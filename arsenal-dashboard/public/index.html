@@ -155,6 +155,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .widget-iframe-wrap{display:none;width:100%}
 .widget-iframe-wrap iframe{width:100%;min-height:420px;border:none;display:block}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+.pl-photo{width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid rgba(239,1,7,.3);position:relative;z-index:1}
 </style>
 </head>
 <body>
@@ -404,10 +405,20 @@ function loadSquad(){
   apiFetch(FN+'/football?type=squad').then(function(data){
     var squad=(data.squad||[]).filter(function(p){return p.position&&p.position!=='null';});
     allPlayers=squad.map(function(p){
-      return {id:p.id,name:p.name,nationality:p.nationality,pos:p.position,posGroup:POS_MAP[p.position]||'MF',posShort:POS_DETAIL[p.position]||'',shirtNumber:p.shirtNumber||null};
+      return {id:p.id,name:p.name,nationality:p.nationality,pos:p.position,posGroup:POS_MAP[p.position]||'MF',posShort:POS_DETAIL[p.position]||'',shirtNumber:p.shirtNumber||null,photo:null};
     });
     badge.textContent='football-data.org';
     renderSq('all');
+    // 사진 비동기 로드
+    var names=allPlayers.map(function(p){return p.name;}).join(',');
+    apiFetch(FN+'/photos?names='+encodeURIComponent(names)).then(function(res){
+      var photoMap=res.photos||{};
+      allPlayers=allPlayers.map(function(p){
+        return Object.assign({},p,{photo:photoMap[p.name]||null});
+      });
+      renderSq(document.querySelector('.f-btn.active')?.textContent==='전체'?'all':
+        document.querySelector('.f-btn.active')?.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]||'all');
+    }).catch(function(){});
   }).catch(function(err){showErr(el,err.message);badge.textContent='오류';});
 }
 function renderSq(filter){
@@ -419,7 +430,13 @@ function renderSq(filter){
     var flag=NAT_FLAG[p.nationality]||'🌍';
     var card=document.createElement('div');card.className='pl-card';
     var vis=document.createElement('div');vis.className='pl-visual';
-    var num=document.createElement('div');num.className='pl-num-bg';num.textContent=p.shirtNumber||'?';vis.appendChild(num);
+    if(p.photo){
+  var img=document.createElement('img');img.className='pl-photo';img.src=p.photo;img.alt=p.name;
+  img.onerror=function(){this.outerHTML='<div class="pl-num-bg">'+(p.shirtNumber||'?')+'</div>';};
+  vis.appendChild(img);
+}else{
+  var num=document.createElement('div');num.className='pl-num-bg';num.textContent=p.shirtNumber||'?';vis.appendChild(num);
+}
     if(p.posShort){var pb=document.createElement('div');pb.className='pl-pos-badge';pb.textContent=p.posShort;vis.appendChild(pb);}
     var info=document.createElement('div');info.className='pl-info';
     var nm=document.createElement('div');nm.className='pl-name';nm.textContent=flag+' '+p.name;
