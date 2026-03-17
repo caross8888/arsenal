@@ -5,13 +5,7 @@
 [build.environment]
   NODE_VERSION = "18"
 
-# API 키는 Netlify 대시보드 > Site settings > Environment variables 에 등록
-# FOOTBALL_DATA_KEY  = football-data.org API 키
-# API_FOOTBALL_KEY   = api-football.com API 키
-# NEWS_API_KEY       = newsapi.org API 키 (선택, BBC RSS가 우선)
-
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
-    Cache-Control = "public, max-age=3600"
