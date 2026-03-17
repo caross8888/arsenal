@@ -403,7 +403,7 @@ function loadSquad(){
   var el=document.getElementById('sqGrid');
   var badge=document.getElementById('squadBadge');
   apiFetch(FN+'/football?type=squad').then(function(data){
-    var squad=(data.squad||[]).filter(function(p){return p.position&&p.position!=='null';});
+    var squad=(data.squad||[]).filter(function(p){return true;});
     allPlayers=squad.map(function(p){
       return {id:p.id,name:p.name,nationality:p.nationality,pos:p.position,posGroup:POS_MAP[p.position]||'MF',posShort:POS_DETAIL[p.position]||'',shirtNumber:p.shirtNumber||null,photo:null};
     });
