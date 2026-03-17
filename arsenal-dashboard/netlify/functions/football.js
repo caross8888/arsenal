@@ -1,23 +1,14 @@
 // netlify/functions/football.js
-// 프록시: football-data.org API (무료 플랜, 하루 10콜)
-// 브라우저에서 API 키 노출 없이 서버에서 호출
+// football-data.org 프록시 (경기일정, 순위, 선수단)
+// 무료 플랜: 하루 10콜 → 서버 캐싱으로 절약
 
 const BASE = 'https://api.football-data.org/v4';
-const ARSENAL_ID = 57; // Arsenal FC team ID
-const HEADERS = { 'X-Auth-Token': process.env.FOOTBALL_DATA_KEY };
+const ARSENAL_ID = 57;
 
-// 결과 캐시 (메모리, Function warm 상태 유지 시)
 const cache = {};
 const TTL = 60 * 60 * 1000; // 1시간
-
-function cached(key, data) {
-  cache[key] = { data, ts: Date.now() };
-}
-function getCache(key) {
-  const c = cache[key];
-  if (c && Date.now() - c.ts < TTL) return c.data;
-  return null;
-}
+function getCache(k) { const c = cache[k]; return (c && Date.now() - c.ts < TTL) ? c.data : null; }
+function setCache(k, d) { cache[k] = { data: d, ts: Date.now() }; }
 
 exports.handler = async (event) => {
   const headers = {
@@ -27,50 +18,53 @@ exports.handler = async (event) => {
   };
 
   const type = event.queryStringParameters?.type || 'fixtures';
-
-  // 캐시 히트
   const hit = getCache(type);
   if (hit) return { statusCode: 200, headers, body: JSON.stringify(hit) };
 
+  const FOOTBALL_KEY = process.env.FOOTBALL_DATA_KEY;
+  if (!FOOTBALL_KEY) return { statusCode: 500, headers, body: JSON.stringify({ error: 'FOOTBALL_DATA_KEY 환경변수가 없습니다.' }) };
+
+  const HEADS = { 'X-Auth-Token': FOOTBALL_KEY };
+
   try {
-    let url, result;
+    let result;
 
     if (type === 'fixtures') {
-      // 최근 5경기 + 다음 5경기
-      const now = new Date();
-      const pastDate = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const futureDate = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      url = `${BASE}/teams/${ARSENAL_ID}/matches?dateFrom=${pastDate}&dateTo=${futureDate}&limit=12`;
+      // 무료 플랜: dateFrom/dateTo 파라미터 사용 불가 → status 필터만 사용
+      const [schedRes, finRes] = await Promise.all([
+        fetch(`${BASE}/teams/${ARSENAL_ID}/matches?status=SCHEDULED,IN_PLAY,PAUSED&limit=6`, { headers: HEADS }),
+        fetch(`${BASE}/teams/${ARSENAL_ID}/matches?status=FINISHED&limit=6`, { headers: HEADS }),
+      ]);
 
-      const res = await fetch(url, { headers: HEADERS });
-      if (!res.ok) throw new Error(`football-data: ${res.status}`);
-      const json = await res.json();
+      const schedJson = schedRes.ok ? await schedRes.json() : { matches: [] };
+      const finJson = finRes.ok ? await finRes.json() : { matches: [] };
 
-      result = {
-        matches: json.matches.map(m => ({
-          id: m.id,
-          competition: m.competition.name,
-          competitionCode: m.competition.code,
-          date: m.utcDate,
-          status: m.status,
-          homeTeam: { name: m.homeTeam.name, shortName: m.homeTeam.shortName, crest: m.homeTeam.crest },
-          awayTeam: { name: m.awayTeam.name, shortName: m.awayTeam.shortName, crest: m.awayTeam.crest },
-          score: m.score,
-          venue: m.venue,
-        }))
-      };
+      const mapMatch = m => ({
+        id: m.id,
+        competition: m.competition.name,
+        competitionCode: m.competition.code,
+        date: m.utcDate,
+        status: m.status,
+        homeTeam: { name: m.homeTeam.name, shortName: m.homeTeam.shortName, crest: m.homeTeam.crest },
+        awayTeam: { name: m.awayTeam.name, shortName: m.awayTeam.shortName, crest: m.awayTeam.crest },
+        score: m.score,
+        venue: m.venue,
+      });
+
+      // 예정: 가까운 순, 종료: 최신 순
+      const scheduled = (schedJson.matches || []).map(mapMatch);
+      const finished = (finJson.matches || []).map(mapMatch).reverse();
+
+      result = { matches: [...scheduled, ...finished] };
 
     } else if (type === 'standings') {
-      // PL 순위 (PL: PL)
-      url = `${BASE}/competitions/PL/standings`;
-      const res = await fetch(url, { headers: HEADERS });
+      const res = await fetch(`${BASE}/competitions/PL/standings`, { headers: HEADS });
       if (!res.ok) throw new Error(`football-data: ${res.status}`);
       const json = await res.json();
-
       const table = json.standings[0].table;
       result = {
-        season: json.season.currentMatchday,
-        standings: table.slice(0, 8).map(row => ({
+        season: json.season?.currentMatchday,
+        standings: table.slice(0, 10).map(row => ({
           position: row.position,
           team: { id: row.team.id, name: row.team.name, shortName: row.team.shortName, crest: row.team.crest },
           playedGames: row.playedGames,
@@ -86,31 +80,24 @@ exports.handler = async (event) => {
       };
 
     } else if (type === 'squad') {
-      url = `${BASE}/teams/${ARSENAL_ID}`;
-      const res = await fetch(url, { headers: HEADERS });
+      const res = await fetch(`${BASE}/teams/${ARSENAL_ID}`, { headers: HEADS });
       if (!res.ok) throw new Error(`football-data: ${res.status}`);
       const json = await res.json();
-
       result = {
-        squad: json.squad.map(p => ({
+        squad: (json.squad || []).map(p => ({
           id: p.id,
           name: p.name,
           position: p.position,
-          dateOfBirth: p.dateOfBirth,
           nationality: p.nationality,
           shirtNumber: p.shirtNumber,
         }))
       };
     }
 
-    cached(type, result);
+    setCache(type, result);
     return { statusCode: 200, headers, body: JSON.stringify(result) };
 
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: err.message, type }),
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };
