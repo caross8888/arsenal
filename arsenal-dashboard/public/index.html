@@ -16,7 +16,7 @@ body{background:var(--navy);color:var(--text);font-family:var(--fb);font-size:14
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(239,1,7,.1) 0%,transparent 60%);pointer-events:none;z-index:0}
 .ticker-wrap{background:var(--red);overflow:hidden;height:28px;display:flex;align-items:center;position:relative;z-index:1}
 .ticker-label{background:var(--red-dark);padding:0 12px;font-size:8px;letter-spacing:3px;text-transform:uppercase;font-weight:700;height:100%;display:flex;align-items:center;flex-shrink:0;white-space:nowrap}
-.ticker-track{display:flex;animation:ticker 40s linear infinite;white-space:nowrap}
+.ticker-track{display:flex;animation:ticker 40s linear infinite;white-space:nowrap;padding-left:8px}
 .ticker-item{padding:0 28px;font-size:11px;font-weight:500;opacity:.95}
 .ticker-dot{margin:0 8px;opacity:.5}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
@@ -76,7 +76,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-score{font-family:var(--fd);font-size:24px;letter-spacing:3px;line-height:1;color:var(--text)}
 .fix-vs{font-family:var(--fd);font-size:16px;letter-spacing:2px;color:var(--text-dim)}
 .fix-venue{font-size:10px;color:var(--text-dim);text-align:center}
-.std-hdr,.std-row{display:grid;grid-template-columns:22px 1fr 24px 24px 24px 36px;gap:4px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px}
+.std-hdr,.std-row{display:grid;grid-template-columns:22px 1fr 24px 24px 24px 24px 36px;gap:4px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px}
 .std-row:last-child{border-bottom:none}
 .std-row.afc-row{background:rgba(239,1,7,.05)}
 .std-row.afc-row .std-pos{color:var(--red);font-weight:700}
@@ -157,6 +157,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .wp-desc{font-size:11px;color:var(--text-dim);max-width:240px;line-height:1.6}
 .widget-iframe-wrap{display:none;width:100%}
 .widget-iframe-wrap iframe{width:100%;min-height:420px;border:none;display:block}
+.more-fix-btn{width:100%;padding:10px;margin-top:6px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-family:var(--fb);font-size:11px;border-radius:10px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
+.more-fix-btn:hover{background:var(--surface2);color:var(--text);}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
 </style>
 </head>
@@ -193,7 +195,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <span class="card-title">&#54532;&#47532;&#48120;&#50612;&#47532;&#44536; &#49692;&#50948;</span>
       <span style="font-size:9px;color:var(--text-dim)" id="stdMatchday"></span>
     </div>
-    <div class="std-hdr"><span>#</span><span>&#54300;</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:right">PTS</span></div>
+    <div class="std-hdr" style="grid-template-columns:22px 1fr 24px 24px 24px 24px 36px"><span>#</span><span>&#44396;&#45800;&#47749;</span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:right">PTS</span></div>
     <div id="stdList"><div class="loading-state" style="padding:20px"><div class="spinner"></div></div></div>
     <button class="more-btn" id="moreStdBtn" onclick="toggleStandings()" style="display:none"><span id="moreStdText">&#51204;&#52404; &#49692;&#50948; &#48372;&#44592; &#8595;</span></button>
   </div>
@@ -380,11 +382,12 @@ function renderStandings(){
     var team=document.createElement('div');team.className='std-team';
     if(s.team.crest){var img=document.createElement('img');img.className='std-crest';img.src=s.team.crest;img.alt='';img.onerror=function(){this.style.display='none';};team.appendChild(img);}
     var nm=document.createElement('span');nm.textContent=s.team.shortName||s.team.name;team.appendChild(nm);
+    var pg=document.createElement('span');pg.className='std-s';pg.textContent=s.playedGames;
     var w=document.createElement('span');w.className='std-s';w.textContent=s.won;
     var d=document.createElement('span');d.className='std-s';d.textContent=s.draw;
     var l=document.createElement('span');l.className='std-s';l.textContent=s.lost;
     var pts=document.createElement('span');pts.className='std-pts';pts.textContent=s.points;
-    row.appendChild(pos);row.appendChild(team);row.appendChild(w);row.appendChild(d);row.appendChild(l);row.appendChild(pts);
+    row.appendChild(pos);row.appendChild(team);row.appendChild(pg);row.appendChild(w);row.appendChild(d);row.appendChild(l);row.appendChild(pts);
     el.appendChild(row);
   });
   if(allStandings.length>10){
