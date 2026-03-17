@@ -19,7 +19,7 @@
   --fd:'Bebas Neue',sans-serif;
   --fb:'Noto Sans KR',sans-serif;
   --fm:'Fira Mono',monospace;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
@@ -31,7 +31,7 @@ body{
 }
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(239,1,7,.1) 0%,transparent 60%);pointer-events:none;z-index:0}
 
-/* ── TICKER ── */
+/* TICKER */
 .ticker-wrap{background:var(--red);overflow:hidden;height:28px;display:flex;align-items:center;position:relative;z-index:1}
 .ticker-label{background:var(--red-dark);padding:0 12px;font-size:8px;letter-spacing:3px;text-transform:uppercase;font-weight:700;height:100%;display:flex;align-items:center;flex-shrink:0;white-space:nowrap}
 .ticker-track{display:flex;animation:ticker 40s linear infinite;white-space:nowrap}
@@ -39,13 +39,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ticker-dot{margin:0 8px;opacity:.5}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
-/* ── TOP HEADER ── */
+/* TOP HEADER */
 .top-header{
-  background:rgba(11,13,18,.96);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--border);
-  padding:12px 16px;
+  background:rgba(11,13,18,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);padding:12px 16px;
   display:flex;align-items:center;justify-content:space-between;
   position:sticky;top:0;z-index:100;
 }
@@ -57,97 +54,112 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* ── BOTTOM NAV (모바일 핵심) ── */
+/* BOTTOM NAV */
 .bottom-nav{
   position:fixed;bottom:0;left:0;right:0;z-index:200;
-  background:rgba(11,13,18,.97);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
+  background:rgba(11,13,18,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-top:1px solid var(--border);
-  display:flex;
-  padding-bottom:var(--safe-bottom);
+  display:flex;padding-bottom:var(--safe-bottom);
 }
 .nav-btn{
   flex:1;display:flex;flex-direction:column;align-items:center;
   padding:10px 4px 8px;gap:4px;
   background:none;border:none;color:var(--text-dim);
-  font-family:var(--fb);font-size:9px;letter-spacing:.5px;
-  text-transform:uppercase;cursor:pointer;
-  transition:color .2s;position:relative;
+  font-family:var(--fb);font-size:9px;letter-spacing:.5px;text-transform:uppercase;
+  cursor:pointer;transition:color .2s;position:relative;
   -webkit-tap-highlight-color:transparent;
 }
-.nav-btn:hover,.nav-btn.active{color:var(--gold)}
+.nav-btn.active{color:var(--gold)}
 .nav-btn.active .nav-icon{color:var(--red)}
 .nav-icon{font-size:18px;line-height:1}
 .nav-live-dot{position:absolute;top:8px;right:calc(50% - 16px);width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 2s infinite}
 
-/* ── PAGE / SECTION ── */
+/* LAYOUT */
 .page{position:relative;z-index:1}
 .section{display:none;padding:16px;max-width:600px;margin:0 auto}
 .section.active{display:block;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-
 .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
 .sec-title{font-family:var(--fd);font-size:30px;letter-spacing:3px}
 .sec-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);background:rgba(200,168,75,.12);border:1px solid var(--border-accent);padding:3px 9px;border-radius:20px}
 .sec-badge.live{color:var(--green);background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);animation:pulse 2s infinite}
 
-/* ── CARD ── */
+/* CARD */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .card-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);font-weight:700}
 
-/* ── LOADING / ERROR ── */
+/* LOADING / ERROR */
 .loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;color:var(--text-muted);font-size:12px}
 .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:8px}
 
-/* ── FIXTURES ── */
-.fix-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+/* FIXTURES */
+.fix-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:6px;padding-left:2px}
+.fix-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
 .fix-card{
   background:var(--surface);border:1px solid var(--border);border-radius:12px;
-  padding:14px;display:flex;flex-direction:column;gap:10px;
+  padding:13px 14px;display:flex;flex-direction:column;gap:10px;
   position:relative;overflow:hidden;
 }
-.fix-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);opacity:0}
-.fix-card.upcoming::before{opacity:1;background:var(--gold)}
-.fix-card.live-match::before{opacity:1;background:var(--green)}
-.fix-card.finished::before{opacity:1;background:var(--surface3)}
-.comp-row{display:flex;align-items:center;justify-content:space-between}
-.comp-tag{display:inline-block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px}
+.fix-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.fix-card.upcoming::before{background:var(--gold)}
+.fix-card.live-match::before{background:var(--green)}
+.fix-card.finished::before{background:var(--surface3)}
+
+/* 경기 카드 상단 행: 대회 + 날짜 */
+.fix-meta-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.comp-tag{display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:4px;flex-shrink:0}
 .tag-pl{background:rgba(55,0,255,.15);color:#A78BFA;border:1px solid rgba(167,139,250,.2)}
 .tag-cl{background:rgba(0,80,200,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.2)}
 .tag-fa{background:rgba(200,168,75,.15);color:var(--gold);border:1px solid var(--border-accent)}
 .tag-ec{background:rgba(239,100,7,.15);color:#FB923C;border:1px solid rgba(251,146,60,.2)}
 .tag-oth{background:rgba(100,100,100,.15);color:var(--text-muted);border:1px solid var(--border)}
-.fix-date-badge{font-size:10px;color:var(--text-muted);font-family:var(--fm)}
-.fix-date-badge.live-tag{color:var(--green);font-weight:700}
-.teams-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
-.fix-team{display:flex;align-items:center;gap:8px}
-.fix-team.away{flex-direction:row-reverse;text-align:right;justify-self:end}
-.t-crest{width:32px;height:32px;border-radius:50%;object-fit:contain;background:var(--surface3);border:1px solid var(--border);padding:3px;flex-shrink:0}
-.t-crest-ph{width:32px;height:32px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:9px;color:var(--text-muted);flex-shrink:0}
-.t-crest-ph.afc{background:rgba(239,1,7,.15);border-color:rgba(239,1,7,.4);color:var(--red)}
-.t-name{font-weight:700;font-size:13px;line-height:1.2}
-.fix-score-center{text-align:center}
-.fix-score{font-family:var(--fd);font-size:26px;letter-spacing:4px;line-height:1;color:var(--text)}
-.fix-vs{font-family:var(--fd);font-size:18px;letter-spacing:3px;color:var(--text-dim)}
-.fix-venue{font-size:10px;color:var(--text-dim);text-align:center;margin-top:2px}
+.fix-date{font-size:10px;color:var(--text-muted);font-family:var(--fm);flex-shrink:0}
+.fix-date.live-tag{color:var(--green);font-weight:700}
 
-/* ── STANDINGS ── */
+/* 팀 행: 홈 - 스코어 - 어웨이 */
+.teams-row{display:grid;grid-template-columns:1fr 72px 1fr;align-items:center;gap:6px}
+.fix-team-home{display:flex;align-items:center;gap:8px}
+.fix-team-away{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.t-crest{width:30px;height:30px;border-radius:50%;object-fit:contain;background:var(--surface3);border:1px solid var(--border);padding:3px;flex-shrink:0}
+.t-crest-ph{width:30px;height:30px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:9px;color:var(--text-muted);flex-shrink:0}
+.t-crest-ph.afc{background:rgba(239,1,7,.15);border-color:rgba(239,1,7,.4);color:var(--red)}
+.t-name-home{font-weight:700;font-size:13px;line-height:1.2;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-name-away{font-weight:700;font-size:13px;line-height:1.2;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.fix-score-box{text-align:center}
+.fix-score{font-family:var(--fd);font-size:24px;letter-spacing:3px;line-height:1;color:var(--text)}
+.fix-vs{font-family:var(--fd);font-size:16px;letter-spacing:2px;color:var(--text-dim)}
+.fix-venue{font-size:10px;color:var(--text-dim);text-align:center}
+
+/* STANDINGS */
 .std-hdr,.std-row{display:grid;grid-template-columns:22px 1fr 24px 24px 24px 36px;gap:4px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px}
 .std-row:last-child{border-bottom:none}
 .std-row.afc-row{background:rgba(239,1,7,.05)}
 .std-row.afc-row .std-pos{color:var(--red);font-weight:700}
 .std-hdr{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
 .std-pos{font-family:var(--fm);font-size:11px;color:var(--text-muted)}
-.std-team{font-weight:500;display:flex;align-items:center;gap:6px;font-size:12px}
+.std-team{font-weight:500;display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}
+.std-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .std-crest{width:16px;height:16px;border-radius:50%;object-fit:contain;border:1px solid var(--border);flex-shrink:0}
 .std-s{font-family:var(--fm);color:var(--text-muted);text-align:center;font-size:11px}
 .std-pts{font-family:var(--fm);font-weight:700;color:var(--text);text-align:right;font-size:12px}
+.std-hidden{display:none}
 
-/* ── SQUAD ── */
+/* 더보기 버튼 */
+.more-btn{
+  width:100%;padding:12px;border:none;background:var(--surface2);
+  color:var(--text-muted);font-family:var(--fb);font-size:11px;
+  letter-spacing:1px;cursor:pointer;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:background .2s,color .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.more-btn:hover{background:var(--surface3);color:var(--text)}
+
+/* SQUAD */
 .f-btns{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
 .f-btns::-webkit-scrollbar{display:none}
 .f-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:11px;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
@@ -167,8 +179,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .st-l{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-top:1px}
 .pl-rating{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);border:1px solid rgba(200,168,75,.4);color:var(--gold);font-family:var(--fm);font-size:9px;padding:2px 5px;border-radius:4px}
 
-/* ── INJURIES ── */
-.inj-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);transition:background .15s}
+/* INJURIES */
+.inj-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
 .inj-row:last-child{border-bottom:none}
 .inj-photo{width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0}
 .inj-photo-ph{width:38px;height:38px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:10px;color:var(--text-muted)}
@@ -186,7 +198,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sum-val.r{color:var(--red)}.sum-val.a{color:var(--amber)}.sum-val.g{color:var(--green)}
 .sum-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:4px}
 
-/* ── NEWS ── */
+/* NEWS */
 .news-list{display:flex;flex-direction:column;gap:10px}
 .news-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-decoration:none;display:block;color:inherit;-webkit-tap-highlight-color:transparent}
 .news-card:active{opacity:.85}
@@ -199,7 +211,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .news-ex{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .news-foot{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim)}
 
-/* ── LIVE ── */
+/* LIVE */
 .live-setup{background:var(--surface);border:1px solid var(--border-accent);border-radius:12px;padding:16px;margin-bottom:16px}
 .live-setup-title{font-weight:700;font-size:13px;margin-bottom:4px}
 .live-setup-sub{font-size:11px;color:var(--text-muted);margin-bottom:14px}
@@ -255,10 +267,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="sub">The Gunners Hub</div>
     </div>
   </div>
-  <div class="header-right">
-    <div class="live-dot"></div>
-    <span>24-25</span>
-  </div>
+  <div class="header-right"><div class="live-dot"></div><span>24-25</span></div>
 </div>
 
 <div class="page">
@@ -266,9 +275,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <!-- FIXTURES -->
 <section id="fixtures" class="section active">
   <div class="sec-head"><h1 class="sec-title">경기 일정</h1><span class="sec-badge" id="fixBadge">로딩 중</span></div>
-  <div class="fix-list" id="fixList">
-    <div class="loading-state"><div class="spinner"></div><span>경기 데이터 로딩 중...</span></div>
+
+  <div id="upcomingWrap">
+    <div class="fix-section-label">📅 예정 경기</div>
+    <div class="fix-list" id="upcomingList">
+      <div class="loading-state"><div class="spinner"></div></div>
+    </div>
   </div>
+
+  <div id="finishedWrap">
+    <div class="fix-section-label">✅ 최근 결과</div>
+    <div class="fix-list" id="finishedList"></div>
+  </div>
+
   <div class="card" style="margin-top:8px">
     <div class="card-head">
       <span class="card-title">프리미어리그 순위</span>
@@ -276,6 +295,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
     <div class="std-hdr"><span>#</span><span>팀</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:right">PTS</span></div>
     <div id="stdList"><div class="loading-state" style="padding:20px"><div class="spinner"></div></div></div>
+    <button class="more-btn" id="moreStdBtn" onclick="toggleStandings()" style="display:none">
+      <span id="moreStdText">전체 순위 보기 ↓</span>
+    </button>
   </div>
 </section>
 
@@ -297,8 +319,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <!-- INJURIES -->
 <section id="injuries" class="section">
   <div class="sec-head"><h1 class="sec-title">부상 현황</h1><span class="sec-badge" id="injBadge">로딩 중</span></div>
-  <div class="sum-grid" id="injSum" style="margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">
-    <div class="loading-state" style="grid-column:1/-1;padding:12px"><div class="spinner"></div></div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="sum-grid" id="injSum">
+      <div class="loading-state" style="grid-column:1/-1;padding:12px"><div class="spinner"></div></div>
+    </div>
   </div>
   <div class="card">
     <div class="card-head">
@@ -346,149 +370,275 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 </section>
 
-</div><!-- /page -->
+</div>
 
-<!-- 하단 네비게이션 -->
+<!-- 하단 네비 -->
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="showSec('fixtures',this)">
-    <span class="nav-icon">📅</span>
-    <span>일정</span>
+    <span class="nav-icon">📅</span><span>일정</span>
   </button>
   <button class="nav-btn" onclick="showSec('squad',this)">
-    <span class="nav-icon">👕</span>
-    <span>선수단</span>
+    <span class="nav-icon">👕</span><span>선수단</span>
   </button>
   <button class="nav-btn" onclick="showSec('injuries',this)">
-    <span class="nav-icon">🏥</span>
-    <span>부상</span>
+    <span class="nav-icon">🏥</span><span>부상</span>
   </button>
   <button class="nav-btn" onclick="showSec('news',this)">
-    <span class="nav-icon">📰</span>
-    <span>뉴스</span>
+    <span class="nav-icon">📰</span><span>뉴스</span>
   </button>
   <button class="nav-btn" onclick="showSec('live',this)" style="position:relative">
-    <span class="nav-icon">🔴</span>
-    <span>라이브</span>
+    <span class="nav-icon">🔴</span><span>라이브</span>
     <span class="nav-live-dot"></span>
   </button>
 </nav>
 
 <script>
-const FN = '/.netlify/functions';
-let autoWidgetKey = '';
-let curWidgetType = 'livescore';
-let widgetActivated = false;
+var FN = '/.netlify/functions';
+var autoWidgetKey = '';
+var curWidgetType = 'livescore';
+var widgetActivated = false;
+var stdExpanded = false;
+var allStandings = [];
 
-async function apiFetch(url) {
-  const sep = url.includes('?') ? '&' : '?';
-  const res = await fetch(url + sep + '_=' + Date.now());
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || 'HTTP ' + res.status);
-  }
-  return res.json();
+function apiFetch(url) {
+  var sep = url.indexOf('?') >= 0 ? '&' : '?';
+  return fetch(url + sep + '_=' + Date.now())
+    .then(function(r) {
+      if (!r.ok) return r.json().then(function(e){ throw new Error(e.error || 'HTTP ' + r.status); });
+      return r.json();
+    });
 }
 function showErr(el, msg) {
   el.innerHTML = '<div class="error-state">⚠️ ' + msg + '</div>';
 }
 
-// ── COMP TAGS ──
-const CTAG = {PL:'tag-pl',CL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec'};
-const CNAME = {PL:'Premier League',CL:'UCL',EL:'Europa',FAC:'FA Cup',ELC:'EFL Cup'};
-function ctag(c){return CTAG[c]||'tag-oth'}
-function cname(c,fb){return CNAME[c]||fb||c}
+var CTAG = {PL:'tag-pl',CL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec'};
+var CNAME = {PL:'PL',CL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup'};
+function ctag(c){ return CTAG[c] || 'tag-oth'; }
+function cname(c, fb){ return CNAME[c] || fb || c; }
 
 function formatDate(utcDate) {
-  const d = new Date(utcDate);
-  const diff = Math.round((d - Date.now()) / 86400000);
-  const time = d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
-  const date = d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'});
+  var d = new Date(utcDate);
+  var diff = Math.round((d - Date.now()) / 86400000);
+  var time = d.toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit', hour12:false});
+  var date = d.toLocaleDateString('ko-KR', {month:'short', day:'numeric', weekday:'short'});
   if (diff === 0) return '오늘 ' + time;
   if (diff === 1) return '내일 ' + time;
-  if (diff > 1 && diff < 7) return date + ' ' + time;
-  if (diff >= 7) return date;
+  if (diff > 1 && diff < 8) return date + ' ' + time;
+  if (diff >= 8) return date;
   if (diff === -1) return '어제';
   return date;
 }
 
+// ── crest 렌더 (HTML 이스케이프 버그 수정) ──
 function makeCrest(team, isArs) {
+  var shortName = (team.shortName || team.name || '').substring(0, 3).toUpperCase();
+  var phClass = 't-crest-ph' + (isArs ? ' afc' : '');
   if (team.crest) {
-    return '<img class="t-crest" src="' + team.crest + '" alt="" onerror="this.outerHTML=\'<div class=\\"t-crest-ph ' + (isArs?'afc':'') + '\\">' + (team.shortName||'').substring(0,3).toUpperCase() + '</div>\'">';
+    // createElement 방식으로 이스케이프 문제 완전 회피
+    return {
+      type: 'crest',
+      src: team.crest,
+      alt: team.shortName || '',
+      phClass: phClass,
+      shortName: shortName,
+    };
   }
-  return '<div class="t-crest-ph ' + (isArs?'afc':'') + '">' + (team.shortName||team.name||'').substring(0,3).toUpperCase() + '</div>';
+  return { type: 'ph', phClass: phClass, shortName: shortName };
+}
+
+function renderCrest(c) {
+  if (c.type === 'crest') {
+    var img = document.createElement('img');
+    img.className = 't-crest';
+    img.src = c.src;
+    img.alt = c.alt;
+    img.onerror = function() {
+      var ph = document.createElement('div');
+      ph.className = c.phClass;
+      ph.textContent = c.shortName;
+      this.parentNode.replaceChild(ph, this);
+    };
+    return img;
+  }
+  var ph = document.createElement('div');
+  ph.className = c.phClass;
+  ph.textContent = c.shortName;
+  return ph;
+}
+
+function buildFixCard(m) {
+  var ARSENAL_ID = 57;
+  var isArsHome = m.homeTeam && m.homeTeam.id === ARSENAL_ID;
+  var isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
+  var isDone = m.status === 'FINISHED';
+  var code = m.competitionCode || 'PL';
+  var hs = m.score && m.score.fullTime ? m.score.fullTime.home : null;
+  var as_ = m.score && m.score.fullTime ? m.score.fullTime.away : null;
+  var hasScore = hs !== null && hs !== undefined;
+  var cls = 'fix-card ' + (isLive ? 'live-match' : isDone ? 'finished' : 'upcoming');
+
+  var card = document.createElement('div');
+  card.className = cls;
+
+  // 메타 행
+  var metaRow = document.createElement('div');
+  metaRow.className = 'fix-meta-row';
+  var compTag = document.createElement('span');
+  compTag.className = 'comp-tag ' + ctag(code);
+  compTag.textContent = cname(code, m.competition);
+  var dateSpan = document.createElement('span');
+  dateSpan.className = 'fix-date' + (isLive ? ' live-tag' : '');
+  dateSpan.textContent = isLive ? '● LIVE' : formatDate(m.date);
+  metaRow.appendChild(compTag);
+  metaRow.appendChild(dateSpan);
+  card.appendChild(metaRow);
+
+  // 팀 행
+  var teamsRow = document.createElement('div');
+  teamsRow.className = 'teams-row';
+
+  // 홈팀
+  var homeDiv = document.createElement('div');
+  homeDiv.className = 'fix-team-home';
+  homeDiv.appendChild(renderCrest(makeCrest(m.homeTeam, isArsHome)));
+  var homeName = document.createElement('div');
+  homeName.className = 't-name-home';
+  homeName.textContent = m.homeTeam.shortName || m.homeTeam.name;
+  homeDiv.appendChild(homeName);
+
+  // 스코어
+  var scoreBox = document.createElement('div');
+  scoreBox.className = 'fix-score-box';
+  if (hasScore) {
+    var scoreDiv = document.createElement('div');
+    scoreDiv.className = 'fix-score';
+    scoreDiv.textContent = hs + ' : ' + as_;
+    scoreBox.appendChild(scoreDiv);
+  } else {
+    var vsDiv = document.createElement('div');
+    vsDiv.className = 'fix-vs';
+    vsDiv.textContent = 'VS';
+    scoreBox.appendChild(vsDiv);
+  }
+
+  // 어웨이팀
+  var awayDiv = document.createElement('div');
+  awayDiv.className = 'fix-team-away';
+  var awayName = document.createElement('div');
+  awayName.className = 't-name-away';
+  awayName.textContent = m.awayTeam.shortName || m.awayTeam.name;
+  awayDiv.appendChild(awayName);
+  awayDiv.appendChild(renderCrest(makeCrest(m.awayTeam, !isArsHome)));
+
+  teamsRow.appendChild(homeDiv);
+  teamsRow.appendChild(scoreBox);
+  teamsRow.appendChild(awayDiv);
+  card.appendChild(teamsRow);
+
+  // 경기장
+  if (m.venue) {
+    var venue = document.createElement('div');
+    venue.className = 'fix-venue';
+    venue.textContent = m.venue;
+    card.appendChild(venue);
+  }
+
+  return card;
 }
 
 // ── FIXTURES ──
-async function loadFixtures() {
-  const el = document.getElementById('fixList');
-  const badge = document.getElementById('fixBadge');
-  try {
-    const data = await apiFetch(FN + '/football?type=fixtures');
-    badge.textContent = 'football-data.org';
-    const matches = data.matches || [];
-    if (!matches.length) {
-      el.innerHTML = '<div class="loading-state" style="color:var(--text-muted)">예정된 경기가 없습니다</div>';
-      return;
-    }
-    el.innerHTML = matches.map(function(m) {
-      const isArsHome = m.homeTeam && m.homeTeam.id === 57;
-      const isLive = ['IN_PLAY','PAUSED'].includes(m.status);
-      const isDone = m.status === 'FINISHED';
-      const code = m.competitionCode || 'PL';
-      const hs = m.score && m.score.fullTime ? m.score.fullTime.home : null;
-      const as_ = m.score && m.score.fullTime ? m.score.fullTime.away : null;
-      const hasScore = hs !== null && hs !== undefined;
-      const cls = isLive ? 'live-match' : (isDone ? 'finished' : 'upcoming');
+function loadFixtures() {
+  var upEl = document.getElementById('upcomingList');
+  var fnEl = document.getElementById('finishedList');
+  var badge = document.getElementById('fixBadge');
 
-      return '<div class="fix-card ' + cls + '">' +
-        '<div class="comp-row">' +
-          '<span class="comp-tag ' + ctag(code) + '">' + cname(code, m.competition) + '</span>' +
-          '<span class="fix-date-badge ' + (isLive?'live-tag':'') + '">' +
-            (isLive ? '● LIVE' : formatDate(m.date)) +
-          '</span>' +
-        '</div>' +
-        '<div class="teams-row">' +
-          '<div class="fix-team">' +
-            makeCrest(m.homeTeam, isArsHome) +
-            '<div class="t-name">' + (m.homeTeam.shortName || m.homeTeam.name) + '</div>' +
-          '</div>' +
-          '<div class="fix-score-center">' +
-            (hasScore
-              ? '<div class="fix-score">' + hs + ' : ' + as_ + '</div>'
-              : '<div class="fix-vs">VS</div>'
-            ) +
-          '</div>' +
-          '<div class="fix-team away">' +
-            '<div class="t-name">' + (m.awayTeam.shortName || m.awayTeam.name) + '</div>' +
-            makeCrest(m.awayTeam, !isArsHome) +
-          '</div>' +
-        '</div>' +
-        (m.venue ? '<div class="fix-venue">' + m.venue + '</div>' : '') +
-      '</div>';
-    }).join('');
-    updateTicker(matches);
-  } catch(err) { showErr(el, err.message); badge.textContent = '오류'; }
+  apiFetch(FN + '/football?type=fixtures')
+    .then(function(data) {
+      badge.textContent = 'football-data.org';
+      var matches = data.matches || [];
+
+      var upcoming = matches.filter(function(m){ return ['SCHEDULED','IN_PLAY','PAUSED'].includes(m.status); });
+      var finished = matches.filter(function(m){ return m.status === 'FINISHED'; });
+
+      upEl.innerHTML = '';
+      if (upcoming.length) {
+        upcoming.forEach(function(m){ upEl.appendChild(buildFixCard(m)); });
+      } else {
+        upEl.innerHTML = '<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">예정된 경기가 없습니다</div>';
+      }
+
+      fnEl.innerHTML = '';
+      if (finished.length) {
+        finished.forEach(function(m){ fnEl.appendChild(buildFixCard(m)); });
+      } else {
+        fnEl.innerHTML = '<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">최근 결과가 없습니다</div>';
+      }
+
+      updateTicker(matches);
+    })
+    .catch(function(err){ showErr(upEl, err.message); badge.textContent = '오류'; });
 }
 
-async function loadStandings() {
-  const el = document.getElementById('stdList');
-  try {
-    const data = await apiFetch(FN + '/football?type=standings');
-    if (data.season) document.getElementById('stdMatchday').textContent = 'GW ' + data.season;
-    el.innerHTML = (data.standings || []).map(function(s) {
-      const crest = s.team.crest
-        ? '<img class="std-crest" src="' + s.team.crest + '" alt="" onerror="this.style.display=\'none\'">'
-        : '';
-      return '<div class="std-row ' + (s.isArsenal?'afc-row':'') + '">' +
-        '<span class="std-pos">' + s.position + '</span>' +
-        '<div class="std-team">' + crest + '<span>' + (s.team.shortName||s.team.name) + '</span></div>' +
-        '<span class="std-s">' + s.won + '</span>' +
-        '<span class="std-s">' + s.draw + '</span>' +
-        '<span class="std-s">' + s.lost + '</span>' +
-        '<span class="std-pts">' + s.points + '</span>' +
-      '</div>';
-    }).join('');
-  } catch(err) { showErr(el, err.message); }
+// ── STANDINGS ──
+function loadStandings() {
+  var el = document.getElementById('stdList');
+  apiFetch(FN + '/football?type=standings')
+    .then(function(data) {
+      if (data.season) document.getElementById('stdMatchday').textContent = 'GW ' + data.season;
+      allStandings = data.standings || [];
+      renderStandings();
+    })
+    .catch(function(err){ showErr(el, err.message); });
+}
+
+function renderStandings() {
+  var el = document.getElementById('stdList');
+  var btn = document.getElementById('moreStdBtn');
+  var visible = stdExpanded ? allStandings : allStandings.slice(0, 10);
+
+  el.innerHTML = '';
+  visible.forEach(function(s) {
+    var row = document.createElement('div');
+    row.className = 'std-row' + (s.isArsenal ? ' afc-row' : '');
+
+    var pos = document.createElement('span');
+    pos.className = 'std-pos';
+    pos.textContent = s.position;
+
+    var team = document.createElement('div');
+    team.className = 'std-team';
+    if (s.team.crest) {
+      var img = document.createElement('img');
+      img.className = 'std-crest';
+      img.src = s.team.crest;
+      img.alt = '';
+      img.onerror = function(){ this.style.display='none'; };
+      team.appendChild(img);
+    }
+    var name = document.createElement('span');
+    name.textContent = s.team.shortName || s.team.name;
+    team.appendChild(name);
+
+    var w = document.createElement('span'); w.className = 'std-s'; w.textContent = s.won;
+    var d = document.createElement('span'); d.className = 'std-s'; d.textContent = s.draw;
+    var l = document.createElement('span'); l.className = 'std-s'; l.textContent = s.lost;
+    var pts = document.createElement('span'); pts.className = 'std-pts'; pts.textContent = s.points;
+
+    row.appendChild(pos); row.appendChild(team);
+    row.appendChild(w); row.appendChild(d); row.appendChild(l); row.appendChild(pts);
+    el.appendChild(row);
+  });
+
+  if (allStandings.length > 10) {
+    btn.style.display = 'flex';
+    document.getElementById('moreStdText').textContent = stdExpanded ? '접기 ↑' : '전체 순위 보기 ↓ (' + allStandings.length + '팀)';
+  }
+}
+
+function toggleStandings() {
+  stdExpanded = !stdExpanded;
+  renderStandings();
 }
 
 // ── SQUAD ──
@@ -501,127 +651,194 @@ var NAT_FLAG = {
 };
 var POS_KO = {Goalkeeper:'골키퍼',Defender:'수비수',Midfielder:'미드필더',Attacker:'공격수'};
 
-async function loadSquad() {
-  const el = document.getElementById('sqGrid');
-  const badge = document.getElementById('squadBadge');
-  try {
-    const data = await apiFetch(FN + '/apifootball?type=players');
-    allPlayers = data.players || [];
-    badge.textContent = 'api-football.com';
-    renderSq('all');
-  } catch(err) { showErr(el, err.message); badge.textContent = '오류'; }
+function loadSquad() {
+  var el = document.getElementById('sqGrid');
+  var badge = document.getElementById('squadBadge');
+  apiFetch(FN + '/apifootball?type=players')
+    .then(function(data) {
+      allPlayers = data.players || [];
+      badge.textContent = 'api-football.com';
+      renderSq('all');
+    })
+    .catch(function(err){ showErr(el, err.message); badge.textContent = '오류'; });
 }
 
 function renderSq(filter) {
-  const el = document.getElementById('sqGrid');
-  const list = filter === 'all' ? allPlayers : allPlayers.filter(function(p){return p.position===filter});
+  var el = document.getElementById('sqGrid');
+  var list = filter === 'all' ? allPlayers : allPlayers.filter(function(p){ return p.position === filter; });
   if (!list.length) { el.innerHTML = '<div class="loading-state" style="grid-column:1/-1">선수 데이터 없음</div>'; return; }
-  el.innerHTML = list.map(function(p) {
+  el.innerHTML = '';
+  list.forEach(function(p) {
     var flag = NAT_FLAG[p.nationality] || '🌍';
     var isGK = p.position === 'Goalkeeper';
-    var photo = p.photo
-      ? '<img class="pl-photo" src="' + p.photo + '" alt="' + p.name + '" onerror="this.outerHTML=\'<div class=\\"pl-num-bg\\">' + (p.number||'?') + '</div>\'">'
-      : '<div class="pl-num-bg">' + (p.number||'?') + '</div>';
-    return '<div class="pl-card">' +
-      '<div class="pl-visual">' + photo + (p.rating?'<div class="pl-rating">'+p.rating+'</div>':'') + '</div>' +
-      '<div class="pl-info">' +
-        '<div class="pl-name">' + flag + ' ' + p.name + '</div>' +
-        '<div class="pl-pos">' + (POS_KO[p.position]||p.position||'-') + '</div>' +
-        '<div class="pl-stats">' +
-          '<div class="st-box"><div class="st-v">' + (isGK?(p.saves??'-'):(p.goals??0)) + '</div><div class="st-l">' + (isGK?'SV':'G') + '</div></div>' +
-          '<div class="st-box"><div class="st-v">' + (p.assists??0) + '</div><div class="st-l">A</div></div>' +
-          '<div class="st-box"><div class="st-v">' + (p.appearances??0) + '</div><div class="st-l">출장</div></div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+    var card = document.createElement('div');
+    card.className = 'pl-card';
+
+    var visual = document.createElement('div');
+    visual.className = 'pl-visual';
+    if (p.photo) {
+      var img = document.createElement('img');
+      img.className = 'pl-photo';
+      img.src = p.photo;
+      img.alt = p.name;
+      img.onerror = function(){
+        var nb = document.createElement('div');
+        nb.className = 'pl-num-bg';
+        nb.textContent = p.number || '?';
+        this.parentNode.replaceChild(nb, this);
+      };
+      visual.appendChild(img);
+    } else {
+      var nb = document.createElement('div');
+      nb.className = 'pl-num-bg';
+      nb.textContent = p.number || '?';
+      visual.appendChild(nb);
+    }
+    if (p.rating) {
+      var rat = document.createElement('div');
+      rat.className = 'pl-rating';
+      rat.textContent = p.rating;
+      visual.appendChild(rat);
+    }
+
+    var info = document.createElement('div');
+    info.className = 'pl-info';
+    info.innerHTML =
+      '<div class="pl-name">' + flag + ' ' + p.name + '</div>' +
+      '<div class="pl-pos">' + (POS_KO[p.position] || p.position || '-') + '</div>' +
+      '<div class="pl-stats">' +
+        '<div class="st-box"><div class="st-v">' + (isGK ? (p.saves != null ? p.saves : '-') : (p.goals || 0)) + '</div><div class="st-l">' + (isGK ? 'SV' : 'G') + '</div></div>' +
+        '<div class="st-box"><div class="st-v">' + (p.assists || 0) + '</div><div class="st-l">A</div></div>' +
+        '<div class="st-box"><div class="st-v">' + (p.appearances || 0) + '</div><div class="st-l">출장</div></div>' +
+      '</div>';
+
+    card.appendChild(visual);
+    card.appendChild(info);
+    el.appendChild(card);
+  });
 }
 
 // ── INJURIES ──
-async function loadInjuries() {
-  const listEl = document.getElementById('injList');
-  const sumEl = document.getElementById('injSum');
-  const badge = document.getElementById('injBadge');
-  try {
-    const data = await apiFetch(FN + '/apifootball?type=injuries');
-    const injuries = data.injuries || [];
-    badge.textContent = 'api-football.com';
-    document.getElementById('injCount').textContent = '총 ' + injuries.length + '건';
-    if (!injuries.length) {
-      listEl.innerHTML = '<div class="loading-state" style="padding:28px">🎉 현재 부상 선수 없음</div>';
-      sumEl.innerHTML = '<div class="sum-stat"><div class="sum-val g">0</div><div class="sum-lbl">부상자</div></div>';
-      return;
-    }
-    listEl.innerHTML = injuries.map(function(i) {
-      var photo = i.player.photo
-        ? '<img class="inj-photo" src="' + i.player.photo + '" alt="" onerror="this.outerHTML=\'<div class=\\"inj-photo-ph\\">' + i.player.name.substring(0,2).toUpperCase() + '</div>\'">'
-        : '<div class="inj-photo-ph">' + i.player.name.substring(0,2).toUpperCase() + '</div>';
-      var dateStr = i.fixture && i.fixture.date ? new Date(i.fixture.date).toLocaleDateString('ko-KR',{month:'short',day:'numeric'}) : '';
-      return '<div class="inj-row">' +
-        photo +
-        '<div class="inj-info">' +
-          '<div class="inj-name">' + i.player.name + '</div>' +
-          '<div class="inj-detail">' + (i.reason||'사유 미공개') + (i.fixture&&i.fixture.league?' · '+i.fixture.league:'') + '</div>' +
-        '</div>' +
-        '<div class="inj-right">' +
-          '<span class="inj-badge ' + (i.type==='Injury'?'inj-injury':'inj-miss') + '">' + (i.type==='Injury'?'부상':'결장') + '</span>' +
-          '<span class="inj-date">' + dateStr + '</span>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-    var injCnt = injuries.filter(function(i){return i.type==='Injury'}).length;
-    var missCnt = injuries.length - injCnt;
-    sumEl.innerHTML =
-      '<div class="sum-stat"><div class="sum-val r">' + injCnt + '</div><div class="sum-lbl">부상</div></div>' +
-      '<div class="sum-stat"><div class="sum-val a">' + missCnt + '</div><div class="sum-lbl">결장</div></div>' +
-      '<div class="sum-stat"><div class="sum-val">' + injuries.length + '</div><div class="sum-lbl">총 인원</div></div>' +
-      '<div class="sum-stat"><div class="sum-val g">' + (allPlayers.length ? allPlayers.length - injuries.length : '-') + '</div><div class="sum-lbl">출전 가능</div></div>';
-  } catch(err) { showErr(listEl, err.message); badge.textContent = '오류'; }
+function loadInjuries() {
+  var listEl = document.getElementById('injList');
+  var sumEl = document.getElementById('injSum');
+  var badge = document.getElementById('injBadge');
+  apiFetch(FN + '/apifootball?type=injuries')
+    .then(function(data) {
+      var injuries = data.injuries || [];
+      badge.textContent = 'api-football.com';
+      document.getElementById('injCount').textContent = '총 ' + injuries.length + '건';
+      if (!injuries.length) {
+        listEl.innerHTML = '<div class="loading-state" style="padding:28px">🎉 현재 부상 선수 없음</div>';
+        sumEl.innerHTML = '<div class="sum-stat"><div class="sum-val g">0</div><div class="sum-lbl">부상자</div></div>';
+        return;
+      }
+      listEl.innerHTML = '';
+      injuries.forEach(function(i) {
+        var row = document.createElement('div');
+        row.className = 'inj-row';
+        var photoEl;
+        if (i.player.photo) {
+          photoEl = document.createElement('img');
+          photoEl.className = 'inj-photo';
+          photoEl.src = i.player.photo;
+          photoEl.alt = i.player.name;
+          photoEl.onerror = function(){
+            var ph = document.createElement('div');
+            ph.className = 'inj-photo-ph';
+            ph.textContent = i.player.name.substring(0,2).toUpperCase();
+            this.parentNode.replaceChild(ph, this);
+          };
+        } else {
+          photoEl = document.createElement('div');
+          photoEl.className = 'inj-photo-ph';
+          photoEl.textContent = i.player.name.substring(0,2).toUpperCase();
+        }
+        var dateStr = i.fixture && i.fixture.date ? new Date(i.fixture.date).toLocaleDateString('ko-KR',{month:'short',day:'numeric'}) : '';
+        row.appendChild(photoEl);
+        var infoDiv = document.createElement('div');
+        infoDiv.className = 'inj-info';
+        infoDiv.innerHTML = '<div class="inj-name">' + i.player.name + '</div><div class="inj-detail">' + (i.reason || '사유 미공개') + (i.fixture && i.fixture.league ? ' · ' + i.fixture.league : '') + '</div>';
+        var rightDiv = document.createElement('div');
+        rightDiv.className = 'inj-right';
+        rightDiv.innerHTML = '<span class="inj-badge ' + (i.type==='Injury'?'inj-injury':'inj-miss') + '">' + (i.type==='Injury'?'부상':'결장') + '</span><span class="inj-date">' + dateStr + '</span>';
+        row.appendChild(infoDiv);
+        row.appendChild(rightDiv);
+        listEl.appendChild(row);
+      });
+      var injCnt = injuries.filter(function(i){ return i.type === 'Injury'; }).length;
+      sumEl.innerHTML =
+        '<div class="sum-stat"><div class="sum-val r">' + injCnt + '</div><div class="sum-lbl">부상</div></div>' +
+        '<div class="sum-stat"><div class="sum-val a">' + (injuries.length - injCnt) + '</div><div class="sum-lbl">결장</div></div>' +
+        '<div class="sum-stat"><div class="sum-val">' + injuries.length + '</div><div class="sum-lbl">총 인원</div></div>' +
+        '<div class="sum-stat"><div class="sum-val g">' + (allPlayers.length ? allPlayers.length - injuries.length : '-') + '</div><div class="sum-lbl">출전 가능</div></div>';
+    })
+    .catch(function(err){ showErr(listEl, err.message); badge.textContent = '오류'; });
 }
 
 // ── NEWS ──
-async function loadNews() {
-  const el = document.getElementById('newsGrid');
-  const badge = document.getElementById('newsBadge');
-  try {
-    const data = await apiFetch(FN + '/news');
-    badge.textContent = data.source || 'RSS';
-    const articles = data.articles || [];
-    if (!articles.length) { el.innerHTML = '<div class="loading-state">뉴스 없음</div>'; return; }
-    el.innerHTML = articles.map(function(a) {
-      var imgHtml = a.urlToImage
-        ? '<img src="' + a.urlToImage + '" alt="" onerror="this.parentElement.innerHTML=\'<div class=\\"news-img-ph\\">📰</div>\'">'
-        : '<div class="news-img-ph">📰</div>';
-      return '<a class="news-card" href="' + (a.url||'#') + '" target="_blank" rel="noopener">' +
-        '<div class="news-img">' + imgHtml + '<div class="news-src-badge">' + (data.source||'RSS') + '</div></div>' +
-        '<div class="news-body">' +
-          '<div class="news-hl">' + (a.title||'') + '</div>' +
-          '<div class="news-ex">' + (a.description||'') + '</div>' +
-          '<div class="news-foot"><span>🕐 ' + (a.timeAgo||'') + '</span><span style="color:var(--red);font-weight:700">읽기 →</span></div>' +
-        '</div>' +
-      '</a>';
-    }).join('');
-  } catch(err) { showErr(el, err.message); badge.textContent = '오류'; }
+function loadNews() {
+  var el = document.getElementById('newsGrid');
+  var badge = document.getElementById('newsBadge');
+  apiFetch(FN + '/news')
+    .then(function(data) {
+      badge.textContent = data.source || 'RSS';
+      var articles = data.articles || [];
+      if (!articles.length) { el.innerHTML = '<div class="loading-state">뉴스 없음</div>'; return; }
+      el.innerHTML = '';
+      articles.forEach(function(a) {
+        var card = document.createElement('a');
+        card.className = 'news-card';
+        card.href = a.url || '#';
+        card.target = '_blank';
+        card.rel = 'noopener';
+        var imgDiv = document.createElement('div');
+        imgDiv.className = 'news-img';
+        if (a.urlToImage) {
+          var img = document.createElement('img');
+          img.src = a.urlToImage;
+          img.alt = '';
+          img.onerror = function(){ this.parentElement.innerHTML = '<div class="news-img-ph">📰</div>'; };
+          imgDiv.appendChild(img);
+        } else {
+          imgDiv.innerHTML = '<div class="news-img-ph">📰</div>';
+        }
+        var srcBadge = document.createElement('div');
+        srcBadge.className = 'news-src-badge';
+        srcBadge.textContent = data.source || 'RSS';
+        imgDiv.appendChild(srcBadge);
+        var body = document.createElement('div');
+        body.className = 'news-body';
+        body.innerHTML =
+          '<div class="news-hl">' + (a.title || '') + '</div>' +
+          '<div class="news-ex">' + (a.description || '') + '</div>' +
+          '<div class="news-foot"><span>🕐 ' + (a.timeAgo || '') + '</span><span style="color:var(--red);font-weight:700">읽기 →</span></div>';
+        card.appendChild(imgDiv);
+        card.appendChild(body);
+        el.appendChild(card);
+      });
+    })
+    .catch(function(err){ showErr(el, err.message); badge.textContent = '오류'; });
 }
 
 // ── TICKER ──
 function updateTicker(matches) {
   if (!matches || !matches.length) return;
   var items = matches.slice(0,6).map(function(m) {
-    var h = (m.homeTeam&&(m.homeTeam.shortName||m.homeTeam.name)) || '';
-    var a = (m.awayTeam&&(m.awayTeam.shortName||m.awayTeam.name)) || '';
-    var isLive = ['IN_PLAY','PAUSED'].includes(m.status);
+    var h = (m.homeTeam && (m.homeTeam.shortName || m.homeTeam.name)) || '';
+    var a = (m.awayTeam && (m.awayTeam.shortName || m.awayTeam.name)) || '';
+    var isLive = m.status === 'IN_PLAY' || m.status === 'PAUSED';
     var isDone = m.status === 'FINISHED';
-    var hs = m.score&&m.score.fullTime ? m.score.fullTime.home : null;
-    var as_ = m.score&&m.score.fullTime ? m.score.fullTime.away : null;
-    if (isLive) return '🔴 LIVE: ' + h + ' ' + (hs??0) + '-' + (as_??0) + ' ' + a;
+    var hs = m.score && m.score.fullTime ? m.score.fullTime.home : null;
+    var as_ = m.score && m.score.fullTime ? m.score.fullTime.away : null;
+    if (isLive) return '🔴 LIVE: ' + h + ' ' + (hs||0) + '-' + (as_||0) + ' ' + a;
     if (isDone && hs !== null) return h + ' ' + hs + '-' + as_ + ' ' + a + ' ✓';
     var d = new Date(m.date);
     return h + ' vs ' + a + ' · ' + d.toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
   });
   var doubled = items.concat(items);
-  document.getElementById('tickerTrack').innerHTML = doubled.map(function(t,i) {
-    return '<span class="ticker-item">' + t + '</span>' + (i<doubled.length-1?'<span class="ticker-dot">◆</span>':'');
+  document.getElementById('tickerTrack').innerHTML = doubled.map(function(t,i){
+    return '<span class="ticker-item">' + t + '</span>' + (i < doubled.length-1 ? '<span class="ticker-dot">◆</span>' : '');
   }).join('');
 }
 
@@ -629,9 +846,7 @@ function updateTicker(matches) {
 function activateWidget(key) {
   var k = key || document.getElementById('apiKeyInput').value.trim();
   var st = document.getElementById('keyStatus');
-  if (!k || k.length < 8) {
-    st.className='key-status err'; st.innerHTML='⚠️ 유효한 키를 입력해주세요.'; return;
-  }
+  if (!k || k.length < 8) { st.className='key-status err'; st.innerHTML='⚠️ 유효한 키를 입력해주세요.'; return; }
   if (!key) { st.className='key-status ok'; st.innerHTML='✓ 연결됨'; }
   var wMap = {livescore:'widgetLiveScore',fixtures:'widgetFixtures',results:'widgetResults',standings:'widgetStandings'};
   var wn = wMap[curWidgetType];
@@ -657,37 +872,37 @@ function activateWidget(key) {
 
 function selTab(type, btn) {
   curWidgetType = type;
-  document.querySelectorAll('.wgt-tab').forEach(function(b){b.classList.remove('active')});
+  document.querySelectorAll('.wgt-tab').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
   if (widgetActivated && autoWidgetKey) activateWidget(autoWidgetKey);
 }
 
-// ── CONFIG (자동 키 로드) ──
-async function loadConfig() {
-  try {
-    var cfg = await fetch(FN + '/config').then(function(r){return r.json()});
-    if (cfg.widgetKey) {
-      autoWidgetKey = cfg.widgetKey;
-      document.getElementById('autoBadge').style.display='inline-flex';
-      document.getElementById('setupSub').textContent='환경변수에서 API 키 자동 로드됨';
-      document.getElementById('wpTitle').textContent='위젯 준비됨';
-    } else {
-      document.getElementById('setupSub').textContent='API 키를 입력해주세요';
+// ── CONFIG ──
+function loadConfig() {
+  fetch(FN + '/config').then(function(r){ return r.json(); })
+    .then(function(cfg) {
+      if (cfg.widgetKey) {
+        autoWidgetKey = cfg.widgetKey;
+        document.getElementById('autoBadge').style.display='inline-flex';
+        document.getElementById('setupSub').textContent='API 키 자동 로드됨';
+        document.getElementById('wpTitle').textContent='위젯 준비됨';
+      } else {
+        document.getElementById('setupSub').textContent='API 키를 입력해주세요';
+        document.getElementById('keyRow').style.display='flex';
+        document.getElementById('wpTitle').textContent='키 입력 필요';
+      }
+    })
+    .catch(function(){
+      document.getElementById('setupSub').textContent='수동 입력 모드';
       document.getElementById('keyRow').style.display='flex';
-      document.getElementById('wpTitle').textContent='키 입력 필요';
-    }
-  } catch(_) {
-    document.getElementById('setupSub').textContent='수동 입력 모드';
-    document.getElementById('keyRow').style.display='flex';
-  }
+    });
 }
 
 // ── NAV ──
 var loaded = {fixtures: true};
-
 function showSec(id, btn) {
-  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active')});
-  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active')});
+  document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
   if (!loaded[id]) {
@@ -696,21 +911,19 @@ function showSec(id, btn) {
     if (id === 'injuries') loadInjuries();
     if (id === 'news') loadNews();
   }
-  if (id === 'live' && autoWidgetKey && !widgetActivated) {
-    activateWidget(autoWidgetKey);
-  }
-  window.scrollTo(0,0);
+  if (id === 'live' && autoWidgetKey && !widgetActivated) activateWidget(autoWidgetKey);
+  window.scrollTo(0, 0);
 }
-
 function filterSq(f, btn) {
-  document.querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active')});
+  document.querySelectorAll('.f-btn').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
   renderSq(f);
 }
 
 // ── START ──
 loadConfig();
-Promise.all([loadFixtures(), loadStandings()]);
+loadFixtures();
+loadStandings();
 </script>
 </body>
 </html>
