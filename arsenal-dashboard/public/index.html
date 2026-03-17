@@ -361,15 +361,22 @@ function loadFixtures(){
         return;
       }
       list.forEach(function(m){el.appendChild(buildFixCard(m));});
-      if(allList.length > list.length){
+      if(allList.length > 3){
+        var expanded = (list.length > 3);
         var btn=document.createElement('button');
         btn.className='more-fix-btn';
-        btn.textContent='\uB354\uBCF4\uAE30 ('+allList.length+'\uACBD\uAE30) \u2193';
+        btn.textContent = expanded ? '\u2191 \uC811\uAE30' : '\u2193 \uB354\uBCF4\uAE30';
         btn.onclick=function(){
-          allList.forEach(function(m){el.insertBefore(buildFixCard(m), btn);});
-          // 중복 제거: 기존 카드들 제거 후 전체 다시 렌더
-          el.innerHTML='';
-          allList.forEach(function(m){el.appendChild(buildFixCard(m));});
+          if(!expanded){
+            expanded=true;
+            el.innerHTML='';
+            allList.forEach(function(m){el.appendChild(buildFixCard(m));});
+            btn=document.createElement('button');
+            btn.className='more-fix-btn';
+            btn.textContent='\u2191 \uC811\uAE30';
+            btn.onclick=function(){renderList(el, allList.slice(0,3), allList);};
+            el.appendChild(btn);
+          }
         };
         el.appendChild(btn);
       }
