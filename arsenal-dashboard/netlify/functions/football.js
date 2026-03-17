@@ -33,7 +33,7 @@ exports.handler = async (event) => {
         fetch(`${BASE}/teams/${ARSENAL_ID}/matches?status=FINISHED&limit=5`, { headers: H })
           .then(r => r.ok ? r.json() : { matches: [] })
           .catch(() => ({ matches: [] })),
-        fetch(`${BASE}/teams/${ARSENAL_ID}/matches?status=SCHEDULED&limit=5`, { headers: H })
+        fetch(`${BASE}/teams/${ARSENAL_ID}/matches?status=SCHEDULED,TIMED&limit=5`, { headers: H })
           .then(r => r.ok ? r.json() : { matches: [] })
           .catch(() => ({ matches: [] })),
       ]);
