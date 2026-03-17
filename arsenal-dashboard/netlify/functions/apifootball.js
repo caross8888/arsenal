@@ -3,7 +3,7 @@
 // 무료 플랜: 하루 100콜
 
 const BASE = 'https://v3.football.api-sports.io';
-const SEASON = 2024; // 현재 진행 시즌
+const SEASON = 2025; // 현재 진행 시즌
 const ARSENAL_ID = 42;
 
 const cache = {};
