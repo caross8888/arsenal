@@ -350,7 +350,7 @@ function renderCrest(c){
 function buildFixCard(m){
   var ARS=57;
   var isArsHome=m.homeTeam&&m.homeTeam.id===ARS;
-  var isLive=m.status==='IN_PLAY'||m.status==='PAUSED';
+  if(isDone&&hs!==null)
   var isDone=m.status==='FINISHED';
   var code=m.competitionCode||'PL';
   var hs=m.score&&m.score.fullTime?m.score.fullTime.home:null;
@@ -384,7 +384,7 @@ function loadFixtures(){
   apiFetch(FN+'/football?type=fixtures').then(function(data){
     badge.textContent='football-data.org';
     var matches=data.matches||[];
-    var upcoming=matches.filter(function(m){return['SCHEDULED','IN_PLAY','PAUSED'].includes(m.status);});
+    var upcoming=matches.filter(function(m){return['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status);});
     var finished=matches.filter(function(m){return m.status==='FINISHED';});
     upEl.innerHTML='';
     if(upcoming.length) upcoming.forEach(function(m){upEl.appendChild(buildFixCard(m));});
@@ -569,7 +569,7 @@ function updateTicker(matches){
   var items=matches.slice(0,6).map(function(m){
     var h=(m.homeTeam&&(m.homeTeam.shortName||m.homeTeam.name))||'';
     var a=(m.awayTeam&&(m.awayTeam.shortName||m.awayTeam.name))||'';
-    var isLive=m.status==='IN_PLAY'||m.status==='PAUSED';
+    var cls='fix-card '+(isLive?'live-match':isDone?'finished':'upcoming');
     var isDone=m.status==='FINISHED';
     var hs=m.score&&m.score.fullTime?m.score.fullTime.home:null;
     var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
