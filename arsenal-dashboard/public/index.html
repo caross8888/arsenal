@@ -15,7 +15,7 @@ html{-webkit-text-size-adjust:100%}
 body{background:var(--navy);color:var(--text);font-family:var(--fb);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;padding-bottom:calc(64px + var(--safe-bottom));}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(239,1,7,.1) 0%,transparent 60%);pointer-events:none;z-index:0}
 .ticker-wrap{background:var(--red);overflow:hidden;height:28px;display:flex;align-items:center;position:relative;z-index:1}
-.ticker-label{background:var(--red-dark);padding:0 12px;font-size:8px;letter-spacing:3px;text-transform:uppercase;font-weight:700;height:100%;display:flex;align-items:center;flex-shrink:0;white-space:nowrap}
+.ticker-label{background:var(--red-dark);padding:0 12px;font-size:8px;letter-spacing:3px;text-transform:uppercase;font-weight:700;height:100%;display:flex;align-items:center;flex-shrink:0;white-space:nowrap;position:relative;z-index:2}
 .ticker-track{display:flex;animation:ticker 40s linear infinite;white-space:nowrap;padding-left:8px}
 .ticker-item{padding:0 28px;font-size:11px;font-weight:500;opacity:.95}
 .ticker-dot{margin:0 8px;opacity:.5}
