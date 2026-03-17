@@ -69,8 +69,8 @@ export default async function handler(req, res) {
 
       result = {
         matches:[
-          ...allMatches.filter(m=>['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status)).sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate)).slice(0,3).map(mapMatch),
-          ...allMatches.filter(m=>m.status==='FINISHED').sort((a,b)=>new Date(b.utcDate)-new Date(a.utcDate)).slice(0,3).map(mapMatch),
+          ...allMatches.filter(m=>['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status)).sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate)).slice(0,10).map(mapMatch),
+          ...allMatches.filter(m=>m.status==='FINISHED').sort((a,b)=>new Date(b.utcDate)-new Date(a.utcDate)).slice(0,10).map(mapMatch),
         ]
       };
 
