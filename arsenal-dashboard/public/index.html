@@ -351,16 +351,34 @@ function loadFixtures(){
   apiFetch(FN+'/football?type=fixtures').then(function(data){
     badge.textContent='football-data.org';
     var matches=data.matches||[];
-    var upcoming=matches.filter(function(m){return['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status);});
-    var finished=matches.filter(function(m){return m.status==='FINISHED';});
-    upEl.innerHTML='';
-    if(upcoming.length) upcoming.forEach(function(m){upEl.appendChild(buildFixCard(m));});
-    else upEl.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">\uc608\uc815\ub41c \uacbd\uae30\uac00 \uc5c6\uc2b5\ub2c8\ub2e4</div>';
-    fnEl.innerHTML='';
-    if(finished.length) finished.forEach(function(m){fnEl.appendChild(buildFixCard(m));});
-    else fnEl.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">\ucd5c\uadfc \uacb0\uacfc\uac00 \uc5c6\uc2b5\ub2c8\ub2e4</div>';
+    var upcomingAll=matches.filter(function(m){return['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status);});
+    var finishedAll=matches.filter(function(m){return m.status==='FINISHED';});
+
+    function renderList(el, list, allList) {
+      el.innerHTML='';
+      if(!list.length){
+        el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">\uB370\uC774\uD130 \uC5C6\uC74C</div>';
+        return;
+      }
+      list.forEach(function(m){el.appendChild(buildFixCard(m));});
+      if(allList.length > list.length){
+        var btn=document.createElement('button');
+        btn.className='more-fix-btn';
+        btn.textContent='\uB354\uBCF4\uAE30 ('+allList.length+'\uACBD\uAE30) \u2193';
+        btn.onclick=function(){
+          allList.forEach(function(m){el.insertBefore(buildFixCard(m), btn);});
+          // 중복 제거: 기존 카드들 제거 후 전체 다시 렌더
+          el.innerHTML='';
+          allList.forEach(function(m){el.appendChild(buildFixCard(m));});
+        };
+        el.appendChild(btn);
+      }
+    }
+
+    renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
+    renderList(fnEl, finishedAll.slice(0,3), finishedAll);
     updateTicker(matches);
-  }).catch(function(err){showErr(upEl,err.message);badge.textContent='\uc624\ub958';});
+  }).catch(function(err){showErr(upEl,err.message);badge.textContent='\uC624\uB958';});
 }
 
 function loadStandings(){
