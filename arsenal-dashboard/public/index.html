@@ -9,15 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@400;500;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{
-  --red:#EF0107;--red-dark:#b50004;--gold:#C8A84B;
-  --navy:#0B0D12;--surface:#111318;--surface2:#181B22;--surface3:#1F2330;
-  --border:rgba(255,255,255,0.07);--border-accent:rgba(200,168,75,0.3);
-  --text:#F0F2F7;--text-muted:#7A8099;--text-dim:#4A5070;
-  --green:#22C55E;--amber:#F59E0B;
-  --fd:'Bebas Neue',sans-serif;--fb:'Noto Sans KR',sans-serif;--fm:'Fira Mono',monospace;
-  --safe-bottom:env(safe-area-inset-bottom,0px);
-}
+:root{--red:#EF0107;--red-dark:#b50004;--gold:#C8A84B;--navy:#0B0D12;--surface:#111318;--surface2:#181B22;--surface3:#1F2330;--border:rgba(255,255,255,0.07);--border-accent:rgba(200,168,75,0.3);--text:#F0F2F7;--text-muted:#7A8099;--text-dim:#4A5070;--green:#22C55E;--amber:#F59E0B;--fd:'Bebas Neue',sans-serif;--fb:'Noto Sans KR',sans-serif;--fm:'Fira Mono',monospace;--safe-bottom:env(safe-area-inset-bottom,0px);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--navy);color:var(--text);font-family:var(--fb);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;padding-bottom:calc(64px + var(--safe-bottom));}
@@ -56,7 +48,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:8px}
-/* FIXTURES */
 .fix-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:6px;padding-left:2px}
 .fix-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
 .fix-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;}
@@ -85,7 +76,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-score{font-family:var(--fd);font-size:24px;letter-spacing:3px;line-height:1;color:var(--text)}
 .fix-vs{font-family:var(--fd);font-size:16px;letter-spacing:2px;color:var(--text-dim)}
 .fix-venue{font-size:10px;color:var(--text-dim);text-align:center}
-/* STANDINGS */
 .std-hdr,.std-row{display:grid;grid-template-columns:22px 1fr 24px 24px 24px 36px;gap:4px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px}
 .std-row:last-child{border-bottom:none}
 .std-row.afc-row{background:rgba(239,1,7,.05)}
@@ -99,7 +89,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .std-pts{font-family:var(--fm);font-weight:700;color:var(--text);text-align:right;font-size:12px}
 .more-btn{width:100%;padding:12px;border:none;background:var(--surface2);color:var(--text-muted);font-family:var(--fb);font-size:11px;letter-spacing:1px;cursor:pointer;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:6px;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;}
 .more-btn:hover{background:var(--surface3);color:var(--text)}
-/* SQUAD */
 .f-btns{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
 .f-btns::-webkit-scrollbar{display:none}
 .f-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:11px;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
@@ -114,7 +103,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pl-name{font-weight:700;font-size:12px;line-height:1.3;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl-pos{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px}
 .pl-nat{font-size:10px;color:var(--text-dim)}
-/* INJURIES */
 .inj-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
 .inj-row:last-child{border-bottom:none}
 .inj-pos-badge{width:38px;height:38px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;color:var(--text-muted)}
@@ -132,7 +120,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sum-val{font-family:var(--fd);font-size:36px;line-height:1}
 .sum-val.r{color:var(--red)}.sum-val.a{color:var(--amber)}.sum-val.g{color:var(--green)}
 .sum-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:4px}
-/* NEWS */
 .news-list{display:flex;flex-direction:column;gap:10px}
 .news-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-decoration:none;display:block;color:inherit;-webkit-tap-highlight-color:transparent}
 .news-card:active{opacity:.85}
@@ -144,7 +131,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .news-hl{font-weight:700;font-size:13px;line-height:1.4;margin-bottom:6px;color:var(--text)}
 .news-ex{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .news-foot{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim)}
-/* LIVE */
 .live-setup{background:var(--surface);border:1px solid var(--border-accent);border-radius:12px;padding:16px;margin-bottom:16px}
 .live-setup-title{font-weight:700;font-size:13px;margin-bottom:4px}
 .live-setup-sub{font-size:11px;color:var(--text-muted);margin-bottom:14px}
@@ -172,7 +158,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </style>
 </head>
 <body>
-
 <div class="ticker-wrap">
   <div class="ticker-label">⚡ Live</div>
   <div class="ticker-track" id="tickerTrack">
@@ -182,7 +167,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <span class="ticker-dot">◆</span><span class="ticker-item">데이터 로딩 중...</span>
   </div>
 </div>
-
 <div class="top-header">
   <div class="brand">
     <svg class="logo-svg" viewBox="0 0 40 40" fill="none">
@@ -194,9 +178,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
   <div class="header-right"><div class="live-dot"></div><span>24-25</span></div>
 </div>
-
 <div class="page">
-
 <section id="fixtures" class="section active">
   <div class="sec-head"><h1 class="sec-title">경기 일정</h1><span class="sec-badge" id="fixBadge">로딩 중</span></div>
   <div id="upcomingWrap">
@@ -214,12 +196,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
     <div class="std-hdr"><span>#</span><span>팀</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:right">PTS</span></div>
     <div id="stdList"><div class="loading-state" style="padding:20px"><div class="spinner"></div></div></div>
-    <button class="more-btn" id="moreStdBtn" onclick="toggleStandings()" style="display:none">
-      <span id="moreStdText">전체 순위 보기 ↓</span>
-    </button>
+    <button class="more-btn" id="moreStdBtn" onclick="toggleStandings()" style="display:none"><span id="moreStdText">전체 순위 보기 ↓</span></button>
   </div>
 </section>
-
 <section id="squad" class="section">
   <div class="sec-head"><h1 class="sec-title">선수단</h1><span class="sec-badge" id="squadBadge">로딩 중</span></div>
   <div class="f-btns">
@@ -229,34 +208,20 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <button class="f-btn" onclick="filterSq('MF',this)">미드필더</button>
     <button class="f-btn" onclick="filterSq('FW',this)">공격수</button>
   </div>
-  <div class="sq-grid" id="sqGrid">
-    <div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><span>선수 데이터 로딩 중...</span></div>
-  </div>
+  <div class="sq-grid" id="sqGrid"><div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><span>선수 데이터 로딩 중...</span></div></div>
 </section>
-
 <section id="injuries" class="section">
   <div class="sec-head"><h1 class="sec-title">부상 현황</h1><span class="sec-badge" id="injBadge">로딩 중</span></div>
-  <div class="card" style="margin-bottom:16px">
-    <div class="sum-grid" id="injSum">
-      <div class="loading-state" style="grid-column:1/-1;padding:12px"><div class="spinner"></div></div>
-    </div>
-  </div>
+  <div class="card" style="margin-bottom:16px"><div class="sum-grid" id="injSum"><div class="loading-state" style="grid-column:1/-1;padding:12px"><div class="spinner"></div></div></div></div>
   <div class="card">
-    <div class="card-head">
-      <span class="card-title">현재 부상 / 결장 선수</span>
-      <span id="injCount" style="font-size:9px;color:var(--text-dim)"></span>
-    </div>
+    <div class="card-head"><span class="card-title">현재 부상 / 결장 선수</span><span id="injCount" style="font-size:9px;color:var(--text-dim)"></span></div>
     <div id="injList"><div class="loading-state" style="padding:28px"><div class="spinner"></div></div></div>
   </div>
 </section>
-
 <section id="news" class="section">
   <div class="sec-head"><h1 class="sec-title">뉴스</h1><span class="sec-badge" id="newsBadge">로딩 중</span></div>
-  <div class="news-list" id="newsGrid">
-    <div class="loading-state"><div class="spinner"></div><span>뉴스 로딩 중...</span></div>
-  </div>
+  <div class="news-list" id="newsGrid"><div class="loading-state"><div class="spinner"></div><span>뉴스 로딩 중...</span></div></div>
 </section>
-
 <section id="live" class="section">
   <div class="sec-head"><h1 class="sec-title">라이브</h1><span class="sec-badge live">● LIVE</span></div>
   <div class="live-setup">
@@ -276,17 +241,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <button class="wgt-tab" onclick="selTab('standings',this)">🏆 순위</button>
   </div>
   <div class="widget-wrap">
-    <div class="widget-ph" id="widgetPh">
-      <div class="wp-icon">📡</div>
-      <div class="wp-title" id="wpTitle">준비 중...</div>
-      <div class="wp-desc">잠시 후 자동으로 위젯이 표시됩니다.</div>
-    </div>
+    <div class="widget-ph" id="widgetPh"><div class="wp-icon">📡</div><div class="wp-title" id="wpTitle">준비 중...</div><div class="wp-desc">잠시 후 자동으로 위젯이 표시됩니다.</div></div>
     <div class="widget-iframe-wrap" id="widgetIframe"></div>
   </div>
 </section>
-
 </div>
-
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="showSec('fixtures',this)"><span class="nav-icon">📅</span><span>일정</span></button>
   <button class="nav-btn" onclick="showSec('squad',this)"><span class="nav-icon">👕</span><span>선수단</span></button>
@@ -294,7 +253,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <button class="nav-btn" onclick="showSec('news',this)"><span class="nav-icon">📰</span><span>뉴스</span></button>
   <button class="nav-btn" onclick="showSec('live',this)" style="position:relative"><span class="nav-icon">🔴</span><span>라이브</span><span class="nav-live-dot"></span></button>
 </nav>
-
 <script>
 var FN='/.netlify/functions';
 var autoWidgetKey='';
@@ -347,21 +305,26 @@ function renderCrest(c){
   var ph=document.createElement('div');ph.className=c.phCls;ph.textContent=c.short;return ph;
 }
 
+// ── buildFixCard: 변수 선언 순서 완전 수정 ──
 function buildFixCard(m){
   var ARS=57;
   var isArsHome=m.homeTeam&&m.homeTeam.id===ARS;
-  if(isDone&&hs!==null)
-  var isDone=m.status==='FINISHED';
+  var isLive=m.status==='IN_PLAY'||m.status==='PAUSED';  // ← 먼저 선언
+  var isDone=m.status==='FINISHED';                       // ← 그 다음 선언
   var code=m.competitionCode||'PL';
   var hs=m.score&&m.score.fullTime?m.score.fullTime.home:null;
   var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
   var hasScore=hs!==null&&hs!==undefined;
+
   var card=document.createElement('div');
   card.className='fix-card '+(isLive?'live-match':isDone?'finished':'upcoming');
+
   var metaRow=document.createElement('div');metaRow.className='fix-meta-row';
   var ct=document.createElement('span');ct.className='comp-tag '+ctag(code);ct.textContent=cname(code,m.competition);
-  var ds=document.createElement('span');ds.className='fix-date'+(isLive?' live-tag':'');ds.textContent=isLive?'● LIVE':formatDate(m.date);
+  var ds=document.createElement('span');ds.className='fix-date'+(isLive?' live-tag':'');
+  ds.textContent=isLive?'● LIVE':formatDate(m.date);
   metaRow.appendChild(ct);metaRow.appendChild(ds);card.appendChild(metaRow);
+
   var tr=document.createElement('div');tr.className='teams-row';
   var hd=document.createElement('div');hd.className='fix-team-home';
   hd.appendChild(renderCrest(makeCrest(m.homeTeam,isArsHome)));
@@ -384,6 +347,7 @@ function loadFixtures(){
   apiFetch(FN+'/football?type=fixtures').then(function(data){
     badge.textContent='football-data.org';
     var matches=data.matches||[];
+    // TIMED 추가 (football-data.org에서 확정 일정은 TIMED 상태로 옴)
     var upcoming=matches.filter(function(m){return['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status);});
     var finished=matches.filter(function(m){return m.status==='FINISHED';});
     upEl.innerHTML='';
@@ -410,8 +374,7 @@ function renderStandings(){
   var visible=stdExpanded?allStandings:allStandings.slice(0,10);
   el.innerHTML='';
   visible.forEach(function(s){
-    var row=document.createElement('div');
-    row.className='std-row'+(s.isArsenal?' afc-row':'');
+    var row=document.createElement('div');row.className='std-row'+(s.isArsenal?' afc-row':'');
     var pos=document.createElement('span');pos.className='std-pos';pos.textContent=s.position;
     var team=document.createElement('div');team.className='std-team';
     if(s.team.crest){var img=document.createElement('img');img.className='std-crest';img.src=s.team.crest;img.alt='';img.onerror=function(){this.style.display='none';};team.appendChild(img);}
@@ -430,25 +393,10 @@ function renderStandings(){
 }
 function toggleStandings(){stdExpanded=!stdExpanded;renderStandings();}
 
-/* ── SQUAD: football-data.org /teams/57 (현재 실제 스쿼드) ── */
-var POS_MAP={
-  'Goalkeeper':'GK','Defence':'DF','Centre-Back':'DF','Right-Back':'DF','Left-Back':'DF',
-  'Midfield':'MF','Central Midfield':'MF','Defensive Midfield':'MF','Attacking Midfield':'MF',
-  'Left Winger':'FW','Right Winger':'FW','Centre-Forward':'FW','Offence':'FW'
-};
+var POS_MAP={'Goalkeeper':'GK','Defence':'DF','Centre-Back':'DF','Right-Back':'DF','Left-Back':'DF','Midfield':'MF','Central Midfield':'MF','Defensive Midfield':'MF','Attacking Midfield':'MF','Left Winger':'FW','Right Winger':'FW','Centre-Forward':'FW','Offence':'FW'};
 var POS_KO={GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'};
-var POS_DETAIL={
-  'Goalkeeper':'GK','Centre-Back':'CB','Right-Back':'RB','Left-Back':'LB','Defence':'DF',
-  'Central Midfield':'CM','Defensive Midfield':'DM','Attacking Midfield':'AM','Midfield':'MF',
-  'Left Winger':'LW','Right Winger':'RW','Centre-Forward':'CF','Offence':'FW'
-};
-var NAT_FLAG={
-  'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Spain':'🇪🇸','Brazil':'🇧🇷','Germany':'🇩🇪','France':'🇫🇷',
-  'Netherlands':'🇳🇱','Norway':'🇳🇴','Belgium':'🇧🇪','Ghana':'🇬🇭','Portugal':'🇵🇹',
-  'Ukraine':'🇺🇦','Italy':'🇮🇹','Switzerland':'🇨🇭','Japan':'🇯🇵','Denmark':'🇩🇰',
-  'Wales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','Sweden':'🇸🇪','USA':'🇺🇸','Argentina':'🇦🇷',
-  'Ecuador':'🇪🇨','Northern Ireland':'🏴󠁧󠁢󠁮󠁩󠁲󠁿','Russia':'🇷🇺','Estonia':'🇪🇪'
-};
+var POS_DETAIL={'Goalkeeper':'GK','Centre-Back':'CB','Right-Back':'RB','Left-Back':'LB','Defence':'DF','Central Midfield':'CM','Defensive Midfield':'DM','Attacking Midfield':'AM','Midfield':'MF','Left Winger':'LW','Right Winger':'RW','Centre-Forward':'CF','Offence':'FW'};
+var NAT_FLAG={'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Spain':'🇪🇸','Brazil':'🇧🇷','Germany':'🇩🇪','France':'🇫🇷','Netherlands':'🇳🇱','Norway':'🇳🇴','Belgium':'🇧🇪','Ghana':'🇬🇭','Portugal':'🇵🇹','Ukraine':'🇺🇦','Italy':'🇮🇹','Switzerland':'🇨🇭','Japan':'🇯🇵','Denmark':'🇩🇰','Wales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','Sweden':'🇸🇪','USA':'🇺🇸','Argentina':'🇦🇷','Ecuador':'🇪🇨','Northern Ireland':'🏴󠁧󠁢󠁮󠁩󠁲󠁿','Russia':'🇷🇺','Estonia':'🇪🇪'};
 
 function loadSquad(){
   var el=document.getElementById('sqGrid');
@@ -456,19 +404,12 @@ function loadSquad(){
   apiFetch(FN+'/football?type=squad').then(function(data){
     var squad=(data.squad||[]).filter(function(p){return p.position&&p.position!=='null';});
     allPlayers=squad.map(function(p){
-      return {
-        id:p.id, name:p.name, nationality:p.nationality,
-        pos:p.position,
-        posGroup:POS_MAP[p.position]||'MF',
-        posShort:POS_DETAIL[p.position]||'',
-        shirtNumber:p.shirtNumber||null
-      };
+      return {id:p.id,name:p.name,nationality:p.nationality,pos:p.position,posGroup:POS_MAP[p.position]||'MF',posShort:POS_DETAIL[p.position]||'',shirtNumber:p.shirtNumber||null};
     });
     badge.textContent='football-data.org';
     renderSq('all');
   }).catch(function(err){showErr(el,err.message);badge.textContent='오류';});
 }
-
 function renderSq(filter){
   var el=document.getElementById('sqGrid');
   var list=filter==='all'?allPlayers:allPlayers.filter(function(p){return p.posGroup===filter;});
@@ -489,7 +430,6 @@ function renderSq(filter){
   });
 }
 
-/* ── INJURIES: FPL API (현재 부상/결장자 실시간) ── */
 var STATUS_LABEL={'i':'부상','d':'출전 의심','s':'출장 정지','u':'결장'};
 var STATUS_CLS={'i':'inj-injury','d':'inj-doubt','s':'inj-miss','u':'inj-miss'};
 var FPL_POS={1:'GK',2:'DF',3:'MF',4:'FW'};
@@ -510,32 +450,20 @@ function loadInjuries(){
       '<div class="sum-stat"><div class="sum-val a">'+dbtCnt+'</div><div class="sum-lbl">출전 의심</div></div>'+
       '<div class="sum-stat"><div class="sum-val" style="color:var(--text-muted)">'+outCnt+'</div><div class="sum-lbl">결장</div></div>'+
       '<div class="sum-stat"><div class="sum-val g">'+(data.availableCount||'-')+'</div><div class="sum-lbl">출전 가능</div></div>';
-    if(!injured.length){
-      listEl.innerHTML='<div class="loading-state" style="padding:28px">🎉 현재 부상/결장 선수 없음</div>';
-      return;
-    }
+    if(!injured.length){listEl.innerHTML='<div class="loading-state" style="padding:28px">🎉 현재 부상/결장 선수 없음</div>';return;}
     listEl.innerHTML='';
     injured.forEach(function(p){
       var row=document.createElement('div');row.className='inj-row';
-      // 포지션 배지
       var posBadge=document.createElement('div');posBadge.className='inj-pos-badge';
       posBadge.textContent=FPL_POS[p.positionType]||p.position||'?';
-      // 이름 + 부상 내용
       var info=document.createElement('div');info.className='inj-info';
-      var nm=document.createElement('div');nm.className='inj-name';
-      nm.textContent=p.fullName||p.name; // FPL web_name은 "Ødegaard" 처럼 실제 표기 사용
-      var detail=document.createElement('div');detail.className='inj-detail';
-      detail.textContent=p.news||'정보 없음';
+      var nm=document.createElement('div');nm.className='inj-name';nm.textContent=p.fullName||p.name;
+      var detail=document.createElement('div');detail.className='inj-detail';detail.textContent=p.news||'정보 없음';
       info.appendChild(nm);info.appendChild(detail);
-      // 우측: 상태 배지 + 출전 확률
       var right=document.createElement('div');right.className='inj-right';
-      var bdg=document.createElement('span');
-      bdg.className='inj-badge '+(STATUS_CLS[p.status]||'inj-miss');
-      bdg.textContent=STATUS_LABEL[p.status]||p.status;
+      var bdg=document.createElement('span');bdg.className='inj-badge '+(STATUS_CLS[p.status]||'inj-miss');bdg.textContent=STATUS_LABEL[p.status]||p.status;
       var chance=document.createElement('span');chance.className='inj-chance';
-      chance.textContent=p.chanceOfPlaying!==null&&p.chanceOfPlaying!==undefined
-        ?'출전 '+p.chanceOfPlaying+'%'
-        :(p.status==='u'?'출전 불가':'');
+      chance.textContent=p.chanceOfPlaying!==null&&p.chanceOfPlaying!==undefined?'출전 '+p.chanceOfPlaying+'%':(p.status==='u'?'출전 불가':'');
       right.appendChild(bdg);right.appendChild(chance);
       row.appendChild(posBadge);row.appendChild(info);row.appendChild(right);
       listEl.appendChild(row);
@@ -564,13 +492,14 @@ function loadNews(){
   }).catch(function(err){showErr(el,err.message);badge.textContent='오류';});
 }
 
+// ── updateTicker: 변수 선언 순서 완전 수정 ──
 function updateTicker(matches){
   if(!matches||!matches.length) return;
   var items=matches.slice(0,6).map(function(m){
     var h=(m.homeTeam&&(m.homeTeam.shortName||m.homeTeam.name))||'';
     var a=(m.awayTeam&&(m.awayTeam.shortName||m.awayTeam.name))||'';
-    var cls='fix-card '+(isLive?'live-match':isDone?'finished':'upcoming');
-    var isDone=m.status==='FINISHED';
+    var isLive=m.status==='IN_PLAY'||m.status==='PAUSED';  // ← 먼저 선언
+    var isDone=m.status==='FINISHED';                       // ← 그 다음 선언
     var hs=m.score&&m.score.fullTime?m.score.fullTime.home:null;
     var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
     if(isLive) return '🔴 LIVE: '+h+' '+(hs||0)+'-'+(as_||0)+' '+a;
