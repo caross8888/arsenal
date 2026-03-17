@@ -435,7 +435,7 @@ function renderSq(filter){
   img.onerror=function(){this.outerHTML='<div class="pl-num-bg">'+(p.shirtNumber||'?')+'</div>';};
   vis.appendChild(img);
 }else{
-  var num=document.createElement('div');num.className='pl-num-bg';num.textContent=p.shirtNumber||'?';vis.appendChild(num);
+  var num=document.createElement('div');num.className='pl-num-bg';num.textContent=p.shirtNumber||p.posShort||'?';vis.appendChild(num);
 }
     if(p.posShort){var pb=document.createElement('div');pb.className='pl-pos-badge';pb.textContent=p.posShort;vis.appendChild(pb);}
     var info=document.createElement('div');info.className='pl-info';
