@@ -99,13 +99,11 @@ export default async function handler(req, res) {
           if(sqRes.ok){
             const sqJson = await sqRes.json();
             (sqJson.squad||[]).forEach(p=>{
-              // 전체 이름 + 성 + 이름 첫글자 조합으로 Set에 추가
               officialNames.add(p.name.toLowerCase());
-              const parts = p.name.split(' ');
-              if(parts.length>1){
-                officialNames.add(parts[parts.length-1].toLowerCase()); // 성
-                officialNames.add(parts[0].toLowerCase()); // 이름
-              }
+              // 모든 단어를 개별로 추가 (Kepa Arrizabalaga → kepa, arrizabalaga)
+              p.name.toLowerCase().split(' ').forEach(word => {
+                if(word.length > 2) officialNames.add(word);
+              });
             });
           }
         }catch(_){}
@@ -125,18 +123,24 @@ export default async function handler(req, res) {
             const sqJson = await sqRes.json();
             (sqJson.squad||[]).forEach(p=>{
               nationalityMap[p.name.toLowerCase()] = p.nationality;
-              const parts = p.name.split(' ');
-              if(parts.length>1) nationalityMap[parts[parts.length-1].toLowerCase()] = p.nationality;
+              p.name.toLowerCase().split(' ').forEach(word => {
+                if(word.length > 2) nationalityMap[word] = p.nationality;
+              });
             });
           }
         }catch(_){}
       }
 
       const isOfficialSquad = (p) => {
-        const fullName = `${p.first_name} ${p.second_name}`.toLowerCase();
-        const lastName = p.second_name.toLowerCase();
+        const fullName = (p.first_name + ' ' + p.second_name).toLowerCase();
         const webName = p.web_name.toLowerCase();
-        return officialNames.has(fullName) || officialNames.has(lastName) || officialNames.has(webName);
+        // FPL second_name도 단어별로 쪼개서 체크 (예: "Arrizabalaga Revuelta" → "arrizabalaga")
+        const secondNameWords = p.second_name.toLowerCase().split(' ');
+        const firstNameWords = p.first_name.toLowerCase().split(' ');
+        return officialNames.has(fullName)
+          || officialNames.has(webName)
+          || secondNameWords.some(w => w.length > 2 && officialNames.has(w))
+          || firstNameWords.some(w => w.length > 2 && officialNames.has(w));
       };
 
       const players = fplJson.elements
