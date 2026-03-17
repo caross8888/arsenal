@@ -1,15 +1,16 @@
 // api/football.js — Vercel Serverless Function
-// Netlify: exports.handler = async(event) => {}
-// Vercel:  export default async function(req, res) {}
-
 const BASE = 'https://api.football-data.org/v4';
-const ARSENAL_ID = 57;
-const YOUTH_POSITIONS = ['Defence', 'Midfield', 'Offence'];
+const FPL_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/';
+const ARSENAL_ID = 57;        // football-data.org
+const ARSENAL_FPL_ID = 3;     // FPL
 
 const cache = {};
 const TTL = 30 * 60 * 1000;
 function getCache(k) { const c = cache[k]; return (c && Date.now() - c.ts < TTL) ? c.data : null; }
 function setCache(k, d) { cache[k] = { data: d, ts: Date.now() }; }
+
+// FPL 포지션 타입
+const FPL_POS = { 1: 'GK', 2: 'DF', 3: 'MF', 4: 'FW' };
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -24,13 +25,13 @@ export default async function handler(req, res) {
   }
 
   const KEY = process.env.FOOTBALL_DATA_KEY;
-  if (!KEY) return res.status(500).json({ error: 'FOOTBALL_DATA_KEY 환경변수 없음' });
-  const H = { 'X-Auth-Token': KEY };
+  const H = KEY ? { 'X-Auth-Token': KEY } : {};
 
   try {
     let result;
 
     if (type === 'fixtures') {
+      if (!KEY) return res.status(500).json({ error: 'FOOTBALL_DATA_KEY 없음' });
       const COMPS = ['PL', 'CL', 'FAC'];
       const responses = await Promise.all(
         COMPS.map(comp =>
@@ -69,6 +70,7 @@ export default async function handler(req, res) {
       result = { matches: [...upcoming, ...finished] };
 
     } else if (type === 'standings') {
+      if (!KEY) return res.status(500).json({ error: 'FOOTBALL_DATA_KEY 없음' });
       const r = await fetch(`${BASE}/competitions/PL/standings`, { headers: H });
       if (!r.ok) throw new Error(`football-data: ${r.status}`);
       const json = await r.json();
@@ -85,14 +87,64 @@ export default async function handler(req, res) {
       };
 
     } else if (type === 'squad') {
-      const r = await fetch(`${BASE}/teams/${ARSENAL_ID}`, { headers: H });
-      if (!r.ok) throw new Error(`football-data: ${r.status}`);
+      // FPL API로 선수단 + 스탯 가져오기
+      // - 출전 기록(minutes > 0) 있는 선수만 → 1군 + 유소년 중 1군 출전자 포함
+      // - goals_scored, assists → 공격포인트
+      // - photo → FPL 공식 선수 사진
+      const r = await fetch(FPL_URL, {
+        headers: { 'User-Agent': 'Arsenal-Dashboard/1.0' },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!r.ok) throw new Error(`FPL API: ${r.status}`);
       const json = await r.json();
-      result = {
-        squad: (json.squad || [])
-          .filter(p => p.position && p.position !== 'null' && !YOUTH_POSITIONS.includes(p.position))
-          .map(p => ({ id: p.id, name: p.name, position: p.position, nationality: p.nationality, shirtNumber: p.shirtNumber }))
-      };
+
+      // 국적 매핑 (FPL은 국적 코드만 줌 → football-data.org로 보완)
+      // FPL에는 nationality 없으므로 이름 기반으로 매핑
+      const squadMap = {};
+      if (KEY) {
+        try {
+          const sqRes = await fetch(`${BASE}/teams/${ARSENAL_ID}`, { headers: H });
+          if (sqRes.ok) {
+            const sqJson = await sqRes.json();
+            (sqJson.squad || []).forEach(p => { squadMap[p.name.toLowerCase()] = p; });
+          }
+        } catch (_) {}
+      }
+
+      const arsenal = json.teams.find(t => t.id === ARSENAL_FPL_ID);
+      if (!arsenal) throw new Error('Arsenal not found in FPL');
+
+      const players = json.elements
+        .filter(p => p.team === ARSENAL_FPL_ID && p.minutes > 0) // 출전 기록 있는 선수만
+        .map(p => {
+          const posGroup = FPL_POS[p.element_type] || 'MF';
+          const fullName = `${p.first_name} ${p.second_name}`;
+          // football-data.org에서 국적 찾기
+          const fdPlayer = squadMap[fullName.toLowerCase()] || squadMap[p.second_name.toLowerCase()];
+          return {
+            id: p.id,
+            name: p.web_name,
+            fullName,
+            nationality: fdPlayer?.nationality || '',
+            posGroup,          // GK / DF / MF / FW
+            shirtNumber: fdPlayer?.shirtNumber || null,
+            // 스탯
+            goals: p.goals_scored,
+            assists: p.assists,
+            minutes: p.minutes,
+            appearances: Math.round(p.minutes / 90),
+            // FPL 공식 사진 URL
+            photo: p.photo ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${p.photo.replace('.jpg','')}` : null,
+          };
+        })
+        .sort((a, b) => {
+          // 포지션 순 정렬: GK → DF → MF → FW
+          const order = { GK: 0, DF: 1, MF: 2, FW: 3 };
+          return (order[a.posGroup] ?? 9) - (order[b.posGroup] ?? 9);
+        });
+
+      result = { squad: players };
+
     }
 
     if (!nocache) setCache(type, result);
