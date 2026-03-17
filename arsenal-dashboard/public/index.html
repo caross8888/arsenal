@@ -365,13 +365,14 @@
 
 <script>
 const FN = '/.netlify/functions';
+const BUST = '?v=' + Date.now(); // 캐시 무력화
 let autoWidgetKey = '';
 let curWidgetType = 'livescore';
 let widgetActivated = false;
 
 // ── FETCH HELPERS ──────────────────────────────────────────
 async function apiFetch(url) {
-  const res = await fetch(url);
+  const res = await fetch(url + (url.includes('?') ? '&' : '?') + '_=' + Date.now());
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || `HTTP ${res.status}`);
