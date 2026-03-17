@@ -156,6 +156,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .widget-iframe-wrap iframe{width:100%;min-height:420px;border:none;display:block}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
 .pl-photo{width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid rgba(239,1,7,.3);position:relative;z-index:1}
+.pl-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:6px}
+.st-box{background:var(--surface2);border-radius:6px;padding:4px 2px;text-align:center}
+.st-v{font-family:var(--fd);font-size:16px;color:var(--text);line-height:1}
+.st-l{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-top:1px}
 </style>
 </head>
 <body>
@@ -394,31 +398,18 @@ function renderStandings(){
 }
 function toggleStandings(){stdExpanded=!stdExpanded;renderStandings();}
 
-var POS_MAP={'Goalkeeper':'GK','Defence':'DF','Centre-Back':'DF','Right-Back':'DF','Left-Back':'DF','Midfield':'MF','Central Midfield':'MF','Defensive Midfield':'MF','Attacking Midfield':'MF','Left Winger':'FW','Right Winger':'FW','Centre-Forward':'FW','Offence':'FW'};
 var POS_KO={GK:'골키퍼',DF:'수비수',MF:'미드필더',FW:'공격수'};
-var POS_DETAIL={'Goalkeeper':'GK','Centre-Back':'CB','Right-Back':'RB','Left-Back':'LB','Defence':'DF','Central Midfield':'CM','Defensive Midfield':'DM','Attacking Midfield':'AM','Midfield':'MF','Left Winger':'LW','Right Winger':'RW','Centre-Forward':'CF','Offence':'FW'};
-var NAT_FLAG={'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Spain':'🇪🇸','Brazil':'🇧🇷','Germany':'🇩🇪','France':'🇫🇷','Netherlands':'🇳🇱','Norway':'🇳🇴','Belgium':'🇧🇪','Ghana':'🇬🇭','Portugal':'🇵🇹','Ukraine':'🇺🇦','Italy':'🇮🇹','Switzerland':'🇨🇭','Japan':'🇯🇵','Denmark':'🇩🇰','Wales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','Sweden':'🇸🇪','USA':'🇺🇸','Argentina':'🇦🇷','Ecuador':'🇪🇨','Northern Ireland':'🏴󠁧󠁢󠁮󠁩󠁲󠁿','Russia':'🇷🇺','Estonia':'🇪🇪'};
+var POS_COLOR={GK:'rgba(200,168,75,.15)',DF:'rgba(59,130,246,.15)',MF:'rgba(34,197,94,.15)',FW:'rgba(239,1,7,.15)'};
+var POS_BORDER={GK:'rgba(200,168,75,.4)',DF:'rgba(59,130,246,.4)',MF:'rgba(34,197,94,.4)',FW:'rgba(239,1,7,.4)'};
+var POS_TEXT={GK:'var(--gold)',DF:'#60A5FA',MF:'var(--green)',FW:'var(--red)'};
 
 function loadSquad(){
   var el=document.getElementById('sqGrid');
   var badge=document.getElementById('squadBadge');
   apiFetch(FN+'/football?type=squad').then(function(data){
-    var squad=(data.squad||[]).filter(function(p){return true;});
-    allPlayers=squad.map(function(p){
-      return {id:p.id,name:p.name,nationality:p.nationality,pos:p.position,posGroup:POS_MAP[p.position]||'MF',posShort:POS_DETAIL[p.position]||'',shirtNumber:p.shirtNumber||null,photo:null};
-    });
-    badge.textContent='football-data.org';
+    allPlayers=data.squad||[];
+    badge.textContent='FPL API';
     renderSq('all');
-    // 사진 비동기 로드
-    var names=allPlayers.map(function(p){return p.name;}).join(',');
-    apiFetch(FN+'/photos?names='+encodeURIComponent(names)).then(function(res){
-      var photoMap=res.photos||{};
-      allPlayers=allPlayers.map(function(p){
-        return Object.assign({},p,{photo:photoMap[p.name]||null});
-      });
-      renderSq(document.querySelector('.f-btn.active')?.textContent==='전체'?'all':
-        document.querySelector('.f-btn.active')?.getAttribute('onclick')?.match(/'(\w+)'/)?.[1]||'all');
-    }).catch(function(){});
   }).catch(function(err){showErr(el,err.message);badge.textContent='오류';});
 }
 function renderSq(filter){
@@ -427,15 +418,29 @@ function renderSq(filter){
   if(!list.length){el.innerHTML='<div class="loading-state" style="grid-column:1/-1">선수 데이터 없음</div>';return;}
   el.innerHTML='';
   list.forEach(function(p){
-    var flag=NAT_FLAG[p.nationality]||'🌍';
+    var flag=NAT_FLAG[p.nationality]||'';
+    var bg=POS_COLOR[p.posGroup]||'rgba(100,100,100,.1)';
+    var border=POS_BORDER[p.posGroup]||'var(--border)';
+    var textColor=POS_TEXT[p.posGroup]||'var(--text-muted)';
     var card=document.createElement('div');card.className='pl-card';
     var vis=document.createElement('div');vis.className='pl-visual';
+    vis.style.background='linear-gradient(135deg,'+bg+',rgba(17,19,24,.9))';
+    vis.style.borderBottom='1px solid '+border;
     if(p.photo){
-  var img=document.createElement('img');img.className='pl-photo';img.src=p.photo;img.alt=p.name;
-  img.onerror=function(){this.outerHTML='<div class="pl-num-bg">'+(p.shirtNumber||'?')+'</div>';};
-  vis.appendChild(img);
-}else{
-  var num=document.createElement('div');num.className='pl-num-bg';num.textContent=p.shirtNumber||p.posShort||'?';vis.appendChild(num);
+      var img=document.createElement('img');img.className='pl-photo';img.src=p.photo;img.alt=p.name;
+      img.onerror=function(){var fb=document.createElement('div');fb.className='pl-num-bg';fb.textContent=p.posGroup;fb.style.color=textColor;this.parentNode.replaceChild(fb,this);};
+      vis.appendChild(img);
+    } else {
+      var num=document.createElement('div');num.className='pl-num-bg';num.textContent=p.posGroup;num.style.color=textColor;vis.appendChild(num);
+    }
+    var pb=document.createElement('div');pb.className='pl-pos-badge';pb.textContent=POS_KO[p.posGroup]||p.posGroup;pb.style.color=textColor;pb.style.borderColor=border;vis.appendChild(pb);
+    var info=document.createElement('div');info.className='pl-info';
+    var nm=document.createElement('div');nm.className='pl-name';nm.textContent=(flag?flag+' ':'')+p.name;
+    var stats=document.createElement('div');stats.className='pl-stats';
+    stats.innerHTML='<div class="st-box"><div class="st-v" style="color:'+textColor+'">'+p.goals+'</div><div class="st-l">골</div></div><div class="st-box"><div class="st-v">'+p.assists+'</div><div class="st-l">어시</div></div><div class="st-box"><div class="st-v">'+p.appearances+'</div><div class="st-l">출장</div></div>';
+    info.appendChild(nm);info.appendChild(stats);
+    card.appendChild(vis);card.appendChild(info);el.appendChild(card);
+  });
 }
     if(p.posShort){var pb=document.createElement('div');pb.className='pl-pos-badge';pb.textContent=p.posShort;vis.appendChild(pb);}
     var info=document.createElement('div');info.className='pl-info';
