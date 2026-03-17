@@ -2,7 +2,7 @@
 const BASE = 'https://api.football-data.org/v4';
 const FPL_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/';
 const ARSENAL_ID = 57;
-const ARSENAL_FPL_ID = 3;
+const ARSENAL_FPL_ID = 1;
 const FPL_POS = {1:'GK',2:'DF',3:'MF',4:'FW'};
 const YOUTH_POSITIONS = ['Defence','Midfield','Offence'];
 
