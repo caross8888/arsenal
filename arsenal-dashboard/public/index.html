@@ -437,7 +437,7 @@ function renderSq(filter){
     var info=document.createElement('div');info.className='pl-info';
     var nm=document.createElement('div');nm.className='pl-name';nm.textContent=(flag?flag+' ':'')+p.name;
     var stats=document.createElement('div');stats.className='pl-stats';
-    stats.innerHTML='<div class="st-box"><div class="st-v" style="color:'+textColor+'">'+p.goals+'</div><div class="st-l">골</div></div><div class="st-box"><div class="st-v">'+p.assists+'</div><div class="st-l">어시</div></div><div class="st-box"><div class="st-v">'+p.appearances+'</div><div class="st-l">출장</div></div>';
+    stats.innerHTML='<div class="st-box"><div class="st-v" style="color:'+textColor+'">'+p.goals+'</div><div class="st-l">\uAE3C</div></div><div class="st-box"><div class="st-v">'+p.assists+'</div><div class="st-l">\uc5b4\uc2dc</div></div><div class="st-box"><div class="st-v">'+p.appearances+'</div><div class="st-l">\ucd9c\uc7a5</div></div>';
     info.appendChild(nm);info.appendChild(stats);
     card.appendChild(vis);card.appendChild(info);el.appendChild(card);
   });
