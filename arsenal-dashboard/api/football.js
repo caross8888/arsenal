@@ -159,16 +159,33 @@ export default async function handler(req, res) {
           const nationality = nationalityMap[fullName.toLowerCase()]
             || nationalityMap[lastName] || '';
           const photoId = p.photo ? p.photo.replace('.jpg','') : null;
+          const apps = Math.max(1, Math.round(p.minutes/90));
           return {
             id: p.id,
+            fplId: p.id,
             name: p.web_name,
             fullName,
             nationality,
             posGroup: FPL_POS[p.element_type]||'MF',
+            // 기본 스탯
             goals: p.goals_scored,
             assists: p.assists,
-            appearances: Math.round(p.minutes/90),
+            appearances: apps,
+            starts: p.starts || 0,
             minutes: p.minutes,
+            yellowCards: p.yellow_cards,
+            redCards: p.red_cards,
+            // FPL 고급 지표
+            xG: parseFloat(p.expected_goals)||0,
+            xA: parseFloat(p.expected_assists)||0,
+            xGI: parseFloat(p.expected_goal_involvements)||0,
+            creativity: parseFloat(p.creativity)||0,
+            threat: parseFloat(p.threat)||0,
+            influence: parseFloat(p.influence)||0,
+            ictIndex: parseFloat(p.ict_index)||0,
+            form: parseFloat(p.form)||0,
+            bonus: p.bonus||0,
+            totalPoints: p.total_points||0,
             photo: photoId
               ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${photoId}.png`
               : null,
