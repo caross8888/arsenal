@@ -1,47 +1,57 @@
 // api/football.js — Vercel Serverless Function
 const BASE = 'https://api.football-data.org/v4';
 const FPL_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/';
-const ARSENAL_ID = 57;        // football-data.org
-const ARSENAL_FPL_ID = 3;     // FPL
+const ARSENAL_ID = 57;
+const ARSENAL_FPL_ID = 3;
+const FPL_POS = {1:'GK',2:'DF',3:'MF',4:'FW'};
+const YOUTH_POSITIONS = ['Defence','Midfield','Offence'];
 
 const cache = {};
-const TTL = 30 * 60 * 1000;
-function getCache(k) { const c = cache[k]; return (c && Date.now() - c.ts < TTL) ? c.data : null; }
-function setCache(k, d) { cache[k] = { data: d, ts: Date.now() }; }
-
-// FPL 포지션 타입
-const FPL_POS = { 1: 'GK', 2: 'DF', 3: 'MF', 4: 'FW' };
+const TTL = 60 * 60 * 1000; // 1시간 캐시 (429 방지)
+function getCache(k){const c=cache[k];return(c&&Date.now()-c.ts<TTL)?c.data:null;}
+function setCache(k,d){cache[k]={data:d,ts:Date.now()};}
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 'public, max-age=1800');
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.setHeader('Cache-Control','public, max-age=3600');
 
   const type = req.query.type || 'fixtures';
   const nocache = req.query.nocache;
 
-  if (!nocache) {
+  if(!nocache){
     const hit = getCache(type);
-    if (hit) return res.json(hit);
+    if(hit) return res.json(hit);
   }
 
   const KEY = process.env.FOOTBALL_DATA_KEY;
-  const H = KEY ? { 'X-Auth-Token': KEY } : {};
+  const H = KEY ? {'X-Auth-Token': KEY} : {};
 
   try {
     let result;
 
-    if (type === 'fixtures') {
-      if (!KEY) return res.status(500).json({ error: 'FOOTBALL_DATA_KEY 없음' });
-      const COMPS = ['PL', 'CL', 'FAC'];
-      const responses = await Promise.all(
-        COMPS.map(comp =>
-          fetch(`${BASE}/competitions/${comp}/matches?status=SCHEDULED,TIMED,IN_PLAY,PAUSED,FINISHED&limit=38`, { headers: H })
-            .then(r => r.ok ? r.json() : { matches: [] })
-            .catch(() => ({ matches: [] }))
-        )
-      );
+    if(type === 'fixtures'){
+      if(!KEY) return res.status(500).json({error:'FOOTBALL_DATA_KEY 없음'});
 
-      const allMatches = responses
+      // 429 방지: 병렬 대신 순차 조회 + 딜레이
+      const delay = ms => new Promise(r => setTimeout(r, ms));
+      const fetchComp = async (comp) => {
+        const r = await fetch(
+          `${BASE}/competitions/${comp}/matches?status=SCHEDULED,TIMED,IN_PLAY,PAUSED,FINISHED&limit=38`,
+          {headers: H, signal: AbortSignal.timeout(8000)}
+        );
+        if(r.status === 429) return {matches:[], limited:true};
+        if(!r.ok) return {matches:[]};
+        return r.json();
+      };
+
+      // PL만 먼저, 나머지는 딜레이 후 순차
+      const plData = await fetchComp('PL');
+      await delay(600);
+      const clData = await fetchComp('CL');
+      await delay(600);
+      const facData = await fetchComp('FAC');
+
+      const allMatches = [plData, clData, facData]
         .flatMap(j => j.matches || [])
         .filter(m => m.homeTeam?.id === ARSENAL_ID || m.awayTeam?.id === ARSENAL_ID);
 
@@ -51,106 +61,103 @@ export default async function handler(req, res) {
         competitionCode: m.competition?.code || 'PL',
         date: m.utcDate,
         status: m.status,
-        homeTeam: { id: m.homeTeam?.id, name: m.homeTeam?.name || '', shortName: m.homeTeam?.shortName || '', crest: m.homeTeam?.crest || '' },
-        awayTeam: { id: m.awayTeam?.id, name: m.awayTeam?.name || '', shortName: m.awayTeam?.shortName || '', crest: m.awayTeam?.crest || '' },
+        homeTeam: {id:m.homeTeam?.id, name:m.homeTeam?.name||'', shortName:m.homeTeam?.shortName||'', crest:m.homeTeam?.crest||''},
+        awayTeam: {id:m.awayTeam?.id, name:m.awayTeam?.name||'', shortName:m.awayTeam?.shortName||'', crest:m.awayTeam?.crest||''},
         score: m.score,
         venue: m.venue || '',
       });
 
       const upcoming = allMatches
-        .filter(m => ['SCHEDULED', 'TIMED', 'IN_PLAY', 'PAUSED'].includes(m.status))
-        .sort((a, b) => new Date(a.utcDate) - new Date(b.utcDate))
-        .slice(0, 3).map(mapMatch);
+        .filter(m => ['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status))
+        .sort((a,b) => new Date(a.utcDate)-new Date(b.utcDate))
+        .slice(0,3).map(mapMatch);
 
       const finished = allMatches
-        .filter(m => m.status === 'FINISHED')
-        .sort((a, b) => new Date(b.utcDate) - new Date(a.utcDate))
-        .slice(0, 3).map(mapMatch);
+        .filter(m => m.status==='FINISHED')
+        .sort((a,b) => new Date(b.utcDate)-new Date(a.utcDate))
+        .slice(0,3).map(mapMatch);
 
-      result = { matches: [...upcoming, ...finished] };
+      result = {matches:[...upcoming,...finished]};
 
-    } else if (type === 'standings') {
-      if (!KEY) return res.status(500).json({ error: 'FOOTBALL_DATA_KEY 없음' });
-      const r = await fetch(`${BASE}/competitions/PL/standings`, { headers: H });
-      if (!r.ok) throw new Error(`football-data: ${r.status}`);
+    } else if(type === 'standings'){
+      if(!KEY) return res.status(500).json({error:'FOOTBALL_DATA_KEY 없음'});
+      const r = await fetch(`${BASE}/competitions/PL/standings`, {headers:H, signal:AbortSignal.timeout(8000)});
+      if(!r.ok) throw new Error(`football-data: ${r.status}`);
       const json = await r.json();
       const table = json.standings?.[0]?.table || [];
       result = {
         season: json.season?.currentMatchday,
         standings: table.map(row => ({
           position: row.position,
-          team: { id: row.team?.id, name: row.team?.name || '', shortName: row.team?.shortName || '', crest: row.team?.crest || '' },
-          playedGames: row.playedGames, won: row.won, draw: row.draw, lost: row.lost,
-          points: row.points, goalsFor: row.goalsFor, goalsAgainst: row.goalsAgainst,
-          goalDifference: row.goalDifference, isArsenal: row.team?.id === ARSENAL_ID,
+          team: {id:row.team?.id, name:row.team?.name||'', shortName:row.team?.shortName||'', crest:row.team?.crest||''},
+          playedGames:row.playedGames, won:row.won, draw:row.draw, lost:row.lost,
+          points:row.points, goalsFor:row.goalsFor, goalsAgainst:row.goalsAgainst,
+          goalDifference:row.goalDifference, isArsenal:row.team?.id===ARSENAL_ID,
         }))
       };
 
-    } else if (type === 'squad') {
-      // FPL API로 선수단 + 스탯 가져오기
-      // - 출전 기록(minutes > 0) 있는 선수만 → 1군 + 유소년 중 1군 출전자 포함
-      // - goals_scored, assists → 공격포인트
-      // - photo → FPL 공식 선수 사진
-      const r = await fetch(FPL_URL, {
-        headers: { 'User-Agent': 'Arsenal-Dashboard/1.0' },
+    } else if(type === 'squad'){
+      // ── FPL API로 선수단 + 스탯 + 사진 ──
+      const fplRes = await fetch(FPL_URL, {
+        headers:{'User-Agent':'Arsenal-Dashboard/1.0'},
         signal: AbortSignal.timeout(8000),
       });
-      if (!r.ok) throw new Error(`FPL API: ${r.status}`);
-      const json = await r.json();
+      if(!fplRes.ok) throw new Error(`FPL API: ${fplRes.status}`);
+      const fplJson = await fplRes.json();
 
-      // 국적 매핑 (FPL은 국적 코드만 줌 → football-data.org로 보완)
-      // FPL에는 nationality 없으므로 이름 기반으로 매핑
+      // football-data.org로 국적 보완 (별도 API 호출)
       const squadMap = {};
-      if (KEY) {
-        try {
-          const sqRes = await fetch(`${BASE}/teams/${ARSENAL_ID}`, { headers: H });
-          if (sqRes.ok) {
+      if(KEY){
+        try{
+          const sqRes = await fetch(`${BASE}/teams/${ARSENAL_ID}`,{headers:H,signal:AbortSignal.timeout(5000)});
+          if(sqRes.ok){
             const sqJson = await sqRes.json();
-            (sqJson.squad || []).forEach(p => { squadMap[p.name.toLowerCase()] = p; });
+            (sqJson.squad||[]).forEach(p=>{
+              squadMap[p.name.toLowerCase()] = p;
+              // 성(last name)으로도 매핑
+              const parts = p.name.split(' ');
+              if(parts.length>1) squadMap[parts[parts.length-1].toLowerCase()] = p;
+            });
           }
-        } catch (_) {}
+        }catch(_){}
       }
 
-      const arsenal = json.teams.find(t => t.id === ARSENAL_FPL_ID);
-      if (!arsenal) throw new Error('Arsenal not found in FPL');
+      const arsenal = fplJson.teams.find(t=>t.id===ARSENAL_FPL_ID);
+      if(!arsenal) throw new Error('Arsenal not found in FPL');
 
-      const players = json.elements
-        .filter(p => p.team === ARSENAL_FPL_ID && p.minutes > 0) // 출전 기록 있는 선수만
+      const players = fplJson.elements
+        .filter(p => p.team===ARSENAL_FPL_ID && p.minutes>0)
         .map(p => {
-          const posGroup = FPL_POS[p.element_type] || 'MF';
+          const posGroup = FPL_POS[p.element_type]||'MF';
           const fullName = `${p.first_name} ${p.second_name}`;
-          // football-data.org에서 국적 찾기
-          const fdPlayer = squadMap[fullName.toLowerCase()] || squadMap[p.second_name.toLowerCase()];
+          const lastName = p.second_name.toLowerCase();
+          const fullLower = fullName.toLowerCase();
+          const fdPlayer = squadMap[fullLower] || squadMap[lastName];
+          const photoId = p.photo ? p.photo.replace('.jpg','') : null;
           return {
             id: p.id,
             name: p.web_name,
             fullName,
             nationality: fdPlayer?.nationality || '',
-            posGroup,          // GK / DF / MF / FW
-            shirtNumber: fdPlayer?.shirtNumber || null,
-            // 스탯
+            posGroup,
             goals: p.goals_scored,
             assists: p.assists,
+            appearances: p.minutes > 0 ? Math.max(1, Math.round(p.minutes/90)) : 0,
             minutes: p.minutes,
-            appearances: Math.round(p.minutes / 90),
-            // FPL 공식 사진 URL
-            photo: p.photo ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${p.photo.replace('.jpg','')}` : null,
+            photo: photoId
+              ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${photoId}.png`
+              : null,
           };
         })
-        .sort((a, b) => {
-          // 포지션 순 정렬: GK → DF → MF → FW
-          const order = { GK: 0, DF: 1, MF: 2, FW: 3 };
-          return (order[a.posGroup] ?? 9) - (order[b.posGroup] ?? 9);
-        });
+        .sort((a,b)=>({GK:0,DF:1,MF:2,FW:3}[a.posGroup]??9)-({GK:0,DF:1,MF:2,FW:3}[b.posGroup]??9));
 
-      result = { squad: players };
-
+      result = {squad: players};
     }
 
-    if (!nocache) setCache(type, result);
+    if(!nocache) setCache(type, result);
     return res.json(result);
 
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
+  } catch(err){
+    return res.status(500).json({error: err.message});
   }
 }
