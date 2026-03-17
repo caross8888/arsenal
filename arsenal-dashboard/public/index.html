@@ -61,28 +61,25 @@
   .card-title{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-muted);font-weight:500}
 
   /* LOADING / ERROR */
-  .loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:12px;color:var(--text-muted)}
+  .loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:12px;color:var(--text-muted);font-size:13px}
   .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:16px 20px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:10px}
-  .api-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 10px;border-radius:20px;margin-bottom:20px}
-  .api-badge.live{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--green)}
-  .api-badge.cached{background:rgba(200,168,75,.1);border:1px solid var(--border-accent);color:var(--gold)}
+  .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:16px 20px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:10px;margin:8px 0}
 
-  /* ===== FIXTURES ===== */
+  /* FIXTURES */
   .fix-grid{display:grid;grid-template-columns:1fr 320px;gap:20px}
   .fix-list{display:flex;flex-direction:column;gap:10px}
-  .fix-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;position:relative;overflow:hidden;transition:all .2s;cursor:default}
+  .fix-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;position:relative;overflow:hidden;transition:all .2s}
   .fix-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--red);opacity:0;transition:opacity .2s}
   .fix-card:hover{border-color:rgba(239,1,7,.3);background:var(--surface2)}
-  .fix-card:hover::before{opacity:1}
-  .fix-card.upcoming::before{opacity:1;background:var(--gold)}
+  .fix-card:hover::before,.fix-card.upcoming::before{opacity:1}
+  .fix-card.upcoming::before{background:var(--gold)}
   .fix-card.live-match::before{opacity:1;background:var(--green)}
   .fix-team{display:flex;align-items:center;gap:12px}
   .fix-team.away{flex-direction:row-reverse;text-align:right}
-  .t-crest{width:36px;height:36px;border-radius:50%;object-fit:contain;background:var(--surface3);border:1px solid var(--border);padding:3px}
-  .t-crest-placeholder{width:36px;height:36px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:10px;color:var(--text-muted);flex-shrink:0}
-  .t-crest-placeholder.afc{background:rgba(239,1,7,.15);border-color:rgba(239,1,7,.4);color:var(--red)}
+  .t-crest{width:36px;height:36px;border-radius:50%;object-fit:contain;background:var(--surface3);border:1px solid var(--border);padding:3px;flex-shrink:0}
+  .t-crest-ph{width:36px;height:36px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:10px;color:var(--text-muted);flex-shrink:0}
+  .t-crest-ph.afc{background:rgba(239,1,7,.15);border-color:rgba(239,1,7,.4);color:var(--red)}
   .t-name{font-weight:500;font-size:13px}
   .t-sub{font-size:10px;color:var(--text-muted);margin-top:2px}
   .fix-center{text-align:center;flex-shrink:0}
@@ -95,6 +92,7 @@
   .tag-cl{background:rgba(0,80,200,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.2)}
   .tag-fa{background:rgba(200,168,75,.15);color:var(--gold);border:1px solid var(--border-accent)}
   .tag-ec{background:rgba(239,100,7,.15);color:#FB923C;border:1px solid rgba(251,146,60,.2)}
+  .tag-oth{background:rgba(100,100,100,.15);color:var(--text-muted);border:1px solid var(--border)}
 
   /* STANDINGS */
   .std-hdr,.std-row{display:grid;grid-template-columns:24px 1fr 28px 28px 28px 24px 40px;gap:6px;align-items:center;padding:9px 20px;border-bottom:1px solid var(--border);font-size:12px}
@@ -110,17 +108,17 @@
   .std-pts{font-family:var(--fm);font-weight:500;color:var(--text);text-align:right}
   .std-gd{font-family:var(--fm);font-size:10px;text-align:center;color:var(--text-dim)}
 
-  /* ===== SQUAD ===== */
+  /* SQUAD */
   .f-btns{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
   .f-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .2s}
   .f-btn:hover,.f-btn.active{background:var(--red);border-color:var(--red);color:#fff}
-  .sq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+  .sq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
   .pl-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative}
   .pl-card:hover{border-color:rgba(239,1,7,.4);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
   .pl-visual{height:90px;background:linear-gradient(135deg,var(--surface2),var(--surface3));display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
   .pl-visual::before{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,var(--surface))}
-  .pl-photo{width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid rgba(239,1,7,.3);position:relative;z-index:1}
-  .pl-num-bg{font-family:var(--fd);font-size:64px;color:rgba(239,1,7,.12);line-height:1;user-select:none}
+  .pl-photo{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid rgba(239,1,7,.3);position:relative;z-index:1}
+  .pl-num-bg{font-family:var(--fd);font-size:60px;color:rgba(239,1,7,.12);line-height:1;user-select:none}
   .pl-info{padding:12px 14px}
   .pl-name{font-weight:500;font-size:13px;line-height:1.2;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pl-pos{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px}
@@ -129,42 +127,41 @@
   .st-v{font-family:var(--fd);font-size:18px;color:var(--text);line-height:1}
   .st-l{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-top:1px}
   .pl-rating{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);border:1px solid rgba(200,168,75,.4);color:var(--gold);font-family:var(--fm);font-size:10px;padding:2px 6px;border-radius:4px}
-  .nat-flag{font-size:13px;margin-right:3px}
 
-  /* ===== INJURIES ===== */
-  .inj-layout{display:grid;grid-template-columns:1fr 320px;gap:20px}
-  .inj-row{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--border);transition:background .15s}
+  /* INJURIES */
+  .inj-layout{display:grid;grid-template-columns:1fr 300px;gap:20px}
+  .inj-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);transition:background .15s}
   .inj-row:hover{background:var(--surface2)}
   .inj-photo{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0}
-  .inj-photo-placeholder{width:40px;height:40px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;color:var(--text-muted)}
-  .inj-info{flex:1}
-  .inj-name{font-weight:500;font-size:13px}
+  .inj-photo-ph{width:40px;height:40px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;color:var(--text-muted)}
+  .inj-info{flex:1;min-width:0}
+  .inj-name{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .inj-detail{font-size:11px;color:var(--text-muted);margin-top:2px}
-  .inj-badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:20px;font-weight:500;flex-shrink:0}
+  .inj-badge{display:inline-block;font-size:10px;padding:3px 10px;border-radius:20px;font-weight:500;flex-shrink:0;white-space:nowrap}
   .inj-injury{background:rgba(239,68,68,.15);color:#F87171;border:1px solid rgba(239,68,68,.3)}
   .inj-miss{background:rgba(245,158,11,.15);color:#FCD34D;border:1px solid rgba(245,158,11,.3)}
-  .inj-date{font-size:11px;color:var(--text-dim);flex-shrink:0;text-align:right}
+  .inj-date{font-size:11px;color:var(--text-dim);flex-shrink:0;text-align:right;min-width:60px}
   .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px}
   .sum-stat{background:var(--surface2);border-radius:10px;padding:16px;text-align:center}
   .sum-val{font-family:var(--fd);font-size:40px;line-height:1}
   .sum-val.r{color:var(--red)}.sum-val.a{color:var(--amber)}.sum-val.g{color:var(--green)}
   .sum-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:6px}
 
-  /* ===== NEWS ===== */
+  /* NEWS */
   .news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
   .news-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;text-decoration:none;display:block;color:inherit}
   .news-card:hover{border-color:rgba(239,1,7,.4);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
   .news-img{height:140px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface2),var(--surface3))}
   .news-img img{width:100%;height:100%;object-fit:cover;display:block}
-  .news-img-placeholder{height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:48px;color:rgba(239,1,7,.15)}
+  .news-img-ph{height:100%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:48px;color:rgba(239,1,7,.15)}
   .news-src-badge{position:absolute;top:12px;left:12px;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:4px;background:var(--red);color:#fff;font-weight:600}
   .news-body{padding:14px 16px}
   .news-hl{font-weight:500;font-size:13px;line-height:1.4;margin-bottom:8px;color:var(--text)}
   .news-ex{font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px}
   .news-foot{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim)}
 
-  /* ===== LIVE ===== */
-  .live-grid{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start}
+  /* LIVE */
+  .live-grid{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
   .setup-card{background:var(--surface);border:1px solid var(--border-accent);border-radius:16px;overflow:hidden;margin-bottom:20px}
   .setup-head{padding:16px 22px;background:linear-gradient(135deg,rgba(239,1,7,.07),transparent);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px}
   .setup-icon{width:40px;height:40px;border-radius:10px;background:rgba(239,1,7,.15);border:1px solid rgba(239,1,7,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
@@ -181,22 +178,22 @@
   .key-status{margin-top:10px;font-size:11px;padding:8px 14px;border-radius:6px;display:none}
   .key-status.ok{display:flex;align-items:center;gap:8px;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
   .key-status.err{display:flex;align-items:center;gap:8px;background:rgba(239,68,68,.1);color:#F87171;border:1px solid rgba(239,68,68,.2)}
+  .auto-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2);padding:4px 10px;border-radius:20px;margin-bottom:12px}
   .wgt-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
   .wgt-tab{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:7px 14px;border-radius:6px;cursor:pointer;transition:all .2s}
   .wgt-tab.active{background:rgba(239,1,7,.15);border-color:rgba(239,1,7,.4);color:var(--red)}
   .widget-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;min-height:260px}
-  .widget-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px;text-align:center;gap:14px}
+  .widget-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px;text-align:center;gap:14px}
   .wp-icon{font-size:40px;opacity:.25}
   .wp-title{font-family:var(--fd);font-size:20px;letter-spacing:2px;color:var(--text-muted)}
   .wp-desc{font-size:12px;color:var(--text-dim);max-width:280px;line-height:1.6}
   .widget-iframe-wrap{display:none;width:100%}
-  .widget-iframe-wrap iframe{width:100%;min-height:420px;border:none;display:block}
+  .widget-iframe-wrap iframe{width:100%;min-height:440px;border:none;display:block}
   .info-stack{display:flex;flex-direction:column;gap:14px}
   .info-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
   .info-head{padding:12px 18px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted)}
   .info-body{padding:14px 18px}
-  .feat-list{display:flex;flex-direction:column;gap:7px}
-  .feat-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text-muted);line-height:1.5}
+  .feat-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:7px}
   .feat-ok{color:var(--green);flex-shrink:0}.feat-no{color:#F87171;flex-shrink:0}
   .limit-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
   .limit-row:last-child{border-bottom:none}
@@ -216,20 +213,18 @@
 </head>
 <body>
 
-<!-- TICKER -->
 <div class="ticker-wrap">
   <div class="ticker-label">⚡ Live</div>
   <div class="ticker-track" id="tickerTrack">
-    <span class="ticker-item">Arsenal FC · 2025-26 시즌</span>
+    <span class="ticker-item">Arsenal FC · 2024-25 시즌</span>
     <span class="ticker-dot">◆</span>
     <span class="ticker-item">데이터 로딩 중...</span>
-    <span class="ticker-item">Arsenal FC · 2025-26 시즌</span>
+    <span class="ticker-item">Arsenal FC · 2024-25 시즌</span>
     <span class="ticker-dot">◆</span>
     <span class="ticker-item">데이터 로딩 중...</span>
   </div>
 </div>
 
-<!-- HEADER -->
 <header>
   <div class="header-brand">
     <div class="logo-mark">
@@ -244,31 +239,32 @@
   <nav>
     <button onclick="showSec('live',this)" style="position:relative">라이브<span class="live-dot-nav"></span></button>
     <button class="active" onclick="showSec('fixtures',this)">일정</button>
-    <button onclick="showSec('squad',this)" id="squadNavBtn">선수단</button>
-    <button onclick="showSec('injuries',this)" id="injNavBtn">부상</button>
-    <button onclick="showSec('news',this)" id="newsNavBtn">뉴스</button>
+    <button onclick="showSec('squad',this)">선수단</button>
+    <button onclick="showSec('injuries',this)">부상</button>
+    <button onclick="showSec('news',this)">뉴스</button>
   </nav>
-  <div class="header-right"><div class="live-dot"></div><span>2025-26 시즌</span></div>
+  <div class="header-right"><div class="live-dot"></div><span>2024-25 시즌</span></div>
 </header>
 
 <div class="page">
 
-<!-- ===== LIVE ===== -->
+<!-- LIVE -->
 <section id="live" class="section">
   <div class="sec-head"><h1 class="sec-title">라이브 스코어</h1><span class="sec-badge live">● LIVE</span></div>
   <div class="live-grid">
     <div>
       <div class="setup-card">
         <div class="setup-head">
-          <div class="setup-icon">🔑</div>
+          <div class="setup-icon">📡</div>
           <div>
-            <div class="setup-title">api-football.com 위젯 연동</div>
-            <div class="setup-sub">무료 계정 API 키 입력 → 실시간 라이브스코어 위젯 활성화</div>
+            <div class="setup-title">api-football.com 라이브 위젯</div>
+            <div class="setup-sub" id="setupSub">API 키 자동 로드 중...</div>
           </div>
         </div>
         <div class="setup-body">
-          <label class="key-label">API Key (api-football.com 대시보드에서 발급)</label>
-          <div class="key-row">
+          <div id="autoBadge" style="display:none" class="auto-badge">● 자동 연결됨 — 키 입력 불필요</div>
+          <label class="key-label" id="keyLabel" style="display:none">수동 입력 (자동 로드 실패 시)</label>
+          <div class="key-row" id="keyRow" style="display:none">
             <input class="key-input" id="apiKeyInput" type="text" placeholder="API 키 붙여넣기..."/>
             <button class="key-btn" onclick="activateWidget()">위젯 활성화</button>
           </div>
@@ -282,25 +278,24 @@
         <button class="wgt-tab" onclick="selTab('standings',this)">🏆 순위표</button>
       </div>
       <div class="widget-wrap">
-        <div class="widget-placeholder" id="widgetPlaceholder">
+        <div class="widget-ph" id="widgetPh">
           <div class="wp-icon">📡</div>
-          <div class="wp-title">위젯 대기 중</div>
-          <div class="wp-desc">api-football.com에서 무료 API 키를 발급받아 위에 입력하면 실시간 위젯이 표시됩니다.</div>
+          <div class="wp-title" id="wpTitle">키 로드 중...</div>
+          <div class="wp-desc">잠시 후 위젯이 자동으로 표시됩니다.</div>
         </div>
         <div class="widget-iframe-wrap" id="widgetIframe"></div>
       </div>
     </div>
     <div class="info-stack">
       <div class="info-card">
-        <div class="info-head">✅ 무료 위젯 기능</div>
+        <div class="info-head">✅ 위젯 기능</div>
         <div class="info-body">
-          <div class="feat-list">
-            <div class="feat-item"><span class="feat-ok">✓</span>실시간 라이브스코어 (15초 갱신)</div>
-            <div class="feat-item"><span class="feat-ok">✓</span>골·카드·교체 이벤트</div>
-            <div class="feat-item"><span class="feat-ok">✓</span>PL·UCL·FA컵 등 1200+ 리그</div>
-            <div class="feat-item"><span class="feat-ok">✓</span>경기 일정 / 결과 / 순위</div>
-            <div class="feat-item"><span class="feat-no">✗</span>디자인 커스텀 (iframe 제약)</div>
-          </div>
+          <div class="feat-item"><span class="feat-ok">✓</span>실시간 라이브스코어 (15초 갱신)</div>
+          <div class="feat-item"><span class="feat-ok">✓</span>골·카드·교체 이벤트</div>
+          <div class="feat-item"><span class="feat-ok">✓</span>PL·UCL·FA컵 등 1200+ 리그</div>
+          <div class="feat-item"><span class="feat-ok">✓</span>경기 일정 / 결과 / 순위</div>
+          <div class="feat-item"><span class="feat-ok">✓</span>자동 키 로드 (매번 입력 불필요)</div>
+          <div class="feat-item"><span class="feat-no">✗</span>디자인 커스텀 (iframe 제약)</div>
         </div>
       </div>
       <div class="info-card">
@@ -312,23 +307,16 @@
           <div class="limit-row"><span class="lk">신용카드</span><span class="lv ok">불필요</span></div>
         </div>
       </div>
-      <div class="info-card">
-        <div class="info-head">💡 가입 링크</div>
-        <div class="info-body" style="font-size:12px;color:var(--text-muted);line-height:1.8">
-          <a href="https://dashboard.api-football.com/register" target="_blank" style="color:var(--gold);text-decoration:none">→ api-football.com 무료 가입</a><br>
-          <a href="https://dashboard.api-football.com" target="_blank" style="color:var(--gold);text-decoration:none">→ 대시보드 (API 키 확인)</a>
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
-<!-- ===== FIXTURES ===== -->
+<!-- FIXTURES -->
 <section id="fixtures" class="section active">
   <div class="sec-head"><h1 class="sec-title">경기 일정</h1><span class="sec-badge" id="fixBadge">로딩 중...</span></div>
   <div class="fix-grid">
     <div>
-      <div id="fixList"><div class="loading-state"><div class="spinner"></div><span>football-data.org에서 경기 데이터 로딩 중...</span></div></div>
+      <div id="fixList"><div class="loading-state"><div class="spinner"></div><span>경기 데이터 로딩 중...</span></div></div>
     </div>
     <div>
       <div class="card">
@@ -340,7 +328,7 @@
   </div>
 </section>
 
-<!-- ===== SQUAD ===== -->
+<!-- SQUAD -->
 <section id="squad" class="section">
   <div class="sec-head"><h1 class="sec-title">선수단</h1><span class="sec-badge" id="squadBadge">로딩 중...</span></div>
   <div class="f-btns">
@@ -350,10 +338,10 @@
     <button class="f-btn" onclick="filterSq('Midfielder',this)">미드필더</button>
     <button class="f-btn" onclick="filterSq('Attacker',this)">공격수</button>
   </div>
-  <div class="sq-grid" id="sqGrid"><div class="loading-state"><div class="spinner"></div><span>api-football.com에서 선수 데이터 로딩 중...</span></div></div>
+  <div class="sq-grid" id="sqGrid"><div class="loading-state"><div class="spinner"></div><span>선수 데이터 로딩 중...</span></div></div>
 </section>
 
-<!-- ===== INJURIES ===== -->
+<!-- INJURIES -->
 <section id="injuries" class="section">
   <div class="sec-head"><h1 class="sec-title">부상 현황</h1><span class="sec-badge" id="injBadge">로딩 중...</span></div>
   <div class="inj-layout">
@@ -367,118 +355,97 @@
   </div>
 </section>
 
-<!-- ===== NEWS ===== -->
+<!-- NEWS -->
 <section id="news" class="section">
   <div class="sec-head"><h1 class="sec-title">최근 뉴스</h1><span class="sec-badge" id="newsBadge">로딩 중...</span></div>
-  <div class="news-grid" id="newsGrid"><div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><span>BBC Sport RSS 로딩 중...</span></div></div>
+  <div class="news-grid" id="newsGrid"><div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div><span>뉴스 로딩 중...</span></div></div>
 </section>
 
 </div>
 
 <script>
-// ============================================================
-// CONFIG
-// ============================================================
-// Netlify Functions URL (로컬 개발: http://localhost:8888/.netlify/functions)
-// 배포 후: /.netlify/functions (자동으로 같은 도메인 사용)
 const FN = '/.netlify/functions';
+let autoWidgetKey = '';
+let curWidgetType = 'livescore';
+let widgetActivated = false;
 
-// ============================================================
-// FETCH HELPERS
-// ============================================================
+// ── FETCH HELPERS ──────────────────────────────────────────
 async function apiFetch(url) {
   const res = await fetch(url);
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
+    const err = await res.json().catch(() => ({}));
     throw new Error(err.error || `HTTP ${res.status}`);
   }
   return res.json();
 }
-
-function showError(el, msg) {
-  el.innerHTML = `<div class="error-state">⚠️ ${msg} — API 키 또는 네트워크를 확인해주세요.</div>`;
+function showErr(el, msg) {
+  el.innerHTML = `<div class="error-state">⚠️ ${msg}</div>`;
 }
 
-// ============================================================
-// FIXTURES + STANDINGS (football-data.org)
-// ============================================================
-const COMP_CODES = {
-  'PL':'tag-pl','CL':'tag-cl','EL':'tag-cl','FAC':'tag-fa','ELC':'tag-ec'
-};
-const COMP_LABELS = {
-  'PL':'Premier League','CL':'Champions League','EL':'Europa League','FAC':'FA Cup','ELC':'EFL Cup'
-};
+// ── COMPETITION TAG ────────────────────────────────────────
+const COMP_TAG = { PL:'tag-pl', CL:'tag-cl', EL:'tag-cl', FAC:'tag-fa', ELC:'tag-ec' };
+const COMP_NAME = { PL:'Premier League', CL:'Champions League', EL:'Europa League', FAC:'FA Cup', ELC:'EFL Cup' };
 
-function formatFixtureDate(utcDate) {
+function compTag(code) { return COMP_TAG[code] || 'tag-oth'; }
+function compName(code, fallback) { return COMP_NAME[code] || fallback || code; }
+
+function formatDate(utcDate) {
   const d = new Date(utcDate);
-  const now = new Date();
-  const diffMs = d - now;
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  const dateStr = d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
-  const timeStr = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-
-  if (diffDays === 0) return `오늘 ${timeStr}`;
-  if (diffDays === 1) return `내일 ${timeStr}`;
-  if (diffDays === -1) return `어제`;
-  if (diffMs > 0) return `${dateStr} ${timeStr}`;
-  return dateStr;
+  const diff = Math.round((d - Date.now()) / 86400000);
+  const time = d.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit', hour12:false });
+  const date = d.toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'short' });
+  if (diff === 0) return `오늘 ${time}`;
+  if (diff === 1) return `내일 ${time}`;
+  if (diff > 0) return `${date} ${time}`;
+  if (diff === -1) return '어제';
+  return date;
 }
 
+function makeCrest(team, isArsenal) {
+  if (team.crest) {
+    return `<img class="t-crest" src="${team.crest}" alt="${team.shortName||''}" onerror="this.outerHTML='<div class=\\"t-crest-ph ${isArsenal?'afc':''}\\">${(team.shortName||'').substring(0,3).toUpperCase()}</div>'">`;
+  }
+  return `<div class="t-crest-ph ${isArsenal?'afc':''}">${(team.shortName||team.name||'').substring(0,3).toUpperCase()}</div>`;
+}
+
+// ── FIXTURES ───────────────────────────────────────────────
 async function loadFixtures() {
   const el = document.getElementById('fixList');
   const badge = document.getElementById('fixBadge');
   try {
     const data = await apiFetch(`${FN}/football?type=fixtures`);
     badge.textContent = 'football-data.org';
-
     const matches = data.matches || [];
-    if (!matches.length) { el.innerHTML = '<div class="loading-state">경기 데이터가 없습니다.</div>'; return; }
+    if (!matches.length) { el.innerHTML = '<div class="loading-state">경기 데이터 없음</div>'; return; }
 
-    // 최신순 정렬: 지난 경기 최신→오래된, 앞으로 경기 가까운 순
-    const now = new Date();
-    const past = matches.filter(m => new Date(m.date) < now && m.status !== 'IN_PLAY').reverse();
-    const upcoming = matches.filter(m => new Date(m.date) >= now || m.status === 'IN_PLAY');
-    const sorted = [...upcoming, ...past];
-
-    el.innerHTML = sorted.map(m => {
+    el.innerHTML = matches.map(m => {
       const isArsenalHome = m.homeTeam.name.includes('Arsenal');
-      const status = m.status;
-      const isLive = status === 'IN_PLAY' || status === 'PAUSED';
-      const isDone = status === 'FINISHED';
-      const compCode = m.competitionCode || 'PL';
-      const compClass = COMP_CODES[compCode] || 'tag-pl';
-      const compName = COMP_LABELS[compCode] || m.competition;
+      const isLive = ['IN_PLAY','PAUSED'].includes(m.status);
+      const isDone = m.status === 'FINISHED';
+      const code = m.competitionCode || '';
+      const hs = m.score?.fullTime?.home;
+      const as_ = m.score?.fullTime?.away;
+      const hasScore = hs !== null && hs !== undefined;
+      const cls = isLive ? 'live-match' : (!isDone ? 'upcoming' : '');
 
-      const homeScore = m.score?.fullTime?.home;
-      const awayScore = m.score?.fullTime?.away;
-      const hasScore = homeScore !== null && homeScore !== undefined;
-
-      const cardClass = isLive ? 'live-match' : (!isDone ? 'upcoming' : '');
-
-      const makeBadge = (team, isArsenal) => {
-        if (team.crest) return `<img class="t-crest" src="${team.crest}" alt="${team.shortName}" onerror="this.style.display='none'">`;
-        return `<div class="t-crest-placeholder ${isArsenal?'afc':''}">${(team.shortName||team.name||'').substring(0,3).toUpperCase()}</div>`;
-      };
-
-      return `<div class="fix-card ${cardClass}">
+      return `<div class="fix-card ${cls}">
         <div class="fix-team home">
-          ${makeBadge(m.homeTeam, isArsenalHome)}
+          ${makeCrest(m.homeTeam, isArsenalHome)}
           <div>
-            <div class="comp-tag ${compClass}">${compName}</div>
+            <div class="comp-tag ${compTag(code)}">${compName(code, m.competition)}</div>
             <div class="t-name">${m.homeTeam.shortName || m.homeTeam.name}</div>
             <div class="t-sub">홈</div>
           </div>
         </div>
         <div class="fix-center">
-          ${hasScore ? `<div class="fix-score">${homeScore} : ${awayScore}</div>` : `<div class="fix-vs">VS</div>`}
+          ${hasScore ? `<div class="fix-score">${hs} : ${as_}</div>` : `<div class="fix-vs">VS</div>`}
           <div class="fix-meta ${isLive?'live-tag':''}">
-            ${isLive ? '● LIVE' : isDone ? formatFixtureDate(m.date) : formatFixtureDate(m.date)}
+            ${isLive ? '● LIVE' : formatDate(m.date)}
           </div>
           ${m.venue ? `<div style="font-size:10px;color:var(--text-dim);margin-top:2px">${m.venue}</div>` : ''}
         </div>
         <div class="fix-team away">
-          ${makeBadge(m.awayTeam, !isArsenalHome)}
+          ${makeCrest(m.awayTeam, !isArsenalHome)}
           <div>
             <div class="t-name">${m.awayTeam.shortName || m.awayTeam.name}</div>
             <div class="t-sub">어웨이</div>
@@ -487,11 +454,9 @@ async function loadFixtures() {
       </div>`;
     }).join('');
 
-    // 티커 업데이트
-    updateTicker(sorted);
-
+    updateTicker(matches);
   } catch(err) {
-    showError(el, err.message);
+    showErr(el, err.message);
     badge.textContent = '오류';
   }
 }
@@ -500,12 +465,11 @@ async function loadStandings() {
   const el = document.getElementById('stdList');
   try {
     const data = await apiFetch(`${FN}/football?type=standings`);
-    document.getElementById('stdMatchday').textContent = `GW ${data.season || ''}`;
-
+    document.getElementById('stdMatchday').textContent = data.season ? `GW ${data.season}` : '';
     el.innerHTML = (data.standings || []).map(s => {
       const crest = s.team.crest
-        ? `<img class="std-crest" src="${s.team.crest}" alt="${s.team.shortName}" onerror="this.style.display='none'">`
-        : `<div class="std-crest" style="background:var(--surface3);border-radius:50%;width:18px;height:18px;border:1px solid var(--border)"></div>`;
+        ? `<img class="std-crest" src="${s.team.crest}" alt="" onerror="this.style.display='none'">`
+        : `<span></span>`;
       const gd = s.goalDifference > 0 ? `+${s.goalDifference}` : s.goalDifference;
       return `<div class="std-row ${s.isArsenal?'afc-row':''}">
         <span class="std-pos">${s.position}</span>
@@ -517,22 +481,18 @@ async function loadStandings() {
         <span class="std-pts">${s.points}</span>
       </div>`;
     }).join('');
-  } catch(err) {
-    showError(el, err.message);
-  }
+  } catch(err) { showErr(el, err.message); }
 }
 
-// ============================================================
-// SQUAD (api-football.com via Netlify Function)
-// ============================================================
+// ── SQUAD ──────────────────────────────────────────────────
 let allPlayers = [];
-
-const POS_KO = { Goalkeeper:'골키퍼', Defender:'수비수', Midfielder:'미드필더', Attacker:'공격수' };
-const NAT_FLAGS = {
-  'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Spain':'🇪🇸','Brazil':'🇧🇷','Germany':'🇩🇪','France':'🇫🇷','Netherlands':'🇳🇱',
-  'Norway':'🇳🇴','Belgium':'🇧🇪','Ghana':'🇬🇭','Portugal':'🇵🇹','Ukraine':'🇺🇦','Italy':'🇮🇹',
-  'Switzerland':'🇨🇭','Japan':'🇯🇵','Denmark':'🇩🇰','Wales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+const NAT_FLAG = {
+  'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Spain':'🇪🇸','Brazil':'🇧🇷','Germany':'🇩🇪','France':'🇫🇷',
+  'Netherlands':'🇳🇱','Norway':'🇳🇴','Belgium':'🇧🇪','Ghana':'🇬🇭','Portugal':'🇵🇹',
+  'Ukraine':'🇺🇦','Italy':'🇮🇹','Switzerland':'🇨🇭','Japan':'🇯🇵','Denmark':'🇩🇰',
+  'Wales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','Sweden':'🇸🇪','USA':'🇺🇸','Argentina':'🇦🇷',
 };
+const POS_KO = { Goalkeeper:'골키퍼', Defender:'수비수', Midfielder:'미드필더', Attacker:'공격수' };
 
 async function loadSquad() {
   const el = document.getElementById('sqGrid');
@@ -542,191 +502,134 @@ async function loadSquad() {
     allPlayers = data.players || [];
     badge.textContent = 'api-football.com';
     renderSq('all');
-  } catch(err) {
-    showError(el, err.message);
-    badge.textContent = '오류';
-  }
+  } catch(err) { showErr(el, err.message); badge.textContent = '오류'; }
 }
 
 function renderSq(filter) {
   const el = document.getElementById('sqGrid');
   const list = filter === 'all' ? allPlayers : allPlayers.filter(p => p.position === filter);
-
-  if (!list.length) {
-    el.innerHTML = '<div class="loading-state">선수 데이터가 없습니다.</div>';
-    return;
-  }
-
+  if (!list.length) { el.innerHTML = '<div class="loading-state">선수 데이터 없음</div>'; return; }
   el.innerHTML = list.map(p => {
-    const flag = NAT_FLAGS[p.nationality] || '🌍';
-    const posKo = POS_KO[p.position] || p.position || '-';
+    const flag = NAT_FLAG[p.nationality] || '🌍';
     const isGK = p.position === 'Goalkeeper';
     const photo = p.photo
-      ? `<img class="pl-photo" src="${p.photo}" alt="${p.name}" onerror="this.parentElement.innerHTML='<div class=\\"pl-num-bg\\">${p.number || '?'}</div>'">`
-      : `<div class="pl-num-bg">${p.number || '?'}</div>`;
-
+      ? `<img class="pl-photo" src="${p.photo}" alt="${p.name}" onerror="this.outerHTML='<div class=\\"pl-num-bg\\">${p.number||'?'}</div>'">`
+      : `<div class="pl-num-bg">${p.number||'?'}</div>`;
     return `<div class="pl-card">
       <div class="pl-visual">
         ${photo}
         ${p.rating ? `<div class="pl-rating">${p.rating}</div>` : ''}
       </div>
       <div class="pl-info">
-        <div class="pl-name"><span class="nat-flag">${flag}</span>${p.name}</div>
-        <div class="pl-pos">${posKo}</div>
+        <div class="pl-name">${flag} ${p.name}</div>
+        <div class="pl-pos">${POS_KO[p.position]||p.position||'-'}</div>
         <div class="pl-stats">
-          <div class="st-box">
-            <div class="st-v">${isGK ? (p.saves ?? '-') : (p.goals ?? 0)}</div>
-            <div class="st-l">${isGK ? 'SV' : 'G'}</div>
-          </div>
-          <div class="st-box">
-            <div class="st-v">${p.assists ?? 0}</div>
-            <div class="st-l">A</div>
-          </div>
-          <div class="st-box">
-            <div class="st-v">${p.appearances ?? 0}</div>
-            <div class="st-l">출장</div>
-          </div>
+          <div class="st-box"><div class="st-v">${isGK?(p.saves??'-'):(p.goals??0)}</div><div class="st-l">${isGK?'SV':'G'}</div></div>
+          <div class="st-box"><div class="st-v">${p.assists??0}</div><div class="st-l">A</div></div>
+          <div class="st-box"><div class="st-v">${p.appearances??0}</div><div class="st-l">출장</div></div>
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-// ============================================================
-// INJURIES (api-football.com via Netlify Function)
-// ============================================================
+// ── INJURIES ───────────────────────────────────────────────
 async function loadInjuries() {
   const listEl = document.getElementById('injList');
   const sumEl = document.getElementById('injSum');
   const badge = document.getElementById('injBadge');
-
   try {
     const data = await apiFetch(`${FN}/apifootball?type=injuries`);
     const injuries = data.injuries || [];
     badge.textContent = 'api-football.com';
     document.getElementById('injCount').textContent = `총 ${injuries.length}건`;
-
     if (!injuries.length) {
-      listEl.innerHTML = '<div class="loading-state" style="padding:32px">현재 부상 선수가 없습니다 🎉</div>';
+      listEl.innerHTML = '<div class="loading-state" style="padding:32px">🎉 현재 부상 선수 없음</div>';
       sumEl.innerHTML = '';
       return;
     }
-
     listEl.innerHTML = injuries.map(i => {
       const photo = i.player.photo
-        ? `<img class="inj-photo" src="${i.player.photo}" alt="${i.player.name}" onerror="this.style.display='none'">`
-        : `<div class="inj-photo-placeholder">${i.player.name.substring(0,2).toUpperCase()}</div>`;
-
-      const isInjury = i.type === 'Injury';
-      const dateStr = i.fixture?.date ? new Date(i.fixture.date).toLocaleDateString('ko-KR', {month:'long',day:'numeric'}) : '';
-
+        ? `<img class="inj-photo" src="${i.player.photo}" alt="${i.player.name}" onerror="this.outerHTML='<div class=\\"inj-photo-ph\\">${i.player.name.substring(0,2).toUpperCase()}</div>'">`
+        : `<div class="inj-photo-ph">${i.player.name.substring(0,2).toUpperCase()}</div>`;
+      const dateStr = i.fixture?.date ? new Date(i.fixture.date).toLocaleDateString('ko-KR',{month:'long',day:'numeric'}) : '';
       return `<div class="inj-row">
         ${photo}
         <div class="inj-info">
           <div class="inj-name">${i.player.name}</div>
-          <div class="inj-detail">${i.reason || '사유 미공개'} · ${i.fixture?.league || ''}</div>
+          <div class="inj-detail">${i.reason||'사유 미공개'}${i.fixture?.league ? ' · '+i.fixture.league : ''}</div>
         </div>
-        <span class="inj-badge ${isInjury ? 'inj-injury' : 'inj-miss'}">${isInjury ? '부상' : '결장'}</span>
+        <span class="inj-badge ${i.type==='Injury'?'inj-injury':'inj-miss'}">${i.type==='Injury'?'부상':'결장'}</span>
         <div class="inj-date">${dateStr}</div>
       </div>`;
     }).join('');
-
-    const injCount = injuries.filter(i => i.type === 'Injury').length;
-    const missCount = injuries.filter(i => i.type !== 'Injury').length;
-
+    const injCnt = injuries.filter(i=>i.type==='Injury').length;
+    const missCnt = injuries.length - injCnt;
     sumEl.innerHTML = `
-      <div class="sum-stat"><div class="sum-val r">${injCount}</div><div class="sum-lbl">부상</div></div>
-      <div class="sum-stat"><div class="sum-val a">${missCount}</div><div class="sum-lbl">결장</div></div>
+      <div class="sum-stat"><div class="sum-val r">${injCnt}</div><div class="sum-lbl">부상</div></div>
+      <div class="sum-stat"><div class="sum-val a">${missCnt}</div><div class="sum-lbl">결장</div></div>
       <div class="sum-stat"><div class="sum-val">${injuries.length}</div><div class="sum-lbl">총 인원</div></div>
       <div class="sum-stat"><div class="sum-val g">${allPlayers.length ? allPlayers.length - injuries.length : '-'}</div><div class="sum-lbl">출전 가능</div></div>`;
-
-  } catch(err) {
-    showError(listEl, err.message);
-    badge.textContent = '오류';
-  }
+  } catch(err) { showErr(listEl, err.message); badge.textContent = '오류'; }
 }
 
-// ============================================================
-// NEWS (BBC Sport RSS via Netlify Function)
-// ============================================================
+// ── NEWS ───────────────────────────────────────────────────
 async function loadNews() {
   const el = document.getElementById('newsGrid');
   const badge = document.getElementById('newsBadge');
   try {
     const data = await apiFetch(`${FN}/news`);
-    badge.textContent = data.source || 'BBC Sport';
-
+    badge.textContent = data.source || 'RSS';
     const articles = data.articles || [];
-    if (!articles.length) { el.innerHTML = '<div class="loading-state">뉴스가 없습니다.</div>'; return; }
-
+    if (!articles.length) { el.innerHTML = '<div class="loading-state">뉴스 없음</div>'; return; }
     el.innerHTML = articles.map(a => {
       const imgHtml = a.urlToImage
-        ? `<img src="${a.urlToImage}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='<div class=\\"news-img-placeholder\\">📰</div>'">`
-        : `<div class="news-img-placeholder">📰</div>`;
-
-      return `<a class="news-card" href="${a.url}" target="_blank" rel="noopener">
-        <div class="news-img">
-          ${imgHtml}
-          <div class="news-src-badge">${data.source || 'BBC'}</div>
-        </div>
+        ? `<img src="${a.urlToImage}" alt="" onerror="this.parentElement.innerHTML='<div class=\\"news-img-ph\\">📰</div>'">`
+        : `<div class="news-img-ph">📰</div>`;
+      return `<a class="news-card" href="${a.url||'#'}" target="_blank" rel="noopener">
+        <div class="news-img">${imgHtml}<div class="news-src-badge">${data.source||'RSS'}</div></div>
         <div class="news-body">
-          <div class="news-hl">${a.title || ''}</div>
-          <div class="news-ex">${a.description || ''}</div>
-          <div class="news-foot">
-            <span>🕐 ${a.timeAgo || ''}</span>
-            <span style="color:var(--red);font-size:11px;font-weight:500">읽기 →</span>
-          </div>
+          <div class="news-hl">${a.title||''}</div>
+          <div class="news-ex">${a.description||''}</div>
+          <div class="news-foot"><span>🕐 ${a.timeAgo||''}</span><span style="color:var(--red);font-size:11px;font-weight:500">읽기 →</span></div>
         </div>
       </a>`;
     }).join('');
-  } catch(err) {
-    showError(el, err.message);
-    badge.textContent = '오류';
-  }
+  } catch(err) { showErr(el, err.message); badge.textContent = '오류'; }
 }
 
-// ============================================================
-// TICKER UPDATE
-// ============================================================
+// ── TICKER ─────────────────────────────────────────────────
 function updateTicker(matches) {
   if (!matches?.length) return;
-  const now = new Date();
   const items = matches.slice(0, 6).map(m => {
-    const home = m.homeTeam?.shortName || m.homeTeam?.name || '';
-    const away = m.awayTeam?.shortName || m.awayTeam?.name || '';
-    const isLive = m.status === 'IN_PLAY';
+    const h = m.homeTeam?.shortName || m.homeTeam?.name || '';
+    const a = m.awayTeam?.shortName || m.awayTeam?.name || '';
+    const isLive = ['IN_PLAY','PAUSED'].includes(m.status);
     const isDone = m.status === 'FINISHED';
     const hs = m.score?.fullTime?.home;
-    const as = m.score?.fullTime?.away;
-    if (isLive) return `🔴 LIVE: ${home} ${hs ?? 0}-${as ?? 0} ${away}`;
-    if (isDone && hs !== undefined) return `${home} ${hs}-${as} ${away} ✓`;
+    const as_ = m.score?.fullTime?.away;
+    if (isLive) return `🔴 LIVE: ${h} ${hs??0}-${as_??0} ${a}`;
+    if (isDone && hs !== undefined) return `${h} ${hs}-${as_} ${a} ✓`;
     const d = new Date(m.date);
-    return `${home} vs ${away} · ${d.toLocaleDateString('ko-KR', {month:'short',day:'numeric'})} ${d.toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit',hour12:false})}`;
+    return `${h} vs ${a} · ${d.toLocaleDateString('ko-KR',{month:'short',day:'numeric'})} ${d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false})}`;
   });
-
   const doubled = [...items, ...items];
-  const html = doubled.map((t,i) =>
+  document.getElementById('tickerTrack').innerHTML = doubled.map((t,i) =>
     `<span class="ticker-item">${t}</span>${i < doubled.length-1 ? '<span class="ticker-dot">◆</span>' : ''}`
   ).join('');
-  document.getElementById('tickerTrack').innerHTML = html;
 }
 
-// ============================================================
-// LIVE WIDGET
-// ============================================================
-let curWidgetType = 'livescore';
-
-function selTab(type, btn) {
-  curWidgetType = type;
-  document.querySelectorAll('.wgt-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-function activateWidget() {
-  const key = document.getElementById('apiKeyInput').value.trim();
+// ── LIVE WIDGET ────────────────────────────────────────────
+function activateWidget(key) {
+  const k = key || document.getElementById('apiKeyInput').value.trim();
   const st = document.getElementById('keyStatus');
-  if (!key || key.length < 8) { st.className='key-status err'; st.innerHTML='⚠️ 유효한 API 키를 입력해주세요.'; return; }
-  st.className='key-status ok'; st.innerHTML='✓ 키 확인 · 위젯 로드 중...';
+  if (!k || k.length < 8) {
+    st.className='key-status err'; st.innerHTML='⚠️ 유효한 API 키를 입력해주세요.';
+    document.getElementById('keyRow').style.display='flex';
+    document.getElementById('keyLabel').style.display='block';
+    return;
+  }
+  if (!key) { st.className='key-status ok'; st.innerHTML='✓ 키 확인됨'; }
 
   const wMap = { livescore:'widgetLiveScore', fixtures:'widgetFixtures', results:'widgetResults', standings:'widgetStandings' };
   const wn = wMap[curWidgetType];
@@ -741,35 +644,70 @@ function activateWidget() {
 <script src="https://apifootball.com/widgets/js/jquery.${wn}.js"><\/script>
 <script>
 $(document).ready(function(){
-  var o={widgetWidth:'100%',displayCalendar:true,justLiveScore:false,APIkey:'${key}'};
+  var o={widgetWidth:'100%',displayCalendar:true,justLiveScore:false,APIkey:'${k}'};
   if('${curWidgetType}'!=='livescore'){o.leagueId='148';o.leagueName='Premier League';}
   $('#${wn}')['${wn}'](o);
 });
 <\/script></body></html>`;
 
-  document.getElementById('widgetPlaceholder').style.display='none';
+  document.getElementById('widgetPh').style.display='none';
   const iw = document.getElementById('widgetIframe');
   iw.style.display='block';
-  iw.innerHTML=`<iframe srcdoc="${html.replace(/"/g,'&quot;')}" style="width:100%;min-height:450px;border:none"></iframe>`;
+  iw.innerHTML=`<iframe srcdoc="${html.replace(/"/g,'&quot;')}" style="width:100%;min-height:440px;border:none"></iframe>`;
+  widgetActivated = true;
 }
 
-// ============================================================
-// NAV
-// ============================================================
-const loaded = {};
+function selTab(type, btn) {
+  curWidgetType = type;
+  document.querySelectorAll('.wgt-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // 위젯 이미 활성화됐으면 새 타입으로 재로드
+  if (widgetActivated && autoWidgetKey) activateWidget(autoWidgetKey);
+}
+
+// ── INIT CONFIG (자동 키 로드) ─────────────────────────────
+async function loadConfig() {
+  try {
+    const cfg = await fetch(`${FN}/config`).then(r => r.json());
+    if (cfg.widgetKey) {
+      autoWidgetKey = cfg.widgetKey;
+      document.getElementById('autoBadge').style.display='inline-flex';
+      document.getElementById('setupSub').textContent='환경변수에서 API 키 자동 로드됨';
+      document.getElementById('wpTitle').textContent='위젯 준비됨';
+      // 라이브 탭이 이미 활성화된 경우 즉시 실행
+      if (document.getElementById('live').classList.contains('active')) {
+        activateWidget(autoWidgetKey);
+      }
+    } else {
+      document.getElementById('setupSub').textContent='API 키를 아래에 수동으로 입력해주세요';
+      document.getElementById('keyRow').style.display='flex';
+      document.getElementById('keyLabel').style.display='block';
+      document.getElementById('wpTitle').textContent='키 입력 필요';
+    }
+  } catch(_) {
+    document.getElementById('setupSub').textContent='수동 입력 모드';
+    document.getElementById('keyRow').style.display='flex';
+    document.getElementById('keyLabel').style.display='block';
+  }
+}
+
+// ── NAV ────────────────────────────────────────────────────
+const loaded = { fixtures: true };
 
 function showSec(id, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
-
-  // Lazy load on first visit
   if (!loaded[id]) {
     loaded[id] = true;
     if (id === 'squad') loadSquad();
     if (id === 'injuries') loadInjuries();
     if (id === 'news') loadNews();
+  }
+  // 라이브 탭: 키 있으면 자동 위젯 활성화
+  if (id === 'live' && autoWidgetKey && !widgetActivated) {
+    activateWidget(autoWidgetKey);
   }
 }
 
@@ -779,10 +717,8 @@ function filterSq(f, btn) {
   renderSq(f);
 }
 
-// ============================================================
-// INIT — 일정/순위는 첫 화면부터 로드
-// ============================================================
-loaded.fixtures = true;
+// ── START ──────────────────────────────────────────────────
+loadConfig();
 Promise.all([loadFixtures(), loadStandings()]);
 </script>
 </body>
