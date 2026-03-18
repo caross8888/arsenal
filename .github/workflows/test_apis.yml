@@ -9,4 +9,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run test
-        run: python scripts/test_apis.py
+        run: python scripts/test_espn.py
