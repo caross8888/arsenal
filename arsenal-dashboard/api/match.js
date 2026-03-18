@@ -143,10 +143,9 @@ export default async function handler(req, res) {
       const typeText = (ev.type?.text || ev.type?.id || ev.text || '').toLowerCase();
       const isGoal    = typeText.includes('goal') && !typeText.includes('disallow') && !typeText.includes('no goal');
       const isOwnGoal = typeText.includes('own goal') || typeText.includes('own-goal');
-      const isRed     = typeText.includes('red card') || typeText.includes('straight red') || typeText.includes('second yellow');
-      const isYellow  = typeText.includes('yellow card') && !typeText.includes('second');
+      const isRed = typeText.includes('red card') || typeText.includes('straight red') || typeText.includes('second yellow');
 
-      if (!isGoal && !isOwnGoal && !isRed && !isYellow) continue;
+      if (!isGoal && !isOwnGoal && !isRed) continue;
 
       // 분 추출
       const min = ev.clock?.displayValue
@@ -166,7 +165,7 @@ export default async function handler(req, res) {
 
       events.push({
         minute:  min,
-        type:    isOwnGoal ? 'own_goal' : isGoal ? 'goal' : isRed ? 'red_card' : 'yellow_card',
+        type:    isOwnGoal ? 'own_goal' : isGoal ? 'goal' : 'red_card',
         player,
         homeAway,
       });
