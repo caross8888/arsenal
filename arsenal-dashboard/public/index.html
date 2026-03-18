@@ -166,7 +166,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* PLAYER MODAL - Fotmob style */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
 .modal-overlay.open{display:flex;}
-.modal-sheet{background:#1a1c22;border-radius:20px 20px 0 0;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;animation:slideUp .28s cubic-bezier(.32,.72,0,1);padding-bottom:32px;}
+.modal-sheet{background:#1a1c22;border-radius:20px 20px 0 0;width:100%;max-width:540px;max-height:92vh;overflow:hidden;animation:slideUp .28s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}.modal-sheet-inner{overflow-y:auto;flex:1;padding-bottom:32px;}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:10px auto 0;}
 .modal-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:2;}
@@ -318,7 +318,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <!-- PLAYER DETAIL MODAL -->
 <div class="modal-overlay" id="playerModal" onclick="closeModal(event)">
   <div class="modal-sheet" id="modalSheet">
-    <div id="modalContent"></div>
+    <div class="modal-sheet-inner" id="modalContent"></div>
   </div>
 </div>
 
