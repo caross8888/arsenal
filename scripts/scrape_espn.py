@@ -75,7 +75,7 @@ def scrape():
                         'shortName': p.get('shortName', name),
                         'position': pos.get('abbreviation', ''),
                         'positionName': pos.get('name', ''),
-                        'nationality': (p.get('citizenship') or citizen.get('displayName') or p.get('birthPlace',{}).get('country','') or ''),
+                        'nationality': p.get('citizenship', ''),
                         'nationalityCode': citizen.get('abbreviation', ''),
                         'age': p.get('age'),
                         'dateOfBirth': birth,
@@ -83,25 +83,27 @@ def scrape():
                         # 대회별 스탯
                         'competitions': {},
                         # 합산 스탯 (초기화)
-                        'goals': 0, 'assists': 0,
-                        'shotsOnTarget': 0, 'totalShots': 0,
+                        'appearances': 0, 'goals': 0, 'assists': 0,
+                        'shotsOnTarget': 0, 'totalShots': 0, 'offsides': 0,
                         'foulsCommitted': 0, 'foulsDrawn': 0,
                         'yellowCards': 0, 'redCards': 0,
-                        'saves': 0, 'goalsConceded': 0,
-                        'appearances': 0,
+                        'saves': 0, 'shotsFaced': 0, 'goalsConceded': 0,
                     }
 
                 # 대회별 스탯 저장
                 comp_stats = {
+                    'appearances':   get_stat(p, 'general',  'appearances'),
                     'goals':         get_stat(p, 'offensive', 'totalGoals'),
                     'assists':       get_stat(p, 'offensive', 'goalAssists'),
                     'shotsOnTarget': get_stat(p, 'offensive', 'shotsOnTarget'),
                     'totalShots':    get_stat(p, 'offensive', 'totalShots'),
+                    'offsides':      get_stat(p, 'offensive', 'offsides'),
                     'foulsCommitted':get_stat(p, 'general',  'foulsCommitted'),
                     'foulsDrawn':    get_stat(p, 'general',  'foulsSuffered'),
                     'yellowCards':   get_stat(p, 'general',  'yellowCards'),
                     'redCards':      get_stat(p, 'general',  'redCards'),
                     'saves':         get_stat(p, 'goalKeeping', 'saves'),
+                    'shotsFaced':    get_stat(p, 'goalKeeping', 'shotsFaced'),
                     'goalsConceded': get_stat(p, 'goalKeeping', 'goalsConceded'),
                 }
                 player_map[name]['competitions'][comp_code] = {
@@ -109,9 +111,9 @@ def scrape():
                 }
 
                 # 합산
-                for key in ['goals','assists','shotsOnTarget','totalShots',
-                            'foulsCommitted','foulsDrawn','yellowCards','redCards',
-                            'saves','goalsConceded']:
+                for key in ['appearances','goals','assists','shotsOnTarget','totalShots',
+                            'offsides','foulsCommitted','foulsDrawn','yellowCards','redCards',
+                            'saves','shotsFaced','goalsConceded']:
                     player_map[name][key] += comp_stats[key]
 
                 # 출전 경기 수 (스탯이 있으면 1경기 이상)
