@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-03-18T05:32:17.537089",
+  "updated_at": "2026-03-18T05:35:54.607978",
   "season": "2025/2026",
   "source": "Fotmob",
   "players": [
     {
       "id": 317564,
       "name": "Kepa Arrizabalaga",
-      "nationality": "189 cm",
+      "nationality": "",
       "position": "keeper_long",
       "jersey": "13",
       "age": 31,
@@ -146,12 +146,123 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other keepers",
+        "items": [
+          {
+            "key": "keeper_sweeper_actions",
+            "title": "Sweeper actions",
+            "value": 93
+          },
+          {
+            "key": "goals_conceded",
+            "title": "Goals conceded",
+            "value": 91
+          },
+          {
+            "key": "save_percentage",
+            "title": "Save percentage",
+            "value": 79
+          },
+          {
+            "key": "keeper_high_claim",
+            "title": "High claims",
+            "value": 39
+          },
+          {
+            "key": "clean_sheet",
+            "title": "Clean sheets",
+            "value": 65
+          },
+          {
+            "key": "long_ball_succeeeded_accuracy",
+            "title": "Long ball percentage",
+            "value": 6
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Keeper",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "9",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "AFC Bournemouth",
+          "startDate": "2024-08",
+          "endDate": "2025-06",
+          "active": false,
+          "appearances": "35",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Chelsea",
+          "startDate": "2024-07",
+          "endDate": "2024-08",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Real Madrid",
+          "startDate": "2023-08",
+          "endDate": "2024-06",
+          "active": false,
+          "appearances": "20",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Chelsea",
+          "startDate": "2018-08",
+          "endDate": "2023-08",
+          "active": false,
+          "appearances": "163",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Athletic Club",
+          "startDate": "2016-07",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "54",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Real Valladolid",
+          "startDate": "2015-07",
+          "endDate": "2016-06",
+          "active": false,
+          "appearances": "40",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Ponferradina",
+          "startDate": "2015-01",
+          "endDate": "2015-06",
+          "active": false,
+          "appearances": "20",
+          "goals": "0",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 562727,
       "name": "David Raya",
-      "nationality": "183 cm",
+      "nationality": "",
       "position": "keeper_long",
       "jersey": "1",
       "age": 30,
@@ -296,12 +407,114 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other keepers",
+        "items": [
+          {
+            "key": "keeper_sweeper_actions",
+            "title": "Sweeper actions",
+            "value": 81
+          },
+          {
+            "key": "goals_conceded",
+            "title": "Goals conceded",
+            "value": 97
+          },
+          {
+            "key": "save_percentage",
+            "title": "Save percentage",
+            "value": 69
+          },
+          {
+            "key": "keeper_high_claim",
+            "title": "High claims",
+            "value": 87
+          },
+          {
+            "key": "clean_sheet",
+            "title": "Clean sheets",
+            "value": 94
+          },
+          {
+            "key": "long_ball_succeeeded_accuracy",
+            "title": "Long ball percentage",
+            "value": 25
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Keeper",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2024-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "95",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Brentford",
+          "startDate": "2024-07",
+          "endDate": "2024-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Arsenal",
+          "startDate": "2023-08",
+          "endDate": "2024-06",
+          "active": false,
+          "appearances": "41",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Brentford",
+          "startDate": "2019-07",
+          "endDate": "2023-08",
+          "active": false,
+          "appearances": "161",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Blackburn Rovers",
+          "startDate": "2015-04",
+          "endDate": "2019-07",
+          "active": false,
+          "appearances": "108",
+          "goals": "0",
+          "assists": "1"
+        },
+        {
+          "team": "Southport",
+          "startDate": "2014-09",
+          "endDate": "2015-03",
+          "active": false,
+          "appearances": "24",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Blackburn Rovers",
+          "startDate": "2013-07",
+          "endDate": "2014-09",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        }
+      ]
     },
     {
       "id": 1243239,
       "name": "Tommy Setford",
-      "nationality": "185 cm",
+      "nationality": "",
       "position": "keeper_long",
       "jersey": "35",
       "age": 20,
@@ -418,12 +631,43 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Keeper",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2024-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "2",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Jong Ajax",
+          "startDate": "2023-02",
+          "endDate": "2024-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Ajax",
+          "startDate": "2022-06",
+          "endDate": "2023-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        }
+      ]
     },
     {
       "id": 776151,
       "name": "Ben White",
-      "nationality": "186 cm",
+      "nationality": "",
       "position": "rightback",
       "jersey": "4",
       "age": 28,
@@ -683,12 +927,123 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other fullbacks",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 68
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 91
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 59
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 57
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 54
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 68
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Right Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2021-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "180",
+          "goals": "7",
+          "assists": "14"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2020-08",
+          "endDate": "2021-07",
+          "active": false,
+          "appearances": "39",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Leeds United",
+          "startDate": "2019-07",
+          "endDate": "2020-07",
+          "active": false,
+          "appearances": "49",
+          "goals": "1",
+          "assists": "2"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2019-07",
+          "endDate": "2019-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Peterborough United",
+          "startDate": "2019-01",
+          "endDate": "2019-06",
+          "active": false,
+          "appearances": "16",
+          "goals": "1",
+          "assists": "0"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2018-07",
+          "endDate": "2019-01",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Newport County",
+          "startDate": "2017-08",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "51",
+          "goals": "1",
+          "assists": "6"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2016-07",
+          "endDate": "2017-06",
+          "active": false,
+          "appearances": "2",
+          "goals": "0",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 955406,
       "name": "William Saliba",
-      "nationality": "193 cm",
+      "nationality": "",
       "position": "centerback",
       "jersey": "2",
       "age": 24,
@@ -948,12 +1303,123 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other center-backs",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 59
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 48
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 7
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 30
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 7
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 89
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Center Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2022-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "171",
+          "goals": "8",
+          "assists": "3"
+        },
+        {
+          "team": "Marseille",
+          "startDate": "2021-07",
+          "endDate": "2022-06",
+          "active": false,
+          "appearances": "52",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Nice",
+          "startDate": "2021-01",
+          "endDate": "2021-06",
+          "active": false,
+          "appearances": "22",
+          "goals": "1",
+          "assists": "0"
+        },
+        {
+          "team": "Arsenal",
+          "startDate": "2020-07",
+          "endDate": "2021-01",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Saint-Etienne",
+          "startDate": "2019-07",
+          "endDate": "2020-06",
+          "active": false,
+          "appearances": "17",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Arsenal",
+          "startDate": "2019-07",
+          "endDate": "2019-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Saint-Etienne",
+          "startDate": "2018-08",
+          "endDate": "2019-07",
+          "active": false,
+          "appearances": "19",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Saint-Etienne B",
+          "startDate": "2018-01",
+          "endDate": "2018-12",
+          "active": false,
+          "appearances": "3",
+          "goals": "0",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 795179,
       "name": "Gabriel",
-      "nationality": "190 cm",
+      "nationality": "",
       "position": "centerback",
       "jersey": "6",
       "age": 28,
@@ -1218,12 +1684,123 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other center-backs",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 60
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 90
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 52
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 89
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 86
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 62
+          }
+        ]
+      },
+      "preferredFoot": "Left",
+      "positionLabel": "Center Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2020-09",
+          "endDate": null,
+          "active": true,
+          "appearances": "247",
+          "goals": "24",
+          "assists": "7"
+        },
+        {
+          "team": "Lille",
+          "startDate": "2018-07",
+          "endDate": "2020-06",
+          "active": false,
+          "appearances": "51",
+          "goals": "2",
+          "assists": "0"
+        },
+        {
+          "team": "Lille B",
+          "startDate": "2018-07",
+          "endDate": "2019-09",
+          "active": false,
+          "appearances": "5",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Dinamo Zagreb B",
+          "startDate": "2018-02",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "10",
+          "goals": "2",
+          "assists": "0"
+        },
+        {
+          "team": "Dinamo Zagreb",
+          "startDate": "2018-02",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "1",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Troyes",
+          "startDate": "2017-07",
+          "endDate": "2018-02",
+          "active": false,
+          "appearances": "4",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Troyes B",
+          "startDate": "2017-07",
+          "endDate": "2018-02",
+          "active": false,
+          "appearances": "5",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Lille",
+          "startDate": "2017-01",
+          "endDate": "2017-06",
+          "active": false,
+          "appearances": "1",
+          "goals": "0",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 942381,
       "name": "Jurriën Timber",
-      "nationality": "179 cm",
+      "nationality": "",
       "position": "rightback",
       "jersey": "12",
       "age": 24,
@@ -1493,12 +2070,78 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other fullbacks",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 52
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 79
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 46
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 73
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 69
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 48
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Right Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2023-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "94",
+          "goals": "6",
+          "assists": "10"
+        },
+        {
+          "team": "Ajax",
+          "startDate": "2019-06",
+          "endDate": "2023-07",
+          "active": false,
+          "appearances": "121",
+          "goals": "6",
+          "assists": "4"
+        },
+        {
+          "team": "Jong Ajax",
+          "startDate": "2018-11",
+          "endDate": "2021-06",
+          "active": false,
+          "appearances": "39",
+          "goals": "0",
+          "assists": "1"
+        }
+      ]
     },
     {
       "id": 1105912,
       "name": "Riccardo Calafiori",
-      "nationality": "188 cm",
+      "nationality": "",
       "position": "centerback",
       "jersey": "33",
       "age": 23,
@@ -1758,12 +2401,105 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other fullbacks",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 20
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 98
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 66
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 51
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 98
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 61
+          }
+        ]
+      },
+      "preferredFoot": "Left",
+      "positionLabel": "Center Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2024-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "57",
+          "goals": "4",
+          "assists": "5"
+        },
+        {
+          "team": "Bologna",
+          "startDate": "2023-08",
+          "endDate": "2024-07",
+          "active": false,
+          "appearances": "33",
+          "goals": "2",
+          "assists": "5"
+        },
+        {
+          "team": "Basel",
+          "startDate": "2022-09",
+          "endDate": "2023-08",
+          "active": false,
+          "appearances": "38",
+          "goals": "1",
+          "assists": "2"
+        },
+        {
+          "team": "Roma",
+          "startDate": "2022-07",
+          "endDate": "2022-09",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Genoa",
+          "startDate": "2022-01",
+          "endDate": "2022-06",
+          "active": false,
+          "appearances": "3",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Roma",
+          "startDate": "2019-07",
+          "endDate": "2022-01",
+          "active": false,
+          "appearances": "18",
+          "goals": "1",
+          "assists": "2"
+        }
+      ]
     },
     {
       "id": 1137667,
       "name": "Piero Hincapié",
-      "nationality": "184 cm",
+      "nationality": "",
       "position": "centerback",
       "jersey": "5",
       "age": 24,
@@ -2023,12 +2759,96 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other fullbacks",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 10
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 99
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 96
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 39
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 29
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 87
+          }
+        ]
+      },
+      "preferredFoot": "Left",
+      "positionLabel": "Center Back",
+      "career": [
+        {
+          "team": "Bayer Leverkusen",
+          "startDate": "2026-07",
+          "endDate": null,
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Arsenal",
+          "startDate": "2025-09",
+          "endDate": "2026-06",
+          "active": true,
+          "appearances": "30",
+          "goals": "1",
+          "assists": "2"
+        },
+        {
+          "team": "Bayer Leverkusen",
+          "startDate": "2021-08",
+          "endDate": "2025-09",
+          "active": false,
+          "appearances": "166",
+          "goals": "7",
+          "assists": "7"
+        },
+        {
+          "team": "Talleres",
+          "startDate": "2020-08",
+          "endDate": "2021-08",
+          "active": false,
+          "appearances": "22",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Independiente del Valle",
+          "startDate": "2019-04",
+          "endDate": "2020-08",
+          "active": false,
+          "appearances": "3",
+          "goals": "0",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 1298907,
       "name": "Cristhian Mosquera",
-      "nationality": "191 cm",
+      "nationality": "",
       "position": "rightback",
       "jersey": "3",
       "age": 21,
@@ -2238,12 +3058,78 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other center-backs",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 22
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 36
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 23
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 0
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 17
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 78
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Right Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "24",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Valencia",
+          "startDate": "2021-09",
+          "endDate": "2025-07",
+          "active": false,
+          "appearances": "90",
+          "goals": "1",
+          "assists": "0"
+        },
+        {
+          "team": "Valencia B",
+          "startDate": "2021-07",
+          "endDate": "2023-06",
+          "active": false,
+          "appearances": "14",
+          "goals": "0",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 1406436,
       "name": "Myles Lewis-Skelly",
-      "nationality": "178 cm",
+      "nationality": "",
       "position": "leftback",
       "jersey": "49",
       "age": 19,
@@ -2468,12 +3354,60 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other fullbacks",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 30
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 42
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 4
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 44
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 23
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 58
+          }
+        ]
+      },
+      "preferredFoot": "Left",
+      "positionLabel": "Left Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2022-12",
+          "endDate": null,
+          "active": true,
+          "appearances": "65",
+          "goals": "1",
+          "assists": "5"
+        }
+      ]
     },
     {
       "id": 1787525,
       "name": "Marli Salmon",
-      "nationality": 89,
+      "nationality": "",
       "position": "rightback",
       "jersey": "89",
       "age": 16,
@@ -2705,12 +3639,24 @@
           "per90": 0.1,
           "percentile": 0
         }
-      }
+      },
+      "positionLabel": "Right Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "4",
+          "goals": "0",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 534670,
       "name": "Martin Ødegaard",
-      "nationality": "176 cm",
+      "nationality": "",
       "position": "rightmidfielder",
       "jersey": "8",
       "age": 27,
@@ -2965,12 +3911,123 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other midfielders",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 99
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 3
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 1
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 73
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 95
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 81
+          }
+        ]
+      },
+      "preferredFoot": "Left",
+      "positionLabel": "Right Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2021-08",
+          "endDate": null,
+          "active": true,
+          "appearances": "205",
+          "goals": "40",
+          "assists": "40"
+        },
+        {
+          "team": "Real Madrid",
+          "startDate": "2021-07",
+          "endDate": "2021-08",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Arsenal",
+          "startDate": "2021-01",
+          "endDate": "2021-06",
+          "active": false,
+          "appearances": "20",
+          "goals": "2",
+          "assists": "2"
+        },
+        {
+          "team": "Real Madrid",
+          "startDate": "2020-08",
+          "endDate": "2021-01",
+          "active": false,
+          "appearances": "9",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Real Sociedad",
+          "startDate": "2019-07",
+          "endDate": "2020-08",
+          "active": false,
+          "appearances": "36",
+          "goals": "7",
+          "assists": "9"
+        },
+        {
+          "team": "Vitesse",
+          "startDate": "2018-08",
+          "endDate": "2019-06",
+          "active": false,
+          "appearances": "39",
+          "goals": "11",
+          "assists": "12"
+        },
+        {
+          "team": "Real Madrid",
+          "startDate": "2018-07",
+          "endDate": "2018-08",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "SC Heerenveen",
+          "startDate": "2017-01",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "43",
+          "goals": "3",
+          "assists": "5"
+        }
+      ]
     },
     {
       "id": 574645,
       "name": "Mikel Merino",
-      "nationality": "187 cm",
+      "nationality": "",
       "position": "centerdefensivemidfielder",
       "jersey": "23",
       "age": 29,
@@ -3225,12 +4282,105 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other midfielders",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 72
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 97
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 61
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 99
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 94
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 15
+          }
+        ]
+      },
+      "preferredFoot": "Left",
+      "positionLabel": "Defensive Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2024-08",
+          "endDate": null,
+          "active": true,
+          "appearances": "77",
+          "goals": "15",
+          "assists": "8"
+        },
+        {
+          "team": "Real Sociedad",
+          "startDate": "2018-07",
+          "endDate": "2024-08",
+          "active": false,
+          "appearances": "242",
+          "goals": "27",
+          "assists": "26"
+        },
+        {
+          "team": "Newcastle United",
+          "startDate": "2018-01",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "8",
+          "goals": "0",
+          "assists": "1"
+        },
+        {
+          "team": "Newcastle United",
+          "startDate": "2017-07",
+          "endDate": "2018-01",
+          "active": false,
+          "appearances": "17",
+          "goals": "1",
+          "assists": null
+        },
+        {
+          "team": "Borussia Dortmund",
+          "startDate": "2016-07",
+          "endDate": "2017-07",
+          "active": false,
+          "appearances": "9",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Osasuna",
+          "startDate": "2014-07",
+          "endDate": "2016-06",
+          "active": false,
+          "appearances": "67",
+          "goals": "8",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 1031325,
       "name": "Martín Zubimendi",
-      "nationality": "180 cm",
+      "nationality": "",
       "position": "centerdefensivemidfielder",
       "jersey": "36",
       "age": 27,
@@ -3495,12 +4645,78 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other midfielders",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 46
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 87
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 59
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 71
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 43
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 78
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Defensive Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "43",
+          "goals": "6",
+          "assists": "3"
+        },
+        {
+          "team": "Real Sociedad",
+          "startDate": "2019-03",
+          "endDate": "2025-07",
+          "active": false,
+          "appearances": "236",
+          "goals": "10",
+          "assists": "8"
+        },
+        {
+          "team": "Real Sociedad B",
+          "startDate": "2017-04",
+          "endDate": "2020-06",
+          "active": false,
+          "appearances": "50",
+          "goals": "4",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 654096,
       "name": "Declan Rice",
-      "nationality": "185 cm",
+      "nationality": "",
       "position": "rightback",
       "jersey": "41",
       "age": 27,
@@ -3765,12 +4981,69 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other midfielders",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 94
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 71
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 41
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 76
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 74
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 86
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Right Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2023-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "146",
+          "goals": "20",
+          "assists": "28"
+        },
+        {
+          "team": "West Ham United",
+          "startDate": "2016-07",
+          "endDate": "2023-07",
+          "active": false,
+          "appearances": "245",
+          "goals": "15",
+          "assists": "13"
+        }
+      ]
     },
     {
       "id": 266520,
       "name": "Christian Nørgaard",
-      "nationality": "185 cm",
+      "nationality": "",
       "position": "centerback",
       "jersey": "16",
       "age": 32,
@@ -3834,12 +5107,114 @@
           "avgRating": 7.4
         }
       },
-      "stats": {}
+      "stats": {},
+      "traits": {
+        "title": "Stats compared to other midfielders",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 23
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 82
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 74
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 52
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 39
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 76
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Center Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "17",
+          "goals": "0",
+          "assists": "2"
+        },
+        {
+          "team": "Brentford",
+          "startDate": "2019-06",
+          "endDate": "2025-07",
+          "active": false,
+          "appearances": "196",
+          "goals": "13",
+          "assists": "17"
+        },
+        {
+          "team": "Fiorentina",
+          "startDate": "2018-07",
+          "endDate": "2019-06",
+          "active": false,
+          "appearances": "6",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Brøndby IF",
+          "startDate": "2013-08",
+          "endDate": "2018-07",
+          "active": false,
+          "appearances": "145",
+          "goals": "11",
+          "assists": "0"
+        },
+        {
+          "team": "Hamburger SV",
+          "startDate": "2012-08",
+          "endDate": "2013-08",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Hamburger SV II",
+          "startDate": "2012-01",
+          "endDate": "2013-08",
+          "active": false,
+          "appearances": "22",
+          "goals": "2",
+          "assists": "0"
+        },
+        {
+          "team": "Lyngby",
+          "startDate": "2011-09",
+          "endDate": "2011-12",
+          "active": false,
+          "appearances": "1",
+          "goals": "0",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 1635773,
       "name": "Max Dowman",
-      "nationality": "183 cm",
+      "nationality": "",
       "position": "centermidfielder",
       "jersey": "",
       "age": 16,
@@ -3900,12 +5275,25 @@
           "avgRating": 6.8
         }
       },
-      "stats": {}
+      "stats": {},
+      "preferredFoot": "Left",
+      "positionLabel": "Central Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "7",
+          "goals": "1",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 818975,
       "name": "Eberechi Eze",
-      "nationality": "178 cm",
+      "nationality": "",
       "position": "centerdefensivemidfielder",
       "jersey": "10",
       "age": 27,
@@ -4165,12 +5553,96 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other attacking midfielders/wingers",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 31
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 47
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 15
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 94
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 78
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 36
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Defensive Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-08",
+          "endDate": null,
+          "active": true,
+          "appearances": "41",
+          "goals": "8",
+          "assists": "5"
+        },
+        {
+          "team": "Crystal Palace",
+          "startDate": "2020-08",
+          "endDate": "2025-08",
+          "active": false,
+          "appearances": "169",
+          "goals": "40",
+          "assists": "29"
+        },
+        {
+          "team": "Queens Park Rangers",
+          "startDate": "2018-01",
+          "endDate": "2020-08",
+          "active": false,
+          "appearances": "111",
+          "goals": "20",
+          "assists": "11"
+        },
+        {
+          "team": "Wycombe Wanderers",
+          "startDate": "2017-08",
+          "endDate": "2018-01",
+          "active": false,
+          "appearances": "22",
+          "goals": "5",
+          "assists": "1"
+        },
+        {
+          "team": "Queens Park Rangers",
+          "startDate": "2016-12",
+          "endDate": "2017-06",
+          "active": false,
+          "appearances": "1",
+          "goals": "0",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 961995,
       "name": "Bukayo Saka",
-      "nationality": "178 cm",
+      "nationality": "",
       "position": "rightmidfielder",
       "jersey": "7",
       "age": 24,
@@ -4435,12 +5907,60 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other attacking midfielders/wingers",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 86
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 60
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 53
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 74
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 90
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 60
+          }
+        ]
+      },
+      "preferredFoot": "Left",
+      "positionLabel": "Right Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2018-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "304",
+          "goals": "79",
+          "assists": "69"
+        }
+      ]
     },
     {
       "id": 1084981,
       "name": "Noni Madueke",
-      "nationality": "182 cm",
+      "nationality": "",
       "position": "right_wing_back",
       "jersey": "20",
       "age": 24,
@@ -4705,12 +6225,87 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other attacking midfielders/wingers",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 63
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 57
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 39
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 72
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 77
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 61
+          }
+        ]
+      },
+      "preferredFoot": "Left",
+      "positionLabel": "Right Wing-Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "30",
+          "goals": "7",
+          "assists": "3"
+        },
+        {
+          "team": "Chelsea",
+          "startDate": "2023-01",
+          "endDate": "2025-07",
+          "active": false,
+          "appearances": "92",
+          "goals": "20",
+          "assists": "7"
+        },
+        {
+          "team": "PSV Eindhoven",
+          "startDate": "2019-08",
+          "endDate": "2023-01",
+          "active": false,
+          "appearances": "80",
+          "goals": "20",
+          "assists": "12"
+        },
+        {
+          "team": "Jong PSV",
+          "startDate": "2019-08",
+          "endDate": "2020-06",
+          "active": false,
+          "appearances": "6",
+          "goals": "4",
+          "assists": "1"
+        }
+      ]
     },
     {
       "id": 1021586,
       "name": "Gabriel Martinelli",
-      "nationality": "180 cm",
+      "nationality": "",
       "position": "left_wing_back",
       "jersey": "11",
       "age": 24,
@@ -4970,12 +6565,69 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other attacking midfielders/wingers",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 36
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 68
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 7
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 83
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 73
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 12
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Left Wing-Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2019-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "265",
+          "goals": "62",
+          "assists": "32"
+        },
+        {
+          "team": "Ituano FC",
+          "startDate": "2018-01",
+          "endDate": "2019-05",
+          "active": false,
+          "appearances": "34",
+          "goals": "10",
+          "assists": "3"
+        }
+      ]
     },
     {
       "id": 318615,
       "name": "Leandro Trossard",
-      "nationality": "175 cm",
+      "nationality": "",
       "position": "rightwinger",
       "jersey": "19",
       "age": 31,
@@ -5240,12 +6892,123 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other attacking midfielders/wingers",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 40
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 20
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 23
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 66
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 72
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 55
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Right Winger",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true,
+          "appearances": "163",
+          "goals": "35",
+          "assists": "28"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2019-06",
+          "endDate": "2023-01",
+          "active": false,
+          "appearances": "121",
+          "goals": "25",
+          "assists": "13"
+        },
+        {
+          "team": "Genk",
+          "startDate": "2016-07",
+          "endDate": "2019-06",
+          "active": false,
+          "appearances": "118",
+          "goals": "39",
+          "assists": "18"
+        },
+        {
+          "team": "OH Leuven",
+          "startDate": "2015-07",
+          "endDate": "2016-06",
+          "active": false,
+          "appearances": "31",
+          "goals": "9",
+          "assists": "6"
+        },
+        {
+          "team": "Lommel",
+          "startDate": "2014-07",
+          "endDate": "2015-06",
+          "active": false,
+          "appearances": "42",
+          "goals": "17",
+          "assists": "1"
+        },
+        {
+          "team": "Westerlo",
+          "startDate": "2013-07",
+          "endDate": "2014-06",
+          "active": false,
+          "appearances": "21",
+          "goals": "5",
+          "assists": "0"
+        },
+        {
+          "team": "Lommel",
+          "startDate": "2013-01",
+          "endDate": "2013-06",
+          "active": false,
+          "appearances": "12",
+          "goals": "7",
+          "assists": "0"
+        },
+        {
+          "team": "Genk",
+          "startDate": "2011-07",
+          "endDate": "2013-01",
+          "active": false,
+          "appearances": "2",
+          "goals": "0",
+          "assists": "0"
+        }
+      ]
     },
     {
       "id": 576165,
       "name": "Gabriel Jesus",
-      "nationality": "175 cm",
+      "nationality": "",
       "position": "striker",
       "jersey": "9",
       "age": 28,
@@ -5480,12 +7243,78 @@
           "per90": 0,
           "percentile": 0
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other forwards",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 33
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 63
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 67
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 83
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 90
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 89
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Striker",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2022-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "116",
+          "goals": "31",
+          "assists": "18"
+        },
+        {
+          "team": "Manchester City",
+          "startDate": "2017-01",
+          "endDate": "2022-07",
+          "active": false,
+          "appearances": "236",
+          "goals": "95",
+          "assists": "41"
+        },
+        {
+          "team": "Palmeiras",
+          "startDate": "2014-08",
+          "endDate": "2016-12",
+          "active": false,
+          "appearances": "83",
+          "goals": "28",
+          "assists": "9"
+        }
+      ]
     },
     {
       "id": 749736,
       "name": "Kai Havertz",
-      "nationality": "193 cm",
+      "nationality": "",
       "position": "centerdefensivemidfielder",
       "jersey": "29",
       "age": 26,
@@ -5720,12 +7549,78 @@
           "per90": 0,
           "percentile": 100
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other forwards",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 98
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 74
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 81
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 72
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 41
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 81
+          }
+        ]
+      },
+      "preferredFoot": "Left",
+      "positionLabel": "Defensive Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2023-06",
+          "endDate": null,
+          "active": true,
+          "appearances": "99",
+          "goals": "32",
+          "assists": "13"
+        },
+        {
+          "team": "Chelsea",
+          "startDate": "2020-09",
+          "endDate": "2023-06",
+          "active": false,
+          "appearances": "139",
+          "goals": "32",
+          "assists": "12"
+        },
+        {
+          "team": "Bayer Leverkusen",
+          "startDate": "2016-09",
+          "endDate": "2020-09",
+          "active": false,
+          "appearances": "150",
+          "goals": "46",
+          "assists": "28"
+        }
+      ]
     },
     {
       "id": 664500,
       "name": "Viktor Gyökeres",
-      "nationality": "187 cm",
+      "nationality": "",
       "position": "striker",
       "jersey": "14",
       "age": 27,
@@ -5995,7 +7890,118 @@
           "per90": 0,
           "percentile": 0
         }
-      }
+      },
+      "traits": {
+        "title": "Stats compared to other forwards",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 60
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 24
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 23
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 90
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 59
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 26
+          }
+        ]
+      },
+      "preferredFoot": "Right",
+      "positionLabel": "Striker",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "41",
+          "goals": "16",
+          "assists": "2"
+        },
+        {
+          "team": "Sporting CP",
+          "startDate": "2023-07",
+          "endDate": "2025-07",
+          "active": false,
+          "appearances": "102",
+          "goals": "97",
+          "assists": "26"
+        },
+        {
+          "team": "Coventry City",
+          "startDate": "2021-07",
+          "endDate": "2023-07",
+          "active": false,
+          "appearances": "97",
+          "goals": "40",
+          "assists": "17"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2021-07",
+          "endDate": "2021-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Coventry City",
+          "startDate": "2021-01",
+          "endDate": "2021-06",
+          "active": false,
+          "appearances": "19",
+          "goals": "3",
+          "assists": "0"
+        },
+        {
+          "team": "Swansea City",
+          "startDate": "2020-10",
+          "endDate": "2021-01",
+          "active": false,
+          "appearances": "12",
+          "goals": "1",
+          "assists": "0"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2020-07",
+          "endDate": "2020-10",
+          "active": false,
+          "appearances": "3",
+          "goals": "1",
+          "assists": "1"
+        },
+        {
+          "team": "St. Pauli",
+          "startDate": "2019-07",
+          "endDate": "2020-06",
+          "active": false,
+          "appearances": "28",
+          "goals": "7",
+          "assists": "4"
+        }
+      ]
     }
   ]
 }
