@@ -43,7 +43,7 @@ export default async function handler(req, res) {
       } catch (_) {}
     }
 
-    if (!raw) return res.status(404).json({ error: 'match not found' });
+    if (!raw) return res.status(404).json({ error: 'match not found - tried slugs: ' + slugsToTry.join(',') + ' for event: ' + eventId });
 
     // ── 팀 정보 (header 또는 boxscore에서) ──
     const comp = raw.header?.competitions?.[0];
@@ -228,6 +228,6 @@ export default async function handler(req, res) {
     return res.json(result);
 
   } catch (err) {
-    return res.status(500).json({ error: err.message, stack: err.stack });
+    return res.status(500).json({ error: err.message });
   }
 }
