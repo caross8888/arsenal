@@ -1,135 +1,162 @@
 #!/usr/bin/env python3
 """
 FBref 아스날 선수 스탯 스크래퍼
-soccerdata 라이브러리로 Cloudflare 우회
-매일 GitHub Actions에서 실행 → players.json 업데이트
+GitHub Actions에서 매일 UTC 23:00 실행
+결과: arsenal-dashboard/public/data/players.json
 """
 
 import json
 import os
 import time
+import sys
 from pathlib import Path
 
 import pandas as pd
-import soccerdata as sd
 
 OUTPUT_PATH = Path("arsenal-dashboard/public/data/players.json")
 OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 TEAM = "Arsenal"
 LEAGUE = "ENG-Premier League"
-SEASON = "2526"  # 2025-26 시즌
 
-# FBref 스탯 타입들
+# 현재 시즌 자동 계산
+from datetime import datetime
+now = datetime.utcnow()
+year = now.year
+month = now.month
+start_year = year if month >= 8 else year - 1
+SEASON = f"{str(start_year)[2:]}{str(start_year+1)[2:]}"  # 예: "2526"
+
+print(f"🔍 FBref 스크래핑 시작 - {TEAM} {SEASON}")
+
+try:
+    import soccerdata as sd
+except ImportError:
+    print("❌ soccerdata 없음")
+    sys.exit(1)
+
 STAT_TYPES = [
-    "standard",    # 기본 (골/어시/출전)
-    "shooting",    # 슈팅 (xG, 유효슈팅)
-    "passing",     # 패스 (패스%, 키패스, xA)
-    "defense",     # 수비 (태클, 인터셉트, 클리어런스)
-    "misc",        # 기타 (드리블, 파울, 카드)
+    ("standard", "기본 스탯"),
+    ("shooting", "슈팅"),
+    ("passing", "패스"),
+    ("defense", "수비"),
+    ("misc", "기타"),
 ]
 
 def safe_val(val, default=0):
-    """NaN/None 안전 변환"""
-    if pd.isna(val):
+    try:
+        if pd.isna(val):
+            return default
+        v = float(val)
+        return int(v) if v == int(v) else round(v, 2)
+    except:
         return default
-    if isinstance(val, float) and val == int(val):
-        return int(val)
-    return round(float(val), 2) if isinstance(val, float) else val
 
 
-def scrape_fbref():
-    print(f"🔍 FBref 스크래핑 시작 - {TEAM} {SEASON}")
-    fbref = sd.FBref(leagues=LEAGUE, seasons=SEASON)
+def flatten_cols(df):
+    """멀티인덱스 컬럼 평탄화"""
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = ['_'.join(str(c).strip() for c in col if str(c) != '').strip('_') 
+                      for col in df.columns]
+    return df
 
-    all_stats = {}
 
-    for stat_type in STAT_TYPES:
-        print(f"  📥 {stat_type} 스탯 수집 중...")
-        try:
-            df = fbref.read_player_season_stats(stat_type=stat_type)
-            # 아스날 선수만 필터
-            arsenal_df = df[df.index.get_level_values('team') == TEAM]
-            if arsenal_df.empty:
-                # 팀명 형식이 다를 수 있음
-                teams = df.index.get_level_values('team').unique()
-                ars = [t for t in teams if 'Arsenal' in str(t)]
-                if ars:
-                    arsenal_df = df[df.index.get_level_values('team') == ars[0]]
+fbref = sd.FBref(leagues=LEAGUE, seasons=SEASON)
+all_stats = {}
 
-            for idx, row in arsenal_df.iterrows():
-                player_name = idx[1] if isinstance(idx, tuple) else str(idx)
-                if player_name not in all_stats:
-                    all_stats[player_name] = {"name": player_name}
-                # 컬럼 값 저장 (멀티인덱스 컬럼 평탄화)
-                for col in arsenal_df.columns:
-                    col_key = '_'.join(str(c) for c in col) if isinstance(col, tuple) else str(col)
-                    all_stats[player_name][f"{stat_type}_{col_key}"] = safe_val(row[col])
+for stat_type, label in STAT_TYPES:
+    print(f"  📥 {label} 수집 중...")
+    try:
+        df = fbref.read_player_season_stats(stat_type=stat_type)
+        df = flatten_cols(df.reset_index())
 
-            time.sleep(3)  # 요청 간격 (차단 방지)
+        # 아스날 필터 (team 컬럼)
+        team_col = next((c for c in df.columns if 'team' in c.lower()), None)
+        if team_col:
+            arsenal_df = df[df[team_col].str.contains('Arsenal', na=False)]
+        else:
+            arsenal_df = df
 
-        except Exception as e:
-            print(f"  ⚠️  {stat_type} 실패: {e}")
+        if arsenal_df.empty:
+            print(f"    ⚠️ {label}: 아스날 데이터 없음")
             continue
 
-    if not all_stats:
-        print("❌ 데이터 없음 - 종료")
-        return
+        print(f"    ✅ {label}: {len(arsenal_df)}명")
 
-    # 핵심 지표만 추출해서 깔끔하게 정리
-    players_output = []
-    for name, raw in all_stats.items():
-        player = {
-            "name": name,
-            # 기본
-            "appearances":    raw.get("standard_Playing Time_MP", 0),
-            "starts":         raw.get("standard_Playing Time_Starts", 0),
-            "minutes":        raw.get("standard_Playing Time_Min", 0),
-            "goals":          raw.get("standard_Performance_Gls", 0),
-            "assists":        raw.get("standard_Performance_Ast", 0),
-            "xG":             raw.get("standard_Expected_xG", 0),
-            "xA":             raw.get("standard_Expected_xAG", 0),
-            # 슈팅
-            "shots":          raw.get("shooting_Standard_Sh", 0),
-            "shots_on_target":raw.get("shooting_Standard_SoT", 0),
-            "shot_accuracy":  raw.get("shooting_Standard_SoT%", 0),
-            "xG_shooting":    raw.get("shooting_Expected_xG", 0),
-            # 패스
-            "passes":         raw.get("passing_Total_Att", 0),
-            "pass_accuracy":  raw.get("passing_Total_Cmp%", 0),
-            "key_passes":     raw.get("passing_KP", 0),
-            "xA_passing":     raw.get("passing_xAG", 0),
-            # 수비
-            "tackles":        raw.get("defense_Tackles_Tkl", 0),
-            "tackles_won":    raw.get("defense_Tackles_TklW", 0),
-            "interceptions":  raw.get("defense_Int", 0),
-            "blocks":         raw.get("defense_Blocks_Blocks", 0),
-            "clearances":     raw.get("defense_Clr", 0),
-            # 기타
-            "dribbles":       raw.get("misc_Performance_Succ", 0),  # 드리블 성공
-            "yellow_cards":   raw.get("misc_Performance_CrdY", 0),
-            "red_cards":      raw.get("misc_Performance_CrdR", 0),
-            "fouls_committed":raw.get("misc_Performance_Fls", 0),
-            "fouls_drawn":    raw.get("misc_Performance_Fld", 0),
-        }
-        players_output.append(player)
+        # player 컬럼 찾기
+        player_col = next((c for c in df.columns if 'player' in c.lower()), df.columns[0])
 
-    # 출전 시간 순 정렬
-    players_output.sort(key=lambda p: p["minutes"], reverse=True)
+        for _, row in arsenal_df.iterrows():
+            name = str(row.get(player_col, ''))
+            if not name or name == 'nan':
+                continue
+            if name not in all_stats:
+                all_stats[name] = {"name": name}
+            for col in arsenal_df.columns:
+                if col not in (player_col, team_col, 'season', 'league'):
+                    all_stats[name][f"{stat_type}_{col}"] = safe_val(row[col])
 
-    output = {
-        "updated_at": pd.Timestamp.now().isoformat(),
-        "season": SEASON,
-        "source": "FBref via soccerdata",
-        "players": players_output,
-    }
+        time.sleep(4)  # 차단 방지 딜레이
 
-    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+    except Exception as e:
+        print(f"    ❌ {label} 실패: {e}")
+        continue
+
+if not all_stats:
+    print("❌ 수집된 데이터 없음 - players.json 빈 파일로 저장")
+    output = {"updated_at": datetime.utcnow().isoformat(), "season": SEASON,
+              "source": "FBref via soccerdata", "players": []}
+    with open(OUTPUT_PATH, "w") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
+    sys.exit(0)
 
-    print(f"✅ 완료! {len(players_output)}명 → {OUTPUT_PATH}")
-    print(f"   샘플: {players_output[0] if players_output else 'N/A'}")
+# 핵심 지표 추출
+players_output = []
+for name, raw in all_stats.items():
+    p = {
+        "name": name,
+        # 기본
+        "appearances":      raw.get("standard_MP", 0),
+        "starts":           raw.get("standard_Starts", 0),
+        "minutes":          raw.get("standard_Min", 0),
+        "goals":            raw.get("standard_Gls", 0),
+        "assists":          raw.get("standard_Ast", 0),
+        "xG":               raw.get("standard_xG", 0),
+        "xA":               raw.get("standard_xAG", 0),
+        # 슈팅
+        "shots":            raw.get("shooting_Sh", 0),
+        "shots_on_target":  raw.get("shooting_SoT", 0),
+        "shot_accuracy":    raw.get("shooting_SoT%", 0),
+        # 패스
+        "pass_accuracy":    raw.get("passing_Cmp%", 0),
+        "key_passes":       raw.get("passing_KP", 0),
+        "passes_total":     raw.get("passing_Att", 0),
+        # 수비
+        "tackles":          raw.get("defense_Tkl", 0),
+        "tackles_won":      raw.get("defense_TklW", 0),
+        "interceptions":    raw.get("defense_Int", 0),
+        "blocks":           raw.get("defense_Blocks", 0),
+        "clearances":       raw.get("defense_Clr", 0),
+        # 기타
+        "dribbles_success": raw.get("misc_Succ", 0),
+        "yellow_cards":     raw.get("misc_CrdY", 0),
+        "red_cards":        raw.get("misc_CrdR", 0),
+        "fouls":            raw.get("misc_Fls", 0),
+    }
+    players_output.append(p)
 
+players_output.sort(key=lambda x: x["minutes"], reverse=True)
 
-if __name__ == "__main__":
-    scrape_fbref()
+output = {
+    "updated_at": datetime.utcnow().isoformat(),
+    "season": SEASON,
+    "source": "FBref via soccerdata",
+    "players": players_output
+}
+
+with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+    json.dump(output, f, ensure_ascii=False, indent=2)
+
+print(f"✅ 완료! {len(players_output)}명 저장 → {OUTPUT_PATH}")
+if players_output:
+    print(f"   1위: {players_output[0]['name']} - {players_output[0]['minutes']}분")
