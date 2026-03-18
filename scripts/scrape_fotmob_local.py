@@ -154,64 +154,102 @@ def parse_stats(data):
             }
     result['stats'] = all_stats
 
-    # 대회별 스탯 — recentMatches에서 leagueId 기준으로 집계
+    # 대회별 스탯 — Fotmob playerStats API (seasonStat=entryId)
     LEAGUE_TO_COMP = {
-        47:  'PL',   # Premier League
-        42:  'UCL',  # Champions League
-        132: 'FAC',  # FA Cup
-        133: 'EFL',  # EFL Cup
+        47:  'PL',
+        42:  'UCL',
+        132: 'FAC',
+        133: 'EFL',
     }
-    comp_stats = {}
-    recent_raw = data.get('recentMatches', {})
-    # recentMatches가 dict이면 values(), list면 그대로
-    recent = recent_raw.values() if isinstance(recent_raw, dict) else (recent_raw if isinstance(recent_raw, list) else [])
-    for match in recent:
-        league_id = match.get('leagueId')
-        comp = LEAGUE_TO_COMP.get(league_id)
-        if not comp:
-            continue
-        if comp not in comp_stats:
-            comp_stats[comp] = {
-                'name': COMP_NAMES.get(comp, comp),
-                'appearances': 0,  # 출전 경기 (벤치 제외)
-                'starts': 0,       # 선발
-                'goals': 0,
-                'assists': 0,
-                'yellowCards': 0,
-                'redCards': 0,
-                'minutesPlayed': 0,
-                'rating_sum': 0,
-                'rating_count': 0,
-            }
-        c = comp_stats[comp]
-        on_bench = match.get('onBench', True)
-        minutes = match.get('minutesPlayed', 0) or 0
-        if not on_bench and minutes > 0:
-            c['appearances'] += 1
-            # 선발: 벤치 아니고 45분 이상 또는 전반부터 출전
-            if minutes >= 45:
-                c['starts'] += 1
-        c['goals']         += match.get('goals', 0) or 0
-        c['assists']       += match.get('assists', 0) or 0
-        c['yellowCards']   += match.get('yellowCards', 0) or 0
-        c['redCards']      += match.get('redCards', 0) or 0
-        c['minutesPlayed'] += minutes
-        rating = match.get('ratingProps') or {}
-        if rating.get('rating'):
-            try:
-                c['rating_sum']   += float(rating['rating'])
-                c['rating_count'] += 1
-            except:
-                pass
 
-    for comp, c in comp_stats.items():
-        if c['rating_count'] > 0:
-            c['avgRating'] = round(c['rating_sum'] / c['rating_count'], 1)
-        else:
-            c['avgRating'] = None
-        del c['rating_sum']
-        del c['rating_count']
-        result['competitions'][comp] = c
+    # statSeasons에서 현재 시즌 대회 목록 가져오기
+    seasons = data.get('statSeasons', [])
+    current_season = next((s for s in seasons if s.get('seasonName') == SEASON), seasons[0] if seasons else None)
+    tournaments = current_season.get('tournaments', []) if current_season else []
+
+    for t in tournaments:
+        comp_code = LEAGUE_TO_COMP.get(t.get('tournamentId'))
+        if not comp_code:
+            continue
+        entry_id = t.get('entryId')
+        if not entry_id:
+            continue
+
+        try:
+            url = f'https://www.fotmob.com/api/playerStats?playerId={result["id"]}&seasonStat={entry_id}'
+            r = requests.get(url, headers=HEADERS, timeout=15)
+            if not r.ok:
+                continue
+            j = r.json()
+
+            # statsSection에서 스탯 파싱
+            stats_section = j.get('statsSection', {})
+            comp_raw = {}
+            for group in stats_section.get('items', []):
+                for stat in group.get('items', []):
+                    key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
+                    comp_raw[key] = stat.get('statValue')
+
+            # topStats (상단 요약 스탯: 클린시트, 실점, 평점, 경기, 선발 등)
+            top_stats = {}
+            for ts in j.get('topStatCard', {}).get('items', []):
+                ts_key = ts.get('localizedTitleId') or ts.get('title', '')
+                top_stats[ts_key] = ts.get('statValue')
+
+            def sv(key, fallback=0):
+                v = comp_raw.get(key) or top_stats.get(key)
+                if v is None: return fallback
+                try: return int(float(str(v)))
+                except: return fallback
+
+            def svf(key, fallback=None):
+                v = comp_raw.get(key) or top_stats.get(key)
+                if v is None: return fallback
+                try: return round(float(str(v)), 2)
+                except: return fallback
+
+            result['competitions'][comp_code] = {
+                'name':          COMP_NAMES.get(comp_code, comp_code),
+                'appearances':   sv('appearances') or sv('matches_played'),
+                'starts':        sv('matches_started') or sv('starter'),
+                'goals':         sv('goals'),
+                'assists':       sv('goal_assist') or sv('assists'),
+                'yellowCards':   sv('yellow_card') or sv('yellow_cards'),
+                'redCards':      sv('red_card') or sv('red_cards'),
+                'minutesPlayed': sv('minutes_played') or sv('mins_played'),
+                'avgRating':     svf('average_rating') or svf('rating'),
+                # GK 전용
+                'cleanSheets':   sv('clean_sheet_team_title') or sv('clean_sheets'),
+                'goalsConceded': sv('goals_conceded'),
+                'saves':         sv('saves'),
+                'savePercentage': svf('save_percentage'),
+            }
+            time.sleep(1)
+        except Exception as e:
+            print(f'  ⚠️  {comp_code} playerStats 실패: {e}')
+            # fallback: recentMatches 기반 집계
+            recent_raw = data.get('recentMatches', {})
+            recent = recent_raw.values() if isinstance(recent_raw, dict) else (recent_raw if isinstance(recent_raw, list) else [])
+            c = {'name':COMP_NAMES.get(comp_code,comp_code),'appearances':0,'starts':0,'goals':0,'assists':0,'yellowCards':0,'redCards':0,'minutesPlayed':0,'cleanSheets':0,'goalsConceded':0,'avgRating':None,'saves':0,'savePercentage':None}
+            rs, rc = 0, 0
+            for match in recent:
+                if LEAGUE_TO_COMP.get(match.get('leagueId')) != comp_code: continue
+                ob = match.get('onBench', True)
+                mins = match.get('minutesPlayed', 0) or 0
+                if not ob and mins > 0:
+                    c['appearances'] += 1
+                    if mins >= 45: c['starts'] += 1
+                c['goals'] += match.get('goals', 0) or 0
+                c['assists'] += match.get('assists', 0) or 0
+                c['yellowCards'] += match.get('yellowCards', 0) or 0
+                c['redCards'] += match.get('redCards', 0) or 0
+                c['minutesPlayed'] += mins
+                rating = (match.get('ratingProps') or {}).get('rating')
+                if rating:
+                    try: rs += float(rating); rc += 1
+                    except: pass
+            if rc > 0: c['avgRating'] = round(rs/rc, 1)
+            result['competitions'][comp_code] = c
 
 
     # traits (레이더 차트용 - Fotmob 포지션별 비교)
