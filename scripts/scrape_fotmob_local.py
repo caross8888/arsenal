@@ -218,6 +218,62 @@ def parse_stats(data):
         del c['rating_sum']
         del c['rating_count']
         result['competitions'][comp] = c
+    # ── traits (레이더 차트용) ──
+    traits_raw = data.get('traits') or {}
+    if traits_raw and traits_raw.get('items'):
+        result['traits'] = {
+            'title': traits_raw.get('title', ''),
+            'items': [
+                {
+                    'key':   item.get('key'),
+                    'title': item.get('title'),
+                    'value': round((item.get('value') or 0) * 100),  # 0~1 → 0~100
+                }
+                for item in traits_raw.get('items', [])
+            ]
+        }
+
+    # ── 기본 정보 (키, 발, 나이, 등번호) ──
+    for info in data.get('playerInformation', []):
+        title = (info.get('title') or '').lower()
+        val   = info.get('value', {}) or {}
+        if 'height' in title:
+            result['height'] = val.get('fallback', '')
+        elif 'shirt' in title or 'number' in title:
+            result['jersey'] = str(val.get('numberValue', ''))
+        elif 'age' in title:
+            result['age'] = val.get('numberValue') or val.get('fallback')
+        elif 'foot' in title:
+            result['preferredFoot'] = val.get('fallback', '')
+
+    # ── 포지션 ──
+    pos_list = data.get('positionDescription', {}).get('positions', [])
+    if pos_list:
+        result['positionLabel'] = pos_list[0].get('strPos', {}).get('label', '')
+
+    # ── 국적 ──
+    result['nationality'] = data.get('citizenship', '')
+
+    # ── 계약 만료 ──
+    ce = data.get('contractEnd', {}) or {}
+    if ce:
+        result['contractEnd'] = (ce.get('utcTime') or '')[:10]
+
+    # ── 경력 ──
+    career = data.get('careerHistory', {}).get('careerItems', {}).get('senior', {}).get('teamEntries', [])
+    result['career'] = [
+        {
+            'team':        e.get('team'),
+            'startDate':   (e.get('startDate') or '')[:7],
+            'endDate':     (e.get('endDate') or '')[:7] or None,
+            'active':      e.get('active', False),
+            'appearances': e.get('appearances'),
+            'goals':       e.get('goals'),
+            'assists':     e.get('assists'),
+        }
+        for e in career[:8]
+    ]
+
     return result
 
 
