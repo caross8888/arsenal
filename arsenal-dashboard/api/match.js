@@ -180,11 +180,47 @@ export default async function handler(req, res) {
       away.score = parseInt(aComp?.score || 0);
     }
 
+    // ── 경기장 ──
+    const venue = raw.header?.competitions?.[0]?.venue?.fullName
+      || raw.gameInfo?.venue?.fullName
+      || raw.venue?.fullName
+      || null;
+
+    // ── 선수 스탯 ──
+    function parsePlayers(competitor) {
+      const roster = competitor?.roster || competitor?.athletes || [];
+      return roster.slice(0, 14).map(p => {
+        const ath = p.athlete || p;
+        const stats = {};
+        for (const s of (p.stats || p.statistics || [])) {
+          const n = (s.name || s.abbreviation || '').toLowerCase();
+          if (n.includes('rating') || n === 'rat') stats.rating = s.displayValue || s.value;
+          if (n === 'shots' || n === 'totalshots') stats.shots = s.displayValue || s.value;
+          if (n.includes('passacc') || n.includes('pass%')) stats.passAccuracy = s.displayValue || s.value;
+          if (n.includes('dribble') || n === 'drb') stats.dribbles = s.displayValue || s.value;
+          if (n.includes('tackle') || n === 'tck') stats.tackles = s.displayValue || s.value;
+        }
+        return {
+          name:     ath.displayName || ath.shortName || ath.name || '',
+          jersey:   ath.jersey || p.jersey || '',
+          position: (ath.position?.abbreviation || ath.position?.displayAbbreviation || ''),
+          stats,
+        };
+      }).filter(p => p.name);
+    }
+
+    const players = {
+      home: parsePlayers(bsTeams.find(t => t.homeAway === 'home')),
+      away: parsePlayers(bsTeams.find(t => t.homeAway === 'away')),
+    };
+
     const result = {
       eventId,
+      venue,
       homeTeam: { id: home.id, name: home.name, crest: home.crest, score: home.score, stats: home.stats },
       awayTeam: { id: away.id, name: away.name, crest: away.crest, score: away.score, stats: away.stats },
       events,
+      players,
       status: comp?.status?.type?.description || '',
     };
 
