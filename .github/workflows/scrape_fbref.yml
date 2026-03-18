@@ -1,0 +1,37 @@
+name: Scrape FBref Stats
+
+on:
+  schedule:
+    # UTC 23:00 = 영국 BST 자정 (여름/시즌 중)
+    # 경기 종료 후 FBref 데이터 업데이트 시간 고려
+    - cron: '0 23 * * *'
+  workflow_dispatch:  # 수동 실행 버튼
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install soccerdata pandas
+
+      - name: Run scraper
+        run: python scripts/scrape_fbref.py
+
+      - name: Commit and push data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add arsenal-dashboard/public/data/players.json
+          git diff --staged --quiet || git commit -m "📊 FBref stats update $(date +'%Y-%m-%d %H:%M UTC')"
+          git push
