@@ -36,68 +36,92 @@ export default async function handler(req, res) {
     let result;
 
     if(type === 'fixtures'){
-      const delay = ms => new Promise(r => setTimeout(r, ms));
-
-      // ESPN API - 모든 대회 아스날 일정
-      const ESPN_SLUGS = [
-        {slug:'eng.1',        name:'Premier League',      short:'PL'},
-        {slug:'uefa.champions',name:'Champions League',   short:'UCL'},
-        {slug:'eng.league_cup',name:'EFL Cup',            short:'EFL'},
-        {slug:'eng.fa',        name:'FA Cup',             short:'FAC'},
-        {slug:'eng.community_shield', name:'Community Shield', short:'CS'},
-        {slug:'fifa.cwc',     name:'Club World Cup',      short:'CWC'},
+      const ARSENAL_ESPN_ID = '359';
+      const SLUGS = [
+        {slug:'eng.1',         name:'Premier League',   short:'PL'},
+        {slug:'uefa.champions',name:'Champions League', short:'UCL'},
+        {slug:'eng.league_cup',name:'EFL Cup',          short:'EFL'},
+        {slug:'eng.fa',        name:'FA Cup',           short:'FAC'},
       ];
 
-      const fetchESPN = async ({slug, name, short}) => {
+      const now = new Date();
+      const fmtDate = d => d.toISOString().slice(0,10).replace(/-/g,'');
+      const futureEnd = fmtDate(new Date(now.getFullYear(), 7, 31));
+
+      const parseEvent = (e, name, short) => {
+        const comp = e.competitions?.[0];
+        const home = comp?.competitors?.find(c => c.homeAway === 'home');
+        const away = comp?.competitors?.find(c => c.homeAway === 'away');
+        const status = comp?.status?.type;
+        const finished = status?.completed || false;
+        const live = status?.state === 'in';
+        const homeScore = (finished||live) ? (parseInt(home?.score?.displayValue ?? home?.score ?? 0)||0) : null;
+        const awayScore = (finished||live) ? (parseInt(away?.score?.displayValue ?? away?.score ?? 0)||0) : null;
+        const homeId = home?.team?.id;
+        const awayId = away?.team?.id;
+        return {
+          id:          e.id,
+          utcDate:     e.date,
+          competition: {name, short},
+          status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
+          homeTeam: {
+            id:    homeId,
+            name:  home?.team?.displayName || home?.team?.name,
+            crest: home?.team?.logo || (homeId ? `https://a.espncdn.com/i/teamlogos/soccer/500/${homeId}.png` : null),
+          },
+          awayTeam: {
+            id:    awayId,
+            name:  away?.team?.displayName || away?.team?.name,
+            crest: away?.team?.logo || (awayId ? `https://a.espncdn.com/i/teamlogos/soccer/500/${awayId}.png` : null),
+          },
+          score: {fullTime: {home: homeScore, away: awayScore}}
+        };
+      };
+
+      const isArsenal = m =>
+        m.homeTeam?.id === ARSENAL_ESPN_ID || m.awayTeam?.id === ARSENAL_ESPN_ID ||
+        m.homeTeam?.name?.includes('Arsenal') || m.awayTeam?.name?.includes('Arsenal');
+
+      const fetchSlug = async ({slug, name, short}) => {
         try {
-          const r = await fetch(
-            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/teams/359/schedule`,
+          // 완료 경기: schedule API
+          const sr = await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/teams/${ARSENAL_ESPN_ID}/schedule`,
             {signal: AbortSignal.timeout(8000)}
           );
-          if(!r.ok) return [];
-          const j = await r.json();
-          return (j.events || []).map(e => {
-            const comp = e.competitions?.[0];
-            const home = comp?.competitors?.find(c => c.homeAway === 'home');
-            const away = comp?.competitors?.find(c => c.homeAway === 'away');
-            const status = comp?.status?.type;
-            const finished = status?.completed || false;
-            const homeScore = finished ? parseInt(home?.score?.displayValue ?? home?.score) : null;
-            const awayScore = finished ? parseInt(away?.score?.displayValue ?? away?.score) : null;
-            return {
-              id:           e.id,
-              utcDate:      e.date,
-              competition:  {name, short},
-              status:       finished ? 'FINISHED' : (status?.state === 'in' ? 'IN_PLAY' : 'SCHEDULED'),
-              homeTeam:     {id: home?.team?.id, name: home?.team?.displayName, crest: home?.team?.logo},
-              awayTeam:     {id: away?.team?.id, name: away?.team?.displayName, crest: away?.team?.logo},
-              score: {
-                fullTime: {home: homeScore, away: awayScore}
-              }
-            };
-          });
+          const sj = sr.ok ? await sr.json() : {events:[]};
+          const past = (sj.events||[]).map(e => parseEvent(e, name, short)).filter(isArsenal);
+
+          // 예정 경기: scoreboard API (오늘~시즌 종료)
+          const todayStr = fmtDate(now);
+          const br = await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard?dates=${todayStr}-${futureEnd}&limit=50`,
+            {signal: AbortSignal.timeout(8000)}
+          );
+          const bj = br.ok ? await br.json() : {events:[]};
+          const future = (bj.events||[]).map(e => parseEvent(e, name, short)).filter(isArsenal);
+
+          return [...past, ...future];
         } catch(_){ return []; }
       };
 
-      // 병렬 fetch
-      const results = await Promise.all(ESPN_SLUGS.map(fetchESPN));
-      const allMatches = results.flat();
+      const results = await Promise.all(SLUGS.map(fetchSlug));
 
-      // 아스날(팀 ID 359) 경기만 필터
-      const arsenalMatches = allMatches.filter(m =>
-        m.homeTeam?.id === '359' || m.awayTeam?.id === '359' ||
-        m.homeTeam?.name?.includes('Arsenal') || m.awayTeam?.name?.includes('Arsenal')
-      );
+      // 중복 제거 (id 기준)
+      const seen = new Set();
+      const allMatches = results.flat().filter(m => {
+        if(seen.has(m.id)) return false;
+        seen.add(m.id);
+        return true;
+      });
 
       // 날짜순 정렬
-      arsenalMatches.sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
+      allMatches.sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
 
-      // 완료/예정 분리
-      const now = new Date();
-      const finished = arsenalMatches.filter(m => m.status === 'FINISHED');
-      const upcoming = arsenalMatches.filter(m => m.status !== 'FINISHED');
+      const finished = allMatches.filter(m => m.status === 'FINISHED');
+      const upcoming = allMatches.filter(m => m.status !== 'FINISHED');
 
-      return res.json({matches: arsenalMatches, finished, upcoming});
+      return res.json({matches: allMatches, finished, upcoming});
 
     } else if(type === 'standings'){
       if(!KEY) return res.status(500).json({error:'FOOTBALL_DATA_KEY 없음'});
@@ -116,7 +140,6 @@ export default async function handler(req, res) {
       };
 
     } else if(type === 'squad'){
-      // ── Step 1: football-data.org에서 공식 1군 스쿼드 이름 목록 ──
       const officialNames = new Set();
       if(KEY){
         try{
@@ -125,7 +148,6 @@ export default async function handler(req, res) {
             const sqJson = await sqRes.json();
             (sqJson.squad||[]).forEach(p=>{
               officialNames.add(p.name.toLowerCase());
-              // 모든 단어를 개별로 추가 (Kepa Arrizabalaga → kepa, arrizabalaga)
               p.name.toLowerCase().split(' ').forEach(word => {
                 if(word.length > 2) officialNames.add(word);
               });
@@ -134,12 +156,10 @@ export default async function handler(req, res) {
         }catch(_){}
       }
 
-      // ── Step 2: FPL에서 아스날 선수 데이터 ──
       const fplRes = await fetch(FPL_URL,{headers:FPL_HEADERS,signal:AbortSignal.timeout(8000)});
       if(!fplRes.ok) throw new Error(`FPL API: ${fplRes.status}`);
       const fplJson = await fplRes.json();
 
-      // football-data 국적 매핑
       const nationalityMap = {};
       if(KEY){
         try{
@@ -156,19 +176,7 @@ export default async function handler(req, res) {
         }catch(_){}
       }
 
-      const isOfficialSquad = (p) => {
-        const fullName = (p.first_name + ' ' + p.second_name).toLowerCase();
-        const webName = p.web_name.toLowerCase();
-        // FPL second_name도 단어별로 쪼개서 체크 (예: "Arrizabalaga Revuelta" → "arrizabalaga")
-        const secondNameWords = p.second_name.toLowerCase().split(' ');
-        const firstNameWords = p.first_name.toLowerCase().split(' ');
-        return officialNames.has(fullName)
-          || officialNames.has(webName)
-          || secondNameWords.some(w => w.length > 2 && officialNames.has(w))
-          || firstNameWords.some(w => w.length > 2 && officialNames.has(w));
-      };
-
-      // Fotmob 스크래퍼 명단 (이 명단에 없는 선수는 표시 안 함)
+      // Fotmob 명단 기반 필터
       const FOTMOB_NAMES = [
         'kepa','raya','setford','white','saliba','gabriel','timber',
         'calafiori','hincapie','mosquera','lewis-skelly','lewis skelly','salmon',
@@ -189,7 +197,6 @@ export default async function handler(req, res) {
         .filter(p => {
           if(p.team !== ARSENAL_FPL_ID) return false;
           if(p.news && LOAN_KEYWORDS.test(p.news)) return false;
-          // Fotmob 명단에 있는 선수만 표시
           return isInFotmob(p);
         })
         .map(p => {
@@ -198,7 +205,6 @@ export default async function handler(req, res) {
           const nationality = nationalityMap[fullName.toLowerCase()]
             || nationalityMap[lastName] || '';
           const photoId = p.photo ? p.photo.replace('.jpg','') : null;
-          const apps = Math.max(1, Math.round(p.minutes/90));
           return {
             id: p.id,
             fplId: p.id,
@@ -206,15 +212,13 @@ export default async function handler(req, res) {
             fullName,
             nationality,
             posGroup: FPL_POS[p.element_type]||'MF',
-            // 기본 스탯
             goals: p.goals_scored,
             assists: p.assists,
-            appearances: apps,
+            appearances: Math.max(1, Math.round(p.minutes/90)),
             starts: p.starts || 0,
             minutes: p.minutes,
             yellowCards: p.yellow_cards,
             redCards: p.red_cards,
-            // FPL 고급 지표
             xG: parseFloat(p.expected_goals)||0,
             xA: parseFloat(p.expected_assists)||0,
             xGI: parseFloat(p.expected_goal_involvements)||0,
