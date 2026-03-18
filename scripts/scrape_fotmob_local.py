@@ -295,9 +295,18 @@ def parse_stats(data):
         result['nationality'] = data.get('citizenship', '')
 
     # ── 포지션 ──
-    pos_list = data.get('positionDescription', {}).get('positions', [])
-    if pos_list:
-        result['positionLabel'] = pos_list[0].get('strPos', {}).get('label', '')
+    pos_desc = data.get('positionDescription', {})
+    pos_list = pos_desc.get('positions', [])
+    # primaryPosition label 우선
+    primary_label = pos_desc.get('primaryPosition', {}).get('label', '')
+    if not primary_label:
+        main = next((p for p in pos_list if p.get('isMainPosition')), None)
+        if main:
+            primary_label = (main.get('strPos') or {}).get('label', '')
+        elif pos_list:
+            best = max(pos_list, key=lambda p: p.get('occurences', 0))
+            primary_label = (best.get('strPos') or {}).get('label', '')
+    result['positionLabel'] = primary_label
 
     # ── 계약 만료 ──
     ce = data.get('contractEnd', {}) or {}
