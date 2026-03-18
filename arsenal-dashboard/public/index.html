@@ -446,20 +446,16 @@ function buildFixCard(m){
   var card=document.createElement('div');
   card.className='fix-card '+(isLive?'live-match':isDone?'finished '+resultCls:'upcoming');
   if(resultBg) card.style.background=resultBg;
-  // meta row
   var metaRow=document.createElement('div');metaRow.className='fix-meta-row';
   var ct=document.createElement('span');ct.className='comp-tag '+ctag(code);ct.textContent=cname(code,compName);
   var ds=document.createElement('span');ds.className='fix-date'+(isLive?' live-tag':'');
   ds.textContent=isLive?'● LIVE':formatDate(m.utcDate||m.date);
   metaRow.appendChild(ct);metaRow.appendChild(ds);card.appendChild(metaRow);
-  // teams row - 스코어 중앙 고정, 팀명 flex
   var tr=document.createElement('div');tr.className='teams-row';
-  // 홈팀
   var hd=document.createElement('div');hd.className='fix-team-home';
   hd.appendChild(renderCrest(makeCrest(m.homeTeam,isArsHome)));
   var hn=document.createElement('div');hn.className='t-name-home';
   hn.textContent=m.homeTeam.shortName||m.homeTeam.displayName||m.homeTeam.name||'';hd.appendChild(hn);
-  // 스코어박스
   var sb=document.createElement('div');sb.className='fix-score-box';
   if(hasScore){
     var sd=document.createElement('div');sd.className='fix-score';
@@ -472,7 +468,6 @@ function buildFixCard(m){
   } else {
     var vd=document.createElement('div');vd.className='fix-vs';vd.textContent='VS';sb.appendChild(vd);
   }
-  // 원정팀
   var ad=document.createElement('div');ad.className='fix-team-away';
   var an=document.createElement('div');an.className='t-name-away';
   an.textContent=m.awayTeam.shortName||m.awayTeam.displayName||m.awayTeam.name||'';ad.appendChild(an);
@@ -868,11 +863,12 @@ function openPlayerModal(p) {
     });
   }
   var fotmob = null;
+  var normalize=function(s){return(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');};
   if(window._fotmobPlayers){
     fotmob = window._fotmobPlayers.find(function(f){
-      var pn=(p.name||'').toLowerCase();
-      var fn=(f.name||'').toLowerCase();
-      return fn===pn||fn.includes(pn)||pn.includes(fn.split(' ').pop());
+      var pn=normalize(p.name); var pfn=normalize(p.fullName||p.name);
+      var fn=normalize(f.name); var fln=normalize(f.name.split(' ').pop());
+      return fn===pn||fn===pfn||fn.includes(pn)||pfn.includes(fn)||pn.includes(fln)||pfn.includes(fln);
     });
   }
 
@@ -958,7 +954,7 @@ function openPlayerModal(p) {
       var hidden = i===0 ? '' : 'display:none';
       h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+hidden+'">';
       var mins=c.minutesPlayed||0;
-      var h_=Math.floor(mins/60); var m_=mins%60;
+      var h_=Math.floor(mins/60);var m_=mins%60;
       var minsStr=mins>=60?(h_+'h '+(m_>0?m_+'m':'')):(mins>0?mins+'m':'-');
       var rating=c.avgRating?c.avgRating.toFixed(1):'-';
       var ratingColor=c.avgRating>=8?'#22C55E':c.avgRating>=7?'#84CC16':c.avgRating>=6?'#F59E0B':'rgba(255,255,255,0.7)';
@@ -966,23 +962,23 @@ function openPlayerModal(p) {
       if(pos==='GK'){
         var csVal=c.cleanSheets!=null?c.cleanSheets:'-';
         var gcVal=c.goalsConceded!=null?c.goalsConceded:'-';
-        h += makeFMStat(csVal,'클린시트',parseInt(csVal)>0?'#22C55E':'');
-        h += makeFMStat(gcVal,'실점',parseInt(gcVal)===0?'#22C55E':'#EF4444');
-        h += makeFMStat(rating,'평점',ratingColor);
-        h += makeFMStat(c.appearances||0,'경기','');
-        h += makeFMStat(minsStr,'출전시간','');
-        h += makeFMStat(c.yellowCards||0,'경고',c.yellowCards>0?'#F59E0B':'');
-        h += makeFMStat(c.redCards||0,'퇴장',c.redCards>0?'#EF4444':'');
-        h += makeFMStat('','','');
+        h+=makeFMStat(csVal,'클린시트',parseInt(csVal)>0?'#22C55E':'');
+        h+=makeFMStat(gcVal,'실점',parseInt(gcVal)===0?'#22C55E':'#EF4444');
+        h+=makeFMStat(rating,'평점',ratingColor);
+        h+=makeFMStat(c.appearances||0,'경기','');
+        h+=makeFMStat(minsStr,'출전시간','');
+        h+=makeFMStat(c.yellowCards||0,'경고',c.yellowCards>0?'#F59E0B':'');
+        h+=makeFMStat(c.redCards||0,'퇴장',c.redCards>0?'#EF4444':'');
+        h+=makeFMStat('','','');
       } else {
-        h += makeFMStat(c.goals||0,'득점','#22C55E');
-        h += makeFMStat(c.assists||0,'어시스트','#60A5FA');
-        h += makeFMStat(c.starts!=null?c.starts:'-','선발','');
-        h += makeFMStat(c.appearances||0,'경기','');
-        h += makeFMStat(minsStr,'출전시간','');
-        h += makeFMStat(rating,'평균평점',ratingColor);
-        h += makeFMStat(c.yellowCards||0,'경고',c.yellowCards>0?'#F59E0B':'');
-        h += makeFMStat(c.redCards||0,'퇴장',c.redCards>0?'#EF4444':'');
+        h+=makeFMStat(c.goals||0,'득점','#22C55E');
+        h+=makeFMStat(c.assists||0,'어시스트','#60A5FA');
+        h+=makeFMStat(c.starts!=null?c.starts:'-','선발','');
+        h+=makeFMStat(c.appearances||0,'경기','');
+        h+=makeFMStat(minsStr,'출전시간','');
+        h+=makeFMStat(rating,'평균평점',ratingColor);
+        h+=makeFMStat(c.yellowCards||0,'경고',c.yellowCards>0?'#F59E0B':'');
+        h+=makeFMStat(c.redCards||0,'퇴장',c.redCards>0?'#EF4444':'');
       }
       h += '</div>';
       h += '</div>';
