@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-03-18T07:17:16.305947",
+  "updated_at": "2026-03-18T08:09:10.105188",
   "season": "2025/2026",
   "source": "Fotmob",
   "players": [
@@ -13,11 +13,87 @@
       "jersey": "13",
       "age": 31,
       "height": "189 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 6967934,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
+      "positionLabel": "Keeper",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "9",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "AFC Bournemouth",
+          "startDate": "2024-08",
+          "endDate": "2025-06",
+          "active": false,
+          "appearances": "35",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Chelsea",
+          "startDate": "2024-07",
+          "endDate": "2024-08",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Real Madrid",
+          "startDate": "2023-08",
+          "endDate": "2024-06",
+          "active": false,
+          "appearances": "20",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Chelsea",
+          "startDate": "2018-08",
+          "endDate": "2023-08",
+          "active": false,
+          "appearances": "163",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Athletic Club",
+          "startDate": "2016-07",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "54",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Real Valladolid",
+          "startDate": "2015-07",
+          "endDate": "2016-06",
+          "active": false,
+          "appearances": "40",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Ponferradina",
+          "startDate": "2015-01",
+          "endDate": "2015-06",
+          "active": false,
+          "appearances": "20",
+          "goals": "0",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -34,29 +110,29 @@
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 9,
-          "starts": 9,
+          "appearances": 0,
+          "starts": 0,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 810,
-          "cleanSheets": 3,
-          "goalsConceded": 10,
-          "avgRating": 6.8
+          "minutesPlayed": 0,
+          "cleanSheets": 0,
+          "goalsConceded": 0,
+          "avgRating": null
         },
         "FAC": {
           "name": "FA컵",
-          "appearances": 4,
-          "starts": 4,
+          "appearances": 3,
+          "starts": 3,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 357,
+          "minutesPlayed": 267,
           "cleanSheets": 1,
-          "goalsConceded": 4,
-          "avgRating": 7.6
+          "goalsConceded": 2,
+          "avgRating": 7.5
         },
         "EFL": {
           "name": "카라바오컵",
@@ -147,6 +223,31 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "0",
+          "per90": 0,
+          "percentile": -1
+        },
+        "rating": {
+          "value": "7.44",
+          "per90": 7.44,
+          "percentile": 87
+        },
+        "matches_uppercase": {
+          "value": "3",
+          "per90": 3,
+          "percentile": 85
+        },
+        "player_started_matches": {
+          "value": "3",
+          "per90": 3,
+          "percentile": 85
+        },
+        "saved_penalties": {
+          "value": "0/0",
+          "per90": 0,
+          "percentile": 0
         }
       },
       "traits": {
@@ -184,82 +285,7 @@
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Keeper",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2025-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "9",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "AFC Bournemouth",
-          "startDate": "2024-08",
-          "endDate": "2025-06",
-          "active": false,
-          "appearances": "35",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Chelsea",
-          "startDate": "2024-07",
-          "endDate": "2024-08",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Real Madrid",
-          "startDate": "2023-08",
-          "endDate": "2024-06",
-          "active": false,
-          "appearances": "20",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Chelsea",
-          "startDate": "2018-08",
-          "endDate": "2023-08",
-          "active": false,
-          "appearances": "163",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Athletic Club",
-          "startDate": "2016-07",
-          "endDate": "2018-06",
-          "active": false,
-          "appearances": "54",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Real Valladolid",
-          "startDate": "2015-07",
-          "endDate": "2016-06",
-          "active": false,
-          "appearances": "40",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Ponferradina",
-          "startDate": "2015-01",
-          "endDate": "2015-06",
-          "active": false,
-          "appearances": "20",
-          "goals": "0",
-          "assists": "0"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 562727,
@@ -271,36 +297,103 @@
       "jersey": "1",
       "age": 30,
       "height": "183 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 27377976,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
+      "positionLabel": "Keeper",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2024-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "95",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Brentford",
+          "startDate": "2024-07",
+          "endDate": "2024-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Arsenal",
+          "startDate": "2023-08",
+          "endDate": "2024-06",
+          "active": false,
+          "appearances": "41",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Brentford",
+          "startDate": "2019-07",
+          "endDate": "2023-08",
+          "active": false,
+          "appearances": "161",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Blackburn Rovers",
+          "startDate": "2015-04",
+          "endDate": "2019-07",
+          "active": false,
+          "appearances": "108",
+          "goals": "0",
+          "assists": "1"
+        },
+        {
+          "team": "Southport",
+          "startDate": "2014-09",
+          "endDate": "2015-03",
+          "active": false,
+          "appearances": "24",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Blackburn Rovers",
+          "startDate": "2013-07",
+          "endDate": "2014-09",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 13,
-          "starts": 13,
+          "appearances": 9,
+          "starts": 9,
           "goals": 0,
           "assists": 0,
-          "yellowCards": 1,
+          "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 1170,
-          "cleanSheets": 7,
-          "goalsConceded": 7,
+          "minutesPlayed": 810,
+          "cleanSheets": 6,
+          "goalsConceded": 3,
           "avgRating": 7.7
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 38,
-          "starts": 38,
+          "appearances": 31,
+          "starts": 31,
           "goals": 0,
           "assists": 0,
-          "yellowCards": 2,
+          "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 3420,
-          "cleanSheets": 17,
-          "goalsConceded": 30,
+          "minutesPlayed": 2790,
+          "cleanSheets": 15,
+          "goalsConceded": 22,
           "avgRating": 7.2
         },
         "EFL": {
@@ -410,6 +503,31 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "15",
+          "per90": 0.48,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "7.22",
+          "per90": 7.22,
+          "percentile": 85
+        },
+        "matches_uppercase": {
+          "value": "31",
+          "per90": 31,
+          "percentile": 100
+        },
+        "player_started_matches": {
+          "value": "31",
+          "per90": 31,
+          "percentile": 100
+        },
+        "saved_penalties": {
+          "value": "0/0",
+          "per90": 0,
+          "percentile": 0
         }
       },
       "traits": {
@@ -418,17 +536,17 @@
           {
             "key": "keeper_sweeper_actions",
             "title": "Sweeper actions",
-            "value": 81
+            "value": 82
           },
           {
             "key": "goals_conceded",
             "title": "Goals conceded",
-            "value": 97
+            "value": 98
           },
           {
             "key": "save_percentage",
             "title": "Save percentage",
-            "value": 69
+            "value": 74
           },
           {
             "key": "keeper_high_claim",
@@ -438,82 +556,16 @@
           {
             "key": "clean_sheet",
             "title": "Clean sheets",
-            "value": 94
+            "value": 96
           },
           {
             "key": "long_ball_succeeeded_accuracy",
             "title": "Long ball percentage",
-            "value": 25
+            "value": 27
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Keeper",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2024-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "95",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Brentford",
-          "startDate": "2024-07",
-          "endDate": "2024-07",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Arsenal",
-          "startDate": "2023-08",
-          "endDate": "2024-06",
-          "active": false,
-          "appearances": "41",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Brentford",
-          "startDate": "2019-07",
-          "endDate": "2023-08",
-          "active": false,
-          "appearances": "161",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Blackburn Rovers",
-          "startDate": "2015-04",
-          "endDate": "2019-07",
-          "active": false,
-          "appearances": "108",
-          "goals": "0",
-          "assists": "1"
-        },
-        {
-          "team": "Southport",
-          "startDate": "2014-09",
-          "endDate": "2015-03",
-          "active": false,
-          "appearances": "24",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Blackburn Rovers",
-          "startDate": "2013-07",
-          "endDate": "2014-09",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 1243239,
@@ -525,11 +577,42 @@
       "jersey": "35",
       "age": 20,
       "height": "185 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 90000,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
+      "positionLabel": "Keeper",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2024-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "2",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Jong Ajax",
+          "startDate": "2023-02",
+          "endDate": "2024-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Ajax",
+          "startDate": "2022-06",
+          "endDate": "2023-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        }
+      ],
       "competitions": {
         "FAC": {
           "name": "FA컵",
@@ -546,19 +629,6 @@
         },
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 0,
-          "starts": 0,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 0,
-          "cleanSheets": 0,
-          "goalsConceded": 0,
-          "avgRating": null
-        },
-        "PL": {
-          "name": "프리미어리그",
           "appearances": 0,
           "starts": 0,
           "goals": 0,
@@ -636,39 +706,35 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "3",
+          "per90": 0.4,
+          "percentile": 90
+        },
+        "rating": {
+          "value": "6.93",
+          "per90": 6.93,
+          "percentile": 79
+        },
+        "matches_uppercase": {
+          "value": "8",
+          "per90": 8,
+          "percentile": 78
+        },
+        "player_started_matches": {
+          "value": "8",
+          "per90": 8,
+          "percentile": 79
+        },
+        "saved_penalties": {
+          "value": "0/0",
+          "per90": 0,
+          "percentile": 0
         }
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Keeper",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2024-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "2",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Jong Ajax",
-          "startDate": "2023-02",
-          "endDate": "2024-07",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Ajax",
-          "startDate": "2022-06",
-          "endDate": "2023-07",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        }
-      ]
+      "traits": null,
+      "season": "2025/2026"
     },
     {
       "id": 776151,
@@ -680,36 +746,112 @@
       "jersey": "4",
       "age": 28,
       "height": "186 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 42005827,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
+      "positionLabel": "Right Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2021-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "180",
+          "goals": "7",
+          "assists": "14"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2020-08",
+          "endDate": "2021-07",
+          "active": false,
+          "appearances": "39",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Leeds United",
+          "startDate": "2019-07",
+          "endDate": "2020-07",
+          "active": false,
+          "appearances": "49",
+          "goals": "1",
+          "assists": "2"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2019-07",
+          "endDate": "2019-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Peterborough United",
+          "startDate": "2019-01",
+          "endDate": "2019-06",
+          "active": false,
+          "appearances": "16",
+          "goals": "1",
+          "assists": "0"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2018-07",
+          "endDate": "2019-01",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Newport County",
+          "startDate": "2017-08",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "51",
+          "goals": "1",
+          "assists": "6"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2016-07",
+          "endDate": "2017-06",
+          "active": false,
+          "appearances": "2",
+          "goals": "0",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 12,
+          "appearances": 8,
           "starts": 4,
           "goals": 0,
           "assists": 1,
           "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 375,
-          "cleanSheets": 6,
-          "goalsConceded": 8,
+          "minutesPlayed": 359,
+          "cleanSheets": 5,
+          "goalsConceded": 4,
           "avgRating": 6.8
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 13,
-          "starts": 10,
+          "appearances": 7,
+          "starts": 4,
           "goals": 0,
-          "assists": 2,
+          "assists": 1,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 906,
-          "cleanSheets": 5,
-          "goalsConceded": 13,
+          "minutesPlayed": 411,
+          "cleanSheets": 3,
+          "goalsConceded": 7,
           "avgRating": 7.1
         },
         "FAC": {
@@ -934,6 +1076,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "7.07",
+          "per90": 7.07,
+          "percentile": 75
+        },
+        "matches_uppercase": {
+          "value": "7",
+          "per90": 7,
+          "percentile": 10
+        },
+        "player_started_matches": {
+          "value": "5",
+          "per90": 5,
+          "percentile": 18
+        },
+        "minutes_played": {
+          "value": "411",
+          "per90": 90,
+          "percentile": 18
         }
       },
       "traits": {
@@ -942,17 +1104,17 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 68
+            "value": 69
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 91
+            "value": 90
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 59
+            "value": 53
           },
           {
             "key": "goals",
@@ -962,91 +1124,16 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 54
+            "value": 56
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 68
+            "value": 64
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Right Back",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2021-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "180",
-          "goals": "7",
-          "assists": "14"
-        },
-        {
-          "team": "Brighton & Hove Albion",
-          "startDate": "2020-08",
-          "endDate": "2021-07",
-          "active": false,
-          "appearances": "39",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Leeds United",
-          "startDate": "2019-07",
-          "endDate": "2020-07",
-          "active": false,
-          "appearances": "49",
-          "goals": "1",
-          "assists": "2"
-        },
-        {
-          "team": "Brighton & Hove Albion",
-          "startDate": "2019-07",
-          "endDate": "2019-07",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Peterborough United",
-          "startDate": "2019-01",
-          "endDate": "2019-06",
-          "active": false,
-          "appearances": "16",
-          "goals": "1",
-          "assists": "0"
-        },
-        {
-          "team": "Brighton & Hove Albion",
-          "startDate": "2018-07",
-          "endDate": "2019-01",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Newport County",
-          "startDate": "2017-08",
-          "endDate": "2018-06",
-          "active": false,
-          "appearances": "51",
-          "goals": "1",
-          "assists": "6"
-        },
-        {
-          "team": "Brighton & Hove Albion",
-          "startDate": "2016-07",
-          "endDate": "2017-06",
-          "active": false,
-          "appearances": "2",
-          "goals": "0",
-          "assists": "0"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 955406,
@@ -1058,36 +1145,112 @@
       "jersey": "2",
       "age": 24,
       "height": "193 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 89055964,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
+      "positionLabel": "Center Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2022-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "171",
+          "goals": "8",
+          "assists": "3"
+        },
+        {
+          "team": "Marseille",
+          "startDate": "2021-07",
+          "endDate": "2022-06",
+          "active": false,
+          "appearances": "52",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Nice",
+          "startDate": "2021-01",
+          "endDate": "2021-06",
+          "active": false,
+          "appearances": "22",
+          "goals": "1",
+          "assists": "0"
+        },
+        {
+          "team": "Arsenal",
+          "startDate": "2020-07",
+          "endDate": "2021-01",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Saint-Etienne",
+          "startDate": "2019-07",
+          "endDate": "2020-06",
+          "active": false,
+          "appearances": "17",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Arsenal",
+          "startDate": "2019-07",
+          "endDate": "2019-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Saint-Etienne",
+          "startDate": "2018-08",
+          "endDate": "2019-07",
+          "active": false,
+          "appearances": "19",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Saint-Etienne B",
+          "startDate": "2018-01",
+          "endDate": "2018-12",
+          "active": false,
+          "appearances": "3",
+          "goals": "0",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 11,
-          "starts": 11,
+          "appearances": 7,
+          "starts": 7,
           "goals": 0,
           "assists": 0,
           "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 990,
-          "cleanSheets": 5,
-          "goalsConceded": 7,
-          "avgRating": 6.8
+          "minutesPlayed": 630,
+          "cleanSheets": 4,
+          "goalsConceded": 3,
+          "avgRating": 7.1
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 33,
-          "starts": 32,
+          "appearances": 25,
+          "starts": 24,
           "goals": 1,
           "assists": 0,
           "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 2750,
-          "cleanSheets": 14,
-          "goalsConceded": 27,
+          "minutesPlayed": 2075,
+          "cleanSheets": 12,
+          "goalsConceded": 18,
           "avgRating": 7.2
         },
         "FAC": {
@@ -1312,6 +1475,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "7.18",
+          "per90": 7.18,
+          "percentile": 86
+        },
+        "matches_uppercase": {
+          "value": "25",
+          "per90": 25,
+          "percentile": 67
+        },
+        "player_started_matches": {
+          "value": "24",
+          "per90": 24,
+          "percentile": 73
+        },
+        "minutes_played": {
+          "value": "2075",
+          "per90": 90,
+          "percentile": 73
         }
       },
       "traits": {
@@ -1320,7 +1503,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 59
+            "value": 58
           },
           {
             "key": "aerials_won",
@@ -1349,82 +1532,7 @@
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Center Back",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2022-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "171",
-          "goals": "8",
-          "assists": "3"
-        },
-        {
-          "team": "Marseille",
-          "startDate": "2021-07",
-          "endDate": "2022-06",
-          "active": false,
-          "appearances": "52",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Nice",
-          "startDate": "2021-01",
-          "endDate": "2021-06",
-          "active": false,
-          "appearances": "22",
-          "goals": "1",
-          "assists": "0"
-        },
-        {
-          "team": "Arsenal",
-          "startDate": "2020-07",
-          "endDate": "2021-01",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Saint-Etienne",
-          "startDate": "2019-07",
-          "endDate": "2020-06",
-          "active": false,
-          "appearances": "17",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Arsenal",
-          "startDate": "2019-07",
-          "endDate": "2019-07",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Saint-Etienne",
-          "startDate": "2018-08",
-          "endDate": "2019-07",
-          "active": false,
-          "appearances": "19",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Saint-Etienne B",
-          "startDate": "2018-01",
-          "endDate": "2018-12",
-          "active": false,
-          "appearances": "3",
-          "goals": "0",
-          "assists": "0"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 795179,
@@ -1436,11 +1544,87 @@
       "jersey": "6",
       "age": 28,
       "height": "190 cm",
+      "preferredFoot": "Left",
       "marketValue": {
         "value": 69583929,
         "currency": "EUR"
       },
       "contractEnd": "2029-06-30",
+      "positionLabel": "Center Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2020-09",
+          "endDate": null,
+          "active": true,
+          "appearances": "247",
+          "goals": "24",
+          "assists": "7"
+        },
+        {
+          "team": "Lille",
+          "startDate": "2018-07",
+          "endDate": "2020-06",
+          "active": false,
+          "appearances": "51",
+          "goals": "2",
+          "assists": "0"
+        },
+        {
+          "team": "Lille B",
+          "startDate": "2018-07",
+          "endDate": "2019-09",
+          "active": false,
+          "appearances": "5",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Dinamo Zagreb B",
+          "startDate": "2018-02",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "10",
+          "goals": "2",
+          "assists": "0"
+        },
+        {
+          "team": "Dinamo Zagreb",
+          "startDate": "2018-02",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "1",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Troyes",
+          "startDate": "2017-07",
+          "endDate": "2018-02",
+          "active": false,
+          "appearances": "4",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Troyes B",
+          "startDate": "2017-07",
+          "endDate": "2018-02",
+          "active": false,
+          "appearances": "5",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Lille",
+          "startDate": "2017-01",
+          "endDate": "2017-06",
+          "active": false,
+          "appearances": "1",
+          "goals": "0",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -1457,16 +1641,16 @@
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 26,
+          "appearances": 25,
           "starts": 24,
           "goals": 3,
           "assists": 4,
           "yellowCards": 3,
           "redCards": 0,
-          "minutesPlayed": 2182,
+          "minutesPlayed": 2166,
           "cleanSheets": 13,
-          "goalsConceded": 18,
-          "avgRating": 7.4
+          "goalsConceded": 17,
+          "avgRating": 7.5
         },
         "FAC": {
           "name": "FA컵",
@@ -1695,6 +1879,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "7.44",
+          "per90": 7.44,
+          "percentile": 100
+        },
+        "matches_uppercase": {
+          "value": "25",
+          "per90": 25,
+          "percentile": 67
+        },
+        "player_started_matches": {
+          "value": "24",
+          "per90": 24,
+          "percentile": 73
+        },
+        "minutes_played": {
+          "value": "2166",
+          "per90": 90,
+          "percentile": 75
         }
       },
       "traits": {
@@ -1703,7 +1907,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 60
+            "value": 58
           },
           {
             "key": "aerials_won",
@@ -1718,7 +1922,7 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 89
+            "value": 87
           },
           {
             "key": "shot_attempts",
@@ -1728,86 +1932,11 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 62
+            "value": 60
           }
         ]
       },
-      "preferredFoot": "Left",
-      "positionLabel": "Center Back",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2020-09",
-          "endDate": null,
-          "active": true,
-          "appearances": "247",
-          "goals": "24",
-          "assists": "7"
-        },
-        {
-          "team": "Lille",
-          "startDate": "2018-07",
-          "endDate": "2020-06",
-          "active": false,
-          "appearances": "51",
-          "goals": "2",
-          "assists": "0"
-        },
-        {
-          "team": "Lille B",
-          "startDate": "2018-07",
-          "endDate": "2019-09",
-          "active": false,
-          "appearances": "5",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Dinamo Zagreb B",
-          "startDate": "2018-02",
-          "endDate": "2018-06",
-          "active": false,
-          "appearances": "10",
-          "goals": "2",
-          "assists": "0"
-        },
-        {
-          "team": "Dinamo Zagreb",
-          "startDate": "2018-02",
-          "endDate": "2018-06",
-          "active": false,
-          "appearances": "1",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Troyes",
-          "startDate": "2017-07",
-          "endDate": "2018-02",
-          "active": false,
-          "appearances": "4",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Troyes B",
-          "startDate": "2017-07",
-          "endDate": "2018-02",
-          "active": false,
-          "appearances": "5",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Lille",
-          "startDate": "2017-01",
-          "endDate": "2017-06",
-          "active": false,
-          "appearances": "1",
-          "goals": "0",
-          "assists": "0"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 942381,
@@ -1819,37 +1948,68 @@
       "jersey": "12",
       "age": 24,
       "height": "179 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 64716670,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
+      "positionLabel": "Right Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2023-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "94",
+          "goals": "6",
+          "assists": "10"
+        },
+        {
+          "team": "Ajax",
+          "startDate": "2019-06",
+          "endDate": "2023-07",
+          "active": false,
+          "appearances": "121",
+          "goals": "6",
+          "assists": "4"
+        },
+        {
+          "team": "Jong Ajax",
+          "startDate": "2018-11",
+          "endDate": "2021-06",
+          "active": false,
+          "appearances": "39",
+          "goals": "0",
+          "assists": "1"
+        }
+      ],
       "competitions": {
         "PL": {
           "name": "프리미어리그",
-          "appearances": 34,
-          "starts": 30,
+          "appearances": 30,
+          "starts": 28,
           "goals": 3,
-          "assists": 6,
+          "assists": 5,
           "yellowCards": 5,
           "redCards": 0,
-          "minutesPlayed": 2674,
+          "minutesPlayed": 2457,
           "cleanSheets": 15,
-          "goalsConceded": 26,
-          "avgRating": 7.2
+          "goalsConceded": 21,
+          "avgRating": 7.3
         },
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 11,
-          "starts": 10,
+          "appearances": 7,
+          "starts": 6,
           "goals": 1,
           "assists": 1,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 857,
-          "cleanSheets": 5,
-          "goalsConceded": 7,
-          "avgRating": 7.1
+          "minutesPlayed": 513,
+          "cleanSheets": 4,
+          "goalsConceded": 3,
+          "avgRating": 7.3
         },
         "FAC": {
           "name": "FA컵",
@@ -2083,6 +2243,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "7.26",
+          "per90": 7.26,
+          "percentile": 94
+        },
+        "matches_uppercase": {
+          "value": "30",
+          "per90": 30,
+          "percentile": 100
+        },
+        "player_started_matches": {
+          "value": "28",
+          "per90": 28,
+          "percentile": 90
+        },
+        "minutes_played": {
+          "value": "2457",
+          "per90": 90,
+          "percentile": 90
         }
       },
       "traits": {
@@ -2120,37 +2300,7 @@
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Right Back",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2023-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "94",
-          "goals": "6",
-          "assists": "10"
-        },
-        {
-          "team": "Ajax",
-          "startDate": "2019-06",
-          "endDate": "2023-07",
-          "active": false,
-          "appearances": "121",
-          "goals": "6",
-          "assists": "4"
-        },
-        {
-          "team": "Jong Ajax",
-          "startDate": "2018-11",
-          "endDate": "2021-06",
-          "active": false,
-          "appearances": "39",
-          "goals": "0",
-          "assists": "1"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 1105912,
@@ -2162,37 +2312,95 @@
       "jersey": "33",
       "age": 23,
       "height": "188 cm",
+      "preferredFoot": "Left",
       "marketValue": {
         "value": 50731067,
         "currency": "EUR"
       },
       "contractEnd": "2029-06-30",
+      "positionLabel": "Left Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2024-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "57",
+          "goals": "4",
+          "assists": "5"
+        },
+        {
+          "team": "Bologna",
+          "startDate": "2023-08",
+          "endDate": "2024-07",
+          "active": false,
+          "appearances": "33",
+          "goals": "2",
+          "assists": "5"
+        },
+        {
+          "team": "Basel",
+          "startDate": "2022-09",
+          "endDate": "2023-08",
+          "active": false,
+          "appearances": "38",
+          "goals": "1",
+          "assists": "2"
+        },
+        {
+          "team": "Roma",
+          "startDate": "2022-07",
+          "endDate": "2022-09",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Genoa",
+          "startDate": "2022-01",
+          "endDate": "2022-06",
+          "active": false,
+          "appearances": "3",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Roma",
+          "startDate": "2019-07",
+          "endDate": "2022-01",
+          "active": false,
+          "appearances": "18",
+          "goals": "1",
+          "assists": "2"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 5,
+          "appearances": 4,
           "starts": 2,
           "goals": 0,
           "assists": 1,
-          "yellowCards": 2,
+          "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 205,
+          "minutesPlayed": 183,
           "cleanSheets": 2,
-          "goalsConceded": 5,
-          "avgRating": 7.1
+          "goalsConceded": 3,
+          "avgRating": 7.2
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 24,
-          "starts": 19,
+          "appearances": 22,
+          "starts": 18,
           "goals": 1,
           "assists": 2,
           "yellowCards": 5,
           "redCards": 0,
-          "minutesPlayed": 1512,
-          "cleanSheets": 14,
-          "goalsConceded": 14,
-          "avgRating": 7.1
+          "minutesPlayed": 1455,
+          "cleanSheets": 13,
+          "goalsConceded": 12,
+          "avgRating": 7.2
         },
         "FAC": {
           "name": "FA컵",
@@ -2416,6 +2624,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "7.17",
+          "per90": 7.17,
+          "percentile": 87
+        },
+        "matches_uppercase": {
+          "value": "22",
+          "per90": 22,
+          "percentile": 52
+        },
+        "player_started_matches": {
+          "value": "18",
+          "per90": 18,
+          "percentile": 59
+        },
+        "minutes_played": {
+          "value": "1455",
+          "per90": 90,
+          "percentile": 54
         }
       },
       "traits": {
@@ -2453,64 +2681,7 @@
           }
         ]
       },
-      "preferredFoot": "Left",
-      "positionLabel": "Left Back",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2024-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "57",
-          "goals": "4",
-          "assists": "5"
-        },
-        {
-          "team": "Bologna",
-          "startDate": "2023-08",
-          "endDate": "2024-07",
-          "active": false,
-          "appearances": "33",
-          "goals": "2",
-          "assists": "5"
-        },
-        {
-          "team": "Basel",
-          "startDate": "2022-09",
-          "endDate": "2023-08",
-          "active": false,
-          "appearances": "38",
-          "goals": "1",
-          "assists": "2"
-        },
-        {
-          "team": "Roma",
-          "startDate": "2022-07",
-          "endDate": "2022-09",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Genoa",
-          "startDate": "2022-01",
-          "endDate": "2022-06",
-          "active": false,
-          "appearances": "3",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Roma",
-          "startDate": "2019-07",
-          "endDate": "2022-01",
-          "active": false,
-          "appearances": "18",
-          "goals": "1",
-          "assists": "2"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 1137667,
@@ -2522,11 +2693,60 @@
       "jersey": "5",
       "age": 24,
       "height": "184 cm",
+      "preferredFoot": "Left",
       "marketValue": {
         "value": 60923489,
         "currency": "EUR"
       },
       "contractEnd": "2029-06-30",
+      "positionLabel": "Center Back",
+      "career": [
+        {
+          "team": "Bayer Leverkusen",
+          "startDate": "2026-07",
+          "endDate": null,
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Arsenal",
+          "startDate": "2025-09",
+          "endDate": "2026-06",
+          "active": true,
+          "appearances": "30",
+          "goals": "1",
+          "assists": "2"
+        },
+        {
+          "team": "Bayer Leverkusen",
+          "startDate": "2021-08",
+          "endDate": "2025-09",
+          "active": false,
+          "appearances": "166",
+          "goals": "7",
+          "assists": "7"
+        },
+        {
+          "team": "Talleres",
+          "startDate": "2020-08",
+          "endDate": "2021-08",
+          "active": false,
+          "appearances": "22",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Independiente del Valle",
+          "startDate": "2019-04",
+          "endDate": "2020-08",
+          "active": false,
+          "appearances": "3",
+          "goals": "0",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -2776,6 +2996,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "7.10",
+          "per90": 7.1,
+          "percentile": 80
+        },
+        "matches_uppercase": {
+          "value": "21",
+          "per90": 21,
+          "percentile": 48
+        },
+        "player_started_matches": {
+          "value": "17",
+          "per90": 17,
+          "percentile": 53
+        },
+        "minutes_played": {
+          "value": "1504",
+          "per90": 90,
+          "percentile": 58
         }
       },
       "traits": {
@@ -2784,7 +3024,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 10
+            "value": 11
           },
           {
             "key": "aerials_won",
@@ -2804,64 +3044,16 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 29
+            "value": 27
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 87
+            "value": 86
           }
         ]
       },
-      "preferredFoot": "Left",
-      "positionLabel": "Center Back",
-      "career": [
-        {
-          "team": "Bayer Leverkusen",
-          "startDate": "2026-07",
-          "endDate": null,
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Arsenal",
-          "startDate": "2025-09",
-          "endDate": "2026-06",
-          "active": true,
-          "appearances": "30",
-          "goals": "1",
-          "assists": "2"
-        },
-        {
-          "team": "Bayer Leverkusen",
-          "startDate": "2021-08",
-          "endDate": "2025-09",
-          "active": false,
-          "appearances": "166",
-          "goals": "7",
-          "assists": "7"
-        },
-        {
-          "team": "Talleres",
-          "startDate": "2020-08",
-          "endDate": "2021-08",
-          "active": false,
-          "appearances": "22",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Independiente del Valle",
-          "startDate": "2019-04",
-          "endDate": "2020-08",
-          "active": false,
-          "appearances": "3",
-          "goals": "0",
-          "assists": "0"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 1298907,
@@ -2873,11 +3065,42 @@
       "jersey": "3",
       "age": 21,
       "height": "191 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 53658263,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
+      "positionLabel": "Center Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "25",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Valencia",
+          "startDate": "2021-09",
+          "endDate": "2025-07",
+          "active": false,
+          "appearances": "90",
+          "goals": "1",
+          "assists": "0"
+        },
+        {
+          "team": "Valencia B",
+          "startDate": "2021-07",
+          "endDate": "2023-06",
+          "active": false,
+          "appearances": "14",
+          "goals": "0",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -3077,6 +3300,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "6.95",
+          "per90": 6.95,
+          "percentile": 63
+        },
+        "matches_uppercase": {
+          "value": "14",
+          "per90": 14,
+          "percentile": 30
+        },
+        "player_started_matches": {
+          "value": "6",
+          "per90": 6,
+          "percentile": 19
+        },
+        "minutes_played": {
+          "value": "669",
+          "per90": 90,
+          "percentile": 25
         }
       },
       "traits": {
@@ -3085,12 +3328,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 22
+            "value": 21
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 36
+            "value": 37
           },
           {
             "key": "defensive_actions",
@@ -3105,46 +3348,16 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 17
+            "value": 16
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 78
+            "value": 77
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Center Back",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2025-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "25",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Valencia",
-          "startDate": "2021-09",
-          "endDate": "2025-07",
-          "active": false,
-          "appearances": "90",
-          "goals": "1",
-          "assists": "0"
-        },
-        {
-          "team": "Valencia B",
-          "startDate": "2021-07",
-          "endDate": "2023-06",
-          "active": false,
-          "appearances": "14",
-          "goals": "0",
-          "assists": "0"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 1406436,
@@ -3156,37 +3369,50 @@
       "jersey": "49",
       "age": 19,
       "height": "178 cm",
+      "preferredFoot": "Left",
       "marketValue": {
         "value": 56573250,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
+      "positionLabel": "Left Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2022-12",
+          "endDate": null,
+          "active": true,
+          "appearances": "66",
+          "goals": "1",
+          "assists": "5"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 12,
-          "starts": 10,
+          "appearances": 8,
+          "starts": 6,
           "goals": 0,
-          "assists": 3,
-          "yellowCards": 2,
+          "assists": 2,
+          "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 874,
-          "cleanSheets": 6,
-          "goalsConceded": 8,
-          "avgRating": 7.2
+          "minutesPlayed": 536,
+          "cleanSheets": 5,
+          "goalsConceded": 4,
+          "avgRating": 7.3
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 23,
-          "starts": 9,
+          "appearances": 14,
+          "starts": 3,
           "goals": 0,
           "assists": 0,
-          "yellowCards": 4,
+          "yellowCards": 3,
           "redCards": 0,
-          "minutesPlayed": 914,
-          "cleanSheets": 9,
-          "goalsConceded": 18,
-          "avgRating": 6.5
+          "minutesPlayed": 312,
+          "cleanSheets": 7,
+          "goalsConceded": 8,
+          "avgRating": 6.4
         },
         "FAC": {
           "name": "FA컵",
@@ -3375,6 +3601,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "6.41",
+          "per90": 6.41,
+          "percentile": 8
+        },
+        "matches_uppercase": {
+          "value": "14",
+          "per90": 14,
+          "percentile": 23
+        },
+        "player_started_matches": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 0
+        },
+        "minutes_played": {
+          "value": "312",
+          "per90": 90,
+          "percentile": 14
         }
       },
       "traits": {
@@ -3383,7 +3629,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 30
+            "value": 29
           },
           {
             "key": "aerials_won",
@@ -3412,19 +3658,7 @@
           }
         ]
       },
-      "preferredFoot": "Left",
-      "positionLabel": "Left Back",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2022-12",
-          "endDate": null,
-          "active": true,
-          "appearances": "66",
-          "goals": "1",
-          "assists": "5"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 1787525,
@@ -3436,8 +3670,21 @@
       "jersey": "89",
       "age": 16,
       "height": "",
+      "preferredFoot": "",
       "marketValue": null,
       "contractEnd": null,
+      "positionLabel": "Center Back",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "4",
+          "goals": "0",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -3662,20 +3909,30 @@
           "value": "1",
           "per90": 0.1,
           "percentile": 0
+        },
+        "rating": {
+          "value": "6.57",
+          "per90": 6.57,
+          "percentile": 37
+        },
+        "matches_uppercase": {
+          "value": "12",
+          "per90": 12,
+          "percentile": 75
+        },
+        "player_started_matches": {
+          "value": "11",
+          "per90": 11,
+          "percentile": 77
+        },
+        "minutes_played": {
+          "value": "919",
+          "per90": 90,
+          "percentile": 76
         }
       },
-      "positionLabel": "Center Back",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2025-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "4",
-          "goals": "0",
-          "assists": "0"
-        }
-      ]
+      "traits": null,
+      "season": "2025/2026"
     },
     {
       "id": 534670,
@@ -3687,37 +3944,113 @@
       "jersey": "8",
       "age": 27,
       "height": "176 cm",
+      "preferredFoot": "Left",
       "marketValue": {
         "value": 76919293,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
+      "positionLabel": "Central Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2021-08",
+          "endDate": null,
+          "active": true,
+          "appearances": "205",
+          "goals": "40",
+          "assists": "40"
+        },
+        {
+          "team": "Real Madrid",
+          "startDate": "2021-07",
+          "endDate": "2021-08",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Arsenal",
+          "startDate": "2021-01",
+          "endDate": "2021-06",
+          "active": false,
+          "appearances": "20",
+          "goals": "2",
+          "assists": "2"
+        },
+        {
+          "team": "Real Madrid",
+          "startDate": "2020-08",
+          "endDate": "2021-01",
+          "active": false,
+          "appearances": "9",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Real Sociedad",
+          "startDate": "2019-07",
+          "endDate": "2020-08",
+          "active": false,
+          "appearances": "36",
+          "goals": "7",
+          "assists": "9"
+        },
+        {
+          "team": "Vitesse",
+          "startDate": "2018-08",
+          "endDate": "2019-06",
+          "active": false,
+          "appearances": "39",
+          "goals": "11",
+          "assists": "12"
+        },
+        {
+          "team": "Real Madrid",
+          "startDate": "2018-07",
+          "endDate": "2018-08",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "SC Heerenveen",
+          "startDate": "2017-01",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "43",
+          "goals": "3",
+          "assists": "5"
+        }
+      ],
       "competitions": {
         "PL": {
           "name": "프리미어리그",
-          "appearances": 29,
-          "starts": 17,
-          "goals": 2,
-          "assists": 9,
-          "yellowCards": 1,
+          "appearances": 20,
+          "starts": 11,
+          "goals": 1,
+          "assists": 5,
+          "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 1675,
-          "cleanSheets": 11,
-          "goalsConceded": 25,
-          "avgRating": 7.1
+          "minutesPlayed": 1078,
+          "cleanSheets": 9,
+          "goalsConceded": 15,
+          "avgRating": 7.0
         },
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 8,
-          "starts": 7,
+          "appearances": 4,
+          "starts": 3,
           "goals": 0,
           "assists": 1,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 574,
-          "cleanSheets": 3,
-          "goalsConceded": 7,
-          "avgRating": 7.0
+          "minutesPlayed": 215,
+          "cleanSheets": 2,
+          "goalsConceded": 3,
+          "avgRating": 7.5
         },
         "EFL": {
           "name": "카라바오컵",
@@ -3936,6 +4269,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "6.98",
+          "per90": 6.98,
+          "percentile": 67
+        },
+        "matches_uppercase": {
+          "value": "20",
+          "per90": 20,
+          "percentile": 33
+        },
+        "player_started_matches": {
+          "value": "13",
+          "per90": 13,
+          "percentile": 40
+        },
+        "minutes_played": {
+          "value": "1078",
+          "per90": 90,
+          "percentile": 34
         }
       },
       "traits": {
@@ -3973,82 +4326,7 @@
           }
         ]
       },
-      "preferredFoot": "Left",
-      "positionLabel": "Central Midfielder",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2021-08",
-          "endDate": null,
-          "active": true,
-          "appearances": "205",
-          "goals": "40",
-          "assists": "40"
-        },
-        {
-          "team": "Real Madrid",
-          "startDate": "2021-07",
-          "endDate": "2021-08",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Arsenal",
-          "startDate": "2021-01",
-          "endDate": "2021-06",
-          "active": false,
-          "appearances": "20",
-          "goals": "2",
-          "assists": "2"
-        },
-        {
-          "team": "Real Madrid",
-          "startDate": "2020-08",
-          "endDate": "2021-01",
-          "active": false,
-          "appearances": "9",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Real Sociedad",
-          "startDate": "2019-07",
-          "endDate": "2020-08",
-          "active": false,
-          "appearances": "36",
-          "goals": "7",
-          "assists": "9"
-        },
-        {
-          "team": "Vitesse",
-          "startDate": "2018-08",
-          "endDate": "2019-06",
-          "active": false,
-          "appearances": "39",
-          "goals": "11",
-          "assists": "12"
-        },
-        {
-          "team": "Real Madrid",
-          "startDate": "2018-07",
-          "endDate": "2018-08",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "SC Heerenveen",
-          "startDate": "2017-01",
-          "endDate": "2018-06",
-          "active": false,
-          "appearances": "43",
-          "goals": "3",
-          "assists": "5"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 574645,
@@ -4060,37 +4338,95 @@
       "jersey": "23",
       "age": 29,
       "height": "187 cm",
+      "preferredFoot": "Left",
       "marketValue": {
         "value": 41717865,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
+      "positionLabel": "Central Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2024-08",
+          "endDate": null,
+          "active": true,
+          "appearances": "77",
+          "goals": "15",
+          "assists": "8"
+        },
+        {
+          "team": "Real Sociedad",
+          "startDate": "2018-07",
+          "endDate": "2024-08",
+          "active": false,
+          "appearances": "242",
+          "goals": "27",
+          "assists": "26"
+        },
+        {
+          "team": "Newcastle United",
+          "startDate": "2018-01",
+          "endDate": "2018-06",
+          "active": false,
+          "appearances": "8",
+          "goals": "0",
+          "assists": "1"
+        },
+        {
+          "team": "Newcastle United",
+          "startDate": "2017-07",
+          "endDate": "2018-01",
+          "active": false,
+          "appearances": "17",
+          "goals": "1",
+          "assists": null
+        },
+        {
+          "team": "Borussia Dortmund",
+          "startDate": "2016-07",
+          "endDate": "2017-07",
+          "active": false,
+          "appearances": "9",
+          "goals": "0",
+          "assists": "0"
+        },
+        {
+          "team": "Osasuna",
+          "startDate": "2014-07",
+          "endDate": "2016-06",
+          "active": false,
+          "appearances": "67",
+          "goals": "8",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "PL": {
           "name": "프리미어리그",
-          "appearances": 28,
-          "starts": 16,
-          "goals": 6,
-          "assists": 4,
+          "appearances": 21,
+          "starts": 11,
+          "goals": 4,
+          "assists": 3,
           "yellowCards": 1,
-          "redCards": 1,
-          "minutesPlayed": 1436,
-          "cleanSheets": 10,
-          "goalsConceded": 25,
+          "redCards": 0,
+          "minutesPlayed": 999,
+          "cleanSheets": 9,
+          "goalsConceded": 17,
           "avgRating": 7.0
         },
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 11,
-          "starts": 10,
-          "goals": 3,
-          "assists": 2,
+          "appearances": 7,
+          "starts": 6,
+          "goals": 2,
+          "assists": 0,
           "yellowCards": 3,
           "redCards": 0,
-          "minutesPlayed": 875,
-          "cleanSheets": 6,
-          "goalsConceded": 6,
-          "avgRating": 7.4
+          "minutesPlayed": 515,
+          "cleanSheets": 5,
+          "goalsConceded": 2,
+          "avgRating": 7.5
         },
         "EFL": {
           "name": "카라바오컵",
@@ -4309,6 +4645,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "6.97",
+          "per90": 6.97,
+          "percentile": 66
+        },
+        "matches_uppercase": {
+          "value": "21",
+          "per90": 21,
+          "percentile": 45
+        },
+        "player_started_matches": {
+          "value": "10",
+          "per90": 10,
+          "percentile": 25
+        },
+        "minutes_played": {
+          "value": "999",
+          "per90": 90,
+          "percentile": 31
         }
       },
       "traits": {
@@ -4317,7 +4673,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 72
+            "value": 71
           },
           {
             "key": "aerials_won",
@@ -4327,7 +4683,7 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 61
+            "value": 62
           },
           {
             "key": "goals",
@@ -4337,7 +4693,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 94
+            "value": 93
           },
           {
             "key": "touches",
@@ -4346,64 +4702,7 @@
           }
         ]
       },
-      "preferredFoot": "Left",
-      "positionLabel": "Central Midfielder",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2024-08",
-          "endDate": null,
-          "active": true,
-          "appearances": "77",
-          "goals": "15",
-          "assists": "8"
-        },
-        {
-          "team": "Real Sociedad",
-          "startDate": "2018-07",
-          "endDate": "2024-08",
-          "active": false,
-          "appearances": "242",
-          "goals": "27",
-          "assists": "26"
-        },
-        {
-          "team": "Newcastle United",
-          "startDate": "2018-01",
-          "endDate": "2018-06",
-          "active": false,
-          "appearances": "8",
-          "goals": "0",
-          "assists": "1"
-        },
-        {
-          "team": "Newcastle United",
-          "startDate": "2017-07",
-          "endDate": "2018-01",
-          "active": false,
-          "appearances": "17",
-          "goals": "1",
-          "assists": null
-        },
-        {
-          "team": "Borussia Dortmund",
-          "startDate": "2016-07",
-          "endDate": "2017-07",
-          "active": false,
-          "appearances": "9",
-          "goals": "0",
-          "assists": "0"
-        },
-        {
-          "team": "Osasuna",
-          "startDate": "2014-07",
-          "endDate": "2016-06",
-          "active": false,
-          "appearances": "67",
-          "goals": "8",
-          "assists": "0"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 1031325,
@@ -4415,11 +4714,42 @@
       "jersey": "36",
       "age": 27,
       "height": "180 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 74493129,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
+      "positionLabel": "Central Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "43",
+          "goals": "6",
+          "assists": "3"
+        },
+        {
+          "team": "Real Sociedad",
+          "startDate": "2019-03",
+          "endDate": "2025-07",
+          "active": false,
+          "appearances": "236",
+          "goals": "10",
+          "assists": "8"
+        },
+        {
+          "team": "Real Sociedad B",
+          "startDate": "2017-04",
+          "endDate": "2020-06",
+          "active": false,
+          "appearances": "50",
+          "goals": "4",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -4674,6 +5004,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "7.27",
+          "per90": 7.27,
+          "percentile": 85
+        },
+        "matches_uppercase": {
+          "value": "31",
+          "per90": 31,
+          "percentile": 100
+        },
+        "player_started_matches": {
+          "value": "30",
+          "per90": 30,
+          "percentile": 100
+        },
+        "minutes_played": {
+          "value": "2604",
+          "per90": 90,
+          "percentile": 96
         }
       },
       "traits": {
@@ -4682,17 +5032,17 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 46
+            "value": 45
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 87
+            "value": 88
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 59
+            "value": 60
           },
           {
             "key": "goals",
@@ -4702,7 +5052,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 43
+            "value": 42
           },
           {
             "key": "touches",
@@ -4711,37 +5061,7 @@
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Central Midfielder",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2025-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "43",
-          "goals": "6",
-          "assists": "3"
-        },
-        {
-          "team": "Real Sociedad",
-          "startDate": "2019-03",
-          "endDate": "2025-07",
-          "active": false,
-          "appearances": "236",
-          "goals": "10",
-          "assists": "8"
-        },
-        {
-          "team": "Real Sociedad B",
-          "startDate": "2017-04",
-          "endDate": "2020-06",
-          "active": false,
-          "appearances": "50",
-          "goals": "4",
-          "assists": "0"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 654096,
@@ -4753,37 +5073,59 @@
       "jersey": "41",
       "age": 27,
       "height": "185 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 101277324,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
+      "positionLabel": "Central Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2023-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "146",
+          "goals": "21",
+          "assists": "28"
+        },
+        {
+          "team": "West Ham United",
+          "startDate": "2016-07",
+          "endDate": "2023-07",
+          "active": false,
+          "appearances": "245",
+          "goals": "15",
+          "assists": "13"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 12,
-          "starts": 10,
-          "goals": 3,
+          "appearances": 8,
+          "starts": 6,
+          "goals": 1,
           "assists": 2,
-          "yellowCards": 4,
+          "yellowCards": 3,
           "redCards": 0,
-          "minutesPlayed": 938,
-          "cleanSheets": 6,
-          "goalsConceded": 7,
-          "avgRating": 7.5
+          "minutesPlayed": 589,
+          "cleanSheets": 5,
+          "goalsConceded": 3,
+          "avgRating": 7.4
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 38,
-          "starts": 37,
-          "goals": 6,
-          "assists": 7,
-          "yellowCards": 4,
+          "appearances": 30,
+          "starts": 29,
+          "goals": 4,
+          "assists": 5,
+          "yellowCards": 2,
           "redCards": 0,
-          "minutesPlayed": 3257,
-          "cleanSheets": 17,
-          "goalsConceded": 29,
-          "avgRating": 7.6
+          "minutesPlayed": 2585,
+          "cleanSheets": 15,
+          "goalsConceded": 21,
+          "avgRating": 7.7
         },
         "FAC": {
           "name": "FA컵",
@@ -5012,6 +5354,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "7.64",
+          "per90": 7.64,
+          "percentile": 98
+        },
+        "matches_uppercase": {
+          "value": "30",
+          "per90": 30,
+          "percentile": 92
+        },
+        "player_started_matches": {
+          "value": "29",
+          "per90": 29,
+          "percentile": 94
+        },
+        "minutes_played": {
+          "value": "2585",
+          "per90": 90,
+          "percentile": 95
         }
       },
       "traits": {
@@ -5030,12 +5392,12 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 41
+            "value": 43
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 76
+            "value": 81
           },
           {
             "key": "shot_attempts",
@@ -5045,32 +5407,11 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 86
+            "value": 85
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Central Midfielder",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2023-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "146",
-          "goals": "21",
-          "assists": "28"
-        },
-        {
-          "team": "West Ham United",
-          "startDate": "2016-07",
-          "endDate": "2023-07",
-          "active": false,
-          "appearances": "245",
-          "goals": "15",
-          "assists": "13"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 266520,
@@ -5082,102 +5423,12 @@
       "jersey": "16",
       "age": 32,
       "height": "185 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 9365271,
         "currency": "EUR"
       },
       "contractEnd": "2027-06-30",
-      "competitions": {
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 6,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 2,
-          "redCards": 0,
-          "minutesPlayed": 309,
-          "cleanSheets": 5,
-          "goalsConceded": 2,
-          "avgRating": 7.0
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 3,
-          "starts": 3,
-          "goals": 0,
-          "assists": 2,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 270,
-          "cleanSheets": 1,
-          "goalsConceded": 2,
-          "avgRating": 7.9
-        },
-        "PL": {
-          "name": "프리미어리그",
-          "appearances": 15,
-          "starts": 9,
-          "goals": 1,
-          "assists": 2,
-          "yellowCards": 4,
-          "redCards": 0,
-          "minutesPlayed": 865,
-          "cleanSheets": 7,
-          "goalsConceded": 14,
-          "avgRating": 6.8
-        },
-        "EFL": {
-          "name": "카라바오컵",
-          "appearances": 3,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 270,
-          "cleanSheets": 2,
-          "goalsConceded": 1,
-          "avgRating": 7.4
-        }
-      },
-      "stats": {},
-      "traits": {
-        "title": "Stats compared to other midfielders",
-        "items": [
-          {
-            "key": "chances_created",
-            "title": "Chances created",
-            "value": 23
-          },
-          {
-            "key": "aerials_won",
-            "title": "Aerial duels",
-            "value": 82
-          },
-          {
-            "key": "defensive_actions",
-            "title": "Defensive actions",
-            "value": 74
-          },
-          {
-            "key": "goals",
-            "title": "Goals",
-            "value": 52
-          },
-          {
-            "key": "shot_attempts",
-            "title": "Shot attempts",
-            "value": 39
-          },
-          {
-            "key": "touches",
-            "title": "Touches",
-            "value": 76
-          }
-        ]
-      },
-      "preferredFoot": "Right",
       "positionLabel": "Defensive Midfielder",
       "career": [
         {
@@ -5243,7 +5494,129 @@
           "goals": "0",
           "assists": "0"
         }
-      ]
+      ],
+      "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 6,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 309,
+          "cleanSheets": 5,
+          "goalsConceded": 2,
+          "avgRating": 7.0
+        },
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 3,
+          "starts": 3,
+          "goals": 0,
+          "assists": 2,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 270,
+          "cleanSheets": 1,
+          "goalsConceded": 2,
+          "avgRating": 7.9
+        },
+        "PL": {
+          "name": "프리미어리그",
+          "appearances": 6,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 56,
+          "cleanSheets": 4,
+          "goalsConceded": 2,
+          "avgRating": 6.1
+        },
+        "EFL": {
+          "name": "카라바오컵",
+          "appearances": 3,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 270,
+          "cleanSheets": 2,
+          "goalsConceded": 1,
+          "avgRating": 7.4
+        }
+      },
+      "stats": {
+        "goals": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "assists": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "rating": {
+          "value": "6.09",
+          "per90": 6.09,
+          "percentile": 10
+        },
+        "matches_uppercase": {
+          "value": "6",
+          "per90": 6,
+          "percentile": 17
+        },
+        "player_started_matches": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "minutes_played": {
+          "value": "56",
+          "per90": 90,
+          "percentile": 11
+        }
+      },
+      "traits": {
+        "title": "Stats compared to other midfielders",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 22
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 83
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 74
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 52
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 40
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 76
+          }
+        ]
+      },
+      "season": "2025/2026"
     },
     {
       "id": 1635773,
@@ -5255,8 +5628,21 @@
       "jersey": "",
       "age": 16,
       "height": "183 cm",
+      "preferredFoot": "Left",
       "marketValue": null,
       "contractEnd": null,
+      "positionLabel": "Central Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "7",
+          "goals": "1",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -5311,20 +5697,40 @@
           "avgRating": 6.8
         }
       },
-      "stats": {},
-      "preferredFoot": "Left",
-      "positionLabel": "Central Midfielder",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2025-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "7",
-          "goals": "1",
-          "assists": "0"
+      "stats": {
+        "goals": {
+          "value": "1",
+          "per90": 2.09,
+          "percentile": 51
+        },
+        "assists": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "rating": {
+          "value": "7.43",
+          "per90": 7.43,
+          "percentile": 97
+        },
+        "matches_uppercase": {
+          "value": "3",
+          "per90": 3,
+          "percentile": 9
+        },
+        "player_started_matches": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "minutes_played": {
+          "value": "43",
+          "per90": 90,
+          "percentile": 9
         }
-      ]
+      },
+      "traits": null,
+      "season": "2025/2026"
     },
     {
       "id": 818975,
@@ -5336,11 +5742,60 @@
       "jersey": "10",
       "age": 27,
       "height": "178 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 73621730,
         "currency": "EUR"
       },
       "contractEnd": "2029-06-30",
+      "positionLabel": "Attacking Midfielder",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-08",
+          "endDate": null,
+          "active": true,
+          "appearances": "41",
+          "goals": "9",
+          "assists": "5"
+        },
+        {
+          "team": "Crystal Palace",
+          "startDate": "2020-08",
+          "endDate": "2025-08",
+          "active": false,
+          "appearances": "169",
+          "goals": "40",
+          "assists": "29"
+        },
+        {
+          "team": "Queens Park Rangers",
+          "startDate": "2018-01",
+          "endDate": "2020-08",
+          "active": false,
+          "appearances": "111",
+          "goals": "20",
+          "assists": "11"
+        },
+        {
+          "team": "Wycombe Wanderers",
+          "startDate": "2017-08",
+          "endDate": "2018-01",
+          "active": false,
+          "appearances": "22",
+          "goals": "5",
+          "assists": "1"
+        },
+        {
+          "team": "Queens Park Rangers",
+          "startDate": "2016-12",
+          "endDate": "2017-06",
+          "active": false,
+          "appearances": "1",
+          "goals": "0",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -5357,29 +5812,29 @@
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 35,
-          "starts": 26,
-          "goals": 12,
-          "assists": 4,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 2082,
-          "cleanSheets": 15,
-          "goalsConceded": 35,
-          "avgRating": 7.1
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 5,
-          "starts": 4,
-          "goals": 3,
+          "appearances": 26,
+          "starts": 18,
+          "goals": 6,
           "assists": 2,
           "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 386,
-          "cleanSheets": 3,
+          "minutesPlayed": 1504,
+          "cleanSheets": 13,
+          "goalsConceded": 18,
+          "avgRating": 7.0
+        },
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 3,
+          "starts": 2,
+          "goals": 1,
+          "assists": 2,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 208,
+          "cleanSheets": 1,
           "goalsConceded": 2,
-          "avgRating": 7.9
+          "avgRating": 7.6
         },
         "EFL": {
           "name": "카라바오컵",
@@ -5590,6 +6045,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "6.99",
+          "per90": 6.99,
+          "percentile": 71
+        },
+        "matches_uppercase": {
+          "value": "26",
+          "per90": 26,
+          "percentile": 73
+        },
+        "player_started_matches": {
+          "value": "17",
+          "per90": 17,
+          "percentile": 64
+        },
+        "minutes_played": {
+          "value": "1504",
+          "per90": 90,
+          "percentile": 65
         }
       },
       "traits": {
@@ -5598,12 +6073,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 31
+            "value": 34
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 47
+            "value": 48
           },
           {
             "key": "defensive_actions",
@@ -5613,7 +6088,7 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 94
+            "value": 95
           },
           {
             "key": "shot_attempts",
@@ -5627,55 +6102,7 @@
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Attacking Midfielder",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2025-08",
-          "endDate": null,
-          "active": true,
-          "appearances": "41",
-          "goals": "9",
-          "assists": "5"
-        },
-        {
-          "team": "Crystal Palace",
-          "startDate": "2020-08",
-          "endDate": "2025-08",
-          "active": false,
-          "appearances": "169",
-          "goals": "40",
-          "assists": "29"
-        },
-        {
-          "team": "Queens Park Rangers",
-          "startDate": "2018-01",
-          "endDate": "2020-08",
-          "active": false,
-          "appearances": "111",
-          "goals": "20",
-          "assists": "11"
-        },
-        {
-          "team": "Wycombe Wanderers",
-          "startDate": "2017-08",
-          "endDate": "2018-01",
-          "active": false,
-          "appearances": "22",
-          "goals": "5",
-          "assists": "1"
-        },
-        {
-          "team": "Queens Park Rangers",
-          "startDate": "2016-12",
-          "endDate": "2017-06",
-          "active": false,
-          "appearances": "1",
-          "goals": "0",
-          "assists": "0"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 961995,
@@ -5687,37 +6114,50 @@
       "jersey": "7",
       "age": 24,
       "height": "178 cm",
+      "preferredFoot": "Left",
       "marketValue": {
         "value": 103450000,
         "currency": "EUR"
       },
       "contractEnd": "2027-06-30",
+      "positionLabel": "Right Winger",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2018-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "304",
+          "goals": "79",
+          "assists": "69"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 12,
-          "starts": 10,
-          "goals": 4,
+          "appearances": 8,
+          "starts": 6,
+          "goals": 2,
           "assists": 2,
-          "yellowCards": 2,
+          "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 855,
-          "cleanSheets": 6,
-          "goalsConceded": 7,
-          "avgRating": 7.3
+          "minutesPlayed": 524,
+          "cleanSheets": 5,
+          "goalsConceded": 3,
+          "avgRating": 7.4
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 36,
-          "starts": 28,
-          "goals": 7,
+          "appearances": 27,
+          "starts": 23,
+          "goals": 6,
           "assists": 3,
           "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 2461,
-          "cleanSheets": 14,
-          "goalsConceded": 31,
-          "avgRating": 7.4
+          "minutesPlayed": 2001,
+          "cleanSheets": 12,
+          "goalsConceded": 21,
+          "avgRating": 7.5
         },
         "FAC": {
           "name": "FA컵",
@@ -5946,6 +6386,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "7.49",
+          "per90": 7.49,
+          "percentile": 100
+        },
+        "matches_uppercase": {
+          "value": "27",
+          "per90": 27,
+          "percentile": 81
+        },
+        "player_started_matches": {
+          "value": "22",
+          "per90": 22,
+          "percentile": 79
+        },
+        "minutes_played": {
+          "value": "2001",
+          "per90": 90,
+          "percentile": 86
         }
       },
       "traits": {
@@ -5954,12 +6414,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 86
+            "value": 88
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 60
+            "value": 58
           },
           {
             "key": "defensive_actions",
@@ -5969,12 +6429,12 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 74
+            "value": 73
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 90
+            "value": 91
           },
           {
             "key": "touches",
@@ -5983,19 +6443,7 @@
           }
         ]
       },
-      "preferredFoot": "Left",
-      "positionLabel": "Right Winger",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2018-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "304",
-          "goals": "79",
-          "assists": "69"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 1084981,
@@ -6007,11 +6455,51 @@
       "jersey": "20",
       "age": 24,
       "height": "182 cm",
+      "preferredFoot": "Left",
       "marketValue": {
         "value": 54872398,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
+      "positionLabel": "Right Winger",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "30",
+          "goals": "7",
+          "assists": "3"
+        },
+        {
+          "team": "Chelsea",
+          "startDate": "2023-01",
+          "endDate": "2025-07",
+          "active": false,
+          "appearances": "92",
+          "goals": "20",
+          "assists": "7"
+        },
+        {
+          "team": "PSV Eindhoven",
+          "startDate": "2019-08",
+          "endDate": "2023-01",
+          "active": false,
+          "appearances": "80",
+          "goals": "20",
+          "assists": "12"
+        },
+        {
+          "team": "Jong PSV",
+          "startDate": "2019-08",
+          "endDate": "2020-06",
+          "active": false,
+          "appearances": "6",
+          "goals": "4",
+          "assists": "1"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -6028,16 +6516,16 @@
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 29,
-          "starts": 20,
+          "appearances": 20,
+          "starts": 12,
           "goals": 2,
           "assists": 1,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 1482,
-          "cleanSheets": 14,
-          "goalsConceded": 22,
-          "avgRating": 6.9
+          "minutesPlayed": 899,
+          "cleanSheets": 9,
+          "goalsConceded": 16,
+          "avgRating": 6.8
         },
         "FAC": {
           "name": "FA컵",
@@ -6266,6 +6754,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "6.76",
+          "per90": 6.75,
+          "percentile": 57
+        },
+        "matches_uppercase": {
+          "value": "20",
+          "per90": 20,
+          "percentile": 43
+        },
+        "player_started_matches": {
+          "value": "12",
+          "per90": 12,
+          "percentile": 48
+        },
+        "minutes_played": {
+          "value": "899",
+          "per90": 90,
+          "percentile": 42
         }
       },
       "traits": {
@@ -6279,17 +6787,17 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 57
+            "value": 56
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 39
+            "value": 40
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 72
+            "value": 71
           },
           {
             "key": "shot_attempts",
@@ -6299,50 +6807,11 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 61
+            "value": 62
           }
         ]
       },
-      "preferredFoot": "Left",
-      "positionLabel": "Right Winger",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2025-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "30",
-          "goals": "7",
-          "assists": "3"
-        },
-        {
-          "team": "Chelsea",
-          "startDate": "2023-01",
-          "endDate": "2025-07",
-          "active": false,
-          "appearances": "92",
-          "goals": "20",
-          "assists": "7"
-        },
-        {
-          "team": "PSV Eindhoven",
-          "startDate": "2019-08",
-          "endDate": "2023-01",
-          "active": false,
-          "appearances": "80",
-          "goals": "20",
-          "assists": "12"
-        },
-        {
-          "team": "Jong PSV",
-          "startDate": "2019-08",
-          "endDate": "2020-06",
-          "active": false,
-          "appearances": "6",
-          "goals": "4",
-          "assists": "1"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 1021586,
@@ -6354,37 +6823,59 @@
       "jersey": "11",
       "age": 24,
       "height": "180 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 48821141,
         "currency": "EUR"
       },
       "contractEnd": "2027-06-30",
+      "positionLabel": "Left Winger",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2019-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "266",
+          "goals": "62",
+          "assists": "32"
+        },
+        {
+          "team": "Ituano FC",
+          "startDate": "2018-01",
+          "endDate": "2019-05",
+          "active": false,
+          "appearances": "34",
+          "goals": "10",
+          "assists": "3"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 13,
-          "starts": 9,
-          "goals": 7,
+          "appearances": 9,
+          "starts": 5,
+          "goals": 6,
           "assists": 1,
           "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 830,
-          "cleanSheets": 6,
-          "goalsConceded": 9,
-          "avgRating": 7.4
+          "minutesPlayed": 493,
+          "cleanSheets": 5,
+          "goalsConceded": 5,
+          "avgRating": 7.6
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 34,
-          "starts": 18,
-          "goals": 3,
-          "assists": 4,
+          "appearances": 25,
+          "starts": 9,
+          "goals": 1,
+          "assists": 3,
           "yellowCards": 2,
           "redCards": 0,
-          "minutesPlayed": 1571,
-          "cleanSheets": 15,
-          "goalsConceded": 25,
-          "avgRating": 6.7
+          "minutesPlayed": 846,
+          "cleanSheets": 13,
+          "goalsConceded": 15,
+          "avgRating": 6.5
         },
         "FAC": {
           "name": "FA컵",
@@ -6608,6 +7099,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "6.52",
+          "per90": 6.52,
+          "percentile": 29
+        },
+        "matches_uppercase": {
+          "value": "25",
+          "per90": 25,
+          "percentile": 69
+        },
+        "player_started_matches": {
+          "value": "9",
+          "per90": 9,
+          "percentile": 35
+        },
+        "minutes_played": {
+          "value": "846",
+          "per90": 90,
+          "percentile": 38
         }
       },
       "traits": {
@@ -6616,17 +7127,17 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 36
+            "value": 38
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 68
+            "value": 67
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 7
+            "value": 8
           },
           {
             "key": "goals",
@@ -6636,7 +7147,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 73
+            "value": 72
           },
           {
             "key": "touches",
@@ -6645,28 +7156,7 @@
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Left Winger",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2019-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "266",
-          "goals": "62",
-          "assists": "32"
-        },
-        {
-          "team": "Ituano FC",
-          "startDate": "2018-01",
-          "endDate": "2019-05",
-          "active": false,
-          "appearances": "34",
-          "goals": "10",
-          "assists": "3"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 318615,
@@ -6678,24 +7168,100 @@
       "jersey": "19",
       "age": 31,
       "height": "175 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 19801676,
         "currency": "EUR"
       },
       "contractEnd": "2027-06-30",
+      "positionLabel": "Left Winger",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true,
+          "appearances": "163",
+          "goals": "35",
+          "assists": "29"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2019-06",
+          "endDate": "2023-01",
+          "active": false,
+          "appearances": "121",
+          "goals": "25",
+          "assists": "13"
+        },
+        {
+          "team": "Genk",
+          "startDate": "2016-07",
+          "endDate": "2019-06",
+          "active": false,
+          "appearances": "118",
+          "goals": "39",
+          "assists": "18"
+        },
+        {
+          "team": "OH Leuven",
+          "startDate": "2015-07",
+          "endDate": "2016-06",
+          "active": false,
+          "appearances": "31",
+          "goals": "9",
+          "assists": "6"
+        },
+        {
+          "team": "Lommel",
+          "startDate": "2014-07",
+          "endDate": "2015-06",
+          "active": false,
+          "appearances": "42",
+          "goals": "17",
+          "assists": "1"
+        },
+        {
+          "team": "Westerlo",
+          "startDate": "2013-07",
+          "endDate": "2014-06",
+          "active": false,
+          "appearances": "21",
+          "goals": "5",
+          "assists": "0"
+        },
+        {
+          "team": "Lommel",
+          "startDate": "2013-01",
+          "endDate": "2013-06",
+          "active": false,
+          "appearances": "12",
+          "goals": "7",
+          "assists": "0"
+        },
+        {
+          "team": "Genk",
+          "startDate": "2011-07",
+          "endDate": "2013-01",
+          "active": false,
+          "appearances": "2",
+          "goals": "0",
+          "assists": "0"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
-          "appearances": 10,
-          "starts": 5,
+          "appearances": 6,
+          "starts": 4,
           "goals": 1,
           "assists": 3,
-          "yellowCards": 1,
+          "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 497,
-          "cleanSheets": 5,
-          "goalsConceded": 6,
-          "avgRating": 7.0
+          "minutesPlayed": 356,
+          "cleanSheets": 4,
+          "goalsConceded": 2,
+          "avgRating": 7.5
         },
         "FAC": {
           "name": "FA컵",
@@ -6712,15 +7278,15 @@
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 35,
-          "starts": 26,
-          "goals": 9,
-          "assists": 7,
+          "appearances": 26,
+          "starts": 19,
+          "goals": 5,
+          "assists": 5,
           "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 2335,
-          "cleanSheets": 14,
-          "goalsConceded": 30,
+          "minutesPlayed": 1685,
+          "cleanSheets": 12,
+          "goalsConceded": 20,
           "avgRating": 7.1
         },
         "EFL": {
@@ -6937,6 +7503,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "7.08",
+          "per90": 7.08,
+          "percentile": 81
+        },
+        "matches_uppercase": {
+          "value": "26",
+          "per90": 26,
+          "percentile": 73
+        },
+        "player_started_matches": {
+          "value": "18",
+          "per90": 18,
+          "percentile": 67
+        },
+        "minutes_played": {
+          "value": "1685",
+          "per90": 90,
+          "percentile": 75
         }
       },
       "traits": {
@@ -6945,12 +7531,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 40
+            "value": 41
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 20
+            "value": 19
           },
           {
             "key": "defensive_actions",
@@ -6960,12 +7546,12 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 66
+            "value": 65
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 72
+            "value": 74
           },
           {
             "key": "touches",
@@ -6974,82 +7560,7 @@
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Left Winger",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2023-01",
-          "endDate": null,
-          "active": true,
-          "appearances": "163",
-          "goals": "35",
-          "assists": "29"
-        },
-        {
-          "team": "Brighton & Hove Albion",
-          "startDate": "2019-06",
-          "endDate": "2023-01",
-          "active": false,
-          "appearances": "121",
-          "goals": "25",
-          "assists": "13"
-        },
-        {
-          "team": "Genk",
-          "startDate": "2016-07",
-          "endDate": "2019-06",
-          "active": false,
-          "appearances": "118",
-          "goals": "39",
-          "assists": "18"
-        },
-        {
-          "team": "OH Leuven",
-          "startDate": "2015-07",
-          "endDate": "2016-06",
-          "active": false,
-          "appearances": "31",
-          "goals": "9",
-          "assists": "6"
-        },
-        {
-          "team": "Lommel",
-          "startDate": "2014-07",
-          "endDate": "2015-06",
-          "active": false,
-          "appearances": "42",
-          "goals": "17",
-          "assists": "1"
-        },
-        {
-          "team": "Westerlo",
-          "startDate": "2013-07",
-          "endDate": "2014-06",
-          "active": false,
-          "appearances": "21",
-          "goals": "5",
-          "assists": "0"
-        },
-        {
-          "team": "Lommel",
-          "startDate": "2013-01",
-          "endDate": "2013-06",
-          "active": false,
-          "appearances": "12",
-          "goals": "7",
-          "assists": "0"
-        },
-        {
-          "team": "Genk",
-          "startDate": "2011-07",
-          "endDate": "2013-01",
-          "active": false,
-          "appearances": "2",
-          "goals": "0",
-          "assists": "0"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 576165,
@@ -7061,11 +7572,42 @@
       "jersey": "9",
       "age": 28,
       "height": "175 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 21887060,
         "currency": "EUR"
       },
       "contractEnd": "2027-06-30",
+      "positionLabel": "Striker",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2022-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "116",
+          "goals": "31",
+          "assists": "18"
+        },
+        {
+          "team": "Manchester City",
+          "startDate": "2017-01",
+          "endDate": "2022-07",
+          "active": false,
+          "appearances": "236",
+          "goals": "95",
+          "assists": "41"
+        },
+        {
+          "team": "Palmeiras",
+          "startDate": "2014-08",
+          "endDate": "2016-12",
+          "active": false,
+          "appearances": "83",
+          "goals": "28",
+          "assists": "9"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -7290,6 +7832,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 0
+        },
+        "rating": {
+          "value": "6.47",
+          "per90": 6.47,
+          "percentile": 47
+        },
+        "matches_uppercase": {
+          "value": "11",
+          "per90": 11,
+          "percentile": 18
+        },
+        "player_started_matches": {
+          "value": "2",
+          "per90": 2,
+          "percentile": 12
+        },
+        "minutes_played": {
+          "value": "306",
+          "per90": 90,
+          "percentile": 16
         }
       },
       "traits": {
@@ -7327,37 +7889,7 @@
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Striker",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2022-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "116",
-          "goals": "31",
-          "assists": "18"
-        },
-        {
-          "team": "Manchester City",
-          "startDate": "2017-01",
-          "endDate": "2022-07",
-          "active": false,
-          "appearances": "236",
-          "goals": "95",
-          "assists": "41"
-        },
-        {
-          "team": "Palmeiras",
-          "startDate": "2014-08",
-          "endDate": "2016-12",
-          "active": false,
-          "appearances": "83",
-          "goals": "28",
-          "assists": "9"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 749736,
@@ -7369,11 +7901,42 @@
       "jersey": "29",
       "age": 26,
       "height": "193 cm",
+      "preferredFoot": "Left",
       "marketValue": {
         "value": 60777895,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
+      "positionLabel": "Striker",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2023-06",
+          "endDate": null,
+          "active": true,
+          "appearances": "100",
+          "goals": "32",
+          "assists": "13"
+        },
+        {
+          "team": "Chelsea",
+          "startDate": "2020-09",
+          "endDate": "2023-06",
+          "active": false,
+          "appearances": "139",
+          "goals": "32",
+          "assists": "12"
+        },
+        {
+          "team": "Bayer Leverkusen",
+          "startDate": "2016-09",
+          "endDate": "2020-09",
+          "active": false,
+          "appearances": "150",
+          "goals": "46",
+          "assists": "28"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -7390,16 +7953,16 @@
         },
         "PL": {
           "name": "프리미어리그",
-          "appearances": 8,
+          "appearances": 6,
           "starts": 3,
           "goals": 0,
           "assists": 1,
-          "yellowCards": 1,
+          "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 297,
-          "cleanSheets": 6,
-          "goalsConceded": 2,
-          "avgRating": 6.6
+          "minutesPlayed": 264,
+          "cleanSheets": 5,
+          "goalsConceded": 1,
+          "avgRating": 6.7
         },
         "FAC": {
           "name": "FA컵",
@@ -7598,6 +8161,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "rating": {
+          "value": "6.72",
+          "per90": 6.72,
+          "percentile": 54
+        },
+        "matches_uppercase": {
+          "value": "6",
+          "per90": 6,
+          "percentile": 7
+        },
+        "player_started_matches": {
+          "value": "3",
+          "per90": 3,
+          "percentile": 16
+        },
+        "minutes_played": {
+          "value": "264",
+          "per90": 90,
+          "percentile": 12
         }
       },
       "traits": {
@@ -7606,12 +8189,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 98
+            "value": 97
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 74
+            "value": 83
           },
           {
             "key": "defensive_actions",
@@ -7621,51 +8204,21 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 72
+            "value": 70
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 41
+            "value": 35
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 81
+            "value": 82
           }
         ]
       },
-      "preferredFoot": "Left",
-      "positionLabel": "Striker",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2023-06",
-          "endDate": null,
-          "active": true,
-          "appearances": "100",
-          "goals": "32",
-          "assists": "13"
-        },
-        {
-          "team": "Chelsea",
-          "startDate": "2020-09",
-          "endDate": "2023-06",
-          "active": false,
-          "appearances": "139",
-          "goals": "32",
-          "assists": "12"
-        },
-        {
-          "team": "Bayer Leverkusen",
-          "startDate": "2016-09",
-          "endDate": "2020-09",
-          "active": false,
-          "appearances": "150",
-          "goals": "46",
-          "assists": "28"
-        }
-      ]
+      "season": "2025/2026"
     },
     {
       "id": 664500,
@@ -7677,11 +8230,87 @@
       "jersey": "14",
       "age": 27,
       "height": "187 cm",
+      "preferredFoot": "Right",
       "marketValue": {
         "value": 75132294,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
+      "positionLabel": "Striker",
+      "career": [
+        {
+          "team": "Arsenal",
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true,
+          "appearances": "41",
+          "goals": "16",
+          "assists": "2"
+        },
+        {
+          "team": "Sporting CP",
+          "startDate": "2023-07",
+          "endDate": "2025-07",
+          "active": false,
+          "appearances": "102",
+          "goals": "97",
+          "assists": "26"
+        },
+        {
+          "team": "Coventry City",
+          "startDate": "2021-07",
+          "endDate": "2023-07",
+          "active": false,
+          "appearances": "97",
+          "goals": "40",
+          "assists": "17"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2021-07",
+          "endDate": "2021-07",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        },
+        {
+          "team": "Coventry City",
+          "startDate": "2021-01",
+          "endDate": "2021-06",
+          "active": false,
+          "appearances": "19",
+          "goals": "3",
+          "assists": "0"
+        },
+        {
+          "team": "Swansea City",
+          "startDate": "2020-10",
+          "endDate": "2021-01",
+          "active": false,
+          "appearances": "12",
+          "goals": "1",
+          "assists": "0"
+        },
+        {
+          "team": "Brighton & Hove Albion",
+          "startDate": "2020-07",
+          "endDate": "2020-10",
+          "active": false,
+          "appearances": "3",
+          "goals": "1",
+          "assists": "1"
+        },
+        {
+          "team": "St. Pauli",
+          "startDate": "2019-07",
+          "endDate": "2020-06",
+          "active": false,
+          "appearances": "28",
+          "goals": "7",
+          "assists": "4"
+        }
+      ],
       "competitions": {
         "UCL": {
           "name": "챔피언스리그",
@@ -7941,6 +8570,26 @@
           "value": "0",
           "per90": 0,
           "percentile": 0
+        },
+        "rating": {
+          "value": "6.78",
+          "per90": 6.78,
+          "percentile": 78
+        },
+        "matches_uppercase": {
+          "value": "29",
+          "per90": 29,
+          "percentile": 80
+        },
+        "player_started_matches": {
+          "value": "23",
+          "per90": 23,
+          "percentile": 84
+        },
+        "minutes_played": {
+          "value": "1900",
+          "per90": 90,
+          "percentile": 82
         }
       },
       "traits": {
@@ -7954,7 +8603,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 24
+            "value": 23
           },
           {
             "key": "defensive_actions",
@@ -7964,96 +8613,21 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 90
+            "value": 89
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 59
+            "value": 57
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 26
+            "value": 27
           }
         ]
       },
-      "preferredFoot": "Right",
-      "positionLabel": "Striker",
-      "career": [
-        {
-          "team": "Arsenal",
-          "startDate": "2025-07",
-          "endDate": null,
-          "active": true,
-          "appearances": "41",
-          "goals": "16",
-          "assists": "2"
-        },
-        {
-          "team": "Sporting CP",
-          "startDate": "2023-07",
-          "endDate": "2025-07",
-          "active": false,
-          "appearances": "102",
-          "goals": "97",
-          "assists": "26"
-        },
-        {
-          "team": "Coventry City",
-          "startDate": "2021-07",
-          "endDate": "2023-07",
-          "active": false,
-          "appearances": "97",
-          "goals": "40",
-          "assists": "17"
-        },
-        {
-          "team": "Brighton & Hove Albion",
-          "startDate": "2021-07",
-          "endDate": "2021-07",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        },
-        {
-          "team": "Coventry City",
-          "startDate": "2021-01",
-          "endDate": "2021-06",
-          "active": false,
-          "appearances": "19",
-          "goals": "3",
-          "assists": "0"
-        },
-        {
-          "team": "Swansea City",
-          "startDate": "2020-10",
-          "endDate": "2021-01",
-          "active": false,
-          "appearances": "12",
-          "goals": "1",
-          "assists": "0"
-        },
-        {
-          "team": "Brighton & Hove Albion",
-          "startDate": "2020-07",
-          "endDate": "2020-10",
-          "active": false,
-          "appearances": "3",
-          "goals": "1",
-          "assists": "1"
-        },
-        {
-          "team": "St. Pauli",
-          "startDate": "2019-07",
-          "endDate": "2020-06",
-          "active": false,
-          "appearances": "28",
-          "goals": "7",
-          "assists": "4"
-        }
-      ]
+      "season": "2025/2026"
     }
   ]
 }
