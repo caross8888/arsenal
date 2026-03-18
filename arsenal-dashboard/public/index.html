@@ -213,6 +213,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-career-team{flex:1;font-size:13px;color:#fff;font-weight:600;}
 .pm-career-period{font-size:10px;color:rgba(255,255,255,.4);}
 .pm-career-stat{font-size:11px;color:rgba(255,255,255,.5);min-width:60px;text-align:right;}
+/* Fotmob 대회별 스탯 그리드 */
+.fotmob-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.06);margin:0;border-top:1px solid rgba(255,255,255,.06);}
+.fm-stat-cell{background:#1a1c22;padding:12px 8px;text-align:center;}
+.fm-stat-val{font-family:var(--fd);font-size:20px;font-weight:700;color:#fff;line-height:1;}
+.fm-stat-lbl{font-size:9px;color:rgba(255,255,255,.4);margin-top:4px;letter-spacing:.5px;}
 /* Radar */
 .radar-wrap{padding:16px 20px;display:flex;justify-content:center;}
 .pl-modal-header{display:flex;gap:16px;padding:20px 20px 16px;border-bottom:1px solid var(--border);position:relative;}
@@ -796,6 +801,40 @@ if(tb) tb.textContent = 'Arsenal FC · ' + SEASON;
 if(tb2) tb2.textContent = 'Arsenal FC · ' + SEASON;
 
 
+// ── Fotmob trait 라벨 한국어 매핑 ──
+var TRAIT_LABELS = {
+  // GK
+  'keeper_sweeper_actions':        '스위퍼',
+  'goals_conceded':                '실점',
+  'save_percentage':               '선방률',
+  'keeper_high_claim':             '하이클레임',
+  'clean_sheet':                   '클린시트',
+  'long_ball_succeeeded_accuracy': '롱볼 정확도',
+  'long_ball_succeeded_accuracy':  '롱볼 정확도',
+  // FW
+  'goals':                         '골',
+  'shot_attempts':                 '슈팅',
+  'chances_created':               '찬스 생성',
+  'aerials_won':                   '공중볼 경합',
+  'defensive_actions':             '수비 행동',
+  'touches':                       '터치',
+  'dribbles':                      '드리블',
+  'goals_subtitle':                '골',
+  // MF
+  'key_passes':                    '키패스',
+  'successful_dribbles':           '드리블 성공',
+  'tackles_won':                   '태클 성공',
+  'interceptions':                 '인터셉',
+  'passes_accuracy':               '패스 정확도',
+  'big_chances_created':           '빅 찬스',
+  // DF
+  'tackle_success':                '태클 성공률',
+  'clearances':                    '클리어런스',
+  'blocks':                        '블록',
+  'duels_won':                     '듀얼 승률',
+  'possession_won':                '볼 소유권 확보',
+};
+
 // ── PLAYER MODAL (Fotmob Style) ──
 
 function openPlayerModal(p) {
@@ -885,25 +924,6 @@ function openPlayerModal(p) {
     h += '</div>';
   }
 
-  // ── 선수 특성 레이더 (Fotmob traits) ──
-  if(traits && traits.items && traits.items.length){
-    h += '<div class="pm-traits">';
-    h += '<div class="pm-section-title">\uc120\uc218 \ud2b9\uc131</div>';
-    h += '<div class="pm-section-sub">'+traits.title+'</div>';
-    h += '<div class="pm-radar-wrap">';
-    h += '<canvas id="radar_traits" width="240" height="220"></canvas>';
-    h += '</div>';
-    h += '</div>';
-  } else if(fotStats) {
-    // Fotmob stats 없으면 ESPN 기반 레이더
-    h += '<div class="pm-traits">';
-    h += '<div class="pm-section-title">\uc120\uc218 \ud2b9\uc131 (\ub9ac\uadf8)</div>';
-    h += '<div class="pm-radar-wrap">';
-    h += '<canvas id="radar_traits" width="240" height="220"></canvas>';
-    h += '</div>';
-    h += '</div>';
-  }
-
   // ── 대회별 스탯 탭 ──
   if(compKeys.length > 0){
     h += '<div class="stat-section">';
@@ -970,26 +990,21 @@ function openPlayerModal(p) {
         h+='</div>';
       }
 
-      // Fotmob 퍼센타일 바 (stats 있을 때)
-      if(fotStats && k==='PL'){
-        var pctStats = getPctStats(fotStats, pos);
-        if(pctStats.length){
-          h+='<div style="padding:12px 16px 0">';
-          h+='<div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:10px">퍼센타일</div>';
-          pctStats.forEach(function(s){
-            var c2=s.pct>=75?'#22C55E':s.pct>=50?'#F59E0B':'#EF4444';
-            h+='<div class="pct-row">';
-            h+='<span class="pct-label">'+s.label+'</span>';
-            h+='<div class="pct-bar-wrap"><div class="pct-bar" style="width:'+s.pct+'%;background:'+c2+'"></div></div>';
-            h+='<span class="pct-val" style="color:'+c2+'">'+s.pct+'%</span>';
-            h+='</div>';
-          });
-          h+='</div>';
-        }
-      }
+
       h += '</div>'; // comp-stat-panel
     });
     h += '</div>'; // stat-section
+  }
+
+  // ── 선수 특성 레이더 (Fotmob traits) ──
+  if(traits && traits.items && traits.items.length){
+    h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
+    h += '<div class="pm-section-title">\uc120\uc218 \ud2b9\uc131</div>';
+    h += '<div class="pm-section-sub">'+traits.title+'</div>';
+    h += '<div class="pm-radar-wrap">';
+    h += '<canvas id="radar_traits" width="240" height="220"></canvas>';
+    h += '</div>';
+    h += '</div>';
   }
 
   // ── 경력 ──
@@ -1018,7 +1033,10 @@ function openPlayerModal(p) {
   // 레이더 차트
   setTimeout(function(){
     if(traits && traits.items && traits.items.length){
-      drawFotmobRadar('radar_traits', traits.items);
+      var translated = traits.items.map(function(item){
+        return {key: item.key, title: TRAIT_LABELS[item.key]||item.title, value: item.value};
+      });
+      drawFotmobRadar('radar_traits', translated);
     }
   }, 60);
 }
@@ -1029,13 +1047,15 @@ function drawFotmobRadar(canvasId, items){
   if(!canvas) return;
   var ctx = canvas.getContext('2d');
   var W=canvas.width, H=canvas.height;
-  var cx=W/2, cy=H/2+5;
-  var r=Math.min(W,H)/2-36;
+  // 라벨 공간 확보를 위해 중심 약간 위로
+  var cx=W/2, cy=H/2;
+  var r=Math.min(W,H)/2-50;
   var n=items.length;
   ctx.clearRect(0,0,W,H);
 
-  // 배경 격자
-  var gridC='rgba(255,255,255,0.08)';
+  var gridC='rgba(255,255,255,0.1)';
+
+  // 배경 동심 다각형 (4단계)
   [0.25,0.5,0.75,1].forEach(function(s){
     ctx.beginPath();
     for(var i=0;i<n;i++){
@@ -1043,47 +1063,72 @@ function drawFotmobRadar(canvasId, items){
       i===0?ctx.moveTo(cx+Math.cos(a)*r*s,cy+Math.sin(a)*r*s):ctx.lineTo(cx+Math.cos(a)*r*s,cy+Math.sin(a)*r*s);
     }
     ctx.closePath();
-    ctx.strokeStyle=gridC;ctx.lineWidth=1;ctx.stroke();
+    ctx.strokeStyle=gridC;ctx.lineWidth=s===1?1.5:1;ctx.stroke();
+    if(s===1){ctx.fillStyle='rgba(255,255,255,0.02)';ctx.fill();}
   });
+
+  // 축
   for(var i=0;i<n;i++){
     var a=(i/n)*Math.PI*2-Math.PI/2;
-    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
     ctx.strokeStyle=gridC;ctx.lineWidth=1;ctx.stroke();
   }
 
-  // 데이터 (빨간색 Fotmob 스타일)
+  // 데이터 영역
   ctx.beginPath();
   for(var i=0;i<n;i++){
     var a=(i/n)*Math.PI*2-Math.PI/2;
     var v=Math.min(1,Math.max(0,(items[i].value||0)/100));
-    var x=cx+Math.cos(a)*r*v, y=cy+Math.sin(a)*r*v;
-    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    i===0?ctx.moveTo(cx+Math.cos(a)*r*v,cy+Math.sin(a)*r*v)
+         :ctx.lineTo(cx+Math.cos(a)*r*v,cy+Math.sin(a)*r*v);
   }
   ctx.closePath();
-  ctx.fillStyle='rgba(189,5,16,0.5)';ctx.fill();
-  ctx.strokeStyle='rgba(189,5,16,0.9)';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='rgba(189,5,16,0.4)';ctx.fill();
+  ctx.strokeStyle='#EF4444';ctx.lineWidth=2;ctx.stroke();
 
-  // 점
+  // 데이터 점
   for(var i=0;i<n;i++){
     var a=(i/n)*Math.PI*2-Math.PI/2;
     var v=Math.min(1,Math.max(0,(items[i].value||0)/100));
-    ctx.beginPath();ctx.arc(cx+Math.cos(a)*r*v,cy+Math.sin(a)*r*v,3,0,Math.PI*2);
-    ctx.fillStyle='#EF4444';ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx+Math.cos(a)*r*v,cy+Math.sin(a)*r*v,4,0,Math.PI*2);
+    ctx.fillStyle='#fff';ctx.fill();
+    ctx.strokeStyle='#EF4444';ctx.lineWidth=2;ctx.stroke();
   }
 
-  // 라벨 + 퍼센트
-  ctx.textAlign='center';ctx.textBaseline='middle';
+  // 라벨 (% 수치 크게 + 설명 작게) - Fotmob 스타일
   for(var i=0;i<n;i++){
     var a=(i/n)*Math.PI*2-Math.PI/2;
-    var lx=cx+Math.cos(a)*(r+22), ly=cy+Math.sin(a)*(r+22);
+    var labelR = r+28;
+    var lx=cx+Math.cos(a)*labelR;
+    var ly=cy+Math.sin(a)*labelR;
     var pct=items[i].value||0;
-    var col=pct>=75?'#22C55E':pct>=50?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.5)';
-    ctx.font='bold 10px sans-serif';
-    ctx.fillStyle='rgba(255,255,255,0.5)';
-    ctx.fillText(items[i].title, lx, ly-7);
-    ctx.font='bold 11px sans-serif';
+    var col=pct>=75?'#22C55E':pct>=50?'#fff':'rgba(255,255,255,0.6)';
+
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+
+    // % 수치 (크게)
+    ctx.font='bold 13px sans-serif';
     ctx.fillStyle=col;
-    ctx.fillText(pct+'%', lx, ly+7);
+    ctx.fillText(pct+'%', lx, ly-7);
+
+    // 라벨 (작게)
+    ctx.font='10px sans-serif';
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    // 긴 라벨 줄바꿈 처리
+    var title=items[i].title||'';
+    if(title.length>12){
+      var words=title.split(' ');
+      var mid=Math.ceil(words.length/2);
+      var line1=words.slice(0,mid).join(' ');
+      var line2=words.slice(mid).join(' ');
+      ctx.fillText(line1,lx,ly+6);
+      ctx.fillText(line2,lx,ly+17);
+    } else {
+      ctx.fillText(title,lx,ly+7);
+    }
   }
 }
 
@@ -1113,6 +1158,14 @@ function switchPMComp(btn){
   content.querySelectorAll('.comp-stat-panel').forEach(function(panel){
     panel.style.display=panel.getAttribute('data-comp')===comp?'':'none';
   });
+}
+
+function makeFMStat(val, lbl, color){
+  var style = color ? ' style="color:'+color+'"' : '';
+  return '<div class="fm-stat-cell">'
+    +'<div class="fm-stat-val"'+style+'>'+val+'</div>'
+    +'<div class="fm-stat-lbl">'+lbl+'</div>'
+    +'</div>';
 }
 
 function makeStatBox(val,lbl,sub,color){
