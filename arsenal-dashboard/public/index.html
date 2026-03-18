@@ -734,113 +734,158 @@ function openPlayerModal(p) {
   var border = POS_BORDER[p.posGroup]||'var(--border)';
   var tc = POS_TEXT[p.posGroup]||'var(--text-muted)';
   var flag = NAT_FLAG[p.nationality]||'';
+  var espn = window._espnPlayers ? window._espnPlayers.find(function(e){
+    return e.name === p.fullName || e.name === p.name ||
+           e.shortName === p.name ||
+           p.fullName.toLowerCase().includes(e.name.toLowerCase().split(' ').pop());
+  }) : null;
+
+  // FPL 기반 계산
   var apps = p.appearances||1;
+  var goalContrib = (p.goals||0)+(p.assists||0);
+  var xGPerGame = apps>0?((p.xG||0)/apps).toFixed(2):'0.00';
+  var xAPerGame = apps>0?((p.xA||0)/apps).toFixed(2):'0.00';
 
-  // 계산 지표
-  var goalContrib = (p.goals||0) + (p.assists||0);
-  var minsPerGoal = p.goals > 0 ? Math.round((p.minutes||0)/p.goals) : 0;
-  var minsPerContrib = goalContrib > 0 ? Math.round((p.minutes||0)/goalContrib) : 0;
-  var xGPerGame = apps > 0 ? ((p.xG||0)/apps).toFixed(2) : '0.00';
-  var xAPerGame = apps > 0 ? ((p.xA||0)/apps).toFixed(2) : '0.00';
-
-  // 퍼센타일 색상
-  function pctColor(v) {
-    if(v>=80) return '#22C55E';
-    if(v>=60) return '#84CC16';
-    if(v>=40) return '#F59E0B';
-    return '#EF4444';
+  function pctColor(v){
+    if(v>=80)return'#22C55E';if(v>=60)return'#84CC16';
+    if(v>=40)return'#F59E0B';return'#EF4444';
   }
 
-  // ICT 기반 레이더 정규화 (팀 내 최대값 기준 → 전체 평균값 기준으로 스케일)
-  var radarData = [
-    {label:'영향력', val: Math.min(100, Math.round((p.influence||0)/8))},
-    {label:'창의성', val: Math.min(100, Math.round((p.creativity||0)/7))},
-    {label:'위협도', val: Math.min(100, Math.round((p.threat||0)/8))},
-    {label:'공격', val: Math.min(100, Math.round(((p.goals||0)*6+(p.assists||0)*4)/apps*10))},
-    {label:'기여도', val: Math.min(100, Math.round((p.xGI||0)/apps*15))},
+  var radarData=[
+    {label:'\uc601\ud5a5\ub825',val:Math.min(100,Math.round((p.influence||0)/8))},
+    {label:'\uc0c1\uc2e4\ub825',val:Math.min(100,Math.round((p.creativity||0)/7))},
+    {label:'\uc704\ud611\ub3c4', val:Math.min(100,Math.round((p.threat||0)/8))},
+    {label:'\uacf5\uaca9',      val:Math.min(100,Math.round(((p.goals||0)*6+(p.assists||0)*4)/apps*10))},
+    {label:'\uae30\uc5ec\ub3c4', val:Math.min(100,Math.round((p.xGI||0)/apps*15))},
   ];
 
-  var html = '';
+  var html='';
 
   // 헤더
-  html += '<div class="pl-modal-header" style="background:linear-gradient(135deg,'+bg+',transparent)">';
+  html+='<div class="pl-modal-header" style="background:linear-gradient(135deg,'+bg+',transparent)">';
   if(p.photo){
-    html += '<img class="pl-modal-photo" src="'+p.photo+'" onerror="this.style.display=\'none\'">';
+    html+='<img class="pl-modal-photo" src="'+p.photo+'" onerror="this.style.display=\'none\'">';
   } else {
-    html += '<div class="pl-modal-photo-ph" style="background:'+bg+';color:'+tc+'">'+p.posGroup+'</div>';
+    html+='<div class="pl-modal-photo-ph" style="background:'+bg+';color:'+tc+'">'+p.posGroup+'</div>';
   }
-  html += '<div style="flex:1;min-width:0">';
-  html += '<div class="pl-modal-name">'+p.name+'</div>';
-  html += '<div class="pl-modal-sub">'+(flag?flag+' ':'')+p.nationality+' &nbsp;·&nbsp; Arsenal FC</div>';
-  html += '<div class="pl-modal-sub" style="margin-top:2px">'+p.posGroup+' &nbsp;·&nbsp; '+p.appearances+'경기 '+p.minutes+'분</div>';
-  html += '<span class="pl-modal-badge" style="background:'+bg+';color:'+tc+';border:1px solid '+border+'">ICT '+((p.ictIndex||0).toFixed(1))+'</span>';
-  html += '</div></div>';
+  html+='<div style="flex:1;min-width:0">';
+  html+='<div class="pl-modal-name">'+p.name+'</div>';
+  html+='<div class="pl-modal-sub">'+(flag?flag+' ':'')+p.nationality+' \u00b7 Arsenal FC</div>';
+  html+='<div class="pl-modal-sub" style="margin-top:2px">'+p.posGroup+' \u00b7 PL '+p.appearances+'\uacbd\uae30 '+p.minutes+'\ubd84</div>';
+  html+='<span class="pl-modal-badge" style="background:'+bg+';color:'+tc+';border:1px solid '+border+'">ICT '+((p.ictIndex||0).toFixed(1))+'</span>';
+  if(espn&&espn.jersey){
+    html+='<span class="pl-modal-badge" style="background:var(--surface2);color:var(--text-muted);margin-left:4px">#'+espn.jersey+'</span>';
+  }
+  html+='</div></div>';
 
-  // 핵심 스탯
-  html += '<div class="stat-section">';
-  html += '<div class="stat-section-title">핵심 스탯</div>';
-  html += '<div class="stat-grid-4">';
-  html += makeStatBox(p.goals||0, '골', p.xG ? 'xG '+p.xG.toFixed(1) : '', tc);
-  html += makeStatBox(p.assists||0, '어시스트', p.xA ? 'xA '+p.xA.toFixed(1) : '', '');
-  html += makeStatBox(goalContrib, '공격포인트', '', '');
-  html += makeStatBox(p.starts||0, '선발', p.appearances+'경기', '');
-  html += '</div></div>';
+  // ESPN 대회별 스탯
+  if(espn&&espn.competitions&&Object.keys(espn.competitions).length>0){
+    html+='<div class="stat-section">';
+    html+='<div class="stat-section-title">\ub300\ud68c\ubcc4 \uc2a4\ud0ef</div>';
+    // 탭 버튼
+    var compKeys = Object.keys(espn.competitions);
+    var compLabels = {PL:'\ud504\ub9ac\ubbf8\uc5b4\ub9ac\uadf8',UCL:'\ucc54\ud53c\uc5b8\uc2a4\ub9ac\uadf8',FAC:'FA\ucef5',EFL:'\uce74\ub77c\ubc14\uc624\ucef5'};
+    html+='<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">';
+    compKeys.forEach(function(k,i){
+      var active=i===0?'background:var(--red-dark);color:#fff':'background:var(--surface2);color:var(--text-muted)';
+      html+='<button class="comp-tab-btn" data-comp="'+k+'" style="'+active+';border:none;padding:4px 10px;border-radius:20px;font-size:10px;cursor:pointer;font-family:var(--fb)">'+compLabels[k]+'</button>';
+    });
+    html+='</div>';
+    // 각 대회 스탯 (첫번째만 보이게)
+    compKeys.forEach(function(k,i){
+      var c=espn.competitions[k];
+      var display=i===0?'':'display:none';
+      html+='<div class="comp-stat-panel" data-comp="'+k+'" style="'+display+'">';
+      html+='<div class="stat-grid-4">';
+      html+=makeStatBox(c.goals||0,'\uace8','','');
+      html+=makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','');
+      html+=makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud305','/ '+(c.totalShots||0)+'\uc288\ud305','');
+      html+=makeStatBox((c.yellowCards||0)+' / '+(c.redCards||0),'\uce74\ub4dc \uacbd\uace0/\ud1f4\uc7a5','',c.yellowCards>3?'#F59E0B':'');
+      html+='</div></div>';
+    });
+    html+='</div>';
+  }
 
-  // 경기당 지표
-  html += '<div class="stat-section">';
-  html += '<div class="stat-section-title">경기당 평균</div>';
-  html += '<div class="stat-grid-3">';
-  html += makeStatBox(xGPerGame, 'xG/경기', '', '#22C55E');
-  html += makeStatBox(xAPerGame, 'xA/경기', '', '#60A5FA');
-  html += makeStatBox(minsPerContrib > 0 ? minsPerContrib+"'" : '-', '공격포인트 간격', '', '');
-  html += '</div></div>';
+  // FPL 핵심 스탯 (PL 기반)
+  html+='<div class="stat-section">';
+  html+='<div class="stat-section-title">FPL \ud575\uc2ec \uc9c0\ud45c (PL)</div>';
+  html+='<div class="stat-grid-4">';
+  html+=makeStatBox(p.goals||0,'\uace8',p.xG?'xG '+p.xG.toFixed(1):'',tc);
+  html+=makeStatBox(p.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8',p.xA?'xA '+p.xA.toFixed(1):'','');
+  html+=makeStatBox(xGPerGame,'xG/\uacbd\uae30','','#22C55E');
+  html+=makeStatBox(xAPerGame,'xA/\uacbd\uae30','','#60A5FA');
+  html+='</div></div>';
 
-  // FPL 지수 퍼센타일 바
-  html += '<div class="stat-section">';
-  html += '<div class="stat-section-title">FPL 지수 분석</div>';
+  // ICT 지수
+  html+='<div class="stat-section">';
+  html+='<div class="stat-section-title">FPL \uc9c0\uc218 \ubd84\uc11d</div>';
   radarData.forEach(function(r){
-    var color = pctColor(r.val);
-    html += '<div class="pct-row">';
-    html += '<span class="pct-label">'+r.label+'</span>';
-    html += '<div class="pct-bar-wrap"><div class="pct-bar" style="width:'+r.val+'%;background:'+color+'"></div></div>';
-    html += '<span class="pct-val" style="color:'+color+'">'+r.val+'</span>';
-    html += '</div>';
+    var color=pctColor(r.val);
+    html+='<div class="pct-row">';
+    html+='<span class="pct-label">'+r.label+'</span>';
+    html+='<div class="pct-bar-wrap"><div class="pct-bar" style="width:'+r.val+'%;background:'+color+'"></div></div>';
+    html+='<span class="pct-val" style="color:'+color+'">'+r.val+'</span>';
+    html+='</div>';
   });
-  html += '</div>';
+  html+='</div>';
 
-  // 기타 스탯
-  html += '<div class="stat-section">';
-  html += '<div class="stat-section-title">기타</div>';
-  html += '<div class="stat-grid-4">';
-  html += makeStatBox(p.bonus||0, '보너스', '', '');
-  html += makeStatBox(p.totalPoints||0, 'FPL 포인트', '', '');
-  html += makeStatBox(p.yellowCards||0, '경고', '', p.yellowCards>3?'#F59E0B':'');
-  html += makeStatBox(p.form||0, '폼', '최근 30일', p.form>=6?'#22C55E':p.form>=4?'#F59E0B':'#EF4444');
-  html += '</div></div>';
+  // 기타
+  html+='<div class="stat-section">';
+  html+='<div class="stat-section-title">\uae30\ud0c0</div>';
+  html+='<div class="stat-grid-4">';
+  html+=makeStatBox(p.bonus||0,'\ubcf4\ub108\uc2a4','','');
+  html+=makeStatBox(p.totalPoints||0,'FPL\uc810\uc218','','');
+  html+=makeStatBox(p.yellowCards||0,'\uacbd\uace0','',p.yellowCards>3?'#F59E0B':'');
+  html+=makeStatBox(p.form||0,'\ud3fc','30\uc77c',p.form>=6?'#22C55E':p.form>=4?'#F59E0B':'#EF4444');
+  html+='</div></div>';
 
-  content.innerHTML = html;
+  content.innerHTML=html;
 
-  // 퍼센타일 바 애니메이션 (약간 지연 후)
+  // 대회 탭 클릭 이벤트
+  content.querySelectorAll('.comp-tab-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var comp=this.getAttribute('data-comp');
+      content.querySelectorAll('.comp-tab-btn').forEach(function(b){
+        b.style.background='var(--surface2)';b.style.color='var(--text-muted)';
+      });
+      this.style.background='var(--red-dark)';this.style.color='#fff';
+      content.querySelectorAll('.comp-stat-panel').forEach(function(p){
+        p.style.display=p.getAttribute('data-comp')===comp?'':'none';
+      });
+    });
+  });
+
   modal.classList.add('open');
   document.body.style.overflow='hidden';
 }
 
-function makeStatBox(val, lbl, sub, color) {
-  var style = color ? ' style="color:'+color+'"' : '';
+function makeStatBox(val,lbl,sub,color){
+  var style=color?' style="color:'+color+'"':'';
   return '<div class="stat-box"><div class="stat-box-val"'+style+'>'+val+'</div>'
     +'<div class="stat-box-lbl">'+lbl+'</div>'
     +(sub?'<div class="stat-box-sub">'+sub+'</div>':'')
     +'</div>';
 }
 
-function closePlayerModal() {
+function closePlayerModal(){
   document.getElementById('playerModal').classList.remove('open');
   document.body.style.overflow='';
 }
-function closeModal(e) {
-  if(e.target === document.getElementById('playerModal')) closePlayerModal();
+function closeModal(e){
+  if(e.target===document.getElementById('playerModal'))closePlayerModal();
 }
 
+// ESPN 데이터 로드 (players.json)
+var _espnPlayers=null;
+function loadESPNStats(){
+  fetch('/data/players.json')
+    .then(function(r){return r.json();})
+    .then(function(d){window._espnPlayers=d.players;console.log('ESPN stats loaded:',d.players.length);})
+    .catch(function(){console.log('ESPN stats not available yet');});
+}
+
+
+loadESPNStats();
 loadConfig();
 loadFixtures();
 loadStandings();
