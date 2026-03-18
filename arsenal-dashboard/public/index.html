@@ -811,9 +811,17 @@ function showSec(id,btn){
 (function(){
   function restoreHash(){
     var hash = location.hash.replace('#','');
+    if(hash === 'player') return; // 모달은 hashchange로만 처리
     if(hash && VALID_SECS.indexOf(hash) !== -1){
       var btn = document.querySelector('.nav-btn[onclick*="\''+hash+'\'"]');
       if(btn) showSec(hash, btn);
+    } else if(!hash) {
+      // 해시 없어지면 모달 닫기
+      var modal = document.getElementById('playerModal');
+      if(modal.classList.contains('open')){
+        modal.classList.remove('open');
+        document.body.style.overflow='';
+      }
     }
   }
   restoreHash();
@@ -1085,6 +1093,7 @@ function openPlayerModal(p) {
   content.innerHTML = h;
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
+  location.hash = 'player';
 
   // 레이더 차트
   setTimeout(function(){
@@ -1232,9 +1241,10 @@ function makeStatBox(val,lbl,sub,color){
     +'</div>';
 }
 
-function closePlayerModal(){
+function closePlayerModal(fromHash){
   document.getElementById('playerModal').classList.remove('open');
   document.body.style.overflow='';
+  if(!fromHash && location.hash==='#player') history.back();
 }
 function closeModal(e){
   if(e.target===document.getElementById('playerModal'))closePlayerModal();
