@@ -233,6 +233,40 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pl-modal-name{font-family:var(--fd);font-size:26px;letter-spacing:2px;line-height:1.1;}
 .pl-modal-sub{font-size:11px;color:var(--text-muted);margin-top:4px;}
 .pl-modal-badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:20px;font-weight:700;margin-top:6px;}
+/* ── 경기 상세 모달 ── */
+.match-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
+.match-modal-overlay.open{display:flex;}
+.match-modal-sheet{background:#1a1c22;border-radius:20px 20px 0 0;width:100%;max-width:540px;max-height:92vh;overflow:hidden;animation:slideUp .28s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}
+.match-modal-inner{overflow-y:auto;flex:1;padding-bottom:32px;}
+.mm-header{background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);padding:18px 16px 14px;position:relative;}
+.mm-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 14px;}
+.mm-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.mm-scoreboard{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px;}
+.mm-team{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0;}
+.mm-crest{width:44px;height:44px;object-fit:contain;border-radius:50%;background:rgba(255,255,255,.05);padding:3px;}
+.mm-team-name{font-size:11px;font-weight:700;text-align:center;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
+.mm-score{font-family:var(--fd);font-size:42px;font-weight:900;color:#fff;letter-spacing:2px;text-align:center;min-width:80px;}
+.mm-comp-badge{text-align:center;margin-top:10px;}
+.mm-comp-tag{display:inline-block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.08);color:var(--text-muted);border:1px solid var(--border);}
+.mm-section{padding:14px 16px 0;}
+.mm-section-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
+.mm-events{display:flex;flex-direction:column;gap:4px;}
+.mm-event{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--surface2);}
+.mm-event.home{flex-direction:row;}
+.mm-event.away{flex-direction:row-reverse;}
+.mm-event-min{font-family:var(--fm);font-size:11px;color:var(--gold);min-width:32px;font-weight:700;}
+.mm-event.away .mm-event-min{text-align:right;}
+.mm-event-icon{font-size:14px;flex-shrink:0;}
+.mm-event-player{font-size:12px;font-weight:700;color:var(--text);flex:1;}
+.mm-event.away .mm-event-player{text-align:right;}
+.mm-stats-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:4px 8px;align-items:center;}
+.mm-stat-val{font-size:13px;font-weight:700;color:var(--text);}
+.mm-stat-val.home{text-align:right;}
+.mm-stat-val.away{text-align:left;}
+.mm-stat-label{font-size:10px;color:var(--text-muted);text-align:center;letter-spacing:.5px;}
+.mm-stat-bar-wrap{grid-column:1/-1;display:flex;height:3px;border-radius:2px;overflow:hidden;margin-bottom:4px;}
+.mm-stat-bar-home{background:var(--red);transition:width .4s;}
+.mm-stat-bar-away{background:rgba(255,255,255,.25);flex:1;}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
 /* ── SNS ── */
 .sns-list{display:flex;flex-direction:column;gap:10px}
@@ -323,6 +357,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <div class="modal-overlay" id="playerModal" onclick="closeModal(event)">
   <div class="modal-sheet" id="modalSheet">
     <div class="modal-sheet-inner" id="modalContent"></div>
+  </div>
+</div>
+
+<!-- MATCH DETAIL MODAL -->
+<div class="match-modal-overlay" id="matchModal" onclick="closeMatchModal(event)">
+  <div class="match-modal-sheet">
+    <div class="match-modal-inner" id="matchModalContent"></div>
   </div>
 </div>
 
@@ -468,6 +509,10 @@ function buildFixCard(m){
   ad.appendChild(renderCrest(makeCrest(m.awayTeam,!isArsHome)));
   tr.appendChild(hd);tr.appendChild(sb);tr.appendChild(ad);card.appendChild(tr);
   if(m.venue){var v=document.createElement('div');v.className='fix-venue';v.textContent=m.venue;card.appendChild(v);}
+  if(isDone && m.id){
+    card.style.cursor='pointer';
+    card.onclick=function(){openMatchModal(m);};
+  }
   return card;
 }
 
@@ -759,6 +804,132 @@ function loadSns(){
   });
 }
 
+// ── MATCH DETAIL MODAL ──
+var COMP_SLUG_MAP={PL:'eng.1',UCL:'uefa.champions',EFL:'eng.league_cup',FAC:'eng.fa'};
+
+function openMatchModal(m){
+  var overlay=document.getElementById('matchModal');
+  var content=document.getElementById('matchModalContent');
+  var slug=COMP_SLUG_MAP[m.competition&&m.competition.short]||'eng.1';
+
+  // 로딩 상태
+  content.innerHTML=
+    '<div class="mm-header">'+
+      '<div class="mm-handle"></div>'+
+      '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>'+
+      '<div class="mm-scoreboard">'+
+        '<div class="mm-team">'+
+          (m.homeTeam.crest?'<img class="mm-crest" src="'+m.homeTeam.crest+'" onerror="this.style.display=\'none\'">':'')+
+          '<div class="mm-team-name">'+(m.homeTeam.shortName||m.homeTeam.name||'')+'</div>'+
+        '</div>'+
+        '<div class="mm-score">'+(m.score.fullTime.home||0)+' : '+(m.score.fullTime.away||0)+'</div>'+
+        '<div class="mm-team">'+
+          (m.awayTeam.crest?'<img class="mm-crest" src="'+m.awayTeam.crest+'" onerror="this.style.display=\'none\'">':'')+
+          '<div class="mm-team-name">'+(m.awayTeam.shortName||m.awayTeam.name||'')+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
+    '</div>'+
+    '<div style="padding:24px;text-align:center"><div class="spinner"></div></div>';
+
+  overlay.classList.add('open');
+  document.body.style.overflow='hidden';
+  location.hash='match';
+
+  apiFetch(FN+'/match?id='+m.id+'&slug='+slug).then(function(data){
+    renderMatchModal(content, m, data);
+  }).catch(function(){
+    content.querySelector('div[style]').innerHTML='<div class="error-state">&#9888;&#65039; 데이터를 불러올 수 없어요</div>';
+  });
+}
+
+function renderMatchModal(content, m, data){
+  var h=data.homeTeam, a=data.awayTeam;
+  var ARSENAL_ID='359';
+  var isArsHome=(h.id===ARSENAL_ID||h.name.includes('Arsenal'));
+
+  var EVENT_ICON={goal:'⚽',own_goal:'⚽',red_card:'🟥',yellow_card:'🟨'};
+  var STAT_LABELS={
+    possessionPct:'점유율',totalShots:'슈팅',shotsOnTarget:'유효슈팅',
+    passingAccuracy:'패스성공률',cornerKicks:'코너킥',offsides:'오프사이드',
+    yellowCards:'경고',redCards:'퇴장'
+  };
+
+  // 헤더
+  var html=
+    '<div class="mm-header">'+
+      '<div class="mm-handle"></div>'+
+      '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>'+
+      '<div class="mm-scoreboard">'+
+        '<div class="mm-team">'+
+          (h.crest?'<img class="mm-crest" src="'+h.crest+'" onerror="this.style.display=\'none\'">':'')+
+          '<div class="mm-team-name">'+(h.name||'')+'</div>'+
+        '</div>'+
+        '<div class="mm-score" style="color:'+(
+          isArsHome
+            ? (h.score>a.score?'#22C55E':h.score===a.score?'#F59E0B':'#EF4444')
+            : (a.score>h.score?'#22C55E':a.score===h.score?'#F59E0B':'#EF4444')
+        )+'">'+h.score+' : '+a.score+'</div>'+
+        '<div class="mm-team">'+
+          (a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display=\'none\'">':'')+
+          '<div class="mm-team-name">'+(a.name||'')+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
+    '</div>';
+
+  // 이벤트 타임라인
+  if(data.events && data.events.length){
+    html+='<div class="mm-section"><div class="mm-section-title">골 &amp; 이벤트</div><div class="mm-events">';
+    data.events.forEach(function(ev){
+      var side=ev.homeAway==='home'?'home':'away';
+      var icon=EVENT_ICON[ev.type]||'•';
+      var label=ev.type==='own_goal'?ev.player+' (OG)':ev.player;
+      html+=
+        '<div class="mm-event '+side+'">'+
+          '<span class="mm-event-min">'+ev.minute+'</span>'+
+          '<span class="mm-event-icon">'+icon+'</span>'+
+          '<span class="mm-event-player">'+label+'</span>'+
+        '</div>';
+    });
+    html+='</div></div>';
+  }
+
+  // 팀 스탯
+  var statKeys=['possessionPct','totalShots','shotsOnTarget','passingAccuracy','cornerKicks','offsides','yellowCards','redCards'];
+  var hasStats=statKeys.some(function(k){return h.stats[k]||a.stats[k];});
+  if(hasStats){
+    html+='<div class="mm-section" style="margin-top:14px"><div class="mm-section-title">팀 스탯</div><div class="mm-stats-grid">';
+    statKeys.forEach(function(k){
+      var hv=parseFloat(h.stats[k])||0;
+      var av=parseFloat(a.stats[k])||0;
+      var hvStr=h.stats[k]||'0'; var avStr=a.stats[k]||'0';
+      if(!h.stats[k]&&!a.stats[k]) return;
+      var total=hv+av||1;
+      var homePct=Math.round(hv/total*100);
+      html+=
+        '<div class="mm-stat-val home">'+hvStr+'</div>'+
+        '<div class="mm-stat-label">'+(STAT_LABELS[k]||k)+'</div>'+
+        '<div class="mm-stat-val away">'+avStr+'</div>'+
+        '<div class="mm-stat-bar-wrap">'+
+          '<div class="mm-stat-bar-home" style="width:'+homePct+'%"></div>'+
+          '<div class="mm-stat-bar-away"></div>'+
+        '</div>';
+    });
+    html+='</div></div>';
+  }
+
+  content.innerHTML=html;
+}
+
+function closeMatchModal(e){
+  if(e && e.target !== document.getElementById('matchModal')) return;
+  var overlay=document.getElementById('matchModal');
+  overlay.classList.remove('open');
+  document.body.style.overflow='';
+  if(location.hash==='#match') history.back();
+}
+
 // ── TICKER ──
 function updateTicker(matches){
   if(!matches||!matches.length) return;
@@ -811,15 +982,19 @@ function showSec(id,btn){
 (function(){
   function restoreHash(){
     var hash = location.hash.replace('#','');
-    if(hash === 'player') return; // 모달은 hashchange로만 처리
+    if(hash === 'player' || hash === 'match') return; // 모달은 hashchange로만 처리
     if(hash && VALID_SECS.indexOf(hash) !== -1){
-      var btn = document.querySelector('.nav-btn[onclick*="\''+hash+'\'"]');
+      var btn = document.querySelector('.nav-btn[onclick*="\''+hash+"'"+'\"]');
       if(btn) showSec(hash, btn);
     } else if(!hash) {
       // 해시 없어지면 모달 닫기
       var modal = document.getElementById('playerModal');
       if(modal.classList.contains('open')){
-        modal.classList.remove('open');
+        closePlayerModal(true);
+      }
+      var matchModal = document.getElementById('matchModal');
+      if(matchModal.classList.contains('open')){
+        matchModal.classList.remove('open');
         document.body.style.overflow='';
       }
     }
