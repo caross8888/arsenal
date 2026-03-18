@@ -94,6 +94,42 @@ def fetch_player(player_id, slug):
         return None
 
 
+def _get_primary_pos_key(pos_desc):
+    """primaryPosition 또는 isMainPosition=True인 포지션 key 반환"""
+    if not pos_desc:
+        return ''
+    # 1) primaryPosition 필드 직접 사용 (가장 신뢰할 수 있음)
+    primary = pos_desc.get('primaryPosition', {})
+    if primary and primary.get('key'):
+        return primary['key']
+    # 2) isMainPosition=True인 포지션
+    positions = pos_desc.get('positions', [])
+    main = next((p for p in positions if p.get('isMainPosition')), None)
+    if main:
+        return (main.get('strPos') or {}).get('key', '')
+    # 3) 출전 빈도 가장 높은 포지션
+    if positions:
+        best = max(positions, key=lambda p: p.get('occurences', 0))
+        return (best.get('strPos') or {}).get('key', '')
+    return ''
+
+
+def _pos_to_group(pos_key):
+    """Fotmob position key → GK/DF/MF/FW"""
+    pos_key = (pos_key or '').lower()
+    if 'keeper' in pos_key or pos_key == 'gk':
+        return 'GK'
+    if any(x in pos_key for x in ['back', 'defender', 'centre-back', 'centreback', 'wingback', 'wing-back']):
+        return 'DF'
+    if any(x in pos_key for x in ['forward', 'striker', 'centre-forward', 'centreforward', 'winger', 'attackingmidfielder', 'attacking midfielder']):
+        return 'FW'
+    if any(x in pos_key for x in ['midfielder', 'midfield']):
+        return 'MF'
+    # fallback: strPosShort label 기준
+    return 'MF'
+
+
+
 def parse_stats(data):
     """선수 데이터에서 스탯 추출"""
     if not data:
@@ -105,7 +141,8 @@ def parse_stats(data):
         'fotmobPhoto': f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png' if player_id else None,
         'nationality': data.get('playerInformation', [{}])[0].get('value', {}).get('fallback', '')
                        if data.get('playerInformation') else '',
-        'position':    data.get('positionDescription', {}).get('positions', [{}])[0].get('strPos', {}).get('key', ''),
+        'position':    _get_primary_pos_key(data.get('positionDescription', {})),
+        'posGroup':    _pos_to_group(_get_primary_pos_key(data.get('positionDescription', {}))),
         'jersey':      '',
         'age':         None,
         'height':      '',
