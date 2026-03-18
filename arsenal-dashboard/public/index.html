@@ -268,7 +268,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-evt-cell{display:inline-flex;align-items:center;gap:3px;padding:3px 6px;background:var(--surface2);border-radius:6px;max-width:100%;min-width:0;overflow:hidden;}
 .mm-evt-home .mm-evt-cell{flex-direction:row;border-radius:6px 0 0 6px;}
 .mm-evt-away .mm-evt-cell{flex-direction:row;border-radius:0 6px 6px 0;}
-.mm-event-icon{font-size:10px;flex-shrink:0;}.og-icon{filter:sepia(1) saturate(5) hue-rotate(310deg);display:inline-block;}
+.mm-event-icon{font-size:10px;flex-shrink:0;}.og-icon{filter:brightness(0) saturate(100%) invert(20%) sepia(100%) saturate(700%) hue-rotate(340deg) brightness(110%);display:inline-block;}
 .mm-event-min{font-family:var(--fm);font-size:9px;color:var(--gold);font-weight:700;flex-shrink:0;width:28px;text-align:center;}
 .mm-event-player{font-size:10px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;}
 .mm-stats-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:3px 8px;align-items:center;}
@@ -915,7 +915,7 @@ function renderMatchModal(content, m, data){
         html+='<td class="mm-evt-home"><span class="mm-evt-cell">'
           +'<span class="mm-event-player">'+ev.player+'</span>'
           +'<span class="mm-event-min">'+ev.minute+'</span>'
-          +'<span class="mm-event-icon">'+(ev.type==='own_goal'?'<span class="og-icon">⚽</span>(OG)':ev.type==='pen_goal'?'⚽(P)':'⚽')+'</span>'
+          +'<span class="mm-event-icon">'+(ev.type==='own_goal'?'(OG)<span class="og-icon">⚽</span>':ev.type==='pen_goal'?'(P)⚽':'⚽')+'</span>'
           +'</span></td>';
       } else {
         html+='<td class="mm-evt-home"></td>';
@@ -924,7 +924,7 @@ function renderMatchModal(content, m, data){
       // 어웨이셀: 아이콘→시간→이름 순, 왼쪽 정렬
       if(ev2){
         html+='<td class="mm-evt-away"><span class="mm-evt-cell">'
-          +'<span class="mm-event-icon">'+(ev2.type==='own_goal'?'(OG)<span class="og-icon">⚽</span>':ev2.type==='pen_goal'?'(P)⚽':'⚽')+'</span>'
+          +'<span class="mm-event-icon">'+(ev2.type==='own_goal'?'<span class="og-icon">⚽</span>(OG)':ev2.type==='pen_goal'?'⚽(P)':'⚽')+'</span>'
           +'<span class="mm-event-min">'+ev2.minute+'</span>'
           +'<span class="mm-event-player">'+ev2.player+'</span>'
           +'</span></td>';
