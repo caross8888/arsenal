@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#EF0107">
-<meta name="color-scheme" content="only light">
+<meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Arsenal">
@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@400;500;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:only light;--red:#EF0107;--red-dark:#b50004;--gold:#C8A84B;--navy:#0B0D12;--surface:#111318;--surface2:#181B22;--surface3:#1F2330;--border:rgba(255,255,255,0.07);--border-accent:rgba(200,168,75,0.3);--text:#F0F2F7;--text-muted:#7A8099;--text-dim:#4A5070;--green:#22C55E;--amber:#F59E0B;--fd:'Bebas Neue',sans-serif;--fb:'Noto Sans KR',sans-serif;--fm:'Fira Mono',monospace;--safe-bottom:env(safe-area-inset-bottom,0px);}
+:root{color-scheme:dark;--red:#EF0107;--red-dark:#b50004;--gold:#C8A84B;--navy:#0B0D12;--surface:#111318;--surface2:#181B22;--surface3:#1F2330;--border:rgba(255,255,255,0.07);--border-accent:rgba(200,168,75,0.3);--text:#F0F2F7;--text-muted:#7A8099;--text-dim:#4A5070;--green:#22C55E;--amber:#F59E0B;--fd:'Bebas Neue',sans-serif;--fb:'Noto Sans KR',sans-serif;--fm:'Fira Mono',monospace;--safe-bottom:env(safe-area-inset-bottom,0px);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--navy);color:var(--text);font-family:var(--fb);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;padding-bottom:calc(64px + var(--safe-bottom));}
@@ -96,7 +96,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .more-btn{width:100%;padding:12px;border:none;background:var(--surface2);color:var(--text-muted);font-family:var(--fb);font-size:11px;letter-spacing:1px;cursor:pointer;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:6px;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;}
 .more-btn:hover{background:var(--surface3);color:var(--text)}
 .f-btns{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
-.f-btns::-webkit-scrollbar{display:none}
+.f-btns@media (prefers-color-scheme:dark){body{background-color:#0B0D12!important;color:#F0F2F7!important}img{filter:none!important}}
+::-webkit-scrollbar{display:none}
 .f-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:11px;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .f-btn.active{background:var(--red);border-color:var(--red);color:#fff}
 .sq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
@@ -249,7 +250,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sns-foot{display:flex;gap:14px;padding:8px 14px 12px;border-top:1px solid var(--border)}
 .sns-stat{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted)}
 .sns-bsky-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:rgba(0,133,255,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.25);margin-left:auto;flex-shrink:0}
-</style>
+/* ── 삼성 인터넷 강제 다크모드 차단 — 이미 다크 테마이므로 고정 ── */</style>
 </head>
 <body>
 <div class="ticker-wrap">
