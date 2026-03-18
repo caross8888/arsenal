@@ -196,15 +196,16 @@ def parse_stats(data):
         c['redCards']    += match.get('redCards', 0) or 0
         c['minutesPlayed'] += minutes
 
-        # 클린시트/실점 (스코어 기반)
-        home_score = match.get('homeScore')
-        away_score = match.get('awayScore')
-        is_home = match.get('isHomeTeam', True)
-        if home_score is not None and away_score is not None:
-            conceded = (away_score if is_home else home_score) or 0
-            c['goalsConceded'] += conceded
-            if conceded == 0 and not on_bench and minutes > 0:
-                c['cleanSheets'] += 1
+        # 클린시트/실점 (출전한 경기만 집계)
+        if not on_bench and minutes > 0:
+            home_score = match.get('homeScore')
+            away_score = match.get('awayScore')
+            is_home = match.get('isHomeTeam', True)
+            if home_score is not None and away_score is not None:
+                conceded = (away_score if is_home else home_score) or 0
+                c['goalsConceded'] += conceded
+                if conceded == 0:
+                    c['cleanSheets'] += 1
 
         rating = (match.get('ratingProps') or {}).get('rating')
         if rating:
