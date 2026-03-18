@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-03-18T04:06:46.501207",
+  "updated_at": "2026-03-18T04:34:54.983657",
   "season": "2025/2026",
   "source": "Fotmob",
   "players": [
@@ -17,20 +17,49 @@
       },
       "contractEnd": "2028-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 90,
+          "avgRating": 6.4
+        },
+        "PL": {
+          "name": "프리미어리그",
+          "appearances": 9,
+          "starts": 9,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 810,
+          "avgRating": 6.8
+        },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 4,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 357,
+          "avgRating": 7.6
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-2",
-          "hasDeepStats": true
+          "appearances": 5,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 450,
+          "avgRating": 7.4
         }
       },
       "stats": {
@@ -236,15 +265,49 @@
       },
       "contractEnd": "2028-06-30",
       "competitions": {
-        "PL": {
-          "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
-        },
         "UCL": {
           "name": "챔피언스리그",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 13,
+          "starts": 13,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 1170,
+          "avgRating": 7.7
+        },
+        "PL": {
+          "name": "프리미어리그",
+          "appearances": 38,
+          "starts": 38,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 3420,
+          "avgRating": 7.2
+        },
+        "EFL": {
+          "name": "카라바오컵",
+          "appearances": 0,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 0,
+          "avgRating": null
+        },
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 0,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 0,
+          "avgRating": null
         }
       },
       "stats": {
@@ -448,8 +511,36 @@
       "competitions": {
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
+          "appearances": 1,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 3,
+          "avgRating": null
+        },
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 0,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 0,
+          "avgRating": null
+        },
+        "PL": {
+          "name": "프리미어리그",
+          "appearances": 0,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 0,
+          "avgRating": null
         }
       },
       "stats": {
@@ -565,25 +656,49 @@
       },
       "contractEnd": "2028-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 12,
+          "starts": 4,
+          "goals": 0,
+          "assists": 1,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 375,
+          "avgRating": 6.8
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 13,
+          "starts": 10,
+          "goals": 0,
+          "assists": 2,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 906,
+          "avgRating": 7.1
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 148,
+          "avgRating": 7.1
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 3,
+          "starts": 3,
+          "goals": 1,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 231,
+          "avgRating": 7.4
         }
       },
       "stats": {
@@ -909,25 +1024,49 @@
       },
       "contractEnd": "2030-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 11,
+          "starts": 11,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 990,
+          "avgRating": 6.8
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 33,
+          "starts": 32,
+          "goals": 1,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 2750,
+          "avgRating": 7.2
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 61,
+          "avgRating": 7.4
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 4,
+          "starts": 4,
+          "goals": 0,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 360,
+          "avgRating": 7.3
         }
       },
       "stats": {
@@ -1253,25 +1392,49 @@
       },
       "contractEnd": "2029-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 7,
+          "starts": 6,
+          "goals": 1,
+          "assists": 1,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 522,
+          "avgRating": 7.3
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 26,
+          "starts": 24,
+          "goals": 3,
+          "assists": 4,
+          "yellowCards": 3,
+          "redCards": 0,
+          "minutesPlayed": 2182,
+          "avgRating": 7.4
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 76,
+          "avgRating": 6.3
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 4,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 219,
+          "avgRating": 6.7
         }
       },
       "stats": {
@@ -1604,23 +1767,47 @@
       "competitions": {
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
-        },
-        "FAC": {
-          "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
-        },
-        "EFL": {
-          "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
+          "appearances": 34,
+          "starts": 30,
+          "goals": 3,
+          "assists": 6,
+          "yellowCards": 5,
+          "redCards": 0,
+          "minutesPlayed": 2674,
+          "avgRating": 7.2
         },
         "UCL": {
           "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 11,
+          "starts": 10,
+          "goals": 1,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 857,
+          "avgRating": 7.1
+        },
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 2,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 49,
+          "avgRating": 6.4
+        },
+        "EFL": {
+          "name": "카라바오컵",
+          "appearances": 4,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 290,
+          "avgRating": 7.0
         }
       },
       "stats": {
@@ -1911,25 +2098,49 @@
       },
       "contractEnd": "2029-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 5,
+          "starts": 2,
+          "goals": 0,
+          "assists": 1,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 205,
+          "avgRating": 7.1
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 24,
+          "starts": 19,
+          "goals": 1,
+          "assists": 2,
+          "yellowCards": 5,
+          "redCards": 0,
+          "minutesPlayed": 1512,
+          "avgRating": 7.1
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 76,
+          "avgRating": 7.0
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 90,
+          "avgRating": 7.2
         }
       },
       "stats": {
@@ -2237,25 +2448,49 @@
       },
       "contractEnd": "2029-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 6,
+          "starts": 5,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 362,
+          "avgRating": 7.3
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 21,
+          "starts": 17,
+          "goals": 1,
+          "assists": 2,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 1504,
+          "avgRating": 7.1
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 52,
+          "avgRating": 6.8
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-3",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-5",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 160,
+          "avgRating": 7.5
         }
       },
       "stats": {
@@ -2554,25 +2789,49 @@
       },
       "contractEnd": "2030-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 7,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 399,
+          "avgRating": 6.7
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 14,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 669,
+          "avgRating": 6.9
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 180,
+          "avgRating": 7.3
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 180,
+          "avgRating": 7.2
         }
       },
       "stats": {
@@ -2803,25 +3062,49 @@
       },
       "contractEnd": "2030-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 12,
+          "starts": 10,
+          "goals": 0,
+          "assists": 3,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 874,
+          "avgRating": 7.2
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 23,
+          "starts": 9,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 4,
+          "redCards": 0,
+          "minutesPlayed": 914,
+          "avgRating": 6.5
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 180,
+          "avgRating": 6.7
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 3,
+          "starts": 3,
+          "goals": 0,
+          "assists": 2,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 270,
+          "avgRating": 8.1
         }
       },
       "stats": {
@@ -3046,15 +3329,49 @@
       "marketValue": null,
       "contractEnd": null,
       "competitions": {
-        "FAC": {
-          "name": "FA컵",
-          "entryId": "0-3",
-          "hasDeepStats": true
-        },
         "UCL": {
           "name": "챔피언스리그",
-          "entryId": "0-4",
-          "hasDeepStats": true
+          "appearances": 1,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 7,
+          "avgRating": null
+        },
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 3,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 105,
+          "avgRating": 6.3
+        },
+        "PL": {
+          "name": "프리미어리그",
+          "appearances": 0,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 0,
+          "avgRating": null
+        },
+        "EFL": {
+          "name": "카라바오컵",
+          "appearances": 0,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 0,
+          "avgRating": null
         }
       },
       "stats": {
@@ -3258,23 +3575,47 @@
       "competitions": {
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
-        },
-        "FAC": {
-          "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
-        },
-        "EFL": {
-          "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
+          "appearances": 29,
+          "starts": 17,
+          "goals": 2,
+          "assists": 9,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 1675,
+          "avgRating": 7.1
         },
         "UCL": {
           "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 8,
+          "starts": 7,
+          "goals": 0,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 574,
+          "avgRating": 7.0
+        },
+        "EFL": {
+          "name": "카라바오컵",
+          "appearances": 2,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 91,
+          "avgRating": 6.5
+        },
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 1,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 21,
+          "avgRating": 6.9
         }
       },
       "stats": {
@@ -3597,23 +3938,47 @@
       "competitions": {
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
-        },
-        "FAC": {
-          "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
-        },
-        "EFL": {
-          "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
+          "appearances": 28,
+          "starts": 16,
+          "goals": 6,
+          "assists": 4,
+          "yellowCards": 1,
+          "redCards": 1,
+          "minutesPlayed": 1436,
+          "avgRating": 7.0
         },
         "UCL": {
           "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 11,
+          "starts": 10,
+          "goals": 3,
+          "assists": 2,
+          "yellowCards": 3,
+          "redCards": 0,
+          "minutesPlayed": 875,
+          "avgRating": 7.4
+        },
+        "EFL": {
+          "name": "카라바오컵",
+          "appearances": 4,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 273,
+          "avgRating": 6.7
+        },
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 90,
+          "avgRating": 7.8
         }
       },
       "stats": {
@@ -3916,25 +4281,49 @@
       },
       "contractEnd": "2030-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 8,
+          "starts": 8,
+          "goals": 0,
+          "assists": 2,
+          "yellowCards": 4,
+          "redCards": 0,
+          "minutesPlayed": 681,
+          "avgRating": 7.4
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 31,
+          "starts": 31,
+          "goals": 5,
+          "assists": 1,
+          "yellowCards": 4,
+          "redCards": 0,
+          "minutesPlayed": 2604,
+          "avgRating": 7.3
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 19,
+          "avgRating": 6.8
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 2,
+          "goals": 1,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 180,
+          "avgRating": 7.5
         }
       },
       "stats": {
@@ -4220,20 +4609,49 @@
       },
       "contractEnd": "2028-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 12,
+          "starts": 10,
+          "goals": 3,
+          "assists": 2,
+          "yellowCards": 4,
+          "redCards": 0,
+          "minutesPlayed": 938,
+          "avgRating": 7.5
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 38,
+          "starts": 37,
+          "goals": 6,
+          "assists": 7,
+          "yellowCards": 4,
+          "redCards": 0,
+          "minutesPlayed": 3257,
+          "avgRating": 7.6
+        },
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 0,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 0,
+          "avgRating": null
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-2",
-          "hasDeepStats": true
+          "appearances": 5,
+          "starts": 2,
+          "goals": 0,
+          "assists": 2,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 198,
+          "avgRating": 7.3
         }
       },
       "stats": {
@@ -4510,25 +4928,49 @@
       },
       "contractEnd": "2027-06-30",
       "competitions": {
-        "PL": {
-          "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 6,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 309,
+          "avgRating": 7.0
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 3,
+          "starts": 3,
+          "goals": 0,
+          "assists": 2,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 270,
+          "avgRating": 7.9
+        },
+        "PL": {
+          "name": "프리미어리그",
+          "appearances": 15,
+          "starts": 9,
+          "goals": 1,
+          "assists": 2,
+          "yellowCards": 4,
+          "redCards": 0,
+          "minutesPlayed": 865,
+          "avgRating": 6.8
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 3,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 270,
+          "avgRating": 7.4
         }
       },
       "stats": {},
@@ -4646,25 +5088,49 @@
       "marketValue": null,
       "contractEnd": null,
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 1,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 18,
+          "avgRating": 6.6
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 3,
+          "starts": 0,
+          "goals": 1,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 43,
+          "avgRating": 7.4
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 77,
+          "avgRating": 7.7
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-3",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-4",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 98,
+          "avgRating": 6.8
         }
       },
       "stats": {},
@@ -4696,25 +5162,49 @@
       },
       "contractEnd": "2029-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 9,
+          "starts": 7,
+          "goals": 1,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 572,
+          "avgRating": 7.1
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 35,
+          "starts": 26,
+          "goals": 12,
+          "assists": 4,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 2082,
+          "avgRating": 7.1
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 5,
+          "starts": 4,
+          "goals": 3,
+          "assists": 2,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 386,
+          "avgRating": 7.9
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 4,
+          "starts": 4,
+          "goals": 1,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 321,
+          "avgRating": 7.2
         }
       },
       "stats": {
@@ -5013,25 +5503,49 @@
       },
       "contractEnd": "2027-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 12,
+          "starts": 10,
+          "goals": 4,
+          "assists": 2,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 855,
+          "avgRating": 7.3
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 36,
+          "starts": 28,
+          "goals": 7,
+          "assists": 3,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 2461,
+          "avgRating": 7.4
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 58,
+          "avgRating": 7.0
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 4,
+          "starts": 2,
+          "goals": 1,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 195,
+          "avgRating": 7.0
         }
       },
       "stats": {
@@ -5299,25 +5813,49 @@
       },
       "contractEnd": "2030-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 5,
+          "starts": 4,
+          "goals": 3,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 332,
+          "avgRating": 7.7
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 29,
+          "starts": 20,
+          "goals": 2,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 1482,
+          "avgRating": 6.9
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 3,
+          "starts": 3,
+          "goals": 2,
+          "assists": 2,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 242,
+          "avgRating": 8.4
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 136,
+          "avgRating": 6.8
         }
       },
       "stats": {
@@ -5612,25 +6150,49 @@
       },
       "contractEnd": "2027-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 13,
+          "starts": 9,
+          "goals": 7,
+          "assists": 1,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 830,
+          "avgRating": 7.4
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 34,
+          "starts": 18,
+          "goals": 3,
+          "assists": 4,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 1571,
+          "avgRating": 6.7
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 3,
+          "starts": 3,
+          "goals": 4,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 262,
+          "avgRating": 8.4
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 4,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 253,
+          "avgRating": 6.8
         }
       },
       "stats": {
@@ -5902,25 +6464,49 @@
       },
       "contractEnd": "2027-06-30",
       "competitions": {
-        "PL": {
-          "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 10,
+          "starts": 5,
+          "goals": 1,
+          "assists": 3,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 497,
+          "avgRating": 6.9
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 66,
+          "avgRating": 6.8
+        },
+        "PL": {
+          "name": "프리미어리그",
+          "appearances": 35,
+          "starts": 26,
+          "goals": 9,
+          "assists": 7,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 2335,
+          "avgRating": 7.1
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 5,
+          "starts": 1,
+          "goals": 1,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 135,
+          "avgRating": 6.4
         }
       },
       "stats": {
@@ -6251,25 +6837,49 @@
       },
       "contractEnd": "2027-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 4,
+          "starts": 1,
+          "goals": 2,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 124,
+          "avgRating": 7.5
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 11,
+          "starts": 2,
+          "goals": 2,
+          "assists": 0,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 306,
+          "avgRating": 6.5
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 3,
+          "starts": 3,
+          "goals": 1,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 249,
+          "avgRating": 7.4
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 94,
+          "avgRating": 7.0
         }
       },
       "stats": {
@@ -6525,25 +7135,49 @@
       },
       "contractEnd": "2028-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 3,
+          "starts": 1,
+          "goals": 2,
+          "assists": 1,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 82,
+          "avgRating": 7.2
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 8,
+          "starts": 3,
+          "goals": 0,
+          "assists": 1,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 297,
+          "avgRating": 6.6
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 83,
+          "avgRating": 6.7
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 2,
+          "starts": 0,
+          "goals": 1,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 29,
+          "avgRating": 7.3
         }
       },
       "stats": {
@@ -6799,25 +7433,49 @@
       },
       "contractEnd": "2030-06-30",
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 8,
+          "starts": 7,
+          "goals": 4,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 555,
+          "avgRating": 7.3
+        },
         "PL": {
           "name": "프리미어리그",
-          "entryId": "0-0",
-          "hasDeepStats": true
+          "appearances": 29,
+          "starts": 24,
+          "goals": 11,
+          "assists": 0,
+          "yellowCards": 4,
+          "redCards": 0,
+          "minutesPlayed": 1900,
+          "avgRating": 6.8
         },
         "FAC": {
           "name": "FA컵",
-          "entryId": "0-1",
-          "hasDeepStats": true
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 45,
+          "avgRating": 6.0
         },
         "EFL": {
           "name": "카라바오컵",
-          "entryId": "0-2",
-          "hasDeepStats": true
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "entryId": "0-3",
-          "hasDeepStats": true
+          "appearances": 3,
+          "starts": 2,
+          "goals": 1,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 170,
+          "avgRating": 7.0
         }
       },
       "stats": {
