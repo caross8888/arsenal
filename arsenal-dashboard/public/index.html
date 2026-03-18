@@ -771,139 +771,280 @@ if(tb2) tb2.textContent = 'Arsenal FC · ' + SEASON;
 // ── PLAYER MODAL ──
 var NAT_FLAG_MODAL = NAT_FLAG; // 동일 참조
 
+// ── PLAYER MODAL (ESPN + 레이더 차트) ──
+
 function openPlayerModal(p) {
   var modal = document.getElementById('playerModal');
   var content = document.getElementById('modalContent');
   var bg = POS_BG[p.posGroup]||'rgba(100,100,100,.15)';
   var border = POS_BORDER[p.posGroup]||'var(--border)';
   var tc = POS_TEXT[p.posGroup]||'var(--text-muted)';
-  var flag = NAT_FLAG[p.nationality]||'';
-  var espn = window._espnPlayers ? window._espnPlayers.find(function(e){
-    return e.name === p.fullName || e.name === p.name ||
-           e.shortName === p.name ||
-           p.fullName.toLowerCase().includes(e.name.toLowerCase().split(' ').pop());
-  }) : null;
 
-  // FPL 기반 계산
-  var apps = p.appearances||1;
-  var goalContrib = (p.goals||0)+(p.assists||0);
-  var xGPerGame = apps>0?((p.xG||0)/apps).toFixed(2):'0.00';
-  var xAPerGame = apps>0?((p.xA||0)/apps).toFixed(2):'0.00';
-
-  function pctColor(v){
-    if(v>=80)return'#22C55E';if(v>=60)return'#84CC16';
-    if(v>=40)return'#F59E0B';return'#EF4444';
+  // ESPN 데이터 매핑
+  var espn = null;
+  if(window._espnPlayers){
+    espn = window._espnPlayers.find(function(e){
+      var fn=(p.fullName||p.name).toLowerCase();
+      var en=(e.name||'').toLowerCase();
+      var sn=(e.shortName||'').toLowerCase();
+      var pn=(p.name||'').toLowerCase();
+      return fn===en||pn===en||pn===sn||en.includes(pn)||pn.includes(en.split(' ').pop());
+    });
   }
 
-  var radarData=[
-    {label:'\uc601\ud5a5\ub825',val:Math.min(100,Math.round((p.influence||0)/8))},
-    {label:'\uc0c1\uc2e4\ub825',val:Math.min(100,Math.round((p.creativity||0)/7))},
-    {label:'\uc704\ud611\ub3c4', val:Math.min(100,Math.round((p.threat||0)/8))},
-    {label:'\uacf5\uaca9',      val:Math.min(100,Math.round(((p.goals||0)*6+(p.assists||0)*4)/apps*10))},
-    {label:'\uae30\uc5ec\ub3c4', val:Math.min(100,Math.round((p.xGI||0)/apps*15))},
-  ];
+  var nationality = (espn&&espn.nationality) ? espn.nationality : p.nationality||'';
+  var flagUrl = getNatFlag(nationality);
+  var competitions = espn ? espn.competitions : {};
+  var compKeys = Object.keys(competitions);
+  var compLabels = {PL:'\ud504\ub9ac\ubbf8\uc5b4\ub9ac\uadf8',UCL:'\uccc4\ud53c\uc5b8\uc2a4\ub9ac\uadf8',FAC:'FA\ucef5',EFL:'\uce74\ub77c\ubc14\uc624\ucef5'};
+  var pos = p.posGroup; // GK, DF, MF, FW
 
-  var html='';
+  var h = '';
 
-  // 헤더
-  html+='<div class="pl-modal-header" style="background:linear-gradient(135deg,'+bg+',transparent)">';
+  // ── 헤더 ──
+  h += '<div class="pl-modal-header" style="background:linear-gradient(135deg,'+bg+',transparent)">';
   if(p.photo){
-    html+='<img class="pl-modal-photo" src="'+p.photo+'" onerror="this.style.display=\'none\'">';
+    h += '<img class="pl-modal-photo" src="'+p.photo+'" onerror="this.style.display=\'none\'">';
   } else {
-    html+='<div class="pl-modal-photo-ph" style="background:'+bg+';color:'+tc+'">'+p.posGroup+'</div>';
+    h += '<div class="pl-modal-photo-ph" style="background:'+bg+';color:'+tc+'">'+pos+'</div>';
   }
-  html+='<div style="flex:1;min-width:0">';
-  html+='<div class="pl-modal-name">'+p.name+'</div>';
-  var flagImgHtml='';
-  var flagUrl2=getNatFlag(p.nationality);
-  if(flagUrl2) flagImgHtml='<img src="'+flagUrl2+'" style="width:20px;height:15px;border-radius:2px;object-fit:cover;vertical-align:middle;margin-right:5px">';
-  html+='<div class="pl-modal-sub">'+flagImgHtml+p.nationality+' \u00b7 Arsenal FC</div>';
-  html+='<div class="pl-modal-sub" style="margin-top:2px">'+p.posGroup+' \u00b7 PL '+p.appearances+'\uacbd\uae30 '+p.minutes+'\ubd84</div>';
-  html+='<span class="pl-modal-badge" style="background:'+bg+';color:'+tc+';border:1px solid '+border+'">ICT '+((p.ictIndex||0).toFixed(1))+'</span>';
-  if(espn&&espn.jersey){
-    html+='<span class="pl-modal-badge" style="background:var(--surface2);color:var(--text-muted);margin-left:4px">#'+espn.jersey+'</span>';
-  }
-  html+='</div></div>';
+  h += '<div style="flex:1;min-width:0">';
+  h += '<div class="pl-modal-name">'+p.name+'</div>';
+  var flagImgHtml = flagUrl ? '<img src="'+flagUrl+'" style="width:18px;height:13px;border-radius:2px;object-fit:cover;vertical-align:middle;margin-right:4px">' : '';
+  h += '<div class="pl-modal-sub">'+flagImgHtml+nationality+' \u00b7 Arsenal FC</div>';
+  h += '<div class="pl-modal-sub" style="margin-top:2px">'+pos;
+  if(espn&&espn.jersey) h += ' \u00b7 #'+espn.jersey;
+  h += '</div>';
+  h += '</div></div>';
 
-  // ESPN 대회별 스탯
-  if(espn&&espn.competitions&&Object.keys(espn.competitions).length>0){
-    html+='<div class="stat-section">';
-    html+='<div class="stat-section-title">\ub300\ud68c\ubcc4 \uc2a4\ud0ef</div>';
-    // 탭 버튼
-    var compKeys = Object.keys(espn.competitions);
-    var compLabels = {PL:'\ud504\ub9ac\ubbf8\uc5b4\ub9ac\uadf8',UCL:'\ucc54\ud53c\uc5b8\uc2a4\ub9ac\uadf8',FAC:'FA\ucef5',EFL:'\uce74\ub77c\ubc14\uc624\ucef5'};
-    html+='<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">';
+  // ── 대회 탭 ──
+  if(compKeys.length > 0){
+    h += '<div class="stat-section">';
+    h += '<div class="stat-section-title">\ub300\ud68c\ubcc4 \uc2a4\ud0ef</div>';
+    h += '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap" id="compTabs">';
     compKeys.forEach(function(k,i){
-      var active=i===0?'background:var(--red-dark);color:#fff':'background:var(--surface2);color:var(--text-muted)';
-      html+='<button class="comp-tab-btn" data-comp="'+k+'" style="'+active+';border:none;padding:4px 10px;border-radius:20px;font-size:10px;cursor:pointer;font-family:var(--fb)">'+compLabels[k]+'</button>';
+      var active = i===0 ? 'background:var(--red-dark);color:#fff' : 'background:var(--surface2);color:var(--text-muted)';
+      h += '<button class="comp-tab-btn" data-comp="'+k+'" onclick="switchComp(this,\''+k+'\')" style="'+active+';border:none;padding:4px 10px;border-radius:20px;font-size:10px;cursor:pointer;font-family:var(--fb)">'+compLabels[k]+'</button>';
     });
-    html+='</div>';
-    // 각 대회 스탯 (첫번째만 보이게)
-    compKeys.forEach(function(k,i){
-      var c=espn.competitions[k];
-      var display=i===0?'':'display:none';
-      html+='<div class="comp-stat-panel" data-comp="'+k+'" style="'+display+'">';
-      html+='<div class="stat-grid-4">';
-      html+=makeStatBox(c.goals||0,'\uace8','','');
-      html+=makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','');
-      html+=makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud305','/ '+(c.totalShots||0)+'\uc288\ud305','');
-      html+=makeStatBox((c.yellowCards||0)+' / '+(c.redCards||0),'\uce74\ub4dc \uacbd\uace0/\ud1f4\uc7a5','',c.yellowCards>3?'#F59E0B':'');
-      html+='</div></div>';
+    h += '</div>';
+
+    // 대회별 스탯 패널
+    compKeys.forEach(function(k, i){
+      var c = competitions[k];
+      var display = i===0 ? '' : 'display:none';
+      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+display+'">';
+
+      // 포지션별 스탯 박스
+      if(pos==='GK'){
+        h += '<div class="stat-grid-4">';
+        h += makeStatBox(c.saves||0,'\uc120\ubc29','','#22C55E');
+        h += makeStatBox(c.goalsConceded||0,'\uc2e4\uc810','','#EF4444');
+        h += makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
+        h += makeStatBox(c.foulsDrawn||0,'\ud30c\uc6b8\uc720\ub3c4','','');
+        h += '</div>';
+      } else if(pos==='DF'){
+        h += '<div class="stat-grid-4">';
+        h += makeStatBox(c.goals||0,'\uace8','','');
+        h += makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','');
+        h += makeStatBox(c.foulsCommitted||0,'\ud30c\uc6b8','','');
+        h += makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
+        h += '</div>';
+      } else if(pos==='MF'){
+        h += '<div class="stat-grid-4">';
+        h += makeStatBox(c.goals||0,'\uace8','','');
+        h += makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','#60A5FA');
+        h += makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud305','/ '+(c.totalShots||0),'');
+        h += makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
+        h += '</div>';
+      } else { // FW
+        h += '<div class="stat-grid-4">';
+        h += makeStatBox(c.goals||0,'\uace8','','#22C55E');
+        h += makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','#60A5FA');
+        h += makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud305','','');
+        h += makeStatBox(c.totalShots||0,'\uc804\uccb4\uc288\ud305','','');
+        h += '</div>';
+      }
+
+      // 레이더 차트 캔버스
+      h += '<div style="display:flex;justify-content:center;padding:12px 0">';
+      h += '<canvas id="radar_'+k+'" width="200" height="200"></canvas>';
+      h += '</div>';
+      h += '</div>'; // comp-stat-panel
     });
-    html+='</div>';
+    h += '</div>'; // stat-section
+  } else {
+    // ESPN 데이터 없으면 FPL 기반
+    h += '<div class="stat-section">';
+    h += '<div class="stat-section-title">FPL \ud575\uc2ec \uc9c0\ud45c (PL)</div>';
+    h += '<div class="stat-grid-4">';
+    h += makeStatBox(p.goals||0,'\uace8',p.xG?'xG '+p.xG.toFixed(1):'',tc);
+    h += makeStatBox(p.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8',p.xA?'xA '+p.xA.toFixed(1):'','');
+    h += makeStatBox(((p.xG||0)/Math.max(1,p.appearances||1)).toFixed(2),'xG/\uacbd\uae30','','#22C55E');
+    h += makeStatBox(((p.xA||0)/Math.max(1,p.appearances||1)).toFixed(2),'xA/\uacbd\uae30','','#60A5FA');
+    h += '</div></div>';
   }
 
-  // FPL 핵심 스탯 (PL 기반)
-  html+='<div class="stat-section">';
-  html+='<div class="stat-section-title">FPL \ud575\uc2ec \uc9c0\ud45c (PL)</div>';
-  html+='<div class="stat-grid-4">';
-  html+=makeStatBox(p.goals||0,'\uace8',p.xG?'xG '+p.xG.toFixed(1):'',tc);
-  html+=makeStatBox(p.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8',p.xA?'xA '+p.xA.toFixed(1):'','');
-  html+=makeStatBox(xGPerGame,'xG/\uacbd\uae30','','#22C55E');
-  html+=makeStatBox(xAPerGame,'xA/\uacbd\uae30','','#60A5FA');
-  html+='</div></div>';
-
-  // ICT 지수
-  html+='<div class="stat-section">';
-  html+='<div class="stat-section-title">FPL \uc9c0\uc218 \ubd84\uc11d</div>';
-  radarData.forEach(function(r){
-    var color=pctColor(r.val);
-    html+='<div class="pct-row">';
-    html+='<span class="pct-label">'+r.label+'</span>';
-    html+='<div class="pct-bar-wrap"><div class="pct-bar" style="width:'+r.val+'%;background:'+color+'"></div></div>';
-    html+='<span class="pct-val" style="color:'+color+'">'+r.val+'</span>';
-    html+='</div>';
-  });
-  html+='</div>';
-
-  // 기타
-  html+='<div class="stat-section">';
-  html+='<div class="stat-section-title">\uae30\ud0c0</div>';
-  html+='<div class="stat-grid-4">';
-  html+=makeStatBox(p.bonus||0,'\ubcf4\ub108\uc2a4','','');
-  html+=makeStatBox(p.totalPoints||0,'FPL\uc810\uc218','','');
-  html+=makeStatBox(p.yellowCards||0,'\uacbd\uace0','',p.yellowCards>3?'#F59E0B':'');
-  html+=makeStatBox(p.form||0,'\ud3fc','30\uc77c',p.form>=6?'#22C55E':p.form>=4?'#F59E0B':'#EF4444');
-  html+='</div></div>';
-
-  content.innerHTML=html;
-
-  // 대회 탭 클릭 이벤트
-  content.querySelectorAll('.comp-tab-btn').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      var comp=this.getAttribute('data-comp');
-      content.querySelectorAll('.comp-tab-btn').forEach(function(b){
-        b.style.background='var(--surface2)';b.style.color='var(--text-muted)';
-      });
-      this.style.background='var(--red-dark)';this.style.color='#fff';
-      content.querySelectorAll('.comp-stat-panel').forEach(function(p){
-        p.style.display=p.getAttribute('data-comp')===comp?'':'none';
-      });
-    });
-  });
-
+  content.innerHTML = h;
   modal.classList.add('open');
-  document.body.style.overflow='hidden';
+  document.body.style.overflow = 'hidden';
+
+  // 레이더 차트 그리기 (첫번째 대회)
+  if(compKeys.length > 0){
+    drawRadar(compKeys[0], competitions[compKeys[0]], pos);
+  }
+}
+
+function switchComp(btn, comp){
+  var content = document.getElementById('modalContent');
+  content.querySelectorAll('.comp-tab-btn').forEach(function(b){
+    b.style.background='var(--surface2)';b.style.color='var(--text-muted)';
+  });
+  btn.style.background='var(--red-dark)';btn.style.color='#fff';
+  content.querySelectorAll('.comp-stat-panel').forEach(function(panel){
+    panel.style.display = panel.getAttribute('data-comp')===comp ? '' : 'none';
+  });
+  // 해당 대회 레이더 그리기
+  var espn = null;
+  // competitions 데이터는 현재 모달에서 가져와야 함
+  // canvas 다시 그리기
+  var canvas = document.getElementById('radar_'+comp);
+  if(canvas && canvas._data){
+    drawRadarOnCanvas(canvas, canvas._data.labels, canvas._data.values, canvas._data.color);
+  }
+}
+
+// ── 레이더 차트 ──
+function drawRadar(compKey, compData, pos){
+  var canvas = document.getElementById('radar_'+compKey);
+  if(!canvas) return;
+
+  var radarConfig = getRadarConfig(compData, pos);
+  canvas._data = {labels: radarConfig.labels, values: radarConfig.values, color: radarConfig.color};
+  drawRadarOnCanvas(canvas, radarConfig.labels, radarConfig.values, radarConfig.color);
+}
+
+function getRadarConfig(c, pos){
+  if(pos==='GK'){
+    var saves = c.saves||0;
+    var conceded = c.goalsConceded||0;
+    var saveRate = saves+conceded>0 ? Math.round(saves/(saves+conceded)*100) : 0;
+    return {
+      labels:['\uc120\ubc29\ub960','\uc2e4\uc810\uad00\ub9ac','\ud30c\uc6b8\uc720\ub3c4','\uce74\ub4dc\uad00\ub9ac','\uc120\ubc29\ud69f\uc218'],
+      values:[saveRate, Math.max(0,100-conceded*10), Math.min(100,(c.foulsDrawn||0)*20), Math.max(0,100-(c.yellowCards||0)*30-(c.redCards||0)*60), Math.min(100,saves*5)],
+      color:'#22C55E'
+    };
+  } else if(pos==='DF'){
+    return {
+      labels:['\uacf5\uaca9\ucc38\uc5ec','\uc5b4\uc2dc\uc2a4\ud2b8','\ud30c\uc6b8\uc720\ub3c4','\uce74\ub4dc\uad00\ub9ac','\uc218\ube44\ubb34\uc2e4'],
+      values:[Math.min(100,(c.goals||0)*40), Math.min(100,(c.assists||0)*40), Math.min(100,(c.foulsDrawn||0)*20), Math.max(0,100-(c.yellowCards||0)*25-(c.redCards||0)*50), Math.max(0,100-(c.foulsCommitted||0)*10)],
+      color:'#60A5FA'
+    };
+  } else if(pos==='MF'){
+    return {
+      labels:['\uace8','\uc5b4\uc2dc\uc2a4\ud2b8','\uc288\ud305\uc815\ud655\ub3c4','\ud30c\uc6b8\uc720\ub3c4','\uce74\ub4dc\uad00\ub9ac'],
+      values:[Math.min(100,(c.goals||0)*30), Math.min(100,(c.assists||0)*30), c.totalShots>0?Math.round((c.shotsOnTarget||0)/(c.totalShots)*100):0, Math.min(100,(c.foulsDrawn||0)*20), Math.max(0,100-(c.yellowCards||0)*25-(c.redCards||0)*50)],
+      color:'#A78BFA'
+    };
+  } else { // FW
+    return {
+      labels:['\uace8','\uc5b4\uc2dc\uc2a4\ud2b8','\uc288\ud305\uc815\ud655\ub3c4','\uacf5\uaca9\ud3ec\uc778\ud2b8','\uc81c\uc2a4\uccd0'],
+      values:[Math.min(100,(c.goals||0)*20), Math.min(100,(c.assists||0)*20), c.totalShots>0?Math.round((c.shotsOnTarget||0)/c.totalShots*100):0, Math.min(100,((c.goals||0)+(c.assists||0))*15), Math.min(100,(c.foulsDrawn||0)*15)],
+      color:'#EF4444'
+    };
+  }
+}
+
+function drawRadarOnCanvas(canvas, labels, values, color){
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  var cx = W/2, cy = H/2;
+  var r = Math.min(W,H)/2 - 30;
+  var n = labels.length;
+  ctx.clearRect(0,0,W,H);
+
+  // 배경 동심원
+  var isDark = document.documentElement.classList.contains('dark') ||
+               window.matchMedia('(prefers-color-scheme:dark)').matches;
+  var gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  var textColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
+
+  [0.25,0.5,0.75,1].forEach(function(scale){
+    ctx.beginPath();
+    for(var i=0;i<n;i++){
+      var angle = (i/n)*Math.PI*2 - Math.PI/2;
+      var x = cx + Math.cos(angle)*r*scale;
+      var y = cy + Math.sin(angle)*r*scale;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // 축선
+  for(var i=0;i<n;i++){
+    var angle = (i/n)*Math.PI*2 - Math.PI/2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(angle)*r, cy+Math.sin(angle)*r);
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // 데이터 영역
+  ctx.beginPath();
+  for(var i=0;i<n;i++){
+    var angle = (i/n)*Math.PI*2 - Math.PI/2;
+    var val = Math.min(100,Math.max(0,values[i]||0))/100;
+    var x = cx + Math.cos(angle)*r*val;
+    var y = cy + Math.sin(angle)*r*val;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = color.replace(')',',0.25)').replace('rgb(','rgba(').replace('#','rgba(').replace(/rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/i, function(m,r,g,b){return 'rgba('+parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)+',';});
+
+  // hex to rgba 처리
+  if(color.startsWith('#')){
+    var big = parseInt(color.slice(1),16);
+    var rr=(big>>16)&255, gg=(big>>8)&255, bb=big&255;
+    ctx.fillStyle = 'rgba('+rr+','+gg+','+bb+',0.25)';
+    ctx.strokeStyle = 'rgba('+rr+','+gg+','+bb+',0.9)';
+  } else {
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+  }
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // 점
+  for(var i=0;i<n;i++){
+    var angle = (i/n)*Math.PI*2 - Math.PI/2;
+    var val = Math.min(100,Math.max(0,values[i]||0))/100;
+    var x = cx+Math.cos(angle)*r*val;
+    var y = cy+Math.sin(angle)*r*val;
+    ctx.beginPath();
+    ctx.arc(x,y,3,0,Math.PI*2);
+    if(color.startsWith('#')){
+      var big=parseInt(color.slice(1),16);
+      ctx.fillStyle='rgba('+((big>>16)&255)+','+((big>>8)&255)+','+(big&255)+',0.9)';
+    }
+    ctx.fill();
+  }
+
+  // 라벨
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = textColor;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for(var i=0;i<n;i++){
+    var angle = (i/n)*Math.PI*2 - Math.PI/2;
+    var lx = cx+Math.cos(angle)*(r+18);
+    var ly = cy+Math.sin(angle)*(r+18);
+    ctx.fillText(labels[i], lx, ly);
+  }
 }
 
 function makeStatBox(val,lbl,sub,color){
@@ -922,13 +1063,16 @@ function closeModal(e){
   if(e.target===document.getElementById('playerModal'))closePlayerModal();
 }
 
-// ESPN 데이터 로드 (players.json)
+// ESPN 데이터 로드
 var _espnPlayers=null;
 function loadESPNStats(){
   fetch('/data/players.json')
     .then(function(r){return r.json();})
-    .then(function(d){window._espnPlayers=d.players;console.log('ESPN stats loaded:',d.players.length);})
-    .catch(function(){console.log('ESPN stats not available yet');});
+    .then(function(d){
+      window._espnPlayers=d.players;
+      console.log('ESPN loaded:',d.players.length,'\uba85');
+    })
+    .catch(function(e){console.log('ESPN not available:',e);});
 }
 
 
