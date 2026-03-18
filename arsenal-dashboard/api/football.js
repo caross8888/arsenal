@@ -173,6 +173,8 @@ export default async function handler(req, res) {
           fullName:    p.name,
           nationality: p.nationality || '',
           posGroup:    p.posGroup || 'MF',
+          position:    p.position || '',
+          positionLabel: p.positionLabel || '',
           goals:       p.stats?.goals || 0,
           assists:     p.stats?.assists || 0,
           appearances: p.stats?.appearances || 0,
