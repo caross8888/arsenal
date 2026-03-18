@@ -163,36 +163,64 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .more-fix-btn{width:100%;padding:10px;margin-top:6px;border:1px dashed var(--border);background:transparent;color:var(--text-muted);font-family:var(--fb);font-size:11px;border-radius:10px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
 .more-fix-btn:hover{background:var(--surface2);color:var(--text);}
 
-/* PLAYER MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+/* PLAYER MODAL - Fotmob style */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
 .modal-overlay.open{display:flex;}
-.modal-sheet{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding-bottom:calc(32px + var(--safe-bottom));animation:slideUp .3s ease;}
+.modal-sheet{background:#1a1c22;border-radius:20px 20px 0 0;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;animation:slideUp .28s cubic-bezier(.32,.72,0,1);padding-bottom:32px;}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal-handle{width:40px;height:4px;background:var(--surface3);border-radius:2px;margin:12px auto 0;}
-.modal-close{position:absolute;top:12px;right:16px;background:var(--surface2);border:none;color:var(--text-muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.modal-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:10px auto 0;}
+.modal-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:2;}
+/* 헤더 */
+.pm-header{background:linear-gradient(135deg,#bd0510 0%,#7a0010 100%);padding:20px 16px 18px;position:relative;}
+.pm-header-inner{display:flex;gap:14px;align-items:center;}
+.pm-photo{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);flex-shrink:0;}
+.pm-photo-ph{width:68px;height:68px;border-radius:50%;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;color:#fff;flex-shrink:0;}
+.pm-name{font-family:var(--fd);font-size:22px;color:#fff;letter-spacing:1px;line-height:1.1;}
+.pm-club{font-size:12px;color:rgba(255,255,255,.75);margin-top:3px;display:flex;align-items:center;gap:5px;}
+.pm-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border-radius:20px;padding:2px 8px;font-size:10px;color:rgba(255,255,255,.85);margin-top:5px;}
+/* 기본정보 그리드 */
+.pm-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid rgba(255,255,255,.06);}
+.pm-info-cell{padding:12px 16px;border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);}
+.pm-info-cell:nth-child(2n){border-right:none;}
+.pm-info-val{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;}
+.pm-info-lbl{font-size:10px;color:rgba(255,255,255,.4);}
+/* 선수 특성 (레이더) */
+.pm-traits{padding:16px 16px 8px;}
+.pm-section-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
+.pm-section-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:14px;}
+.pm-radar-wrap{display:flex;justify-content:center;position:relative;}
+/* 대회 탭 */
+.pm-comp-tabs{display:flex;gap:6px;padding:14px 16px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.pm-comp-tab{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.5);cursor:pointer;font-family:var(--fb);}
+.pm-comp-tab.active{background:var(--red-dark);border-color:var(--red-dark);color:#fff;}
+/* 스탯 섹션 */
+.stat-section{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);}
+.stat-section-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:10px;font-weight:700;}
+.stat-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.stat-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.stat-box{background:rgba(255,255,255,.05);border-radius:10px;padding:10px 6px;text-align:center;}
+.stat-box-val{font-family:var(--fd);font-size:20px;line-height:1;color:#fff;}
+.stat-box-lbl{font-size:8px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:3px;}
+.stat-box-sub{font-size:9px;color:rgba(255,255,255,.3);margin-top:1px;}
+/* 퍼센타일 바 */
+.pct-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.pct-label{font-size:11px;color:rgba(255,255,255,.5);width:100px;flex-shrink:0;}
+.pct-bar-wrap{flex:1;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;}
+.pct-bar{height:100%;border-radius:3px;}
+.pct-val{font-size:11px;font-weight:700;width:36px;text-align:right;flex-shrink:0;}
+/* 경력 */
+.pm-career-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05);}
+.pm-career-team{flex:1;font-size:13px;color:#fff;font-weight:600;}
+.pm-career-period{font-size:10px;color:rgba(255,255,255,.4);}
+.pm-career-stat{font-size:11px;color:rgba(255,255,255,.5);min-width:60px;text-align:right;}
+/* Radar */
+.radar-wrap{padding:16px 20px;display:flex;justify-content:center;}
 .pl-modal-header{display:flex;gap:16px;padding:20px 20px 16px;border-bottom:1px solid var(--border);position:relative;}
 .pl-modal-photo{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0;}
 .pl-modal-photo-ph{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:24px;flex-shrink:0;}
 .pl-modal-name{font-family:var(--fd);font-size:26px;letter-spacing:2px;line-height:1.1;}
 .pl-modal-sub{font-size:11px;color:var(--text-muted);margin-top:4px;}
 .pl-modal-badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:20px;font-weight:700;margin-top:6px;}
-/* 스탯 섹션 */
-.stat-section{padding:16px 20px;border-bottom:1px solid var(--border);}
-.stat-section-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;font-weight:700;}
-.stat-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-.stat-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.stat-box{background:var(--surface2);border-radius:10px;padding:10px 8px;text-align:center;}
-.stat-box-val{font-family:var(--fd);font-size:22px;line-height:1;}
-.stat-box-lbl{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-top:3px;}
-.stat-box-sub{font-size:9px;color:var(--text-muted);margin-top:1px;}
-/* 퍼센타일 바 */
-.pct-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.pct-label{font-size:11px;color:var(--text-muted);width:90px;flex-shrink:0;}
-.pct-bar-wrap{flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;}
-.pct-bar{height:100%;border-radius:3px;transition:width .6s ease;}
-.pct-val{font-family:var(--fm);font-size:10px;color:var(--text-muted);width:36px;text-align:right;flex-shrink:0;}
-/* Radar */
-.radar-wrap{padding:16px 20px;display:flex;justify-content:center;}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
 </style>
 </head>
@@ -768,19 +796,14 @@ if(tb) tb.textContent = 'Arsenal FC · ' + SEASON;
 if(tb2) tb2.textContent = 'Arsenal FC · ' + SEASON;
 
 
-// ── PLAYER MODAL ──
-var NAT_FLAG_MODAL = NAT_FLAG; // 동일 참조
-
-// ── PLAYER MODAL ──
+// ── PLAYER MODAL (Fotmob Style) ──
 
 function openPlayerModal(p) {
-  var modal = document.getElementById('playerModal');
+  var modal   = document.getElementById('playerModal');
   var content = document.getElementById('modalContent');
-  var bg = POS_BG[p.posGroup]||'rgba(100,100,100,.15)';
-  var border = POS_BORDER[p.posGroup]||'var(--border)';
-  var tc = POS_TEXT[p.posGroup]||'var(--text-muted)';
+  var pos = p.posGroup; // GK DF MF FW
 
-  // ESPN 데이터 매핑
+  // ESPN + Fotmob 데이터 매핑
   var espn = null;
   if(window._espnPlayers){
     espn = window._espnPlayers.find(function(e){
@@ -790,231 +813,229 @@ function openPlayerModal(p) {
       return fn===en||pn===en||en.includes(pn)||pn.includes(en.split(' ').pop());
     });
   }
+  var fotmob = null;
+  if(window._fotmobPlayers){
+    fotmob = window._fotmobPlayers.find(function(f){
+      var pn=(p.name||'').toLowerCase();
+      var fn=(f.name||'').toLowerCase();
+      return fn===pn||fn.includes(pn)||pn.includes(fn.split(' ').pop());
+    });
+  }
 
-  var nationality = espn ? (espn.nationality||'') : (p.nationality||'');
-  var flagUrl = getNatFlag(nationality);
-  var competitions = (espn && espn.competitions) ? espn.competitions : {};
-  var compKeys = Object.keys(competitions);
-  var compLabels = {
-    PL:'프리미어리그',
-    UCL:'쳄피언스리그',
-    FAC:'FA컵',
-    EFL:'카라바오컵'
-  };
-  var pos = p.posGroup;
+  var nationality = (fotmob&&fotmob.nationality)||(espn&&espn.nationality)||p.nationality||'';
+  var flagUrl     = getNatFlag(nationality);
+  var jersey      = (fotmob&&fotmob.jersey)||(espn&&espn.jersey)||'';
+  var height      = (fotmob&&fotmob.height)||'';
+  var age         = (fotmob&&fotmob.age)||(espn&&espn.age)||'';
+  var prefFoot    = (fotmob&&fotmob.preferredFoot)||'';
+  var posLabel    = (fotmob&&fotmob.positionLabel)||pos;
+  var contractEnd = fotmob&&fotmob.contractEnd ? fotmob.contractEnd.slice(0,7) : '';
+  var competitions= (espn&&espn.competitions)||{};
+  var compKeys    = Object.keys(competitions);
+  var compLabels  = {PL:'\ud504\ub9ac\ubbf8\uc5b4\ub9ac\uadf8',UCL:'\uccc4\ud53c\uc5b8\uc2a4\ub9ac\uadf8',FAC:'FA\ucef5',EFL:'\uce74\ub77c\ubc14\uc624\ucef5'};
+  var traits      = fotmob&&fotmob.traits;
+  var career      = fotmob&&fotmob.career;
+  var fotStats    = fotmob&&fotmob.stats;
 
   var h = '';
 
-  // ── 헤더 ──
-  h += '<div class="pl-modal-header" style="background:linear-gradient(135deg,'+bg+',transparent)">';
+  // ── 헤더 (빨간 배경) ──
+  h += '<div class="pm-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
+  h += '<button class="modal-close" onclick="closePlayerModal()">&#10005;</button>';
+  h += '<div class="pm-header-inner">';
   if(p.photo){
-    h += '<img class="pl-modal-photo" src="'+p.photo+'" onerror="this.style.display=\'none\'">';
+    h += '<img class="pm-photo" src="'+p.photo+'" onerror="this.style.display=\'none\'">';
   } else {
-    h += '<div class="pl-modal-photo-ph" style="background:'+bg+';color:'+tc+'">'+pos+'</div>';
+    h += '<div class="pm-photo-ph">'+pos+'</div>';
   }
-  h += '<div style="flex:1;min-width:0">';
-  h += '<div class="pl-modal-name">'+p.name+'</div>';
-  var flagHtml = flagUrl ? '<img src="'+flagUrl+'" style="width:18px;height:13px;border-radius:2px;object-fit:cover;vertical-align:middle;margin-right:4px">' : '';
-  h += '<div class="pl-modal-sub">'+flagHtml+nationality+' · Arsenal FC</div>';
-  h += '<div class="pl-modal-sub" style="margin-top:2px">'+pos;
-  if(espn&&espn.jersey) h += ' · #'+espn.jersey;
+  h += '<div>';
+  h += '<div class="pm-name">'+p.name+'</div>';
+  h += '<div class="pm-club">';
+  h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> Arsenal FC';
   h += '</div>';
-  // FPL 지표 요약 (PL)
-  if(p.xG||p.xA||p.ictIndex){
-    h += '<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">';
-    if(p.xG) h += '<span class="pl-modal-badge" style="background:'+bg+';color:'+tc+';border:1px solid '+border+'">xG '+p.xG.toFixed(1)+'</span>';
-    if(p.xA) h += '<span class="pl-modal-badge" style="background:'+bg+';color:'+tc+';border:1px solid '+border+'">xA '+p.xA.toFixed(1)+'</span>';
-    if(p.ictIndex) h += '<span class="pl-modal-badge" style="background:'+bg+';color:'+tc+';border:1px solid '+border+'">ICT '+p.ictIndex.toFixed(1)+'</span>';
+  var badges = [];
+  if(jersey) badges.push('#'+jersey);
+  if(posLabel) badges.push(posLabel);
+  if(age) badges.push(age+'\uc138');
+  if(badges.length){
+    h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
+    badges.forEach(function(b){ h += '<span class="pm-badge">'+b+'</span>'; });
     h += '</div>';
   }
-  h += '</div></div>';
+  h += '</div></div></div>';
 
-  // ── 대회 탭 ──
+  // ── 기본 정보 그리드 ──
+  var infoItems = [];
+  if(height) infoItems.push({val:height, lbl:'\ud0a4'});
+  if(flagUrl) infoItems.push({val:'<img src="'+flagUrl+'" style="width:22px;height:16px;border-radius:2px;object-fit:cover;vertical-align:middle"> '+nationality, lbl:'\uad6d\uac00', html:true});
+  if(prefFoot) infoItems.push({val:prefFoot==='Right'?'\uc624\ub978\ubc1c':prefFoot==='Left'?'\uc67c\ubc1c':prefFoot, lbl:'\uc8fc\uc0ac\uc6a9 \ubc1c'});
+  if(contractEnd) infoItems.push({val:contractEnd, lbl:'\uacc4\uc57d \ub9cc\ub8cc'});
+  // FPL 지표
+  if(p.xG) infoItems.push({val:'xG '+p.xG.toFixed(1), lbl:'\uae30\ub300 \ub4dd\uc810 (PL)'});
+  if(p.xA) infoItems.push({val:'xA '+p.xA.toFixed(1), lbl:'\uae30\ub300 \uc5b4\uc2dc\uc2a4\ud2b8 (PL)'});
+
+  if(infoItems.length){
+    h += '<div class="pm-info-grid">';
+    infoItems.forEach(function(item){
+      h += '<div class="pm-info-cell">';
+      h += '<div class="pm-info-val">'+(item.html?item.val:item.val)+'</div>';
+      h += '<div class="pm-info-lbl">'+item.lbl+'</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+
+  // ── 선수 특성 레이더 (Fotmob traits) ──
+  if(traits && traits.items && traits.items.length){
+    h += '<div class="pm-traits">';
+    h += '<div class="pm-section-title">\uc120\uc218 \ud2b9\uc131</div>';
+    h += '<div class="pm-section-sub">'+traits.title+'</div>';
+    h += '<div class="pm-radar-wrap">';
+    h += '<canvas id="radar_traits" width="240" height="220"></canvas>';
+    h += '</div>';
+    h += '</div>';
+  } else if(fotStats) {
+    // Fotmob stats 없으면 ESPN 기반 레이더
+    h += '<div class="pm-traits">';
+    h += '<div class="pm-section-title">\uc120\uc218 \ud2b9\uc131 (\ub9ac\uadf8)</div>';
+    h += '<div class="pm-radar-wrap">';
+    h += '<canvas id="radar_traits" width="240" height="220"></canvas>';
+    h += '</div>';
+    h += '</div>';
+  }
+
+  // ── 대회별 스탯 탭 ──
   if(compKeys.length > 0){
     h += '<div class="stat-section">';
-    h += '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">';
-    compKeys.forEach(function(k, i){
-      var active = i===0
-        ? 'background:var(--red-dark);color:#fff'
-        : 'background:var(--surface2);color:var(--text-muted)';
-      h += '<button class="comp-tab-btn" data-comp="'+k+'"'
-        +' onclick="switchCompTab(this)"'
-        +' style="'+active+';border:none;padding:4px 10px;border-radius:20px;font-size:10px;cursor:pointer;font-family:var(--fb)">'
-        +(compLabels[k]||k)+'</button>';
+    h += '<div class="stat-section-title">\ub300\ud68c\ubcc4 \uc2a4\ud0ef</div>';
+    h += '<div class="pm-comp-tabs">';
+    compKeys.forEach(function(k,i){
+      h += '<button class="pm-comp-tab'+(i===0?' active':'')+'" data-comp="'+k+'" onclick="switchPMComp(this)">'+(compLabels[k]||k)+'</button>';
     });
     h += '</div>';
 
     compKeys.forEach(function(k, i){
       var c = competitions[k];
       var hidden = i===0 ? '' : 'display:none';
-      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+hidden+'">';
+      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+hidden+';padding:0 0 8px">';
+      if(c.appearances) h += '<div style="text-align:center;font-size:10px;color:rgba(255,255,255,.35);padding:4px 0 8px">'+c.appearances+'\uacbd\uae30 \ucd9c\uc804</div>';
 
-      // 출전 횟수
-      if(c.appearances){
-        h += '<div style="text-align:center;font-size:10px;color:var(--text-dim);margin-bottom:8px">'
-          +c.appearances+'경기 출전</div>';
-      }
-
-      // 포지션별 스탯 그리드
       if(pos==='GK'){
-        h += '<div class="stat-grid-4">';
-        h += makeStatBox(c.saves||0,'선방','','#22C55E');
-        h += makeStatBox(c.goalsConceded||0,'실점','','#EF4444');
-        h += makeStatBox(c.shotsFaced||0,'슈팅허용','','');
-        h += makeStatBox((c.saves||0)+(c.shotsFaced||0)>0
-          ? Math.round((c.saves||0)/((c.saves||0)+(c.goalsConceded||0)||1)*100)+'%'
-          : '-','선방률','','#22C55E');
-        h += '</div>';
-        h += '<div class="stat-grid-4" style="margin-top:8px">';
-        h += makeStatBox(c.yellowCards||0,'경고','','#F59E0B');
-        h += makeStatBox(c.redCards||0,'퇴장','','#EF4444');
-        h += makeStatBox(c.foulsDrawn||0,'파울유도','','');
-        h += makeStatBox(c.foulsCommitted||0,'파울','','');
-        h += '</div>';
+        var saveRate=(c.saves||0)+(c.goalsConceded||0)>0?Math.round((c.saves||0)/((c.saves||0)+(c.goalsConceded||0))*100)+'%':'-';
+        h+='<div class="stat-grid-4" style="padding:0 16px">';
+        h+=makeStatBox(c.saves||0,'\uc120\ubc29','','#22C55E');
+        h+=makeStatBox(c.goalsConceded||0,'\uc2e4\uc810','','#EF4444');
+        h+=makeStatBox(saveRate,'\uc120\ubc29\ub960','','#22C55E');
+        h+=makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
+        h+='</div>';
       } else if(pos==='DF'){
-        h += '<div class="stat-grid-4">';
-        h += makeStatBox(c.goals||0,'골','','');
-        h += makeStatBox(c.assists||0,'어시스트','','#60A5FA');
-        h += makeStatBox(c.foulsDrawn||0,'파울유도','','');
-        h += makeStatBox(c.foulsCommitted||0,'파울','','');
-        h += '</div>';
-        h += '<div class="stat-grid-4" style="margin-top:8px">';
-        h += makeStatBox(c.shotsOnTarget||0,'유효슈팅','/ '+(c.totalShots||0),'');
-        h += makeStatBox(c.yellowCards||0,'경고','','#F59E0B');
-        h += makeStatBox(c.redCards||0,'퇴장','','#EF4444');
-        h += makeStatBox(c.offsides||0,'오프사이드','','');
-        h += '</div>';
+        h+='<div class="stat-grid-4" style="padding:0 16px">';
+        h+=makeStatBox(c.goals||0,'\uace8','','');
+        h+=makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','#60A5FA');
+        h+=makeStatBox(c.foulsDrawn||0,'\ud30c\uc6b8\uc720\ub3c4','','');
+        h+=makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
+        h+='</div>';
+        h+='<div class="stat-grid-4" style="padding:8px 16px 0">';
+        h+=makeStatBox(c.foulsCommitted||0,'\ud30c\uc6b8','','');
+        h+=makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud305','','');
+        h+=makeStatBox(c.offsides||0,'\uc624\ud504\uc0ac\uc774\ub4dc','','');
+        h+=makeStatBox(c.redCards||0,'\ud1f4\uc7a5','','#EF4444');
+        h+='</div>';
       } else if(pos==='MF'){
-        h += '<div class="stat-grid-4">';
-        h += makeStatBox(c.goals||0,'골','','');
-        h += makeStatBox(c.assists||0,'어시스트','','#60A5FA');
-        h += makeStatBox(c.shotsOnTarget||0,'유효슈팅','/ '+(c.totalShots||0),'');
-        h += makeStatBox(c.foulsDrawn||0,'파울유도','','');
-        h += '</div>';
-        h += '<div class="stat-grid-4" style="margin-top:8px">';
-        h += makeStatBox(c.foulsCommitted||0,'파울','','');
-        h += makeStatBox(c.yellowCards||0,'경고','','#F59E0B');
-        h += makeStatBox(c.redCards||0,'퇴장','','#EF4444');
-        h += makeStatBox(c.offsides||0,'오프사이드','','');
-        h += '</div>';
-      } else { // FW
-        h += '<div class="stat-grid-4">';
-        h += makeStatBox(c.goals||0,'골','','#22C55E');
-        h += makeStatBox(c.assists||0,'어시스트','','#60A5FA');
-        h += makeStatBox(c.shotsOnTarget||0,'유효슈팅','','');
-        h += makeStatBox(c.totalShots||0,'전체슈팅','','');
-        h += '</div>';
-        h += '<div class="stat-grid-4" style="margin-top:8px">';
-        h += makeStatBox(c.totalShots>0?Math.round(c.shotsOnTarget/c.totalShots*100)+'%':'-','슈팅정확도','','');
-        h += makeStatBox(c.foulsDrawn||0,'파울유도','','');
-        h += makeStatBox(c.yellowCards||0,'경고','','#F59E0B');
-        h += makeStatBox(c.offsides||0,'오프사이드','','');
-        h += '</div>';
+        h+='<div class="stat-grid-4" style="padding:0 16px">';
+        h+=makeStatBox(c.goals||0,'\uace8','','');
+        h+=makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','#60A5FA');
+        h+=makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud305','/ '+(c.totalShots||0),'');
+        h+=makeStatBox(c.foulsDrawn||0,'\ud30c\uc6b8\uc720\ub3c4','','');
+        h+='</div>';
+        h+='<div class="stat-grid-4" style="padding:8px 16px 0">';
+        h+=makeStatBox(c.foulsCommitted||0,'\ud30c\uc6b8','','');
+        h+=makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
+        h+=makeStatBox(c.offsides||0,'\uc624\ud504\uc0ac\uc774\ub4dc','','');
+        h+=makeStatBox(c.redCards||0,'\ud1f4\uc7a5','','#EF4444');
+        h+='</div>';
+      } else {
+        var shotAcc=c.totalShots>0?Math.round((c.shotsOnTarget||0)/c.totalShots*100)+'%':'-';
+        h+='<div class="stat-grid-4" style="padding:0 16px">';
+        h+=makeStatBox(c.goals||0,'\uace8','','#22C55E');
+        h+=makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','#60A5FA');
+        h+=makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud569','/ '+(c.totalShots||0),'');
+        h+=makeStatBox(shotAcc,'\uc288\ud305\uc815\ud655\ub3c4','','');
+        h+='</div>';
+        h+='<div class="stat-grid-4" style="padding:8px 16px 0">';
+        h+=makeStatBox(c.foulsDrawn||0,'\ud30c\uc6b8\uc720\ub3c4','','');
+        h+=makeStatBox(c.offsides||0,'\uc624\ud504\uc0ac\uc774\ub4dc','','');
+        h+=makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
+        h+=makeStatBox(c.redCards||0,'\ud1f4\uc7a5','','#EF4444');
+        h+='</div>';
       }
 
-      // 레이더 차트
-      h += '<canvas id="radar_'+k+'" width="220" height="200" style="display:block;margin:12px auto 0"></canvas>';
+      // Fotmob 퍼센타일 바 (stats 있을 때)
+      if(fotStats && k==='PL'){
+        var pctStats = getPctStats(fotStats, pos);
+        if(pctStats.length){
+          h+='<div style="padding:12px 16px 0">';
+          h+='<div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:10px">퍼센타일</div>';
+          pctStats.forEach(function(s){
+            var c2=s.pct>=75?'#22C55E':s.pct>=50?'#F59E0B':'#EF4444';
+            h+='<div class="pct-row">';
+            h+='<span class="pct-label">'+s.label+'</span>';
+            h+='<div class="pct-bar-wrap"><div class="pct-bar" style="width:'+s.pct+'%;background:'+c2+'"></div></div>';
+            h+='<span class="pct-val" style="color:'+c2+'">'+s.pct+'%</span>';
+            h+='</div>';
+          });
+          h+='</div>';
+        }
+      }
       h += '</div>'; // comp-stat-panel
     });
     h += '</div>'; // stat-section
-  } else {
-    // ESPN 없으면 FPL 기반
-    h += '<div class="stat-section">';
-    h += '<div class="stat-section-title">FPL 핵심 지표 (PL)</div>';
-    h += '<div class="stat-grid-4">';
-    h += makeStatBox(p.goals||0,'골',p.xG?'xG '+p.xG.toFixed(1):'',tc);
-    h += makeStatBox(p.assists||0,'어시스트',p.xA?'xA '+p.xA.toFixed(1):'','');
-    h += makeStatBox(((p.xG||0)/Math.max(1,p.appearances)).toFixed(2),'xG/경기','','#22C55E');
-    h += makeStatBox(((p.xA||0)/Math.max(1,p.appearances)).toFixed(2),'xA/경기','','#60A5FA');
-    h += '</div></div>';
+  }
+
+  // ── 경력 ──
+  if(career && career.length){
+    h += '<div style="padding:14px 0 0">';
+    h += '<div style="font-size:13px;font-weight:700;color:#fff;padding:0 16px 10px">\uacbd\ub825</div>';
+    career.forEach(function(c){
+      var period = c.startDate ? c.startDate.slice(0,4) : '';
+      if(c.endDate) period += ' - '+c.endDate.slice(0,4);
+      else if(c.active) period += ' - \ud604\uc7ac';
+      var statStr = '';
+      if(c.appearances) statStr += c.appearances+'\uacbd\uae30';
+      if(c.goals) statStr += ' '+c.goals+'\uace8';
+      h += '<div class="pm-career-row">';
+      h += '<div><div class="pm-career-team">'+c.team+'</div><div class="pm-career-period">'+period+'</div></div>';
+      h += '<div class="pm-career-stat">'+statStr+'</div>';
+      h += '</div>';
+    });
+    h += '</div>';
   }
 
   content.innerHTML = h;
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  // 첫 대회 레이더 그리기
-  if(compKeys.length > 0){
-    setTimeout(function(){
-      drawRadar('radar_'+compKeys[0], competitions[compKeys[0]], pos);
-    }, 50);
-  }
+  // 레이더 차트
+  setTimeout(function(){
+    if(traits && traits.items && traits.items.length){
+      drawFotmobRadar('radar_traits', traits.items);
+    }
+  }, 60);
 }
 
-function switchCompTab(btn){
-  var content = document.getElementById('modalContent');
-  var comp = btn.getAttribute('data-comp');
-  content.querySelectorAll('.comp-tab-btn').forEach(function(b){
-    b.style.background='var(--surface2)'; b.style.color='var(--text-muted)';
-  });
-  btn.style.background='var(--red-dark)'; btn.style.color='#fff';
-  content.querySelectorAll('.comp-stat-panel').forEach(function(panel){
-    panel.style.display = panel.getAttribute('data-comp')===comp ? '' : 'none';
-  });
-  // 레이더 차트 그리기
-  var canvas = document.getElementById('radar_'+comp);
-  if(canvas && canvas._radarData){
-    drawRadarOnCanvas(canvas, canvas._radarData.labels, canvas._radarData.values, canvas._radarData.color);
-  }
-}
-
-// ── 레이더 차트 ──
-function drawRadar(canvasId, c, pos){
+// ── Fotmob 스타일 6각형 레이더 ──
+function drawFotmobRadar(canvasId, items){
   var canvas = document.getElementById(canvasId);
   if(!canvas) return;
-  var cfg = getRadarConfig(c, pos);
-  canvas._radarData = cfg;
-  drawRadarOnCanvas(canvas, cfg.labels, cfg.values, cfg.color);
-}
-
-function getRadarConfig(c, pos){
-  var apps = Math.max(1, c.appearances||1);
-  if(pos==='GK'){
-    var total = (c.saves||0)+(c.goalsConceded||0);
-    var saveRate = total>0 ? Math.round((c.saves||0)/total*100) : 0;
-    return {
-      labels:['선방률','실점관리','파울유도','카드관리','평규선방'],
-      values:[saveRate, Math.max(0,100-Math.min(10,c.goalsConceded||0)*10), Math.min(100,(c.foulsDrawn||0)/apps*30), Math.max(0,100-(c.yellowCards||0)*20-(c.redCards||0)*50), Math.min(100,(c.saves||0)/apps*15)],
-      color:'#22C55E'
-    };
-  } else if(pos==='DF'){
-    return {
-      labels:['공격참여','어시스트','파울유도','카드관리','파울자제'],
-      values:[Math.min(100,(c.goals||0)/apps*60), Math.min(100,(c.assists||0)/apps*60), Math.min(100,(c.foulsDrawn||0)/apps*25), Math.max(0,100-(c.yellowCards||0)*20-(c.redCards||0)*50), Math.max(0,100-(c.foulsCommitted||0)/apps*15)],
-      color:'#60A5FA'
-    };
-  } else if(pos==='MF'){
-    var shotAcc = c.totalShots>0 ? Math.round((c.shotsOnTarget||0)/c.totalShots*100) : 0;
-    return {
-      labels:['골','어시스트','슈팅정확도','파울유도','카드관리'],
-      values:[Math.min(100,(c.goals||0)/apps*50), Math.min(100,(c.assists||0)/apps*50), shotAcc, Math.min(100,(c.foulsDrawn||0)/apps*25), Math.max(0,100-(c.yellowCards||0)*20-(c.redCards||0)*50)],
-      color:'#A78BFA'
-    };
-  } else { // FW
-    var shotAcc2 = c.totalShots>0 ? Math.round((c.shotsOnTarget||0)/c.totalShots*100) : 0;
-    return {
-      labels:['골','어시스트','슈팅정확도','공격포인트','파울유도'],
-      values:[Math.min(100,(c.goals||0)/apps*40), Math.min(100,(c.assists||0)/apps*50), shotAcc2, Math.min(100,((c.goals||0)+(c.assists||0))/apps*30), Math.min(100,(c.foulsDrawn||0)/apps*25)],
-      color:'#EF4444'
-    };
-  }
-}
-
-function drawRadarOnCanvas(canvas, labels, values, hexColor){
   var ctx = canvas.getContext('2d');
   var W=canvas.width, H=canvas.height;
   var cx=W/2, cy=H/2+5;
-  var r=Math.min(W,H)/2-32;
-  var n=labels.length;
+  var r=Math.min(W,H)/2-36;
+  var n=items.length;
   ctx.clearRect(0,0,W,H);
 
-  var isDark = document.body.style.background !== 'rgb(255,255,255)' ||
-               window.matchMedia('(prefers-color-scheme:dark)').matches;
-  var gridC = 'rgba(128,128,128,0.15)';
-  var textC = 'rgba(150,150,150,0.9)';
-  var dotC  = hexColor;
-
-  // 동심원
+  // 배경 격자
+  var gridC='rgba(255,255,255,0.08)';
   [0.25,0.5,0.75,1].forEach(function(s){
     ctx.beginPath();
     for(var i=0;i<n;i++){
@@ -1022,50 +1043,76 @@ function drawRadarOnCanvas(canvas, labels, values, hexColor){
       i===0?ctx.moveTo(cx+Math.cos(a)*r*s,cy+Math.sin(a)*r*s):ctx.lineTo(cx+Math.cos(a)*r*s,cy+Math.sin(a)*r*s);
     }
     ctx.closePath();
-    ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke();
+    ctx.strokeStyle=gridC;ctx.lineWidth=1;ctx.stroke();
   });
-
-  // 축
   for(var i=0;i<n;i++){
     var a=(i/n)*Math.PI*2-Math.PI/2;
     ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
     ctx.strokeStyle=gridC;ctx.lineWidth=1;ctx.stroke();
   }
 
-  // hex → rgb
-  var big=parseInt(hexColor.slice(1),16);
-  var rr=(big>>16)&255, gg=(big>>8)&255, bb=big&255;
-
-  // 데이터 영역
+  // 데이터 (빨간색 Fotmob 스타일)
   ctx.beginPath();
   for(var i=0;i<n;i++){
     var a=(i/n)*Math.PI*2-Math.PI/2;
-    var v=Math.min(100,Math.max(0,values[i]||0))/100;
+    var v=Math.min(1,Math.max(0,(items[i].value||0)/100));
     var x=cx+Math.cos(a)*r*v, y=cy+Math.sin(a)*r*v;
     i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
   }
   ctx.closePath();
-  ctx.fillStyle='rgba('+rr+','+gg+','+bb+',0.2)';
-  ctx.fill();
-  ctx.strokeStyle='rgba('+rr+','+gg+','+bb+',0.85)';
-  ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle='rgba(189,5,16,0.5)';ctx.fill();
+  ctx.strokeStyle='rgba(189,5,16,0.9)';ctx.lineWidth=2;ctx.stroke();
 
   // 점
   for(var i=0;i<n;i++){
     var a=(i/n)*Math.PI*2-Math.PI/2;
-    var v=Math.min(100,Math.max(0,values[i]||0))/100;
+    var v=Math.min(1,Math.max(0,(items[i].value||0)/100));
     ctx.beginPath();ctx.arc(cx+Math.cos(a)*r*v,cy+Math.sin(a)*r*v,3,0,Math.PI*2);
-    ctx.fillStyle='rgba('+rr+','+gg+','+bb+',0.9)';ctx.fill();
+    ctx.fillStyle='#EF4444';ctx.fill();
   }
 
-  // 라벨
-  ctx.font='bold 9px sans-serif';
-  ctx.textAlign='center'; ctx.textBaseline='middle';
+  // 라벨 + 퍼센트
+  ctx.textAlign='center';ctx.textBaseline='middle';
   for(var i=0;i<n;i++){
     var a=(i/n)*Math.PI*2-Math.PI/2;
-    ctx.fillStyle=textC;
-    ctx.fillText(labels[i], cx+Math.cos(a)*(r+20), cy+Math.sin(a)*(r+20));
+    var lx=cx+Math.cos(a)*(r+22), ly=cy+Math.sin(a)*(r+22);
+    var pct=items[i].value||0;
+    var col=pct>=75?'#22C55E':pct>=50?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.5)';
+    ctx.font='bold 10px sans-serif';
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.fillText(items[i].title, lx, ly-7);
+    ctx.font='bold 11px sans-serif';
+    ctx.fillStyle=col;
+    ctx.fillText(pct+'%', lx, ly+7);
   }
+}
+
+function getPctStats(fotStats, pos){
+  var keys = pos==='GK'
+    ? ['goals_conceded_per_90','saves','clean_sheets']
+    : pos==='DF'
+    ? ['goals','assists','chances_created','tackles','interceptions']
+    : pos==='MF'
+    ? ['goals','assists','chances_created','shots','accurate_passes','tackles']
+    : ['goals','assists','shots','expected_goals','chances_created','touches_in_opposition_box'];
+  var result=[];
+  keys.forEach(function(k){
+    var s=fotStats[k];
+    if(s && s.percentile!=null){
+      result.push({label:s.title||k, pct:s.percentile});
+    }
+  });
+  return result.slice(0,6);
+}
+
+function switchPMComp(btn){
+  var content=document.getElementById('modalContent');
+  var comp=btn.getAttribute('data-comp');
+  content.querySelectorAll('.pm-comp-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.comp-stat-panel').forEach(function(panel){
+    panel.style.display=panel.getAttribute('data-comp')===comp?'':'none';
+  });
 }
 
 function makeStatBox(val,lbl,sub,color){
@@ -1084,11 +1131,14 @@ function closeModal(e){
   if(e.target===document.getElementById('playerModal'))closePlayerModal();
 }
 
-// ESPN 데이터 로드
+// ESPN + Fotmob 데이터 로드
 function loadESPNStats(){
   fetch('/data/players.json')
     .then(function(r){return r.json();})
-    .then(function(d){window._espnPlayers=d.players;})
+    .then(function(d){
+      window._espnPlayers=d.players;
+      if(d.source==='Fotmob') window._fotmobPlayers=d.players;
+    })
     .catch(function(){});
 }
 
