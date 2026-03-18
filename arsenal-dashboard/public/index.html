@@ -867,11 +867,16 @@ function openPlayerModal(p) {
   }
   var fotmob = null;
   if(window._fotmobPlayers){
-    fotmob = window._fotmobPlayers.find(function(f){
-      var pn=(p.name||'').toLowerCase();
-      var fn=(f.name||'').toLowerCase();
-      return fn===pn||fn.includes(pn)||pn.includes(fn.split(' ').pop());
-    });
+    // fotmobId로 정확하게 매핑 (이름 중복 방지)
+    if(p.fotmobId){
+      fotmob = window._fotmobPlayers.find(function(f){ return f.id===p.fotmobId; });
+    }
+    if(!fotmob){
+      var nrm=function(s){return(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');};
+      fotmob = window._fotmobPlayers.find(function(f){
+        return nrm(f.name)===nrm(p.fullName||p.name);
+      });
+    }
   }
 
   var nationality = (fotmob&&fotmob.nationality)||(espn&&espn.nationality)||p.nationality||'';
