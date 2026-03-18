@@ -987,8 +987,7 @@ function openPlayerModal(p) {
       var hidden = i===0 ? '' : 'display:none';
       h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+hidden+'">';
       var mins=c.minutesPlayed||0;
-      var h_=Math.floor(mins/60); var m_=mins%60;
-      var minsStr=mins>=60?(h_+'h '+(m_>0?m_+'m':'')):(mins>0?mins+'m':'-');
+      var minsStr=mins>0?mins:'-';
       var rating=c.avgRating?c.avgRating.toFixed(1):'-';
       var ratingColor=c.avgRating>=8?'#22C55E':c.avgRating>=7?'#84CC16':c.avgRating>=6?'#F59E0B':'rgba(255,255,255,0.7)';
       h += '<div class="fotmob-stat-grid">';
