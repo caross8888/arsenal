@@ -6,13 +6,39 @@ const ARSENAL_FPL_ID = 1;
 const FPL_POS = {1:'GK',2:'DF',3:'MF',4:'FW'};
 const LOAN_KEYWORDS = /loan|loaned|joined|transferred|released|left the club/i;
 
+// Fotmob 선수 ID 매핑 (사진: images.fotmob.com/image_resources/playerimages/{id}.png)
+const FOTMOB_IDS = {
+  'kepa':        317564,  'raya':        562727,  'setford':     1243239,
+  'white':       776151,  'saliba':      955406,  'gabriel':     795179,
+  'timber':      942381,  'calafiori':   1105912, 'hincapie':    1137667,
+  'mosquera':    1298907, 'lewis-skelly':1406436, 'salmon':      1787525,
+  'odegaard':    534670,  'merino':      574645,  'zubimendi':   1031325,
+  'rice':        654096,  'norgaard':    266520,  'dowman':      1635773,
+  'eze':         818975,  'saka':        961995,  'madueke':     1084981,
+  'martinelli':  1021586, 'trossard':    318615,  'jesus':       576165,
+  'havertz':     749736,  'gyokeres':    664500,
+};
+
+function getFotmobId(p) {
+  const web = p.web_name.toLowerCase().replace(/[^a-z]/g, '');
+  const second = p.second_name.toLowerCase().replace(/[^a-z]/g, '');
+  const full = (p.first_name + ' ' + p.second_name).toLowerCase().replace(/[^a-z ]/g, '');
+  for (const [key, id] of Object.entries(FOTMOB_IDS)) {
+    const k = key.replace(/[^a-z]/g, '');
+    if (web.includes(k) || second.includes(k) || k.includes(second) || full.includes(k)) {
+      return id;
+    }
+  }
+  return null;
+}
+
 const cache = {};
 const TTL = 60 * 60 * 1000;
 function getCache(k){const c=cache[k];return(c&&Date.now()-c.ts<TTL)?c.data:null;}
 function setCache(k,d){cache[k]={data:d,ts:Date.now()};}
 
 const FPL_HEADERS = {
-  'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36',
   'Accept':'application/json',
   'Referer':'https://fantasy.premierleague.com/',
 };
@@ -84,7 +110,6 @@ export default async function handler(req, res) {
 
       const fetchSlug = async ({slug, name, short}) => {
         try {
-          // 완료 경기: schedule API
           const sr = await fetch(
             `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/teams/${ARSENAL_ESPN_ID}/schedule`,
             {signal: AbortSignal.timeout(8000)}
@@ -92,7 +117,6 @@ export default async function handler(req, res) {
           const sj = sr.ok ? await sr.json() : {events:[]};
           const past = (sj.events||[]).map(e => parseEvent(e, name, short)).filter(isArsenal);
 
-          // 예정 경기: scoreboard API (오늘~시즌 종료)
           const todayStr = fmtDate(now);
           const br = await fetch(
             `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard?dates=${todayStr}-${futureEnd}&limit=50`,
@@ -106,8 +130,6 @@ export default async function handler(req, res) {
       };
 
       const results = await Promise.all(SLUGS.map(fetchSlug));
-
-      // 중복 제거 (id 기준)
       const seen = new Set();
       const allMatches = results.flat().filter(m => {
         if(seen.has(m.id)) return false;
@@ -115,9 +137,7 @@ export default async function handler(req, res) {
         return true;
       });
 
-      // 날짜순 정렬
       allMatches.sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
-
       const finished = allMatches.filter(m => m.status === 'FINISHED');
       const upcoming = allMatches.filter(m => m.status !== 'FINISHED');
 
@@ -140,103 +160,31 @@ export default async function handler(req, res) {
       };
 
     } else if(type === 'squad'){
-      const officialNames = new Set();
-      if(KEY){
-        try{
-          const sqRes = await fetch(`${BASE}/teams/${ARSENAL_ID}`,{headers:H,signal:AbortSignal.timeout(5000)});
-          if(sqRes.ok){
-            const sqJson = await sqRes.json();
-            (sqJson.squad||[]).forEach(p=>{
-              officialNames.add(p.name.toLowerCase());
-              p.name.toLowerCase().split(' ').forEach(word => {
-                if(word.length > 2) officialNames.add(word);
-              });
-            });
-          }
-        }catch(_){}
-      }
+      // players.json (Fotmob 기반) 직접 사용
+      const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
+      if(!pjRes.ok) throw new Error('players.json 로드 실패');
+      const pjData = await pjRes.json();
 
-      const fplRes = await fetch(FPL_URL,{headers:FPL_HEADERS,signal:AbortSignal.timeout(8000)});
-      if(!fplRes.ok) throw new Error(`FPL API: ${fplRes.status}`);
-      const fplJson = await fplRes.json();
-
-      const nationalityMap = {};
-      if(KEY){
-        try{
-          const sqRes = await fetch(`${BASE}/teams/${ARSENAL_ID}`,{headers:H,signal:AbortSignal.timeout(5000)});
-          if(sqRes.ok){
-            const sqJson = await sqRes.json();
-            (sqJson.squad||[]).forEach(p=>{
-              nationalityMap[p.name.toLowerCase()] = p.nationality;
-              p.name.toLowerCase().split(' ').forEach(word => {
-                if(word.length > 2) nationalityMap[word] = p.nationality;
-              });
-            });
-          }
-        }catch(_){}
-      }
-
-      // Fotmob 명단 기반 필터
-      const FOTMOB_NAMES = [
-        'kepa','raya','setford','white','saliba','gabriel','timber',
-        'calafiori','hincapie','mosquera','lewis-skelly','lewis skelly','salmon',
-        'odegaard','ødegaard','merino','zubimendi','rice','norgaard','nørgaard',
-        'dowman','eze','saka','madueke','martinelli','trossard','jesus',
-        'havertz','gyokeres','gyökeres',
-      ];
-      const isInFotmob = (p) => {
-        const full = (p.first_name+' '+p.second_name).toLowerCase();
-        const web = p.web_name.toLowerCase();
-        const second = p.second_name.toLowerCase();
-        return FOTMOB_NAMES.some(n =>
-          full.includes(n) || web.includes(n) || second.includes(n)
-        );
+      result = {
+        squad: (pjData.players || []).map(p => ({
+          id:          p.id,
+          fotmobId:    p.id,
+          name:        p.name,
+          fullName:    p.name,
+          nationality: p.nationality || '',
+          posGroup:    p.posGroup || 'MF',
+          goals:       p.stats?.goals || 0,
+          assists:     p.stats?.assists || 0,
+          appearances: p.stats?.appearances || 0,
+          starts:      p.stats?.starts || 0,
+          minutes:     p.stats?.minutesPlayed || 0,
+          yellowCards: p.stats?.yellowCards || 0,
+          redCards:    p.stats?.redCards || 0,
+          xG:          p.stats?.xG || 0,
+          xA:          p.stats?.xA || 0,
+          photo:       `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+        }))
       };
-
-      const players = fplJson.elements
-        .filter(p => {
-          if(p.team !== ARSENAL_FPL_ID) return false;
-          if(p.news && LOAN_KEYWORDS.test(p.news)) return false;
-          return isInFotmob(p);
-        })
-        .map(p => {
-          const fullName = `${p.first_name} ${p.second_name}`;
-          const lastName = p.second_name.toLowerCase();
-          const nationality = nationalityMap[fullName.toLowerCase()]
-            || nationalityMap[lastName] || '';
-          const photoId = p.photo ? p.photo.replace('.jpg','') : null;
-          return {
-            id: p.id,
-            fplId: p.id,
-            name: p.web_name,
-            fullName,
-            nationality,
-            posGroup: FPL_POS[p.element_type]||'MF',
-            goals: p.goals_scored,
-            assists: p.assists,
-            appearances: Math.max(1, Math.round(p.minutes/90)),
-            starts: p.starts || 0,
-            minutes: p.minutes,
-            yellowCards: p.yellow_cards,
-            redCards: p.red_cards,
-            xG: parseFloat(p.expected_goals)||0,
-            xA: parseFloat(p.expected_assists)||0,
-            xGI: parseFloat(p.expected_goal_involvements)||0,
-            creativity: parseFloat(p.creativity)||0,
-            threat: parseFloat(p.threat)||0,
-            influence: parseFloat(p.influence)||0,
-            ictIndex: parseFloat(p.ict_index)||0,
-            form: parseFloat(p.form)||0,
-            bonus: p.bonus||0,
-            totalPoints: p.total_points||0,
-            photo: photoId
-              ? `https://resources.premierleague.com/premierleague/photos/players/110x140/p${photoId}.png`
-              : null,
-          };
-        })
-        .sort((a,b)=>({GK:0,DF:1,MF:2,FW:3}[a.posGroup]??9)-({GK:0,DF:1,MF:2,FW:3}[b.posGroup]??9));
-
-      result = {squad: players};
     }
 
     if(!nocache) setCache(type, result);
