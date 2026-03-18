@@ -162,8 +162,10 @@ def parse_stats(data):
         133: 'EFL',  # EFL Cup
     }
     comp_stats = {}
-    recent = data.get('recentMatches', {})
-    for match in recent.values():
+    recent_raw = data.get('recentMatches', {})
+    # recentMatches가 dict이면 values(), list면 그대로
+    recent = recent_raw.values() if isinstance(recent_raw, dict) else (recent_raw if isinstance(recent_raw, list) else [])
+    for match in recent:
         league_id = match.get('leagueId')
         comp = LEAGUE_TO_COMP.get(league_id)
         if not comp:
