@@ -154,21 +154,62 @@ def parse_stats(data):
             }
     result['stats'] = all_stats
 
-    # 대회별 스탯 — statSeasons에서 현재 시즌 찾기
-    seasons = data.get('statSeasons', [])
-    current = next((s for s in seasons if s.get('seasonName') == SEASON), None)
-    if current:
-        for t in current.get('tournaments', []):
-            comp_code = COMP_MAP.get(t.get('tournamentId'))
-            if not comp_code:
-                continue
-            # 대회별 상세 스탯은 별도 API 필요
-            # 여기서는 entryId만 저장 (추후 확장 가능)
-            result['competitions'][comp_code] = {
-                'name':      COMP_NAMES.get(comp_code, comp_code),
-                'entryId':   t.get('entryId'),
-                'hasDeepStats': t.get('hasDeepStats', False),
+    # 대회별 스탯 — recentMatches에서 leagueId 기준으로 집계
+    LEAGUE_TO_COMP = {
+        47:  'PL',   # Premier League
+        42:  'UCL',  # Champions League
+        132: 'FAC',  # FA Cup
+        133: 'EFL',  # EFL Cup
+    }
+    comp_stats = {}
+    recent = data.get('recentMatches', {})
+    for match in recent.values():
+        league_id = match.get('leagueId')
+        comp = LEAGUE_TO_COMP.get(league_id)
+        if not comp:
+            continue
+        if comp not in comp_stats:
+            comp_stats[comp] = {
+                'name': COMP_NAMES.get(comp, comp),
+                'appearances': 0,  # 출전 경기 (벤치 제외)
+                'starts': 0,       # 선발
+                'goals': 0,
+                'assists': 0,
+                'yellowCards': 0,
+                'redCards': 0,
+                'minutesPlayed': 0,
+                'rating_sum': 0,
+                'rating_count': 0,
             }
+        c = comp_stats[comp]
+        on_bench = match.get('onBench', True)
+        minutes = match.get('minutesPlayed', 0) or 0
+        if not on_bench and minutes > 0:
+            c['appearances'] += 1
+            # 선발: 벤치 아니고 45분 이상 또는 전반부터 출전
+            if minutes >= 45:
+                c['starts'] += 1
+        c['goals']         += match.get('goals', 0) or 0
+        c['assists']       += match.get('assists', 0) or 0
+        c['yellowCards']   += match.get('yellowCards', 0) or 0
+        c['redCards']      += match.get('redCards', 0) or 0
+        c['minutesPlayed'] += minutes
+        rating = match.get('ratingProps') or {}
+        if rating.get('rating'):
+            try:
+                c['rating_sum']   += float(rating['rating'])
+                c['rating_count'] += 1
+            except:
+                pass
+
+    for comp, c in comp_stats.items():
+        if c['rating_count'] > 0:
+            c['avgRating'] = round(c['rating_sum'] / c['rating_count'], 1)
+        else:
+            c['avgRating'] = None
+        del c['rating_sum']
+        del c['rating_count']
+        result['competitions'][comp] = c
 
 
     # traits (레이더 차트용 - Fotmob 포지션별 비교)
