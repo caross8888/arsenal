@@ -96,7 +96,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .pl-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s}
 .pl-card:active{transform:scale(.98)}
-.pl-top{display:grid;grid-template-columns:1fr 62px;height:90px}
+.pl-top{display:grid;grid-template-columns:70px 1fr;height:90px}
 .pl-left{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
 .pl-left.fw{background:rgba(239,1,7,.75)}
 .pl-left.mf{background:rgba(34,197,94,.60)}
@@ -104,7 +104,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pl-left.gk{background:rgba(234,179,8,.65)}
 .pl-pos-txt{font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.95);text-transform:uppercase}
 .pl-num-txt{font-family:var(--fd);font-size:32px;font-weight:900;line-height:1;color:#fff;opacity:.95}
-.pl-photo-box{width:62px;height:90px;overflow:hidden;background:var(--surface2)}
+.pl-photo-box{width:100%;height:90px;overflow:hidden;background:var(--surface2)}
 .pl-photo-box img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
 .pl-photo-box.no-img{display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:18px}
 .pl-card-divider{height:1px;background:var(--border)}
@@ -477,43 +477,30 @@ function loadFixtures(){
   var fnEl=document.getElementById('finishedList');
   var badge=document.getElementById('fixBadge');
   apiFetch(FN+'/football?type=fixtures').then(function(data){
-    badge.textContent='football-data.org';
-    var matches=data.matches||[];
-    var upcomingAll=matches.filter(function(m){return['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status);});
-    var finishedAll=matches.filter(function(m){return m.status==='FINISHED';});
-
-    function renderList(el, list, allList) {
+    badge.textContent='ESPN';
+    var finishedAll=(data.finished||[]).slice().reverse(); // 최신순
+    var upcomingAll=data.upcoming||[];
+    function renderList(el,showList,allList){
       el.innerHTML='';
-      if(!list.length){
-        el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">\uB370\uC774\uD130 \uC5C6\uC74C</div>';
-        return;
-      }
-      list.forEach(function(m){el.appendChild(buildFixCard(m));});
-      if(allList.length > 3){
-        var expanded = (list.length > 3);
-        var btn=document.createElement('button');
-        btn.className='more-fix-btn';
-        btn.textContent = expanded ? '\u2191 \uC811\uAE30' : '\u2193 \uB354\uBCF4\uAE30';
+      if(!showList.length){el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">데이터 없음</div>';return;}
+      var expanded=false;
+      showList.forEach(function(m){el.appendChild(buildFixCard(m));});
+      if(allList.length>showList.length){
+        var btn=document.createElement('button');btn.className='more-fix-btn';
+        btn.textContent='↓ 더보기 ('+(allList.length-showList.length)+'개 더)';
         btn.onclick=function(){
-          if(!expanded){
-            expanded=true;
-            el.innerHTML='';
+          if(!expanded){expanded=true;el.innerHTML='';
             allList.forEach(function(m){el.appendChild(buildFixCard(m));});
-            btn=document.createElement('button');
-            btn.className='more-fix-btn';
-            btn.textContent='\u2191 \uC811\uAE30';
-            btn.onclick=function(){renderList(el, allList.slice(0,3), allList);};
-            el.appendChild(btn);
-          }
-        };
-        el.appendChild(btn);
-      }
+            var col=document.createElement('button');col.className='more-fix-btn';
+            col.textContent='↑ 접기';
+            col.onclick=function(){expanded=false;renderList(el,showList,allList);};
+            el.appendChild(col);}
+        };el.appendChild(btn);}
     }
-
-    renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
-    renderList(fnEl, finishedAll.slice(0,3), finishedAll);
-    updateTicker(matches);
-  }).catch(function(err){showErr(upEl,err.message);badge.textContent='\uC624\uB958';});
+    renderList(upEl,upcomingAll.slice(0,3),upcomingAll);
+    renderList(fnEl,finishedAll.slice(0,5),finishedAll);
+    updateTicker(data.matches||[]);
+  }).catch(function(err){showErr(upEl,err.message);badge.textContent='오류';});
 }
 
 function loadStandings(){
@@ -587,6 +574,10 @@ function renderSq(filter){
     var posShort=POS_SHORT[posKey]||p.posGroup||'';
     var leftCls=POS_GROUP_CLS[p.posGroup]||'df';
     var jersey=p.jersey||'';
+    if(!jersey&&window._fotmobPlayers){
+      var fm=window._fotmobPlayers.find(function(f){return f.id===p.fotmobId||f.id===p.id;});
+      if(fm&&fm.jersey) jersey=fm.jersey;
+    }
 
     var card=document.createElement('div');
     card.className='pl-card';
