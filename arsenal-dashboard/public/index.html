@@ -579,7 +579,7 @@ function renderSq(filter){
 
     var card=document.createElement('div');
     card.className='pl-card';
-    card.style.outline='2px solid '+(POS_BORDER[posGroup]||'rgba(255,255,255,0.1)');
+    card.style.outline='2px solid '+(POS_BORDER[p.posGroup]||'rgba(255,255,255,0.1)');
     card.style.outlineOffset='-1px';
     card.onclick=function(){openPlayerModal(p);};
 
