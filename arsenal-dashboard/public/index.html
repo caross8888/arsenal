@@ -789,6 +789,7 @@ function loadConfig(){
 }
 
 // ── NAV ──
+var VALID_SECS = ['fixtures','squad','injuries','news','sns'];
 var loaded={fixtures:true};
 function showSec(id,btn){
   document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
@@ -802,8 +803,22 @@ function showSec(id,btn){
     if(id==='news') loadNews();
     if(id==='sns') loadSns();
   }
+  location.hash = id;
   window.scrollTo(0,0);
 }
+
+// 페이지 로드 시 해시 복원 + 뒤로가기 탭 전환
+(function(){
+  function restoreHash(){
+    var hash = location.hash.replace('#','');
+    if(hash && VALID_SECS.indexOf(hash) !== -1){
+      var btn = document.querySelector('.nav-btn[onclick*="\''+hash+'\'"]');
+      if(btn) showSec(hash, btn);
+    }
+  }
+  restoreHash();
+  window.addEventListener('hashchange', restoreHash);
+})();
 function filterSq(f,btn){
   document.querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');renderSq(f);
