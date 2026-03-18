@@ -386,8 +386,8 @@ function apiFetch(url){
 }
 function showErr(el,msg){el.innerHTML='<div class="error-state">&#9888;&#65039; '+msg+'</div>';}
 
-var CTAG={PL:'tag-pl',CL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec'};
-var CNAME={PL:'PL',CL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup'};
+var CTAG={PL:'tag-pl',CL:'tag-cl',UCL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec',EFL:'tag-ec',CS:'tag-oth',CWC:'tag-oth'};
+var CNAME={PL:'PL',CL:'UCL',UCL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup',EFL:'EFL Cup',CS:'Shield',CWC:'CWC'};
 function ctag(c){return CTAG[c]||'tag-oth';}
 function cname(c,fb){return CNAME[c]||fb||c;}
 
@@ -405,9 +405,10 @@ function formatDate(utcDate){
 }
 
 function makeCrest(team,isArs){
-  var short=(team.shortName||team.name||'').substring(0,3).toUpperCase();
+  var short=(team.shortName||team.displayName||team.name||'').substring(0,3).toUpperCase();
   var phCls='t-crest-ph'+(isArs?' afc':'');
-  if(team.crest) return {type:'crest',src:team.crest,alt:team.shortName||'',phCls:phCls,short:short};
+  var src=team.crest||team.logo||null;
+  if(src) return {type:'crest',src:src,alt:team.shortName||team.name||'',phCls:phCls,short:short};
   return {type:'ph',phCls:phCls,short:short};
 }
 function renderCrest(c){
@@ -421,82 +422,76 @@ function renderCrest(c){
 }
 
 function buildFixCard(m){
-  var isArsHome = m.homeTeam && (m.homeTeam.id===57 || m.homeTeam.id==='359' || (m.homeTeam.name||'').includes('Arsenal'));
+  var ARSENAL_ID_ESPN='359';
+  var isArsHome=m.homeTeam&&(m.homeTeam.id===57||m.homeTeam.id===ARSENAL_ID_ESPN||(m.homeTeam.name||'').includes('Arsenal'));
   var isLive=m.status==='IN_PLAY'||m.status==='PAUSED';
   var isDone=m.status==='FINISHED';
-  var code=m.competition?.short || m.competitionCode || 'PL';
+  // competition short 코드
+  var code=(m.competition&&m.competition.short)||m.competitionCode||'PL';
+  var compName=(m.competition&&m.competition.name)||m.competition||code;
   var hs=m.score&&m.score.fullTime?m.score.fullTime.home:null;
   var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
-  var hasScore=hs!==null&&hs!==undefined;
+  var hasScore=hs!==null&&hs!==undefined&&isDone;
   var card=document.createElement('div');
   card.className='fix-card '+(isLive?'live-match':isDone?'finished':'upcoming');
+  // meta row
   var metaRow=document.createElement('div');metaRow.className='fix-meta-row';
-  var ct=document.createElement('span');ct.className='comp-tag '+ctag(code);ct.textContent=cname(code,m.competition);
+  var ct=document.createElement('span');ct.className='comp-tag '+ctag(code);ct.textContent=cname(code,compName);
   var ds=document.createElement('span');ds.className='fix-date'+(isLive?' live-tag':'');
-  ds.textContent=isLive?'\u25cf LIVE':formatDate(m.date);
+  ds.textContent=isLive?'\u25cf LIVE':formatDate(m.utcDate||m.date);
   metaRow.appendChild(ct);metaRow.appendChild(ds);card.appendChild(metaRow);
+  // teams row
   var tr=document.createElement('div');tr.className='teams-row';
   var hd=document.createElement('div');hd.className='fix-team-home';
   hd.appendChild(renderCrest(makeCrest(m.homeTeam,isArsHome)));
-  var hn=document.createElement('div');hn.className='t-name-home';hn.textContent=m.homeTeam.shortName||m.homeTeam.name;hd.appendChild(hn);
+  var hn=document.createElement('div');hn.className='t-name-home';
+  hn.textContent=m.homeTeam.shortName||m.homeTeam.displayName||m.homeTeam.name||'';hd.appendChild(hn);
   var sb=document.createElement('div');sb.className='fix-score-box';
   if(hasScore){var sd=document.createElement('div');sd.className='fix-score';sd.textContent=hs+' : '+as_;sb.appendChild(sd);}
+  else if(isLive){var ld=document.createElement('div');ld.className='fix-score';ld.style.color='var(--green)';ld.textContent=(hs||0)+' : '+(as_||0);sb.appendChild(ld);}
   else{var vd=document.createElement('div');vd.className='fix-vs';vd.textContent='VS';sb.appendChild(vd);}
   var ad=document.createElement('div');ad.className='fix-team-away';
-  var an=document.createElement('div');an.className='t-name-away';an.textContent=m.awayTeam.shortName||m.awayTeam.name;ad.appendChild(an);
+  var an=document.createElement('div');an.className='t-name-away';
+  an.textContent=m.awayTeam.shortName||m.awayTeam.displayName||m.awayTeam.name||'';ad.appendChild(an);
   ad.appendChild(renderCrest(makeCrest(m.awayTeam,!isArsHome)));
   tr.appendChild(hd);tr.appendChild(sb);tr.appendChild(ad);card.appendChild(tr);
   if(m.venue){var v=document.createElement('div');v.className='fix-venue';v.textContent=m.venue;card.appendChild(v);}
   return card;
 }
 
-var COMP_COLORS={
-  'PL':'#3d195b','CL':'#1a3a6b','UCL':'#1a3a6b',
-  'FAC':'#006400','EFL':'#8B0000','ELC':'#8B0000',
-  'CS':'#8B4513','CWC':'#1a1a2e'
-};
 function loadFixtures(){
   var upEl=document.getElementById('upcomingList');
   var fnEl=document.getElementById('finishedList');
   var badge=document.getElementById('fixBadge');
   apiFetch(FN+'/football?type=fixtures').then(function(data){
-    badge.textContent='football-data.org';
-    var matches=data.matches||[];
-    var upcomingAll=matches.filter(function(m){return['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status);});
-    var finishedAll=matches.filter(function(m){return m.status==='FINISHED';});
+    badge.textContent='ESPN';
+    // ESPN API: finished/upcoming 이미 분리됨
+    var finishedAll=(data.finished||[]).slice().reverse(); // 최신순
+    var upcomingAll=data.upcoming||[];
 
-    function renderList(el, list, allList) {
+    function renderList(el, showList, allList){
       el.innerHTML='';
-      if(!list.length){
-        el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">\uB370\uC774\uD130 \uC5C6\uC74C</div>';
+      if(!showList.length){
+        el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">\ub370\uc774\ud130 \uc5c6\uc74c</div>';
         return;
       }
-      list.forEach(function(m){el.appendChild(buildFixCard(m));});
-      if(allList.length > 3){
-        var expanded = (list.length > 3);
+      showList.forEach(function(m){el.appendChild(buildFixCard(m));});
+      if(allList.length>showList.length){
         var btn=document.createElement('button');
         btn.className='more-fix-btn';
-        btn.textContent = expanded ? '\u2191 \uC811\uAE30' : '\u2193 \uB354\uBCF4\uAE30';
+        btn.textContent='\u2193 \ub354\ubcf4\uae30 ('+(allList.length-showList.length)+'\uac1c \ub354)';
         btn.onclick=function(){
-          if(!expanded){
-            expanded=true;
-            el.innerHTML='';
-            allList.forEach(function(m){el.appendChild(buildFixCard(m));});
-            btn=document.createElement('button');
-            btn.className='more-fix-btn';
-            btn.textContent='\u2191 \uC811\uAE30';
-            btn.onclick=function(){renderList(el, allList.slice(0,3), allList);};
-            el.appendChild(btn);
-          }
+          el.innerHTML='';
+          allList.forEach(function(m){el.appendChild(buildFixCard(m));});
         };
         el.appendChild(btn);
       }
     }
 
     renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
-    renderList(fnEl, finishedAll.slice(0,3), finishedAll);
-    updateTicker(matches);
-  }).catch(function(err){showErr(upEl,err.message);badge.textContent='\uC624\uB958';});
+    renderList(fnEl, finishedAll.slice(0,5), finishedAll);
+    updateTicker(data.matches||[]);
+  }).catch(function(err){showErr(upEl,err.message);badge.textContent='\uc624\ub958';});
 }
 
 function loadStandings(){
@@ -704,7 +699,7 @@ function updateTicker(matches){
     var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
     if(isLive) return '\uD83D\uDD34 LIVE: '+h+' '+(hs||0)+'-'+(as_||0)+' '+a;
     if(isDone&&hs!==null) return h+' '+hs+'-'+as_+' '+a+' \u2713';
-    var d=new Date(m.date);
+    var d=new Date(m.utcDate||m.date);
     return h+' vs '+a+' \u00B7 '+d.toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
   });
   var doubled=items.concat(items);
