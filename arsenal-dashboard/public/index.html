@@ -855,11 +855,24 @@ function openMatchModal(m){
   document.body.style.overflow='hidden';
   location.hash='match';
 
-  apiFetch(FN+'/match?id='+m.id+'&slug='+slug).then(function(data){
-    renderMatchModal(content, m, data);
-  }).catch(function(){
-    content.querySelector('div[style]').innerHTML='<div class="error-state">&#9888;&#65039; 데이터를 불러올 수 없어요</div>';
-  });
+  var timer=setTimeout(function(){
+    var sp=content.querySelector('.spinner');
+    if(sp) sp.parentElement.innerHTML='<div class="error-state">&#9888;&#65039; 응답 없음 — 잠시 후 다시 시도해주세요</div>';
+  }, 10000);
+
+  fetch(FN+'/match?id='+m.id+'&slug='+slug+'&_='+Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      clearTimeout(timer);
+      if(data.error) throw new Error(data.error);
+      renderMatchModal(content, m, data);
+    })
+    .catch(function(err){
+      clearTimeout(timer);
+      var sp=content.querySelector('.spinner');
+      var wrap=sp?sp.parentElement:content;
+      wrap.innerHTML='<div class="error-state" style="margin:16px">&#9888;&#65039; '+( err&&err.message?err.message:'데이터를 불러올 수 없어요')+'</div>';
+    });
 }
 
 function renderMatchModal(content, m, data){
