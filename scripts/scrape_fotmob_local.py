@@ -98,9 +98,11 @@ def parse_stats(data):
     """선수 데이터에서 스탯 추출"""
     if not data:
         return None
+    player_id = data.get('id')
     result = {
-        'id':          data.get('id'),
+        'id':          player_id,
         'name':        data.get('name', ''),
+        'fotmobPhoto': f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png' if player_id else None,
         'nationality': data.get('playerInformation', [{}])[0].get('value', {}).get('fallback', '')
                        if data.get('playerInformation') else '',
         'position':    data.get('positionDescription', {}).get('positions', [{}])[0].get('strPos', {}).get('key', ''),
