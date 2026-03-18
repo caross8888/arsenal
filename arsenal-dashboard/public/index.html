@@ -262,7 +262,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-venue{text-align:center;font-size:10px;color:var(--text-dim);margin-top:6px;}
 .mm-events-row{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
 .mm-event-cell{display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;background:var(--surface2);}
-.mm-event-cell.home{flex-direction:row;}
+.mm-event-cell.home{flex-direction:row;justify-content:flex-end;text-align:right;}
 .mm-event-cell.away{flex-direction:row-reverse;}
 .mm-event-cell.home.empty,.mm-event-cell.away.empty{background:transparent;}
 .mm-event-icon{font-size:12px;flex-shrink:0;}
@@ -902,19 +902,17 @@ function renderMatchModal(content, m, data){
     var awayEvs=data.events.filter(function(e){return e.homeAway==='away';});
     var maxLen=Math.max(homeEvs.length,awayEvs.length);
     html+='<div class="mm-section"><div class="mm-section-title">골 &amp; 이벤트</div><div class="mm-events-row">';
-    html+='<div style="display:flex;flex-direction:column;gap:4px;">';
     for(var i=0;i<maxLen;i++){
       var ev=homeEvs[i];
-      if(ev){html+='<div class="mm-event-cell home"><span class="mm-event-icon">'+(EVENT_ICON[ev.type]||'•')+'</span><span class="mm-event-player">'+(ev.type==='own_goal'?ev.player+' (OG)':ev.player)+'</span><span class="mm-event-min">'+ev.minute+'</span></div>';}
+      var ev2=awayEvs[i];
+      // 홈 셀: 이름 시간 아이콘 (오른쪽 정렬)
+      if(ev){html+='<div class="mm-event-cell home"><span class="mm-event-player">'+(ev.type==='own_goal'?ev.player+' (OG)':ev.player)+'</span><span class="mm-event-min">'+ev.minute+'</span><span class="mm-event-icon">'+(EVENT_ICON[ev.type]||'•')+'</span></div>';}
+      else{html+='<div class="mm-event-cell empty"></div>';}
+      // 어웨이 셀: 아이콘 이름 시간 (왼쪽 정렬)
+      if(ev2){html+='<div class="mm-event-cell away"><span class="mm-event-icon">'+(EVENT_ICON[ev2.type]||'•')+'</span><span class="mm-event-player">'+(ev2.type==='own_goal'?ev2.player+' (OG)':ev2.player)+'</span><span class="mm-event-min">'+ev2.minute+'</span></div>';}
       else{html+='<div class="mm-event-cell empty"></div>';}
     }
-    html+='</div><div style="display:flex;flex-direction:column;gap:4px;">';
-    for(var j=0;j<maxLen;j++){
-      var ev2=awayEvs[j];
-      if(ev2){html+='<div class="mm-event-cell away"><span class="mm-event-min">'+ev2.minute+'</span><span class="mm-event-player">'+(ev2.type==='own_goal'?ev2.player+' (OG)':ev2.player)+'</span><span class="mm-event-icon">'+(EVENT_ICON[ev2.type]||'•')+'</span></div>';}
-      else{html+='<div class="mm-event-cell empty"></div>';}
-    }
-    html+='</div></div></div>';
+    html+='</div></div>';
   }
 
   // 팀 스탯
@@ -958,7 +956,8 @@ function renderMatchModal(content, m, data){
 
 function renderPlayerTable(side, players, visible){
   if(!players||!players.length) return '';
-  var html='<div class="mm-section mm-players-'+side+'" style="margin-top:10px;'+(visible?'':'display:none')+'">'+
+  var style=visible?'margin-top:10px':'margin-top:10px;display:none';
+  var html='<div class="mm-section mm-players-'+side+'" style="'+style+'">'+
     '<table class="mm-player-table"><thead><tr>'+
     '<th>선수</th><th>평점</th><th>슈팅</th><th>패스%</th><th>드리블</th><th>태클</th>'+
     '</tr></thead><tbody>';
