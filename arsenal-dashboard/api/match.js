@@ -141,7 +141,8 @@ export default async function handler(req, res) {
 
     for (const ev of eventSource) {
       const typeText = (ev.type?.text || ev.type?.id || ev.text || '').toLowerCase();
-      const isGoal    = typeText.includes('goal') && !typeText.includes('disallow') && !typeText.includes('no goal');
+      const isPenGoal = typeText.includes('penalty - scored') || typeText.includes('penalty scored');
+      const isGoal    = (typeText.includes('goal') || isPenGoal) && !typeText.includes('disallow') && !typeText.includes('no goal') && !typeText.includes('miss') && !typeText.includes('saved');
       const isOwnGoal = typeText.includes('own goal') || typeText.includes('own-goal');
       const isRed = typeText.includes('red card') || typeText.includes('straight red') || typeText.includes('second yellow');
 
@@ -165,7 +166,7 @@ export default async function handler(req, res) {
 
       events.push({
         minute:  min,
-        type:    isOwnGoal ? 'own_goal' : isGoal ? 'goal' : 'red_card',
+        type:    isOwnGoal ? 'own_goal' : isPenGoal ? 'pen_goal' : isGoal ? 'goal' : 'red_card',
         player,
         homeAway,
       });
