@@ -48,34 +48,49 @@ export default async function handler(req, res) {
         {slug:'fifa.cwc',     name:'Club World Cup',      short:'CWC'},
       ];
 
+      const parseEvent = (e, name, short) => {
+        const comp = e.competitions?.[0];
+        const home = comp?.competitors?.find(c => c.homeAway === 'home');
+        const away = comp?.competitors?.find(c => c.homeAway === 'away');
+        const status = comp?.status?.type;
+        const finished = status?.completed || false;
+        const live = status?.state === 'in';
+        const homeScore = (finished||live) ? (parseInt(home?.score?.displayValue ?? home?.score)||0) : null;
+        const awayScore = (finished||live) ? (parseInt(away?.score?.displayValue ?? away?.score)||0) : null;
+        return {
+          id:          e.id,
+          utcDate:     e.date,
+          competition: {name, short},
+          status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
+          homeTeam:    {id: home?.team?.id, name: home?.team?.displayName, crest: home?.team?.logo},
+          awayTeam:    {id: away?.team?.id, name: away?.team?.displayName, crest: away?.team?.logo},
+          score:       {fullTime: {home: homeScore, away: awayScore}}
+        };
+      };
+
+      const now = new Date();
+      const fmtDate = d => d.toISOString().slice(0,10).replace(/-/g,'');
+      const futureEnd = fmtDate(new Date(now.getFullYear(), 7, 31));
+
       const fetchESPN = async ({slug, name, short}) => {
         try {
-          const r = await fetch(
+          // 1) 완료 경기: schedule API
+          const sr = await fetch(
             `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/teams/359/schedule`,
             {signal: AbortSignal.timeout(8000)}
           );
-          if(!r.ok) return [];
-          const j = await r.json();
-          return (j.events || []).map(e => {
-            const comp = e.competitions?.[0];
-            const home = comp?.competitors?.find(c => c.homeAway === 'home');
-            const away = comp?.competitors?.find(c => c.homeAway === 'away');
-            const status = comp?.status?.type;
-            const finished = status?.completed || false;
-            const homeScore = finished ? parseInt(home?.score?.displayValue ?? home?.score) : null;
-            const awayScore = finished ? parseInt(away?.score?.displayValue ?? away?.score) : null;
-            return {
-              id:           e.id,
-              utcDate:      e.date,
-              competition:  {name, short},
-              status:       finished ? 'FINISHED' : (status?.state === 'in' ? 'IN_PLAY' : 'SCHEDULED'),
-              homeTeam:     {id: home?.team?.id, name: home?.team?.displayName, crest: home?.team?.logo},
-              awayTeam:     {id: away?.team?.id, name: away?.team?.displayName, crest: away?.team?.logo},
-              score: {
-                fullTime: {home: homeScore, away: awayScore}
-              }
-            };
-          });
+          const sj = sr.ok ? await sr.json() : {events:[]};
+          const past = (sj.events||[]).map(e => parseEvent(e, name, short));
+
+          // 2) 예정 경기: scoreboard API (오늘~시즌 종료)
+          const br = await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard?dates=${fmtDate(now)}-${futureEnd}&limit=50`,
+            {signal: AbortSignal.timeout(8000)}
+          );
+          const bj = br.ok ? await br.json() : {events:[]};
+          const future = (bj.events||[]).map(e => parseEvent(e, name, short));
+
+          return [...past, ...future];
         } catch(_){ return []; }
       };
 
@@ -83,17 +98,23 @@ export default async function handler(req, res) {
       const results = await Promise.all(ESPN_SLUGS.map(fetchESPN));
       const allMatches = results.flat();
 
-      // 아스날(팀 ID 359) 경기만 필터
-      const arsenalMatches = allMatches.filter(m =>
-        m.homeTeam?.id === '359' || m.awayTeam?.id === '359' ||
-        m.homeTeam?.name?.includes('Arsenal') || m.awayTeam?.name?.includes('Arsenal')
-      );
+      // 아스날(팀 ID 359) 경기만 필터 + 중복 제거
+      const seen = new Set();
+      const arsenalMatches = allMatches
+        .filter(m =>
+          m.homeTeam?.id === '359' || m.awayTeam?.id === '359' ||
+          m.homeTeam?.name?.includes('Arsenal') || m.awayTeam?.name?.includes('Arsenal')
+        )
+        .filter(m => {
+          if(seen.has(m.id)) return false;
+          seen.add(m.id);
+          return true;
+        });
 
       // 날짜순 정렬
       arsenalMatches.sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
 
       // 완료/예정 분리
-      const now = new Date();
       const finished = arsenalMatches.filter(m => m.status === 'FINISHED');
       const upcoming = arsenalMatches.filter(m => m.status !== 'FINISHED');
 
