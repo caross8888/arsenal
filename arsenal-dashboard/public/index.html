@@ -888,7 +888,24 @@ function openPlayerModal(p) {
     'striker':'스트라이커','centreforward':'스트라이커','centerforward':'스트라이커',
   };
   var _rawPos = (fotmob&&fotmob.position)||'';
-  var posLabel = POS_LABEL_KO[_rawPos.toLowerCase().replace(/_/g,'').replace(/-/g,'').replace(/ /g,'')] || (fotmob&&fotmob.positionLabel) || pos;
+  var _rawKey = _rawPos.toLowerCase().replace(/_/g,'').replace(/-/g,'').replace(/ /g,'');
+  // label(영문) 기반 한글 매핑 (key가 차단될 때 fallback)
+  var POS_LABEL_EN = {
+    'goalkeeper':'골키퍼','right back':'오른쪽 수비','left back':'왼쪽 수비',
+    'center back':'센터백','centre back':'센터백',
+    'right wing-back':'오른쪽 윙백','left wing-back':'왼쪽 윙백',
+    'right midfielder':'오른쪽 미드필더','left midfielder':'왼쪽 미드필더',
+    'central midfielder':'중앙 미드필더',
+    'defensive midfielder':'수비형 미드필더',
+    'attacking midfielder':'공격형 미드필더',
+    'right winger':'오른쪽 윙','left winger':'왼쪽 윙',
+    'striker':'스트라이커','centre forward':'스트라이커','center forward':'스트라이커',
+  };
+  var _labelRaw = ((fotmob&&fotmob.positionLabel)||'').toLowerCase();
+  var posLabel = POS_LABEL_KO[_rawKey]
+    || POS_LABEL_EN[_labelRaw]
+    || (fotmob&&fotmob.positionLabel)
+    || pos;
   var contractEnd = fotmob&&fotmob.contractEnd ? fotmob.contractEnd.slice(0,7) : '';
   var competitions= (fotmob&&fotmob.competitions)||(espn&&espn.competitions)||{};
   var COMP_ORDER=['PL','UCL','FAC','EFL'];
