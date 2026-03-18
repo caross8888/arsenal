@@ -227,32 +227,37 @@ def parse_stats(data):
                 {
                     'key':   item.get('key'),
                     'title': item.get('title'),
-                    'value': round((item.get('value') or 0) * 100),  # 0~1 → 0~100
+                    'value': round((item.get('value') or 0) * 100),
                 }
                 for item in traits_raw.get('items', [])
             ]
         }
 
-    # ── 기본 정보 (키, 발, 나이, 등번호) ──
+    # ── 기본 정보 (키, 발, 나이, 등번호, 국적) ──
     for info in data.get('playerInformation', []):
         title = (info.get('title') or '').lower()
         val   = info.get('value', {}) or {}
-        if 'height' in title:
-            result['height'] = val.get('fallback', '')
-        elif 'shirt' in title or 'number' in title:
-            result['jersey'] = str(val.get('numberValue', ''))
-        elif 'age' in title:
-            result['age'] = val.get('numberValue') or val.get('fallback')
-        elif 'foot' in title:
-            result['preferredFoot'] = val.get('fallback', '')
+        fallback = val.get('fallback', '') if isinstance(val, dict) else str(val)
+        number   = val.get('numberValue') if isinstance(val, dict) else None
+        if title == 'height':
+            result['height'] = fallback
+        elif title in ('shirt', 'shirt number'):
+            result['jersey'] = str(number or '')
+        elif title == 'age':
+            result['age'] = number or fallback
+        elif title in ('preferred foot', 'foot'):
+            result['preferredFoot'] = fallback
+        elif title in ('country', 'nationality', 'nation'):
+            result['nationality'] = fallback
+
+    # ── citizenship fallback ──
+    if not result.get('nationality'):
+        result['nationality'] = data.get('citizenship', '')
 
     # ── 포지션 ──
     pos_list = data.get('positionDescription', {}).get('positions', [])
     if pos_list:
         result['positionLabel'] = pos_list[0].get('strPos', {}).get('label', '')
-
-    # ── 국적 ──
-    result['nationality'] = data.get('citizenship', '')
 
     # ── 계약 만료 ──
     ce = data.get('contractEnd', {}) or {}
