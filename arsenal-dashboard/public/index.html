@@ -318,8 +318,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <!-- PLAYER DETAIL MODAL -->
 <div class="modal-overlay" id="playerModal" onclick="closeModal(event)">
   <div class="modal-sheet" id="modalSheet">
-    <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closePlayerModal()">&#10005;</button>
     <div id="modalContent"></div>
   </div>
 </div>
@@ -581,6 +579,8 @@ function renderSq(filter){
 
     var card=document.createElement('div');
     card.className='pl-card';
+    card.style.outline='2px solid '+(POS_BORDER[posGroup]||'rgba(255,255,255,0.1)');
+    card.style.outlineOffset='-1px';
     card.onclick=function(){openPlayerModal(p);};
 
     // 상단
@@ -912,7 +912,7 @@ function openPlayerModal(p) {
   compKeys=COMP_ORDER.filter(function(k){return competitions[k];});
   var extra=Object.keys(competitions).filter(function(k){return COMP_ORDER.indexOf(k)===-1;});
   compKeys=compKeys.concat(extra);
-  var compLabels={PL:'프리미어리그',UCL:'챔피언스리그',FAC:'FA컵',EFL:'카라바오컵'};
+  var compLabels={PL:'EPL',UCL:'UCL',FAC:'FA컵',EFL:'카라바오'};
   var traits      = fotmob&&fotmob.traits;
   var career      = fotmob&&fotmob.career;
   var fotStats    = fotmob&&fotmob.stats;
