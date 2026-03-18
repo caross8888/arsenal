@@ -386,8 +386,8 @@ function apiFetch(url){
 }
 function showErr(el,msg){el.innerHTML='<div class="error-state">&#9888;&#65039; '+msg+'</div>';}
 
-var CTAG={PL:'tag-pl',CL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec'};
-var CNAME={PL:'PL',CL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup'};
+var CTAG={PL:'tag-pl',CL:'tag-cl',UCL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec',EFL:'tag-ec',CS:'tag-oth',CWC:'tag-oth'};
+var CNAME={PL:'PL',CL:'UCL',UCL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup',EFL:'EFL Cup',CS:'Shield',CWC:'CWC'};
 function ctag(c){return CTAG[c]||'tag-oth';}
 function cname(c,fb){return CNAME[c]||fb||c;}
 
