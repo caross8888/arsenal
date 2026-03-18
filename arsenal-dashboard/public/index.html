@@ -888,9 +888,9 @@ function renderMatchModal(content, m, data){
       '<div class="mm-handle"></div>'+
       '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>'+
       '<div class="mm-scoreboard">'+
-        '<div class="mm-team">'+(h.crest?'<img class="mm-crest" src="'+h.crest+'" onerror="this.style.display='none'">':'')+'<div class="mm-team-name">'+(h.name||'')+'</div></div>'+
+        '<div class="mm-team">'+(h.crest?'<img class="mm-crest" src="'+h.crest+'" onerror="this.style.display=&quot;none&quot;">':'')+'<div class="mm-team-name">'+(h.name||'')+'</div></div>'+
         '<div class="mm-score" style="color:'+scoreColor+'">'+h.score+' : '+a.score+'</div>'+
-        '<div class="mm-team">'+(a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display='none'">':'')+'<div class="mm-team-name">'+(a.name||'')+'</div></div>'+
+        '<div class="mm-team">'+(a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display=&quot;none&quot;">':'')+'<div class="mm-team-name">'+(a.name||'')+'</div></div>'+
       '</div>'+
       '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
       (data.venue?'<div class="mm-venue">📍 '+data.venue+'</div>':'')+
@@ -947,8 +947,8 @@ function renderMatchModal(content, m, data){
   var aP=(data.players&&data.players.away)||[];
   if(hP.length||aP.length){
     html+='<div class="mm-tab-row">'+
-      '<button class="mm-tab active" id="mm-tab-home" onclick="mmSwitchTab('home')">'+h.name+'</button>'+
-      '<button class="mm-tab" id="mm-tab-away" onclick="mmSwitchTab('away')">'+a.name+'</button>'+
+      '<button class="mm-tab active" id="mm-tab-home" onclick="mmSwitchTab(&quot;home&quot;)">'+h.name+'</button>'+
+      '<button class="mm-tab" id="mm-tab-away" onclick="mmSwitchTab(&quot;away&quot;)">'+a.name+'</button>'+
     '</div>';
     html+=renderPlayerTable('home',hP,true)+renderPlayerTable('away',aP,false);
   }
