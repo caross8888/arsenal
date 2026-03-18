@@ -100,8 +100,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pl-photo{width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.2);position:relative;z-index:1}
 .pl-num-bg{font-family:var(--fd);font-size:48px;line-height:1;user-select:none;position:relative;z-index:0;opacity:.5}
 .pl-pos-badge{position:absolute;top:6px;left:6px;font-size:8px;padding:2px 6px;border-radius:4px;letter-spacing:.5px;z-index:2;font-weight:700}
-.pl-info{padding:10px 12px}
-.pl-name{font-weight:700;font-size:12px;line-height:1.3;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-info{padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.pl-meta{display:flex;align-items:center;gap:6px;min-height:18px}
+.pl-flag{font-size:16px;line-height:1}
+.pl-jersey{font-family:var(--fd);font-size:12px;font-weight:700;letter-spacing:1px}
+.pl-name{font-weight:700;font-size:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
 .st-box{background:var(--surface2);border-radius:6px;padding:4px 2px;text-align:center}
 .st-v{font-family:var(--fd);font-size:16px;color:var(--text);line-height:1}
@@ -309,7 +312,37 @@ var POS_KO={GK:'GK',DF:'DF',MF:'MF',FW:'FW'};
 var POS_BG={GK:'rgba(200,168,75,.18)',DF:'rgba(59,130,246,.18)',MF:'rgba(34,197,94,.18)',FW:'rgba(239,1,7,.18)'};
 var POS_BORDER={GK:'rgba(200,168,75,.5)',DF:'rgba(59,130,246,.5)',MF:'rgba(34,197,94,.5)',FW:'rgba(239,1,7,.5)'};
 var POS_TEXT={GK:'#C8A84B',DF:'#60A5FA',MF:'#22C55E',FW:'#EF0107'};
-var NAT_FLAG={'England':'\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67\uDB40\uDC7F','Spain':'\uD83C\uDDEA\uD83C\uDDF8','Brazil':'\uD83C\uDDE7\uD83C\uDDF7','Germany':'\uD83C\uDDE9\uD83C\uDDEA','France':'\uD83C\uDDEB\uD83C\uDDF7','Netherlands':'\uD83C\uDDF3\uD83C\uDDF1','Norway':'\uD83C\uDDF3\uD83C\uDDF4','Belgium':'\uD83C\uDDE7\uD83C\uDDEA','Ghana':'\uD83C\uDDEC\uD83C\uDDED','Portugal':'\uD83C\uDDF5\uD83C\uDDF9','Ukraine':'\uD83C\uDDFA\uD83C\uDDE6','Italy':'\uD83C\uDDEE\uD83C\uDDF9','Switzerland':'\uD83C\uDDE8\uD83C\uDDED','Japan':'\uD83C\uDDEF\uD83C\uDDF5','Denmark':'\uD83C\uDDE9\uD83C\uDDF0','Wales':'\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73\uDB40\uDC7F','Scotland':'\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74\uDB40\uDC7F','Sweden':'\uD83C\uDDF8\uD83C\uDDEA','USA':'\uD83C\uDDFA\uD83C\uDDF8','Argentina':'\uD83C\uDDE6\uD83C\uDDF7','Ecuador':'\uD83C\uDDEA\uD83C\uDDE8','Northern Ireland':'\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC6E\uDB40\uDC69\uDB40\uDC72\uDB40\uDC7F','Russia':'\uD83C\uDDF7\uD83C\uDDFA','Estonia':'\uD83C\uDDEA\uD83C\uDDEA'};
+var NAT_FLAG_ISO={
+  'England':'gb-eng','Scotland':'gb-sct','Wales':'gb-wls',
+  'Spain':'es','France':'fr','Germany':'de','Italy':'it',
+  'Portugal':'pt','Netherlands':'nl','Belgium':'be',
+  'Brazil':'br','Argentina':'ar','Colombia':'co','Uruguay':'uy',
+  'Norway':'no','Denmark':'dk','Sweden':'se','Finland':'fi',
+  'Poland':'pl','Czech Republic':'cz','Croatia':'hr','Switzerland':'ch',
+  'Austria':'at','Greece':'gr','Turkey':'tr','Serbia':'rs',
+  'Ukraine':'ua','Slovakia':'sk','Slovenia':'si','Hungary':'hu',
+  'Romania':'ro','Bulgaria':'bg','Albania':'al','North Macedonia':'mk',
+  'Bosnia and Herzegovina':'ba','Montenegro':'me','Kosovo':'xk',
+  'Senegal':'sn','Nigeria':'ng','Ghana':'gh','Ivory Coast':'ci',
+  'Cameroon':'cm','Mali':'ml','Morocco':'ma','Algeria':'dz',
+  'Egypt':'eg','South Africa':'za','Guinea':'gn','Gabon':'ga',
+  'Congo':'cd','Tunisia':'tn','Benin':'bj','Burkina Faso':'bf',
+  'South Korea':'kr','Japan':'jp','China':'cn','Australia':'au',
+  'United States':'us','Canada':'ca','Mexico':'mx','Jamaica':'jm',
+  'Trinidad and Tobago':'tt','Costa Rica':'cr','Ecuador':'ec',
+  'Ireland':'ie','Northern Ireland':'gb-nir','Iceland':'is',
+  'Georgia':'ge','Armenia':'am','Azerbaijan':'az',
+  'Israel':'il','Saudi Arabia':'sa','Iran':'ir','Iraq':'iq',
+  'Angola':'ao','Guinea-Bissau':'gw','Cape Verde':'cv',
+  'Mozambique':'mz','Zimbabwe':'zw','Zambia':'zm',
+  'United Kingdom':'gb',
+};
+function getNatFlag(nationality){
+  var code=NAT_FLAG_ISO[nationality];
+  if(!code)return null;
+  return 'https://flagcdn.com/24x18/'+code+'.png';
+}
+var NAT_FLAG=NAT_FLAG_ISO;
 
 function apiFetch(url){
   var sep=url.indexOf('?')>=0?'&':'?';
@@ -512,31 +545,37 @@ function renderSq(filter){
     pb.style.background=bg;pb.style.color=tc;pb.style.border='1px solid '+border;
     vis.appendChild(pb);
 
-    // 정보
+    // 정보 — 국기+등번호 / 이름
     var info=document.createElement('div');info.className='pl-info';
+
+    // 상단: 국기 + 등번호
+    var meta=document.createElement('div');meta.className='pl-meta';
+    // ESPN 데이터에서 등번호 찾기
+    var jerseyNum='';
+    if(window._espnPlayers){
+      var ep=window._espnPlayers.find(function(e){
+        return e.name===p.fullName||e.name===p.name||e.shortName===p.name;
+      });
+      if(ep&&ep.jersey) jerseyNum='#'+ep.jersey;
+    }
+    var flagEl=document.createElement('div');flagEl.className='pl-flag';
+    var flagUrl=getNatFlag(p.nationality);
+    if(flagUrl){
+      var flagImg=document.createElement('img');
+      flagImg.src=flagUrl;flagImg.alt=p.nationality;
+      flagImg.style.cssText='width:20px;height:15px;border-radius:2px;object-fit:cover;display:block';
+      flagImg.onerror=function(){this.style.display='none';};
+      flagEl.appendChild(flagImg);
+    }
+    var numEl=document.createElement('span');numEl.className='pl-jersey';
+    numEl.textContent=jerseyNum;numEl.style.color=tc;
+    meta.appendChild(flagEl);meta.appendChild(numEl);
+
+    // 이름
     var nm=document.createElement('div');nm.className='pl-name';
-    nm.textContent=(flag?flag+' ':'')+p.name;
+    nm.textContent=p.name;
 
-    // 스탯 (createElement 사용 — 한글 파싱 오류 방지)
-    var stats=document.createElement('div');stats.className='pl-stats';
-
-    var b1=document.createElement('div');b1.className='st-box';
-    var v1=document.createElement('div');v1.className='st-v';v1.style.color=tc;v1.textContent=p.goals;
-    var l1=document.createElement('div');l1.className='st-l';l1.textContent='G';
-    b1.appendChild(v1);b1.appendChild(l1);
-
-    var b2=document.createElement('div');b2.className='st-box';
-    var v2=document.createElement('div');v2.className='st-v';v2.textContent=p.assists;
-    var l2=document.createElement('div');l2.className='st-l';l2.textContent='A';
-    b2.appendChild(v2);b2.appendChild(l2);
-
-    var b3=document.createElement('div');b3.className='st-box';
-    var v3=document.createElement('div');v3.className='st-v';v3.textContent=p.appearances||0;
-    var l3=document.createElement('div');l3.className='st-l';l3.textContent='APP';
-    b3.appendChild(v3);b3.appendChild(l3);
-
-    stats.appendChild(b1);stats.appendChild(b2);stats.appendChild(b3);
-    info.appendChild(nm);info.appendChild(stats);
+    info.appendChild(meta);info.appendChild(nm);
     card.style.cursor='pointer';
     card.onclick=function(){openPlayerModal(p);};
     card.appendChild(vis);card.appendChild(info);el.appendChild(card);
@@ -770,7 +809,10 @@ function openPlayerModal(p) {
   }
   html+='<div style="flex:1;min-width:0">';
   html+='<div class="pl-modal-name">'+p.name+'</div>';
-  html+='<div class="pl-modal-sub">'+(flag?flag+' ':'')+p.nationality+' \u00b7 Arsenal FC</div>';
+  var flagImgHtml='';
+  var flagUrl2=getNatFlag(p.nationality);
+  if(flagUrl2) flagImgHtml='<img src="'+flagUrl2+'" style="width:20px;height:15px;border-radius:2px;object-fit:cover;vertical-align:middle;margin-right:5px">';
+  html+='<div class="pl-modal-sub">'+flagImgHtml+p.nationality+' \u00b7 Arsenal FC</div>';
   html+='<div class="pl-modal-sub" style="margin-top:2px">'+p.posGroup+' \u00b7 PL '+p.appearances+'\uacbd\uae30 '+p.minutes+'\ubd84</div>';
   html+='<span class="pl-modal-badge" style="background:'+bg+';color:'+tc+';border:1px solid '+border+'">ICT '+((p.ictIndex||0).toFixed(1))+'</span>';
   if(espn&&espn.jersey){
