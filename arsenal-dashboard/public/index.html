@@ -882,9 +882,12 @@ function openPlayerModal(p) {
   var prefFoot    = (fotmob&&fotmob.preferredFoot)||'';
   var posLabel    = (fotmob&&fotmob.positionLabel)||pos;
   var contractEnd = fotmob&&fotmob.contractEnd ? fotmob.contractEnd.slice(0,7) : '';
-  var competitions= (espn&&espn.competitions)||{};
-  var compKeys    = Object.keys(competitions);
-  var compLabels  = {PL:'\ud504\ub9ac\ubbf8\uc5b4\ub9ac\uadf8',UCL:'\uccc4\ud53c\uc5b8\uc2a4\ub9ac\uadf8',FAC:'FA\ucef5',EFL:'\uce74\ub77c\ubc14\uc624\ucef5'};
+  var competitions= (fotmob&&fotmob.competitions)||(espn&&espn.competitions)||{};
+  var COMP_ORDER=['PL','UCL','FAC','EFL'];
+  compKeys=COMP_ORDER.filter(function(k){return competitions[k];});
+  var extra=Object.keys(competitions).filter(function(k){return COMP_ORDER.indexOf(k)===-1;});
+  compKeys=compKeys.concat(extra);
+  var compLabels={PL:'프리미어리그',UCL:'챔피언스리그',FAC:'FA컵',EFL:'카라바오컵'};
   var traits      = fotmob&&fotmob.traits;
   var career      = fotmob&&fotmob.career;
   var fotStats    = fotmob&&fotmob.stats;
@@ -950,61 +953,36 @@ function openPlayerModal(p) {
     compKeys.forEach(function(k, i){
       var c = competitions[k];
       var hidden = i===0 ? '' : 'display:none';
-      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+hidden+';padding:0 0 8px">';
-      if(c.appearances) h += '<div style="text-align:center;font-size:10px;color:rgba(255,255,255,.35);padding:4px 0 8px">'+c.appearances+'\uacbd\uae30 \ucd9c\uc804</div>';
-
+      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+hidden+'">';
+      var mins=c.minutesPlayed||0;
+      var h_=Math.floor(mins/60); var m_=mins%60;
+      var minsStr=mins>=60?(h_+'h '+(m_>0?m_+'m':'')):(mins>0?mins+'m':'-');
+      var rating=c.avgRating?c.avgRating.toFixed(1):'-';
+      var ratingColor=c.avgRating>=8?'#22C55E':c.avgRating>=7?'#84CC16':c.avgRating>=6?'#F59E0B':'rgba(255,255,255,0.7)';
+      h += '<div class="fotmob-stat-grid">';
       if(pos==='GK'){
-        var saveRate=(c.saves||0)+(c.goalsConceded||0)>0?Math.round((c.saves||0)/((c.saves||0)+(c.goalsConceded||0))*100)+'%':'-';
-        h+='<div class="stat-grid-4" style="padding:0 16px">';
-        h+=makeStatBox(c.saves||0,'\uc120\ubc29','','#22C55E');
-        h+=makeStatBox(c.goalsConceded||0,'\uc2e4\uc810','','#EF4444');
-        h+=makeStatBox(saveRate,'\uc120\ubc29\ub960','','#22C55E');
-        h+=makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
-        h+='</div>';
-      } else if(pos==='DF'){
-        h+='<div class="stat-grid-4" style="padding:0 16px">';
-        h+=makeStatBox(c.goals||0,'\uace8','','');
-        h+=makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','#60A5FA');
-        h+=makeStatBox(c.foulsDrawn||0,'\ud30c\uc6b8\uc720\ub3c4','','');
-        h+=makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
-        h+='</div>';
-        h+='<div class="stat-grid-4" style="padding:8px 16px 0">';
-        h+=makeStatBox(c.foulsCommitted||0,'\ud30c\uc6b8','','');
-        h+=makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud305','','');
-        h+=makeStatBox(c.offsides||0,'\uc624\ud504\uc0ac\uc774\ub4dc','','');
-        h+=makeStatBox(c.redCards||0,'\ud1f4\uc7a5','','#EF4444');
-        h+='</div>';
-      } else if(pos==='MF'){
-        h+='<div class="stat-grid-4" style="padding:0 16px">';
-        h+=makeStatBox(c.goals||0,'\uace8','','');
-        h+=makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','#60A5FA');
-        h+=makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud305','/ '+(c.totalShots||0),'');
-        h+=makeStatBox(c.foulsDrawn||0,'\ud30c\uc6b8\uc720\ub3c4','','');
-        h+='</div>';
-        h+='<div class="stat-grid-4" style="padding:8px 16px 0">';
-        h+=makeStatBox(c.foulsCommitted||0,'\ud30c\uc6b8','','');
-        h+=makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
-        h+=makeStatBox(c.offsides||0,'\uc624\ud504\uc0ac\uc774\ub4dc','','');
-        h+=makeStatBox(c.redCards||0,'\ud1f4\uc7a5','','#EF4444');
-        h+='</div>';
+        var csVal=c.cleanSheets!=null?c.cleanSheets:'-';
+        var gcVal=c.goalsConceded!=null?c.goalsConceded:'-';
+        h+=makeFMStat(csVal,'클린시트',parseInt(csVal)>0?'#22C55E':'');
+        h+=makeFMStat(gcVal,'실점',parseInt(gcVal)===0?'#22C55E':'#EF4444');
+        h+=makeFMStat(rating,'평점',ratingColor);
+        h+=makeFMStat(c.appearances||0,'경기','');
+        h+=makeFMStat(minsStr,'출전시간','');
+        h+=makeFMStat(c.yellowCards||0,'경고',c.yellowCards>0?'#F59E0B':'');
+        h+=makeFMStat(c.redCards||0,'퇴장',c.redCards>0?'#EF4444':'');
+        h+=makeFMStat('','','');
       } else {
-        var shotAcc=c.totalShots>0?Math.round((c.shotsOnTarget||0)/c.totalShots*100)+'%':'-';
-        h+='<div class="stat-grid-4" style="padding:0 16px">';
-        h+=makeStatBox(c.goals||0,'\uace8','','#22C55E');
-        h+=makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','#60A5FA');
-        h+=makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud569','/ '+(c.totalShots||0),'');
-        h+=makeStatBox(shotAcc,'\uc288\ud305\uc815\ud655\ub3c4','','');
-        h+='</div>';
-        h+='<div class="stat-grid-4" style="padding:8px 16px 0">';
-        h+=makeStatBox(c.foulsDrawn||0,'\ud30c\uc6b8\uc720\ub3c4','','');
-        h+=makeStatBox(c.offsides||0,'\uc624\ud504\uc0ac\uc774\ub4dc','','');
-        h+=makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
-        h+=makeStatBox(c.redCards||0,'\ud1f4\uc7a5','','#EF4444');
-        h+='</div>';
+        h+=makeFMStat(c.goals||0,'득점','#22C55E');
+        h+=makeFMStat(c.assists||0,'어시스트','#60A5FA');
+        h+=makeFMStat(c.starts!=null?c.starts:'-','선발','');
+        h+=makeFMStat(c.appearances||0,'경기','');
+        h+=makeFMStat(minsStr,'출전시간','');
+        h+=makeFMStat(rating,'평균평점',ratingColor);
+        h+=makeFMStat(c.yellowCards||0,'경고',c.yellowCards>0?'#F59E0B':'');
+        h+=makeFMStat(c.redCards||0,'퇴장',c.redCards>0?'#EF4444':'');
       }
-
-
-      h += '</div>'; // comp-stat-panel
+      h += '</div>';
+      h += '</div>';
     });
     h += '</div>'; // stat-section
   }
