@@ -227,6 +227,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pl-modal-sub{font-size:11px;color:var(--text-muted);margin-top:4px;}
 .pl-modal-badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:20px;font-weight:700;margin-top:6px;}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+/* ── SNS ── */
+.sns-list{display:flex;flex-direction:column;gap:10px}
+.sns-post{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-decoration:none;display:block;color:inherit;-webkit-tap-highlight-color:transparent;transition:border-color .2s}
+.sns-post:active{opacity:.85}
+.sns-post-head{display:flex;align-items:center;gap:10px;padding:12px 14px 8px}
+.sns-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:14px;color:#fff;flex-shrink:0;border:1px solid rgba(239,1,7,.4)}
+.sns-author{flex:1;min-width:0}
+.sns-author-name{font-weight:700;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sns-author-label{font-size:10px;color:var(--text-muted)}
+.sns-time{font-size:10px;color:var(--text-dim);flex-shrink:0}
+.sns-body{padding:0 14px 10px}
+.sns-text{font-size:13px;line-height:1.5;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.sns-image{width:100%;max-height:200px;object-fit:cover;display:block;border-top:1px solid var(--border)}
+.sns-foot{display:flex;gap:14px;padding:8px 14px 12px;border-top:1px solid var(--border)}
+.sns-stat{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted)}
+.sns-bsky-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:rgba(0,133,255,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.25);margin-left:auto;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -290,28 +306,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="sec-head"><h1 class="sec-title">&#45684;&#49828;</h1><span class="sec-badge" id="newsBadge">&#47196;&#46377; &#51473;</span></div>
   <div class="news-list" id="newsGrid"><div class="loading-state"><div class="spinner"></div><span>&#45684;&#49828; &#47196;&#46377; &#51473;...</span></div></div>
 </section>
-<section id="live" class="section">
-  <div class="sec-head"><h1 class="sec-title">&#46972;&#51060;&#lambda;&#53412;</h1><span class="sec-badge live">&#9679; LIVE</span></div>
-  <div class="live-setup">
-    <div class="live-setup-title">&#128225; api-football.com &#50948;&#51119;</div>
-    <div class="live-setup-sub" id="setupSub">API &#53412; &#51088;&#46041; &#47196;&#46377; &#51473;...</div>
-    <div id="autoBadge" style="display:none" class="auto-badge">&#9679; &#51088;&#46041; &#50672;&#44208;&#46428;</div>
-    <div class="key-row" id="keyRow" style="display:none">
-      <input class="key-input" id="apiKeyInput" type="text" placeholder="API &#53412; &#51077;&#47141;..."/>
-      <button class="key-btn" onclick="activateWidget()">&#50672;&#44208;</button>
-    </div>
-    <div class="key-status" id="keyStatus"></div>
-  </div>
-  <div class="wgt-tabs">
-    <button class="wgt-tab active" onclick="selTab('livescore',this)">&#9889; &#46972;&#51060;&#lambda;&#53412;</button>
-    <button class="wgt-tab" onclick="selTab('fixtures',this)">&#128197; &#51068;&#51221;</button>
-    <button class="wgt-tab" onclick="selTab('results',this)">&#128203; &#44208;&#44284;</button>
-    <button class="wgt-tab" onclick="selTab('standings',this)">&#127942; &#49692;&#50948;</button>
-  </div>
-  <div class="widget-wrap">
-    <div class="widget-ph" id="widgetPh"><div class="wp-icon">&#128225;</div><div class="wp-title" id="wpTitle">&#51456;&#48708; &#51473;...</div><div class="wp-desc">&#51316;&#49884; &#54980; &#51088;&#46041;&#51004;&#47196; &#50948;&#51119;&#51060; &#54364;&#49884;&#46429;&#45768;&#45796;.</div></div>
-    <div class="widget-iframe-wrap" id="widgetIframe"></div>
-  </div>
+<section id="sns" class="section">
+  <div class="sec-head"><h1 class="sec-title">SNS</h1><span class="sec-badge" id="snsBadge">로딩 중</span></div>
+  <div class="sns-list" id="snsGrid"><div class="loading-state"><div class="spinner"></div><span>피드 로딩 중...</span></div></div>
 </section>
 </div>
 
@@ -327,13 +324,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <button class="nav-btn" onclick="showSec('squad',this)"><span class="nav-icon">&#128085;</span><span>&#49440;&#49688;&#45800;</span></button>
   <button class="nav-btn" onclick="showSec('injuries',this)"><span class="nav-icon">&#127973;</span><span>&#48512;&#49345;</span></button>
   <button class="nav-btn" onclick="showSec('news',this)"><span class="nav-icon">&#128240;</span><span>&#45684;&#49828;</span></button>
-  <button class="nav-btn" onclick="showSec('live',this)" style="position:relative"><span class="nav-icon">&#128308;</span><span>&#46972;&#51060;&#lambda;&#53412;</span><span class="nav-live-dot"></span></button>
+  <button class="nav-btn" onclick="showSec('sns',this)"><span class="nav-icon">&#129493;</span><span>SNS</span></button>
 </nav>
 <script>
 var FN='/api';
-var autoWidgetKey='';
-var curWidgetType='livescore';
-var widgetActivated=false;
 var stdExpanded=false;
 var allStandings=[];
 var allPlayers=[];
@@ -696,6 +690,68 @@ function loadNews(){
   }).catch(function(err){showErr(el,err.message);badge.textContent='\uC624\uB958';});
 }
 
+// ── SNS (Bluesky) ──
+function loadSns(){
+  var el=document.getElementById('snsGrid');
+  var badge=document.getElementById('snsBadge');
+  apiFetch(FN+'/social').then(function(data){
+    var posts=data.posts||[];
+    badge.textContent=posts.length+'개';
+    if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
+    el.innerHTML='';
+    posts.forEach(function(p){
+      var a=document.createElement('a');
+      a.className='sns-post';
+      a.href=p.url||'#';
+      a.target='_blank';
+      a.rel='noopener';
+
+      // 헤더 (아바타 + 작성자 + 시간)
+      var head=document.createElement('div');head.className='sns-post-head';
+      var av=document.createElement('div');av.className='sns-avatar';
+      av.textContent=(p.author.name||'?').charAt(0).toUpperCase();
+      var authorDiv=document.createElement('div');authorDiv.className='sns-author';
+      var nameEl=document.createElement('div');nameEl.className='sns-author-name';nameEl.textContent=p.author.name||'';
+      var labelEl=document.createElement('div');labelEl.className='sns-author-label';labelEl.textContent=p.author.label||'';
+      authorDiv.appendChild(nameEl);authorDiv.appendChild(labelEl);
+      var timeEl=document.createElement('div');timeEl.className='sns-time';timeEl.textContent=p.timeAgo||'';
+      head.appendChild(av);head.appendChild(authorDiv);head.appendChild(timeEl);
+
+      // 본문
+      var body=document.createElement('div');body.className='sns-body';
+      var txt=document.createElement('div');txt.className='sns-text';txt.textContent=p.text||'';
+      body.appendChild(txt);
+
+      // 이미지
+      var imgEl=null;
+      if(p.image){
+        imgEl=document.createElement('img');
+        imgEl.className='sns-image';
+        imgEl.src=p.image;
+        imgEl.alt='';
+        imgEl.onerror=function(){this.style.display='none';};
+      }
+
+      // 푸터 (좋아요, 리포스트, 댓글 + Bluesky 배지)
+      var foot=document.createElement('div');foot.className='sns-foot';
+      foot.innerHTML=
+        '<span class="sns-stat">♥ '+p.likes+'</span>'+
+        '<span class="sns-stat">↺ '+p.reposts+'</span>'+
+        '<span class="sns-stat">💬 '+p.replies+'</span>'+
+        '<span class="sns-bsky-badge">🦋 Bluesky</span>';
+
+      a.appendChild(head);
+      a.appendChild(body);
+      if(imgEl) a.appendChild(imgEl);
+      a.appendChild(foot);
+      el.appendChild(a);
+    });
+  }).catch(function(err){
+    el.innerHTML='<div class="loading-state">오류: '+err.message+'</div>';
+    badge.textContent='오류';
+  });
+}
+
 // ── TICKER ──
 function updateTicker(matches){
   if(!matches||!matches.length) return;
@@ -717,56 +773,12 @@ function updateTicker(matches){
   }).join('');
 }
 
-// ── LIVE WIDGET ──
-function activateWidget(key){
-  var k=key||document.getElementById('apiKeyInput').value.trim();
-  var st=document.getElementById('keyStatus');
-  if(!k||k.length<8){st.className='key-status err';st.innerHTML='\u26A0\uFE0F \uC720\uD6A8\uD55C \uD0A4\uB97C \uC785\uB825\uD574\uC8FC\uC138\uC694.';return;}
-  if(!key){st.className='key-status ok';st.innerHTML='\u2713 \uC5F0\uACB0\uB428';}
-  var wMap={livescore:'widgetLiveScore',fixtures:'widgetFixtures',results:'widgetResults',standings:'widgetStandings'};
-  var wn=wMap[curWidgetType];
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'+
-    '<link rel="stylesheet" href="https://apifootball.com/widgets/css/main-style.css"/>'+
-    '<link rel="stylesheet" href="https://apifootball.com/widgets/css/'+wn+'.css"/>'+
-    '<style>body{margin:0;padding:8px;background:#111318}</style></head><body>'+
-    '<div id="'+wn+'"></div>'+
-    '<script src="https://apifootball.com/widgets/js/jquery.js"><\/script>'+
-    '<script src="https://apifootball.com/widgets/js/jqueryGlobals.js"><\/script>'+
-    '<script src="https://apifootball.com/widgets/js/jquery.'+wn+'.js"><\/script>'+
-    '<script>$(document).ready(function(){'+
-    'var o={widgetWidth:"100%",displayCalendar:true,justLiveScore:false,APIkey:"'+k+'"};'+
-    'if("'+curWidgetType+'"!=="livescore"){o.leagueId="148";o.leagueName="Premier League";}'+
-    '$("#'+wn+'")["'+wn+'"](o);'+
-    '});<\/script></body></html>';
-  document.getElementById('widgetPh').style.display='none';
-  var iw=document.getElementById('widgetIframe');iw.style.display='block';
-  iw.innerHTML='<iframe srcdoc="'+html.replace(/"/g,'&quot;')+'" style="width:100%;min-height:420px;border:none"></iframe>';
-  widgetActivated=true;
-}
-function selTab(type,btn){
-  curWidgetType=type;
-  document.querySelectorAll('.wgt-tab').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
-  if(widgetActivated&&autoWidgetKey) activateWidget(autoWidgetKey);
-}
 
 // ── CONFIG ──
 function loadConfig(){
   fetch(FN+'/config').then(function(r){return r.json();}).then(function(cfg){
-    if(cfg.widgetKey){
-      autoWidgetKey=cfg.widgetKey;
-      document.getElementById('autoBadge').style.display='inline-flex';
-      document.getElementById('setupSub').textContent='API \uD0A4 \uC790\uB3D9 \uB85C\uB4DC\uB428';
-      document.getElementById('wpTitle').textContent='\uC704\uC82F \uC900\uBE44\uB428';
-    } else {
-      document.getElementById('setupSub').textContent='API \uD0A4\uB97C \uC785\uB825\uD574\uC8FC\uC138\uC694';
-      document.getElementById('keyRow').style.display='flex';
-      document.getElementById('wpTitle').textContent='\uD0A4 \uC785\uB825 \uD544\uC694';
-    }
-  }).catch(function(){
-    document.getElementById('setupSub').textContent='\uC218\uB3D9 \uC785\uB825 \uBAA8\uB4DC';
-    document.getElementById('keyRow').style.display='flex';
-  });
+    // widgetKey는 더 이상 사용하지 않음
+  }).catch(function(){});
 }
 
 // ── NAV ──
@@ -781,8 +793,8 @@ function showSec(id,btn){
     if(id==='squad') loadSquad();
     if(id==='injuries') loadInjuries();
     if(id==='news') loadNews();
+    if(id==='sns') loadSns();
   }
-  if(id==='live'&&autoWidgetKey&&!widgetActivated) activateWidget(autoWidgetKey);
   window.scrollTo(0,0);
 }
 function filterSq(f,btn){
