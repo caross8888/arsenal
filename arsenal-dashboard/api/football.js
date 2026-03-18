@@ -62,8 +62,8 @@ export default async function handler(req, res) {
           utcDate:     e.date,
           competition: {name, short},
           status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
-          homeTeam:    {id: home?.team?.id, name: home?.team?.displayName, crest: home?.team?.logo},
-          awayTeam:    {id: away?.team?.id, name: away?.team?.displayName, crest: away?.team?.logo},
+          homeTeam:    {id: home?.team?.id, name: home?.team?.displayName, crest: home?.team?.logo || (home?.team?.id ? `https://a.espncdn.com/i/teamlogos/soccer/500/${home.team.id}.png` : null)},
+          awayTeam:    {id: away?.team?.id, name: away?.team?.displayName, crest: away?.team?.logo || (away?.team?.id ? `https://a.espncdn.com/i/teamlogos/soccer/500/${away.team.id}.png` : null)},
           score:       {fullTime: {home: homeScore, away: awayScore}}
         };
       };
