@@ -421,11 +421,10 @@ function renderCrest(c){
 }
 
 function buildFixCard(m){
-  var ARS=57;
-  var isArsHome=m.homeTeam&&m.homeTeam.id===ARS;
+  var isArsHome = m.homeTeam && (m.homeTeam.id===57 || m.homeTeam.id==='359' || (m.homeTeam.name||'').includes('Arsenal'));
   var isLive=m.status==='IN_PLAY'||m.status==='PAUSED';
   var isDone=m.status==='FINISHED';
-  var code=m.competitionCode||'PL';
+  var code=m.competition?.short || m.competitionCode || 'PL';
   var hs=m.score&&m.score.fullTime?m.score.fullTime.home:null;
   var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
   var hasScore=hs!==null&&hs!==undefined;
@@ -451,6 +450,11 @@ function buildFixCard(m){
   return card;
 }
 
+var COMP_COLORS={
+  'PL':'#3d195b','CL':'#1a3a6b','UCL':'#1a3a6b',
+  'FAC':'#006400','EFL':'#8B0000','ELC':'#8B0000',
+  'CS':'#8B4513','CWC':'#1a1a2e'
+};
 function loadFixtures(){
   var upEl=document.getElementById('upcomingList');
   var fnEl=document.getElementById('finishedList');

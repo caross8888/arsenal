@@ -36,43 +36,68 @@ export default async function handler(req, res) {
     let result;
 
     if(type === 'fixtures'){
-      if(!KEY) return res.status(500).json({error:'FOOTBALL_DATA_KEY 없음'});
       const delay = ms => new Promise(r => setTimeout(r, ms));
-      const fetchComp = async (comp) => {
+
+      // ESPN API - 모든 대회 아스날 일정
+      const ESPN_SLUGS = [
+        {slug:'eng.1',        name:'Premier League',      short:'PL'},
+        {slug:'uefa.champions',name:'Champions League',   short:'UCL'},
+        {slug:'eng.league_cup',name:'EFL Cup',            short:'EFL'},
+        {slug:'eng.fa',        name:'FA Cup',             short:'FAC'},
+        {slug:'eng.community_shield', name:'Community Shield', short:'CS'},
+        {slug:'fifa.cwc',     name:'Club World Cup',      short:'CWC'},
+      ];
+
+      const fetchESPN = async ({slug, name, short}) => {
         try {
           const r = await fetch(
-            `${BASE}/competitions/${comp}/matches?status=SCHEDULED,TIMED,IN_PLAY,PAUSED,FINISHED&limit=38`,
-            {headers:H, signal:AbortSignal.timeout(8000)}
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/teams/359/schedule`,
+            {signal: AbortSignal.timeout(8000)}
           );
-          if(!r.ok) return {matches:[]};
-          return r.json();
-        } catch(_){ return {matches:[]}; }
+          if(!r.ok) return [];
+          const j = await r.json();
+          return (j.events || []).map(e => {
+            const comp = e.competitions?.[0];
+            const home = comp?.competitors?.find(c => c.homeAway === 'home');
+            const away = comp?.competitors?.find(c => c.homeAway === 'away');
+            const status = comp?.status?.type;
+            const finished = status?.completed || false;
+            const homeScore = finished ? parseInt(home?.score?.displayValue ?? home?.score) : null;
+            const awayScore = finished ? parseInt(away?.score?.displayValue ?? away?.score) : null;
+            return {
+              id:           e.id,
+              utcDate:      e.date,
+              competition:  {name, short},
+              status:       finished ? 'FINISHED' : (status?.state === 'in' ? 'IN_PLAY' : 'SCHEDULED'),
+              homeTeam:     {id: home?.team?.id, name: home?.team?.displayName, crest: home?.team?.logo},
+              awayTeam:     {id: away?.team?.id, name: away?.team?.displayName, crest: away?.team?.logo},
+              score: {
+                fullTime: {home: homeScore, away: awayScore}
+              }
+            };
+          });
+        } catch(_){ return []; }
       };
-      const plData = await fetchComp('PL');
-      await delay(600);
-      const clData = await fetchComp('CL');
-      await delay(600);
-      const facData = await fetchComp('FAC');
 
-      const allMatches = [plData,clData,facData]
-        .flatMap(j=>j.matches||[])
-        .filter(m=>m.homeTeam?.id===ARSENAL_ID||m.awayTeam?.id===ARSENAL_ID);
+      // 병렬 fetch
+      const results = await Promise.all(ESPN_SLUGS.map(fetchESPN));
+      const allMatches = results.flat();
 
-      const mapMatch = m=>({
-        id:m.id, competition:m.competition?.name||'',
-        competitionCode:m.competition?.code||'PL',
-        date:m.utcDate, status:m.status,
-        homeTeam:{id:m.homeTeam?.id,name:m.homeTeam?.name||'',shortName:m.homeTeam?.shortName||'',crest:m.homeTeam?.crest||''},
-        awayTeam:{id:m.awayTeam?.id,name:m.awayTeam?.name||'',shortName:m.awayTeam?.shortName||'',crest:m.awayTeam?.crest||''},
-        score:m.score, venue:m.venue||'',
-      });
+      // 아스날(팀 ID 359) 경기만 필터
+      const arsenalMatches = allMatches.filter(m =>
+        m.homeTeam?.id === '359' || m.awayTeam?.id === '359' ||
+        m.homeTeam?.name?.includes('Arsenal') || m.awayTeam?.name?.includes('Arsenal')
+      );
 
-      result = {
-        matches:[
-          ...allMatches.filter(m=>['SCHEDULED','TIMED','IN_PLAY','PAUSED'].includes(m.status)).sort((a,b)=>new Date(a.utcDate)-new Date(b.utcDate)).slice(0,10).map(mapMatch),
-          ...allMatches.filter(m=>m.status==='FINISHED').sort((a,b)=>new Date(b.utcDate)-new Date(a.utcDate)).slice(0,10).map(mapMatch),
-        ]
-      };
+      // 날짜순 정렬
+      arsenalMatches.sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
+
+      // 완료/예정 분리
+      const now = new Date();
+      const finished = arsenalMatches.filter(m => m.status === 'FINISHED');
+      const upcoming = arsenalMatches.filter(m => m.status !== 'FINISHED');
+
+      return res.json({matches: arsenalMatches, finished, upcoming});
 
     } else if(type === 'standings'){
       if(!KEY) return res.status(500).json({error:'FOOTBALL_DATA_KEY 없음'});
