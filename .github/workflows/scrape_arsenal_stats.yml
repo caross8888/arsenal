@@ -1,0 +1,33 @@
+name: Scrape Arsenal Stats
+
+on:
+  schedule:
+    - cron: '0 23 * * *'  # UTC 23:00 = 영국 BST 자정
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run scraper
+        run: python scripts/scrape_espn.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add arsenal-dashboard/public/data/players.json
+          git diff --staged --quiet || git commit -m "📊 ESPN stats update $(date +'%Y-%m-%d %H:%M UTC')"
+          git push
