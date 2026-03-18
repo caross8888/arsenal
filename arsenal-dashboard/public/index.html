@@ -771,7 +771,7 @@ if(tb2) tb2.textContent = 'Arsenal FC · ' + SEASON;
 // ── PLAYER MODAL ──
 var NAT_FLAG_MODAL = NAT_FLAG; // 동일 참조
 
-// ── PLAYER MODAL (ESPN + 레이더 차트) ──
+// ── PLAYER MODAL ──
 
 function openPlayerModal(p) {
   var modal = document.getElementById('playerModal');
@@ -786,18 +786,22 @@ function openPlayerModal(p) {
     espn = window._espnPlayers.find(function(e){
       var fn=(p.fullName||p.name).toLowerCase();
       var en=(e.name||'').toLowerCase();
-      var sn=(e.shortName||'').toLowerCase();
       var pn=(p.name||'').toLowerCase();
-      return fn===en||pn===en||pn===sn||en.includes(pn)||pn.includes(en.split(' ').pop());
+      return fn===en||pn===en||en.includes(pn)||pn.includes(en.split(' ').pop());
     });
   }
 
-  var nationality = (espn&&espn.nationality) ? espn.nationality : p.nationality||'';
+  var nationality = espn ? (espn.nationality||'') : (p.nationality||'');
   var flagUrl = getNatFlag(nationality);
-  var competitions = espn ? espn.competitions : {};
+  var competitions = (espn && espn.competitions) ? espn.competitions : {};
   var compKeys = Object.keys(competitions);
-  var compLabels = {PL:'\ud504\ub9ac\ubbf8\uc5b4\ub9ac\uadf8',UCL:'\uccc4\ud53c\uc5b8\uc2a4\ub9ac\uadf8',FAC:'FA\ucef5',EFL:'\uce74\ub77c\ubc14\uc624\ucef5'};
-  var pos = p.posGroup; // GK, DF, MF, FW
+  var compLabels = {
+    PL:'프리미어리그',
+    UCL:'쳄피언스리그',
+    FAC:'FA컵',
+    EFL:'카라바오컵'
+  };
+  var pos = p.posGroup;
 
   var h = '';
 
@@ -810,77 +814,118 @@ function openPlayerModal(p) {
   }
   h += '<div style="flex:1;min-width:0">';
   h += '<div class="pl-modal-name">'+p.name+'</div>';
-  var flagImgHtml = flagUrl ? '<img src="'+flagUrl+'" style="width:18px;height:13px;border-radius:2px;object-fit:cover;vertical-align:middle;margin-right:4px">' : '';
-  h += '<div class="pl-modal-sub">'+flagImgHtml+nationality+' \u00b7 Arsenal FC</div>';
+  var flagHtml = flagUrl ? '<img src="'+flagUrl+'" style="width:18px;height:13px;border-radius:2px;object-fit:cover;vertical-align:middle;margin-right:4px">' : '';
+  h += '<div class="pl-modal-sub">'+flagHtml+nationality+' · Arsenal FC</div>';
   h += '<div class="pl-modal-sub" style="margin-top:2px">'+pos;
-  if(espn&&espn.jersey) h += ' \u00b7 #'+espn.jersey;
+  if(espn&&espn.jersey) h += ' · #'+espn.jersey;
   h += '</div>';
+  // FPL 지표 요약 (PL)
+  if(p.xG||p.xA||p.ictIndex){
+    h += '<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">';
+    if(p.xG) h += '<span class="pl-modal-badge" style="background:'+bg+';color:'+tc+';border:1px solid '+border+'">xG '+p.xG.toFixed(1)+'</span>';
+    if(p.xA) h += '<span class="pl-modal-badge" style="background:'+bg+';color:'+tc+';border:1px solid '+border+'">xA '+p.xA.toFixed(1)+'</span>';
+    if(p.ictIndex) h += '<span class="pl-modal-badge" style="background:'+bg+';color:'+tc+';border:1px solid '+border+'">ICT '+p.ictIndex.toFixed(1)+'</span>';
+    h += '</div>';
+  }
   h += '</div></div>';
 
   // ── 대회 탭 ──
   if(compKeys.length > 0){
     h += '<div class="stat-section">';
-    h += '<div class="stat-section-title">\ub300\ud68c\ubcc4 \uc2a4\ud0ef</div>';
-    h += '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap" id="compTabs">';
-    compKeys.forEach(function(k,i){
-      var active = i===0 ? 'background:var(--red-dark);color:#fff' : 'background:var(--surface2);color:var(--text-muted)';
-      h += '<button class="comp-tab-btn" data-comp="'+k+'" onclick="switchComp(this,\''+k+'\')" style="'+active+';border:none;padding:4px 10px;border-radius:20px;font-size:10px;cursor:pointer;font-family:var(--fb)">'+compLabels[k]+'</button>';
+    h += '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">';
+    compKeys.forEach(function(k, i){
+      var active = i===0
+        ? 'background:var(--red-dark);color:#fff'
+        : 'background:var(--surface2);color:var(--text-muted)';
+      h += '<button class="comp-tab-btn" data-comp="'+k+'"'
+        +' onclick="switchCompTab(this)"'
+        +' style="'+active+';border:none;padding:4px 10px;border-radius:20px;font-size:10px;cursor:pointer;font-family:var(--fb)">'
+        +(compLabels[k]||k)+'</button>';
     });
     h += '</div>';
 
-    // 대회별 스탯 패널
     compKeys.forEach(function(k, i){
       var c = competitions[k];
-      var display = i===0 ? '' : 'display:none';
-      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+display+'">';
+      var hidden = i===0 ? '' : 'display:none';
+      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+hidden+'">';
 
-      // 포지션별 스탯 박스
+      // 출전 횟수
+      if(c.appearances){
+        h += '<div style="text-align:center;font-size:10px;color:var(--text-dim);margin-bottom:8px">'
+          +c.appearances+'경기 출전</div>';
+      }
+
+      // 포지션별 스탯 그리드
       if(pos==='GK'){
         h += '<div class="stat-grid-4">';
-        h += makeStatBox(c.saves||0,'\uc120\ubc29','','#22C55E');
-        h += makeStatBox(c.goalsConceded||0,'\uc2e4\uc810','','#EF4444');
-        h += makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
-        h += makeStatBox(c.foulsDrawn||0,'\ud30c\uc6b8\uc720\ub3c4','','');
+        h += makeStatBox(c.saves||0,'선방','','#22C55E');
+        h += makeStatBox(c.goalsConceded||0,'실점','','#EF4444');
+        h += makeStatBox(c.shotsFaced||0,'슈팅허용','','');
+        h += makeStatBox((c.saves||0)+(c.shotsFaced||0)>0
+          ? Math.round((c.saves||0)/((c.saves||0)+(c.goalsConceded||0)||1)*100)+'%'
+          : '-','선방률','','#22C55E');
+        h += '</div>';
+        h += '<div class="stat-grid-4" style="margin-top:8px">';
+        h += makeStatBox(c.yellowCards||0,'경고','','#F59E0B');
+        h += makeStatBox(c.redCards||0,'퇴장','','#EF4444');
+        h += makeStatBox(c.foulsDrawn||0,'파울유도','','');
+        h += makeStatBox(c.foulsCommitted||0,'파울','','');
         h += '</div>';
       } else if(pos==='DF'){
         h += '<div class="stat-grid-4">';
-        h += makeStatBox(c.goals||0,'\uace8','','');
-        h += makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','');
-        h += makeStatBox(c.foulsCommitted||0,'\ud30c\uc6b8','','');
-        h += makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
+        h += makeStatBox(c.goals||0,'골','','');
+        h += makeStatBox(c.assists||0,'어시스트','','#60A5FA');
+        h += makeStatBox(c.foulsDrawn||0,'파울유도','','');
+        h += makeStatBox(c.foulsCommitted||0,'파울','','');
+        h += '</div>';
+        h += '<div class="stat-grid-4" style="margin-top:8px">';
+        h += makeStatBox(c.shotsOnTarget||0,'유효슈팅','/ '+(c.totalShots||0),'');
+        h += makeStatBox(c.yellowCards||0,'경고','','#F59E0B');
+        h += makeStatBox(c.redCards||0,'퇴장','','#EF4444');
+        h += makeStatBox(c.offsides||0,'오프사이드','','');
         h += '</div>';
       } else if(pos==='MF'){
         h += '<div class="stat-grid-4">';
-        h += makeStatBox(c.goals||0,'\uace8','','');
-        h += makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','#60A5FA');
-        h += makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud305','/ '+(c.totalShots||0),'');
-        h += makeStatBox(c.yellowCards||0,'\uacbd\uace0','','#F59E0B');
+        h += makeStatBox(c.goals||0,'골','','');
+        h += makeStatBox(c.assists||0,'어시스트','','#60A5FA');
+        h += makeStatBox(c.shotsOnTarget||0,'유효슈팅','/ '+(c.totalShots||0),'');
+        h += makeStatBox(c.foulsDrawn||0,'파울유도','','');
+        h += '</div>';
+        h += '<div class="stat-grid-4" style="margin-top:8px">';
+        h += makeStatBox(c.foulsCommitted||0,'파울','','');
+        h += makeStatBox(c.yellowCards||0,'경고','','#F59E0B');
+        h += makeStatBox(c.redCards||0,'퇴장','','#EF4444');
+        h += makeStatBox(c.offsides||0,'오프사이드','','');
         h += '</div>';
       } else { // FW
         h += '<div class="stat-grid-4">';
-        h += makeStatBox(c.goals||0,'\uace8','','#22C55E');
-        h += makeStatBox(c.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8','','#60A5FA');
-        h += makeStatBox(c.shotsOnTarget||0,'\uc720\ud6a8\uc288\ud305','','');
-        h += makeStatBox(c.totalShots||0,'\uc804\uccb4\uc288\ud305','','');
+        h += makeStatBox(c.goals||0,'골','','#22C55E');
+        h += makeStatBox(c.assists||0,'어시스트','','#60A5FA');
+        h += makeStatBox(c.shotsOnTarget||0,'유효슈팅','','');
+        h += makeStatBox(c.totalShots||0,'전체슈팅','','');
+        h += '</div>';
+        h += '<div class="stat-grid-4" style="margin-top:8px">';
+        h += makeStatBox(c.totalShots>0?Math.round(c.shotsOnTarget/c.totalShots*100)+'%':'-','슈팅정확도','','');
+        h += makeStatBox(c.foulsDrawn||0,'파울유도','','');
+        h += makeStatBox(c.yellowCards||0,'경고','','#F59E0B');
+        h += makeStatBox(c.offsides||0,'오프사이드','','');
         h += '</div>';
       }
 
-      // 레이더 차트 캔버스
-      h += '<div style="display:flex;justify-content:center;padding:12px 0">';
-      h += '<canvas id="radar_'+k+'" width="200" height="200"></canvas>';
-      h += '</div>';
+      // 레이더 차트
+      h += '<canvas id="radar_'+k+'" width="220" height="200" style="display:block;margin:12px auto 0"></canvas>';
       h += '</div>'; // comp-stat-panel
     });
     h += '</div>'; // stat-section
   } else {
-    // ESPN 데이터 없으면 FPL 기반
+    // ESPN 없으면 FPL 기반
     h += '<div class="stat-section">';
-    h += '<div class="stat-section-title">FPL \ud575\uc2ec \uc9c0\ud45c (PL)</div>';
+    h += '<div class="stat-section-title">FPL 핵심 지표 (PL)</div>';
     h += '<div class="stat-grid-4">';
-    h += makeStatBox(p.goals||0,'\uace8',p.xG?'xG '+p.xG.toFixed(1):'',tc);
-    h += makeStatBox(p.assists||0,'\uc5b4\uc2dc\uc2a4\ud2b8',p.xA?'xA '+p.xA.toFixed(1):'','');
-    h += makeStatBox(((p.xG||0)/Math.max(1,p.appearances||1)).toFixed(2),'xG/\uacbd\uae30','','#22C55E');
-    h += makeStatBox(((p.xA||0)/Math.max(1,p.appearances||1)).toFixed(2),'xA/\uacbd\uae30','','#60A5FA');
+    h += makeStatBox(p.goals||0,'골',p.xG?'xG '+p.xG.toFixed(1):'',tc);
+    h += makeStatBox(p.assists||0,'어시스트',p.xA?'xA '+p.xA.toFixed(1):'','');
+    h += makeStatBox(((p.xG||0)/Math.max(1,p.appearances)).toFixed(2),'xG/경기','','#22C55E');
+    h += makeStatBox(((p.xA||0)/Math.max(1,p.appearances)).toFixed(2),'xA/경기','','#60A5FA');
     h += '</div></div>';
   }
 
@@ -888,162 +933,138 @@ function openPlayerModal(p) {
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 
-  // 레이더 차트 그리기 (첫번째 대회)
+  // 첫 대회 레이더 그리기
   if(compKeys.length > 0){
-    drawRadar(compKeys[0], competitions[compKeys[0]], pos);
+    setTimeout(function(){
+      drawRadar('radar_'+compKeys[0], competitions[compKeys[0]], pos);
+    }, 50);
   }
 }
 
-function switchComp(btn, comp){
+function switchCompTab(btn){
   var content = document.getElementById('modalContent');
+  var comp = btn.getAttribute('data-comp');
   content.querySelectorAll('.comp-tab-btn').forEach(function(b){
-    b.style.background='var(--surface2)';b.style.color='var(--text-muted)';
+    b.style.background='var(--surface2)'; b.style.color='var(--text-muted)';
   });
-  btn.style.background='var(--red-dark)';btn.style.color='#fff';
+  btn.style.background='var(--red-dark)'; btn.style.color='#fff';
   content.querySelectorAll('.comp-stat-panel').forEach(function(panel){
     panel.style.display = panel.getAttribute('data-comp')===comp ? '' : 'none';
   });
-  // 해당 대회 레이더 그리기
-  var espn = null;
-  // competitions 데이터는 현재 모달에서 가져와야 함
-  // canvas 다시 그리기
+  // 레이더 차트 그리기
   var canvas = document.getElementById('radar_'+comp);
-  if(canvas && canvas._data){
-    drawRadarOnCanvas(canvas, canvas._data.labels, canvas._data.values, canvas._data.color);
+  if(canvas && canvas._radarData){
+    drawRadarOnCanvas(canvas, canvas._radarData.labels, canvas._radarData.values, canvas._radarData.color);
   }
 }
 
 // ── 레이더 차트 ──
-function drawRadar(compKey, compData, pos){
-  var canvas = document.getElementById('radar_'+compKey);
+function drawRadar(canvasId, c, pos){
+  var canvas = document.getElementById(canvasId);
   if(!canvas) return;
-
-  var radarConfig = getRadarConfig(compData, pos);
-  canvas._data = {labels: radarConfig.labels, values: radarConfig.values, color: radarConfig.color};
-  drawRadarOnCanvas(canvas, radarConfig.labels, radarConfig.values, radarConfig.color);
+  var cfg = getRadarConfig(c, pos);
+  canvas._radarData = cfg;
+  drawRadarOnCanvas(canvas, cfg.labels, cfg.values, cfg.color);
 }
 
 function getRadarConfig(c, pos){
+  var apps = Math.max(1, c.appearances||1);
   if(pos==='GK'){
-    var saves = c.saves||0;
-    var conceded = c.goalsConceded||0;
-    var saveRate = saves+conceded>0 ? Math.round(saves/(saves+conceded)*100) : 0;
+    var total = (c.saves||0)+(c.goalsConceded||0);
+    var saveRate = total>0 ? Math.round((c.saves||0)/total*100) : 0;
     return {
-      labels:['\uc120\ubc29\ub960','\uc2e4\uc810\uad00\ub9ac','\ud30c\uc6b8\uc720\ub3c4','\uce74\ub4dc\uad00\ub9ac','\uc120\ubc29\ud69f\uc218'],
-      values:[saveRate, Math.max(0,100-conceded*10), Math.min(100,(c.foulsDrawn||0)*20), Math.max(0,100-(c.yellowCards||0)*30-(c.redCards||0)*60), Math.min(100,saves*5)],
+      labels:['선방률','실점관리','파울유도','카드관리','평규선방'],
+      values:[saveRate, Math.max(0,100-Math.min(10,c.goalsConceded||0)*10), Math.min(100,(c.foulsDrawn||0)/apps*30), Math.max(0,100-(c.yellowCards||0)*20-(c.redCards||0)*50), Math.min(100,(c.saves||0)/apps*15)],
       color:'#22C55E'
     };
   } else if(pos==='DF'){
     return {
-      labels:['\uacf5\uaca9\ucc38\uc5ec','\uc5b4\uc2dc\uc2a4\ud2b8','\ud30c\uc6b8\uc720\ub3c4','\uce74\ub4dc\uad00\ub9ac','\uc218\ube44\ubb34\uc2e4'],
-      values:[Math.min(100,(c.goals||0)*40), Math.min(100,(c.assists||0)*40), Math.min(100,(c.foulsDrawn||0)*20), Math.max(0,100-(c.yellowCards||0)*25-(c.redCards||0)*50), Math.max(0,100-(c.foulsCommitted||0)*10)],
+      labels:['공격참여','어시스트','파울유도','카드관리','파울자제'],
+      values:[Math.min(100,(c.goals||0)/apps*60), Math.min(100,(c.assists||0)/apps*60), Math.min(100,(c.foulsDrawn||0)/apps*25), Math.max(0,100-(c.yellowCards||0)*20-(c.redCards||0)*50), Math.max(0,100-(c.foulsCommitted||0)/apps*15)],
       color:'#60A5FA'
     };
   } else if(pos==='MF'){
+    var shotAcc = c.totalShots>0 ? Math.round((c.shotsOnTarget||0)/c.totalShots*100) : 0;
     return {
-      labels:['\uace8','\uc5b4\uc2dc\uc2a4\ud2b8','\uc288\ud305\uc815\ud655\ub3c4','\ud30c\uc6b8\uc720\ub3c4','\uce74\ub4dc\uad00\ub9ac'],
-      values:[Math.min(100,(c.goals||0)*30), Math.min(100,(c.assists||0)*30), c.totalShots>0?Math.round((c.shotsOnTarget||0)/(c.totalShots)*100):0, Math.min(100,(c.foulsDrawn||0)*20), Math.max(0,100-(c.yellowCards||0)*25-(c.redCards||0)*50)],
+      labels:['골','어시스트','슈팅정확도','파울유도','카드관리'],
+      values:[Math.min(100,(c.goals||0)/apps*50), Math.min(100,(c.assists||0)/apps*50), shotAcc, Math.min(100,(c.foulsDrawn||0)/apps*25), Math.max(0,100-(c.yellowCards||0)*20-(c.redCards||0)*50)],
       color:'#A78BFA'
     };
   } else { // FW
+    var shotAcc2 = c.totalShots>0 ? Math.round((c.shotsOnTarget||0)/c.totalShots*100) : 0;
     return {
-      labels:['\uace8','\uc5b4\uc2dc\uc2a4\ud2b8','\uc288\ud305\uc815\ud655\ub3c4','\uacf5\uaca9\ud3ec\uc778\ud2b8','\uc81c\uc2a4\uccd0'],
-      values:[Math.min(100,(c.goals||0)*20), Math.min(100,(c.assists||0)*20), c.totalShots>0?Math.round((c.shotsOnTarget||0)/c.totalShots*100):0, Math.min(100,((c.goals||0)+(c.assists||0))*15), Math.min(100,(c.foulsDrawn||0)*15)],
+      labels:['골','어시스트','슈팅정확도','공격포인트','파울유도'],
+      values:[Math.min(100,(c.goals||0)/apps*40), Math.min(100,(c.assists||0)/apps*50), shotAcc2, Math.min(100,((c.goals||0)+(c.assists||0))/apps*30), Math.min(100,(c.foulsDrawn||0)/apps*25)],
       color:'#EF4444'
     };
   }
 }
 
-function drawRadarOnCanvas(canvas, labels, values, color){
+function drawRadarOnCanvas(canvas, labels, values, hexColor){
   var ctx = canvas.getContext('2d');
-  var W = canvas.width, H = canvas.height;
-  var cx = W/2, cy = H/2;
-  var r = Math.min(W,H)/2 - 30;
-  var n = labels.length;
+  var W=canvas.width, H=canvas.height;
+  var cx=W/2, cy=H/2+5;
+  var r=Math.min(W,H)/2-32;
+  var n=labels.length;
   ctx.clearRect(0,0,W,H);
 
-  // 배경 동심원
-  var isDark = document.documentElement.classList.contains('dark') ||
+  var isDark = document.body.style.background !== 'rgb(255,255,255)' ||
                window.matchMedia('(prefers-color-scheme:dark)').matches;
-  var gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-  var textColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
+  var gridC = 'rgba(128,128,128,0.15)';
+  var textC = 'rgba(150,150,150,0.9)';
+  var dotC  = hexColor;
 
-  [0.25,0.5,0.75,1].forEach(function(scale){
+  // 동심원
+  [0.25,0.5,0.75,1].forEach(function(s){
     ctx.beginPath();
     for(var i=0;i<n;i++){
-      var angle = (i/n)*Math.PI*2 - Math.PI/2;
-      var x = cx + Math.cos(angle)*r*scale;
-      var y = cy + Math.sin(angle)*r*scale;
-      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      var a=(i/n)*Math.PI*2-Math.PI/2;
+      i===0?ctx.moveTo(cx+Math.cos(a)*r*s,cy+Math.sin(a)*r*s):ctx.lineTo(cx+Math.cos(a)*r*s,cy+Math.sin(a)*r*s);
     }
     ctx.closePath();
-    ctx.strokeStyle = gridColor;
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke();
   });
 
-  // 축선
+  // 축
   for(var i=0;i<n;i++){
-    var angle = (i/n)*Math.PI*2 - Math.PI/2;
-    ctx.beginPath();
-    ctx.moveTo(cx,cy);
-    ctx.lineTo(cx+Math.cos(angle)*r, cy+Math.sin(angle)*r);
-    ctx.strokeStyle = gridColor;
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    var a=(i/n)*Math.PI*2-Math.PI/2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+    ctx.strokeStyle=gridC;ctx.lineWidth=1;ctx.stroke();
   }
+
+  // hex → rgb
+  var big=parseInt(hexColor.slice(1),16);
+  var rr=(big>>16)&255, gg=(big>>8)&255, bb=big&255;
 
   // 데이터 영역
   ctx.beginPath();
   for(var i=0;i<n;i++){
-    var angle = (i/n)*Math.PI*2 - Math.PI/2;
-    var val = Math.min(100,Math.max(0,values[i]||0))/100;
-    var x = cx + Math.cos(angle)*r*val;
-    var y = cy + Math.sin(angle)*r*val;
-    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    var a=(i/n)*Math.PI*2-Math.PI/2;
+    var v=Math.min(100,Math.max(0,values[i]||0))/100;
+    var x=cx+Math.cos(a)*r*v, y=cy+Math.sin(a)*r*v;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
   }
   ctx.closePath();
-  ctx.fillStyle = color.replace(')',',0.25)').replace('rgb(','rgba(').replace('#','rgba(').replace(/rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/i, function(m,r,g,b){return 'rgba('+parseInt(r,16)+','+parseInt(g,16)+','+parseInt(b,16)+',';});
-
-  // hex to rgba 처리
-  if(color.startsWith('#')){
-    var big = parseInt(color.slice(1),16);
-    var rr=(big>>16)&255, gg=(big>>8)&255, bb=big&255;
-    ctx.fillStyle = 'rgba('+rr+','+gg+','+bb+',0.25)';
-    ctx.strokeStyle = 'rgba('+rr+','+gg+','+bb+',0.9)';
-  } else {
-    ctx.fillStyle = color;
-    ctx.strokeStyle = color;
-  }
+  ctx.fillStyle='rgba('+rr+','+gg+','+bb+',0.2)';
   ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  ctx.strokeStyle='rgba('+rr+','+gg+','+bb+',0.85)';
+  ctx.lineWidth=2; ctx.stroke();
 
   // 점
   for(var i=0;i<n;i++){
-    var angle = (i/n)*Math.PI*2 - Math.PI/2;
-    var val = Math.min(100,Math.max(0,values[i]||0))/100;
-    var x = cx+Math.cos(angle)*r*val;
-    var y = cy+Math.sin(angle)*r*val;
-    ctx.beginPath();
-    ctx.arc(x,y,3,0,Math.PI*2);
-    if(color.startsWith('#')){
-      var big=parseInt(color.slice(1),16);
-      ctx.fillStyle='rgba('+((big>>16)&255)+','+((big>>8)&255)+','+(big&255)+',0.9)';
-    }
-    ctx.fill();
+    var a=(i/n)*Math.PI*2-Math.PI/2;
+    var v=Math.min(100,Math.max(0,values[i]||0))/100;
+    ctx.beginPath();ctx.arc(cx+Math.cos(a)*r*v,cy+Math.sin(a)*r*v,3,0,Math.PI*2);
+    ctx.fillStyle='rgba('+rr+','+gg+','+bb+',0.9)';ctx.fill();
   }
 
   // 라벨
-  ctx.font = '10px sans-serif';
-  ctx.fillStyle = textColor;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.font='bold 9px sans-serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
   for(var i=0;i<n;i++){
-    var angle = (i/n)*Math.PI*2 - Math.PI/2;
-    var lx = cx+Math.cos(angle)*(r+18);
-    var ly = cy+Math.sin(angle)*(r+18);
-    ctx.fillText(labels[i], lx, ly);
+    var a=(i/n)*Math.PI*2-Math.PI/2;
+    ctx.fillStyle=textC;
+    ctx.fillText(labels[i], cx+Math.cos(a)*(r+20), cy+Math.sin(a)*(r+20));
   }
 }
 
@@ -1064,15 +1085,11 @@ function closeModal(e){
 }
 
 // ESPN 데이터 로드
-var _espnPlayers=null;
 function loadESPNStats(){
   fetch('/data/players.json')
     .then(function(r){return r.json();})
-    .then(function(d){
-      window._espnPlayers=d.players;
-      console.log('ESPN loaded:',d.players.length,'\uba85');
-    })
-    .catch(function(e){console.log('ESPN not available:',e);});
+    .then(function(d){window._espnPlayers=d.players;})
+    .catch(function(){});
 }
 
 
