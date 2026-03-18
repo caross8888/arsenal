@@ -75,7 +75,7 @@ def scrape():
                         'shortName': p.get('shortName', name),
                         'position': pos.get('abbreviation', ''),
                         'positionName': pos.get('name', ''),
-                        'nationality': citizen.get('displayName', ''),
+                        'nationality': (p.get('citizenship') or citizen.get('displayName') or p.get('birthPlace',{}).get('country','') or ''),
                         'nationalityCode': citizen.get('abbreviation', ''),
                         'age': p.get('age'),
                         'dateOfBirth': birth,
