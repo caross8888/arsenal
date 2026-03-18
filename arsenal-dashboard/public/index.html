@@ -436,18 +436,13 @@ function buildFixCard(m){
   var hs=m.score&&m.score.fullTime?m.score.fullTime.home:null;
   var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
   var hasScore=hs!==null&&hs!==undefined&&isDone;
-
-  // 승패 판별 & 배경색
-  var resultCls='';
-  var resultBg='';
+  var resultCls=''; var resultBg='';
   if(isDone&&hasScore){
-    var arsScore=isArsHome?hs:as_;
-    var oppScore=isArsHome?as_:hs;
+    var arsScore=isArsHome?hs:as_; var oppScore=isArsHome?as_:hs;
     if(arsScore>oppScore){resultCls='result-win';resultBg='rgba(34,197,94,0.08)';}
     else if(arsScore===oppScore){resultCls='result-draw';resultBg='rgba(245,158,11,0.08)';}
     else{resultCls='result-loss';resultBg='rgba(239,68,68,0.08)';}
   }
-
   var card=document.createElement('div');
   card.className='fix-card '+(isLive?'live-match':isDone?'finished '+resultCls:'upcoming');
   if(resultBg) card.style.background=resultBg;
@@ -464,10 +459,8 @@ function buildFixCard(m){
   var sb=document.createElement('div');sb.className='fix-score-box';
   if(hasScore){
     var sd=document.createElement('div');sd.className='fix-score';
-    var arsScore=isArsHome?hs:as_;
-    var oppScore=isArsHome?as_:hs;
-    var scoreColor=arsScore>oppScore?'#22C55E':arsScore===oppScore?'#F59E0B':'#EF4444';
-    sd.style.color=scoreColor;
+    var arsS=isArsHome?hs:as_; var oppS=isArsHome?as_:hs;
+    sd.style.color=arsS>oppS?'#22C55E':arsS===oppS?'#F59E0B':'#EF4444';
     sd.textContent=hs+' : '+as_;sb.appendChild(sd);
   } else if(isLive){
     var ld=document.createElement('div');ld.className='fix-score';ld.style.color='var(--green)';
@@ -492,37 +485,22 @@ function loadFixtures(){
     badge.textContent='ESPN';
     var finishedAll=(data.finished||[]).slice().reverse();
     var upcomingAll=data.upcoming||[];
-
-    function renderList(el, showList, allList){
+    function renderList(el,showList,allList){
       el.innerHTML='';
-      if(!showList.length){
-        el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">\ub370\uc774\ud130 \uc5c6\uc74c</div>';
-        return;
-      }
+      if(!showList.length){el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">\ub370\uc774\ud130 \uc5c6\uc74c</div>';return;}
       var expanded=false;
       showList.forEach(function(m){el.appendChild(buildFixCard(m));});
       if(allList.length>showList.length){
-        var btn=document.createElement('button');
-        btn.className='more-fix-btn';
+        var btn=document.createElement('button');btn.className='more-fix-btn';
         btn.textContent='\u2193 \ub354\ubcf4\uae30 ('+(allList.length-showList.length)+'\uac1c \ub354)';
         btn.onclick=function(){
-          if(!expanded){
-            expanded=true;
-            el.innerHTML='';
-            allList.forEach(function(m){el.appendChild(buildFixCard(m));});
-            var colBtn=document.createElement('button');
-            colBtn.className='more-fix-btn';
-            colBtn.textContent='\u2191 \uc811\uae30';
-            colBtn.onclick=function(){expanded=false;renderList(el,showList,allList);};
-            el.appendChild(colBtn);
-          }
-        };
-        el.appendChild(btn);
-      }
+          if(!expanded){expanded=true;el.innerHTML='';allList.forEach(function(m){el.appendChild(buildFixCard(m));});
+            var col=document.createElement('button');col.className='more-fix-btn';col.textContent='\u2191 \uc811\uae30';
+            col.onclick=function(){expanded=false;renderList(el,showList,allList);};el.appendChild(col);}
+        };el.appendChild(btn);}
     }
-
-    renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
-    renderList(fnEl, finishedAll.slice(0,5), finishedAll);
+    renderList(upEl,upcomingAll.slice(0,3),upcomingAll);
+    renderList(fnEl,finishedAll.slice(0,5),finishedAll);
     updateTicker(data.matches||[]);
   }).catch(function(err){showErr(upEl,err.message);badge.textContent='\uc624\ub958';});
 }
@@ -904,6 +882,12 @@ function openPlayerModal(p) {
   var competitions= (espn&&espn.competitions)||{};
   var compKeys    = Object.keys(competitions);
   var compLabels  = {PL:'\ud504\ub9ac\ubbf8\uc5b4\ub9ac\uadf8',UCL:'\uccc4\ud53c\uc5b8\uc2a4\ub9ac\uadf8',FAC:'FA\ucef5',EFL:'\uce74\ub77c\ubc14\uc624\ucef5'};
+  // 대회 순서 고정: PL → UCL → FAC → EFL
+  var COMP_ORDER = ['PL','UCL','FAC','EFL'];
+  compKeys = COMP_ORDER.filter(function(k){ return competitions[k]; });
+  // 없는 대회는 제외하되 나머지도 추가
+  var extraKeys = Object.keys(competitions).filter(function(k){ return COMP_ORDER.indexOf(k)===-1; });
+  compKeys = compKeys.concat(extraKeys);
   var traits      = fotmob&&fotmob.traits;
   var career      = fotmob&&fotmob.career;
   var fotStats    = fotmob&&fotmob.stats;
