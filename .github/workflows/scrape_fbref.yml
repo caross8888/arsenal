@@ -2,16 +2,15 @@ name: Scrape FBref Stats
 
 on:
   schedule:
-    # UTC 23:00 = 영국 BST 자정 (여름/시즌 중)
-    # 경기 종료 후 FBref 데이터 업데이트 시간 고려
-    - cron: '0 23 * * *'
-  workflow_dispatch:  # 수동 실행 버튼
+    - cron: '0 23 * * *'  # UTC 23:00 = 영국 BST 자정
+  workflow_dispatch:
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -25,8 +24,29 @@ jobs:
       - name: Install dependencies
         run: pip install soccerdata pandas
 
+      - name: Pre-download TLS library
+        run: |
+          # soccerdata가 필요로 하는 TLS 라이브러리 미리 다운로드
+          mkdir -p /home/runner/soccerdata/lib
+          LIB_VER="1.13.1"
+          LIB_URL="https://github.com/bogdanfinn/tls-client/releases/download/v${LIB_VER}/tls-client-linux-amd64-v${LIB_VER}.so"
+          echo "Downloading TLS library..."
+          wget -q --timeout=60 --tries=3 -O /tmp/tls-client.so "$LIB_URL" || \
+          wget -q --timeout=60 --tries=3 -O /tmp/tls-client.so \
+            "https://github.com/bogdanfinn/tls-client/releases/download/v${LIB_VER}/tls-client-ubuntu-amd64-v${LIB_VER}.so"
+          echo "Download complete: $(ls -lh /tmp/tls-client.so)"
+          # soccerdata가 찾는 경로에 복사
+          python3 -c "
+          import soccerdata._common as c
+          import os, shutil
+          lib_dir = os.path.expanduser('~/soccerdata')
+          os.makedirs(lib_dir, exist_ok=True)
+          print('soccerdata dir:', lib_dir)
+          " || true
+
       - name: Run scraper
         run: python scripts/scrape_fbref.py
+        timeout-minutes: 10
 
       - name: Commit and push data
         run: |
