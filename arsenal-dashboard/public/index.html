@@ -94,21 +94,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .f-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:11px;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .f-btn.active{background:var(--red);border-color:var(--red);color:#fff}
 .sq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.pl-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;display:flex;flex-direction:column}
-.pl-visual{height:120px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;flex-shrink:0}
-.pl-visual::before{content:'';position:absolute;bottom:0;left:0;right:0;height:28px;background:linear-gradient(transparent,var(--surface))}
-.pl-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.2);position:relative;z-index:1}
-.pl-num-bg{font-family:var(--fd);font-size:48px;line-height:1;user-select:none;position:relative;z-index:0;opacity:.5}
-.pl-pos-badge{position:absolute;top:6px;left:6px;font-size:8px;padding:2px 6px;border-radius:4px;letter-spacing:.5px;z-index:2;font-weight:700}
-.pl-info{padding:8px 10px 12px;display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center}
-.pl-meta{display:flex;align-items:center;justify-content:center;gap:6px;min-height:22px}
-.pl-flag{font-size:16px;line-height:1}
-.pl-jersey{font-family:var(--fd);font-size:18px;font-weight:900;letter-spacing:0}
-.pl-name{font-weight:700;font-size:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;width:100%}
-.pl-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
-.st-box{background:var(--surface2);border-radius:6px;padding:4px 2px;text-align:center}
-.st-v{font-family:var(--fd);font-size:16px;color:var(--text);line-height:1}
-.st-l{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-top:1px}
+.pl-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s}
+.pl-card:active{transform:scale(.98)}
+.pl-top{display:grid;grid-template-columns:1fr 62px;height:90px}
+.pl-left{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.pl-left.fw{background:rgba(239,1,7,.75)}
+.pl-left.mf{background:rgba(34,197,94,.60)}
+.pl-left.df{background:rgba(59,130,246,.60)}
+.pl-left.gk{background:rgba(234,179,8,.65)}
+.pl-pos-txt{font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.95);text-transform:uppercase}
+.pl-num-txt{font-family:var(--fd);font-size:32px;font-weight:900;line-height:1;color:#fff;opacity:.95}
+.pl-photo-box{width:62px;height:90px;overflow:hidden;background:var(--surface2)}
+.pl-photo-box img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+.pl-photo-box.no-img{display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:18px}
+.pl-card-divider{height:1px;background:var(--border)}
+.pl-card-name{padding:7px 8px;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
 .inj-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
 .inj-row:last-child{border-bottom:none}
 .inj-pos-badge{width:38px;height:38px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;color:var(--text-muted)}
@@ -564,89 +564,69 @@ function loadSquad(){
 function renderSq(filter){
   var el=document.getElementById('sqGrid');
   var list=filter==='all'?allPlayers:allPlayers.filter(function(p){return p.posGroup===filter;});
-  if(!list.length){el.innerHTML='<div class="loading-state" style="grid-column:1/-1">\uc120\uc218 \ub370\uc774\ud130 \uc5c6\uc74c</div>';return;}
+  if(!list.length){el.innerHTML='<div class="loading-state" style="grid-column:1/-1">선수 데이터 없음</div>';return;}
   el.innerHTML='';
+
+  // positionKey → 포지션 약자 변환
+  var POS_SHORT={
+    'keeper_long':'GK','goalkeeper':'GK',
+    'rightback':'RB','leftback':'LB','centerback':'CB','centreback':'CB',
+    'right_wing_back':'RWB','left_wing_back':'LWB',
+    'centermidfielder':'CM','centremidfielder':'CM',
+    'centerdefensivemidfielder':'DM','centredefensivemidfielder':'DM','defensivemidfielder':'DM',
+    'attackingmidfielder':'AM','centreattackingmidfielder':'AM',
+    'rightmidfielder':'RM','leftmidfielder':'LM',
+    'rightwinger':'RW','leftwinger':'LW','rightwing':'RW','leftwing':'LW',
+    'right_wing_back':'RWB','left_wing_back':'LWB',
+    'striker':'ST','centreforward':'ST','centerforward':'ST',
+  };
+  var POS_GROUP_CLS={GK:'gk',DF:'df',MF:'mf',FW:'fw'};
+
   list.forEach(function(p){
-    var flag=NAT_FLAG[p.nationality]||'';
-    var bg=POS_BG[p.posGroup]||'rgba(100,100,100,.15)';
-    var border=POS_BORDER[p.posGroup]||'var(--border)';
-    var tc=POS_TEXT[p.posGroup]||'var(--text-muted)';
+    var posKey=(p.position||'').toLowerCase().replace(/_/g,'').replace(/-/g,'').replace(/ /g,'');
+    var posShort=POS_SHORT[posKey]||p.posGroup||'';
+    var leftCls=POS_GROUP_CLS[p.posGroup]||'df';
+    var jersey=p.jersey||'';
 
-    var card=document.createElement('div');card.className='pl-card';
+    var card=document.createElement('div');
+    card.className='pl-card';
+    card.onclick=function(){openPlayerModal(p);};
 
-    // 비주얼 (포지션 색상 배경)
-    var vis=document.createElement('div');vis.className='pl-visual';
-    vis.style.background='linear-gradient(160deg,'+bg+' 0%,rgba(17,19,24,.95) 100%)';
-    vis.style.borderBottom='1px solid '+border;
+    // 상단
+    var top=document.createElement('div');top.className='pl-top';
 
+    // 좌측 (포지션+번호)
+    var left=document.createElement('div');left.className='pl-left '+leftCls;
+    var posEl=document.createElement('span');posEl.className='pl-pos-txt';posEl.textContent=posShort;
+    var numEl=document.createElement('span');numEl.className='pl-num-txt';numEl.textContent=jersey||'–';
+    left.appendChild(posEl);left.appendChild(numEl);
+
+    // 우측 (사진)
+    var photoBox=document.createElement('div');
     if(p.photo){
-      var img=document.createElement('img');img.className='pl-photo';img.src=p.photo;img.alt=p.name;
+      photoBox.className='pl-photo-box';
+      var img=document.createElement('img');img.src=p.photo;img.alt=p.name;
       img.onerror=function(){
-        var fb=document.createElement('div');fb.className='pl-num-bg';
-        fb.textContent=p.posGroup;fb.style.color=tc;
-        this.parentNode.replaceChild(fb,this);
+        photoBox.className='pl-photo-box no-img';
+        photoBox.innerHTML='⚽';
+        photoBox.removeChild(img);
       };
-      vis.appendChild(img);
+      photoBox.appendChild(img);
     } else {
-      var num=document.createElement('div');num.className='pl-num-bg';
-      num.textContent=p.posGroup;num.style.color=tc;
-      vis.appendChild(num);
+      photoBox.className='pl-photo-box no-img';
+      photoBox.textContent='⚽';
     }
 
-    // 포지션 배지
-    var pb=document.createElement('div');pb.className='pl-pos-badge';
-    pb.textContent=p.posGroup;
-    pb.style.background=bg;pb.style.color=tc;pb.style.border='1px solid '+border;
-    vis.appendChild(pb);
+    top.appendChild(left);top.appendChild(photoBox);
 
-    // 정보 — 국기+등번호 / 이름
-    var info=document.createElement('div');info.className='pl-info';
-
-    // 상단: 국기 + 등번호
-    var meta=document.createElement('div');meta.className='pl-meta';
-    // ESPN 데이터에서 등번호 찾기
-    var jerseyNum='';
-    // Fotmob players.json에서 jersey 우선
-    if(window._fotmobPlayers){
-      var normalize2=function(s){return(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');};
-      var fm2=window._fotmobPlayers.find(function(f){
-        return normalize2(f.name)===normalize2(p.name)||normalize2(f.name)===normalize2(p.fullName||p.name);
-      });
-      if(fm2&&fm2.jersey) jerseyNum=fm2.jersey;
-    }
-    if(!jerseyNum&&window._espnPlayers){
-      var ep=window._espnPlayers.find(function(e){
-        var fn=(p.fullName||p.name).toLowerCase();
-        var en=(e.name||'').toLowerCase();
-        var sn=(e.shortName||'').toLowerCase();
-        var pn=(p.name||'').toLowerCase();
-        return fn===en||pn===en||pn===sn||
-               en.includes(pn)||pn.includes(en.split(' ').pop());
-      });
-      if(ep&&ep.jersey) jerseyNum=ep.jersey;
-    }
-    var flagEl=document.createElement('div');flagEl.className='pl-flag';
-    var flagUrl=getNatFlag(p.nationality);
-    if(flagUrl){
-      var flagImg=document.createElement('img');
-      flagImg.src=flagUrl;flagImg.alt=p.nationality;
-      flagImg.style.cssText='width:28px;height:21px;border-radius:3px;object-fit:cover;display:block';
-      flagImg.onerror=function(){this.style.display='none';};
-      flagEl.appendChild(flagImg);
-    }
-    var numEl=document.createElement('span');numEl.className='pl-jersey';
-    numEl.textContent=jerseyNum;numEl.style.color=tc;
-    if(!jerseyNum) numEl.style.display='none';
-    meta.appendChild(flagEl);meta.appendChild(numEl);
+    // 구분선
+    var div=document.createElement('div');div.className='pl-card-divider';
 
     // 이름
-    var nm=document.createElement('div');nm.className='pl-name';
-    nm.textContent=p.name;
+    var nm=document.createElement('div');nm.className='pl-card-name';nm.textContent=p.name;
 
-    info.appendChild(meta);info.appendChild(nm);
-    card.style.cursor='pointer';
-    card.onclick=function(){openPlayerModal(p);};
-    card.appendChild(vis);card.appendChild(info);el.appendChild(card);
+    card.appendChild(top);card.appendChild(div);card.appendChild(nm);
+    el.appendChild(card);
   });
 }
 
