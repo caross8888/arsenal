@@ -421,40 +421,57 @@ function renderCrest(c){
 }
 
 function buildFixCard(m){
-  var isArsHome = m.homeTeam && (m.homeTeam.id===57 || m.homeTeam.id==='359' || (m.homeTeam.name||'').includes('Arsenal'));
+  var ARSENAL_ESPN='359';
+  var isArsHome=m.homeTeam&&(m.homeTeam.id===57||m.homeTeam.id===ARSENAL_ESPN||(m.homeTeam.name||'').includes('Arsenal'));
   var isLive=m.status==='IN_PLAY'||m.status==='PAUSED';
   var isDone=m.status==='FINISHED';
-  var code=m.competition?.short || m.competitionCode || 'PL';
+  var compObj=m.competition||{};
+  var code=(compObj.short)||m.competitionCode||'PL';
+  var compName=(compObj.name)||code;
   var hs=m.score&&m.score.fullTime?m.score.fullTime.home:null;
   var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
-  var hasScore=hs!==null&&hs!==undefined;
+  var hasScore=hs!==null&&hs!==undefined&&isDone;
+  var resultCls=''; var resultBg='';
+  if(isDone&&hasScore){
+    var arsS=isArsHome?hs:as_; var oppS=isArsHome?as_:hs;
+    if(arsS>oppS){resultCls='result-win';resultBg='rgba(34,197,94,0.08)';}
+    else if(arsS===oppS){resultCls='result-draw';resultBg='rgba(245,158,11,0.08)';}
+    else{resultCls='result-loss';resultBg='rgba(239,68,68,0.08)';}
+  }
   var card=document.createElement('div');
-  card.className='fix-card '+(isLive?'live-match':isDone?'finished':'upcoming');
+  card.className='fix-card '+(isLive?'live-match':isDone?'finished '+resultCls:'upcoming');
+  if(resultBg) card.style.background=resultBg;
   var metaRow=document.createElement('div');metaRow.className='fix-meta-row';
-  var ct=document.createElement('span');ct.className='comp-tag '+ctag(code);ct.textContent=cname(code,m.competition);
+  var ct=document.createElement('span');ct.className='comp-tag '+ctag(code);ct.textContent=cname(code,compName);
   var ds=document.createElement('span');ds.className='fix-date'+(isLive?' live-tag':'');
-  ds.textContent=isLive?'\u25cf LIVE':formatDate(m.date);
+  ds.textContent=isLive?'● LIVE':formatDate(m.utcDate||m.date);
   metaRow.appendChild(ct);metaRow.appendChild(ds);card.appendChild(metaRow);
   var tr=document.createElement('div');tr.className='teams-row';
   var hd=document.createElement('div');hd.className='fix-team-home';
   hd.appendChild(renderCrest(makeCrest(m.homeTeam,isArsHome)));
-  var hn=document.createElement('div');hn.className='t-name-home';hn.textContent=m.homeTeam.shortName||m.homeTeam.name;hd.appendChild(hn);
+  var hn=document.createElement('div');hn.className='t-name-home';
+  hn.textContent=m.homeTeam.shortName||m.homeTeam.displayName||m.homeTeam.name||'';hd.appendChild(hn);
   var sb=document.createElement('div');sb.className='fix-score-box';
-  if(hasScore){var sd=document.createElement('div');sd.className='fix-score';sd.textContent=hs+' : '+as_;sb.appendChild(sd);}
-  else{var vd=document.createElement('div');vd.className='fix-vs';vd.textContent='VS';sb.appendChild(vd);}
+  if(hasScore){
+    var sd=document.createElement('div');sd.className='fix-score';
+    var arsS2=isArsHome?hs:as_; var oppS2=isArsHome?as_:hs;
+    sd.style.color=arsS2>oppS2?'#22C55E':arsS2===oppS2?'#F59E0B':'#EF4444';
+    sd.textContent=hs+' : '+as_;sb.appendChild(sd);
+  } else if(isLive){
+    var ld=document.createElement('div');ld.className='fix-score';ld.style.color='var(--green)';
+    ld.textContent=(hs||0)+' : '+(as_||0);sb.appendChild(ld);
+  } else {
+    var vd=document.createElement('div');vd.className='fix-vs';vd.textContent='VS';sb.appendChild(vd);
+  }
   var ad=document.createElement('div');ad.className='fix-team-away';
-  var an=document.createElement('div');an.className='t-name-away';an.textContent=m.awayTeam.shortName||m.awayTeam.name;ad.appendChild(an);
+  var an=document.createElement('div');an.className='t-name-away';
+  an.textContent=m.awayTeam.shortName||m.awayTeam.displayName||m.awayTeam.name||'';ad.appendChild(an);
   ad.appendChild(renderCrest(makeCrest(m.awayTeam,!isArsHome)));
   tr.appendChild(hd);tr.appendChild(sb);tr.appendChild(ad);card.appendChild(tr);
   if(m.venue){var v=document.createElement('div');v.className='fix-venue';v.textContent=m.venue;card.appendChild(v);}
   return card;
 }
 
-var COMP_COLORS={
-  'PL':'#3d195b','CL':'#1a3a6b','UCL':'#1a3a6b',
-  'FAC':'#006400','EFL':'#8B0000','ELC':'#8B0000',
-  'CS':'#8B4513','CWC':'#1a1a2e'
-};
 function loadFixtures(){
   var upEl=document.getElementById('upcomingList');
   var fnEl=document.getElementById('finishedList');
