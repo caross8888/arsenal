@@ -880,7 +880,22 @@ function openPlayerModal(p) {
   var height      = (fotmob&&fotmob.height)||'';
   var age         = (fotmob&&fotmob.age)||(espn&&espn.age)||'';
   var prefFoot    = (fotmob&&fotmob.preferredFoot)||'';
-  var posLabel    = (fotmob&&fotmob.positionLabel)||pos;
+  var POS_LABEL_KO = {
+    'keeper_long':'골키퍼','goalkeeper':'골키퍼',
+    'rightback':'오른쪽 수비','leftback':'왼쪽 수비',
+    'centerback':'센터백','centreback':'센터백',
+    'right_wing_back':'오른쪽 윙백','left_wing_back':'왼쪽 윙백',
+    'rightwinger':'오른쪽 윙','leftwinger':'왼쪽 윙',
+    'rightwing':'오른쪽 윙','leftwing':'왼쪽 윙',
+    'rightmidfielder':'오른쪽 미드필더','leftmidfielder':'왼쪽 미드필더',
+    'centermidfielder':'중앙 미드필더','centremidfielder':'중앙 미드필더',
+    'centerdefensivemidfielder':'수비형 미드필더','centredefensivemidfielder':'수비형 미드필더',
+    'defensivemidfielder':'수비형 미드필더',
+    'attackingmidfielder':'공격형 미드필더','centreattackingmidfielder':'공격형 미드필더',
+    'striker':'스트라이커','centreforward':'스트라이커','centerforward':'스트라이커',
+  };
+  var _rawPos = (fotmob&&fotmob.position)||'';
+  var posLabel = POS_LABEL_KO[_rawPos.toLowerCase().replace(/_/g,'').replace(/-/g,'').replace(/ /g,'')] || (fotmob&&fotmob.positionLabel) || pos;
   var contractEnd = fotmob&&fotmob.contractEnd ? fotmob.contractEnd.slice(0,7) : '';
   var competitions= (fotmob&&fotmob.competitions)||(espn&&espn.competitions)||{};
   var COMP_ORDER=['PL','UCL','FAC','EFL'];
