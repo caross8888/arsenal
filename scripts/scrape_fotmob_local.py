@@ -39,28 +39,32 @@ SEASON = '2025/2026'
 # ── 아스날 선수 목록 (Fotmob ID) ──────────────────
 # fotmob.com/ko/teams/9825/squad/arsenal 에서 추출
 ARSENAL_PLAYERS = [
-    {'id': 317564, 'slug': 'kepa-arrizabalaga'},
-    {'id': 562727, 'slug': 'david-raya'},
-    {'id': 900988, 'slug': 'tommy-setford'},
-    {'id': 1002003, 'slug': 'ben-white'},
-    {'id': 779830, 'slug': 'william-saliba'},
-    {'id': 869601, 'slug': 'gabriel-magalhaes'},
-    {'id': 933667, 'slug': 'jurrien-timber'},
-    {'id': 868750, 'slug': 'riccardo-calafiori'},
-    {'id': 1068887, 'slug': 'myles-lewis-skelly'},
-    {'id': 534670, 'slug': 'martin-odegaard'},
-    {'id': 654096, 'slug': 'declan-rice'},
-    {'id': 574645, 'slug': 'mikel-merino'},
-    {'id': 266520, 'slug': 'christian-norgaard'},
-    {'id': 318615, 'slug': 'leandro-trossard'},
-    {'id': 576165, 'slug': 'gabriel-jesus'},
-    {'id': 832882, 'slug': 'kai-havertz'},
-    {'id': 900722, 'slug': 'bukayo-saka'},
+    {'id': 317564,  'slug': 'kepa-arrizabalaga'},
+    {'id': 562727,  'slug': 'david-raya'},
+    {'id': 1243239, 'slug': 'tommy-setford'},
+    {'id': 776151,  'slug': 'ben-white'},
+    {'id': 955406,  'slug': 'william-saliba'},
+    {'id': 795179,  'slug': 'gabriel'},
+    {'id': 942381,  'slug': 'jurrien-timber'},
+    {'id': 1105912, 'slug': 'riccardo-calafiori'},
+    {'id': 1137667, 'slug': 'piero-hincapie'},
+    {'id': 1298907, 'slug': 'cristhian-mosquera'},
+    {'id': 1406436, 'slug': 'myles-lewis-skelly'},
+    {'id': 1787525, 'slug': 'marli-salmon'},
+    {'id': 534670,  'slug': 'martin-odegaard'},
+    {'id': 574645,  'slug': 'mikel-merino'},
+    {'id': 1031325, 'slug': 'martin-zubimendi'},
+    {'id': 654096,  'slug': 'declan-rice'},
+    {'id': 266520,  'slug': 'christian-norgaard'},
+    {'id': 1635773, 'slug': 'max-dowman'},
+    {'id': 818975,  'slug': 'eberechi-eze'},
+    {'id': 961995,  'slug': 'bukayo-saka'},
     {'id': 1084981, 'slug': 'noni-madueke'},
-    {'id': 869283, 'slug': 'gabriel-martinelli'},
-    {'id': 664500, 'slug': 'viktor-gyokeres'},
-    {'id': 1096761, 'slug': 'eberechi-eze'},
-    {'id': 1199800, 'slug': 'cristhian-mosquera'},
+    {'id': 1021586, 'slug': 'gabriel-martinelli'},
+    {'id': 318615,  'slug': 'leandro-trossard'},
+    {'id': 576165,  'slug': 'gabriel-jesus'},
+    {'id': 749736,  'slug': 'kai-havertz'},
+    {'id': 664500,  'slug': 'viktor-gyokeres'},
 ]
 
 COMP_MAP = {47: 'PL', 42: 'UCL', 132: 'FAC', 133: 'EFL'}
@@ -92,6 +96,8 @@ def fetch_player(player_id, slug):
 
 def parse_stats(data):
     """선수 데이터에서 스탯 추출"""
+    if not data:
+        return None
     result = {
         'id':          data.get('id'),
         'name':        data.get('name', ''),
@@ -125,7 +131,8 @@ def parse_stats(data):
         result['contractEnd'] = ce.get('utcTime', '')[:10]
 
     # 이적 가치 (최신)
-    mv_data = data.get('marketValues', {}).get('values', [])
+    mv_raw = data.get('marketValues') or {}
+    mv_data = mv_raw.get('values', []) if mv_raw else []
     if mv_data:
         latest = mv_data[-1]
         result['marketValue'] = {
@@ -165,7 +172,7 @@ def parse_stats(data):
 
 
     # traits (레이더 차트용 - Fotmob 포지션별 비교)
-    traits_raw = data.get('traits', {})
+    traits_raw = data.get('traits') or {}
     if traits_raw and traits_raw.get('items'):
         result['traits'] = {
             'title': traits_raw.get('title', ''),
@@ -247,8 +254,11 @@ def main():
         data = fetch_player(p['id'], p['slug'])
         if data:
             parsed = parse_stats(data)
-            players.append(parsed)
-            print(f'✅ {parsed["name"]}')
+            if parsed:
+                players.append(parsed)
+                print(f'✅ {parsed["name"]}')
+            else:
+                print('파싱 실패')
         else:
             print('건너뜀')
         time.sleep(2)  # 요청 간격
