@@ -6,31 +6,7 @@ const ARSENAL_FPL_ID = 1;
 const FPL_POS = {1:'GK',2:'DF',3:'MF',4:'FW'};
 const LOAN_KEYWORDS = /loan|loaned|joined|transferred|released|left the club/i;
 
-// Fotmob 선수 ID 매핑 (사진: images.fotmob.com/image_resources/playerimages/{id}.png)
-const FOTMOB_IDS = {
-  'kepa':        317564,  'raya':        562727,  'setford':     1243239,
-  'white':       776151,  'saliba':      955406,  'gabriel':     795179,
-  'timber':      942381,  'calafiori':   1105912, 'hincapie':    1137667,
-  'mosquera':    1298907, 'lewis-skelly':1406436, 'salmon':      1787525,
-  'odegaard':    534670,  'merino':      574645,  'zubimendi':   1031325,
-  'rice':        654096,  'norgaard':    266520,  'dowman':      1635773,
-  'eze':         818975,  'saka':        961995,  'madueke':     1084981,
-  'martinelli':  1021586, 'trossard':    318615,  'jesus':       576165,
-  'havertz':     749736,  'gyokeres':    664500,
-};
 
-function getFotmobId(p) {
-  const web = p.web_name.toLowerCase().replace(/[^a-z]/g, '');
-  const second = p.second_name.toLowerCase().replace(/[^a-z]/g, '');
-  const full = (p.first_name + ' ' + p.second_name).toLowerCase().replace(/[^a-z ]/g, '');
-  for (const [key, id] of Object.entries(FOTMOB_IDS)) {
-    const k = key.replace(/[^a-z]/g, '');
-    if (web.includes(k) || second.includes(k) || k.includes(second) || full.includes(k)) {
-      return id;
-    }
-  }
-  return null;
-}
 
 const cache = {};
 const TTL = 60 * 60 * 1000;
@@ -162,32 +138,77 @@ export default async function handler(req, res) {
       };
 
     } else if(type === 'squad'){
-      // players.json (Fotmob 기반) 직접 사용
-      const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
-      if(!pjRes.ok) throw new Error('players.json 로드 실패');
-      const pjData = await pjRes.json();
+      // FPL API (이름+사진 기준) + players.json (풋몹 스탯, web_name으로 매칭)
+      const [pjRes, fplRes] = await Promise.all([
+        fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)}),
+        fetch('https://fantasy.premierleague.com/api/bootstrap-static/', {headers: FPL_HEADERS, signal: AbortSignal.timeout(8000)}),
+      ]);
 
+      const norm = s => (s||'').toLowerCase().replace(/[^a-z]/g,'');
+
+      // 풋몹 스탯 맵: 이름 파트별로 인덱싱
+      const fmMap = {};
+      if(pjRes.ok){
+        const pjData = await pjRes.json();
+        (pjData.players || []).forEach(p => {
+          // 풋몹 이름의 각 파트를 키로 등록
+          p.name.split(' ').forEach(part => {
+            const k = norm(part);
+            if(k.length > 2) fmMap[k] = fmMap[k] ? [...fmMap[k], p] : [p];
+          });
+          fmMap[norm(p.name)] = [p]; // 풀네임도 등록
+        });
+      }
+
+      if(!fplRes.ok) throw new Error('FPL API 실패');
+      const fplData = await fplRes.json();
+      const FPL_POS_MAP = {1:'GK',2:'DF',3:'MF',4:'FW'};
+
+      const arsenalPlayers = (fplData.elements || []).filter(p => p.team === ARSENAL_FPL_ID);
       result = {
-        squad: (pjData.players || []).map(p => ({
-          id:          p.id,
-          fotmobId:    p.id,
-          name:        p.name,
-          fullName:    p.name,
-          nationality: p.nationality || '',
-          posGroup:    p.posGroup || 'MF',
-          position:    p.position || '',
-          positionLabel: p.positionLabel || '',
-          goals:       p.stats?.goals || 0,
-          assists:     p.stats?.assists || 0,
-          appearances: p.stats?.appearances || 0,
-          starts:      p.stats?.starts || 0,
-          minutes:     p.stats?.minutesPlayed || 0,
-          yellowCards: p.stats?.yellowCards || 0,
-          redCards:    p.stats?.redCards || 0,
-          xG:          p.stats?.xG || 0,
-          xA:          p.stats?.xA || 0,
-          photo:       `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
-        }))
+        squad: arsenalPlayers.map(p => {
+          const photo   = `https://resources.premierleague.com/premierleague/photos/players/250x250/p${p.code}.png`;
+          // web_name 우선 매칭 (가장 고유) → 성 → 이름
+          const webKey  = norm(p.web_name);
+          const lastKey = norm(p.second_name);
+          const firstKey= norm(p.first_name);
+          const fullKey = norm(p.first_name + p.second_name);
+
+          // 후보 목록에서 1개면 바로 사용, 여러개면 fullKey로 재시도
+          let fm = {};
+          const candidates = fmMap[webKey] || fmMap[fullKey] || fmMap[lastKey] || fmMap[firstKey] || [];
+          if(candidates.length === 1) fm = candidates[0];
+          else if(candidates.length > 1){
+            // 풀네임으로 재시도
+            const byFull = fmMap[fullKey];
+            if(byFull && byFull.length === 1) fm = byFull[0];
+            else fm = candidates[0]; // 그래도 여러개면 첫번째
+          }
+
+          return {
+            id:            p.id,
+            fotmobId:      fm.id || null,
+            name:          p.web_name,
+            fullName:      `${p.first_name} ${p.second_name}`,
+            nationality:   fm.nationality || '',
+            posGroup:      FPL_POS_MAP[p.element_type] || 'MF',
+            position:      fm.position || '',
+            positionLabel: fm.positionLabel || '',
+            jersey:        p.squad_number || fm.jersey || '',
+            photo,
+            goals:       fm.competitions ? Object.values(fm.competitions).reduce((s,c)=>s+(c.goals||0),0) : (p.goals_scored||0),
+            assists:     fm.competitions ? Object.values(fm.competitions).reduce((s,c)=>s+(c.assists||0),0) : (p.assists||0),
+            appearances: fm.competitions ? Object.values(fm.competitions).reduce((s,c)=>s+(c.appearances||0),0) : 0,
+            starts:      fm.competitions ? Object.values(fm.competitions).reduce((s,c)=>s+(c.starts||0),0) : 0,
+            minutes:     fm.competitions ? Object.values(fm.competitions).reduce((s,c)=>s+(c.minutesPlayed||0),0) : (p.minutes||0),
+            yellowCards: fm.competitions ? Object.values(fm.competitions).reduce((s,c)=>s+(c.yellowCards||0),0) : (p.yellow_cards||0),
+            redCards:    fm.competitions ? Object.values(fm.competitions).reduce((s,c)=>s+(c.redCards||0),0) : (p.red_cards||0),
+            competitions: fm.competitions || {},
+            stats:        fm.stats || {},
+            traits:       fm.traits || null,
+            career:       fm.career || [],
+          };
+        })
       };
     }
 
