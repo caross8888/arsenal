@@ -161,6 +161,53 @@ export default async function handler(req, res) {
         }))
       };
 
+    } else if(type === 'injuries'){
+      const r = await fetch(FPL_URL, {
+        headers: {
+          ...FPL_HEADERS,
+          'Accept-Language': 'en-GB,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Windows"',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-origin',
+        },
+        signal: AbortSignal.timeout(8000)
+      });
+      if(!r.ok) throw new Error(`FPL API: ${r.status}`);
+      const json = await r.json();
+      const arsenalTeam = json.teams.find(t => t.name === 'Arsenal');
+      if(!arsenalTeam) throw new Error('Arsenal not found');
+      const arsenalId = arsenalTeam.id;
+      const LOAN_RE = /loan|loaned|joined|transferred|released|left the club/i;
+      const STATUS_LABEL = {i:'부상',d:'출전 의심',s:'출장 정지',u:'결장'};
+      const allArsenal = (json.elements||[])
+        .filter(p => p.team === arsenalId)
+        .map(p => ({
+          id: p.id, name: p.web_name,
+          fullName: `${p.first_name} ${p.second_name}`,
+          status: p.status, statusLabel: STATUS_LABEL[p.status]||p.status,
+          news: p.news||'', chanceOfPlaying: p.chance_of_playing_next_round,
+          position: FPL_POS[p.element_type]||'?', positionType: p.element_type,
+          minutes: p.minutes,
+        }));
+      const injured = allArsenal
+        .filter(p => {
+          if(p.status === 'a') return false;
+          if(p.news && LOAN_RE.test(p.news)) return false;
+          if(p.positionType === 1) return true;
+          return p.minutes > 0;
+        })
+        .sort((a,b) => ({i:0,d:1,s:2,u:3}[a.status]??9)-({i:0,d:1,s:2,u:3}[b.status]??9));
+      result = {
+        injuredCount: injured.length,
+        availableCount: allArsenal.filter(p=>p.status==='a'&&(p.positionType===1||p.minutes>0)&&(!p.news||!LOAN_RE.test(p.news))).length,
+        injured,
+      };
+
     } else if(type === 'squad'){
       // players.json (Fotmob 기반) 직접 사용
       const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
