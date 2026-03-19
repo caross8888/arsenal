@@ -55,15 +55,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-card.upcoming::before{background:var(--gold)}
 .fix-card.live-match::before{background:var(--green)}
 .fix-card.finished::before{background:var(--surface3)}
-.fix-grid{display:grid;grid-template-columns:1fr 68px 1fr;grid-template-rows:auto auto auto;gap:2px 4px;align-items:center;padding:2px 0}
+.fix-grid{display:grid;grid-template-columns:1fr 68px 1fr;grid-template-rows:auto auto;gap:2px 4px;align-items:center;padding:2px 0}
 .fix-z1{grid-column:1;grid-row:1;display:flex;align-items:center;}
 .fix-z2{grid-column:1;grid-row:2;display:flex;align-items:center;}
 .fix-z3top{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:center;}
 .fix-z3bot{grid-column:2;grid-row:2;display:flex;align-items:center;justify-content:center;}
 .fix-z4{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:flex-end;}
 .fix-z5{grid-column:3;grid-row:2;display:flex;align-items:center;justify-content:flex-end;}
-.fix-z6{grid-column:1/-1;grid-row:3;text-align:center;visibility:hidden;height:12px;line-height:12px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;letter-spacing:1px;}
-.fix-z6.visible{visibility:visible;}
+.fix-live-clock{text-align:center;font-size:10px;font-weight:700;letter-spacing:1px;padding-top:4px;}
 .comp-tag{display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:4px;flex-shrink:0}
 .tag-pl{background:rgba(55,0,255,.15);color:#A78BFA;border:1px solid rgba(167,139,250,.2)}
 .tag-cl{background:rgba(0,80,200,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.2)}
@@ -569,21 +568,16 @@ function buildFixCard(m){
   ad.appendChild(an);ad.appendChild(renderCrest(makeCrest(m.awayTeam,!isArsHome)));
   z5.appendChild(ad);
 
-  // 행3: 라이브 시간 (전체 폭)
-  var z6=document.createElement('div');
-  if(isLive){
-    z6.className='fix-z6 visible';
-    var ckSpan=document.createElement('span');
-    ckSpan.style.cssText='font-size:10px;font-weight:700;letter-spacing:1px;color:'+(m.isHT?'#F59E0B':'#22C55E');
-    ckSpan.textContent=m.isHT?'HT':(m.clock||'');
-    z6.appendChild(ckSpan);
-  } else {
-    z6.className='fix-z6';
-  }
   grid.appendChild(z1);grid.appendChild(z3top);grid.appendChild(z4);
   grid.appendChild(z2);grid.appendChild(z3bot);grid.appendChild(z5);
-  grid.appendChild(z6);
   card.appendChild(grid);
+  if(isLive){
+    var clk=document.createElement('div');
+    clk.className='fix-live-clock';
+    clk.style.color=m.isHT?'#F59E0B':'#22C55E';
+    clk.textContent=m.isHT?'HT':(m.clock||'');
+    card.appendChild(clk);
+  }
   if(m.venue){var v=document.createElement('div');v.className='fix-venue';v.textContent=m.venue;card.appendChild(v);}
   if(isDone && m.id){
     card.style.cursor='pointer';
