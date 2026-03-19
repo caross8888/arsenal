@@ -453,11 +453,10 @@ var CNAME={PL:'PL',CL:'UCL',UCL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup',EFL:'E
 function ctag(c){return CTAG[c]||'tag-oth';}
 function cname(c,fb){return CNAME[c]||fb||c;}
 
-function formatDate(utcDate){
+function formatDate(utcDate, tbd){
   var d=new Date(utcDate);
   var diff=Math.round((d-Date.now())/86400000);
-  var isTBD=d.getUTCHours()===0&&d.getUTCMinutes()===0&&d.getUTCSeconds()===0;
-  var time=isTBD?'시간미정':d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
+  var time=tbd?'시간미정':d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
   var date=d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'});
   if(diff===0) return '\uc624\ub298 '+time;
   if(diff===1) return '\ub0b4\uc77c '+time;
@@ -507,7 +506,7 @@ function buildFixCard(m){
   var metaRow=document.createElement('div');metaRow.className='fix-meta-row';
   var ct=document.createElement('span');ct.className='comp-tag '+ctag(code);ct.textContent=cname(code,compName);
   var ds=document.createElement('span');ds.className='fix-date'+(isLive?' live-tag':'');
-  ds.textContent=isLive?'● LIVE':formatDate(m.utcDate||m.date);
+  ds.textContent=isLive?'● LIVE':formatDate(m.utcDate||m.date,m.tbd);
   metaRow.appendChild(ct);metaRow.appendChild(ds);card.appendChild(metaRow);
   var tr=document.createElement('div');tr.className='teams-row';
   var hd=document.createElement('div');hd.className='fix-team-home';
@@ -897,7 +896,7 @@ function renderMatchModal(content, m, data){
         '<div class="mm-score" style="color:'+scoreColor+'">'+h.score+' : '+a.score+'</div>'+
         '<div class="mm-team">'+(a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display=&quot;none&quot;">':'')+'<div class="mm-team-name">'+(a.name||'')+'</div></div>'+
       '</div>'+
-      '<div class="mm-match-date">'+formatDate(m.utcDate||m.date)+'</div>'+
+      '<div class="mm-match-date">'+formatDate(m.utcDate||m.date,m.tbd)+'</div>'+
       '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
       (data.venue?'<div class="mm-venue">📍 '+data.venue+'</div>':'')+
     '</div>';
