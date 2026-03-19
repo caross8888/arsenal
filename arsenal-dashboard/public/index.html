@@ -61,7 +61,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-card.upcoming::before{background:var(--gold)}
 .fix-card.live-match::before{background:var(--green)}
 .fix-card.finished::before{background:var(--surface3)}
-.fix-meta-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fix-grid{display:grid;grid-template-columns:1fr 68px 1fr;grid-template-rows:auto auto;gap:4px 4px;align-items:center;padding:2px 0}
+.fix-z1{grid-column:1;grid-row:1;display:flex;align-items:center;}
+.fix-z2{grid-column:1;grid-row:2;display:flex;align-items:center;}
+.fix-z3{grid-column:2;grid-row:1/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;}
+.fix-z4{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:flex-end;}
+.fix-z5{grid-column:3;grid-row:2;display:flex;align-items:center;justify-content:flex-end;}
 .comp-tag{display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:4px;flex-shrink:0}
 .tag-pl{background:rgba(55,0,255,.15);color:#A78BFA;border:1px solid rgba(167,139,250,.2)}
 .tag-cl{background:rgba(0,80,200,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.2)}
@@ -70,7 +75,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tag-oth{background:rgba(100,100,100,.15);color:var(--text-muted);border:1px solid var(--border)}
 .fix-date{font-size:10px;color:var(--text-muted);font-family:var(--fm);flex-shrink:0}
 .fix-date.live-tag{color:var(--green);font-weight:700}
-.teams-row{display:grid;grid-template-columns:1fr 68px 1fr;align-items:center;gap:4px}
 .fix-team-home{display:flex;align-items:center;gap:8px}
 .fix-team-away{display:flex;align-items:center;gap:8px;justify-content:flex-end}
 .t-crest{width:30px;height:30px;border-radius:50%;object-fit:contain;background:var(--surface3);border:1px solid var(--border);padding:3px;flex-shrink:0}
@@ -521,20 +525,29 @@ function buildFixCard(m){
   var card=document.createElement('div');
   card.className='fix-card '+(isLive?'live-match':isDone?'finished '+resultCls:'upcoming');
   if(resultBg) card.style.background=resultBg;
-  var metaRow=document.createElement('div');metaRow.className='fix-meta-row';
+
+  // 5레이어 grid 구조
+  var grid=document.createElement('div');grid.className='fix-grid';
+
+  // 좌상단: 대회 태그
+  var z1=document.createElement('div');z1.className='fix-z1';
   var ct=document.createElement('span');ct.className='comp-tag '+ctag(code);ct.textContent=cname(code,compName);
-  var ds=document.createElement('span');ds.className='fix-date'+(isLive?' live-tag':'');
-  ds.textContent=isLive?'● LIVE':formatDate(m.utcDate||m.date,m.tbd);
-  var leftGroup=document.createElement('div');leftGroup.style.cssText='display:flex;align-items:center;';
-  leftGroup.appendChild(ct);
-  var centerGroup=document.createElement('div');centerGroup.style.cssText='flex:1;text-align:center;';
-  if(m.round&&ROUND_LABEL[m.round]){var rl2=document.createElement('span');rl2.className='fix-round-text'+(m.round==='final'?' fix-round-final':'');rl2.textContent=ROUND_LABEL[m.round];centerGroup.appendChild(rl2);}
-  metaRow.appendChild(leftGroup);metaRow.appendChild(centerGroup);metaRow.appendChild(ds);card.appendChild(metaRow);
-  var tr=document.createElement('div');tr.className='teams-row';
+  z1.appendChild(ct);
+
+  // 좌하단: 홈팀
+  var z2=document.createElement('div');z2.className='fix-z2';
   var hd=document.createElement('div');hd.className='fix-team-home';
   hd.appendChild(renderCrest(makeCrest(m.homeTeam,isArsHome)));
   var hn=document.createElement('div');hn.className='t-name-home';
-  hn.textContent=m.homeTeam.shortName||m.homeTeam.displayName||m.homeTeam.name||'';hd.appendChild(hn);
+  hn.textContent=m.homeTeam.shortName||m.homeTeam.displayName||m.homeTeam.name||'';
+  hd.appendChild(hn);z2.appendChild(hd);
+
+  // 중앙: 라운드(상단) + VS/스코어(하단)
+  var z3=document.createElement('div');z3.className='fix-z3';
+  if(m.round&&ROUND_LABEL[m.round]){
+    var rl=document.createElement('div');rl.className='fix-round-text'+(m.round==='final'?' fix-round-final':'');
+    rl.textContent=ROUND_LABEL[m.round];z3.appendChild(rl);
+  }
   var sb=document.createElement('div');sb.className='fix-score-box';
   if(hasScore){
     var sd=document.createElement('div');sd.className='fix-score';
@@ -547,11 +560,25 @@ function buildFixCard(m){
   } else {
     var vd=document.createElement('div');vd.className='fix-vs';vd.textContent='VS';sb.appendChild(vd);
   }
+  z3.appendChild(sb);
+
+  // 우상단: 날짜
+  var z4=document.createElement('div');z4.className='fix-z4';
+  var ds=document.createElement('span');ds.className='fix-date'+(isLive?' live-tag':'');
+  ds.textContent=isLive?'● LIVE':formatDate(m.utcDate||m.date,m.tbd);
+  z4.appendChild(ds);
+
+  // 우하단: 어웨이팀
+  var z5=document.createElement('div');z5.className='fix-z5';
   var ad=document.createElement('div');ad.className='fix-team-away';
   var an=document.createElement('div');an.className='t-name-away';
-  an.textContent=m.awayTeam.shortName||m.awayTeam.displayName||m.awayTeam.name||'';ad.appendChild(an);
-  ad.appendChild(renderCrest(makeCrest(m.awayTeam,!isArsHome)));
-  tr.appendChild(hd);tr.appendChild(sb);tr.appendChild(ad);card.appendChild(tr);
+  an.textContent=m.awayTeam.shortName||m.awayTeam.displayName||m.awayTeam.name||'';
+  ad.appendChild(an);ad.appendChild(renderCrest(makeCrest(m.awayTeam,!isArsHome)));
+  z5.appendChild(ad);
+
+  grid.appendChild(z1);grid.appendChild(z3);grid.appendChild(z4);
+  grid.appendChild(z2);grid.appendChild(z5);
+  card.appendChild(grid);
   if(m.venue){var v=document.createElement('div');v.className='fix-venue';v.textContent=m.venue;card.appendChild(v);}
   if(isDone && m.id){
     card.style.cursor='pointer';
