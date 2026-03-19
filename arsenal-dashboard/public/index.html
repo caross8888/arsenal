@@ -456,8 +456,10 @@ function cname(c,fb){return CNAME[c]||fb||c;}
 function formatDate(utcDate, tbd){
   var d=new Date(utcDate);
   var diff=Math.round((d-Date.now())/86400000);
-  var time=tbd?'시간미정':d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
   var date=d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'});
+  if(tbd==='postponed') return date+' 연기';
+  if(tbd==='canceled')  return date+' 취소';
+  var time=tbd==='tbd'?'시간미정':d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
   if(diff===0) return '\uc624\ub298 '+time;
   if(diff===1) return '\ub0b4\uc77c '+time;
   if(diff>1&&diff<8) return date+' '+time;
