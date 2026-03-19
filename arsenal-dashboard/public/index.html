@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+'<span class="mm-event-icon">'+(ev2.type==='own_goal'?'<img src="data:image/svg+xml;base64,None" style="width:12px;height:12px;vertical-align:middle;display:inline-block">':ev2.type==='pen_goal'?'<img src="data:image/svg+xml;base64,None" style="width:12px;height:12px;vertical-align:middle;display:inline-block">':ev2.type==='red_card'?'🟥':'<img src="data:image/svg+xml;base64,None" style="width:12px;height:12px;vertical-align:middle;display:inline-block">')+'</span>''<span class="mm-event-icon">'+(ev.type==='own_goal'?'<img src="data:image/svg+xml;base64,None" style="width:12px;height:12px;vertical-align:middle;display:inline-block">':ev.type==='pen_goal'?'<img src="data:image/svg+xml;base64,None" style="width:12px;height:12px;vertical-align:middle;display:inline-block">':ev.type==='red_card'?'🟥':'<img src="data:image/svg+xml;base64,None" style="width:12px;height:12px;vertical-align:middle;display:inline-block">')+'</span>'<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -896,6 +896,7 @@ function renderMatchModal(content, m, data){
         '<div class="mm-score" style="color:'+scoreColor+'">'+h.score+' : '+a.score+'</div>'+
         '<div class="mm-team">'+(a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display=&quot;none&quot;">':'')+'<div class="mm-team-name">'+(a.name||'')+'</div></div>'+
       '</div>'+
+      '<div class="mm-match-date">'+formatDate(m.utcDate||m.date)+'</div>'+
       '<div class="mm-match-date">'+formatDate(m.utcDate||m.date)+'</div>'+
       '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
       (data.venue?'<div class="mm-venue">📍 '+data.venue+'</div>':'')+
