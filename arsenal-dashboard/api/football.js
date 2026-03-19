@@ -89,6 +89,7 @@ export default async function handler(req, res) {
           id:          e.id,
           utcDate:     e.date,
           competition: {name, short},
+          round:       e.season?.slug||null,
           status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
           tbd:         status?.id === '5' || status?.description === 'Postponed' ? 'postponed' : status?.id === '6' || status?.description === 'Canceled' ? 'canceled' : status?.id === '8' ? 'tbd' : null,
           homeTeam: {
