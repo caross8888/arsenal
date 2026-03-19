@@ -229,6 +229,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-career-stat{font-size:11px;color:rgba(255,255,255,.5);min-width:60px;text-align:right;}
 /* Fotmob 대회별 스탯 그리드 */
 .fotmob-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.06);margin:0;border-top:1px solid rgba(255,255,255,.06);}
+.overall-stat-grid{grid-template-columns:repeat(5,1fr);}
 .fm-stat-cell{background:#1a1c22;padding:12px 8px;text-align:center;}
 .fm-stat-val{font-family:var(--fd);font-size:20px;font-weight:700;color:#fff;line-height:1;}
 .fm-stat-lbl{font-size:9px;color:rgba(255,255,255,.4);margin-top:4px;letter-spacing:.5px;}
@@ -704,9 +705,13 @@ function renderSq(filter){
     var posShort=POS_SHORT[posKey]||p.posGroup||'';
     var leftCls=POS_GROUP_CLS[p.posGroup]||'df';
     var jersey=p.jersey||'';
-    if(!jersey&&window._fotmobPlayers){
-      var fm=window._fotmobPlayers.find(function(f){return f.id===p.fotmobId||f.id===p.id;});
+    if(!jersey&&window._espnPlayers){
+      var fm=window._espnPlayers.find(function(f){return f.id===p.fotmobId||f.id===p.id;});
       if(fm&&fm.jersey) jersey=fm.jersey;
+    }
+    if(!jersey&&window._fotmobPlayers){
+      var fm2=window._fotmobPlayers.find(function(f){return f.id===p.fotmobId||f.id===p.id;});
+      if(fm2&&fm2.jersey) jersey=fm2.jersey;
     }
 
     var card=document.createElement('div');
@@ -1357,10 +1362,10 @@ function openPlayerModal(p) {
     });
     var totRating = tot.ratingCnt>0 ? (tot.ratingSum/tot.ratingCnt).toFixed(1) : '-';
     var totRatingColor = tot.ratingCnt>0?(parseFloat(totRating)>=8?'#22C55E':parseFloat(totRating)>=7?'#84CC16':parseFloat(totRating)>=6?'#F59E0B':'rgba(255,255,255,0.7)'):'rgba(255,255,255,0.7)';
-    var totMins = tot.minutes>0 ? tot.minutes+"'" : '-';
+    var totMins = tot.minutes>0 ? tot.minutes : '-';
     h += '<div class="stat-section">';
     h += '<div class="stat-section-title">종합 스탯</div>';
-    h += '<div class="fotmob-stat-grid">';
+    h += '<div class="fotmob-stat-grid overall-stat-grid">';
     if(pos==='GK'){
       h += makeFMStat(tot.cleanSheets>0?tot.cleanSheets:'-','클린시트',tot.cleanSheets>0?'#22C55E':'');
       h += makeFMStat(tot.goalsConceded>0?tot.goalsConceded:'-','실점',tot.goalsConceded===0?'#22C55E':'#EF4444');
