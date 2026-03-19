@@ -20,12 +20,6 @@
 html{-webkit-text-size-adjust:100%}
 body{background:var(--navy);color:var(--text);font-family:var(--fb);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;padding-bottom:calc(64px + var(--safe-bottom));}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(239,1,7,.1) 0%,transparent 60%);pointer-events:none;z-index:0}
-.ticker-wrap{background:var(--red);overflow:hidden;height:28px;display:flex;align-items:center;position:relative;z-index:1}
-.ticker-label{background:var(--red-dark);padding:0 12px;font-size:8px;letter-spacing:3px;text-transform:uppercase;font-weight:700;height:100%;display:flex;align-items:center;flex-shrink:0;white-space:nowrap;position:relative;z-index:2}
-.ticker-track{display:flex;animation:ticker 40s linear infinite;white-space:nowrap;padding-left:8px}
-.ticker-item{padding:0 28px;font-size:11px;font-weight:500;opacity:.95}
-.ticker-dot{margin:0 8px;opacity:.5}
-@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .top-header{background:rgba(11,13,18,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
 .brand{display:flex;align-items:center;gap:10px}
 .logo-svg{width:34px;height:34px;flex-shrink:0}
@@ -317,15 +311,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* ── 삼성 인터넷 강제 다크모드 차단 — 이미 다크 테마이므로 고정 ── */</style>
 </head>
 <body>
-<div class="ticker-wrap">
-  <div class="ticker-label">&#9889; Live</div>
-  <div class="ticker-track" id="tickerTrack">
-    <span class="ticker-item" id="tickerBrand">Arsenal FC &middot; 24-25</span>
-    <span class="ticker-dot">&#9670;</span><span class="ticker-item">&#45936;&#51060;&#53552; &#47196;&#46377; &#51473;...</span>
-    <span class="ticker-item" id="tickerBrand2">Arsenal FC &middot; 24-25</span>
-    <span class="ticker-dot">&#9670;</span><span class="ticker-item">&#45936;&#51060;&#53552; &#47196;&#46377; &#51473;...</span>
-  </div>
-</div>
+
 <div class="top-header">
   <div class="brand">
     <img class="logo-svg" src="https://crests.football-data.org/57.png" alt="Arsenal FC" style="border-radius:50%;background:rgba(239,1,7,.1);padding:2px;">
@@ -630,7 +616,6 @@ function loadFixtures(){
     }
     renderList(upEl,upcomingAll.slice(0,3),upcomingAll);
     renderList(fnEl,finishedAll.slice(0,5),finishedAll);
-    updateTicker(data.matches||[]);
   }).catch(function(err){showErr(upEl,err.message);badge.textContent='오류';});
 }
 
@@ -767,28 +752,9 @@ function loadInjuries(){
   var listEl=document.getElementById('injList');
   var sumEl=document.getElementById('injSum');
   var badge=document.getElementById('injBadge');
-  var LOAN_RE=/loan|loaned|joined|transferred|released|left the club/i;
-  fetch('https://fantasy.premierleague.com/api/bootstrap-static/',{
-    headers:{'Accept':'application/json','Referer':'https://fantasy.premierleague.com/'}
-  }).then(function(r){return r.json();}).then(function(json){
+  apiFetch(FN+'/football?type=injuries').then(function(data){
     badge.textContent='FPL API';
-    var arsenalTeam=json.teams.find(function(t){return t.name==='Arsenal';});
-    if(!arsenalTeam) throw new Error('Arsenal not found');
-    var arsenalId=arsenalTeam.id;
-    var STATUS_LABEL2={'i':'부상','d':'출전 의심','s':'출장 정지','u':'결장'};
-    var allArsenal=(json.elements||[]).filter(function(p){return p.team===arsenalId;}).map(function(p){return{
-      id:p.id,name:p.web_name,fullName:p.first_name+' '+p.second_name,
-      status:p.status,statusLabel:STATUS_LABEL2[p.status]||p.status,
-      news:p.news||'',chanceOfPlaying:p.chance_of_playing_next_round,
-      position:FPL_POS[p.element_type]||'?',positionType:p.element_type,minutes:p.minutes,
-    };});
-    var injured=allArsenal.filter(function(p){
-      if(p.status==='a') return false;
-      if(p.news&&LOAN_RE.test(p.news)) return false;
-      if(p.positionType===1) return true;
-      return p.minutes>0;
-    }).sort(function(a,b){return({'i':0,'d':1,'s':2,'u':3}[a.status]??9)-({'i':0,'d':1,'s':2,'u':3}[b.status]??9);});
-    var availableCount=allArsenal.filter(function(p){return p.status==='a'&&(p.positionType===1||p.minutes>0)&&(!p.news||!LOAN_RE.test(p.news));}).length;
+    var injured=data.injured||[];
     document.getElementById('injCount').textContent='총 '+injured.length+'명';
     var injCnt=injured.filter(function(p){return p.status==='i';}).length;
     var dbtCnt=injured.filter(function(p){return p.status==='d';}).length;
@@ -797,19 +763,19 @@ function loadInjuries(){
       '<div class="sum-stat"><div class="sum-val r">'+injCnt+'</div><div class="sum-lbl">부상</div></div>'+
       '<div class="sum-stat"><div class="sum-val a">'+dbtCnt+'</div><div class="sum-lbl">출전 의심</div></div>'+
       '<div class="sum-stat"><div class="sum-val" style="color:var(--text-muted)">'+outCnt+'</div><div class="sum-lbl">결장</div></div>'+
-      '<div class="sum-stat"><div class="sum-val g">'+availableCount+'</div><div class="sum-lbl">출전 가능</div></div>';
+      '<div class="sum-stat"><div class="sum-val g">'+(data.availableCount||'-')+'</div><div class="sum-lbl">출전 가능</div></div>';
     if(!injured.length){listEl.innerHTML='<div class="loading-state" style="padding:28px">🎉 현재 부상/결장 선수 없음</div>';return;}
     listEl.innerHTML='';
     injured.forEach(function(p){
       var row=document.createElement('div');row.className='inj-row';
       var posBadge=document.createElement('div');posBadge.className='inj-pos-badge';
-      posBadge.textContent=p.position||'?';
+      posBadge.textContent=FPL_POS[p.positionType]||p.position||'?';
       var info=document.createElement('div');info.className='inj-info';
       var nm=document.createElement('div');nm.className='inj-name';nm.textContent=p.fullName||p.name;
       var detail=document.createElement('div');detail.className='inj-detail';detail.textContent=p.news||'정보 없음';
       info.appendChild(nm);info.appendChild(detail);
       var right=document.createElement('div');right.className='inj-right';
-      var bdg=document.createElement('span');bdg.className='inj-badge '+(STATUS_CLS[p.status]||'inj-miss');bdg.textContent=STATUS_LABEL2[p.status]||p.status;
+      var bdg=document.createElement('span');bdg.className='inj-badge '+(STATUS_CLS[p.status]||'inj-miss');bdg.textContent=STATUS_LABEL[p.status]||p.status;
       var chance=document.createElement('span');chance.className='inj-chance';
       chance.textContent=p.chanceOfPlaying!==null&&p.chanceOfPlaying!==undefined?'출전 '+p.chanceOfPlaying+'%':(p.status==='u'?'출전 불가':'');
       right.appendChild(bdg);right.appendChild(chance);
@@ -1109,25 +1075,6 @@ function closeMatchModal(e){
 }
 
 // ── TICKER ──
-function updateTicker(matches){
-  if(!matches||!matches.length) return;
-  var items=matches.slice(0,6).map(function(m){
-    var h=(m.homeTeam&&(m.homeTeam.shortName||m.homeTeam.name))||'';
-    var a=(m.awayTeam&&(m.awayTeam.shortName||m.awayTeam.name))||'';
-    var isLive=m.status==='IN_PLAY'||m.status==='PAUSED';
-    var isDone=m.status==='FINISHED';
-    var hs=m.score&&m.score.fullTime?m.score.fullTime.home:null;
-    var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
-    if(isLive) return '\uD83D\uDD34 LIVE: '+h+' '+(hs||0)+'-'+(as_||0)+' '+a;
-    if(isDone&&hs!==null) return h+' '+hs+'-'+as_+' '+a+' \u2713';
-    var d=new Date(m.date);
-    return h+' vs '+a+' \u00B7 '+d.toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
-  });
-  var doubled=items.concat(items);
-  document.getElementById('tickerTrack').innerHTML=doubled.map(function(t,i){
-    return '<span class="ticker-item">'+t+'</span>'+(i<doubled.length-1?'<span class="ticker-dot">\u25C6</span>':'');
-  }).join('');
-}
 
 
 // ── CONFIG ──
@@ -1198,10 +1145,6 @@ function getCurrentSeason() {
 }
 var SEASON = getCurrentSeason();
 document.getElementById('seasonLabel').textContent = SEASON;
-var tb = document.getElementById('tickerBrand');
-var tb2 = document.getElementById('tickerBrand2');
-if(tb) tb.textContent = 'Arsenal FC · ' + SEASON;
-if(tb2) tb2.textContent = 'Arsenal FC · ' + SEASON;
 
 
 // ── Fotmob trait 라벨 한국어 매핑 ──
