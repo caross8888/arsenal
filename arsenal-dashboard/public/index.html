@@ -260,6 +260,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-event-player{font-size:12px;font-weight:700;color:var(--text);flex:1;}
 .mm-event.away .mm-event-player{text-align:right;}
 .mm-venue{text-align:center;font-size:10px;color:var(--text-dim);margin-top:6px;}
+.mm-match-date{text-align:center;font-size:11px;color:var(--text-muted);margin-top:4px;}
 .mm-events-table{width:100%;border-collapse:collapse;table-layout:fixed;}
 .mm-events-table td{padding:4px 0;vertical-align:middle;}
 .mm-evt-home{width:calc(50% - 1px);text-align:right;}
@@ -896,6 +897,7 @@ function renderMatchModal(content, m, data){
         '<div class="mm-team">'+(a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display=&quot;none&quot;">':'')+'<div class="mm-team-name">'+(a.name||'')+'</div></div>'+
       '</div>'+
       '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
+      '<div class="mm-match-date">'+formatDate(m.utcDate||m.date)+'</div>'+
       (data.venue?'<div class="mm-venue">📍 '+data.venue+'</div>':'')+
     '</div>';
 
