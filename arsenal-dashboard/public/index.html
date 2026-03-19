@@ -77,7 +77,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .t-crest-ph.afc{background:rgba(239,1,7,.15);border-color:rgba(239,1,7,.4);color:var(--red)}
 .t-name-home{font-weight:700;font-size:12px;line-height:1.3;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .t-name-away{font-weight:700;font-size:12px;line-height:1.3;min-width:0;overflow:hidden;text-align:right;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
-.fix-score-box{text-align:center;flex-shrink:0;width:68px}
+.fix-score-box{text-align:center;flex-shrink:0;width:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.fix-clock{font-size:9px;font-weight:700;letter-spacing:0.5px;visibility:hidden;line-height:1;}
+.fix-clock.visible{visibility:visible;}
 .fix-score{font-family:var(--fd);font-size:24px;letter-spacing:3px;line-height:1;color:var(--text)}
 .fix-vs{font-family:var(--fd);font-size:16px;letter-spacing:2px;color:var(--text-dim)}
 .fix-round-text{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);}
@@ -546,11 +548,21 @@ function buildFixCard(m){
     sd.style.color=arsS2>oppS2?'#22C55E':arsS2===oppS2?'#F59E0B':'#EF4444';
     sd.textContent=hs+' : '+as_;sb.appendChild(sd);
   } else if(isLive){
-    var ld=document.createElement('div');ld.className='fix-score';ld.style.color='var(--green)';
+    var ld=document.createElement('div');ld.className='fix-score';ld.style.color='#22C55E';
     ld.textContent=(hs||0)+' : '+(as_||0);sb.appendChild(ld);
   } else {
     var vd=document.createElement('div');vd.className='fix-vs';vd.textContent='VS';sb.appendChild(vd);
   }
+  // 경기 시간 (라이브/완료 무관 항상 공간 확보)
+  var ck=document.createElement('div');
+  if(isLive){
+    ck.className='fix-clock visible';
+    ck.style.color=m.isHT?'#F59E0B':'#22C55E';
+    ck.textContent=m.isHT?'HT':(m.clock||'');
+  } else {
+    ck.className='fix-clock'; ck.textContent=' ';
+  }
+  sb.appendChild(ck);
   z3bot.appendChild(sb);
 
   // 우상단: 날짜
@@ -616,6 +628,9 @@ function loadFixtures(){
     }
     renderList(upEl,upcomingAll.slice(0,3),upcomingAll);
     renderList(fnEl,finishedAll.slice(0,5),finishedAll);
+    // 라이브 경기 있으면 폴링 시작
+    if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})) startLivePolling();
+    else stopLivePolling();
   }).catch(function(err){showErr(upEl,err.message);badge.textContent='오류';});
 }
 
@@ -1129,6 +1144,39 @@ function showSec(id,btn){
     if(btn) showSec(hash, btn, true);
   }
 })();
+// ── 라이브 폴링 ──
+var _liveTimer = null;
+function startLivePolling(){
+  if(_liveTimer) return;
+  _liveTimer = setInterval(function(){
+    if(document.hidden) return; // 백그라운드면 스킵
+    apiFetch(FN+'/football?type=fixtures&nocache=1').then(function(data){
+      var hasLive = (data.matches||[]).some(function(m){return m.status==='IN_PLAY';});
+      var upEl = document.getElementById('upcomingList');
+      var fnEl = document.getElementById('finishedList');
+      if(upEl && fnEl){
+        var finishedAll = (data.finished||[]).slice().reverse();
+        var upcomingAll = data.upcoming||[];
+        // PL 라운드 재계산
+        var allPL=[...(data.finished||[]),...(data.upcoming||[])]
+          .filter(function(m){return m.competition&&m.competition.short==='PL';})
+          .sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);});
+        var round=1;
+        allPL.forEach(function(m){
+          if(m.tbd==='postponed'||m.tbd==='canceled'){m.round=null;return;}
+          m.round='pl'+round; ROUND_LABEL['pl'+round]=round+'라운드'; round++;
+        });
+        renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
+        renderList(fnEl, finishedAll.slice(0,5), finishedAll);
+      }
+      if(!hasLive) stopLivePolling();
+    }).catch(function(){});
+  }, 30000);
+}
+function stopLivePolling(){
+  if(_liveTimer){clearInterval(_liveTimer);_liveTimer=null;}
+}
+
 function filterSq(f,btn){
   document.querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');renderSq(f);
