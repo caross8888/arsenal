@@ -64,6 +64,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-meta-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .comp-tag{display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:4px;flex-shrink:0}
 .tag-final{background:rgba(212,175,55,.2);color:#D4AF37;border:1px solid rgba(212,175,55,.4);}
+.tag-round{background:rgba(255,255,255,.08);color:var(--text-muted);border:1px solid var(--border);}
 .tag-pl{background:rgba(55,0,255,.15);color:#A78BFA;border:1px solid rgba(167,139,250,.2)}
 .tag-cl{background:rgba(0,80,200,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.2)}
 .tag-fa{background:rgba(200,168,75,.15);color:var(--gold);border:1px solid var(--border-accent)}
@@ -449,6 +450,14 @@ function apiFetch(url){
 }
 function showErr(el,msg){el.innerHTML='<div class="error-state">&#9888;&#65039; '+msg+'</div>';}
 
+var ROUND_LABEL={
+  'final':'결승','semifinals':'4강','quarterfinals':'8강',
+  'round-of-16':'16강','round-of-32':'32강',
+  'league-phase':'리그페이즈',
+  'fourth-round':'4라운드','third-round':'3라운드',
+  'second-round':'2라운드','first-round':'1라운드',
+  'group-stage':'조별리그','playoff-round':'플레이오프'
+};
 var CTAG={PL:'tag-pl',CL:'tag-cl',UCL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec',EFL:'tag-ec',CS:'tag-oth',CWC:'tag-oth'};
 var CNAME={PL:'PL',CL:'UCL',UCL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup',EFL:'EFL Cup',CS:'Shield',CWC:'CWC'};
 function ctag(c){return CTAG[c]||'tag-oth';}
@@ -508,7 +517,7 @@ function buildFixCard(m){
   if(resultBg) card.style.background=resultBg;
   var metaRow=document.createElement('div');metaRow.className='fix-meta-row';
   var ct=document.createElement('span');ct.className='comp-tag '+ctag(code);ct.textContent=cname(code,compName);
-  if(m.round&&m.round.toLowerCase()==='final'){var rl=document.createElement('span');rl.className='comp-tag tag-final';rl.textContent='FINAL';metaRow.appendChild(rl);}
+  if(m.round&&ROUND_LABEL[m.round]){var rl=document.createElement('span');rl.className='comp-tag tag-round'+(m.round==='final'?' tag-final':'');rl.textContent=ROUND_LABEL[m.round];metaRow.appendChild(rl);}
   var ds=document.createElement('span');ds.className='fix-date'+(isLive?' live-tag':'');
   ds.textContent=isLive?'● LIVE':formatDate(m.utcDate||m.date,m.tbd);
   metaRow.appendChild(ct);metaRow.appendChild(ds);card.appendChild(metaRow);
