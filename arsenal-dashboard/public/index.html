@@ -83,6 +83,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-score-box{text-align:center;flex-shrink:0;width:68px}
 .fix-score{font-family:var(--fd);font-size:24px;letter-spacing:3px;line-height:1;color:var(--text)}
 .fix-vs{font-family:var(--fd);font-size:16px;letter-spacing:2px;color:var(--text-dim)}
+.fix-round-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);text-align:center;margin-bottom:2px;}
+.fix-round-final{color:#D4AF37;font-weight:700;}
 .fix-venue{font-size:10px;color:var(--text-dim);text-align:center}
 .std-hdr,.std-row{display:grid;grid-template-columns:22px 1fr 24px 24px 24px 24px 36px;gap:4px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px}
 .std-row:last-child{border-bottom:none}
@@ -527,7 +529,6 @@ function buildFixCard(m){
   ds.textContent=isLive?'● LIVE':formatDate(m.utcDate||m.date,m.tbd);
   var leftGroup=document.createElement('div');leftGroup.style.cssText='display:flex;align-items:center;gap:4px;';
   leftGroup.appendChild(ct);
-  if(m.round&&ROUND_LABEL[m.round]){var rl=document.createElement('span');rl.className='comp-tag tag-round'+(m.round==='final'?' tag-final':'');rl.textContent=ROUND_LABEL[m.round];leftGroup.appendChild(rl);}
   metaRow.appendChild(leftGroup);metaRow.appendChild(ds);card.appendChild(metaRow);
   var tr=document.createElement('div');tr.className='teams-row';
   var hd=document.createElement('div');hd.className='fix-team-home';
@@ -535,6 +536,7 @@ function buildFixCard(m){
   var hn=document.createElement('div');hn.className='t-name-home';
   hn.textContent=m.homeTeam.shortName||m.homeTeam.displayName||m.homeTeam.name||'';hd.appendChild(hn);
   var sb=document.createElement('div');sb.className='fix-score-box';
+  if(m.round&&ROUND_LABEL[m.round]){var rl2=document.createElement('div');rl2.className='fix-round-label'+(m.round==='final'?' fix-round-final':'');rl2.textContent=ROUND_LABEL[m.round];sb.appendChild(rl2);}
   if(hasScore){
     var sd=document.createElement('div');sd.className='fix-score';
     var arsS2=isArsHome?hs:as_; var oppS2=isArsHome?as_:hs;
