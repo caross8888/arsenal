@@ -130,6 +130,27 @@ export default async function handler(req, res) {
     home.stats = parseStats(home.statistics);
     away.stats = parseStats(away.statistics);
 
+    // FA컵/EFL 등 boxscore.teams[].statistics 가 없는 경우 → boxscore.stats 또는 teamStats 시도
+    if (!Object.keys(home.stats).length || !Object.keys(away.stats).length) {
+      // boxscore.stats (배열of {name, teams:[{displayValue}]}) 형태
+      const bsStats = raw.boxscore?.stats || [];
+      for (const grp of bsStats) {
+        for (const stat of (grp.stats || grp.statistics || [grp])) {
+          const name = stat.name || stat.label || '';
+          const mapped = STAT_KEY_MAP[name];
+          const teams = stat.teams || stat.team || [];
+          if (Array.isArray(teams) && teams.length >= 2) {
+            const hVal = teams[0]?.displayValue ?? teams[0]?.value;
+            const aVal = teams[1]?.displayValue ?? teams[1]?.value;
+            if (mapped) {
+              if (!home.stats[mapped] && hVal != null) home.stats[mapped] = String(hVal);
+              if (!away.stats[mapped] && aVal != null) away.stats[mapped] = String(aVal);
+            }
+          }
+        }
+      }
+    }
+
     // ── 이벤트 타임라인 ──
     // ESPN 축구는 keyMoments 또는 plays에서 이벤트 추출
     const events = [];
