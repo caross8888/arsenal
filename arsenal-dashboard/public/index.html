@@ -456,7 +456,8 @@ function cname(c,fb){return CNAME[c]||fb||c;}
 function formatDate(utcDate){
   var d=new Date(utcDate);
   var diff=Math.round((d-Date.now())/86400000);
-  var time=d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
+  var isTBD=d.getUTCHours()===0&&d.getUTCMinutes()===0&&d.getUTCSeconds()===0;
+  var time=isTBD?'시간미정':d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
   var date=d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'});
   if(diff===0) return '\uc624\ub298 '+time;
   if(diff===1) return '\ub0b4\uc77c '+time;
