@@ -207,32 +207,36 @@ export default async function handler(req, res) {
       || raw.venue?.fullName
       || null;
 
-    // ── 선수 스탯 ──
-    function parsePlayers(competitor) {
-      const roster = competitor?.roster || competitor?.athletes || [];
-      return roster.slice(0, 14).map(p => {
-        const ath = p.athlete || p;
+    // ── 선수 스탯 (raw.rosters 사용) ──
+    function parsePlayers(rosterEntry) {
+      const roster = rosterEntry?.roster || [];
+      return roster.map(p => {
+        const ath = p.athlete || {};
         const stats = {};
-        for (const s of (p.stats || p.statistics || [])) {
-          const n = (s.name || s.abbreviation || '').toLowerCase();
-          if (n.includes('rating') || n === 'rat') stats.rating = s.displayValue || s.value;
-          if (n === 'shots' || n === 'totalshots') stats.shots = s.displayValue || s.value;
-          if (n.includes('passacc') || n.includes('pass%')) stats.passAccuracy = s.displayValue || s.value;
-          if (n.includes('dribble') || n === 'drb') stats.dribbles = s.displayValue || s.value;
-          if (n.includes('tackle') || n === 'tck') stats.tackles = s.displayValue || s.value;
+        for (const s of (p.stats || [])) {
+          const n = (s.name || '').toLowerCase();
+          if (n === 'totalgoals') stats.goals = s.displayValue;
+          if (n === 'shotsontarget') stats.shotsOnTarget = s.displayValue;
+          if (n === 'totalshots') stats.shots = s.displayValue;
+          if (n === 'goalassists') stats.assists = s.displayValue;
+          if (n === 'yellowcards') stats.yellowCards = s.displayValue;
+          if (n === 'redcards') stats.redCards = s.displayValue;
+          if (n === 'foulscommitted') stats.fouls = s.displayValue;
         }
         return {
-          name:     ath.displayName || ath.shortName || ath.name || '',
-          jersey:   ath.jersey || p.jersey || '',
-          position: (ath.position?.abbreviation || ath.position?.displayAbbreviation || ''),
+          name:     ath.displayName || ath.shortName || '',
+          jersey:   p.jersey || '',
+          position: p.position?.abbreviation || ath.position?.abbreviation || '',
+          starter:  p.starter || false,
           stats,
         };
       }).filter(p => p.name);
     }
 
+    const rawRosters = raw.rosters || [];
     const players = {
-      home: parsePlayers(bsTeams.find(t => t.homeAway === 'home')),
-      away: parsePlayers(bsTeams.find(t => t.homeAway === 'away')),
+      home: parsePlayers(rawRosters.find(t => t.homeAway === 'home')),
+      away: parsePlayers(rawRosters.find(t => t.homeAway === 'away')),
     };
 
     const result = {
