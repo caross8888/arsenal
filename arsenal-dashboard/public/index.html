@@ -63,8 +63,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-card.finished::before{background:var(--surface3)}
 .fix-meta-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .comp-tag{display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:4px;flex-shrink:0}
-.tag-final{background:rgba(212,175,55,.2);color:#D4AF37;border:1px solid rgba(212,175,55,.4);}
 .tag-round{background:rgba(255,255,255,.08);color:var(--text-muted);border:1px solid var(--border);}
+.tag-round.tag-final{background:rgba(212,175,55,.2);color:#D4AF37;border:1px solid rgba(212,175,55,.4);}
 .tag-pl{background:rgba(55,0,255,.15);color:#A78BFA;border:1px solid rgba(167,139,250,.2)}
 .tag-cl{background:rgba(0,80,200,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.2)}
 .tag-fa{background:rgba(200,168,75,.15);color:var(--gold);border:1px solid var(--border-accent)}
@@ -517,10 +517,12 @@ function buildFixCard(m){
   if(resultBg) card.style.background=resultBg;
   var metaRow=document.createElement('div');metaRow.className='fix-meta-row';
   var ct=document.createElement('span');ct.className='comp-tag '+ctag(code);ct.textContent=cname(code,compName);
-  if(m.round&&ROUND_LABEL[m.round]){var rl=document.createElement('span');rl.className='comp-tag tag-round'+(m.round==='final'?' tag-final':'');rl.textContent=ROUND_LABEL[m.round];metaRow.appendChild(rl);}
   var ds=document.createElement('span');ds.className='fix-date'+(isLive?' live-tag':'');
   ds.textContent=isLive?'● LIVE':formatDate(m.utcDate||m.date,m.tbd);
-  metaRow.appendChild(ct);metaRow.appendChild(ds);card.appendChild(metaRow);
+  var leftGroup=document.createElement('div');leftGroup.style.cssText='display:flex;align-items:center;gap:4px;';
+  leftGroup.appendChild(ct);
+  if(m.round&&ROUND_LABEL[m.round]){var rl=document.createElement('span');rl.className='comp-tag tag-round'+(m.round==='final'?' tag-final':'');rl.textContent=ROUND_LABEL[m.round];leftGroup.appendChild(rl);}
+  metaRow.appendChild(leftGroup);metaRow.appendChild(ds);card.appendChild(metaRow);
   var tr=document.createElement('div');tr.className='teams-row';
   var hd=document.createElement('div');hd.className='fix-team-home';
   hd.appendChild(renderCrest(makeCrest(m.homeTeam,isArsHome)));
