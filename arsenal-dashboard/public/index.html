@@ -179,7 +179,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .modal-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:10px auto 0;}
 .modal-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:2;}
 /* 헤더 */
-.pm-header{background:linear-gradient(135deg,#bd0510 0%,#7a0010 100%);padding:20px 16px 18px;position:relative;}
+.pm-header{background:linear-gradient(135deg,#bd0510 0%,#7a0010 100%);padding:20px 16px 18px;position:sticky;top:0;z-index:10;}
 .pm-header-inner{display:flex;gap:14px;align-items:center;}
 .pm-photo{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);flex-shrink:0;}
 .pm-photo-ph{width:68px;height:68px;border-radius:50%;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;color:#fff;flex-shrink:0;}
@@ -1289,6 +1289,20 @@ function openPlayerModal(p) {
     badges.forEach(function(b){ h += '<span class="pm-badge">'+b+'</span>'; });
     h += '</div>';
   }
+  // 평점 계산 (competitions 집계)
+  var hdrRating = '-'; var hdrRatingColor = 'rgba(255,255,255,0.5)';
+  if(Object.keys(competitions).length > 0){
+    var rSum=0,rCnt=0;
+    Object.values(competitions).forEach(function(c){if(c.avgRating){rSum+=c.avgRating;rCnt++;}});
+    if(rCnt>0){
+      hdrRating=(rSum/rCnt).toFixed(1);
+      hdrRatingColor=parseFloat(hdrRating)>=8?'#22C55E':parseFloat(hdrRating)>=7?'#84CC16':parseFloat(hdrRating)>=6?'#F59E0B':'rgba(255,255,255,0.7)';
+    }
+  }
+  h += '<div style="position:absolute;right:44px;bottom:18px;text-align:center;line-height:1">';
+  h += '<div style="font-size:28px;font-weight:900;font-family:var(--fd);color:'+hdrRatingColor+'">'+hdrRating+'</div>';
+  h += '<div style="font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase;margin-top:2px">평점</div>';
+  h += '</div>';
   h += '</div></div></div>';
 
   // ── 기본 정보 그리드 ──
@@ -1301,18 +1315,8 @@ function openPlayerModal(p) {
   if(p.xG) infoItems.push({val:'xG '+p.xG.toFixed(1), lbl:'\uae30\ub300 \ub4dd\uc810 (PL)'});
   if(p.xA) infoItems.push({val:'xA '+p.xA.toFixed(1), lbl:'\uae30\ub300 \uc5b4\uc2dc\uc2a4\ud2b8 (PL)'});
 
-  if(infoItems.length){
-    h += '<div class="pm-info-grid">';
-    infoItems.forEach(function(item){
-      h += '<div class="pm-info-cell">';
-      h += '<div class="pm-info-val">'+(item.html?item.val:item.val)+'</div>';
-      h += '<div class="pm-info-lbl">'+item.lbl+'</div>';
-      h += '</div>';
-    });
-    h += '</div>';
-  }
 
-  // ── 종합 스탯 (전 대회 합산) ──
+  // ── 종합 스탯 집계 (기본정보 그리드에 삽입) ──
   if(Object.keys(competitions).length > 0){
     var tot = {goals:0,assists:0,appearances:0,minutes:0,cleanSheets:0,goalsConceded:0,ratingSum:0,ratingCnt:0};
     Object.values(competitions).forEach(function(c){
@@ -1324,23 +1328,27 @@ function openPlayerModal(p) {
       tot.goalsConceded+= c.goalsConceded||0;
       if(c.avgRating){tot.ratingSum+=c.avgRating;tot.ratingCnt++;}
     });
-    var totRating = tot.ratingCnt>0 ? (tot.ratingSum/tot.ratingCnt).toFixed(1) : '-';
-    var totRatingColor = tot.ratingCnt>0?(parseFloat(totRating)>=8?'#22C55E':parseFloat(totRating)>=7?'#84CC16':parseFloat(totRating)>=6?'#F59E0B':'rgba(255,255,255,0.7)'):'rgba(255,255,255,0.7)';
     var totMins = tot.minutes>0 ? tot.minutes : '-';
-    h += '<div class="stat-section">';
-    h += '<div class="stat-section-title">종합 스탯</div>';
-    h += '<div class="fotmob-stat-grid overall-stat-grid">';
+    // 기본정보 그리드에 추가
+    infoItems.push({val: tot.appearances>0?tot.appearances:'-', lbl:'경기'});
+    infoItems.push({val: totMins, lbl:'출전시간'});
     if(pos==='GK'){
-      h += makeFMStat(tot.cleanSheets>0?tot.cleanSheets:'-','클린시트',tot.cleanSheets>0?'#22C55E':'');
-      h += makeFMStat(tot.goalsConceded>0?tot.goalsConceded:'-','실점',tot.goalsConceded===0?'#22C55E':'#EF4444');
+      infoItems.push({val: tot.cleanSheets>0?tot.cleanSheets:'-', lbl:'클린시트'});
+      infoItems.push({val: tot.goalsConceded>=0?tot.goalsConceded:'-', lbl:'실점'});
     } else {
-      h += makeFMStat(tot.goals>0?tot.goals:'-','득점',tot.goals>0?'#22C55E':'');
-      h += makeFMStat(tot.assists>0?tot.assists:'-','어시스트',tot.assists>0?'#60A5FA':'');
+      infoItems.push({val: tot.goals>0?tot.goals:'-', lbl:'득점'});
+      infoItems.push({val: tot.assists>0?tot.assists:'-', lbl:'어시스트'});
     }
-    h += makeFMStat(tot.appearances>0?tot.appearances:'-','경기','');
-    h += makeFMStat(totMins,'출전시간','');
-    h += makeFMStat(totRating,'평점',totRatingColor);
-    h += '</div></div>';
+  }
+  if(infoItems.length){
+    h += '<div class="pm-info-grid">';
+    infoItems.forEach(function(item){
+      h += '<div class="pm-info-cell">';
+      h += '<div class="pm-info-val">'+(item.html?item.val:item.val)+'</div>';
+      h += '<div class="pm-info-lbl">'+item.lbl+'</div>';
+      h += '</div>';
+    });
+    h += '</div>';
   }
 
   // ── 대회별 스탯 탭 ──
