@@ -995,7 +995,7 @@ function renderPlayerTable(side, players, visible){
       '<td>'+(s.shots||'-')+'</td>'+
       '<td>'+(s.shotsOnTarget||'-')+'</td>'+
       '<td>'+(s.fouls||'-')+'</td>'+
-      '<td>'+(s.yellowCards&&s.yellowCards!=='0'?'🟨':'-')+'</td>'+
+      '<td>'+(function(s){var y=parseInt(s.yellowCards)||0;var r=parseInt(s.redCards)||0;var out='🟨'.repeat(Math.min(y,2))+(r?'🟥':'');return out||'-';})(s)+'</td>'+
     '</tr>';
   });
   html+='</tbody></table></div>';
