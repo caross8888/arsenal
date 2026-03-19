@@ -910,7 +910,7 @@ function openMatchModal(m){
 
   overlay.classList.add('open');
   document.body.style.overflow='hidden';
-  location.hash='match';
+  history.pushState({modal:'match'},'',' #match');
 
   var timer=setTimeout(function(){
     var sp=content.querySelector('.spinner');
@@ -1071,7 +1071,7 @@ function closeMatchModal(e){
   var overlay=document.getElementById('matchModal');
   overlay.classList.remove('open');
   document.body.style.overflow='';
-  if(location.hash==='#match') history.back();
+  if(location.hash.includes('match')) history.replaceState(null,'',location.href.split('#')[0]);
 }
 
 // ── TICKER ──
@@ -1099,33 +1099,34 @@ function showSec(id,btn){
     if(id==='news') loadNews();
     if(id==='sns') loadSns();
   }
-  location.hash = id;
+  history.pushState({tab:id},'','#'+id);
   window.scrollTo(0,0);
 }
 
-// 페이지 로드 시 해시 복원 + 뒤로가기 탭 전환
+// 뒤로가기 처리: 모달 열려있으면 모달 먼저 닫기, 아니면 탭 전환
 (function(){
-  function restoreHash(){
-    var hash = location.hash.replace('#','');
-    if(hash === 'player' || hash === 'match') return; // 모달은 hashchange로만 처리
+  window.addEventListener('popstate', function(){
+    var playerModal = document.getElementById('playerModal');
+    var matchModal  = document.getElementById('matchModal');
+    if(playerModal && playerModal.classList.contains('open')){
+      closePlayerModal(true); return;
+    }
+    if(matchModal && matchModal.classList.contains('open')){
+      matchModal.classList.remove('open');
+      document.body.style.overflow=''; return;
+    }
+    var hash = location.hash.replace('#','').trim();
     if(hash && VALID_SECS.indexOf(hash) !== -1){
       var btn = document.querySelector('.nav-btn[onclick*="\''+hash+"'"+'\"]');
-      if(btn) showSec(hash, btn);
-    } else if(!hash) {
-      // 해시 없어지면 모달 닫기
-      var modal = document.getElementById('playerModal');
-      if(modal.classList.contains('open')){
-        closePlayerModal(true);
-      }
-      var matchModal = document.getElementById('matchModal');
-      if(matchModal.classList.contains('open')){
-        matchModal.classList.remove('open');
-        document.body.style.overflow='';
-      }
+      if(btn) showSec(hash, btn, true);
     }
+  });
+  // 초기 해시 복원
+  var hash = location.hash.replace('#','').trim();
+  if(hash && VALID_SECS.indexOf(hash) !== -1){
+    var btn = document.querySelector('.nav-btn[onclick*="\''+hash+"'"+'\"]');
+    if(btn) showSec(hash, btn, true);
   }
-  restoreHash();
-  window.addEventListener('hashchange', restoreHash);
 })();
 function filterSq(f,btn){
   document.querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active');});
@@ -1420,7 +1421,7 @@ function openPlayerModal(p) {
   content.innerHTML = h;
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
-  location.hash = 'player';
+  history.pushState({modal:'player'},'',' #player');
 
   // 레이더 차트
   setTimeout(function(){
@@ -1571,7 +1572,7 @@ function makeStatBox(val,lbl,sub,color){
 function closePlayerModal(fromHash){
   document.getElementById('playerModal').classList.remove('open');
   document.body.style.overflow='';
-  if(!fromHash && location.hash==='#player') history.back();
+  if(!fromHash && location.hash.includes('player')) history.replaceState(null,'',location.href.split('#')[0]);
 }
 function closeModal(e){
   if(e.target===document.getElementById('playerModal'))closePlayerModal();
