@@ -6,6 +6,7 @@ const ARSENAL_FPL_ID = 1;
 const FPL_POS = {1:'GK',2:'DF',3:'MF',4:'FW'};
 const LOAN_KEYWORDS = /loan|loaned|joined|transferred|released|left the club/i;
 
+// Fotmob 선수 ID 매핑 (사진: images.fotmob.com/image_resources/playerimages/{id}.png)
 const FOTMOB_IDS = {
   'kepa':        317564,  'raya':        562727,  'setford':     1243239,
   'white':       776151,  'saliba':      955406,  'gabriel':     795179,
@@ -32,9 +33,8 @@ function getFotmobId(p) {
 }
 
 const cache = {};
-const TTL = 6 * 60 * 60 * 1000;
+const TTL = 60 * 60 * 1000;
 function getCache(k){const c=cache[k];return(c&&Date.now()-c.ts<TTL)?c.data:null;}
-function getStalecache(k){const c=cache[k];return c?c.data:null;}
 function setCache(k,d){cache[k]={data:d,ts:Date.now()};}
 
 const FPL_HEADERS = {
@@ -51,9 +51,7 @@ export default async function handler(req, res) {
   const nocache = req.query.nocache;
 
   if(!nocache){
-    const hit = type === 'injuries'
-      ? (cache['injuries'] && Date.now()-cache['injuries'].ts < 24*60*60*1000 ? cache['injuries'].data : null)
-      : getCache(type);
+    const hit = getCache(type);
     if(hit) return res.json(hit);
   }
 
@@ -62,7 +60,6 @@ export default async function handler(req, res) {
 
   try {
     let result;
-    let squadUpdatedAt = null; // squad updated_at을 바깥 스코프에서 관리
 
     if(type === 'fixtures'){
       const ARSENAL_ESPN_ID = '359';
@@ -100,12 +97,12 @@ export default async function handler(req, res) {
           tbd:         status?.id === '5' || status?.description === 'Postponed' ? 'postponed' : status?.id === '6' || status?.description === 'Canceled' ? 'canceled' : status?.id === '8' ? 'tbd' : null,
           homeTeam: {
             id:    homeId,
-            name:  home?.team?.displayName || home?.team?.name,
+            name:  home?.team?.shortDisplayName || home?.team?.displayName || home?.team?.name,
             crest: home?.team?.logo || (homeId ? `https://a.espncdn.com/i/teamlogos/soccer/500/${homeId}.png` : null),
           },
           awayTeam: {
             id:    awayId,
-            name:  away?.team?.displayName || away?.team?.name,
+            name:  away?.team?.shortDisplayName || away?.team?.displayName || away?.team?.name,
             crest: away?.team?.logo || (awayId ? `https://a.espncdn.com/i/teamlogos/soccer/500/${awayId}.png` : null),
           },
           score: {fullTime: {home: homeScore, away: awayScore}}
@@ -167,98 +164,40 @@ export default async function handler(req, res) {
         }))
       };
 
-    } else if(type === 'injuries'){
-      const r = await fetch(FPL_URL, {
-        headers: {
-          ...FPL_HEADERS,
-          'Accept-Language': 'en-GB,en;q=0.9',
-          'sec-ch-ua': '"Chromium";v="122"',
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'same-origin',
-        },
-        signal: AbortSignal.timeout(8000)
-      });
-      if(!r.ok) throw new Error(`FPL API: ${r.status}`);
-      const json = await r.json();
-      const arsenalTeam = json.teams.find(t => t.name === 'Arsenal');
-      if(!arsenalTeam) throw new Error('Arsenal not found');
-      const arsenalId = arsenalTeam.id;
-      const LOAN_RE = /loan|loaned|joined|transferred|released|left the club/i;
-      const STATUS_LABEL = {i:'부상',d:'출전 의심',s:'출장 정지',u:'결장'};
-      const allArsenal = (json.elements||[])
-        .filter(p => p.team === arsenalId)
-        .map(p => ({
-          id: p.id, name: p.web_name,
-          fullName: `${p.first_name} ${p.second_name}`,
-          status: p.status, statusLabel: STATUS_LABEL[p.status]||p.status,
-          news: p.news||'', chanceOfPlaying: p.chance_of_playing_next_round,
-          position: FPL_POS[p.element_type]||'?', positionType: p.element_type,
-          minutes: p.minutes,
-        }));
-      const injured = allArsenal
-        .filter(p => {
-          if(p.status === 'a') return false;
-          if(p.news && LOAN_RE.test(p.news)) return false;
-          if(p.positionType === 1) return true;
-          return p.minutes > 0;
-        })
-        .sort((a,b) => ({i:0,d:1,s:2,u:3}[a.status]??9)-({i:0,d:1,s:2,u:3}[b.status]??9));
-      result = {
-        injuredCount: injured.length,
-        availableCount: allArsenal.filter(p=>p.status==='a'&&(p.positionType===1||p.minutes>0)&&(!p.news||!LOAN_RE.test(p.news))).length,
-        injured,
-      };
-
     } else if(type === 'squad'){
+      // players.json (Fotmob 기반) 직접 사용
       const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
       if(!pjRes.ok) throw new Error('players.json 로드 실패');
       const pjData = await pjRes.json();
 
-      // updated_at이 같으면 캐시 유지
-      const cached = cache['squad'];
-      if(cached && cached.updatedAt === pjData.updated_at) {
-        return res.json(cached.data);
-      }
-
-      squadUpdatedAt = pjData.updated_at; // 바깥 스코프에 저장
-
       result = {
         squad: (pjData.players || []).map(p => ({
-          id:            p.id,
-          fotmobId:      p.id,
-          name:          p.name,
-          fullName:      p.name,
-          nationality:   p.nationality || '',
-          posGroup:      p.posGroup || 'MF',
-          position:      p.position || '',
+          id:          p.id,
+          fotmobId:    p.id,
+          name:        p.name,
+          fullName:    p.name,
+          nationality: p.nationality || '',
+          posGroup:    p.posGroup || 'MF',
+          position:    p.position || '',
           positionLabel: p.positionLabel || '',
-          goals:         p.stats?.goals || 0,
-          assists:       p.stats?.assists || 0,
-          appearances:   p.stats?.appearances || 0,
-          starts:        p.stats?.starts || 0,
-          minutes:       p.stats?.minutesPlayed || 0,
-          yellowCards:   p.stats?.yellowCards || 0,
-          redCards:      p.stats?.redCards || 0,
-          xG:            p.stats?.xG || 0,
-          xA:            p.stats?.xA || 0,
-          photo:         p.localPhoto || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+          goals:       p.stats?.goals || 0,
+          assists:     p.stats?.assists || 0,
+          appearances: p.stats?.appearances || 0,
+          starts:      p.stats?.starts || 0,
+          minutes:     p.stats?.minutesPlayed || 0,
+          yellowCards: p.stats?.yellowCards || 0,
+          redCards:    p.stats?.redCards || 0,
+          xG:          p.stats?.xG || 0,
+          xA:          p.stats?.xA || 0,
+          photo:       `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
         }))
       };
     }
 
-    if(!nocache) {
-      if(type === 'squad' && squadUpdatedAt) {
-        cache['squad'] = {data: result, ts: Date.now(), updatedAt: squadUpdatedAt};
-      } else {
-        setCache(type, result);
-      }
-    }
+    if(!nocache) setCache(type, result);
     return res.json(result);
 
   } catch(err){
-    const stale = getStalecache(type);
-    if(stale) return res.json(stale);
     return res.status(500).json({error: err.message});
   }
 }

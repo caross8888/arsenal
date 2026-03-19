@@ -1,5 +1,4 @@
 // api/match.js — ESPN 경기 상세
-
 const SLUG_MAP = {
   PL:  'eng.1',
   UCL: 'uefa.champions',
@@ -23,10 +22,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    // slug 있으면 바로, 없으면 순회
     let raw = null;
     const slugsToTry = slug ? [slug] : Object.values(SLUG_MAP);
-
     for (const s of slugsToTry) {
       try {
         const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${s}/summary?event=${eventId}`;
@@ -36,103 +33,63 @@ export default async function handler(req, res) {
         });
         if (!r.ok) continue;
         const data = await r.json();
-        if (data && (data.header || data.boxscore || data.plays)) {
-          raw = data;
-          break;
-        }
+        if (data && (data.header || data.boxscore || data.plays)) { raw = data; break; }
       } catch (_) {}
     }
-
     if (!raw) return res.status(404).json({ error: 'match not found - tried slugs: ' + slugsToTry.join(',') + ' for event: ' + eventId });
 
-    // ── 팀 정보 (header 또는 boxscore에서) ──
+    // ── 팀 정보 ──
     const comp = raw.header?.competitions?.[0];
     const bsTeams = raw.boxscore?.teams || [];
-
     const getTeam = (homeAway) => {
-      // header에서
       const hTeam = comp?.competitors?.find(c => c.homeAway === homeAway);
-      // boxscore에서
       const bTeam = bsTeams.find(t => t.homeAway === homeAway);
       const teamData = hTeam?.team || bTeam?.team || {};
       const id = teamData.id || hTeam?.id;
       return {
         id,
-        name:  teamData.displayName || teamData.name || '',
+        name: teamData.shortDisplayName || teamData.displayName || teamData.name || '',
         crest: teamData.logo || (id ? `https://a.espncdn.com/i/teamlogos/soccer/500/${id}.png` : null),
         score: parseInt(hTeam?.score || comp?.status?.type?.shortDetail?.split('-')?.[0] || 0),
         statistics: bTeam?.statistics || [],
       };
     };
-
     const home = getTeam('home');
     const away = getTeam('away');
 
-    // ── 스탯 파싱 (boxscore.teams[].statistics) ──
+    // ── 스탯 파싱 ──
     const STAT_KEY_MAP = {
-      // ESPN 필드명 → 우리 키
-      'possessionPct':         'possessionPct',
-      'possession':            'possessionPct',
-      'Possession':            'possessionPct',
-      'totalShots':            'totalShots',
-      'shots':                 'totalShots',
-      'Shots':                 'totalShots',
-      'shotsOnTarget':         'shotsOnTarget',
-      'shotsonTarget':         'shotsOnTarget',
-      'onTargetShotCount':     'shotsOnTarget',
-      'Shots on Target':       'shotsOnTarget',
-      'passingAccuracy':       'passingAccuracy',
-      'passAccuracy':          'passingAccuracy',
-      'PassAccuracy':          'passingAccuracy',
-      'cornerKicks':           'cornerKicks',
-      'corners':               'cornerKicks',
-      'Corners':               'cornerKicks',
-      'offsides':              'offsides',
-      'Offsides':              'offsides',
-      'yellowCards':           'yellowCards',
-      'yellowCard':            'yellowCards',
-      'YellowCards':           'yellowCards',
-      'redCards':              'redCards',
-      'redCard':               'redCards',
-      'RedCards':              'redCards',
+      'possessionPct':'possessionPct','possession':'possessionPct','Possession':'possessionPct',
+      'totalShots':'totalShots','shots':'totalShots','Shots':'totalShots',
+      'shotsOnTarget':'shotsOnTarget','shotsonTarget':'shotsOnTarget','onTargetShotCount':'shotsOnTarget','Shots on Target':'shotsOnTarget',
+      'passingAccuracy':'passingAccuracy','passAccuracy':'passingAccuracy','PassAccuracy':'passingAccuracy',
+      'cornerKicks':'cornerKicks','corners':'cornerKicks','Corners':'cornerKicks',
+      'offsides':'offsides','Offsides':'offsides',
+      'yellowCards':'yellowCards','yellowCard':'yellowCards','YellowCards':'yellowCards',
+      'redCards':'redCards','redCard':'redCards','RedCards':'redCards',
     };
-
     function parseStats(statistics) {
       const result = {};
       for (const stat of (statistics || [])) {
         const name = stat.name || stat.abbreviation || stat.label || '';
         const mapped = STAT_KEY_MAP[name];
-        if (mapped && !result[mapped]) {
-          result[mapped] = stat.displayValue ?? stat.value ?? '0';
-        }
-        // label/text 기반 fallback
+        if (mapped && !result[mapped]) result[mapped] = stat.displayValue ?? stat.value ?? '0';
         const label = (stat.label || stat.text || '').toLowerCase();
-        if (!result.possessionPct && label.includes('possess'))
-          result.possessionPct = stat.displayValue ?? stat.value ?? '0';
-        if (!result.totalShots && /^shots?$/.test(label))
-          result.totalShots = stat.displayValue ?? stat.value ?? '0';
-        if (!result.shotsOnTarget && label.includes('on target'))
-          result.shotsOnTarget = stat.displayValue ?? stat.value ?? '0';
-        if (!result.passingAccuracy && label.includes('pass') && (label.includes('acc') || label.includes('pct') || label.includes('%')))
-          result.passingAccuracy = stat.displayValue ?? stat.value ?? '0';
-        if (!result.cornerKicks && label.includes('corner'))
-          result.cornerKicks = stat.displayValue ?? stat.value ?? '0';
-        if (!result.offsides && label.includes('offside'))
-          result.offsides = stat.displayValue ?? stat.value ?? '0';
-        if (!result.yellowCards && label.includes('yellow'))
-          result.yellowCards = stat.displayValue ?? stat.value ?? '0';
-        if (!result.redCards && label.includes('red'))
-          result.redCards = stat.displayValue ?? stat.value ?? '0';
+        if (!result.possessionPct && label.includes('possess')) result.possessionPct = stat.displayValue ?? stat.value ?? '0';
+        if (!result.totalShots && /^shots?$/.test(label)) result.totalShots = stat.displayValue ?? stat.value ?? '0';
+        if (!result.shotsOnTarget && label.includes('on target')) result.shotsOnTarget = stat.displayValue ?? stat.value ?? '0';
+        if (!result.passingAccuracy && label.includes('pass') && (label.includes('acc')||label.includes('pct')||label.includes('%'))) result.passingAccuracy = stat.displayValue ?? stat.value ?? '0';
+        if (!result.cornerKicks && label.includes('corner')) result.cornerKicks = stat.displayValue ?? stat.value ?? '0';
+        if (!result.offsides && label.includes('offside')) result.offsides = stat.displayValue ?? stat.value ?? '0';
+        if (!result.yellowCards && label.includes('yellow')) result.yellowCards = stat.displayValue ?? stat.value ?? '0';
+        if (!result.redCards && label.includes('red')) result.redCards = stat.displayValue ?? stat.value ?? '0';
       }
       return result;
     }
-
     home.stats = parseStats(home.statistics);
     away.stats = parseStats(away.statistics);
 
-    // FA컵/EFL 등 boxscore.teams[].statistics 가 없는 경우 → boxscore.stats 또는 teamStats 시도
     if (!Object.keys(home.stats).length || !Object.keys(away.stats).length) {
-      // boxscore.stats (배열of {name, teams:[{displayValue}]}) 형태
       const bsStats = raw.boxscore?.stats || [];
       for (const grp of bsStats) {
         for (const stat of (grp.stats || grp.statistics || [grp])) {
@@ -152,48 +109,24 @@ export default async function handler(req, res) {
     }
 
     // ── 이벤트 타임라인 ──
-    // ESPN 축구는 keyMoments 또는 plays에서 이벤트 추출
     const events = [];
     const keyMoments = raw.keyMoments || raw.keyEvents || [];
     const plays = raw.plays || [];
-
-    // keyMoments 우선 (있으면 더 깔끔)
     const eventSource = keyMoments.length ? keyMoments : plays;
-
     for (const ev of eventSource) {
       const typeText = (ev.type?.text || ev.type?.id || ev.text || '').toLowerCase();
       const isPenGoal = typeText.includes('penalty - scored') || typeText.includes('penalty scored');
-      const isGoal    = (typeText.includes('goal') || isPenGoal) && !typeText.includes('disallow') && !typeText.includes('no goal') && !typeText.includes('miss') && !typeText.includes('saved');
+      const isGoal = (typeText.includes('goal') || isPenGoal) && !typeText.includes('disallow') && !typeText.includes('no goal') && !typeText.includes('miss') && !typeText.includes('saved');
       const isOwnGoal = typeText.includes('own goal') || typeText.includes('own-goal');
       const isRed = typeText.includes('red card') || typeText.includes('straight red') || typeText.includes('second yellow');
-
       if (!isGoal && !isOwnGoal && !isRed) continue;
-
-      // 분 추출
-      const min = ev.clock?.displayValue
-        || ev.period?.clock?.displayValue
-        || ev.time?.displayValue
-        || (ev.period?.number === 2 ? '45+?' : '?');
-
-      // 선수명
-      const player = ev.participants?.[0]?.athlete?.displayName
-        || ev.athlete?.displayName
-        || ev.text?.split(' ')?.[0]
-        || '';
-
-      // 팀
+      const min = ev.clock?.displayValue || ev.period?.clock?.displayValue || ev.time?.displayValue || (ev.period?.number === 2 ? '45+?' : '?');
+      const player = ev.participants?.[0]?.athlete?.shortName || ev.participants?.[0]?.athlete?.displayName || ev.athlete?.shortName || ev.athlete?.displayName || ev.text?.split(' ')?.[0] || '';
       const evTeamId = ev.team?.id || ev.teamId;
       const homeAway = evTeamId === home.id ? 'home' : 'away';
-
-      events.push({
-        minute:  min,
-        type:    isOwnGoal ? 'own_goal' : isPenGoal ? 'pen_goal' : isGoal ? 'goal' : 'red_card',
-        player,
-        homeAway,
-      });
+      events.push({ minute: min, type: isOwnGoal ? 'own_goal' : isPenGoal ? 'pen_goal' : isGoal ? 'goal' : 'red_card', player, homeAway });
     }
 
-    // score 재확인 (header score가 없으면 boxscore에서)
     if (!home.score && !away.score && comp) {
       const hComp = comp.competitors?.find(c => c.homeAway === 'home');
       const aComp = comp.competitors?.find(c => c.homeAway === 'away');
@@ -201,13 +134,9 @@ export default async function handler(req, res) {
       away.score = parseInt(aComp?.score || 0);
     }
 
-    // ── 경기장 ──
-    const venue = raw.header?.competitions?.[0]?.venue?.fullName
-      || raw.gameInfo?.venue?.fullName
-      || raw.venue?.fullName
-      || null;
+    const venue = raw.header?.competitions?.[0]?.venue?.fullName || raw.gameInfo?.venue?.fullName || raw.venue?.fullName || null;
 
-    // ── 선수 스탯 (raw.rosters 사용) ──
+    // ── 선수 스탯 ──
     function parsePlayers(rosterEntry) {
       const roster = rosterEntry?.roster || [];
       return roster.map(p => {
@@ -215,16 +144,16 @@ export default async function handler(req, res) {
         const stats = {};
         for (const s of (p.stats || [])) {
           const n = (s.name || '').toLowerCase();
-          if (n === 'totalgoals') stats.goals = s.displayValue;
-          if (n === 'shotsontarget') stats.shotsOnTarget = s.displayValue;
-          if (n === 'totalshots') stats.shots = s.displayValue;
-          if (n === 'goalassists') stats.assists = s.displayValue;
-          if (n === 'yellowcards') stats.yellowCards = s.displayValue;
-          if (n === 'redcards') stats.redCards = s.displayValue;
+          if (n === 'totalgoals')     stats.goals = s.displayValue;
+          if (n === 'shotsontarget')  stats.shotsOnTarget = s.displayValue;
+          if (n === 'totalshots')     stats.shots = s.displayValue;
+          if (n === 'goalassists')    stats.assists = s.displayValue;
+          if (n === 'yellowcards')    stats.yellowCards = s.displayValue;
+          if (n === 'redcards')       stats.redCards = s.displayValue;
           if (n === 'foulscommitted') stats.fouls = s.displayValue;
         }
         return {
-          name:     ath.displayName || ath.shortName || '',
+          name:     ath.shortName || ath.displayName || '',
           jersey:   p.jersey || '',
           position: p.position?.abbreviation || ath.position?.abbreviation || '',
           starter:  p.starter || false,
