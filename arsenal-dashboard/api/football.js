@@ -33,8 +33,9 @@ function getFotmobId(p) {
 }
 
 const cache = {};
-const TTL = 60 * 60 * 1000;
+const TTL = 6 * 60 * 60 * 1000;
 function getCache(k){const c=cache[k];return(c&&Date.now()-c.ts<TTL)?c.data:null;}
+function getStalecache(k){const c=cache[k];return c?c.data:null;}
 function setCache(k,d){cache[k]={data:d,ts:Date.now()};}
 
 const FPL_HEADERS = {
@@ -51,7 +52,9 @@ export default async function handler(req, res) {
   const nocache = req.query.nocache;
 
   if(!nocache){
-    const hit = getCache(type);
+    const hit = type === 'injuries'
+      ? (cache['injuries'] && Date.now()-cache['injuries'].ts < 24*60*60*1000 ? cache['injuries'].data : null)
+      : getCache(type);
     if(hit) return res.json(hit);
   }
 
@@ -241,6 +244,8 @@ export default async function handler(req, res) {
     return res.json(result);
 
   } catch(err){
+    const stale = getStalecache(type);
+    if(stale) return res.json(stale);
     return res.status(500).json({error: err.message});
   }
 }
