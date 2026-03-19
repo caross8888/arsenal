@@ -6,7 +6,6 @@ const ARSENAL_FPL_ID = 1;
 const FPL_POS = {1:'GK',2:'DF',3:'MF',4:'FW'};
 const LOAN_KEYWORDS = /loan|loaned|joined|transferred|released|left the club/i;
 
-// Fotmob 선수 ID 매핑 (사진: images.fotmob.com/image_resources/playerimages/{id}.png)
 const FOTMOB_IDS = {
   'kepa':        317564,  'raya':        562727,  'setford':     1243239,
   'white':       776151,  'saliba':      955406,  'gabriel':     795179,
@@ -63,6 +62,7 @@ export default async function handler(req, res) {
 
   try {
     let result;
+    let squadUpdatedAt = null; // squad updated_at을 바깥 스코프에서 관리
 
     if(type === 'fixtures'){
       const ARSENAL_ESPN_ID = '359';
@@ -211,7 +211,6 @@ export default async function handler(req, res) {
       };
 
     } else if(type === 'squad'){
-      // players.json updated_at 기반 캐시 — 스크래퍼가 업데이트할 때만 갱신
       const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
       if(!pjRes.ok) throw new Error('players.json 로드 실패');
       const pjData = await pjRes.json();
@@ -222,33 +221,35 @@ export default async function handler(req, res) {
         return res.json(cached.data);
       }
 
+      squadUpdatedAt = pjData.updated_at; // 바깥 스코프에 저장
+
       result = {
         squad: (pjData.players || []).map(p => ({
-          id:          p.id,
-          fotmobId:    p.id,
-          name:        p.name,
-          fullName:    p.name,
-          nationality: p.nationality || '',
-          posGroup:    p.posGroup || 'MF',
-          position:    p.position || '',
+          id:            p.id,
+          fotmobId:      p.id,
+          name:          p.name,
+          fullName:      p.name,
+          nationality:   p.nationality || '',
+          posGroup:      p.posGroup || 'MF',
+          position:      p.position || '',
           positionLabel: p.positionLabel || '',
-          goals:       p.stats?.goals || 0,
-          assists:     p.stats?.assists || 0,
-          appearances: p.stats?.appearances || 0,
-          starts:      p.stats?.starts || 0,
-          minutes:     p.stats?.minutesPlayed || 0,
-          yellowCards: p.stats?.yellowCards || 0,
-          redCards:    p.stats?.redCards || 0,
-          xG:          p.stats?.xG || 0,
-          xA:          p.stats?.xA || 0,
-          photo:       p.localPhoto || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+          goals:         p.stats?.goals || 0,
+          assists:       p.stats?.assists || 0,
+          appearances:   p.stats?.appearances || 0,
+          starts:        p.stats?.starts || 0,
+          minutes:       p.stats?.minutesPlayed || 0,
+          yellowCards:   p.stats?.yellowCards || 0,
+          redCards:      p.stats?.redCards || 0,
+          xG:            p.stats?.xG || 0,
+          xA:            p.stats?.xA || 0,
+          photo:         p.localPhoto || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
         }))
       };
     }
 
     if(!nocache) {
-      if(type === 'squad' && pjData?.updated_at) {
-        cache['squad'] = {data: result, ts: Date.now(), updatedAt: pjData.updated_at};
+      if(type === 'squad' && squadUpdatedAt) {
+        cache['squad'] = {data: result, ts: Date.now(), updatedAt: squadUpdatedAt};
       } else {
         setCache(type, result);
       }
