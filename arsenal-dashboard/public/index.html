@@ -1299,9 +1299,8 @@ function openPlayerModal(p) {
       hdrRatingColor=parseFloat(hdrRating)>=8?'#22C55E':parseFloat(hdrRating)>=7?'#84CC16':parseFloat(hdrRating)>=6?'#F59E0B':'rgba(255,255,255,0.7)';
     }
   }
-  h += '<div style="position:absolute;right:44px;bottom:18px;text-align:center;line-height:1">';
-  h += '<div style="font-size:28px;font-weight:900;font-family:var(--fd);color:'+hdrRatingColor+'">'+hdrRating+'</div>';
-  h += '<div style="font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase;margin-top:2px">평점</div>';
+  h += '<div style="position:absolute;right:16px;bottom:18px;text-align:center;line-height:1">';
+  h += '<div style="font-size:36px;font-weight:900;font-family:var(--fd);color:'+hdrRatingColor+'">'+hdrRating+'</div>';
   h += '</div>';
   h += '</div></div></div>';
 
@@ -1333,18 +1332,18 @@ function openPlayerModal(p) {
     infoItems.push({val: tot.appearances>0?tot.appearances:'-', lbl:'경기'});
     infoItems.push({val: totMins, lbl:'출전시간'});
     if(pos==='GK'){
-      infoItems.push({val: tot.cleanSheets>0?tot.cleanSheets:'-', lbl:'클린시트'});
-      infoItems.push({val: tot.goalsConceded>=0?tot.goalsConceded:'-', lbl:'실점'});
+      infoItems.push({val: tot.cleanSheets>0?tot.cleanSheets:'-', lbl:'클린시트', color: tot.cleanSheets>0?'#22C55E':'#fff'});
+      infoItems.push({val: tot.goalsConceded>=0?tot.goalsConceded:'-', lbl:'실점', color: tot.goalsConceded===0?'#22C55E':tot.goalsConceded>0?'#EF4444':'#fff'});
     } else {
-      infoItems.push({val: tot.goals>0?tot.goals:'-', lbl:'득점'});
-      infoItems.push({val: tot.assists>0?tot.assists:'-', lbl:'어시스트'});
+      infoItems.push({val: tot.goals>0?tot.goals:'-', lbl:'득점', color: tot.goals>0?'#22C55E':'#fff'});
+      infoItems.push({val: tot.assists>0?tot.assists:'-', lbl:'어시스트', color: tot.assists>0?'#60A5FA':'#fff'});
     }
   }
   if(infoItems.length){
     h += '<div class="pm-info-grid">';
     infoItems.forEach(function(item){
       h += '<div class="pm-info-cell">';
-      h += '<div class="pm-info-val">'+(item.html?item.val:item.val)+'</div>';
+      h += '<div class="pm-info-val" style="color:'+(item.color||'#fff')+'">'+(item.html?item.val:item.val)+'</div>';
       h += '<div class="pm-info-lbl">'+item.lbl+'</div>';
       h += '</div>';
     });
