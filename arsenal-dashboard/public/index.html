@@ -461,9 +461,9 @@ function formatDate(utcDate){
   if(diff===0) return '\uc624\ub298 '+time;
   if(diff===1) return '\ub0b4\uc77c '+time;
   if(diff>1&&diff<8) return date+' '+time;
-  if(diff>=8) return date;
+  if(diff>=8) return date+' '+time;
   if(diff===-1) return '\uc5b4\uc81c';
-  return date;
+  return date+' '+time;
 }
 
 function makeCrest(team,isArs){
@@ -896,8 +896,8 @@ function renderMatchModal(content, m, data){
         '<div class="mm-score" style="color:'+scoreColor+'">'+h.score+' : '+a.score+'</div>'+
         '<div class="mm-team">'+(a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display=&quot;none&quot;">':'')+'<div class="mm-team-name">'+(a.name||'')+'</div></div>'+
       '</div>'+
-      '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
       '<div class="mm-match-date">'+formatDate(m.utcDate||m.date)+'</div>'+
+      '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
       (data.venue?'<div class="mm-venue">📍 '+data.venue+'</div>':'')+
     '</div>';
 
@@ -982,21 +982,20 @@ function renderPlayerTable(side, players, visible){
   var style=visible?'margin-top:10px':'margin-top:10px;display:none';
   var html='<div class="mm-section mm-players-'+side+'" style="'+style+'">'+
     '<table class="mm-player-table"><thead><tr>'+
-    '<th>선수</th><th>평점</th><th>슈팅</th><th>패스%</th><th>드리블</th><th>태클</th>'+
+    '<th>선수</th><th>골</th><th>도움</th><th>슈팅</th><th>유효</th><th>파울</th><th>경고</th>'+
     '</tr></thead><tbody>';
   players.forEach(function(p){
     var s=p.stats||{};
-    var rat=parseFloat(s.rating||0);
-    var ratColor=rat>=8?'#22C55E':rat>=7?'#84CC16':rat>=6?'#F59E0B':'var(--text-muted)';
     html+='<tr>'+
       '<td>'+(p.name||'')+(p.jersey?' <span style="color:var(--text-dim);font-size:9px">#'+p.jersey+'</span>':'')+
         (p.position?' <span style="color:var(--text-dim);font-size:9px">'+p.position+'</span>':'')+
       '</td>'+
-      '<td style="color:'+ratColor+'">'+(s.rating||'-')+'</td>'+
+      '<td>'+(s.goals||'-')+'</td>'+
+      '<td>'+(s.assists||'-')+'</td>'+
       '<td>'+(s.shots||'-')+'</td>'+
-      '<td>'+(s.passAccuracy?s.passAccuracy+'%':'-')+'</td>'+
-      '<td>'+(s.dribbles||'-')+'</td>'+
-      '<td>'+(s.tackles||'-')+'</td>'+
+      '<td>'+(s.shotsOnTarget||'-')+'</td>'+
+      '<td>'+(s.fouls||'-')+'</td>'+
+      '<td>'+(s.yellowCards&&s.yellowCards!=='0'?'🟨':'-')+'</td>'+
     '</tr>';
   });
   html+='</tbody></table></div>';
