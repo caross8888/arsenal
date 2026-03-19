@@ -25,6 +25,7 @@ from datetime import datetime
 GITHUB_TOKEN = ''  # GitHub Personal Access Token 입력
 GITHUB_REPO  = 'caross8888/arsenal'
 OUTPUT_PATH  = Path('arsenal-dashboard/public/data/players.json')
+IMAGES_PATH  = Path('arsenal-dashboard/public/data/player_images')
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -83,6 +84,21 @@ def season_start_date(season_name: str) -> str:
         # fallback: 4년 전 날짜 (거의 모든 경기 포함)
         return f'{datetime.utcnow().year - 1}-07-01'
 
+
+def download_photo(player_id):
+    """풋몹 선수 사진 다운로드 → 로컬 저장"""
+    dest = IMAGES_PATH / f'{player_id}.png'
+    if dest.exists():
+        return True
+    url = f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png'
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=10)
+        if r.status_code == 200 and len(r.content) > 1000:
+            dest.write_bytes(r.content)
+            return True
+    except Exception:
+        pass
+    return False
 
 def fetch_player(player_id, slug):
     """Fotmob 선수 페이지 HTML에서 __NEXT_DATA__ 파싱"""
@@ -236,6 +252,7 @@ def parse_stats(data):
         'id':           player_id,
         'name':         data.get('name', ''),
         'fotmobPhoto':  f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png' if player_id else None,
+        'localPhoto':   f'/data/player_images/{player_id}.png' if player_id else None,
         'nationality':  '',
         'position':     _get_primary_pos_key(data.get('positionDescription', {})),
         'posGroup':     _pos_to_group(_get_primary_pos_key(data.get('positionDescription', {}))),
@@ -394,6 +411,7 @@ def git_push(filepath):
 def main():
     print(f'🔍 Fotmob 스크래핑 시작 ({len(ARSENAL_PLAYERS)}명)')
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    IMAGES_PATH.mkdir(parents=True, exist_ok=True)
 
     players = []
     detected_season = None
@@ -407,7 +425,8 @@ def main():
                 players.append(parsed)
                 if not detected_season:
                     detected_season = parsed.get('season', '')
-                print(f'✅ {parsed["name"]} ({parsed.get("season","")})')
+                photo_ok = download_photo(p['id'])
+                print(f'✅ {parsed["name"]} ({parsed.get("season","")}) {"📷" if photo_ok else "❌사진없음"}')
             else:
                 print('파싱 실패')
         else:
@@ -430,7 +449,7 @@ def main():
         git_push(OUTPUT_PATH)
     else:
         print('\n⚠️  GITHUB_TOKEN 미설정 — 수동으로 git push 해주세요')
-        print('   git add arsenal-dashboard/public/data/players.json')
+        print('   git add arsenal-dashboard/public/data/players.json arsenal-dashboard/public/data/player_images/')
         print('   git commit -m "📊 stats update"')
         print('   git push')
 

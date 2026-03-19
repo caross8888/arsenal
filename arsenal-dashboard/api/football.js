@@ -211,10 +211,16 @@ export default async function handler(req, res) {
       };
 
     } else if(type === 'squad'){
-      // players.json (Fotmob 기반) 직접 사용
+      // players.json updated_at 기반 캐시 — 스크래퍼가 업데이트할 때만 갱신
       const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
       if(!pjRes.ok) throw new Error('players.json 로드 실패');
       const pjData = await pjRes.json();
+
+      // updated_at이 같으면 캐시 유지
+      const cached = cache['squad'];
+      if(cached && cached.updatedAt === pjData.updated_at) {
+        return res.json(cached.data);
+      }
 
       result = {
         squad: (pjData.players || []).map(p => ({
@@ -235,12 +241,18 @@ export default async function handler(req, res) {
           redCards:    p.stats?.redCards || 0,
           xG:          p.stats?.xG || 0,
           xA:          p.stats?.xA || 0,
-          photo:       `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+          photo:       p.localPhoto || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
         }))
       };
     }
 
-    if(!nocache) setCache(type, result);
+    if(!nocache) {
+      if(type === 'squad' && pjData?.updated_at) {
+        cache['squad'] = {data: result, ts: Date.now(), updatedAt: pjData.updated_at};
+      } else {
+        setCache(type, result);
+      }
+    }
     return res.json(result);
 
   } catch(err){
