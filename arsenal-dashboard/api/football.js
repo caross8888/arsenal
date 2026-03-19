@@ -90,6 +90,7 @@ export default async function handler(req, res) {
           utcDate:     e.date,
           competition: {name, short},
           status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
+          tbd:         ['5','6','8'].includes(status?.id) || status?.description === 'Postponed' || status?.description === 'Canceled',
           homeTeam: {
             id:    homeId,
             name:  home?.team?.displayName || home?.team?.name,
