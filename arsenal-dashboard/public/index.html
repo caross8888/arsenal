@@ -1208,7 +1208,7 @@ function renderPlayerTable(side, players, visible){
   var style=visible?'margin-top:10px':'margin-top:10px;display:none';
   var starters=players.filter(function(p){return p.starter;});
   var subs=players.filter(function(p){return !p.starter;});
-  var colgroup='<colgroup><col style="width:auto"><col style="width:28px"><col style="width:28px"><col style="width:28px"><col style="width:28px"><col style="width:28px"><col style="width:28px"></colgroup>';
+  var colgroup='<colgroup><col style="width:40%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:10%"></colgroup>';
   var thead='<thead><tr><th>선수</th><th>골</th><th>도움</th><th>슈팅</th><th>유효</th><th>파울</th><th>경고</th></tr></thead>';
   var html='<div class="mm-section mm-players-'+side+'" style="'+style+'">';
   // 선발
