@@ -152,7 +152,7 @@ export default async function handler(req, res) {
         return {
           title:       a.headline || '',
           description: a.description || '',
-          link:        a.links?.web?.href || '',
+          url:         a.links?.web?.href || '',
           image:       a.images?.[0]?.url || null,
           pubDate:     pub.getTime(),
           timeAgo:     timeAgo(pub),
@@ -179,7 +179,7 @@ export default async function handler(req, res) {
         return {
           title:       a.webTitle || '',
           description: a.fields?.trailText || '',
-          link:        a.webUrl || '',
+          url:         a.webUrl || '',
           image:       a.fields?.thumbnail || null,
           pubDate:     pub.getTime(),
           timeAgo:     timeAgo(pub),
