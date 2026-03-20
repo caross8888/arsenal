@@ -1055,7 +1055,7 @@ function renderMatchModal(content, m, data){
     if(hStarters.length||aStarters.length){
       var hHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+hFormation+'</span><span></span></div>';
       var aHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+aFormation+'</span><span></span></div>';
-      html+='<div style="margin:0 14px 8px"><div class="mm-pitch-wrap" id="mm-pitch-home">'+hHeader+renderPitch(hStarters,hFormation,hColor,hP)+'</div></div>';
+      html+='<div style="margin:8px 14px 8px"><div class="mm-pitch-wrap" id="mm-pitch-home">'+hHeader+renderPitch(hStarters,hFormation,hColor,hP)+'</div></div>';
       html+='<div style="margin:0 14px 8px"><div class="mm-pitch-wrap" id="mm-pitch-away" style="display:none">'+aHeader+renderPitch(aStarters,aFormation,aColor,aP)+'</div></div>';
     }
     html+=renderPlayerTable('home',hP,true)+renderPlayerTable('away',aP,false);
@@ -1150,11 +1150,23 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#fff" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
     svg+='<text x="'+c.x+'" y="'+(c.y+r+1)+'" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.85)" font-family="sans-serif">'+lastName+'</text>';
-    // 교체 아이콘
+    // 교체 아이콘 (유니폼 2개)
     if(wasSubbed){
-      var ix=c.x+r-2, iy=c.y-r+2;
-      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="4.5" fill="#16A34A"/>';
-      svg+='<polyline points="'+(ix-2)+','+(iy+1)+' '+ix+','+(iy-2)+' '+(ix+2)+','+(iy+1)+'" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
+      var ix=c.x+r, iy=c.y-r;
+      var s=0.55;
+      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="6" fill="#15803D"/>';
+      // 유니폼 1 (왼쪽, 흰색)
+      svg+='<g transform="translate('+(ix-5.5)+','+(iy-4)+') scale('+s+')">'+
+        '<rect x="2" y="4" width="6" height="7" rx="0.5" fill="#fff"/>'+
+        '<polygon points="0,4 2,2 2,6" fill="#fff"/>'+
+        '<polygon points="10,4 8,2 8,6" fill="#fff"/>'+
+        '</g>';
+      // 유니폼 2 (오른쪽, 연두색)
+      svg+='<g transform="translate('+(ix-0.5)+','+(iy-4)+') scale('+s+')">'+
+        '<rect x="2" y="4" width="6" height="7" rx="0.5" fill="#86EFAC"/>'+
+        '<polygon points="0,4 2,2 2,6" fill="#86EFAC"/>'+
+        '<polygon points="10,4 8,2 8,6" fill="#86EFAC"/>'+
+        '</g>';
     }
   });
   svg+='</svg>';
