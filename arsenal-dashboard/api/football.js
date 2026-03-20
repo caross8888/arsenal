@@ -166,6 +166,20 @@ export default async function handler(req, res) {
       };
 
     } else if(type === 'injuries'){
+      // players.json로 현재 스쿼드 이름 목록 확보
+      let squadNames = new Set();
+      try {
+        const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
+        if(pjRes.ok) {
+          const pjData = await pjRes.json();
+          (pjData.players || []).forEach(p => {
+            squadNames.add(p.name.toLowerCase());
+            const parts = p.name.split(' ');
+            if(parts.length > 1) squadNames.add(parts[parts.length-1].toLowerCase());
+          });
+        }
+      } catch(_){}
+
       // FPL API에서 부상 선수 데이터
       let fplData;
       try {
@@ -183,6 +197,13 @@ export default async function handler(req, res) {
       const arsenalPlayers = (fplData.elements || []).filter(p => p.team === ARSENAL_FPL_ID);
       const injured = arsenalPlayers
         .filter(p => p.chance_of_playing_next_round !== null && p.chance_of_playing_next_round < 100)
+        .filter(p => {
+          if(squadNames.size === 0) return true;
+          const webName = p.web_name.toLowerCase();
+          const lastName = p.second_name.split(' ').pop().toLowerCase();
+          const fullName = `${p.first_name} ${p.second_name}`.toLowerCase();
+          return squadNames.has(webName) || squadNames.has(lastName) || squadNames.has(fullName);
+        })
         .map(p => ({
           id:       p.id,
           name:     p.web_name,
