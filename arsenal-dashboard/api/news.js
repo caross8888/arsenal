@@ -9,18 +9,23 @@ const RSS_SOURCES = [
     filter: null,
   },
   {
-    url: 'https://feeds.bbci.co.uk/sport/football/arsenal/rss.xml',
+    url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',
     name: 'BBC Sport',
-    filter: null,
-  },
-  {
-    url: 'https://www.skysports.com/rss/12040',
-    name: 'Sky Sports',
     filter: /arsenal/i,
   },
   {
-    url: 'https://www.goal.com/feeds/en/news',
-    name: 'Goal',
+    url: 'https://www.espn.com/espn/rss/soccer/news',
+    name: 'ESPN',
+    filter: /arsenal/i,
+  },
+  {
+    url: 'https://api.foxsports.com/v1/rss?partnerKey=zBaFxRyGKCfxBagJG9b8pqLyndmvo7UU&tag=soccer',
+    name: 'Fox Sports',
+    filter: /arsenal/i,
+  },
+  {
+    url: 'https://www.cbssports.com/rss/headlines/soccer/',
+    name: 'CBS Sports',
     filter: /arsenal/i,
   },
 ];
