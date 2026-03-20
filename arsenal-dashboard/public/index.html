@@ -824,9 +824,9 @@ function loadNews(){
       var card=document.createElement('a');card.className='news-card';card.href=a.url||'#';card.target='_blank';card.rel='noopener';
       var imgDiv=document.createElement('div');imgDiv.className='news-img';
       var srcBdg=document.createElement('div');srcBdg.className='news-src-badge';srcBdg.textContent=a.source||'RSS';
-      var validImg=a.urlToImage&&typeof a.urlToImage==='string'&&a.urlToImage.startsWith('http');
+      var validImg=(a.image||a.urlToImage)&&typeof (a.image||a.urlToImage)==='string'&&(a.image||a.urlToImage).startsWith('http');
       if(validImg){
-        var img=document.createElement('img');img.src=a.urlToImage;img.alt='';
+        var img=document.createElement('img');img.src=a.image||a.urlToImage;img.alt='';
         img.onerror=function(){var ph=document.createElement('div');ph.className='news-img-ph';ph.textContent='📰';imgDiv.replaceChild(ph,this);imgDiv.appendChild(srcBdg);};
         imgDiv.appendChild(img);
       } else {

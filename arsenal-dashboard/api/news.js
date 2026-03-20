@@ -147,14 +147,18 @@ export default async function handler(req, res) {
     );
     if (espnRes.ok) {
       const espnData = await espnRes.json();
-      const espnArticles = (espnData.articles || []).map(a => ({
-        title:       a.headline || '',
-        description: a.description || '',
-        link:        a.links?.web?.href || '',
-        image:       a.images?.[0]?.url || null,
-        pubDate:     new Date(a.published || Date.now()),
-        source:      'ESPN',
-      }));
+      const espnArticles = (espnData.articles || []).map(a => {
+        const pub = new Date(a.published || Date.now());
+        return {
+          title:       a.headline || '',
+          description: a.description || '',
+          link:        a.links?.web?.href || '',
+          image:       a.images?.[0]?.url || null,
+          pubDate:     pub.getTime(),
+          timeAgo:     timeAgo(pub),
+          source:      'ESPN',
+        };
+      });
       allArticles.push(...espnArticles);
     } else {
       sourceErrors['ESPN'] = `HTTP ${espnRes.status}`;
@@ -170,14 +174,18 @@ export default async function handler(req, res) {
     );
     if (gRes.ok) {
       const gData = await gRes.json();
-      const gArticles = (gData.response?.results || []).map(a => ({
-        title:       a.webTitle || '',
-        description: a.fields?.trailText || '',
-        link:        a.webUrl || '',
-        image:       a.fields?.thumbnail || null,
-        pubDate:     new Date(a.webPublicationDate || Date.now()),
-        source:      'Guardian',
-      }));
+      const gArticles = (gData.response?.results || []).map(a => {
+        const pub = new Date(a.webPublicationDate || Date.now());
+        return {
+          title:       a.webTitle || '',
+          description: a.fields?.trailText || '',
+          link:        a.webUrl || '',
+          image:       a.fields?.thumbnail || null,
+          pubDate:     pub.getTime(),
+          timeAgo:     timeAgo(pub),
+          source:      'Guardian',
+        };
+      });
       allArticles.push(...gArticles);
     } else {
       sourceErrors['Guardian'] = `HTTP ${gRes.status}`;
