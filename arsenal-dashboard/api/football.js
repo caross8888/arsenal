@@ -195,15 +195,17 @@ export default async function handler(req, res) {
         throw fplErr;
       }
       const arsenalPlayers = (fplData.elements || []).filter(p => p.team === ARSENAL_FPL_ID);
-      const injured = arsenalPlayers
-        .filter(p => p.chance_of_playing_next_round !== null && p.chance_of_playing_next_round < 100)
-        .filter(p => {
+      const squadFilter = (p) => {
           if(squadNames.size === 0) return true;
           const webName = p.web_name.toLowerCase();
           const lastName = p.second_name.split(' ').pop().toLowerCase();
           const fullName = `${p.first_name} ${p.second_name}`.toLowerCase();
           return squadNames.has(webName) || squadNames.has(lastName) || squadNames.has(fullName);
-        })
+      };
+      const squadPlayers = arsenalPlayers.filter(squadFilter);
+      const availableCount = squadPlayers.filter(p => p.chance_of_playing_next_round === null || p.chance_of_playing_next_round === 100).length;
+      const injured = squadPlayers
+        .filter(p => p.chance_of_playing_next_round !== null && p.chance_of_playing_next_round < 100)
         .map(p => ({
           id:       p.id,
           name:     p.web_name,
@@ -214,7 +216,7 @@ export default async function handler(req, res) {
           news:     p.news || '',
           chance:   p.chance_of_playing_next_round,
         }));
-      result = { injured };
+      result = { injured, availableCount };
 
     } else if(type === 'squad'){
       // players.json (Fotmob 기반) 직접 사용
