@@ -283,7 +283,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-stat-bar-wrap{grid-column:1/-1;display:flex;height:3px;border-radius:2px;overflow:hidden;margin-bottom:2px;}
 .mm-stat-bar-home{background:var(--red);transition:width .4s;}
 .mm-stat-bar-away{background:rgba(96,165,250,.5);transition:width .4s;}
-.mm-pitch-wrap{padding:12px 14px 4px;}
+.mm-pitch-wrap{overflow:hidden;border-radius:10px;margin:0 14px 8px;}
 .mm-pitch-svg{width:100%;max-width:360px;display:block;margin:0 auto;}
 .mm-pitch-player{cursor:default;}
 .mm-pitch-player circle{fill:#C8102E;}
@@ -1053,8 +1053,8 @@ function renderMatchModal(content, m, data){
     var hStarters=hP.filter(function(p){return p.starter&&p.formationPlace;});
     var aStarters=aP.filter(function(p){return p.starter&&p.formationPlace;});
     if(hStarters.length||aStarters.length){
-      var hHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px 4px;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+hFormation+'</span><span></span></div>';
-      var aHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px 4px;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+aFormation+'</span><span></span></div>';
+      var hHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+hFormation+'</span><span></span></div>';
+      var aHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+aFormation+'</span><span></span></div>';
       html+='<div class="mm-pitch-wrap" id="mm-pitch-home">'+hHeader+renderPitch(hStarters,hFormation,hColor,hP)+'</div>';
       html+='<div class="mm-pitch-wrap" id="mm-pitch-away" style="display:none">'+aHeader+renderPitch(aStarters,aFormation,aColor,aP)+'</div>';
     }
@@ -1128,7 +1128,7 @@ function renderPitch(starters, formation, teamColor, allPlayers){
   }
 
   var svg='<svg class="mm-pitch-svg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
-  svg+='<rect width="'+W+'" height="'+H+'" rx="4" fill="#2d5a27"/>';
+  svg+='<rect width="'+W+'" height="'+H+'" fill="#2d5a27"/>';
   svg+='<line x1="0" y1="'+H/2+'" x2="'+W+'" y2="'+H/2+'" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
   svg+='<circle cx="'+W/2+'" cy="'+H/2+'" r="28" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
   svg+='<circle cx="'+W/2+'" cy="'+H/2+'" r="2" fill="rgba(255,255,255,0.4)"/>';
@@ -1150,11 +1150,11 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#fff" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
     svg+='<text x="'+c.x+'" y="'+(c.y+r+1)+'" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.85)" font-family="sans-serif">'+lastName+'</text>';
-    // 교체 화살표 (빨간 아래 화살표)
+    // 교체 아이콘 (흰색 순환 화살표)
     if(wasSubbed){
-      var ax=c.x+r-2, ay=c.y-r+2;
-      svg+='<polygon points="'+ax+','+(ay+5)+' '+(ax-4)+','+ay+' '+(ax+4)+','+ay+'" fill="#EF4444"/>';
-      svg+='<rect x="'+(ax-1.5)+'" y="'+(ay-5)+'" width="3" height="5" fill="#EF4444"/>';
+      var ix=c.x+r-3, iy=c.y-r+3;
+      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="5" fill="rgba(0,0,0,0.55)"/>';
+      svg+='<path d="M'+(ix-2.5)+','+(iy+1.5)+' a3 3 0 1 1 5 0 M'+(ix+2)+','+(iy-0.5)+' l1.5 2.5 l-2.5 0.5" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>';
     }
   });
   svg+='</svg>';
