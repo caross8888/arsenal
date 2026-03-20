@@ -4,23 +4,8 @@
 
 const RSS_SOURCES = [
   {
-    url: 'https://www.theguardian.com/football/arsenal/rss',
-    name: 'Guardian',
-    filter: null,
-  },
-  {
     url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',
     name: 'BBC Sport',
-    filter: /arsenal/i,
-  },
-  {
-    url: 'https://www.espn.com/espn/rss/soccer/news',
-    name: 'ESPN',
-    filter: /arsenal/i,
-  },
-  {
-    url: 'https://api.foxsports.com/v1/rss?partnerKey=zBaFxRyGKCfxBagJG9b8pqLyndmvo7UU&tag=soccer',
-    name: 'Fox Sports',
     filter: /arsenal/i,
   },
   {
@@ -64,25 +49,36 @@ function upgradeImageUrl(url) {
 }
 
 function extractImage(item) {
-  // 1) media:content url 속성 — 여러 패턴 시도
-  let m = item.match(/media:content\s[^>]*url="([^"]+)"/);
-  if (!m) m = item.match(/media:content\s+url="([^"]+)"/);
+  // Guardian: media:content width="460" url="..." (가장 큰 사이즈 우선)
+  // media:content 태그에서 url 속성 추출 — 속성 순서 무관하게 처리
+  const mcTags = [...item.matchAll(/media:content([^>]*?)(?:\/>|>)/g)];
+  if (mcTags.length) {
+    // width가 가장 큰 것 선택
+    let best = null, bestW = 0;
+    for (const tag of mcTags) {
+      const urlM = tag[1].match(/url="([^"]+)"/);
+      const wM = tag[1].match(/width="(\d+)"/);
+      if (urlM) {
+        const w = wM ? parseInt(wM[1]) : 0;
+        if (w >= bestW) { bestW = w; best = urlM[1]; }
+      }
+    }
+    if (best) return best;
+  }
+
+  // media:thumbnail
+  let m = item.match(/media:thumbnail[^>]*url="([^"]+)"/);
   if (m) return m[1];
 
-  // 2) media:thumbnail
-  m = item.match(/media:thumbnail\s[^>]*url="([^"]+)"/);
-  if (!m) m = item.match(/media:thumbnail\s+url="([^"]+)"/);
+  // enclosure (CBS Sports: enclosure url="..." length="..." type="image/...")
+  m = item.match(/<enclosure[^>]*url="([^"]+)"/);
   if (m) return m[1];
 
-  // 3) enclosure
-  m = item.match(/<enclosure[^>]+url="([^"]+)"/);
-  if (m) return m[1];
-
-  // 4) description 안의 <img src=...> (Guardian fallback)
+  // description 안의 <img src=...>
   m = item.match(/<img[^>]+src="(https?:\/\/[^"]+)"/);
   if (m) return m[1];
 
-  // 5) CDATA description 안의 img
+  // CDATA description 안의 img
   const cdataDesc = item.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/)?.[1] || '';
   m = cdataDesc.match(/<img[^>]+src="(https?:\/\/[^"]+)"/);
   if (m) return m[1];
@@ -142,6 +138,53 @@ export default async function handler(req, res) {
 
   const allArticles = [];
   const sourceErrors = {};
+
+  // ESPN API (아스날 뉴스, 고화질 이미지 포함)
+  try {
+    const espnRes = await fetch(
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news?team=359&limit=10',
+      { signal: AbortSignal.timeout(6000) }
+    );
+    if (espnRes.ok) {
+      const espnData = await espnRes.json();
+      const espnArticles = (espnData.articles || []).map(a => ({
+        title:       a.headline || '',
+        description: a.description || '',
+        link:        a.links?.web?.href || '',
+        image:       a.images?.[0]?.url || null,
+        pubDate:     new Date(a.published || Date.now()),
+        source:      'ESPN',
+      }));
+      allArticles.push(...espnArticles);
+    } else {
+      sourceErrors['ESPN'] = `HTTP ${espnRes.status}`;
+    }
+  } catch(e) { sourceErrors['ESPN'] = e.message; }
+
+  // Guardian Open Platform API
+  try {
+    const gKey = process.env.GUARDIAN_API_KEY || 'test';
+    const gRes = await fetch(
+      `https://content.guardianapis.com/search?q=arsenal&section=football&show-fields=thumbnail,trailText&page-size=10&api-key=${gKey}`,
+      { signal: AbortSignal.timeout(6000) }
+    );
+    if (gRes.ok) {
+      const gData = await gRes.json();
+      const gArticles = (gData.response?.results || []).map(a => ({
+        title:       a.webTitle || '',
+        description: a.fields?.trailText || '',
+        link:        a.webUrl || '',
+        image:       a.fields?.thumbnail || null,
+        pubDate:     new Date(a.webPublicationDate || Date.now()),
+        source:      'Guardian',
+      }));
+      allArticles.push(...gArticles);
+    } else {
+      sourceErrors['Guardian'] = `HTTP ${gRes.status}`;
+    }
+  } catch(e) { sourceErrors['Guardian'] = e.message; }
+
+  // RSS 소스
   await Promise.all(RSS_SOURCES.map(async (src) => {
     try {
       const r = await fetch(src.url, {
