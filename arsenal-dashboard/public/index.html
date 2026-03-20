@@ -1048,11 +1048,15 @@ function renderMatchModal(content, m, data){
       '<button class="mm-tab active" id="mm-tab-home" onclick="mmSwitchTab(&quot;home&quot;)">'+h.name+'</button>'+
       '<button class="mm-tab" id="mm-tab-away" onclick="mmSwitchTab(&quot;away&quot;)">'+a.name+'</button>'+
     '</div>';
+    var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
+    var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
     var hStarters=hP.filter(function(p){return p.starter&&p.formationPlace;});
     var aStarters=aP.filter(function(p){return p.starter&&p.formationPlace;});
     if(hStarters.length||aStarters.length){
-      html+='<div class="mm-pitch-wrap" id="mm-pitch-home">'+renderPitch(hStarters,hFormation,false)+'</div>';
-      html+='<div class="mm-pitch-wrap" id="mm-pitch-away" style="display:none">'+renderPitch(aStarters,aFormation,true)+'</div>';
+      var hHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px 4px;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+hFormation+'</span><span></span></div>';
+      var aHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px 4px;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+aFormation+'</span><span></span></div>';
+      html+='<div class="mm-pitch-wrap" id="mm-pitch-home">'+hHeader+renderPitch(hStarters,hFormation,hColor,hP)+'</div>';
+      html+='<div class="mm-pitch-wrap" id="mm-pitch-away" style="display:none">'+aHeader+renderPitch(aStarters,aFormation,aColor,aP)+'</div>';
     }
     html+=renderPlayerTable('home',hP,true)+renderPlayerTable('away',aP,false);
   }
@@ -1060,12 +1064,12 @@ function renderMatchModal(content, m, data){
   content.innerHTML=html;
 }
 
-function renderPitch(starters, formation, isAway){
+function renderPitch(starters, formation, teamColor, allPlayers){
   var W=220, H=370;
   var FIRST_Y=29, LAST_Y=H-29;
   var r=11;
+  var fillColor = teamColor||'#C8102E';
 
-  // 포지션 우선순위 (낮을수록 수비)
   var POS_PRIORITY = {
     'G':0,'GK':0,
     'CB':10,'CD':10,'CD-L':10,'CD-R':10,'LB':10,'RB':10,'LWB':10,'RWB':10,'SW':10,'DC':10,
@@ -1075,7 +1079,6 @@ function renderPitch(starters, formation, isAway){
     'CF-L':50,'CF-R':50,'RCF':50,'LCF':50,
     'F':60,'ST':60,'FW':60,'LW':60,'RW':60,'LF':60,'RF':60,'CF':60,
   };
-  // 라인 내 좌→우 순서
   var POS_ORDER = {
     'LB':-3,'LWB':-3,'LM':-3,
     'CD-L':-2,'CM-L':-2,'AM-L':-2,'CF-L':-2,'LF':-2,'LW':-2,'LAM':-2,
@@ -1084,68 +1087,75 @@ function renderPitch(starters, formation, isAway){
     'RB':3,'RWB':3,'RM':3,
   };
 
-  // 1. formation 파싱 → expected 인원 [GK, DF, MF, ...]
   var rows = formation ? formation.split('-').map(Number) : [4,4,2];
   var expected = [1].concat(rows);
 
-  // 2. 포지션 우선순위로 정렬
   var sorted = starters.slice().sort(function(a,b){
-    var pa = POS_PRIORITY[a.position] != null ? POS_PRIORITY[a.position] : 35;
-    var pb = POS_PRIORITY[b.position] != null ? POS_PRIORITY[b.position] : 35;
-    return pa - pb;
+    var pa=POS_PRIORITY[a.position]!=null?POS_PRIORITY[a.position]:35;
+    var pb=POS_PRIORITY[b.position]!=null?POS_PRIORITY[b.position]:35;
+    return pa-pb;
   });
 
-  // 3. expected 인원대로 라인 배정
-  var finalLines = [];
-  var idx = 0;
+  var finalLines=[], idx=0;
   expected.forEach(function(cnt){
-    var line = sorted.slice(idx, idx+cnt);
-    // 라인 내 좌→우 정렬
+    var line=sorted.slice(idx,idx+cnt);
     line.sort(function(a,b){
-      var oa = POS_ORDER[a.position] != null ? POS_ORDER[a.position] : 0;
-      var ob = POS_ORDER[b.position] != null ? POS_ORDER[b.position] : 0;
-      return oa - ob;
+      var oa=POS_ORDER[a.position]!=null?POS_ORDER[a.position]:0;
+      var ob=POS_ORDER[b.position]!=null?POS_ORDER[b.position]:0;
+      return oa-ob;
     });
     finalLines.push(line);
-    idx += cnt;
+    idx+=cnt;
   });
 
-  // 4. 좌표 계산 (GK=하단, FW=상단)
-  var totalLines = finalLines.length;
-  var coords = {};
-  finalLines.forEach(function(line, li){
+  var totalLines=finalLines.length;
+  var coords={};
+  finalLines.forEach(function(line,li){
     if(!line.length) return;
-    var yRatio = totalLines<=1 ? 0 : li/(totalLines-1);
-    // li=0(GK) → LAST_Y, li=last(FW) → FIRST_Y
-    var cy = Math.round(LAST_Y - yRatio*(LAST_Y-FIRST_Y));
-    line.forEach(function(p, ci){
-      coords[p.formationPlace] = {
-        x: Math.round((W/(line.length+1))*(ci+1)),
-        y: cy
-      };
+    var yRatio=totalLines<=1?0:li/(totalLines-1);
+    var cy=Math.round(LAST_Y-yRatio*(LAST_Y-FIRST_Y));
+    line.forEach(function(p,ci){
+      coords[p.formationPlace]={x:Math.round((W/(line.length+1))*(ci+1)),y:cy};
     });
   });
 
-  // 5. SVG 렌더링
+  // 교체된 선수 맵 (subbedOut 선수 formationPlace 기준)
+  var subbedOutMap={};
+  if(allPlayers){
+    allPlayers.forEach(function(p){
+      if(p.subbedOut&&p.formationPlace) subbedOutMap[p.formationPlace]=true;
+    });
+  }
+
   var svg='<svg class="mm-pitch-svg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
   svg+='<rect width="'+W+'" height="'+H+'" rx="4" fill="#2d5a27"/>';
   svg+='<line x1="0" y1="'+H/2+'" x2="'+W+'" y2="'+H/2+'" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
   svg+='<circle cx="'+W/2+'" cy="'+H/2+'" r="28" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
+  svg+='<circle cx="'+W/2+'" cy="'+H/2+'" r="2" fill="rgba(255,255,255,0.4)"/>';
   var bw=W*0.55,bh=32,bx=(W-bw)/2;
   svg+='<rect x="'+bx+'" y="'+(H-bh)+'" width="'+bw+'" height="'+bh+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
   svg+='<rect x="'+bx+'" y="0" width="'+bw+'" height="'+bh+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
-  if(formation){
-    svg+='<text x="'+W/2+'" y="'+(H-3)+'" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.35)" font-family="sans-serif">'+formation+'</text>';
-  }
+  var pr=18,pcx=W/2;
+  svg+='<path d="M '+(pcx-pr)+' '+(H-bh)+' A '+pr+' '+pr+' 0 0 0 '+(pcx+pr)+' '+(H-bh)+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
+  svg+='<path d="M '+(pcx-pr)+' '+bh+' A '+pr+' '+pr+' 0 0 1 '+(pcx+pr)+' '+bh+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
+
+
   starters.forEach(function(p){
     var c=coords[p.formationPlace]; if(!c) return;
-    var cls=isAway?'mm-pitch-player away':'mm-pitch-player';
     var lastName=(p.name||'').split(' ').pop();
-    svg+='<g class="'+cls+'">';
-    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'"/>';
-    svg+='<text class="jersey" x="'+c.x+'" y="'+c.y+'">'+p.jersey+'</text>';
-    svg+='<text class="pname" x="'+c.x+'" y="'+(c.y+r+1)+'">'+lastName+'</text>';
-    svg+='</g>';
+    var wasSubbed=subbedOutMap[p.formationPlace];
+    // 원
+    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'" fill="'+fillColor+'" opacity="'+(wasSubbed?'0.55':'1')+'"/>';
+    // 등번호
+    svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#fff" font-family="sans-serif">'+p.jersey+'</text>';
+    // 이름
+    svg+='<text x="'+c.x+'" y="'+(c.y+r+1)+'" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.85)" font-family="sans-serif">'+lastName+'</text>';
+    // 교체 화살표 (빨간 아래 화살표)
+    if(wasSubbed){
+      var ax=c.x+r-2, ay=c.y-r+2;
+      svg+='<polygon points="'+ax+','+(ay+5)+' '+(ax-4)+','+ay+' '+(ax+4)+','+ay+'" fill="#EF4444"/>';
+      svg+='<rect x="'+(ax-1.5)+'" y="'+(ay-5)+'" width="3" height="5" fill="#EF4444"/>';
+    }
   });
   svg+='</svg>';
   return svg;

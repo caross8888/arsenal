@@ -50,6 +50,8 @@ export default async function handler(req, res) {
         id,
         name: teamData.shortDisplayName || teamData.displayName || teamData.name || '',
         crest: teamData.logo || (id ? `https://a.espncdn.com/i/teamlogos/soccer/500/${id}.png` : null),
+        color: teamData.color ? '#'+teamData.color : null,
+        alternateColor: teamData.alternateColor ? '#'+teamData.alternateColor : null,
         score: parseInt(hTeam?.score || comp?.status?.type?.shortDetail?.split('-')?.[0] || 0),
         statistics: bTeam?.statistics || [],
       };
@@ -158,6 +160,8 @@ export default async function handler(req, res) {
           position:      p.position?.abbreviation || ath.position?.abbreviation || '',
           starter:       p.starter || false,
           formationPlace: p.formationPlace ? parseInt(p.formationPlace) : null,
+          subbedOut:     p.subbedOut || false,
+          subbedIn:      p.subbedIn || false,
           stats,
         };
       }).filter(p => p.name);
@@ -171,13 +175,15 @@ export default async function handler(req, res) {
       away: parsePlayers(awayRoster),
       homeFormation: homeRoster?.formation || '',
       awayFormation: awayRoster?.formation || '',
+      homeUniformColor: homeRoster?.uniform?.color ? '#'+homeRoster.uniform.color : null,
+      awayUniformColor: awayRoster?.uniform?.color ? '#'+awayRoster.uniform.color : null,
     };
 
     const result = {
       eventId,
       venue,
-      homeTeam: { id: home.id, name: home.name, crest: home.crest, score: home.score, stats: home.stats },
-      awayTeam: { id: away.id, name: away.name, crest: away.crest, score: away.score, stats: away.stats },
+      homeTeam: { id: home.id, name: home.name, crest: home.crest, score: home.score, stats: home.stats, color: home.color, alternateColor: home.alternateColor },
+      awayTeam: { id: away.id, name: away.name, crest: away.crest, score: away.score, stats: away.stats, color: away.color, alternateColor: away.alternateColor },
       events,
       players,
       status: comp?.status?.type?.description || '',
