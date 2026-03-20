@@ -154,9 +154,13 @@ export default async function handler(req, res) {
           if (n === 'redcards')       stats.redCards = s.displayValue;
           if (n === 'foulscommitted') stats.fouls = s.displayValue;
         }
-        // 교체 시간: plays에서 substitution=true인 첫번째 play의 clock
+        // 교체 시간 및 교체 선수
         const subPlay = (p.plays||[]).find(pl=>pl.substitution);
         const subTime = subPlay?.clock?.displayValue || null;
+        const subFor = p.subbedOutFor ? {
+          name: p.subbedOutFor.athlete?.displayName || '',
+          jersey: p.subbedOutFor.jersey || '',
+        } : null;
         return {
           name:          ath.shortName || ath.displayName || '',
           jersey:        p.jersey || '',
@@ -166,6 +170,7 @@ export default async function handler(req, res) {
           subbedOut:     p.subbedOut || false,
           subbedIn:      p.subbedIn || false,
           subTime,
+          subFor,
           stats,
         };
       }).filter(p => p.name);

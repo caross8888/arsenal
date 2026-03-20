@@ -1184,9 +1184,10 @@ function renderPlayerRow(p){
   // 교체 아웃 선수: 이름 아래에 교체 아이콘 + 시간 + 교체 선수 이름
   var nameCell=getPosBadge(p.position)+(p.name||'')+(p.jersey?' <span style="color:var(--text-dim);font-size:9px">#'+p.jersey+'</span>':'');
   if(p.subbedOut&&p.subTime){
+    var subForText=p.subFor?(' '+p.subFor.name+(p.subFor.jersey?' #'+p.subFor.jersey:'')):'';
     nameCell+='<div style="display:flex;align-items:center;gap:4px;margin-top:2px;">'+
       '<svg viewBox="0 0 24 24" width="10" height="10" style="flex-shrink:0"><path d="M6.873 3.845l4.221 4.317 0.868-0.868-5.764-5.957-5.74 5.957 0.893 0.868 4.221-4.317v11.745h1.302zM23.66 15.999l-0.917-0.869-4.221 4.317v-11.769h-1.302v11.769l-4.197-4.317-0.965 0.869 5.789 5.932z" fill="#6B7280"/></svg>'+
-      '<span style="font-size:9px;color:var(--text-dim);">'+p.subTime+'</span>'+
+      '<span style="font-size:9px;color:var(--text-dim);">'+p.subTime+subForText+'</span>'+
     '</div>';
   }
   return '<tr>'+
@@ -1204,16 +1205,17 @@ function renderPlayerTable(side, players, visible){
   var style=visible?'margin-top:10px':'margin-top:10px;display:none';
   var starters=players.filter(function(p){return p.starter;});
   var subs=players.filter(function(p){return !p.starter;});
+  var colgroup='<colgroup><col style="width:auto"><col style="width:28px"><col style="width:28px"><col style="width:28px"><col style="width:28px"><col style="width:28px"><col style="width:28px"></colgroup>';
   var thead='<thead><tr><th>선수</th><th>골</th><th>도움</th><th>슈팅</th><th>유효</th><th>파울</th><th>경고</th></tr></thead>';
   var html='<div class="mm-section mm-players-'+side+'" style="'+style+'">';
   // 선발
-  html+='<table class="mm-player-table">'+thead+'<tbody>';
+  html+='<table class="mm-player-table">'+colgroup+thead+'<tbody>';
   starters.forEach(function(p){ html+=renderPlayerRow(p); });
   html+='</tbody></table>';
   // 교체
   if(subs.length){
     html+='<div class="mm-sub-title">Substitutes</div>';
-    html+='<table class="mm-player-table"><tbody>';
+    html+='<table class="mm-player-table">'+colgroup+thead+'<tbody>';
     subs.forEach(function(p){ html+=renderPlayerRow(p); });
     html+='</tbody></table>';
   }
