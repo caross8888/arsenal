@@ -1065,37 +1065,39 @@ function renderPitch(starters, formation, isAway){
   var FIRST_Y=29, LAST_Y=H-29;
   var r=11;
 
-  // 포지션 → 라인 번호
+  // ESPN 실제 좌표 분석 기반 라인 분류
+  // 4-2-3-1: GK / CD / LB+RB / LM+RM(CM) / AM-L+AM+AM-R / F
+  // 3-5-1-1: GK / CD*3 / CM*3 / LM+RM(윙백) / AM+RCF / F
+  // 핵심: LB/RB는 CD와 별도 라인, LM/RM은 CM과 같은 라인
   function getPosLine(pos){
     var p=(pos||'').toUpperCase();
     if(/^(G|GK)$/.test(p)) return 0;
-    if(/^(CB|CD|LB|RB|LWB|RWB|SW|DC|LCB|RCB)/.test(p)) return 1;
-    if(/^(DM|CDM)/.test(p)) return 2;
-    if(/^(CM|LM|RM|MF|ML|MR)/.test(p)) return 3;
-    if(/^(AM|LAM|RAM|SS)/.test(p)) return 4;
-    if(/^(F|ST|FW|LW|RW|LF|RF|CF|RCF|LS|RS)/.test(p)) return 5;
-    return 3;
+    if(/^(CB|CD|SW|DC|LCB|RCB)/.test(p)) return 1;  // CB/CD만
+    if(/^(LB|RB|LWB|RWB)/.test(p)) return 2;         // 풀백 별도 라인
+    if(/^(DM|CDM)/.test(p)) return 3;
+    if(/^(CM|CM-L|CM-R|LM|RM|MF|ML|MR)/.test(p)) return 4; // CM+LM+RM 같은 라인
+    if(/^(AM|LAM|RAM|AM-L|AM-R|SS|CF-L|CF-R|RCF|LCF)/.test(p)) return 5;
+    if(/^(F|ST|FW|LW|RW|LF|RF|CF)$/.test(p)) return 6;
+    return 4;
   }
 
-  // 포지션 → x 정렬 순서 (같은 라인 내 좌→우)
+  // 포지션 → 좌우 정렬 순서
   function getPosOrder(pos){
     var p=(pos||'').toUpperCase();
-    if(/^LB$|^LWB$/.test(p)) return -2;
-    if(/-L$/.test(p)||/^(LM|LAM|LW|LF|LCB)/.test(p)) return -1;
-    if(/^RB$|^RWB$/.test(p)) return 2;
-    if(/-R$/.test(p)||/^(RM|RAM|RW|RF|RCB|RCF)/.test(p)) return 1;
-    return 0; // 중앙
+    if(/^LB$|^LWB$|^LM$/.test(p)) return -2;
+    if(/-L$/.test(p)||/^(LAM|LW|LF|LCB|LCF)/.test(p)) return -1;
+    if(/^RB$|^RWB$|^RM$/.test(p)) return 2;
+    if(/-R$/.test(p)||/^(RAM|RW|RF|RCB|RCF)/.test(p)) return 1;
+    return 0;
   }
 
-  // 라인별 그룹핑
+  // 라인별 그룹핑 + 정렬
   var lineMap = {};
   starters.forEach(function(p){
     var line = getPosLine(p.position);
     if(!lineMap[line]) lineMap[line] = [];
     lineMap[line].push(p);
   });
-
-  // 각 라인 내 좌→우 정렬
   Object.keys(lineMap).forEach(function(k){
     lineMap[k].sort(function(a,b){ return getPosOrder(a.position)-getPosOrder(b.position); });
   });
@@ -1107,13 +1109,10 @@ function renderPitch(starters, formation, isAway){
   lineKeys.forEach(function(lineNum){
     var line = lineMap[lineNum];
     var cnt = line.length;
-    // y: GK(minLine)=LAST_Y, FW(maxLine)=FIRST_Y
     var yRatio = maxLine===minLine ? 0 : (lineNum-minLine)/(maxLine-minLine);
     var cy = Math.round(LAST_Y - yRatio*(LAST_Y-FIRST_Y));
-    // x: ESPN과 동일하게 균등분배 (1/(n+1) * i)
     line.forEach(function(p, i){
-      var cx = Math.round((W/(cnt+1))*(i+1));
-      coords[p.formationPlace] = {x:cx, y:cy};
+      coords[p.formationPlace] = {x:Math.round((W/(cnt+1))*(i+1)), y:cy};
     });
   });
 
