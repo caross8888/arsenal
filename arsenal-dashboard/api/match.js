@@ -158,7 +158,7 @@ export default async function handler(req, res) {
         const subPlay = (p.plays||[]).find(pl=>pl.substitution);
         const subTime = subPlay?.clock?.displayValue || null;
         const subFor = p.subbedOutFor ? {
-          name: p.subbedOutFor.athlete?.displayName || '',
+          name: p.subbedOutFor.athlete?.shortName || p.subbedOutFor.athlete?.displayName || '',
           jersey: p.subbedOutFor.jersey || '',
         } : null;
         return {
