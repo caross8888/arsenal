@@ -1149,24 +1149,11 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     // 등번호
     svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#fff" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
-    svg+='<text x="'+c.x+'" y="'+(c.y+r+1)+'" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.85)" font-family="sans-serif">'+lastName+'</text>';
-    // 교체 아이콘 (유니폼 2개)
+    svg+='<text x="'+c.x+'" y="'+(c.y+r+5)+'" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.85)" font-family="sans-serif">'+lastName+'</text>';
+    // 교체 아이콘 (icons8 유니폼 이미지, 배경 없음)
     if(wasSubbed){
-      var ix=c.x+r, iy=c.y-r;
-      var s=0.55;
-      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="6" fill="#15803D"/>';
-      // 유니폼 1 (왼쪽, 흰색)
-      svg+='<g transform="translate('+(ix-5.5)+','+(iy-4)+') scale('+s+')">'+
-        '<rect x="2" y="4" width="6" height="7" rx="0.5" fill="#fff"/>'+
-        '<polygon points="0,4 2,2 2,6" fill="#fff"/>'+
-        '<polygon points="10,4 8,2 8,6" fill="#fff"/>'+
-        '</g>';
-      // 유니폼 2 (오른쪽, 연두색)
-      svg+='<g transform="translate('+(ix-0.5)+','+(iy-4)+') scale('+s+')">'+
-        '<rect x="2" y="4" width="6" height="7" rx="0.5" fill="#86EFAC"/>'+
-        '<polygon points="0,4 2,2 2,6" fill="#86EFAC"/>'+
-        '<polygon points="10,4 8,2 8,6" fill="#86EFAC"/>'+
-        '</g>';
+      var ix=c.x+r-1, iy=c.y-r+1;
+      svg+='<image href="https://img.icons8.com/?size=30&id=74511&format=png" x="'+(ix-7)+'" y="'+(iy-7)+'" width="14" height="14"/>';
     }
   });
   svg+='</svg>';
