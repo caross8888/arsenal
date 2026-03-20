@@ -136,17 +136,18 @@ export default async function handler(req, res) {
   if (cache.data && Date.now() - cache.ts < TTL) return res.json(cache.data);
 
   const allArticles = [];
+  const sourceErrors = {};
   await Promise.all(RSS_SOURCES.map(async (src) => {
     try {
       const r = await fetch(src.url, {
         headers: { 'User-Agent': 'Mozilla/5.0 Arsenal-Dashboard/1.0' },
         signal: AbortSignal.timeout(6000),
       });
-      if (!r.ok) return;
+      if (!r.ok) { sourceErrors[src.name] = `HTTP ${r.status}`; return; }
       const text = await r.text();
       const items = parseRSS(text, src.name, src.filter);
       allArticles.push(...items);
-    } catch (_) {}
+    } catch (e) { sourceErrors[src.name] = e.message; }
   }));
 
   if (!allArticles.length) {
@@ -168,6 +169,7 @@ export default async function handler(req, res) {
   const result = {
     articles: unique.slice(0, 12).map(({ pubDate: _, ...a }) => a),
     source: 'RSS',
+    sourceErrors: Object.keys(sourceErrors).length ? sourceErrors : undefined,
   };
   cache.data = result;
   cache.ts = Date.now();
