@@ -283,8 +283,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-stat-bar-wrap{grid-column:1/-1;display:flex;height:3px;border-radius:2px;overflow:hidden;margin-bottom:2px;}
 .mm-stat-bar-home{background:var(--red);transition:width .4s;}
 .mm-stat-bar-away{background:rgba(96,165,250,.5);transition:width .4s;}
-.mm-pitch-wrap{overflow:hidden;border-radius:10px;margin:0 14px 8px;}
-.mm-pitch-svg{width:100%;max-width:360px;display:block;margin:0 auto;}
+.mm-pitch-wrap{overflow:hidden;border-radius:10px;}
+.mm-pitch-svg{width:100%;display:block;}
 .mm-pitch-player{cursor:default;}
 .mm-pitch-player circle{fill:#C8102E;}
 .mm-pitch-player.away circle{fill:#1a3a6c;}
@@ -1055,8 +1055,8 @@ function renderMatchModal(content, m, data){
     if(hStarters.length||aStarters.length){
       var hHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+hFormation+'</span><span></span></div>';
       var aHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+aFormation+'</span><span></span></div>';
-      html+='<div class="mm-pitch-wrap" id="mm-pitch-home">'+hHeader+renderPitch(hStarters,hFormation,hColor,hP)+'</div>';
-      html+='<div class="mm-pitch-wrap" id="mm-pitch-away" style="display:none">'+aHeader+renderPitch(aStarters,aFormation,aColor,aP)+'</div>';
+      html+='<div style="margin:0 14px 8px"><div class="mm-pitch-wrap" id="mm-pitch-home">'+hHeader+renderPitch(hStarters,hFormation,hColor,hP)+'</div></div>';
+      html+='<div style="margin:0 14px 8px"><div class="mm-pitch-wrap" id="mm-pitch-away" style="display:none">'+aHeader+renderPitch(aStarters,aFormation,aColor,aP)+'</div></div>';
     }
     html+=renderPlayerTable('home',hP,true)+renderPlayerTable('away',aP,false);
   }
@@ -1145,16 +1145,16 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     var lastName=(p.name||'').split(' ').pop();
     var wasSubbed=subbedOutMap[p.formationPlace];
     // 원
-    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'" fill="'+fillColor+'" opacity="'+(wasSubbed?'0.55':'1')+'"/>';
+    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'" fill="'+fillColor+'"/>';
     // 등번호
     svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#fff" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
     svg+='<text x="'+c.x+'" y="'+(c.y+r+1)+'" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.85)" font-family="sans-serif">'+lastName+'</text>';
-    // 교체 아이콘 (흰색 순환 화살표)
+    // 교체 아이콘
     if(wasSubbed){
-      var ix=c.x+r-3, iy=c.y-r+3;
-      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="5" fill="rgba(0,0,0,0.55)"/>';
-      svg+='<path d="M'+(ix-2.5)+','+(iy+1.5)+' a3 3 0 1 1 5 0 M'+(ix+2)+','+(iy-0.5)+' l1.5 2.5 l-2.5 0.5" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>';
+      var ix=c.x+r-2, iy=c.y-r+2;
+      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="4.5" fill="#16A34A"/>';
+      svg+='<polyline points="'+(ix-2)+','+(iy+1)+' '+ix+','+(iy-2)+' '+(ix+2)+','+(iy+1)+'" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>';
     }
   });
   svg+='</svg>';
