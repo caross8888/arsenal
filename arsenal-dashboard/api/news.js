@@ -9,13 +9,18 @@ const RSS_SOURCES = [
     filter: null,
   },
   {
+    url: 'https://feeds.bbci.co.uk/sport/football/arsenal/rss.xml',
+    name: 'BBC Sport',
+    filter: null,
+  },
+  {
     url: 'https://www.skysports.com/rss/12040',
     name: 'Sky Sports',
     filter: /arsenal/i,
   },
   {
-    url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',
-    name: 'BBC Sport',
+    url: 'https://www.goal.com/feeds/en/news',
+    name: 'Goal',
     filter: /arsenal/i,
   },
 ];
@@ -162,7 +167,7 @@ export default async function handler(req, res) {
 
   const result = {
     articles: unique.slice(0, 12).map(({ pubDate: _, ...a }) => a),
-    source: unique[0]?.source || 'RSS',
+    source: 'RSS',
   };
   cache.data = result;
   cache.ts = Date.now();

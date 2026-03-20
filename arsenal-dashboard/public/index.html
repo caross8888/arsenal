@@ -823,7 +823,7 @@ function loadNews(){
     articles.forEach(function(a){
       var card=document.createElement('a');card.className='news-card';card.href=a.url||'#';card.target='_blank';card.rel='noopener';
       var imgDiv=document.createElement('div');imgDiv.className='news-img';
-      var srcBdg=document.createElement('div');srcBdg.className='news-src-badge';srcBdg.textContent=a.source||data.source||'RSS';
+      var srcBdg=document.createElement('div');srcBdg.className='news-src-badge';srcBdg.textContent=a.source||'RSS';
       var validImg=a.urlToImage&&typeof a.urlToImage==='string'&&a.urlToImage.startsWith('http');
       if(validImg){
         var img=document.createElement('img');img.src=a.urlToImage;img.alt='';
