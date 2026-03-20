@@ -1061,65 +1061,33 @@ function renderMatchModal(content, m, data){
 }
 
 function renderPitch(starters, formation, isAway){
+  // 포지션별 X(0~1), Y라인(0=GK, 높을수록 공격) 좌표 테이블
+  var POS_MAP = {
+    'G':    {x:0.5,  y:0},
+    'CD':   {x:0.5,  y:1},
+    'CD-L': {x:0.3,  y:1},
+    'CD-R': {x:0.7,  y:1},
+    'LB':   {x:0.1,  y:1},
+    'RB':   {x:0.9,  y:1},
+    'DM':   {x:0.5,  y:2},
+    'CM':   {x:0.5,  y:3},
+    'CM-L': {x:0.3,  y:3},
+    'CM-R': {x:0.7,  y:3},
+    'LM':   {x:0.1,  y:3},
+    'RM':   {x:0.9,  y:3},
+    'AM':   {x:0.5,  y:4},
+    'AM-L': {x:0.3,  y:4},
+    'AM-R': {x:0.7,  y:4},
+    'CF-L': {x:0.35, y:5},
+    'CF-R': {x:0.65, y:5},
+    'LF':   {x:0.2,  y:5},
+    'RF':   {x:0.8,  y:5},
+    'RCF':  {x:0.75, y:5},
+    'F':    {x:0.5,  y:5},
+  };
+
   var W=220, H=370;
-  var FIRST_Y=29, LAST_Y=H-29;
-
-  // 포지션 → 라인 번호 (낮을수록 수비)
-  function getPosLine(pos){
-    var p=(pos||'').toUpperCase();
-    if(/^(G|GK)$/.test(p)) return 0;
-    if(/^(CB|CD|SW|DC|LCB|RCB|CD-L|CD-R|CD-C)/.test(p)) return 1;
-    if(/^(LB|RB|LWB|RWB|WB|DL|DR)/.test(p)) return 2;
-    if(/^(DM|CDM|DML|DMR|LDM|RDM)/.test(p)) return 3;
-    if(/^(CM|LM|RM|ML|MR|CM-L|CM-R|MF)/.test(p)) return 4;
-    if(/^(AM|LAM|RAM|AM-L|AM-R|SS|CF-L|CF-R)/.test(p)) return 5;
-    if(/^(F|ST|FW|LW|RW|LS|RS|CF)/.test(p)) return 6;
-    return 4;
-  }
-
-  // 포지션 → 좌우 순서 (낮을수록 왼쪽)
-  function getPosOrder(pos){
-    var p=(pos||'').toUpperCase();
-    if(/-L$/.test(p)||/^(LB|LWB|LM|LAM|LW|LS|DML|LDM)/.test(p)) return 0;
-    if(/-R$/.test(p)||/^(RB|RWB|RM|RAM|RW|RS|DMR|RDM)/.test(p)) return 2;
-    return 1; // 중앙
-  }
-
-  // 라인별 그룹핑
-  var lineMap = {};
-  starters.forEach(function(p){
-    var line = getPosLine(p.position);
-    if(!lineMap[line]) lineMap[line] = [];
-    lineMap[line].push(p);
-  });
-
-  // 각 라인 내에서 좌→중앙→우 정렬
-  Object.keys(lineMap).forEach(function(line){
-    lineMap[line].sort(function(a,b){
-      return getPosOrder(a.position) - getPosOrder(b.position);
-    });
-  });
-
-  // 라인 번호 오름차순 정렬 (GK→DF→MF→FW)
-  var lineKeys = Object.keys(lineMap).map(Number).sort(function(a,b){return a-b;});
-  var lines = lineKeys.map(function(k){return lineMap[k];});
-
-  // 홈: GK 하단(LAST_Y), 공격진 상단(FIRST_Y) → 뒤집기
-  var drawLines = isAway ? lines : lines.slice().reverse();
-  var totalLines = drawLines.length;
-  var coords = {};
-
-  drawLines.forEach(function(line, li){
-    if(!line||!line.length) return;
-    var y = totalLines<=1 ? (FIRST_Y+LAST_Y)/2
-      : Math.round(FIRST_Y + (LAST_Y-FIRST_Y)/(totalLines-1)*li);
-    line.forEach(function(p, ci){
-      coords[p.formationPlace] = {
-        x: Math.round((W/(line.length+1))*(ci+1)),
-        y: y
-      };
-    });
-  });
+  var FIRST_Y=29, LAST_Y=H-29; // 공격(상단) ~ GK(하단)
 
   var r=11;
   var svg='<svg class="mm-pitch-svg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
@@ -1132,14 +1100,20 @@ function renderPitch(starters, formation, isAway){
   if(formation){
     svg+='<text x="'+W/2+'" y="'+(H-3)+'" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.35)" font-family="sans-serif">'+formation+'</text>';
   }
+
   starters.forEach(function(p){
-    var c=coords[p.formationPlace]; if(!c) return;
+    var pm = POS_MAP[p.position];
+    if(!pm) return; // 매핑 없으면 스킵
+    // Y: POS_MAP y(0~5) → 화면 좌표 (GK=하단, FW=상단)
+    // y=0(GK) → LAST_Y, y=5(FW) → FIRST_Y
+    var cx = Math.round(pm.x * W);
+    var cy = Math.round(LAST_Y - (pm.y / 5) * (LAST_Y - FIRST_Y));
     var cls=isAway?'mm-pitch-player away':'mm-pitch-player';
     var lastName=(p.name||'').split(' ').pop();
     svg+='<g class="'+cls+'">';
-    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'"/>';
-    svg+='<text class="jersey" x="'+c.x+'" y="'+c.y+'">'+p.jersey+'</text>';
-    svg+='<text class="pname" x="'+c.x+'" y="'+(c.y+r+1)+'">'+lastName+'</text>';
+    svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'"/>';
+    svg+='<text class="jersey" x="'+cx+'" y="'+cy+'">'+p.jersey+'</text>';
+    svg+='<text class="pname" x="'+cx+'" y="'+(cy+r+1)+'">'+lastName+'</text>';
     svg+='</g>';
   });
   svg+='</svg>';
