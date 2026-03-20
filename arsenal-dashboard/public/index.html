@@ -283,6 +283,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-stat-bar-wrap{grid-column:1/-1;display:flex;height:3px;border-radius:2px;overflow:hidden;margin-bottom:2px;}
 .mm-stat-bar-home{background:var(--red);transition:width .4s;}
 .mm-stat-bar-away{background:rgba(96,165,250,.5);transition:width .4s;}
+.mm-pitch-wrap{padding:12px 14px 4px;}
+.mm-pitch-svg{width:100%;max-width:360px;display:block;margin:0 auto;}
+.mm-pitch-player{cursor:default;}
+.mm-pitch-player circle{fill:#C8102E;}
+.mm-pitch-player.away circle{fill:#1a3a6c;}
+.mm-pitch-player text.jersey{fill:#fff;font-size:9px;font-weight:700;text-anchor:middle;dominant-baseline:central;}
+.mm-pitch-player text.pname{fill:rgba(255,255,255,0.85);font-size:7px;text-anchor:middle;dominant-baseline:hanging;}
+.mm-pitch-formation{font-size:10px;color:var(--text-muted);text-align:center;padding:2px 0 6px;}
 .mm-player-table{width:100%;border-collapse:collapse;font-size:11px;}
 .mm-player-table th{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);padding:5px 6px;text-align:center;border-bottom:1px solid var(--border);}
 .mm-player-table th:first-child{text-align:left;}
@@ -1033,14 +1041,82 @@ function renderMatchModal(content, m, data){
   var hP=(data.players&&data.players.home)||[];
   var aP=(data.players&&data.players.away)||[];
   if(hP.length||aP.length){
+    // 라인업 피치
+    var hFormation=data.players.homeFormation||'';
+    var aFormation=data.players.awayFormation||'';
     html+='<div class="mm-tab-row">'+
       '<button class="mm-tab active" id="mm-tab-home" onclick="mmSwitchTab(&quot;home&quot;)">'+h.name+'</button>'+
       '<button class="mm-tab" id="mm-tab-away" onclick="mmSwitchTab(&quot;away&quot;)">'+a.name+'</button>'+
     '</div>';
+    var hStarters=hP.filter(function(p){return p.starter&&p.formationPlace;});
+    var aStarters=aP.filter(function(p){return p.starter&&p.formationPlace;});
+    if(hStarters.length||aStarters.length){
+      html+='<div class="mm-pitch-wrap" id="mm-pitch-home">'+renderPitch(hStarters,hFormation,false)+'</div>';
+      html+='<div class="mm-pitch-wrap" id="mm-pitch-away" style="display:none">'+renderPitch(aStarters,aFormation,true)+'</div>';
+    }
     html+=renderPlayerTable('home',hP,true)+renderPlayerTable('away',aP,false);
   }
 
   content.innerHTML=html;
+}
+
+function renderPitch(starters, formation, isAway){
+  // 포메이션 파싱: "4-2-3-1" → [4,2,3,1]
+  var rows = (formation||'4-4-2').split('-').map(Number);
+  // formationPlace 1=GK, 2~11=필드
+  // ESPN formationPlace 순서: 1=GK, 이후 수비→미드→공격 순
+  // 각 행에 몇 명씩 배치할지 rows로 결정
+  var W=200, H=300;
+  var players = starters.slice().sort(function(a,b){return a.formationPlace-b.formationPlace;});
+  // 좌표 계산
+  var coords = [];
+  // GK (formationPlace=1)
+  coords.push({x:W/2, y:H-18});
+  // 필드 선수들을 rows에 맞게 배치
+  var fieldPlayers = players.filter(function(p){return p.formationPlace>1;});
+  var yStep = (H-50) / (rows.length+1);
+  var idx = 0;
+  // isAway면 위아래 반전
+  var rowsOrder = isAway ? rows.slice() : rows.slice().reverse();
+  rowsOrder.forEach(function(cnt, ri){
+    var y = isAway ? (H-18) - (ri+1)*yStep : 18 + (ri+1)*yStep;
+    for(var c=0;c<cnt;c++){
+      var x = (W/(cnt+1))*(c+1);
+      coords.push({x:x, y:y});
+      idx++;
+    }
+  });
+
+  var svg = '<svg class="mm-pitch-svg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+  // 피치 배경
+  svg += '<rect width="'+W+'" height="'+H+'" rx="4" fill="#2d5a27"/>';
+  // 중앙선
+  svg += '<line x1="0" y1="'+H/2+'" x2="'+W+'" y2="'+H/2+'" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>';
+  // 중앙원
+  svg += '<circle cx="'+W/2+'" cy="'+H/2+'" r="28" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>';
+  // 페널티 박스 (홈: 하단, 어웨이: 상단)
+  var bw=W*0.6, bh=H*0.15, bx=(W-bw)/2;
+  svg += '<rect x="'+bx+'" y="'+(H-bh)+'" width="'+bw+'" height="'+bh+'" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>';
+  svg += '<rect x="'+bx+'" y="0" width="'+bw+'" height="'+bh+'" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>';
+
+  // 선수 원
+  var r = 12;
+  players.forEach(function(p, i){
+    var coord = coords[i] || {x:W/2, y:H/2};
+    var cls = isAway ? 'mm-pitch-player away' : 'mm-pitch-player';
+    var lastName = (p.name||'').split(' ').pop();
+    svg += '<g class="'+cls+'">';
+    svg += '<circle cx="'+coord.x+'" cy="'+coord.y+'" r="'+r+'"/>';
+    svg += '<text class="jersey" x="'+coord.x+'" y="'+coord.y+'">'+p.jersey+'</text>';
+    svg += '<text class="pname" x="'+coord.x+'" y="'+(coord.y+r+2)+'">'+lastName+'</text>';
+    svg += '</g>';
+  });
+
+  if(formation){
+    svg += '<text x="'+W/2+'" y="'+(H-3)+'" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.5)">'+formation+'</text>';
+  }
+  svg += '</svg>';
+  return svg;
 }
 
 function renderPlayerTable(side, players, visible){
@@ -1072,6 +1148,11 @@ function mmSwitchTab(side){
   document.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
   var tb=document.getElementById('mm-tab-'+side);
   if(tb) tb.classList.add('active');
+  // 피치 토글
+  var ph=document.getElementById('mm-pitch-home');
+  var pa=document.getElementById('mm-pitch-away');
+  if(ph) ph.style.display=side==='home'?'':'none';
+  if(pa) pa.style.display=side==='away'?'':'none';
   document.querySelectorAll('.mm-players-home,.mm-players-away').forEach(function(el){el.style.display='none';});
   var el=document.querySelector('.mm-players-'+side);
   if(el) el.style.display='block';

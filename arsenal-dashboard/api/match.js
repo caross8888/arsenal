@@ -153,19 +153,24 @@ export default async function handler(req, res) {
           if (n === 'foulscommitted') stats.fouls = s.displayValue;
         }
         return {
-          name:     ath.shortName || ath.displayName || '',
-          jersey:   p.jersey || '',
-          position: p.position?.abbreviation || ath.position?.abbreviation || '',
-          starter:  p.starter || false,
+          name:          ath.shortName || ath.displayName || '',
+          jersey:        p.jersey || '',
+          position:      p.position?.abbreviation || ath.position?.abbreviation || '',
+          starter:       p.starter || false,
+          formationPlace: p.formationPlace ? parseInt(p.formationPlace) : null,
           stats,
         };
       }).filter(p => p.name);
     }
 
     const rawRosters = raw.rosters || [];
+    const homeRoster = rawRosters.find(t => t.homeAway === 'home');
+    const awayRoster = rawRosters.find(t => t.homeAway === 'away');
     const players = {
-      home: parsePlayers(rawRosters.find(t => t.homeAway === 'home')),
-      away: parsePlayers(rawRosters.find(t => t.homeAway === 'away')),
+      home: parsePlayers(homeRoster),
+      away: parsePlayers(awayRoster),
+      homeFormation: homeRoster?.formation || '',
+      awayFormation: awayRoster?.formation || '',
     };
 
     const result = {
