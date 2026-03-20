@@ -1061,29 +1061,56 @@ function renderMatchModal(content, m, data){
 }
 
 function renderPitch(starters, formation, isAway){
-  var rows = (formation||'4-4-2').split('-').map(Number);
   var W=220, H=370;
-  // 상단: 이름 공간 18px, 원 반지름 11px → 첫 y=29
-  // 하단: GK 원 아래 이름 + 포메이션 텍스트 공간 확보 → 마지막 y=H-29
-  // 포메이션 텍스트: H-8
   var FIRST_Y=29, LAST_Y=H-29;
 
-  var sorted = starters.slice().sort(function(a,b){return a.formationPlace-b.formationPlace;});
+  // 포지션 → 라인 번호 (낮을수록 수비)
+  function getPosLine(pos){
+    var p=(pos||'').toUpperCase();
+    if(/^(G|GK)$/.test(p)) return 0;
+    if(/^(CB|CD|SW|DC|LCB|RCB|CD-L|CD-R|CD-C)/.test(p)) return 1;
+    if(/^(LB|RB|LWB|RWB|WB|DL|DR)/.test(p)) return 2;
+    if(/^(DM|CDM|DML|DMR|LDM|RDM)/.test(p)) return 3;
+    if(/^(CM|LM|RM|ML|MR|CM-L|CM-R|MF)/.test(p)) return 4;
+    if(/^(AM|LAM|RAM|AM-L|AM-R|SS|CF-L|CF-R)/.test(p)) return 5;
+    if(/^(F|ST|FW|LW|RW|LS|RS|CF)/.test(p)) return 6;
+    return 4;
+  }
 
-  var lines = [];
-  var idx = 0;
-  lines.push(sorted[idx] ? [sorted[idx++]] : []);
-  rows.forEach(function(cnt){
-    var line = [];
-    for(var c=0;c<cnt;c++){ if(sorted[idx]) line.push(sorted[idx++]); }
-    lines.push(line);
+  // 포지션 → 좌우 순서 (낮을수록 왼쪽)
+  function getPosOrder(pos){
+    var p=(pos||'').toUpperCase();
+    if(/-L$/.test(p)||/^(LB|LWB|LM|LAM|LW|LS|DML|LDM)/.test(p)) return 0;
+    if(/-R$/.test(p)||/^(RB|RWB|RM|RAM|RW|RS|DMR|RDM)/.test(p)) return 2;
+    return 1; // 중앙
+  }
+
+  // 라인별 그룹핑
+  var lineMap = {};
+  starters.forEach(function(p){
+    var line = getPosLine(p.position);
+    if(!lineMap[line]) lineMap[line] = [];
+    lineMap[line].push(p);
   });
 
-  // 홈: GK 하단(LAST_Y), 공격진 상단(FIRST_Y)
+  // 각 라인 내에서 좌→중앙→우 정렬
+  Object.keys(lineMap).forEach(function(line){
+    lineMap[line].sort(function(a,b){
+      return getPosOrder(a.position) - getPosOrder(b.position);
+    });
+  });
+
+  // 라인 번호 오름차순 정렬 (GK→DF→MF→FW)
+  var lineKeys = Object.keys(lineMap).map(Number).sort(function(a,b){return a-b;});
+  var lines = lineKeys.map(function(k){return lineMap[k];});
+
+  // 홈: GK 하단(LAST_Y), 공격진 상단(FIRST_Y) → 뒤집기
   var drawLines = isAway ? lines : lines.slice().reverse();
   var totalLines = drawLines.length;
   var coords = {};
+
   drawLines.forEach(function(line, li){
+    if(!line||!line.length) return;
     var y = totalLines<=1 ? (FIRST_Y+LAST_Y)/2
       : Math.round(FIRST_Y + (LAST_Y-FIRST_Y)/(totalLines-1)*li);
     line.forEach(function(p, ci){
@@ -1102,9 +1129,10 @@ function renderPitch(starters, formation, isAway){
   var bw=W*0.55,bh=32,bx=(W-bw)/2;
   svg+='<rect x="'+bx+'" y="'+(H-bh)+'" width="'+bw+'" height="'+bh+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
   svg+='<rect x="'+bx+'" y="0" width="'+bw+'" height="'+bh+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
-
-  // 선수
-  sorted.forEach(function(p){
+  if(formation){
+    svg+='<text x="'+W/2+'" y="'+(H-3)+'" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.35)" font-family="sans-serif">'+formation+'</text>';
+  }
+  starters.forEach(function(p){
     var c=coords[p.formationPlace]; if(!c) return;
     var cls=isAway?'mm-pitch-player away':'mm-pitch-player';
     var lastName=(p.name||'').split(' ').pop();
@@ -1114,11 +1142,6 @@ function renderPitch(starters, formation, isAway){
     svg+='<text class="pname" x="'+c.x+'" y="'+(c.y+r+1)+'">'+lastName+'</text>';
     svg+='</g>';
   });
-
-  // 포메이션 텍스트 (맨 하단, 선수와 안 겹침)
-  if(formation){
-    svg+='<text x="'+W/2+'" y="'+(H-3)+'" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.35)" font-family="sans-serif">'+formation+'</text>';
-  }
   svg+='</svg>';
   return svg;
 }
