@@ -35,6 +35,7 @@ function getFotmobId(p) {
 const cache = {};
 const TTL = 60 * 60 * 1000;
 function getCache(k){const c=cache[k];return(c&&Date.now()-c.ts<TTL)?c.data:null;}
+function getStale(k){const c=cache[k];return c?c.data:null;}
 function setCache(k,d){cache[k]={data:d,ts:Date.now()};}
 
 const FPL_HEADERS = {
@@ -163,6 +164,36 @@ export default async function handler(req, res) {
           goalDifference:row.goalDifference,isArsenal:row.team?.id===ARSENAL_ID,
         }))
       };
+
+    } else if(type === 'injuries'){
+      // FPL API에서 부상 선수 데이터
+      let fplData;
+      try {
+        const fplRes = await fetch(FPL_URL, {headers: FPL_HEADERS, signal: AbortSignal.timeout(10000)});
+        if(!fplRes.ok) throw new Error(`FPL API: ${fplRes.status}`);
+        const fplText = await fplRes.text();
+        if(!fplText || fplText.trim() === '') throw new Error('FPL 응답 빈 값');
+        fplData = JSON.parse(fplText);
+      } catch(fplErr) {
+        // stale 캐시 fallback
+        const stale = getStale('injuries');
+        if(stale) return res.json(stale);
+        throw fplErr;
+      }
+      const arsenalPlayers = (fplData.elements || []).filter(p => p.team === ARSENAL_FPL_ID);
+      const injured = arsenalPlayers
+        .filter(p => p.chance_of_playing_next_round !== null && p.chance_of_playing_next_round < 100)
+        .map(p => ({
+          id:       p.id,
+          name:     p.web_name,
+          fullName: `${p.first_name} ${p.second_name}`,
+          position: FPL_POS[p.element_type] || '',
+          photo:    `https://resources.premierleague.com/premierleague/photos/players/250x250/p${p.code}.png`,
+          status:   p.status === 'i' ? 'i' : p.status === 'd' ? 'd' : p.status === 's' ? 's' : 'u',
+          news:     p.news || '',
+          chance:   p.chance_of_playing_next_round,
+        }));
+      result = { injured };
 
     } else if(type === 'squad'){
       // players.json (Fotmob 기반) 직접 사용
