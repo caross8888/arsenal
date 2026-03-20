@@ -850,7 +850,7 @@ function loadSns(){
   var badge=document.getElementById('snsBadge');
   apiFetch(FN+'/social').then(function(data){
     var posts=data.posts||[];
-    badge.textContent=posts.length+'개';
+    badge.textContent='Bluesky';
     if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
     el.innerHTML='';
     posts.forEach(function(p){
