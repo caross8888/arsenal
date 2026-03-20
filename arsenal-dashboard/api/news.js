@@ -8,7 +8,11 @@ const RSS_SOURCES = [
     name: 'BBC Sport',
     filter: /arsenal/i,
   },
-  
+  {
+    url: 'https://www.cbssports.com/rss/headlines/soccer/',
+    name: 'CBS Sports',
+    filter: /arsenal/i,
+  },
 ];
 
 function decodeHtml(str) {
@@ -187,44 +191,6 @@ export default async function handler(req, res) {
       sourceErrors['Guardian'] = `HTTP ${gRes.status}`;
     }
   } catch(e) { sourceErrors['Guardian'] = e.message; }
-
-  // Sky Sports 스크래핑 (Arsenal 뉴스 페이지 HTML 파싱)
-  try {
-    const skyRes = await fetch('https://www.skysports.com/arsenal-news', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'en-GB,en;q=0.9',
-      },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (skyRes.ok) {
-      const html = await skyRes.text();
-      // 링크: /football/news/숫자/숫자/... 패턴
-      const linkMatches = [...new Set([...html.matchAll(/href="(\/football\/news\/\d+\/\d+\/[^"]+)"/g)].map(m => m[1]))];
-      // 이미지: e0.365dm.com CDN
-      const imgMatches = [...html.matchAll(/src="(https:\/\/e0\.365dm\.com[^"]+\.jpg[^"]*)"/g)].map(m => m[1]);
-      // 제목: 다양한 클래스에서 추출
-      const titleMatches = [...html.matchAll(/class="[^"]*(?:sdc-site-tile__headline-text|news-list__headline|sdc-article-list__headline)[^"]*"[^>]*>([^<]+)<\/[a-z]+>/g)].map(m => m[1].trim());
-
-      // 링크, 이미지, 제목을 순서대로 매핑
-      const skyArticles = linkMatches.slice(0, 8).map((link, i) => {
-        const pub = new Date();
-        return {
-          title:       titleMatches[i] || '',
-          description: '',
-          url:         'https://www.skysports.com' + link,
-          image:       imgMatches[i] || null,
-          pubDate:     pub.getTime(),
-          timeAgo:     '오늘',
-          source:      'Sky Sports',
-        };
-      }).filter(a => a.title);
-      allArticles.push(...skyArticles);
-    } else {
-      sourceErrors['Sky Sports'] = `HTTP ${skyRes.status}`;
-    }
-  } catch(e) { sourceErrors['Sky Sports'] = e.message; }
 
   // RSS 소스
   await Promise.all(RSS_SOURCES.map(async (src) => {
