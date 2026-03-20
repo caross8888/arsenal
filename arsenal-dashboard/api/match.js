@@ -154,6 +154,9 @@ export default async function handler(req, res) {
           if (n === 'redcards')       stats.redCards = s.displayValue;
           if (n === 'foulscommitted') stats.fouls = s.displayValue;
         }
+        // 교체 시간: plays에서 substitution=true인 첫번째 play의 clock
+        const subPlay = (p.plays||[]).find(pl=>pl.substitution);
+        const subTime = subPlay?.clock?.displayValue || null;
         return {
           name:          ath.shortName || ath.displayName || '',
           jersey:        p.jersey || '',
@@ -162,6 +165,7 @@ export default async function handler(req, res) {
           formationPlace: p.formationPlace ? parseInt(p.formationPlace) : null,
           subbedOut:     p.subbedOut || false,
           subbedIn:      p.subbedIn || false,
+          subTime,
           stats,
         };
       }).filter(p => p.name);

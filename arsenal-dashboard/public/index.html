@@ -291,6 +291,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-pitch-player text.jersey{fill:#fff;font-size:9px;font-weight:700;text-anchor:middle;dominant-baseline:central;}
 .mm-pitch-player text.pname{fill:rgba(255,255,255,0.85);font-size:7px;text-anchor:middle;dominant-baseline:hanging;}
 .mm-pitch-formation{font-size:10px;color:var(--text-muted);text-align:center;padding:2px 0 6px;}
+.mm-pos-badge{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:0.5px;margin-right:5px;vertical-align:middle;}
+.mm-pos-gk{background:#B45309;color:#FEF3C7;}
+.mm-pos-df{background:#1D4ED8;color:#DBEAFE;}
+.mm-pos-mf{background:#15803D;color:#DCFCE7;}
+.mm-pos-fw{background:#B91C1C;color:#FEE2E2;}
+.mm-pos-sub{background:#374151;color:#D1D5DB;}
+.mm-sub-title{font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;padding:8px 6px 4px;border-top:1px solid var(--border);}
 .mm-player-table{width:100%;border-collapse:collapse;font-size:11px;}
 .mm-player-table th{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);padding:5px 6px;text-align:center;border-bottom:1px solid var(--border);}
 .mm-player-table th:first-child{text-align:left;}
@@ -1136,8 +1143,12 @@ function renderPitch(starters, formation, teamColor, allPlayers){
   svg+='<rect x="'+bx+'" y="'+(H-bh)+'" width="'+bw+'" height="'+bh+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
   svg+='<rect x="'+bx+'" y="0" width="'+bw+'" height="'+bh+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
   var pr=18,pcx=W/2;
-  svg+='<path d="M '+(pcx-pr)+' '+(H-bh)+' A '+pr+' '+pr+' 0 0 0 '+(pcx+pr)+' '+(H-bh)+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
-  svg+='<path d="M '+(pcx-pr)+' '+bh+' A '+pr+' '+pr+' 0 0 1 '+(pcx+pr)+' '+bh+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
+  // 페널티 반원: 박스 바깥으로, 약 1/3호 (시작/끝 x를 좁혀서 호 범위 제한)
+  var arcR=18, arcW=arcR*0.85;
+  // 하단 박스 바깥(아래)으로 호: sweep=1
+  svg+='<path d="M '+(pcx-arcW)+' '+(H-bh)+' A '+arcR+' '+arcR+' 0 0 1 '+(pcx+arcW)+' '+(H-bh)+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
+  // 상단 박스 바깥(위)으로 호: sweep=0
+  svg+='<path d="M '+(pcx-arcW)+' '+bh+' A '+arcR+' '+arcR+' 0 0 0 '+(pcx+arcW)+' '+bh+'" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>';
 
 
   starters.forEach(function(p){
@@ -1160,28 +1171,53 @@ function renderPitch(starters, formation, teamColor, allPlayers){
   svg+='</svg>';
   return svg;
 }
+function getPosBadge(pos){
+  var p=(pos||'').toUpperCase();
+  if(/^(G|GK)/.test(p)) return '<span class="mm-pos-badge mm-pos-gk">GK</span>';
+  if(/^(CB|CD|LB|RB|LWB|RWB|SW|DC)/.test(p)) return '<span class="mm-pos-badge mm-pos-df">DF</span>';
+  if(/^(CM|DM|LM|RM|MF|ML|MR|AM)/.test(p)) return '<span class="mm-pos-badge mm-pos-mf">MF</span>';
+  if(/^(F|ST|FW|LW|RW|LF|RF|CF|RCF|SS)/.test(p)) return '<span class="mm-pos-badge mm-pos-fw">FW</span>';
+  return '<span class="mm-pos-badge mm-pos-sub">'+pos+'</span>';
+}
+function renderPlayerRow(p){
+  var s=p.stats||{};
+  // 교체 아웃 선수: 이름 아래에 교체 아이콘 + 시간 + 교체 선수 이름
+  var nameCell=getPosBadge(p.position)+(p.name||'')+(p.jersey?' <span style="color:var(--text-dim);font-size:9px">#'+p.jersey+'</span>':'');
+  if(p.subbedOut&&p.subTime){
+    nameCell+='<div style="display:flex;align-items:center;gap:4px;margin-top:2px;">'+
+      '<svg viewBox="0 0 24 24" width="10" height="10" style="flex-shrink:0"><path d="M6.873 3.845l4.221 4.317 0.868-0.868-5.764-5.957-5.74 5.957 0.893 0.868 4.221-4.317v11.745h1.302zM23.66 15.999l-0.917-0.869-4.221 4.317v-11.769h-1.302v11.769l-4.197-4.317-0.965 0.869 5.789 5.932z" fill="#6B7280"/></svg>'+
+      '<span style="font-size:9px;color:var(--text-dim);">'+p.subTime+'</span>'+
+    '</div>';
+  }
+  return '<tr>'+
+    '<td>'+nameCell+'</td>'+
+    '<td>'+(s.goals||'-')+'</td>'+
+    '<td>'+(s.assists||'-')+'</td>'+
+    '<td>'+(s.shots||'-')+'</td>'+
+    '<td>'+(s.shotsOnTarget||'-')+'</td>'+
+    '<td>'+(s.fouls||'-')+'</td>'+
+    '<td>'+(function(s){var y=parseInt(s.yellowCards)||0;var r=parseInt(s.redCards)||0;return r?'🟥':y?'🟨':'-';})(s)+'</td>'+
+  '</tr>';
+}
 function renderPlayerTable(side, players, visible){
   if(!players||!players.length) return '';
   var style=visible?'margin-top:10px':'margin-top:10px;display:none';
-  var html='<div class="mm-section mm-players-'+side+'" style="'+style+'">'+
-    '<table class="mm-player-table"><thead><tr>'+
-    '<th>선수</th><th>골</th><th>도움</th><th>슈팅</th><th>유효</th><th>파울</th><th>경고</th>'+
-    '</tr></thead><tbody>';
-  players.forEach(function(p){
-    var s=p.stats||{};
-    html+='<tr>'+
-      '<td>'+(p.name||'')+(p.jersey?' <span style="color:var(--text-dim);font-size:9px">#'+p.jersey+'</span>':'')+
-        (p.position?' <span style="color:var(--text-dim);font-size:9px">'+p.position+'</span>':'')+
-      '</td>'+
-      '<td>'+(s.goals||'-')+'</td>'+
-      '<td>'+(s.assists||'-')+'</td>'+
-      '<td>'+(s.shots||'-')+'</td>'+
-      '<td>'+(s.shotsOnTarget||'-')+'</td>'+
-      '<td>'+(s.fouls||'-')+'</td>'+
-      '<td>'+(function(s){var y=parseInt(s.yellowCards)||0;var r=parseInt(s.redCards)||0;return r?'🟥':y?'🟨':'-';})(s)+'</td>'+
-    '</tr>';
-  });
-  html+='</tbody></table></div>';
+  var starters=players.filter(function(p){return p.starter;});
+  var subs=players.filter(function(p){return !p.starter;});
+  var thead='<thead><tr><th>선수</th><th>골</th><th>도움</th><th>슈팅</th><th>유효</th><th>파울</th><th>경고</th></tr></thead>';
+  var html='<div class="mm-section mm-players-'+side+'" style="'+style+'">';
+  // 선발
+  html+='<table class="mm-player-table">'+thead+'<tbody>';
+  starters.forEach(function(p){ html+=renderPlayerRow(p); });
+  html+='</tbody></table>';
+  // 교체
+  if(subs.length){
+    html+='<div class="mm-sub-title">Substitutes</div>';
+    html+='<table class="mm-player-table"><tbody>';
+    subs.forEach(function(p){ html+=renderPlayerRow(p); });
+    html+='</tbody></table>';
+  }
+  html+='</div>';
   return html;
 }
 
