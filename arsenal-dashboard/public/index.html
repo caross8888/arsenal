@@ -1065,23 +1065,6 @@ function renderPitch(starters, formation, isAway){
   var FIRST_Y=29, LAST_Y=H-29;
   var r=11;
 
-  // 포지션별 x 보정 오프셋 (-1~1, 0=중앙)
-  // 같은 라인 안에서 좌우 위치를 조정
-  var POS_X_OFFSET = {
-    'LB':-0.5, 'LWB':-0.5,
-    'CD-L':-0.2, 'LCB':-0.2,
-    'CD':0, 'CB':0,
-    'CD-R':0.2, 'RCB':0.2,
-    'RB':0.5, 'RWB':0.5,
-    'LM':-0.4, 'CM-L':-0.2, 'DM-L':-0.2,
-    'CM':0, 'DM':0,
-    'CM-R':0.2, 'DM-R':0.2, 'RM':0.4,
-    'AM-L':-0.2, 'AM':0, 'AM-R':0.2,
-    'LF':-0.3, 'LW':-0.3, 'CF-L':-0.15,
-    'F':0, 'ST':0, 'CF':0,
-    'CF-R':0.15, 'RF':0.3, 'RW':0.3, 'RCF':0.3,
-  };
-
   // 포지션 → 라인 번호
   function getPosLine(pos){
     var p=(pos||'').toUpperCase();
@@ -1094,7 +1077,17 @@ function renderPitch(starters, formation, isAway){
     return 3;
   }
 
-  // 라인별로 선수 그룹핑
+  // 포지션 → x 정렬 순서 (같은 라인 내 좌→우)
+  function getPosOrder(pos){
+    var p=(pos||'').toUpperCase();
+    if(/^LB$|^LWB$/.test(p)) return -2;
+    if(/-L$/.test(p)||/^(LM|LAM|LW|LF|LCB)/.test(p)) return -1;
+    if(/^RB$|^RWB$/.test(p)) return 2;
+    if(/-R$/.test(p)||/^(RM|RAM|RW|RF|RCB|RCF)/.test(p)) return 1;
+    return 0; // 중앙
+  }
+
+  // 라인별 그룹핑
   var lineMap = {};
   starters.forEach(function(p){
     var line = getPosLine(p.position);
@@ -1102,42 +1095,25 @@ function renderPitch(starters, formation, isAway){
     lineMap[line].push(p);
   });
 
-  // 각 라인 y 좌표 계산 (라인 번호 기반 균등 배치)
-  var lineKeys = Object.keys(lineMap).map(Number).sort(function(a,b){return a-b;});
-  var totalLines = lineKeys.length;
+  // 각 라인 내 좌→우 정렬
+  Object.keys(lineMap).forEach(function(k){
+    lineMap[k].sort(function(a,b){ return getPosOrder(a.position)-getPosOrder(b.position); });
+  });
 
+  var lineKeys = Object.keys(lineMap).map(Number).sort(function(a,b){return a-b;});
+  var minLine = lineKeys[0], maxLine = lineKeys[lineKeys.length-1];
   var coords = {};
-  lineKeys.forEach(function(lineNum, li){
+
+  lineKeys.forEach(function(lineNum){
     var line = lineMap[lineNum];
     var cnt = line.length;
-    // y: GK(0)=LAST_Y, 최상단라인=FIRST_Y
-    var maxLine = lineKeys[lineKeys.length-1];
-    var minLine = lineKeys[0];
-    var yRatio = maxLine===minLine ? 0.5 : (lineNum-minLine)/(maxLine-minLine);
-    var baseY = Math.round(LAST_Y - yRatio*(LAST_Y-FIRST_Y));
-
-    // x: 균등 분배 기본값
-    var baseXs = [];
-    for(var i=0;i<cnt;i++){
-      baseXs.push((W/(cnt+1))*(i+1));
-    }
-
-    // 포지션 오프셋으로 정렬 후 x 배정
-    // 오프셋 오름차순으로 정렬 → 왼쪽부터 배치
-    var sorted = line.slice().sort(function(a,b){
-      var oa = POS_X_OFFSET[a.position]||0;
-      var ob = POS_X_OFFSET[b.position]||0;
-      return oa-ob;
-    });
-
-    sorted.forEach(function(p, i){
-      var offset = POS_X_OFFSET[p.position]||0;
-      // 기본 x + 보정: 중앙에서 offset 방향으로 이동
-      var x = baseXs[i];
-      // 추가 미세 보정 (풀백은 조금 더 바깥으로)
-      if(p.position==='LB'||p.position==='LWB') x = Math.max(x, baseXs[0])-8;
-      if(p.position==='RB'||p.position==='RWB') x = Math.min(x, baseXs[baseXs.length-1])+8;
-      coords[p.formationPlace] = {x:Math.round(Math.max(r+2,Math.min(W-r-2,x))), y:baseY};
+    // y: GK(minLine)=LAST_Y, FW(maxLine)=FIRST_Y
+    var yRatio = maxLine===minLine ? 0 : (lineNum-minLine)/(maxLine-minLine);
+    var cy = Math.round(LAST_Y - yRatio*(LAST_Y-FIRST_Y));
+    // x: ESPN과 동일하게 균등분배 (1/(n+1) * i)
+    line.forEach(function(p, i){
+      var cx = Math.round((W/(cnt+1))*(i+1));
+      coords[p.formationPlace] = {x:cx, y:cy};
     });
   });
 
