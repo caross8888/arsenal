@@ -1149,11 +1149,12 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     // 등번호
     svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#fff" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
-    svg+='<text x="'+c.x+'" y="'+(c.y+r+5)+'" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.85)" font-family="sans-serif">'+lastName+'</text>';
-    // 교체 아이콘 (icons8 유니폼 이미지, 배경 없음)
+    svg+='<text x="'+c.x+'" y="'+(c.y+r+8)+'" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.85)" font-family="sans-serif">'+lastName+'</text>';
+    // 교체 아이콘 (ESPN substitution icon)
     if(wasSubbed){
-      var ix=c.x+r-1, iy=c.y-r+1;
-      svg+='<image href="https://img.icons8.com/?size=30&id=74511&format=png" x="'+(ix-7)+'" y="'+(iy-7)+'" width="14" height="14"/>';
+      var ix=c.x+r, iy=c.y-r;
+      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="6" fill="rgba(0,0,0,0.65)"/>';
+      svg+='<g transform="translate('+(ix-5)+','+(iy-5)+') scale(0.42)"><path d="M6.873 3.845l4.221 4.317 0.868-0.868-5.764-5.957-5.74 5.957 0.893 0.868 4.221-4.317v11.745h1.302zM23.66 15.999l-0.917-0.869-4.221 4.317v-11.769h-1.302v11.769l-4.197-4.317-0.965 0.869 5.789 5.932z" fill="#fff"/></g>';
     }
   });
   svg+='</svg>';
