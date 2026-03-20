@@ -157,9 +157,19 @@ export default async function handler(req, res) {
         // 교체 시간 및 교체 선수
         const subPlay = (p.plays||[]).find(pl=>pl.substitution);
         const subTime = subPlay?.clock?.displayValue || null;
-        const subFor = p.subbedOutFor ? {
+        const subForRaw = p.subbedOutFor ? {
           name: p.subbedOutFor.athlete?.shortName || p.subbedOutFor.athlete?.displayName || '',
           jersey: p.subbedOutFor.jersey || '',
+        } : null;
+        // shortName 없으면 "성" 앞글자 이니셜로 단축: "Gabriel Jesus" → "G Jesus"
+        const subFor = subForRaw ? {
+          name: (()=>{
+            const n = subForRaw.name;
+            const parts = n.split(' ');
+            if(parts.length <= 1) return n;
+            return parts[0][0] + ' ' + parts.slice(1).join(' ');
+          })(),
+          jersey: subForRaw.jersey,
         } : null;
         return {
           name:          ath.shortName || ath.displayName || '',
