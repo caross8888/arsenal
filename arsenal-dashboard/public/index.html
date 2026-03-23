@@ -1389,8 +1389,11 @@ function loadLiveExpand(m, panel){
     // 내부 팀탭 side 복원
     if(activeSide === 'away'){
       setTimeout(function(){
-        var sideBtn = el.querySelector('[data-side="away"]');
-        if(sideBtn) sideBtn.click();
+        var activePanel = el.querySelector('.live-tab-panel:not([style*="none"]),.live-tab-panel:not([style])');
+        if(activePanel){
+          var sideBtn = activePanel.querySelector('[data-side="away"]');
+          if(sideBtn) sideBtn.click();
+        }
       }, 50);
     }
   }).catch(function(e){
@@ -1453,8 +1456,11 @@ function startLiveExpandPolling(m, panel){
       }
       if(activeSidePoll === 'away'){
         setTimeout(function(){
-          var sideBtn = el.querySelector('[data-side="away"]');
-          if(sideBtn) sideBtn.click();
+          var activePanel = el.querySelector('.live-tab-panel:not([style*="none"]),.live-tab-panel:not([style])');
+          if(activePanel){
+            var sideBtn = activePanel.querySelector('[data-side="away"]');
+            if(sideBtn) sideBtn.click();
+          }
         }, 50);
       }
     }).catch(function(){});
@@ -1542,35 +1548,39 @@ function buildLiveDetail(data){
   h += '</div>';
 
   // ── 라인업 패널 ──
+  // ── 라인업 패널 ──
   h += '<div class="live-tab-panel" id="live-panel-lineup" style="display:none;padding-top:10px;">';
   if(data.players){
     var hP=data.players.home||[], aP=data.players.away||[];
     var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
     var aS=aP.filter(function(p){return p.starter&&p.formationPlace;});
     var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
-    h += '<div style="display:flex;gap:0;padding:10px 0 0;">';
-    h += '<button class="mm-tab active" data-side="home" id="live-tab-home" onclick="livePitchTab(this,&quot;home&quot;)">' + (data.homeTeam&&data.homeTeam.name||'홈') + '</button>';
-    h += '<button class="mm-tab" data-side="away" id="live-tab-away" onclick="livePitchTab(this,&quot;away&quot;)">' + (data.awayTeam&&data.awayTeam.name||'어웨이') + '</button>';
+    var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
+    var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
+    // 홈/어웨이 탭 버튼
+    h += '<div style="display:flex;gap:0;padding:10px 0 6px;">';
+    h += '<button class="mm-tab active" data-side="home" onclick="liveSwitchSide(this,\'lineup\',\'home\')">'+(data.homeTeam&&data.homeTeam.name||'홈')+'</button>';
+    h += '<button class="mm-tab" data-side="away" onclick="liveSwitchSide(this,\'lineup\',\'away\')">'+(data.awayTeam&&data.awayTeam.name||'어웨이')+'</button>';
     h += '</div>';
-    var hColor = (data.homeTeam&&data.homeTeam.color)||'#C8102E';
-    var aColor = (data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
-    h += '<div id="live-pitch-home" style="padding-bottom:10px;">'+renderPitch(hS,hF,hColor,hP)+'</div>';
-    h += '<div id="live-pitch-away" style="display:none">'+renderPitch(aS,aF,aColor,aP)+'</div>';
+    // 피치
+    h += '<div class="live-side-panel" data-suffix="lineup-home">'+renderPitch(hS,hF,hColor,hP)+'</div>';
+    h += '<div class="live-side-panel" data-suffix="lineup-away" style="display:none">'+renderPitch(aS,aF,aColor,aP)+'</div>';
   } else {
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
   }
   h += '</div>';
 
   // ── 선수 스탯 패널 ──
-  h += '<div class="live-tab-panel" id="live-panel-players" style="display:none;">';
+  h += '<div class="live-tab-panel" id="live-panel-players" style="display:none;padding-top:10px;">';
   if(data.players){
     var hP2=data.players.home||[], aP2=data.players.away||[];
-    h += '<div style="display:flex;gap:0;padding:10px 0 0;">';
-    h += '<button class="mm-tab active" data-side="home" id="live-ptab-home" onclick="livePTab(this,\'home\')">'+((data.homeTeam&&data.homeTeam.name)||'홈')+'</button>';
-    h += '<button class="mm-tab" data-side="away" id="live-ptab-away" onclick="livePTab(this,\'away\')">'+((data.awayTeam&&data.awayTeam.name)||'어웨이')+'</button>';
+    // 홈/어웨이 탭 버튼
+    h += '<div style="display:flex;gap:0;padding:10px 0 6px;">';
+    h += '<button class="mm-tab active" data-side="home" onclick="liveSwitchSide(this,\'players\',\'home\')">'+(data.homeTeam&&data.homeTeam.name||'홈')+'</button>';
+    h += '<button class="mm-tab" data-side="away" onclick="liveSwitchSide(this,\'players\',\'away\')">'+(data.awayTeam&&data.awayTeam.name||'어웨이')+'</button>';
     h += '</div>';
-    h += '<div id="live-ptable-home">'+renderPlayerTable('home',hP2,true)+'</div>';
-    h += '<div id="live-ptable-away" style="display:none">'+renderPlayerTable('away',aP2,false)+'</div>';
+    h += '<div class="live-side-panel" data-suffix="players-home">'+renderPlayerTable('home',hP2,true)+'</div>';
+    h += '<div class="live-side-panel" data-suffix="players-away" style="display:none">'+renderPlayerTable('away',aP2,false)+'</div>';
   } else {
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">데이터 없음</div>';
   }
@@ -1579,18 +1589,18 @@ function buildLiveDetail(data){
   return h;
 }
 
-function livePTab(btn, side){
+function liveSwitchSide(btn, panelId, side){
   var tabRow = btn.parentElement;
   tabRow.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
-  // live-panel-players 까지 올라가기
-  var container = tabRow;
-  while(container && container.id !== 'live-panel-players') container = container.parentElement;
-  if(!container) container = tabRow.parentElement;
-  var h = container.querySelector('[id^="live-ptable-home"]');
-  var a = container.querySelector('[id^="live-ptable-away"]');
-  if(h) h.style.display = side==='home'?'':'none';
-  if(a) a.style.display = side==='away'?'':'none';
+  // 부모 live-tab-panel 찾기
+  var panel = tabRow;
+  while(panel && !panel.classList.contains('live-tab-panel')) panel = panel.parentElement;
+  if(!panel) return;
+  panel.querySelectorAll('.live-side-panel').forEach(function(p){
+    var suffix = p.getAttribute('data-suffix')||'';
+    p.style.display = suffix.endsWith('-'+side) ? '' : 'none';
+  });
 }
 
 function liveSwitchTab(btn, panel){
@@ -1605,18 +1615,7 @@ function liveSwitchTab(btn, panel){
   panels.forEach(function(p,i){p.style.display=(i===idx)?'':'none';});
 }
 
-function livePitchTab(btn, side){
-  var tabRow = btn.parentElement;
-  tabRow.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
-  var container = tabRow;
-  while(container && container.id !== 'live-panel-lineup') container = container.parentElement;
-  if(!container) container = tabRow.parentElement;
-  var h = container.querySelector('[id^="live-pitch-home"]');
-  var a = container.querySelector('[id^="live-pitch-away"]');
-  if(h) h.style.display = side==='home' ? '' : 'none';
-  if(a) a.style.display = side==='away' ? '' : 'none';
-}
+
 
 
 
