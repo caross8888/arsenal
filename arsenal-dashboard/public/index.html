@@ -63,6 +63,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-z4{grid-column:3;grid-row:1;display:flex;align-items:center;justify-content:flex-end;}
 .fix-z5{grid-column:3;grid-row:2;display:flex;align-items:center;justify-content:flex-end;}
 .fix-live-clock{text-align:center;font-size:10px;font-weight:700;letter-spacing:1px;padding-top:4px;}
+.fix-live-expand{margin-top:10px;border-top:1px solid rgba(255,255,255,0.08);overflow:hidden;max-height:0;transition:max-height 0.35s ease;}
+.fix-live-expand.open{max-height:2000px;}
+.live-progress-wrap{padding:10px 14px 0;display:flex;align-items:center;gap:8px;}
+.live-progress-bar-bg{flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;}
+.live-progress-bar{height:100%;background:var(--green);border-radius:2px;transition:width 1s linear;}
+.live-progress-label{font-size:9px;color:var(--green);font-weight:700;min-width:30px;text-align:right;}
+.fix-expand-btn{width:100%;background:none;border:none;border-top:1px solid rgba(255,255,255,0.06);color:var(--text-dim);font-size:10px;padding:6px;cursor:pointer;letter-spacing:1px;margin-top:6px;}
+.fix-expand-btn:hover{color:var(--text);}
 .comp-tag{display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:4px;flex-shrink:0}
 .tag-pl{background:rgba(55,0,255,.15);color:#A78BFA;border:1px solid rgba(167,139,250,.2)}
 .tag-cl{background:rgba(0,80,200,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.2)}
@@ -597,6 +605,33 @@ function buildFixCard(m){
     card.appendChild(clk);
   }
   if(m.venue){var v=document.createElement('div');v.className='fix-venue';v.textContent=m.venue;card.appendChild(v);}
+  if(isLive && m.id){
+    // 라이브 카드 - 확장 패널
+    var expandPanel = document.createElement('div');
+    expandPanel.className = 'fix-live-expand';
+    expandPanel.id = 'live-expand-'+m.id;
+    card.appendChild(expandPanel);
+
+    var expandBtn = document.createElement('button');
+    expandBtn.className = 'fix-expand-btn';
+    expandBtn.textContent = '▼ 상세 보기';
+    card.appendChild(expandBtn);
+
+    expandBtn.onclick = function(e){
+      e.stopPropagation();
+      var isOpen = expandPanel.classList.contains('open');
+      if(!isOpen){
+        expandPanel.classList.add('open');
+        expandBtn.textContent = '▲ 접기';
+        openLiveExpand(m, expandPanel);
+      } else {
+        expandPanel.classList.remove('open');
+        expandBtn.textContent = '▼ 상세 보기';
+        expandPanel.innerHTML = '';
+        stopLiveExpandPolling(m.id);
+      }
+    };
+  }
   if(isDone && m.id){
     card.style.cursor='pointer';
     card.onclick=function(){openMatchModal(m);};
@@ -1298,6 +1333,188 @@ function showSec(id,btn){
     if(btn) showSec(hash, btn, true);
   }
 })();
+// ── 라이브 카드 확장 ──
+var _liveExpandTimers = {}; // matchId → {timer, progressTimer, startTime}
+var LIVE_REFRESH_SEC = 30;
+
+function openLiveExpand(m, panel){
+  loadLiveExpand(m, panel);
+  startLiveExpandPolling(m, panel);
+}
+
+function loadLiveExpand(m, panel){
+  // 프로그레스바 + 매치 상세 로드
+  var comp = m.competition&&m.competition.short || 'PL';
+  var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':'eng.1';
+
+  panel.innerHTML =
+    '<div class="live-progress-wrap">'+
+      '<span style="font-size:9px;color:var(--text-dim);">갱신</span>'+
+      '<div class="live-progress-bar-bg"><div class="live-progress-bar" id="lpb-'+m.id+'" style="width:100%"></div></div>'+
+      '<span class="live-progress-label" id="lpl-'+m.id+'">30s</span>'+
+    '</div>'+
+    '<div id="live-detail-'+m.id+'" style="padding:10px 14px;"><div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">로딩 중...</div></div>';
+
+  // 매치 상세 API 호출
+  var matchApiUrl = FN+'/match?id='+m.id+'&slug='+slug;
+  apiFetch(matchApiUrl).then(function(data){
+    var el = document.getElementById('live-detail-'+m.id);
+    if(!el) return;
+    el.innerHTML = buildLiveDetail(data);
+  }).catch(function(e){
+    var el = document.getElementById('live-detail-'+m.id);
+    if(el) el.innerHTML = '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">데이터를 불러올 수 없어요</div>';
+  });
+
+  // 프로그레스바 시작
+  startProgressBar(m.id);
+}
+
+function startProgressBar(matchId){
+  var state = _liveExpandTimers[matchId];
+  if(!state) return;
+  if(state.progressTimer) clearInterval(state.progressTimer);
+  state.startTime = Date.now();
+  var barEl = document.getElementById('lpb-'+matchId);
+  var lblEl = document.getElementById('lpl-'+matchId);
+  state.progressTimer = setInterval(function(){
+    if(!barEl || !lblEl){ clearInterval(state.progressTimer); return; }
+    var elapsed = (Date.now() - state.startTime) / 1000;
+    var remaining = Math.max(0, LIVE_REFRESH_SEC - elapsed);
+    var pct = (remaining / LIVE_REFRESH_SEC) * 100;
+    barEl.style.width = pct + '%';
+    lblEl.textContent = Math.ceil(remaining) + 's';
+  }, 500);
+}
+
+function startLiveExpandPolling(m, panel){
+  stopLiveExpandPolling(m.id);
+  _liveExpandTimers[m.id] = {};
+  var timer = setInterval(function(){
+    var p = document.getElementById('live-expand-'+m.id);
+    if(!p || !p.classList.contains('open')){
+      stopLiveExpandPolling(m.id); return;
+    }
+    if(document.hidden) return;
+    var comp = m.competition&&m.competition.short || 'PL';
+    var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':'eng.1';
+    // 매치 상세 갱신
+    apiFetch(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
+      var el = document.getElementById('live-detail-'+m.id);
+      if(el) el.innerHTML = buildLiveDetail(data);
+    }).catch(function(){});
+    // 프로그레스바 리셋
+    startProgressBar(m.id);
+  }, LIVE_REFRESH_SEC * 1000);
+  _liveExpandTimers[m.id].timer = timer;
+}
+
+function stopLiveExpandPolling(matchId){
+  var state = _liveExpandTimers[matchId];
+  if(state){
+    if(state.timer) clearInterval(state.timer);
+    if(state.progressTimer) clearInterval(state.progressTimer);
+    delete _liveExpandTimers[matchId];
+  }
+}
+
+function buildLiveDetail(data){
+  if(!data) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">데이터 없음</div>';
+
+  var h = '';
+
+  // ── 탭: 이벤트 / 스탯 / 라인업 ──
+  h += '<div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:10px;">';
+  h += '<button class="mm-tab active" onclick="liveSwitchTab(this,&quot;events&quot;)">골&이벤트</button>';
+  h += '<button class="mm-tab" onclick="liveSwitchTab(this,&quot;stats&quot;)">팀 스탯</button>';
+  h += '<button class="mm-tab" onclick="liveSwitchTab(this,&quot;lineup&quot;)">라인업</button>';
+  h += '</div>';
+
+  // ── 이벤트 패널 ──
+  h += '<div class="live-tab-panel" id="live-panel-events">';
+  var events = data.events||[];
+  if(events.length){
+    h += '<div class="mm-events">';
+    events.forEach(function(ev){
+      var icon = ev.type==='goal'?'⚽':ev.type==='yellowCard'?'🟨':ev.type==='redCard'?'🟥':ev.type==='substitution'?'🔄':'📌';
+      var isHome = ev.team==='home';
+      h += '<div class="mm-event-row '+(isHome?'ev-home':'ev-away')+'">';
+      if(!isHome) h += '<span class="ev-player">'+ev.player+'</span>';
+      h += '<span class="ev-time">'+ev.time+'</span>';
+      h += '<span class="ev-icon">'+icon+'</span>';
+      if(isHome) h += '<span class="ev-player">'+ev.player+'</span>';
+      h += '</div>';
+    });
+    h += '</div>';
+  } else {
+    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">이벤트 없음</div>';
+  }
+  h += '</div>';
+
+  // ── 스탯 패널 ──
+  h += '<div class="live-tab-panel" id="live-panel-stats" style="display:none">';
+  var stats = data.teamStats||[];
+  if(stats.length){
+    h += '<div class="mm-stats-grid">';
+    stats.forEach(function(s){
+      var hv=s.home||0, av=s.away||0;
+      var tot=(parseFloat(hv)||0)+(parseFloat(av)||0);
+      var hp=tot>0?Math.round((parseFloat(hv)||0)/tot*100):50;
+      h += '<div class="mm-stat-row">';
+      h += '<span class="mm-stat-val">'+hv+'</span>';
+      h += '<div class="mm-stat-mid"><div class="mm-stat-label">'+s.label+'</div>';
+      h += '<div class="mm-stat-bar"><div class="mm-stat-bar-h" style="width:'+hp+'%"></div></div></div>';
+      h += '<span class="mm-stat-val tar">'+av+'</span>';
+      h += '</div>';
+    });
+    h += '</div>';
+  } else {
+    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">스탯 없음</div>';
+  }
+  h += '</div>';
+
+  // ── 라인업 패널 ──
+  h += '<div class="live-tab-panel" id="live-panel-lineup" style="display:none">';
+  if(data.players){
+    var hP=data.players.home||[], aP=data.players.away||[];
+    var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
+    var aS=aP.filter(function(p){return p.starter&&p.formationPlace;});
+    var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
+    h += '<div class="mm-tab-row">';
+    h += '<button class="mm-tab active" id="live-tab-home" onclick="livePitchTab(this,&quot;home&quot;)">' + (data.homeTeam&&data.homeTeam.name||'홈') + '</button>';
+    h += '<button class="mm-tab" id="live-tab-away" onclick="livePitchTab(this,&quot;away&quot;)">' + (data.awayTeam&&data.awayTeam.name||'어웨이') + '</button>';
+    h += '</div>';
+    var hColor = (data.homeTeam&&data.homeTeam.color)||'#C8102E';
+    var aColor = (data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
+    h += '<div id="live-pitch-home">'+renderPitch(hS,hF,hColor,hP)+'</div>';
+    h += '<div id="live-pitch-away" style="display:none">'+renderPitch(aS,aF,aColor,aP)+'</div>';
+  } else {
+    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
+  }
+  h += '</div>';
+
+  return h;
+}
+
+function liveSwitchTab(btn, panel){
+  var wrap = btn.closest('.live-tab-panel, [id^="live-detail-"]') || btn.parentElement.parentElement;
+  wrap.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
+  wrap.querySelectorAll('.live-tab-panel').forEach(function(p){p.style.display='none';});
+  btn.classList.add('active');
+  var target = wrap.querySelector('#live-panel-'+panel);
+  if(target) target.style.display='';
+}
+
+function livePitchTab(btn, side){
+  var wrap = btn.closest('[id^="live-detail-"]') || btn.parentElement.parentElement;
+  wrap.querySelectorAll('#live-tab-home,#live-tab-away').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  var h = wrap.querySelector('#live-pitch-home');
+  var a = wrap.querySelector('#live-pitch-away');
+  if(h) h.style.display = side==='home' ? '' : 'none';
+  if(a) a.style.display = side==='away' ? '' : 'none';
+}
+
 // ── 라이브 폴링 ──
 var _liveTimer = null;
 function startLivePolling(){
