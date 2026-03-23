@@ -1580,7 +1580,7 @@ function buildLiveDetail(data){
     h += '<button class="mm-tab" data-side="away" onclick="liveSwitchSide(this,\'players\',\'away\')">'+(data.awayTeam&&data.awayTeam.name||'어웨이')+'</button>';
     h += '</div>';
     h += '<div class="live-side-panel" data-suffix="players-home">'+renderPlayerTable('home',hP2,true)+'</div>';
-    h += '<div class="live-side-panel" data-suffix="players-away" style="display:none">'+renderPlayerTable('away',aP2,false)+'</div>';
+    h += '<div class="live-side-panel" data-suffix="players-away" style="display:none">'+renderPlayerTable('away',aP2,true)+'</div>';
   } else {
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">데이터 없음</div>';
   }

@@ -198,11 +198,27 @@ export default async function handler(req, res) {
       awayUniformColor: awayRoster?.uniform?.color ? '#'+awayRoster.uniform.color : null,
     };
 
+    // teamStats 배열 변환 (buildLiveDetail용)
+    const STAT_DISPLAY = [
+      { key:'possessionPct',  label:'점유율' },
+      { key:'totalShots',     label:'슈팅' },
+      { key:'shotsOnTarget',  label:'유효슈팅' },
+      { key:'passingAccuracy',label:'패스 정확도' },
+      { key:'cornerKicks',    label:'코너킥' },
+      { key:'offsides',       label:'오프사이드' },
+      { key:'yellowCards',    label:'경고' },
+      { key:'redCards',       label:'퇴장' },
+    ];
+    const teamStats = STAT_DISPLAY
+      .filter(s => home.stats[s.key] != null || away.stats[s.key] != null)
+      .map(s => ({ label: s.label, home: home.stats[s.key] ?? '0', away: away.stats[s.key] ?? '0' }));
+
     const result = {
       eventId,
       venue,
       homeTeam: { id: home.id, name: home.name, crest: home.crest, score: home.score, stats: home.stats, color: home.color, alternateColor: home.alternateColor },
       awayTeam: { id: away.id, name: away.name, crest: away.crest, score: away.score, stats: away.stats, color: away.color, alternateColor: away.alternateColor },
+      teamStats,
       events,
       players,
       status: comp?.status?.type?.description || '',
