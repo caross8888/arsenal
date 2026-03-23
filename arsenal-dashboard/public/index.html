@@ -1386,6 +1386,13 @@ function loadLiveExpand(m, panel){
       var btn = el.querySelector('[data-tab="'+activeTab+'"]');
       if(btn) liveSwitchTab(btn, activeTab);
     }
+    // 내부 팀탭 side 복원
+    if(activeSide === 'away'){
+      setTimeout(function(){
+        var sideBtn = el.querySelector('[data-side="away"]');
+        if(sideBtn) sideBtn.click();
+      }, 50);
+    }
   }).catch(function(e){
     var el = document.getElementById('live-detail-'+m.id);
     if(el) el.innerHTML = '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">데이터를 불러올 수 없어요</div>';
@@ -1426,9 +1433,15 @@ function startLiveExpandPolling(m, panel){
     // 매치 상세 갱신
     var elPoll = document.getElementById('live-detail-'+m.id);
     var activeTabPoll = 'events';
+    var activeSidePoll = 'home';
     if(elPoll){
       var ab = elPoll.querySelector('.mm-tab.active');
       if(ab){ activeTabPoll = ab.getAttribute('data-tab') || 'events'; }
+      var activePanel2 = elPoll.querySelector('.live-tab-panel:not([style*="none"])') || elPoll.querySelector('.live-tab-panel');
+      if(activePanel2){
+        var asb = activePanel2.querySelector('.mm-tab.active[data-side]');
+        if(asb) activeSidePoll = asb.getAttribute('data-side') || 'home';
+      }
     }
     apiFetch(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
       var el = document.getElementById('live-detail-'+m.id);
@@ -1437,6 +1450,12 @@ function startLiveExpandPolling(m, panel){
       if(activeTabPoll !== 'events'){
         var btn = el.querySelector('[data-tab="'+activeTabPoll+'"]');
         if(btn) liveSwitchTab(btn, activeTabPoll);
+      }
+      if(activeSidePoll === 'away'){
+        setTimeout(function(){
+          var sideBtn = el.querySelector('[data-side="away"]');
+          if(sideBtn) sideBtn.click();
+        }, 50);
       }
     }).catch(function(){});
     // 프로그레스바 리셋
@@ -1529,9 +1548,9 @@ function buildLiveDetail(data){
     var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
     var aS=aP.filter(function(p){return p.starter&&p.formationPlace;});
     var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
-    h += '<div class="mm-tab-row" style="padding:10px 14px 8px;">';
-    h += '<button class="mm-tab active" id="live-tab-home" onclick="livePitchTab(this,&quot;home&quot;)">' + (data.homeTeam&&data.homeTeam.name||'홈') + '</button>';
-    h += '<button class="mm-tab" id="live-tab-away" onclick="livePitchTab(this,&quot;away&quot;)">' + (data.awayTeam&&data.awayTeam.name||'어웨이') + '</button>';
+    h += '<div style="display:flex;gap:0;padding:10px 0 0;">';
+    h += '<button class="mm-tab active" data-side="home" id="live-tab-home" onclick="livePitchTab(this,&quot;home&quot;)">' + (data.homeTeam&&data.homeTeam.name||'홈') + '</button>';
+    h += '<button class="mm-tab" data-side="away" id="live-tab-away" onclick="livePitchTab(this,&quot;away&quot;)">' + (data.awayTeam&&data.awayTeam.name||'어웨이') + '</button>';
     h += '</div>';
     var hColor = (data.homeTeam&&data.homeTeam.color)||'#C8102E';
     var aColor = (data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
@@ -1547,8 +1566,8 @@ function buildLiveDetail(data){
   if(data.players){
     var hP2=data.players.home||[], aP2=data.players.away||[];
     h += '<div style="display:flex;gap:0;padding:10px 0 0;">';
-    h += '<button class="mm-tab active" id="live-ptab-home" onclick="livePTab(this,\'home\')">'+((data.homeTeam&&data.homeTeam.name)||'홈')+'</button>';
-    h += '<button class="mm-tab" id="live-ptab-away" onclick="livePTab(this,\'away\')">'+((data.awayTeam&&data.awayTeam.name)||'어웨이')+'</button>';
+    h += '<button class="mm-tab active" data-side="home" id="live-ptab-home" onclick="livePTab(this,\'home\')">'+((data.homeTeam&&data.homeTeam.name)||'홈')+'</button>';
+    h += '<button class="mm-tab" data-side="away" id="live-ptab-away" onclick="livePTab(this,\'away\')">'+((data.awayTeam&&data.awayTeam.name)||'어웨이')+'</button>';
     h += '</div>';
     h += '<div id="live-ptable-home">'+renderPlayerTable('home',hP2,true)+'</div>';
     h += '<div id="live-ptable-away" style="display:none">'+renderPlayerTable('away',aP2,false)+'</div>';
@@ -1564,9 +1583,12 @@ function livePTab(btn, side){
   var tabRow = btn.parentElement;
   tabRow.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
-  var container = tabRow.parentElement;
-  var h = container.querySelector('#live-ptable-home');
-  var a = container.querySelector('#live-ptable-away');
+  // live-panel-players 까지 올라가기
+  var container = tabRow;
+  while(container && container.id !== 'live-panel-players') container = container.parentElement;
+  if(!container) container = tabRow.parentElement;
+  var h = container.querySelector('[id^="live-ptable-home"]');
+  var a = container.querySelector('[id^="live-ptable-away"]');
   if(h) h.style.display = side==='home'?'':'none';
   if(a) a.style.display = side==='away'?'':'none';
 }
@@ -1585,9 +1607,11 @@ function liveSwitchTab(btn, panel){
 
 function livePitchTab(btn, side){
   var tabRow = btn.parentElement;
-  var container = tabRow.parentElement;
   tabRow.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
+  var container = tabRow;
+  while(container && container.id !== 'live-panel-lineup') container = container.parentElement;
+  if(!container) container = tabRow.parentElement;
   var h = container.querySelector('[id^="live-pitch-home"]');
   var a = container.querySelector('[id^="live-pitch-away"]');
   if(h) h.style.display = side==='home' ? '' : 'none';
