@@ -203,7 +203,7 @@ export default async function handler(req, res) {
       { key:'possessionPct',  label:'점유율' },
       { key:'totalShots',     label:'슈팅' },
       { key:'shotsOnTarget',  label:'유효슈팅' },
-      { key:'passingAccuracy',label:'패스 정확도' },
+      { key:'passingAccuracy',label:'패스 성공' },
       { key:'cornerKicks',    label:'코너킥' },
       { key:'offsides',       label:'오프사이드' },
       { key:'yellowCards',    label:'경고' },

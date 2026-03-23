@@ -840,7 +840,20 @@ function loadInjuries(){
     injured.forEach(function(p){
       var row=document.createElement('div');row.className='inj-row';
       var posBadge=document.createElement('div');posBadge.className='inj-pos-badge';
-      posBadge.textContent=FPL_POS[p.positionType]||p.position||'?';
+      posBadge.style.cssText='overflow:hidden;background:var(--surface2);';
+      if(p.photo){
+        var pImg=document.createElement('img');
+        pImg.src=p.photo;pImg.alt=p.name;
+        pImg.style.cssText='width:100%;height:100%;object-fit:cover;object-position:top;';
+        pImg.onerror=function(){
+          posBadge.removeChild(pImg);
+          posBadge.textContent=FPL_POS[p.positionType]||p.position||'?';
+          posBadge.style.background='';
+        };
+        posBadge.appendChild(pImg);
+      } else {
+        posBadge.textContent=FPL_POS[p.positionType]||p.position||'?';
+      }
       var info=document.createElement('div');info.className='inj-info';
       var nm=document.createElement('div');nm.className='inj-name';nm.textContent=p.fullName||p.name;
       var detail=document.createElement('div');detail.className='inj-detail';detail.textContent=p.news||'정보 없음';
