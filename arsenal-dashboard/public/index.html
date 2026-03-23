@@ -479,11 +479,14 @@ function cname(c,fb){return CNAME[c]||fb||c;}
 
 function formatDate(utcDate, tbd){
   var d=new Date(utcDate);
-  var diff=Math.round((d-Date.now())/86400000);
   var date=d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'});
   if(tbd==='postponed') return date+' 연기';
   if(tbd==='canceled')  return date+' 취소';
   var time=tbd==='tbd'?'시간미정':d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
+  // KST(UTC+9) 기준 날짜 비교
+  var KST=9*60*60*1000;
+  function kstDay(ts){ return Math.floor((ts+KST)/86400000); }
+  var diff=kstDay(d.getTime())-kstDay(Date.now());
   if(diff===0) return '\uc624\ub298 '+time;
   if(diff===1) return '\ub0b4\uc77c '+time;
   if(diff>1&&diff<8) return date+' '+time;
@@ -716,14 +719,6 @@ function renderSq(filter){
     var posShort=POS_SHORT[posKey]||p.posGroup||'';
     var leftCls=POS_GROUP_CLS[p.posGroup]||'df';
     var jersey=p.jersey||'';
-    if(!jersey&&window._espnPlayers){
-      var fm=window._espnPlayers.find(function(f){return f.id===p.fotmobId||f.id===p.id;});
-      if(fm&&fm.jersey) jersey=fm.jersey;
-    }
-    if(!jersey&&window._fotmobPlayers){
-      var fm2=window._fotmobPlayers.find(function(f){return f.id===p.fotmobId||f.id===p.id;});
-      if(fm2&&fm2.jersey) jersey=fm2.jersey;
-    }
 
     var card=document.createElement('div');
     card.className='pl-card';
@@ -850,7 +845,7 @@ function loadSns(){
   var badge=document.getElementById('snsBadge');
   apiFetch(FN+'/social').then(function(data){
     var posts=data.posts||[];
-    badge.textContent='Bluesky';
+    badge.textContent=posts.length+'개';
     if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
     el.innerHTML='';
     posts.forEach(function(p){
@@ -1397,36 +1392,13 @@ function openPlayerModal(p) {
   var content = document.getElementById('modalContent');
   var pos = p.posGroup; // GK DF MF FW
 
-  // ESPN + Fotmob 데이터 매핑
-  var espn = null;
-  if(window._espnPlayers){
-    espn = window._espnPlayers.find(function(e){
-      var fn=(p.fullName||p.name).toLowerCase();
-      var en=(e.name||'').toLowerCase();
-      var pn=(p.name||'').toLowerCase();
-      return fn===en||pn===en||en.includes(pn)||pn.includes(en.split(' ').pop());
-    });
-  }
-  var fotmob = null;
-  if(window._fotmobPlayers){
-    // fotmobId로 정확하게 매핑 (이름 중복 방지)
-    if(p.fotmobId){
-      fotmob = window._fotmobPlayers.find(function(f){ return f.id===p.fotmobId; });
-    }
-    if(!fotmob){
-      var nrm=function(s){return(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');};
-      fotmob = window._fotmobPlayers.find(function(f){
-        return nrm(f.name)===nrm(p.fullName||p.name);
-      });
-    }
-  }
-
-  var nationality = (fotmob&&fotmob.nationality)||(espn&&espn.nationality)||p.nationality||'';
+  // players.json 기반 데이터 직접 사용 (football.js에서 모든 데이터 전달)
+  var nationality = p.nationality||'';
   var flagUrl     = getNatFlag(nationality);
-  var jersey      = (fotmob&&fotmob.jersey)||(espn&&espn.jersey)||'';
-  var height      = (fotmob&&fotmob.height)||'';
-  var age         = (fotmob&&fotmob.age)||(espn&&espn.age)||'';
-  var prefFoot    = (fotmob&&fotmob.preferredFoot)||'';
+  var jersey      = p.jersey||'';
+  var height      = p.height||'';
+  var age         = p.age||'';
+  var prefFoot    = p.preferredFoot||'';
   var POS_LABEL_KO = {
     'keeper_long':'골키퍼','goalkeeper':'골키퍼',
     'rightback':'오른쪽 수비','leftback':'왼쪽 수비',
@@ -1441,7 +1413,7 @@ function openPlayerModal(p) {
     'attackingmidfielder':'공격형 미드필더','centreattackingmidfielder':'공격형 미드필더',
     'striker':'스트라이커','centreforward':'스트라이커','centerforward':'스트라이커',
   };
-  var _rawPos = (fotmob&&fotmob.position)||'';
+  var _rawPos = p.position||'';
   var _rawKey = _rawPos.toLowerCase().replace(/_/g,'').replace(/-/g,'').replace(/ /g,'');
   // label(영문) 기반 한글 매핑 (key가 차단될 때 fallback)
   var POS_LABEL_EN = {
@@ -1455,21 +1427,21 @@ function openPlayerModal(p) {
     'right winger':'오른쪽 윙','left winger':'왼쪽 윙',
     'striker':'스트라이커','centre forward':'스트라이커','center forward':'스트라이커',
   };
-  var _labelRaw = ((fotmob&&fotmob.positionLabel)||'').toLowerCase();
+  var _labelRaw = (p.positionLabel||'').toLowerCase();
   var posLabel = POS_LABEL_KO[_rawKey]
     || POS_LABEL_EN[_labelRaw]
-    || (fotmob&&fotmob.positionLabel)
+    || p.positionLabel
     || pos;
-  var contractEnd = fotmob&&fotmob.contractEnd ? fotmob.contractEnd.slice(0,7) : '';
-  var competitions= (fotmob&&fotmob.competitions)||(espn&&espn.competitions)||{};
+  var contractEnd = p.contractEnd ? p.contractEnd.slice(0,7) : '';
+  var competitions= p.competitions||{};
   var COMP_ORDER=['PL','UCL','FAC','EFL'];
   compKeys=COMP_ORDER.filter(function(k){return competitions[k];});
   var extra=Object.keys(competitions).filter(function(k){return COMP_ORDER.indexOf(k)===-1;});
   compKeys=compKeys.concat(extra);
   var compLabels={PL:'EPL',UCL:'UCL',FAC:'FA컵',EFL:'카라바오'};
-  var traits      = fotmob&&fotmob.traits;
-  var career      = fotmob&&fotmob.career;
-  var fotStats    = fotmob&&fotmob.stats;
+  var traits      = p.traits||null;
+  var career      = p.career||[];
+  var fotStats    = p.stats||{};
 
   var h = '';
 
@@ -1799,7 +1771,7 @@ function loadESPNStats(){
     .then(function(r){return r.json();})
     .then(function(d){
       window._espnPlayers=d.players;
-      if(d.source==='Fotmob') window._fotmobPlayers=d.players;
+
     })
     .catch(function(){});
 }
