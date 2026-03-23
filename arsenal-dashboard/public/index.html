@@ -1139,7 +1139,7 @@ function renderPitch(starters, formation, teamColor, allPlayers){
   var _r=parseInt(_h.slice(0,2),16)/255,_g=parseInt(_h.slice(2,4),16)/255,_b=parseInt(_h.slice(4,6),16)/255;
   var lum=0.299*_r+0.587*_g+0.114*_b;
   var jerseyTextColor=lum>0.55?'#111':'#fff';
-  var nameTextColor=lum>0.55?'rgba(0,0,0,0.75)':'rgba(255,255,255,0.85)';
+  var nameTextColor='rgba(255,255,255,0.85)';
   // 유니폼 색 밝기 계산 → 밝은 색이면 검은 텍스트
   function hexLuminance(hex){
     var h=(hex||'').replace('#','');
