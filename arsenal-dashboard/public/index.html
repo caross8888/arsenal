@@ -621,14 +621,13 @@ function buildFixCard(m){
       e.stopPropagation();
       var isOpen = expandPanel.classList.contains('open');
       if(!isOpen){
+        openLiveExpand(m, expandPanel);
         expandPanel.classList.add('open');
         expandBtn.textContent = '▲ 접기';
-        openLiveExpand(m, expandPanel);
       } else {
         expandPanel.classList.remove('open');
         expandBtn.textContent = '▼ 상세 보기';
-        expandPanel.innerHTML = '';
-        stopLiveExpandPolling(m.id);
+        setTimeout(function(){ expandPanel.innerHTML=''; stopLiveExpandPolling(m.id); }, 350);
       }
     };
   }
@@ -1434,15 +1433,24 @@ function buildLiveDetail(data){
   h += '<div class="live-tab-panel" id="live-panel-events">';
   var events = data.events||[];
   if(events.length){
-    h += '<div class="mm-events">';
+    h += '<div style="padding:4px 0">';
     events.forEach(function(ev){
       var icon = ev.type==='goal'?'⚽':ev.type==='yellowCard'?'🟨':ev.type==='redCard'?'🟥':ev.type==='substitution'?'🔄':'📌';
       var isHome = ev.team==='home';
-      h += '<div class="mm-event-row '+(isHome?'ev-home':'ev-away')+'">';
-      if(!isHome) h += '<span class="ev-player">'+ev.player+'</span>';
-      h += '<span class="ev-time">'+ev.time+'</span>';
-      h += '<span class="ev-icon">'+icon+'</span>';
-      if(isHome) h += '<span class="ev-player">'+ev.player+'</span>';
+      h += '<div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);">';
+      // 홈 (좌측)
+      h += '<div style="flex:1;text-align:right;padding-right:8px;">';
+      if(isHome) h += '<span style="font-size:11px;color:#fff;">'+ev.player+'</span>';
+      h += '</div>';
+      // 중앙 시간+아이콘
+      h += '<div style="display:flex;align-items:center;gap:4px;min-width:60px;justify-content:center;">';
+      h += '<span style="font-size:10px;color:rgba(255,255,255,0.5);">'+ev.time+'</span>';
+      h += '<span style="font-size:13px;">'+icon+'</span>';
+      h += '</div>';
+      // 어웨이 (우측)
+      h += '<div style="flex:1;text-align:left;padding-left:8px;">';
+      if(!isHome) h += '<span style="font-size:11px;color:#fff;">'+ev.player+'</span>';
+      h += '</div>';
       h += '</div>';
     });
     h += '</div>';
@@ -1455,16 +1463,19 @@ function buildLiveDetail(data){
   h += '<div class="live-tab-panel" id="live-panel-stats" style="display:none">';
   var stats = data.teamStats||[];
   if(stats.length){
-    h += '<div class="mm-stats-grid">';
+    h += '<div style="padding:4px 0">';
     stats.forEach(function(s){
       var hv=s.home||0, av=s.away||0;
       var tot=(parseFloat(hv)||0)+(parseFloat(av)||0);
       var hp=tot>0?Math.round((parseFloat(hv)||0)/tot*100):50;
-      h += '<div class="mm-stat-row">';
-      h += '<span class="mm-stat-val">'+hv+'</span>';
-      h += '<div class="mm-stat-mid"><div class="mm-stat-label">'+s.label+'</div>';
-      h += '<div class="mm-stat-bar"><div class="mm-stat-bar-h" style="width:'+hp+'%"></div></div></div>';
-      h += '<span class="mm-stat-val tar">'+av+'</span>';
+      h += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);">';
+      h += '<span style="width:36px;text-align:right;font-size:12px;font-weight:600;color:#fff;">'+hv+'</span>';
+      h += '<div style="flex:1;">';
+      h += '<div style="font-size:10px;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:3px;">'+s.label+'</div>';
+      h += '<div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;position:relative;">';
+      h += '<div style="position:absolute;left:0;top:0;height:100%;width:'+hp+'%;background:#EF0107;border-radius:2px;"></div>';
+      h += '</div></div>';
+      h += '<span style="width:36px;text-align:left;font-size:12px;font-weight:600;color:#fff;">'+av+'</span>';
       h += '</div>';
     });
     h += '</div>';
@@ -1497,23 +1508,29 @@ function buildLiveDetail(data){
 }
 
 function liveSwitchTab(btn, panel){
-  var wrap = btn.closest('.live-tab-panel, [id^="live-detail-"]') || btn.parentElement.parentElement;
-  wrap.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
-  wrap.querySelectorAll('.live-tab-panel').forEach(function(p){p.style.display='none';});
+  var tabRow = btn.parentElement;
+  var container = tabRow.parentElement;
+  // 탭 버튼 active 토글
+  tabRow.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
-  var target = wrap.querySelector('#live-panel-'+panel);
-  if(target) target.style.display='';
+  // 패널 표시 토글 (탭 행 다음 형제들)
+  var panels = container.querySelectorAll('.live-tab-panel');
+  var idx = ['events','stats','lineup'].indexOf(panel);
+  panels.forEach(function(p,i){p.style.display=(i===idx)?'':'none';});
 }
 
 function livePitchTab(btn, side){
-  var wrap = btn.closest('[id^="live-detail-"]') || btn.parentElement.parentElement;
-  wrap.querySelectorAll('#live-tab-home,#live-tab-away').forEach(function(b){b.classList.remove('active');});
+  var tabRow = btn.parentElement;
+  var container = tabRow.parentElement;
+  tabRow.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
-  var h = wrap.querySelector('#live-pitch-home');
-  var a = wrap.querySelector('#live-pitch-away');
+  var h = container.querySelector('[id^="live-pitch-home"]');
+  var a = container.querySelector('[id^="live-pitch-away"]');
   if(h) h.style.display = side==='home' ? '' : 'none';
   if(a) a.style.display = side==='away' ? '' : 'none';
 }
+
+
 
 // ── 라이브 폴링 ──
 var _liveTimer = null;
