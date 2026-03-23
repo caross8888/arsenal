@@ -320,8 +320,8 @@ def parse_stats(data):
     result['positionLabel'] = primary_label
 
     # ── 전체 스탯 (firstSeasonStats) ──
-    first_stats   = data.get('firstSeasonStats', {})
-    stats_section = first_stats.get('statsSection', {})
+    first_stats   = data.get('firstSeasonStats') or {}
+    stats_section = first_stats.get('statsSection') or {}
     all_stats = {}
     for group in stats_section.get('items', []):
         for stat in group.get('items', []):
@@ -332,7 +332,7 @@ def parse_stats(data):
                 'percentile': round(stat.get('percentileRank', 0)),
             }
     # topStatCard 도 합산 (appearances 등)
-    top_card = first_stats.get('topStatCard', {})
+    top_card = first_stats.get('topStatCard') or {}
     for stat in top_card.get('items', []):
         key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
         if key not in all_stats:
