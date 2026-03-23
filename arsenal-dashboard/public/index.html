@@ -65,7 +65,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-live-clock{text-align:center;font-size:10px;font-weight:700;letter-spacing:1px;padding-top:4px;}
 .fix-live-expand{overflow:hidden;max-height:0;transition:max-height 0.35s ease;}
 .fix-live-expand.open{max-height:2000px;}
-.live-progress-wrap{padding:10px 14px 8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.06);}
+.live-progress-wrap{padding:10px 14px 8px;display:flex;align-items:center;gap:8px;}
 .live-progress-bar-bg{flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;}
 .live-progress-bar{height:100%;background:var(--green);border-radius:2px;transition:width 1s linear;}
 .live-progress-label{font-size:9px;color:var(--green);font-weight:700;min-width:30px;text-align:right;}
@@ -607,6 +607,17 @@ function buildFixCard(m){
   if(m.venue){var v=document.createElement('div');v.className='fix-venue';v.textContent=m.venue;card.appendChild(v);}
   if(isLive && m.id){
     // 라이브 카드 - 확장 패널
+    // 항상 보이는 프로그레스바 영역
+    var progressWrap = document.createElement('div');
+    progressWrap.style.cssText = 'padding:6px 14px 2px;display:flex;align-items:center;gap:8px;';
+    progressWrap.innerHTML =
+      '<span style="font-size:9px;color:var(--text-dim);">갱신</span>'+
+      '<div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">'+
+        '<div class="live-progress-bar" id="lpb-'+m.id+'" style="width:0%"></div>'+
+      '</div>'+
+      '<span class="live-progress-label" id="lpl-'+m.id+'">--</span>';
+    card.appendChild(progressWrap);
+
     var expandPanel = document.createElement('div');
     expandPanel.className = 'fix-live-expand';
     expandPanel.id = 'live-expand-'+m.id;
@@ -617,6 +628,10 @@ function buildFixCard(m){
     expandBtn.textContent = '▼ 상세 보기';
     card.appendChild(expandBtn);
 
+    // 카드 생성 시 바로 프로그레스바 시작
+    _liveExpandTimers[m.id] = {};
+    startProgressBar(m.id);
+
     expandBtn.onclick = function(e){
       e.stopPropagation();
       var isOpen = expandPanel.classList.contains('open');
@@ -624,6 +639,7 @@ function buildFixCard(m){
         openLiveExpand(m, expandPanel);
         expandPanel.classList.add('open');
         expandBtn.textContent = '▲ 접기';
+        startLiveExpandPolling(m, expandPanel);
       } else {
         expandPanel.classList.remove('open');
         expandBtn.textContent = '▼ 상세 보기';
@@ -1338,7 +1354,6 @@ var LIVE_REFRESH_SEC = 30;
 
 function openLiveExpand(m, panel){
   loadLiveExpand(m, panel);
-  startLiveExpandPolling(m, panel);
 }
 
 function loadLiveExpand(m, panel){
@@ -1352,17 +1367,12 @@ function loadLiveExpand(m, panel){
   if(existing){
     var activeBtn = existing.querySelector('.mm-tab.active');
     if(activeBtn){
-      var tabMap={'골&이벤트':'events','팀 스탯':'stats','라인업':'lineup'};
+      var tabMap={'골&이벤트':'events','팀 스탯':'stats','라인업':'lineup','선수 스탯':'players'};
       activeTab = tabMap[activeBtn.textContent] || 'events';
     }
   }
 
   panel.innerHTML =
-    '<div class="live-progress-wrap">'+
-      '<span style="font-size:9px;color:var(--text-dim);">갱신</span>'+
-      '<div class="live-progress-bar-bg"><div class="live-progress-bar" id="lpb-'+m.id+'" style="width:100%"></div></div>'+
-      '<span class="live-progress-label" id="lpl-'+m.id+'">30s</span>'+
-    '</div>'+
     '<div id="live-detail-'+m.id+'"><div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">로딩 중...</div></div>';
 
   // 매치 상세 API 호출
@@ -1373,7 +1383,7 @@ function loadLiveExpand(m, panel){
     el.innerHTML = buildLiveDetail(data);
     // 이전 활성 탭 복원
     if(activeTab !== 'events'){
-      var btn = el.querySelector('[onclick*="'+activeTab+'"]');
+      var btn = el.querySelector('[data-tab="'+activeTab+'"]');
       if(btn) liveSwitchTab(btn, activeTab);
     }
   }).catch(function(e){
@@ -1390,10 +1400,10 @@ function startProgressBar(matchId){
   if(!state) return;
   if(state.progressTimer) clearInterval(state.progressTimer);
   state.startTime = Date.now();
-  var barEl = document.getElementById('lpb-'+matchId);
-  var lblEl = document.getElementById('lpl-'+matchId);
   state.progressTimer = setInterval(function(){
-    if(!barEl || !lblEl){ clearInterval(state.progressTimer); return; }
+    var barEl = document.getElementById('lpb-'+matchId);
+    var lblEl = document.getElementById('lpl-'+matchId);
+    if(!barEl || !lblEl){ return; }
     var elapsed = (Date.now() - state.startTime) / 1000;
     var remaining = Math.max(0, LIVE_REFRESH_SEC - elapsed);
     var pct = (remaining / LIVE_REFRESH_SEC) * 100;
@@ -1418,14 +1428,14 @@ function startLiveExpandPolling(m, panel){
     var activeTabPoll = 'events';
     if(elPoll){
       var ab = elPoll.querySelector('.mm-tab.active');
-      if(ab){var tm={'골&이벤트':'events','팀 스탯':'stats','라인업':'lineup'};activeTabPoll=tm[ab.textContent]||'events';}
+      if(ab){ activeTabPoll = ab.getAttribute('data-tab') || 'events'; }
     }
     apiFetch(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
       var el = document.getElementById('live-detail-'+m.id);
       if(!el) return;
       el.innerHTML = buildLiveDetail(data);
       if(activeTabPoll !== 'events'){
-        var btn = el.querySelector('[onclick*="'+activeTabPoll+'"]');
+        var btn = el.querySelector('[data-tab="'+activeTabPoll+'"]');
         if(btn) liveSwitchTab(btn, activeTabPoll);
       }
     }).catch(function(){});
@@ -1450,10 +1460,11 @@ function buildLiveDetail(data){
   var h = '';
 
   // ── 탭: 이벤트 / 스탯 / 라인업 ──
-  h += '<div style="display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:0;padding-top:4px;">';
-  h += '<button class="mm-tab active" onclick="liveSwitchTab(this,&quot;events&quot;)">골&이벤트</button>';
-  h += '<button class="mm-tab" onclick="liveSwitchTab(this,&quot;stats&quot;)">팀 스탯</button>';
-  h += '<button class="mm-tab" onclick="liveSwitchTab(this,&quot;lineup&quot;)">라인업</button>';
+  h += '<div style="display:flex;gap:0;margin-bottom:0;padding-top:4px;">';
+  h += '<button class="mm-tab active" data-tab="events" onclick="liveSwitchTab(this,&quot;events&quot;)">골&이벤트</button>';
+  h += '<button class="mm-tab" data-tab="stats" onclick="liveSwitchTab(this,&quot;stats&quot;)">팀 스탯</button>';
+  h += '<button class="mm-tab" data-tab="lineup" onclick="liveSwitchTab(this,&quot;lineup&quot;)">라인업</button>';
+  h += '<button class="mm-tab" data-tab="players" onclick="liveSwitchTab(this,&quot;players&quot;)">선수 스탯</button>';
   h += '</div>';
 
   // ── 이벤트 패널 ──
@@ -1464,7 +1475,7 @@ function buildLiveDetail(data){
     events.forEach(function(ev){
       var icon = ev.type==='goal'?'⚽':ev.type==='yellowCard'?'🟨':ev.type==='redCard'?'🟥':ev.type==='substitution'?'🔄':'📌';
       var isHome = ev.team==='home';
-      h += '<div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);">';
+      h += '<div style="display:flex;align-items:center;padding:5px 0;">';
       // 홈 (좌측)
       h += '<div style="flex:1;text-align:right;padding-right:8px;">';
       if(isHome) h += '<span style="font-size:11px;color:#fff;">'+ev.player+'</span>';
@@ -1495,7 +1506,7 @@ function buildLiveDetail(data){
       var hv=s.home||0, av=s.away||0;
       var tot=(parseFloat(hv)||0)+(parseFloat(av)||0);
       var hp=tot>0?Math.round((parseFloat(hv)||0)/tot*100):50;
-      h += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);">';
+      h += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;">';
       h += '<span style="width:36px;text-align:right;font-size:12px;font-weight:600;color:#fff;">'+hv+'</span>';
       h += '<div style="flex:1;">';
       h += '<div style="font-size:10px;color:rgba(255,255,255,0.5);text-align:center;margin-bottom:3px;">'+s.label+'</div>';
@@ -1531,7 +1542,33 @@ function buildLiveDetail(data){
   }
   h += '</div>';
 
+  // ── 선수 스탯 패널 ──
+  h += '<div class="live-tab-panel" id="live-panel-players" style="display:none;">';
+  if(data.players){
+    var hP2=data.players.home||[], aP2=data.players.away||[];
+    h += '<div style="display:flex;gap:0;padding:10px 0 0;">';
+    h += '<button class="mm-tab active" id="live-ptab-home" onclick="livePTab(this,\'home\')">'+((data.homeTeam&&data.homeTeam.name)||'홈')+'</button>';
+    h += '<button class="mm-tab" id="live-ptab-away" onclick="livePTab(this,\'away\')">'+((data.awayTeam&&data.awayTeam.name)||'어웨이')+'</button>';
+    h += '</div>';
+    h += '<div id="live-ptable-home">'+renderPlayerTable('home',hP2,true)+'</div>';
+    h += '<div id="live-ptable-away" style="display:none">'+renderPlayerTable('away',aP2,false)+'</div>';
+  } else {
+    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">데이터 없음</div>';
+  }
+  h += '</div>';
+
   return h;
+}
+
+function livePTab(btn, side){
+  var tabRow = btn.parentElement;
+  tabRow.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  var container = tabRow.parentElement;
+  var h = container.querySelector('#live-ptable-home');
+  var a = container.querySelector('#live-ptable-away');
+  if(h) h.style.display = side==='home'?'':'none';
+  if(a) a.style.display = side==='away'?'':'none';
 }
 
 function liveSwitchTab(btn, panel){
@@ -1542,7 +1579,7 @@ function liveSwitchTab(btn, panel){
   btn.classList.add('active');
   // 패널 표시 토글 (탭 행 다음 형제들)
   var panels = container.querySelectorAll('.live-tab-panel');
-  var idx = ['events','stats','lineup'].indexOf(panel);
+  var idx = ['events','stats','lineup','players'].indexOf(panel);
   panels.forEach(function(p,i){p.style.display=(i===idx)?'':'none';});
 }
 
