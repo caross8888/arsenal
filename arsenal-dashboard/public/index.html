@@ -1377,7 +1377,7 @@ function loadLiveExpand(m, panel){
 
   // 매치 상세 API 호출
   var matchApiUrl = FN+'/match?id='+m.id+'&slug='+slug;
-  apiFetch(matchApiUrl).then(function(data){
+  (window.apiFetch||apiFetch)(matchApiUrl).then(function(data){
     var el = document.getElementById('live-detail-'+m.id);
     if(!el) return;
     el.innerHTML = buildLiveDetail(data);
@@ -1446,7 +1446,7 @@ function startLiveExpandPolling(m, panel){
         if(asb) activeSidePoll = asb.getAttribute('data-side') || 'home';
       }
     }
-    apiFetch(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
+    (window.apiFetch||apiFetch)(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
       var el = document.getElementById('live-detail-'+m.id);
       if(!el) return;
       el.innerHTML = buildLiveDetail(data);
