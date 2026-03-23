@@ -1134,6 +1134,26 @@ function renderPitch(starters, formation, teamColor, allPlayers){
   var FIRST_Y=29, LAST_Y=H-29;
   var r=11;
   var fillColor = teamColor||'#C8102E';
+  // 유니폼 색 밝기 계산 → 밝은 색이면 검은 텍스트
+  var _h=(fillColor||'').replace('#',''); if(_h.length===3)_h=_h[0]+_h[0]+_h[1]+_h[1]+_h[2]+_h[2];
+  var _r=parseInt(_h.slice(0,2),16)/255,_g=parseInt(_h.slice(2,4),16)/255,_b=parseInt(_h.slice(4,6),16)/255;
+  var lum=0.299*_r+0.587*_g+0.114*_b;
+  var jerseyTextColor=lum>0.55?'#111':'#fff';
+  var nameTextColor=lum>0.55?'rgba(0,0,0,0.75)':'rgba(255,255,255,0.85)';
+  // 유니폼 색 밝기 계산 → 밝은 색이면 검은 텍스트
+  function hexLuminance(hex){
+    var h=(hex||'').replace('#','');
+    if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    if(h.length!==6) return 0;
+    var r=parseInt(h.slice(0,2),16)/255;
+    var g=parseInt(h.slice(2,4),16)/255;
+    var b=parseInt(h.slice(4,6),16)/255;
+    // 상대 밝기 (0~1)
+    return 0.299*r + 0.587*g + 0.114*b;
+  }
+  var lum = hexLuminance(fillColor);
+  var jerseyTextColor = lum > 0.55 ? '#111' : '#fff';
+  var nameTextColor   = lum > 0.55 ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)';
 
   var POS_PRIORITY = {
     'G':0,'GK':0,
@@ -1216,9 +1236,9 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     // 원
     svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'" fill="'+fillColor+'"/>';
     // 등번호
-    svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="#fff" font-family="sans-serif">'+p.jersey+'</text>';
+    svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="'+jerseyTextColor+'" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
-    svg+='<text x="'+c.x+'" y="'+(c.y+r+8)+'" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.85)" font-family="sans-serif">'+lastName+'</text>';
+    svg+='<text x="'+c.x+'" y="'+(c.y+r+8)+'" text-anchor="middle" font-size="7.5" fill="'+nameTextColor+'" font-family="sans-serif">'+lastName+'</text>';
     // 교체 아이콘 (ESPN substitution icon)
     if(wasSubbed){
       var ix=c.x+r, iy=c.y-r;
