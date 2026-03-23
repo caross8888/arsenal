@@ -1152,8 +1152,6 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     return 0.299*r + 0.587*g + 0.114*b;
   }
   var lum = hexLuminance(fillColor);
-  var jerseyTextColor = lum > 0.55 ? '#111' : '#fff';
-  var nameTextColor   = lum > 0.55 ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)';
 
   var POS_PRIORITY = {
     'G':0,'GK':0,
@@ -1234,11 +1232,11 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     var lastName=(p.name||'').split(' ').pop();
     var wasSubbed=subbedOutMap[p.formationPlace];
     // 원
-    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'" fill="'+fillColor+'"/>';
+    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'" fill="'+fillColor+'" '+(lum>0.55?'stroke="rgba(0,0,0,0.2)" stroke-width="1"':'')+'/>'+'';
     // 등번호
     svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="'+jerseyTextColor+'" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
-    svg+='<text x="'+c.x+'" y="'+(c.y+r+8)+'" text-anchor="middle" font-size="7.5" fill="'+nameTextColor+'" font-family="sans-serif">'+lastName+'</text>';
+    svg+='<text x="'+c.x+'" y="'+(c.y+r+8)+'" text-anchor="middle" font-size="7.5" font-weight="600" fill="'+nameTextColor+'" font-family="sans-serif">'+lastName+'</text>';
     // 교체 아이콘 (ESPN substitution icon)
     if(wasSubbed){
       var ix=c.x+r, iy=c.y-r;
