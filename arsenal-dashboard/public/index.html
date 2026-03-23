@@ -1232,7 +1232,7 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     var lastName=(p.name||'').split(' ').pop();
     var wasSubbed=subbedOutMap[p.formationPlace];
     // 원
-    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'" fill="'+fillColor+'" '+(lum>0.55?'stroke="rgba(0,0,0,0.2)" stroke-width="1"':'')+'/>'+'';
+    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'" fill="'+fillColor+'" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>';
     // 등번호
     svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="'+jerseyTextColor+'" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
