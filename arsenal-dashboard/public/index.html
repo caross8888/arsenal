@@ -144,6 +144,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sum-val.r{color:var(--red)}.sum-val.a{color:var(--amber)}.sum-val.g{color:var(--green)}
 .sum-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:4px}
 .news-list{display:flex;flex-direction:column;gap:10px}
+.media-seg{display:flex;gap:0;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:14px;}
+.media-seg-btn{flex:1;padding:7px 4px;border:none;background:none;border-radius:8px;font-size:11px;font-weight:700;color:var(--text-dim);cursor:pointer;transition:all .2s;letter-spacing:.3px;}
+.media-seg-btn.active{background:var(--surface3);color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.history-list{display:flex;flex-direction:column;gap:10px;}
+.hist-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .2s;}
+.hist-card:active{opacity:.85;}
+.hist-card-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.hist-cat-badge{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:rgba(239,1,7,.15);color:var(--red);border:1px solid rgba(239,1,7,.25);}
+.hist-date{font-size:10px;color:var(--text-dim);}
+.hist-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:4px;}
+.hist-body{font-size:12px;color:var(--text-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.hist-onthisday{background:linear-gradient(135deg,rgba(239,1,7,.12),rgba(212,175,55,.08));border:1px solid rgba(212,175,55,.25);border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+.hist-otd-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.hist-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.hist-filter-btn{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:none;font-size:11px;color:var(--text-dim);cursor:pointer;}
+.hist-filter-btn.active{background:var(--red);color:#fff;border-color:var(--red);}
 .news-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-decoration:none;display:block;color:inherit;-webkit-tap-highlight-color:transparent}
 .news-card:active{opacity:.85}
 .news-img{height:160px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface2),var(--surface3))}
@@ -383,13 +399,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div id="injList"><div class="loading-state" style="padding:28px"><div class="spinner"></div></div></div>
   </div>
 </section>
-<section id="news" class="section">
-  <div class="sec-head"><h1 class="sec-title">&#45684;&#49828;</h1><span class="sec-badge" id="newsBadge">&#47196;&#46377; &#51473;</span></div>
-  <div class="news-list" id="newsGrid"><div class="loading-state"><div class="spinner"></div><span>&#45684;&#49828; &#47196;&#46377; &#51473;...</span></div></div>
+<section id="media" class="section">
+  <div class="sec-head"><h1 class="sec-title">미디어</h1><span class="sec-badge" id="mediaBadge">로딩 중</span></div>
+  <div class="media-seg">
+    <button class="media-seg-btn active" onclick="switchMedia('news',this)">📰 뉴스</button>
+    <button class="media-seg-btn" onclick="switchMedia('sns',this)">💬 SNS</button>
+  </div>
+  <div id="mediaNews">
+    <div class="news-list" id="newsGrid"><div class="loading-state"><div class="spinner"></div><span>뉴스 로딩 중...</span></div></div>
+  </div>
+  <div id="mediaSns" style="display:none">
+    <div class="sns-list" id="snsGrid"><div class="loading-state"><div class="spinner"></div><span>피드 로딩 중...</span></div></div>
+  </div>
 </section>
-<section id="sns" class="section">
-  <div class="sec-head"><h1 class="sec-title">SNS</h1><span class="sec-badge" id="snsBadge">로딩 중</span></div>
-  <div class="sns-list" id="snsGrid"><div class="loading-state"><div class="spinner"></div><span>피드 로딩 중...</span></div></div>
+<section id="history" class="section">
+  <div class="sec-head"><h1 class="sec-title">History</h1><span class="sec-badge" id="histBadge">로컬</span></div>
+  <div id="historyContent"><div class="loading-state"><div class="spinner"></div><span>로딩 중...</span></div></div>
 </section>
 </div>
 
@@ -411,8 +436,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <button class="nav-btn active" onclick="showSec('fixtures',this)"><span class="nav-icon">&#128197;</span><span>&#51068;&#51221;</span></button>
   <button class="nav-btn" onclick="showSec('squad',this)"><span class="nav-icon">&#128085;</span><span>&#49440;&#49688;&#45800;</span></button>
   <button class="nav-btn" onclick="showSec('injuries',this)"><span class="nav-icon">&#127973;</span><span>&#48512;&#49345;</span></button>
-  <button class="nav-btn" onclick="showSec('news',this)"><span class="nav-icon">&#128240;</span><span>&#45684;&#49828;</span></button>
-  <button class="nav-btn" onclick="showSec('sns',this)"><span class="nav-icon">&#129493;</span><span>SNS</span></button>
+  <button class="nav-btn" onclick="showSec('media',this)"><span class="nav-icon">&#128240;</span><span>미디어</span></button>
+  <button class="nav-btn" onclick="showSec('history',this)"><span class="nav-icon">&#128218;</span><span>History</span></button>
 </nav>
 <script>
 var FN='/api';
@@ -870,11 +895,123 @@ function loadInjuries(){
 }
 
 // ── NEWS ──
+function switchMedia(tab, btn){
+  document.querySelectorAll('.media-seg-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('mediaNews').style.display = tab==='news' ? '' : 'none';
+  document.getElementById('mediaSns').style.display = tab==='sns' ? '' : 'none';
+  if(tab==='sns' && !window._snsLoaded){ loadSns(); window._snsLoaded=true; }
+}
+
+var _mediaLoaded = false;
+function loadMedia(){
+  if(_mediaLoaded) return;
+  _mediaLoaded = true;
+  loadNews();
+  // SNS는 탭 전환 시 lazy load
+}
+
+function loadHistory(){
+  var el = document.getElementById('historyContent');
+  if(window._historyLoaded){ return; }
+  window._historyLoaded = true;
+  var badge = document.getElementById('histBadge');
+  // history.json 로드
+  fetch('/data/history.json').then(function(r){
+    if(!r.ok) throw new Error('history.json 없음');
+    return r.json();
+  }).then(function(data){
+    badge.textContent = data.length + '개';
+    renderHistory(data);
+  }).catch(function(){
+    // 파일 없을 때 준비 중 표시
+    badge.textContent = '준비 중';
+    el.innerHTML = '<div class="loading-state" style="padding:40px;flex-direction:column;gap:12px">'+
+      '<span style="font-size:32px">⚽</span>'+
+      '<span style="color:var(--text-muted);font-size:13px">History 콘텐츠 준비 중...</span>'+
+      '<span style="color:var(--text-dim);font-size:11px">history.json을 /data/ 폴더에 추가하면 표시됩니다</span>'+
+    '</div>';
+  });
+}
+
+var _histFilter = '전체';
+function renderHistory(data){
+  var el = document.getElementById('historyContent');
+  // 오늘의 역사 (월/일 기준)
+  var today = new Date();
+  var mm = String(today.getMonth()+1).padStart(2,'0');
+  var dd = String(today.getDate()).padStart(2,'0');
+  var todayMD = mm+'-'+dd;
+  var todayItems = data.filter(function(d){ return (d.date||'').slice(5) === todayMD; });
+
+  // 카테고리 목록
+  var cats = ['전체'];
+  data.forEach(function(d){ if(d.category && cats.indexOf(d.category)===-1) cats.push(d.category); });
+
+  var html = '';
+
+  // On This Day
+  if(todayItems.length){
+    var item = todayItems[0];
+    html += '<div class="hist-onthisday">';
+    html += '<div class="hist-otd-label">🗓 On This Day · '+mm+'월 '+dd+'일</div>';
+    html += '<div class="hist-title">'+item.title+'</div>';
+    html += '<div class="hist-body">'+item.body+'</div>';
+    html += '</div>';
+  }
+
+  // 필터
+  html += '<div class="hist-filter">';
+  cats.forEach(function(cat){
+    html += '<button class="hist-filter-btn'+(_histFilter===cat?' active':'')+' " onclick="filterHistory(&quot;'+cat+'&quot;,this)">'+cat+'</button>';
+  });
+  html += '</div>';
+
+  // 리스트
+  var filtered = _histFilter==='전체' ? data : data.filter(function(d){ return d.category===_histFilter; });
+  html += '<div class="history-list">';
+  filtered.forEach(function(item){
+    var year = (item.date||'').slice(0,4);
+    html += '<div class="hist-card" onclick="openHistModal(this)" data-title="'+encodeURIComponent(item.title)+'" data-body="'+encodeURIComponent(item.body||'')+'">';
+    html += '<div class="hist-card-top">';
+    html += '<span class="hist-cat-badge">'+item.category+'</span>';
+    html += '<span class="hist-date">'+year+'년'+(item.date&&item.date.length>=7?' '+parseInt(item.date.slice(5,7))+'월':'')+(item.date&&item.date.length>=10?' '+parseInt(item.date.slice(8,10))+'일':'')+'</span>';
+    html += '</div>';
+    html += '<div class="hist-title">'+item.title+'</div>';
+    html += '<div class="hist-body">'+item.body+'</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+  window._historyData = data;
+}
+
+function filterHistory(cat, btn){
+  _histFilter = cat;
+  document.querySelectorAll('.hist-filter-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  if(window._historyData) renderHistory(window._historyData);
+}
+
+function openHistModal(card){
+  var title = decodeURIComponent(card.getAttribute('data-title'));
+  var body = decodeURIComponent(card.getAttribute('data-body'));
+  var mc = document.getElementById('matchModalContent');
+  var html = '<div style="padding:20px 16px">';
+  html += '<div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:12px">'+title+'</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.7">'+body+'</div>';
+  html += '</div>';
+  mc.innerHTML = html;
+  document.getElementById('matchModal').style.display='flex';
+}
+
 function loadNews(){
   var el=document.getElementById('newsGrid');
-  var badge=document.getElementById('newsBadge');
+  var badge=document.getElementById('newsBadge')||document.getElementById('mediaBadge');
+  var mediaBadgeEl=document.getElementById('mediaBadge');
   apiFetch(FN+'/news').then(function(data){
     badge.textContent=data.source||'RSS';
+    if(mediaBadgeEl) mediaBadgeEl.textContent='ESPN+';
     var articles=data.articles||[];
     if(!articles.length){el.innerHTML='<div class="loading-state">\uB274\uC2A4 \uC5C6\uC74C</div>';return;}
     el.innerHTML='';
@@ -1336,7 +1473,7 @@ function loadConfig(){
 }
 
 // ── NAV ──
-var VALID_SECS = ['fixtures','squad','injuries','news','sns'];
+var VALID_SECS = ['fixtures','squad','injuries','media','history'];
 var loaded={fixtures:true};
 function showSec(id,btn){
   document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
@@ -1347,8 +1484,8 @@ function showSec(id,btn){
     loaded[id]=true;
     if(id==='squad') loadSquad();
     if(id==='injuries') loadInjuries();
-    if(id==='news') loadNews();
-    if(id==='sns') loadSns();
+    if(id==='media') loadMedia();
+    if(id==='history') loadHistory();
   }
   history.pushState({tab:id},'','#'+id);
   window.scrollTo(0,0);
@@ -1374,6 +1511,8 @@ function showSec(id,btn){
   });
   // 초기 해시 복원
   var hash = location.hash.replace('#','').trim();
+  // 구 URL 호환 (news/sns → media)
+  if(hash === 'news' || hash === 'sns') hash = 'media';
   if(hash && VALID_SECS.indexOf(hash) !== -1){
     var btn = document.querySelector('.nav-btn[onclick*="\''+hash+"'"+'\"]');
     if(btn) showSec(hash, btn, true);
