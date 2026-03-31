@@ -232,7 +232,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .trophy-modal-count.bronze{color:#cd7f32;}
 .trophy-modal-wins-label{font-size:10px;color:var(--text-dim);font-weight:600;letter-spacing:1px;text-transform:uppercase;}
 .trophy-modal-title{font-size:16px;font-weight:800;color:var(--text);padding:0 16px 6px;}
-.trophy-modal-summary{font-size:12px;color:var(--text-muted);line-height:1.65;padding:0 16px 14px;}
+.trophy-modal-summary{font-size:12px;color:var(--text-muted);line-height:1.65;padding:0 16px 10px;}
+.trophy-modal-body{font-size:13px;color:var(--text-muted);line-height:1.75;padding:0 16px 12px;}
+.trophy-modal-keystat{display:flex;align-items:flex-start;gap:8px;margin:0 16px 16px;padding:10px 12px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.25);border-radius:10px;font-size:11px;color:var(--gold);font-weight:600;line-height:1.5;}
+.trophy-modal-keystat-icon{flex-shrink:0;font-size:13px;}
 .trophy-modal-years-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);padding:0 16px 8px;}
 .trophy-years-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 24px;}
 .trophy-year-chip{padding:4px 10px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text);}
@@ -1241,6 +1244,8 @@ function openTrophyModal(enc){
   html += '</div></div>';
   html += '<div class="trophy-modal-title">'+t.title+'</div>';
   if(t.summary) html += '<div class="trophy-modal-summary">'+t.summary+'</div>';
+  if(t.content) html += '<div class="trophy-modal-body">'+t.content+'</div>';
+  if(t.key_stat) html += '<div class="trophy-modal-keystat"><span class="trophy-modal-keystat-icon">💡</span>'+t.key_stat+'</div>';
   if(t.years && t.years.length){
     var latestYear = t.years[t.years.length-1];
     html += '<div class="trophy-modal-years-label">Winning Years</div>';
