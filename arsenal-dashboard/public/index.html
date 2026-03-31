@@ -349,9 +349,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .match-modal-overlay.open{display:flex;}
 .match-modal-sheet{background:#1a1c22;border-radius:20px 20px 0 0;width:100%;max-width:540px;max-height:92vh;overflow:hidden;animation:slideUp .28s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}
 .match-modal-inner{overflow-y:auto;flex:1;padding-bottom:32px;}
-.mm-header{display:flex;align-items:center;padding:16px 48px 16px 18px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;}
+.mm-header{display:flex;flex-direction:column;padding:16px 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;background:linear-gradient(180deg,rgba(239,1,7,.08) 0%,transparent 100%);}
 .mm-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 14px;}
-.mm-header-title{font-size:15px;font-weight:700;color:var(--text);}
+.mm-header-title{font-size:15px;font-weight:700;color:var(--text);padding-right:32px;}
 .mm-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
 .mm-scoreboard{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px;}
 .mm-team{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0;}
@@ -1403,19 +1403,19 @@ function openMatchModal(m){
   // 로딩 상태
   content.innerHTML=
     '<div class="mm-header">'+
-      '<div class="mm-handle"></div>'+
       '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>'+
       '<div class="mm-scoreboard">'+
         '<div class="mm-team">'+
           (m.homeTeam.crest?'<img class="mm-crest" src="'+m.homeTeam.crest+'" onerror="this.style.display=\'none\'">':'')+
           '<div class="mm-team-name">'+(m.homeTeam.shortName||m.homeTeam.name||'')+'</div>'+
         '</div>'+
-        '<div class="mm-score">'+(m.score.fullTime.home||0)+' : '+(m.score.fullTime.away||0)+'</div>'+
+        '<div class="mm-score">'+(m.score.fullTime.home!=null?m.score.fullTime.home:'-')+' : '+(m.score.fullTime.away!=null?m.score.fullTime.away:'-')+'</div>'+
         '<div class="mm-team">'+
           (m.awayTeam.crest?'<img class="mm-crest" src="'+m.awayTeam.crest+'" onerror="this.style.display=\'none\'">':'')+
           '<div class="mm-team-name">'+(m.awayTeam.shortName||m.awayTeam.name||'')+'</div>'+
         '</div>'+
       '</div>'+
+      '<div class="mm-match-date">'+formatDate(m.utcDate||m.date,m.tbd)+'</div>'+
       '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
     '</div>'+
     '<div style="padding:24px;text-align:center"><div class="spinner"></div></div>';
