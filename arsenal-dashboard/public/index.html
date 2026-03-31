@@ -147,19 +147,51 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .media-seg{display:flex;gap:0;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:14px;}
 .media-seg-btn{flex:1;padding:7px 4px;border:none;background:none;border-radius:8px;font-size:11px;font-weight:700;color:var(--text-dim);cursor:pointer;transition:all .2s;letter-spacing:.3px;}
 .media-seg-btn.active{background:var(--surface3);color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.3);}
-.history-list{display:flex;flex-direction:column;gap:10px;}
-.hist-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .2s;}
-.hist-card:active{opacity:.85;}
-.hist-card-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.hist-cat-badge{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:rgba(239,1,7,.15);color:var(--red);border:1px solid rgba(239,1,7,.25);}
-.hist-date{font-size:10px;color:var(--text-dim);}
-.hist-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:4px;}
-.hist-body{font-size:12px;color:var(--text-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.hist-onthisday{background:linear-gradient(135deg,rgba(239,1,7,.12),rgba(212,175,55,.08));border:1px solid rgba(212,175,55,.25);border-radius:12px;padding:14px 16px;margin-bottom:14px;}
-.hist-otd-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
-.hist-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
-.hist-filter-btn{padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:none;font-size:11px;color:var(--text-dim);cursor:pointer;}
+/* ── History Tab ─────────────────────────── */
+.hist-otd-wrap{margin-bottom:16px;}
+.hist-otd-card{position:relative;border-radius:14px;overflow:hidden;background:var(--surface2);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.hist-otd-card:active{opacity:.88;}
+.hist-otd-img{width:100%;height:160px;object-fit:cover;display:block;}
+.hist-otd-img-ph{width:100%;height:160px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(239,1,7,.18),rgba(212,175,55,.12));}
+.hist-otd-img-ph-icon{font-size:48px;}
+.hist-otd-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.3) 55%,transparent 100%);}
+.hist-otd-content{position:absolute;bottom:0;left:0;right:0;padding:14px 14px 14px;}
+.hist-otd-date-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.hist-otd-month{font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--gold);}
+.hist-otd-day{font-size:32px;font-weight:900;color:#fff;line-height:1;font-family:var(--fd);}
+.hist-otd-label-block{display:flex;flex-direction:column;gap:1px;}
+.hist-otd-label{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);}
+.hist-otd-title{font-size:13px;font-weight:700;color:#fff;line-height:1.35;}
+.hist-otd-summary{font-size:11px;color:rgba(255,255,255,.7);line-height:1.5;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.hist-otd-readmore{font-size:10px;color:var(--gold);margin-top:5px;font-weight:600;}
+
+.hist-filter{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none;}
+.hist-filter::-webkit-scrollbar{display:none;}
+.hist-filter-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:6px 13px;border:1px solid var(--border);border-radius:20px;background:none;font-size:11px;font-weight:600;color:var(--text-dim);cursor:pointer;transition:all .18s;white-space:nowrap;}
 .hist-filter-btn.active{background:var(--red);color:#fff;border-color:var(--red);}
+.hist-filter-btn .hf-icon{font-size:13px;}
+
+.hist-section-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;}
+.history-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.hist-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .18s;}
+.hist-card:active{opacity:.82;}
+.hist-card-img-wrap{position:relative;height:100px;background:var(--surface2);overflow:hidden;}
+.hist-card-img{width:100%;height:100%;object-fit:cover;display:block;}
+.hist-card-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.hist-card-cat-icon{position:absolute;bottom:5px;right:6px;font-size:14px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));}
+.hist-card-body{padding:8px 9px 10px;}
+.hist-card-title{font-size:11px;font-weight:700;color:var(--text);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.hist-card-year{font-size:10px;color:var(--text-dim);margin-top:3px;}
+
+/* History Detail Modal */
+.hist-modal-img{width:100%;height:200px;object-fit:cover;display:block;border-radius:0;}
+.hist-modal-img-ph{width:100%;height:160px;display:flex;align-items:center;justify-content:center;font-size:56px;background:linear-gradient(135deg,rgba(239,1,7,.12),rgba(212,175,55,.08));}
+.hist-modal-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.hist-modal-cat{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:rgba(239,1,7,.15);color:var(--red);border:1px solid rgba(239,1,7,.25);}
+.hist-modal-date{font-size:11px;color:var(--text-dim);}
+.hist-modal-title{font-size:16px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:10px;}
+.hist-modal-body{font-size:13px;color:var(--text-muted);line-height:1.75;}
+.hist-modal-link{display:block;margin-top:14px;font-size:12px;color:var(--gold);font-weight:600;}
 .news-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-decoration:none;display:block;color:inherit;-webkit-tap-highlight-color:transparent}
 .news-card:active{opacity:.85}
 .news-img{height:160px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface2),var(--surface3))}
@@ -934,54 +966,112 @@ function loadHistory(){
   });
 }
 
-var _histFilter = '전체';
+var _histFilter = 'trophy';
+
+var HIST_CAT = {
+  trophy:  { label: 'Trophies',          icon: '🏆' },
+  legend:  { label: 'Legends',           icon: '👤' },
+  moment:  { label: 'Memorable Moments', icon: '⚽' },
+  club:    { label: 'Club & Stadium',    icon: '🏟️' },
+  record:  { label: 'Records',           icon: '📈' }
+};
+
+var HIST_CAT_PH = {
+  trophy: '🏆', legend: '👤', moment: '⚽', club: '🏟️', record: '📈'
+};
+
+function _histDateLabel(dateStr){
+  if(!dateStr) return '';
+  var y = dateStr.slice(0,4);
+  var m = dateStr.length>=7 ? parseInt(dateStr.slice(5,7)) : null;
+  var d = dateStr.length>=10 ? parseInt(dateStr.slice(8,10)) : null;
+  var r = y+'년';
+  if(m) r += ' '+m+'월';
+  if(d) r += ' '+d+'일';
+  return r;
+}
+
 function renderHistory(data){
   var el = document.getElementById('historyContent');
-  // 오늘의 역사 (월/일 기준)
   var today = new Date();
   var mm = String(today.getMonth()+1).padStart(2,'0');
   var dd = String(today.getDate()).padStart(2,'0');
   var todayMD = mm+'-'+dd;
-  var todayItems = data.filter(function(d){ return (d.date||'').slice(5) === todayMD; });
 
-  // 카테고리 목록
-  var cats = ['전체'];
-  data.forEach(function(d){ if(d.category && cats.indexOf(d.category)===-1) cats.push(d.category); });
+  // On This Day — 오늘 날짜 항목 중 첫번째
+  var otdItem = null;
+  for(var i=0;i<data.length;i++){
+    if((data[i].date||'').slice(5)===todayMD){ otdItem=data[i]; break; }
+  }
+  // fallback: 날짜순으로 가장 가까운 항목
+  if(!otdItem) otdItem = data[0];
 
   var html = '';
 
-  // On This Day
-  if(todayItems.length){
-    var item = todayItems[0];
-    html += '<div class="hist-onthisday">';
-    html += '<div class="hist-otd-label">🗓 On This Day · '+mm+'월 '+dd+'일</div>';
-    html += '<div class="hist-title">'+item.title+'</div>';
-    html += '<div class="hist-body">'+item.body+'</div>';
-    html += '</div>';
+  // ── On This Day 카드 ──
+  html += '<div class="hist-otd-wrap">';
+  html += '<div class="hist-otd-card" onclick="openHistModal(\''+encodeURIComponent(JSON.stringify(otdItem))+'\')">';
+  if(otdItem.image){
+    html += '<img class="hist-otd-img" src="'+otdItem.image+'" alt="" onerror="this.parentNode.querySelector(\'.hist-otd-img-ph\').style.display=\'flex\';this.style.display=\'none\'">';
+    html += '<div class="hist-otd-img-ph" style="display:none;position:absolute;inset:0"><span class="hist-otd-img-ph-icon">'+( HIST_CAT_PH[otdItem.category]||'⚽')+'</span></div>';
+  } else {
+    html += '<div class="hist-otd-img-ph"><span class="hist-otd-img-ph-icon">'+(HIST_CAT_PH[otdItem.category]||'⚽')+'</span></div>';
   }
+  html += '<div class="hist-otd-overlay"></div>';
+  html += '<div class="hist-otd-content">';
+  html += '<div class="hist-otd-date-row">';
+  var otdMM = (otdItem.date||'').slice(5,7);
+  var otdDD = (otdItem.date||'').slice(8,10);
+  var MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var monthStr = otdMM ? MONTHS[parseInt(otdMM)-1] : mm;
+  var dayStr = otdDD || dd;
+  html += '<div class="hist-otd-day">'+parseInt(dayStr)+'</div>';
+  html += '<div class="hist-otd-label-block">';
+  html += '<div class="hist-otd-month">'+monthStr+'</div>';
+  html += '<div class="hist-otd-label">ON THIS DAY</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '<div class="hist-otd-title">'+otdItem.title+'</div>';
+  if(otdItem.summary) html += '<div class="hist-otd-summary">'+otdItem.summary+'</div>';
+  html += '<div class="hist-otd-readmore">Read more...</div>';
+  html += '</div>';
+  html += '</div></div>';
 
-  // 필터
+  // ── 카테고리 필터 ──
   html += '<div class="hist-filter">';
-  cats.forEach(function(cat){
-    html += '<button class="hist-filter-btn'+(_histFilter===cat?' active':'')+' " onclick="filterHistory(&quot;'+cat+'&quot;,this)">'+cat+'</button>';
+  Object.keys(HIST_CAT).forEach(function(key){
+    var c = HIST_CAT[key];
+    html += '<button class="hist-filter-btn'+(_histFilter===key?' active':'')+'" onclick="filterHistory(\''+key+'\',this)">';
+    html += '<span class="hf-icon">'+c.icon+'</span> '+c.label;
+    html += '</button>';
   });
   html += '</div>';
 
-  // 리스트
-  var filtered = _histFilter==='전체' ? data : data.filter(function(d){ return d.category===_histFilter; });
-  html += '<div class="history-list">';
+  // ── ALL HISTORY 그리드 ──
+  var filtered = data.filter(function(d){ return d.category===_histFilter; });
+  html += '<div class="hist-section-label">ALL '+( HIST_CAT[_histFilter]?HIST_CAT[_histFilter].label.toUpperCase():_histFilter.toUpperCase() )+' · '+filtered.length+'</div>';
+  html += '<div class="history-grid">';
   filtered.forEach(function(item){
-    var year = (item.date||'').slice(0,4);
-    html += '<div class="hist-card" onclick="openHistModal(this)" data-title="'+encodeURIComponent(item.title)+'" data-body="'+encodeURIComponent(item.body||'')+'">';
-    html += '<div class="hist-card-top">';
-    html += '<span class="hist-cat-badge">'+item.category+'</span>';
-    html += '<span class="hist-date">'+year+'년'+(item.date&&item.date.length>=7?' '+parseInt(item.date.slice(5,7))+'월':'')+(item.date&&item.date.length>=10?' '+parseInt(item.date.slice(8,10))+'일':'')+'</span>';
+    var ph = HIST_CAT_PH[item.category]||'⚽';
+    var enc = encodeURIComponent(JSON.stringify(item));
+    html += '<div class="hist-card" onclick="openHistModal(\''+enc+'\')">';
+    html += '<div class="hist-card-img-wrap">';
+    if(item.image){
+      html += '<img class="hist-card-img" src="'+item.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
+      html += '<div class="hist-card-img-ph" style="display:none">'+ph+'</div>';
+    } else {
+      html += '<div class="hist-card-img-ph">'+ph+'</div>';
+    }
+    html += '<div class="hist-card-cat-icon">'+ph+'</div>';
     html += '</div>';
-    html += '<div class="hist-title">'+item.title+'</div>';
-    html += '<div class="hist-body">'+item.body+'</div>';
+    html += '<div class="hist-card-body">';
+    html += '<div class="hist-card-title">'+item.title+'</div>';
+    html += '<div class="hist-card-year">'+((item.date||'').slice(0,4)||'')+'</div>';
+    html += '</div>';
     html += '</div>';
   });
   html += '</div>';
+
   el.innerHTML = html;
   window._historyData = data;
 }
@@ -993,13 +1083,27 @@ function filterHistory(cat, btn){
   if(window._historyData) renderHistory(window._historyData);
 }
 
-function openHistModal(card){
-  var title = decodeURIComponent(card.getAttribute('data-title'));
-  var body = decodeURIComponent(card.getAttribute('data-body'));
+function openHistModal(enc){
+  var item = JSON.parse(decodeURIComponent(enc));
   var mc = document.getElementById('matchModalContent');
-  var html = '<div style="padding:20px 16px">';
-  html += '<div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:12px">'+title+'</div>';
-  html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.7">'+body+'</div>';
+  var ph = HIST_CAT_PH[item.category]||'⚽';
+  var catInfo = HIST_CAT[item.category]||{label:item.category,icon:ph};
+  var html = '';
+  // 이미지
+  if(item.image){
+    html += '<img class="hist-modal-img" src="'+item.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
+    html += '<div class="hist-modal-img-ph" style="display:none">'+ph+'</div>';
+  } else {
+    html += '<div class="hist-modal-img-ph">'+ph+'</div>';
+  }
+  html += '<div style="padding:16px 16px 24px">';
+  html += '<div class="hist-modal-meta">';
+  html += '<span class="hist-modal-cat">'+catInfo.icon+' '+catInfo.label+'</span>';
+  html += '<span class="hist-modal-date">'+_histDateLabel(item.date)+'</span>';
+  html += '</div>';
+  html += '<div class="hist-modal-title">'+item.title+'</div>';
+  html += '<div class="hist-modal-body">'+(item.content||item.body||item.summary||'')+'</div>';
+  if(item.link) html += '<a class="hist-modal-link" href="'+item.link+'" target="_blank" rel="noopener">🔗 더 알아보기</a>';
   html += '</div>';
   mc.innerHTML = html;
   document.getElementById('matchModal').style.display='flex';
@@ -1042,10 +1146,10 @@ function loadNews(){
 // ── SNS (Bluesky) ──
 function loadSns(){
   var el=document.getElementById('snsGrid');
-  var badge=document.getElementById('snsBadge');
+  var badge=document.getElementById('snsBadge')||document.getElementById('mediaBadge');
   apiFetch(FN+'/social').then(function(data){
     var posts=data.posts||[];
-    badge.textContent=posts.length+'개';
+    if(badge) badge.textContent=posts.length+'개';
     if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
     el.innerHTML='';
     posts.forEach(function(p){
@@ -1097,7 +1201,7 @@ function loadSns(){
     });
   }).catch(function(err){
     el.innerHTML='<div class="loading-state">오류: '+err.message+'</div>';
-    badge.textContent='오류';
+    if(badge) badge.textContent='오류';
   });
 }
 
