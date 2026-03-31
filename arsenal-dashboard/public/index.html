@@ -339,6 +339,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pl-modal-sub{font-size:11px;color:var(--text-muted);margin-top:4px;}
 .pl-modal-badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:20px;font-weight:700;margin-top:6px;}
 /* ── 경기 상세 모달 ── */
+.match-modal-x{position:absolute;top:12px;right:14px;z-index:10;background:rgba(0,0,0,.45);border:none;color:#fff;font-size:16px;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+.match-modal-x:active{opacity:.7;}
+.match-modal-sheet{position:relative;}
 .match-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
 .match-modal-overlay.open{display:flex;}
 .match-modal-sheet{background:#1a1c22;border-radius:20px 20px 0 0;width:100%;max-width:540px;max-height:92vh;overflow:hidden;animation:slideUp .28s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}
@@ -506,6 +509,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <!-- MATCH DETAIL MODAL -->
 <div class="match-modal-overlay" id="matchModal" onclick="closeMatchModal(event)">
   <div class="match-modal-sheet">
+    <button class="match-modal-x" onclick="closeMatchModal()">&#10005;</button>
     <div class="match-modal-inner" id="matchModalContent"></div>
   </div>
 </div>
@@ -1266,7 +1270,9 @@ function openHistModal(enc){
   if(item.link) html += '<a class="hist-modal-link" href="'+item.link+'" target="_blank" rel="noopener">🔗 더 알아보기</a>';
   html += '</div>';
   mc.innerHTML = html;
-  document.getElementById('matchModal').style.display='flex';
+  var modal = document.getElementById('matchModal');
+  modal.style.display='flex';
+  window.history.pushState({modal:'hist'},'','#hist-modal');
 }
 
 function loadNews(){
@@ -1721,9 +1727,10 @@ function mmSwitchTab(side){
 function closeMatchModal(e){
   if(e && e.target !== document.getElementById('matchModal')) return;
   var overlay=document.getElementById('matchModal');
-  overlay.classList.remove('open');
+  overlay.style.display='none';
   document.body.style.overflow='';
-  if(location.hash.includes('match')) history.replaceState(null,'',location.href.split('#')[0]);
+  var h = location.hash;
+  if(h.includes('match') || h.includes('hist-modal')) window.history.replaceState(null,'',location.href.split('#')[0]);
 }
 
 // ── TICKER ──
@@ -1751,7 +1758,7 @@ function showSec(id,btn){
     if(id==='media') loadMedia();
     if(id==='history') loadHistory();
   }
-  history.pushState({tab:id},'','#'+id);
+  window.history.pushState({tab:id},'','#'+id);
   window.scrollTo(0,0);
 }
 
@@ -1763,8 +1770,8 @@ function showSec(id,btn){
     if(playerModal && playerModal.classList.contains('open')){
       closePlayerModal(true); return;
     }
-    if(matchModal && matchModal.classList.contains('open')){
-      matchModal.classList.remove('open');
+    if(matchModal && matchModal.style.display==='flex'){
+      matchModal.style.display='none';
       document.body.style.overflow=''; return;
     }
     var hash = location.hash.replace('#','').trim();
