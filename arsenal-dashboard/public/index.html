@@ -198,28 +198,44 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .trophy-cabinet-header{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
 .trophy-cabinet-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);}
 .trophy-cabinet-total{font-size:10px;color:var(--text-dim);}
-.trophy-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.trophy-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .18s;position:relative;overflow:hidden;}
-.trophy-card:active{opacity:.82;}
-.trophy-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.trophy-card.gold::before{background:linear-gradient(90deg,var(--gold),#f5d87a);}
-.trophy-card.silver::before{background:linear-gradient(90deg,#aaa,#ddd);}
-.trophy-card.bronze::before{background:linear-gradient(90deg,#cd7f32,#e8a96a);}
-.trophy-card-icon{font-size:22px;margin-bottom:6px;display:block;}
-.trophy-card-count{font-size:28px;font-weight:900;color:var(--gold);line-height:1;font-family:var(--fd);}
-.trophy-card-count.silver{color:#bbb;}
-.trophy-card-count.bronze{color:#cd7f32;}
-.trophy-card-name{font-size:10px;font-weight:700;color:var(--text);margin-top:3px;line-height:1.3;}
-.trophy-card-record{font-size:9px;color:var(--gold);font-weight:600;margin-top:3px;}
-.trophy-card-arrow{position:absolute;bottom:10px;right:10px;font-size:11px;color:var(--text-dim);}
 
-/* Trophy years modal */
-.trophy-years-header{padding:20px 16px 12px;}
-.trophy-years-competition{font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;}
-.trophy-years-sub{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:14px;}
-.trophy-years-count{font-size:12px;color:var(--gold);font-weight:700;margin-bottom:12px;}
+/* 3열 그리드 */
+.trophy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.trophy-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .18s;}
+.trophy-card:active{opacity:.82;}
+
+/* 이미지 영역 */
+.trophy-card-img-wrap{width:100%;aspect-ratio:1/1;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.trophy-card-img{width:100%;height:100%;object-fit:cover;display:block;}
+.trophy-card-img-ph{font-size:36px;}
+.trophy-card-cat{position:absolute;top:5px;left:5px;font-size:8px;font-weight:700;letter-spacing:.5px;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.55);color:rgba(255,255,255,.8);}
+
+/* 하단 정보 */
+.trophy-card-info{padding:7px 8px 9px;text-align:center;}
+.trophy-card-name{font-size:9px;font-weight:700;color:var(--text-muted);line-height:1.3;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.trophy-card-count-wrap{display:flex;align-items:baseline;justify-content:center;gap:3px;}
+.trophy-card-count{font-size:22px;font-weight:900;line-height:1;font-family:var(--fd);}
+.trophy-card-count.gold{color:var(--gold);}
+.trophy-card-count.silver{color:#aaa;}
+.trophy-card-count.bronze{color:#cd7f32;}
+.trophy-card-wins{font-size:8px;color:var(--text-dim);font-weight:600;}
+.trophy-card-record{font-size:8px;color:var(--gold);font-weight:700;margin-top:2px;}
+
+/* Trophy 모달 */
+.trophy-modal-top{display:flex;gap:12px;padding:16px 16px 12px;align-items:center;}
+.trophy-modal-img-wrap{width:80px;height:80px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.trophy-modal-img{width:100%;height:100%;object-fit:cover;}
+.trophy-modal-img-ph{font-size:36px;}
+.trophy-modal-count-block{flex:1;}
+.trophy-modal-count{font-size:48px;font-weight:900;line-height:1;font-family:var(--fd);color:var(--gold);}
+.trophy-modal-count.silver{color:#aaa;}
+.trophy-modal-count.bronze{color:#cd7f32;}
+.trophy-modal-wins-label{font-size:10px;color:var(--text-dim);font-weight:600;letter-spacing:1px;text-transform:uppercase;}
+.trophy-modal-title{font-size:16px;font-weight:800;color:var(--text);padding:0 16px 6px;}
+.trophy-modal-summary{font-size:12px;color:var(--text-muted);line-height:1.65;padding:0 16px 14px;}
+.trophy-modal-years-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);padding:0 16px 8px;}
 .trophy-years-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 24px;}
-.trophy-year-chip{padding:5px 12px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);}
+.trophy-year-chip{padding:4px 10px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text);}
 .trophy-year-chip.latest{background:var(--red);border-color:var(--red);color:#fff;}
 
 .news-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-decoration:none;display:block;color:inherit;-webkit-tap-highlight-color:transparent}
@@ -1112,18 +1128,14 @@ function renderHistory(data){
 }
 
 function renderTrophyCabinet(data){
-  // trophy 카테고리 항목들 중 count 필드 있는 것만 (Trophy Cabinet 용)
   var cabinet = data.filter(function(d){ return d.category==='trophy' && d.count; });
-  // count 필드 없는 trophy는 일반 항목 (On This Day용 등)
-  // 총 메이저 합산 (Community Shield 제외 선택 가능 — 여기선 포함)
   var totalMajor = 0;
   cabinet.forEach(function(t){ totalMajor += (t.count||0); });
 
-  // 티어 색상: PL/FA Cup = gold, League Cup/Euro = silver, Community Shield = bronze
   var tierMap = {
-    'Premier League': 'gold', 'First Division': 'gold', 'FA Cup': 'gold',
-    'League Cup': 'silver', 'European': 'silver', 'Cup Winners': 'silver',
-    'Community Shield': 'bronze', 'Inter-Cities Fairs': 'bronze'
+    'Premier League':'gold','First Division':'gold','FA Cup':'gold',
+    'League Cup':'silver','European':'silver','Cup Winners':'silver','Champions':'silver',
+    'Community Shield':'bronze','Inter-Cities Fairs':'bronze'
   };
   function getTier(title){
     var t = 'silver';
@@ -1141,20 +1153,32 @@ function renderTrophyCabinet(data){
   cabinet.forEach(function(t){
     var tier = getTier(t.title);
     var enc = encodeURIComponent(JSON.stringify(t));
-    var latestYear = t.years && t.years.length ? t.years[t.years.length-1] : '';
-    html += '<div class="trophy-card '+tier+'" onclick="openTrophyModal(\''+enc+'\')">';
-    html += '<span class="trophy-card-icon">'+( t.icon || '🏆' )+'</span>';
-    html += '<div class="trophy-card-count '+tier+'">'+t.count+'</div>';
+    html += '<div class="trophy-card" onclick="openTrophyModal(\''+enc+'\')">';
+    // 이미지 영역
+    html += '<div class="trophy-card-img-wrap">';
+    if(t.image){
+      html += '<img class="trophy-card-img" src="'+t.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
+      html += '<div class="trophy-card-img-ph" style="display:none">'+(t.icon||'🏆')+'</div>';
+    } else {
+      html += '<div class="trophy-card-img-ph">'+(t.icon||'🏆')+'</div>';
+    }
+    if(t.record) html += '<div class="trophy-card-cat">RECORD</div>';
+    html += '</div>';
+    // 하단 정보
+    html += '<div class="trophy-card-info">';
     html += '<div class="trophy-card-name">'+t.title+'</div>';
+    html += '<div class="trophy-card-count-wrap">';
+    html += '<div class="trophy-card-count '+tier+'">'+t.count+'</div>';
+    html += '<div class="trophy-card-wins">회</div>';
+    html += '</div>';
     if(t.record) html += '<div class="trophy-card-record">'+t.record+'</div>';
-    else if(latestYear) html += '<div class="trophy-card-record">Last: '+latestYear+'</div>';
-    html += '<div class="trophy-card-arrow">›</div>';
+    html += '</div>';
     html += '</div>';
   });
 
   html += '</div></div>';
 
-  // 일반 trophy 항목(count 없는 것)도 아래에 그리드로
+  // count 없는 trophy 항목 (On This Day 데이터 등) — 별도 그리드
   var extras = data.filter(function(d){ return d.category==='trophy' && !d.count; });
   if(extras.length){
     html += '<div class="hist-section-label" style="margin-top:16px">TROPHY MOMENTS · '+extras.length+'</div>';
@@ -1184,44 +1208,39 @@ function renderTrophyCabinet(data){
 function openTrophyModal(enc){
   var t = JSON.parse(decodeURIComponent(enc));
   var mc = document.getElementById('matchModalContent');
+  var tierMap = {'Premier League':'gold','First Division':'gold','FA Cup':'gold','League Cup':'silver','European':'silver','Cup Winners':'silver','Champions':'silver','Community Shield':'bronze','Inter-Cities Fairs':'bronze'};
+  var tier = 'silver';
+  Object.keys(tierMap).forEach(function(k){ if(t.title.indexOf(k)!==-1) tier=tierMap[k]; });
   var html = '';
-  // 이미지
+  html += '<div class="trophy-modal-top">';
+  html += '<div class="trophy-modal-img-wrap">';
   if(t.image){
-    html += '<img class="hist-modal-img" src="'+t.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
-    html += '<div class="hist-modal-img-ph" style="display:none">'+(t.icon||'🏆')+'</div>';
+    html += '<img class="trophy-modal-img" src="'+t.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
+    html += '<div class="trophy-modal-img-ph" style="display:none">'+(t.icon||'🏆')+'</div>';
   } else {
-    html += '<div class="hist-modal-img-ph">'+(t.icon||'🏆')+'</div>';
+    html += '<div class="trophy-modal-img-ph">'+(t.icon||'🏆')+'</div>';
   }
-  html += '<div class="trophy-years-header">';
-  html += '<div class="trophy-years-competition">'+(t.icon||'🏆')+' '+t.title+'</div>';
-  if(t.summary) html += '<div class="trophy-years-sub">'+t.summary+'</div>';
-  html += '<div class="trophy-years-count">총 '+t.count+'회 우승</div>';
   html += '</div>';
-
+  html += '<div class="trophy-modal-count-block">';
+  html += '<div class="trophy-modal-count '+tier+'">'+t.count+'</div>';
+  html += '<div class="trophy-modal-wins-label">WINS</div>';
+  html += '</div></div>';
+  html += '<div class="trophy-modal-title">'+t.title+'</div>';
+  if(t.summary) html += '<div class="trophy-modal-summary">'+t.summary+'</div>';
   if(t.years && t.years.length){
     var latestYear = t.years[t.years.length-1];
+    html += '<div class="trophy-modal-years-label">Winning Years</div>';
     html += '<div class="trophy-years-chips">';
-    t.years.forEach(function(y){
-      html += '<span class="trophy-year-chip'+(y===latestYear?' latest':'')+'">';
-      html += y;
-      html += '</span>';
-    });
+    t.years.forEach(function(y){ html += '<span class="trophy-year-chip'+(y===latestYear?' latest':'')+'">'+y+'</span>'; });
     html += '</div>';
   }
   if(t.link){
-    html += '<div style="padding:0 16px 24px">';
-    html += '<a class="hist-modal-link" href="'+t.link+'" target="_blank" rel="noopener">🔗 공식 기록 보기</a>';
+    html += '<div style="padding:0 16px 20px">';
+    html += '<a class="hist-modal-link" href="'+t.link+'" target="_blank" rel="noopener" style="display:inline-block;padding:10px 20px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;text-decoration:none;font-size:12px;color:var(--text)">Link to arsenal.com</a>';
     html += '</div>';
   }
   mc.innerHTML = html;
   document.getElementById('matchModal').style.display='flex';
-}
-
-function filterHistory(cat, btn){
-  _histFilter = cat;
-  document.querySelectorAll('.hist-filter-btn').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');
-  if(window._historyData) renderHistory(window._historyData);
 }
 
 function openHistModal(enc){
