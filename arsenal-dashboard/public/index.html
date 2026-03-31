@@ -1140,7 +1140,7 @@ function filterHistory(cat, btn){
   if(window._historyData) renderHistory(window._historyData);
 }
 
-
+function renderTrophyCabinet(data){
   var cabinet = data.filter(function(d){ return d.category==='trophy' && d.count; });
   var totalMajor = 0;
   cabinet.forEach(function(t){ totalMajor += (t.count||0); });
