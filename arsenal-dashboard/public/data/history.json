@@ -1,5 +1,138 @@
 [
   {
+    "id": "trophy_pl",
+    "category": "trophy",
+    "title": "Premier League",
+    "icon": "🏆",
+    "count": 3,
+    "years": [
+      "1998",
+      "2002",
+      "2004"
+    ],
+    "summary": "프리미어리그 시대 3회 우승. 2003-04 시즌 인빈서블스 달성.",
+    "image": "/data/history_images/trophy_pl.webp",
+    "link": "https://www.arsenal.com/history"
+  },
+  {
+    "id": "trophy_first_division",
+    "category": "trophy",
+    "title": "First Division",
+    "icon": "🥇",
+    "count": 10,
+    "years": [
+      "1931",
+      "1933",
+      "1934",
+      "1935",
+      "1938",
+      "1948",
+      "1953",
+      "1971",
+      "1989",
+      "1991"
+    ],
+    "summary": "프리미어리그 출범 이전 잉글랜드 최상위 리그 10회 우승. 1989년 안필드의 기적 포함.",
+    "image": "/data/history_images/trophy_first_division.webp",
+    "link": "https://www.arsenal.com/history"
+  },
+  {
+    "id": "trophy_facup",
+    "category": "trophy",
+    "title": "FA Cup",
+    "icon": "🏅",
+    "count": 14,
+    "record": "역대 최다 우승",
+    "years": [
+      "1930",
+      "1936",
+      "1950",
+      "1971",
+      "1979",
+      "1993",
+      "1998",
+      "2002",
+      "2003",
+      "2005",
+      "2014",
+      "2015",
+      "2017",
+      "2020"
+    ],
+    "summary": "잉글랜드 FA컵 역대 최다 우승 기록 보유. 총 14회 우승.",
+    "image": "/data/history_images/trophy_facup.webp",
+    "link": "https://www.arsenal.com/history"
+  },
+  {
+    "id": "trophy_leaguecup",
+    "category": "trophy",
+    "title": "League Cup",
+    "icon": "🥈",
+    "count": 2,
+    "years": [
+      "1987",
+      "1993"
+    ],
+    "summary": "리그컵(현 카라바오컵) 2회 우승. 1993년 FA컵과 함께 더블 달성.",
+    "image": "/data/history_images/trophy_leaguecup.webp",
+    "link": "https://www.arsenal.com/history"
+  },
+  {
+    "id": "trophy_cwc",
+    "category": "trophy",
+    "title": "Cup Winners' Cup",
+    "icon": "🌍",
+    "count": 1,
+    "years": [
+      "1994"
+    ],
+    "summary": "1993-94 UEFA 컵위너스컵 우승. 코펜하겐에서 파르마를 꺾고 유럽 정상 등극.",
+    "image": "/data/history_images/trophy_cwc.webp",
+    "link": "https://www.arsenal.com/history"
+  },
+  {
+    "id": "trophy_fairs",
+    "category": "trophy",
+    "title": "Inter-Cities Fairs Cup",
+    "icon": "🌐",
+    "count": 1,
+    "years": [
+      "1970"
+    ],
+    "summary": "1969-70 인터시티페어스컵 우승. UEFA 유로파리그의 전신, 아스날 첫 유럽대회 우승.",
+    "image": "/data/history_images/trophy_fairs.webp",
+    "link": "https://www.arsenal.com/history"
+  },
+  {
+    "id": "trophy_communityshield",
+    "category": "trophy",
+    "title": "Community Shield",
+    "icon": "🛡️",
+    "count": 17,
+    "years": [
+      "1930",
+      "1931",
+      "1933",
+      "1934",
+      "1938",
+      "1948",
+      "1953",
+      "1991",
+      "1998",
+      "1999",
+      "2002",
+      "2004",
+      "2014",
+      "2015",
+      "2017",
+      "2019",
+      "2020"
+    ],
+    "summary": "커뮤니티실드 17회 우승. 매 시즌 개막 공식전.",
+    "image": "/data/history_images/trophy_communityshield.webp",
+    "link": "https://www.arsenal.com/history"
+  },
+  {
     "id": "founding_1886",
     "category": "club",
     "title": "다이얼 스퀘어 FC 창단",
@@ -21,7 +154,7 @@
   },
   {
     "id": "first_league_1931",
-    "category": "trophy",
+    "category": "moment",
     "title": "첫 번째 리그 우승",
     "date": "1931-05-01",
     "summary": "허버트 채프먼 감독 체제에서 첫 리그 타이틀 획득",
@@ -41,7 +174,7 @@
   },
   {
     "id": "first_facup_1930",
-    "category": "trophy",
+    "category": "moment",
     "title": "첫 FA컵 우승",
     "date": "1930-04-26",
     "summary": "허버트 채프먼의 아스날, 웸블리에서 허더스필드를 2-0으로 격파",
@@ -71,7 +204,7 @@
   },
   {
     "id": "invincibles_2004",
-    "category": "trophy",
+    "category": "moment",
     "title": "The Invincibles - 무패 우승",
     "date": "2004-05-15",
     "summary": "프리미어리그 역사상 유일한 무패 우승. 38경기 26승 12무",
@@ -131,7 +264,7 @@
   },
   {
     "id": "fa_cup_2003",
-    "category": "trophy",
+    "category": "moment",
     "title": "FA컵 승부차기 우승 - 로베르 피레의 무릎",
     "date": "2003-05-17",
     "summary": "사우샘프턴전 1-0 승리, 아스날 8번째 FA컵 우승",
@@ -161,7 +294,7 @@
   },
   {
     "id": "double_1971",
-    "category": "trophy",
+    "category": "moment",
     "title": "더블 달성 - 리그+FA컵 동시 우승",
     "date": "1971-05-08",
     "summary": "클럽 최초 더블 달성. 토트넘 원정에서 리그 우승 확정",
@@ -171,7 +304,7 @@
   },
   {
     "id": "double_1998",
-    "category": "trophy",
+    "category": "moment",
     "title": "벵거 체제 첫 더블",
     "date": "1998-05-16",
     "summary": "벵거 감독 첫 시즌 완성 - 리그+FA컵 더블",
@@ -181,7 +314,7 @@
   },
   {
     "id": "double_2002",
-    "category": "trophy",
+    "category": "moment",
     "title": "두 번째 벵거 더블",
     "date": "2002-05-08",
     "summary": "2001-02 시즌 더블, 앙리 24골 활약",
@@ -211,7 +344,7 @@
   },
   {
     "id": "fa_cup_2014",
-    "category": "trophy",
+    "category": "moment",
     "title": "FA컵 우승 - 9년 무관 종지부",
     "date": "2014-05-17",
     "summary": "헐 시티 3-2 역전승, 2005년 이후 9년 만의 우승",
@@ -221,7 +354,7 @@
   },
   {
     "id": "fa_cup_2015",
-    "category": "trophy",
+    "category": "moment",
     "title": "FA컵 2연패 달성",
     "date": "2015-05-30",
     "summary": "아스톤 빌라를 4-0으로 완파하며 FA컵 2연속 우승",
@@ -311,7 +444,7 @@
   },
   {
     "id": "fa_cup_2020",
-    "category": "trophy",
+    "category": "moment",
     "title": "아르테타 첫 트로피 - FA컵 우승",
     "date": "2020-08-01",
     "summary": "코로나19로 무관중 결승, 첼시를 2-1로 꺾고 우승",
@@ -471,7 +604,7 @@
   },
   {
     "id": "league_1933",
-    "category": "trophy",
+    "category": "moment",
     "title": "리그 2연패",
     "date": "1933-05-01",
     "summary": "1932-33 시즌 리그 우승, 채프먼 시대 황금기",
@@ -481,7 +614,7 @@
   },
   {
     "id": "league_1934",
-    "category": "trophy",
+    "category": "moment",
     "title": "리그 3연패",
     "date": "1934-05-01",
     "summary": "1933-34 시즌 채프먼 사망 후에도 3연패 달성",
@@ -491,7 +624,7 @@
   },
   {
     "id": "league_1935",
-    "category": "trophy",
+    "category": "moment",
     "title": "리그 4번째 우승",
     "date": "1935-05-01",
     "summary": "조지 앨리슨 체제에서 4번째 리그 우승",
@@ -501,7 +634,7 @@
   },
   {
     "id": "league_1938",
-    "category": "trophy",
+    "category": "moment",
     "title": "전쟁 전 마지막 리그 우승",
     "date": "1938-05-01",
     "summary": "2차 세계대전 직전 1937-38 시즌 리그 우승",
@@ -511,7 +644,7 @@
   },
   {
     "id": "fairs_cup_1970",
-    "category": "trophy",
+    "category": "moment",
     "title": "인터-시티스 페어스컵 우승",
     "date": "1970-04-28",
     "summary": "유럽 대회 첫 우승, 안더레흐트를 합산 4-3으로 꺾어",
@@ -521,7 +654,7 @@
   },
   {
     "id": "league_cup_1987",
-    "category": "trophy",
+    "category": "moment",
     "title": "리그컵 우승",
     "date": "1987-04-05",
     "summary": "리버풀을 2-1로 꺾고 리그컵 첫 우승",
@@ -531,7 +664,7 @@
   },
   {
     "id": "cup_winners_1994",
-    "category": "trophy",
+    "category": "moment",
     "title": "컵위너스컵 우승",
     "date": "1994-05-04",
     "summary": "파르마를 1-0으로 꺾고 유러피언 컵위너스컵 우승",
@@ -541,7 +674,7 @@
   },
   {
     "id": "fa_cup_1993",
-    "category": "trophy",
+    "category": "moment",
     "title": "FA컵 & 리그컵 더블컵",
     "date": "1993-05-20",
     "summary": "같은 시즌 FA컵과 리그컵을 동시 우승한 유일한 구단",
@@ -551,7 +684,7 @@
   },
   {
     "id": "fa_cup_2017",
-    "category": "trophy",
+    "category": "moment",
     "title": "FA컵 3회 우승 완성 (2014-2017)",
     "date": "2017-05-27",
     "summary": "첼시를 2-1로 꺾고 4년 내 3번째 FA컵 우승",
@@ -561,7 +694,7 @@
   },
   {
     "id": "community_shield_2020",
-    "category": "trophy",
+    "category": "moment",
     "title": "커뮤니티 실드 우승",
     "date": "2020-08-29",
     "summary": "리버풀을 승부차기로 꺾고 커뮤니티 실드 우승",
