@@ -1065,7 +1065,7 @@ function renderHistory(data){
 
   // ── On This Day 카드 ──
   html += '<div class="hist-otd-wrap">';
-  html += '<div class="hist-otd-card" onclick="openHistModal(\''+encodeURIComponent(JSON.stringify(otdItem))+'\')">';
+  html += '<div class="hist-otd-card" data-hist="'+encodeURIComponent(JSON.stringify(otdItem))+'" onclick="openHistModal(this.dataset.hist)">';
   if(otdItem.image){
     html += '<img class="hist-otd-img" src="'+otdItem.image+'" alt="" onerror="this.parentNode.querySelector(\'.hist-otd-img-ph\').style.display=\'flex\';this.style.display=\'none\'">';
     html += '<div class="hist-otd-img-ph" style="display:none;position:absolute;inset:0"><span class="hist-otd-img-ph-icon">'+( HIST_CAT_PH[otdItem.category]||'⚽')+'</span></div>';
@@ -1113,7 +1113,7 @@ function renderHistory(data){
     filtered.forEach(function(item){
       var ph = HIST_CAT_PH[item.category]||'⚽';
       var enc = encodeURIComponent(JSON.stringify(item));
-      html += '<div class="hist-card" onclick="openHistModal(\''+enc+'\')">';
+      html += '<div class="hist-card" data-hist="'+enc+'" onclick="openHistModal(this.dataset.hist)">';
       html += '<div class="hist-card-img-wrap">';
       if(item.image){
         html += '<img class="hist-card-img" src="'+item.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
@@ -1169,7 +1169,7 @@ function renderTrophyCabinet(data){
   cabinet.forEach(function(t){
     var tier = getTier(t.title);
     var enc = encodeURIComponent(JSON.stringify(t));
-    html += '<div class="trophy-card" onclick="openTrophyModal(\''+enc+'\')">';
+    html += '<div class="trophy-card" data-hist="'+enc+'" onclick="openTrophyModal(this.dataset.hist)">';
     // 이미지 영역
     html += '<div class="trophy-card-img-wrap">';
     if(t.image){
@@ -1201,7 +1201,7 @@ function renderTrophyCabinet(data){
     html += '<div class="history-grid">';
     extras.forEach(function(item){
       var enc = encodeURIComponent(JSON.stringify(item));
-      html += '<div class="hist-card" onclick="openHistModal(\''+enc+'\')">';
+      html += '<div class="hist-card" data-hist="'+enc+'" onclick="openHistModal(this.dataset.hist)">';
       html += '<div class="hist-card-img-wrap">';
       if(item.image){
         html += '<img class="hist-card-img" src="'+item.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
