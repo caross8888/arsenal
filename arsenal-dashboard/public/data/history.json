@@ -1,40 +1,29 @@
 [
   {
-    "id": "trophy_pl",
+    "id": "trophy_league",
     "category": "trophy",
-    "title": "Premier League",
+    "title": "Premier League / First Division",
     "icon": "🏆",
-    "count": 3,
+    "count": 13,
+    "image": "/data/history_images/trophy_league.jpg",
+    "summary": "잉글랜드 1부 리그 우승 13회",
+    "content": "아스날은 1930년대 허버트 채프먼 체제의 황금기를 시작으로, 1989년 안필드의 기적, 그리고 2003-04 시즌 전무후무한 무패 우승(인빈서블스)을 포함해 총 13번의 리그 정상에 올랐습니다.",
     "years": [
-      "1998",
-      "2002",
-      "2004"
+      "1930/31",
+      "1932/33",
+      "1933/34",
+      "1934/35",
+      "1937/38",
+      "1947/48",
+      "1952/53",
+      "1970/71",
+      "1988/89",
+      "1990/91",
+      "1997/98",
+      "2001/02",
+      "2003/04"
     ],
-    "summary": "프리미어리그 시대 3회 우승. 2003-04 시즌 인빈서블스 달성.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Troph%C3%A9e_Premier_League_13-14.jpg/600px-Troph%C3%A9e_Premier_League_13-14.jpg",
-    "link": "https://www.arsenal.com/history"
-  },
-  {
-    "id": "trophy_first_division",
-    "category": "trophy",
-    "title": "First Division",
-    "icon": "🥇",
-    "count": 10,
-    "years": [
-      "1931",
-      "1933",
-      "1934",
-      "1935",
-      "1938",
-      "1948",
-      "1953",
-      "1971",
-      "1989",
-      "1991"
-    ],
-    "summary": "프리미어리그 출범 이전 잉글랜드 최상위 리그 10회 우승. 1989년 안필드의 기적 포함.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Football_League_trophy.jpg/600px-Football_League_trophy.jpg",
-    "link": "https://www.arsenal.com/history"
+    "link": "https://www.arsenal.com/history/league-titles"
   },
   {
     "id": "trophy_facup",
@@ -43,6 +32,9 @@
     "icon": "🏅",
     "count": 14,
     "record": "역대 최다 우승",
+    "image": "/data/history_images/trophy_facup.jpg",
+    "summary": "잉글랜드 FA컵 역대 최다 우승 기록 보유. 총 14회 우승.",
+    "content": "아스날은 FA컵에서 역대 어느 클럽보다 많은 14번의 우승을 차지했습니다. 1930년 첫 우승부터 2020년 아르테타 감독의 첫 트로피까지, FA컵은 아스날의 상징이 된 대회입니다.",
     "years": [
       "1930",
       "1936",
@@ -59,9 +51,7 @@
       "2017",
       "2020"
     ],
-    "summary": "잉글랜드 FA컵 역대 최다 우승 기록 보유. 총 14회 우승.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/FA_Cup.jpg/600px-FA_Cup.jpg",
-    "link": "https://www.arsenal.com/history"
+    "link": "https://www.arsenal.com/history/the-fa-cup"
   },
   {
     "id": "trophy_leaguecup",
@@ -69,38 +59,13 @@
     "title": "League Cup",
     "icon": "🥈",
     "count": 2,
+    "image": "/data/history_images/trophy_leaguecup.jpg",
+    "summary": "리그컵(현 카라바오컵) 2회 우승.",
+    "content": "1987년 리버풀을 꺾고 첫 리그컵 우승을 차지했으며, 1993년에는 FA컵과 함께 더블컵을 달성했습니다.",
     "years": [
       "1987",
       "1993"
     ],
-    "summary": "리그컵(현 카라바오컵) 2회 우승. 1993년 FA컵과 함께 더블 달성.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Carabao_Cup_trophy.jpg/600px-Carabao_Cup_trophy.jpg",
-    "link": "https://www.arsenal.com/history"
-  },
-  {
-    "id": "trophy_cwc",
-    "category": "trophy",
-    "title": "Cup Winners' Cup",
-    "icon": "🌍",
-    "count": 1,
-    "years": [
-      "1994"
-    ],
-    "summary": "1993-94 UEFA 컵위너스컵 우승. 코펜하겐에서 파르마를 꺾고 유럽 정상 등극.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/UEFA_Cup_Winners_Cup_trophy.jpg/600px-UEFA_Cup_Winners_Cup_trophy.jpg",
-    "link": "https://www.arsenal.com/history"
-  },
-  {
-    "id": "trophy_fairs",
-    "category": "trophy",
-    "title": "Inter-Cities Fairs Cup",
-    "icon": "🌐",
-    "count": 1,
-    "years": [
-      "1970"
-    ],
-    "summary": "1969-70 인터시티페어스컵 우승. UEFA 유로파리그의 전신, 아스날 첫 유럽대회 우승.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Col%C2%B7leccions_del_Museu_del_FC_Barcelona_14.jpg/960px-Col%C2%B7leccions_del_Museu_del_FC_Barcelona_14.jpg",
     "link": "https://www.arsenal.com/history"
   },
   {
@@ -109,6 +74,9 @@
     "title": "Community Shield",
     "icon": "🛡️",
     "count": 17,
+    "image": "/data/history_images/trophy_communityshield.jpg",
+    "summary": "커뮤니티실드 17회 우승.",
+    "content": "매 시즌 개막을 알리는 커뮤니티실드에서 아스날은 역대 최다 수준인 17회 우승을 기록하고 있습니다.",
     "years": [
       "1930",
       "1931",
@@ -128,8 +96,34 @@
       "2019",
       "2020"
     ],
-    "summary": "커뮤니티실드 17회 우승. 매 시즌 개막 공식전.",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/FA_Community_Shield_trophy.jpg/600px-FA_Community_Shield_trophy.jpg",
+    "link": "https://www.arsenal.com/history"
+  },
+  {
+    "id": "trophy_cwc",
+    "category": "trophy",
+    "title": "UEFA Cup Winners' Cup",
+    "icon": "🌍",
+    "count": 1,
+    "image": "/data/history_images/trophy_cwc.jpg",
+    "summary": "1993-94 UEFA 컵위너스컵 우승.",
+    "content": "1994년 5월 덴마크 코펜하겐에서 열린 결승전에서 파르마를 1-0으로 꺾고 유럽 정상에 올랐습니다. 앨런 스미스의 결승골로 아스날 역사상 두 번째 유럽 대회 우승을 달성했습니다.",
+    "years": [
+      "1994"
+    ],
+    "link": "https://www.arsenal.com/history"
+  },
+  {
+    "id": "trophy_fairs",
+    "category": "trophy",
+    "title": "Inter-Cities Fairs Cup",
+    "icon": "🌐",
+    "count": 1,
+    "image": "/data/history_images/trophy_fairs.jpg",
+    "summary": "1969-70 인터시티페어스컵 우승. 아스날 첫 유럽 대회 우승.",
+    "content": "UEFA 유로파리그의 전신인 인터시티페어스컵에서 안드레아 스탄을 꺾고 첫 유럽 대회 우승을 달성했습니다. 당시 홈앤어웨이 합산 4-3으로 우승컵을 가져왔습니다.",
+    "years": [
+      "1970"
+    ],
     "link": "https://www.arsenal.com/history"
   },
   {

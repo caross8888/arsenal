@@ -348,6 +348,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .match-modal-inner{overflow-y:auto;flex:1;padding-bottom:32px;}
 .mm-header{background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);padding:18px 16px 14px;position:relative;}
 .mm-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 14px;}
+.mm-header{display:flex;align-items:center;padding:16px 48px 16px 18px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.mm-header-title{font-size:15px;font-weight:700;color:var(--text);}
 .mm-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
 .mm-scoreboard{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px;}
 .mm-team{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0;}
@@ -509,7 +511,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <!-- MATCH DETAIL MODAL -->
 <div class="match-modal-overlay" id="matchModal" onclick="closeMatchModal(event)">
   <div class="match-modal-sheet">
-    <button class="match-modal-x" onclick="closeMatchModal()">&#10005;</button>
+    <button class="mm-close" onclick="closeMatchModal()">&#10005;</button>
     <div class="match-modal-inner" id="matchModalContent"></div>
   </div>
 </div>
@@ -1131,7 +1133,14 @@ function renderHistory(data){
   window._historyData = data;
 }
 
-function renderTrophyCabinet(data){
+function filterHistory(cat, btn){
+  _histFilter = cat;
+  document.querySelectorAll('.hist-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  if(window._historyData) renderHistory(window._historyData);
+}
+
+
   var cabinet = data.filter(function(d){ return d.category==='trophy' && d.count; });
   var totalMajor = 0;
   cabinet.forEach(function(t){ totalMajor += (t.count||0); });
@@ -1216,6 +1225,7 @@ function openTrophyModal(enc){
   var tier = 'silver';
   Object.keys(tierMap).forEach(function(k){ if(t.title.indexOf(k)!==-1) tier=tierMap[k]; });
   var html = '';
+  html += '<div class="mm-header"><span class="mm-header-title">'+t.title+'</span></div>';
   html += '<div class="trophy-modal-top">';
   html += '<div class="trophy-modal-img-wrap">';
   if(t.image){
@@ -1244,7 +1254,9 @@ function openTrophyModal(enc){
     html += '</div>';
   }
   mc.innerHTML = html;
-  document.getElementById('matchModal').style.display='flex';
+  var modal = document.getElementById('matchModal');
+  modal.style.display='flex';
+  window.history.pushState({modal:'hist'},'','#hist-modal');
 }
 
 function openHistModal(enc){
@@ -1253,6 +1265,7 @@ function openHistModal(enc){
   var ph = HIST_CAT_PH[item.category]||'⚽';
   var catInfo = HIST_CAT[item.category]||{label:item.category,icon:ph};
   var html = '';
+  html += '<div class="mm-header"><span class="mm-header-title">'+(catInfo.icon||ph)+' '+catInfo.label+'</span></div>';
   // 이미지
   if(item.image){
     html += '<img class="hist-modal-img" src="'+item.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
