@@ -238,8 +238,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .trophy-cabinet-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);}
 .trophy-cabinet-total{font-size:10px;color:var(--text-dim);}
 
-/* 3열 그리드 */
-.trophy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+/* 2열 그리드 */
+.trophy-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 .trophy-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .18s;}
 .trophy-card:active{opacity:.82;}
 
@@ -1150,13 +1150,27 @@ function renderTrophiesSection(){
   html += '<div style="font-size:11px;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">TOTAL MAJOR TROPHIES</div>';
   html += '<div style="font-size:48px;font-weight:900;color:var(--red);font-family:var(--fd);">'+total+'</div>';
   html += '</div>';
-  html += '<div class="trophy-cab-grid">';
+  html += '<div class="trophy-grid">';
   trophies.forEach(function(t){
     var enc = encodeURIComponent(JSON.stringify(t));
-    html += '<div class="trophy-cab-card" onclick="openTrophyDetailModal(\'' + enc + '\')">'; 
-    html += '<div class="trophy-cab-icon">'+t.icon+'</div>';
-    html += '<div class="trophy-cab-name">'+t.name+'</div>';
-    html += '<div class="trophy-cab-count">'+t.count+'</div>';
+    var countColor = t.color==='#FFD700' ? 'gold' : (t.color==='#9B9B9B' ? 'silver' : '');
+    html += '<div class="trophy-card" onclick="openTrophyDetailModal(\'' + enc + '\')">';
+    html += '<div class="trophy-card-img-wrap">';
+    if(t.image){
+      html += '<img class="trophy-card-img" src="'+t.image+'" alt="'+t.name+'" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">';
+      html += '<div class="trophy-card-img-ph" style="display:none">'+t.icon+'</div>';
+    } else {
+      html += '<div class="trophy-card-img-ph">'+t.icon+'</div>';
+    }
+    html += '</div>';
+    html += '<div class="trophy-card-info">';
+    html += '<div class="trophy-card-name">'+(t.title||t.name)+'</div>';
+    html += '<div class="trophy-card-count-wrap">';
+    html += '<div class="trophy-card-count'+(countColor?' '+countColor:'')+'">'+t.count+'</div>';
+    html += '<div class="trophy-card-wins">회 우승</div>';
+    html += '</div>';
+    if(t.record) html += '<div class="trophy-card-record">★ '+t.record+'</div>';
+    html += '</div>';
     html += '</div>';
   });
   html += '</div>';
@@ -1222,27 +1236,49 @@ function openTrophyDetailModal(enc){
   try{ t = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
   var modal = document.getElementById('matchModal');
   var content = document.getElementById('matchModalContent');
-  var html = '<div class="mm-header">';
+
+  var html = '<div class="mm-header" style="padding:0;">';
   html += '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>';
-  html += '<div style="font-size:32px;margin-bottom:6px;">'+t.icon+'</div>';
-  html += '<div style="font-size:17px;font-weight:800;color:var(--text);">'+t.name+'</div>';
-  html += '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+t.name_en+'</div>';
-  html += '<div style="font-size:36px;font-weight:900;color:var(--red);font-family:var(--fd);margin-top:8px;">'+t.count+'회 우승</div>';
-  if(t.note) html += '<div style="font-size:11px;color:var(--text-dim);margin-top:4px;">'+t.note+'</div>';
-  html += '</div>';
-  html += '<div style="padding:14px 16px 20px;">';
-  if(t.years && t.years.length){
-    html += '<div style="font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">우승 연도</div>';
-    t.years.forEach(function(y){
-      html += '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start;">';
-      html += '<div style="font-size:15px;font-weight:800;color:var(--red);font-family:var(--fd);min-width:36px;">'+y.year+'</div>';
-      html += '<div style="flex:1;">';
-      if(y.manager) html += '<div style="font-size:11px;color:var(--text-muted);">👔 '+y.manager+'</div>';
-      if(y.final) html += '<div style="font-size:11px;color:var(--text-muted);">🏆 결승: '+y.final+'</div>';
-      if(y.note) html += '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+y.note+'</div>';
-      html += '</div></div>';
-    });
+  // 이미지 or 아이콘 헤더
+  if(t.image){
+    html += '<div style="width:100%;height:160px;overflow:hidden;border-radius:0;position:relative;">';
+    html += '<img src="'+t.image+'" style="width:100%;height:100%;object-fit:contain;background:#0d0d18;" onerror="this.parentNode.innerHTML=\'<div style=&quot;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:72px;background:#0d0d18;&quot;>'+t.icon+'</div>\'">';
+    html += '</div>';
+  } else {
+    html += '<div style="font-size:52px;padding:24px 0 8px;">'+t.icon+'</div>';
   }
+  html += '<div style="padding:14px 16px 14px;width:100%;box-sizing:border-box;">';
+  html += '<div style="font-size:18px;font-weight:800;color:var(--text);">'+(t.title||t.name)+'</div>';
+  html += '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+t.name_en+'</div>';
+  html += '<div style="font-size:38px;font-weight:900;color:var(--red);font-family:var(--fd);margin-top:6px;line-height:1;">'+t.count+'<span style="font-size:14px;font-weight:700;margin-left:4px;">회 우승</span></div>';
+  html += '</div>';
+  html += '</div>';
+
+  // 본문
+  html += '<div style="padding:0 16px 24px;">';
+
+  if(t.content){
+    html += '<p style="font-size:13px;color:var(--text-muted);line-height:1.75;margin:14px 0 0;">'+t.content+'</p>';
+  }
+
+  if(t.key_stat){
+    html += '<div class="trophy-modal-keystat" style="margin:14px 0 0;"><span class="trophy-modal-keystat-icon">⭐</span>'+t.key_stat+'</div>';
+  }
+
+  if(t.years && t.years.length){
+    html += '<div class="trophy-modal-years-label" style="padding:14px 0 8px 0;">우승 연도</div>';
+    html += '<div class="trophy-years-chips" style="padding:0;">';
+    var lastYear = t.years[t.years.length-1];
+    t.years.forEach(function(y){
+      html += '<span class="trophy-year-chip'+(y===lastYear?' latest':'')+'">'+y+'</span>';
+    });
+    html += '</div>';
+  }
+
+  if(t.link){
+    html += '<a href="'+t.link+'" target="_blank" rel="noopener" style="display:block;margin-top:16px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text-dim);text-decoration:none;text-align:center;">🔗 아스날 공식 히스토리 보기</a>';
+  }
+
   html += '</div>';
   content.innerHTML = html;
   modal.classList.add('open');
@@ -1315,7 +1351,8 @@ function openHistModal(enc){
   html += '</div>';
   mc.innerHTML = html;
   var modal = document.getElementById('matchModal');
-  modal.style.display='flex';
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
   window.history.pushState({modal:'hist'},'','#hist-modal');
 }
 
@@ -1486,8 +1523,8 @@ function renderMatchModal(content, m, data){
         '<div class="mm-team">'+(a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display=&quot;none&quot;">':'')+'<div class="mm-team-name">'+(a.name||'')+'</div></div>'+
       '</div>'+
       '<div class="mm-match-date">'+formatDate(m.utcDate||m.date,m.tbd)+'</div>'+
-      '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
       (data.venue?'<div class="mm-venue">📍 '+data.venue+'</div>':'')+
+      '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
     '</div>';
 
   // 이벤트 (좌우 2컬럼)
@@ -1814,9 +1851,8 @@ function showSec(id,btn){
     if(playerModal && playerModal.classList.contains('open')){
       closePlayerModal(true); return;
     }
-    if(matchModal && matchModal.style.display==='flex'){
-      matchModal.style.display='none';
-      document.body.style.overflow=''; return;
+    if(matchModal && matchModal.classList.contains('open')){
+      closeMatchModal(); return;
     }
     var hash = location.hash.replace('#','').trim();
     if(hash && VALID_SECS.indexOf(hash) !== -1){
