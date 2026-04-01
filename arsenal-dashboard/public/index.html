@@ -1089,7 +1089,7 @@ function renderHistoryNew(){
     var yr = otdItem.year || 0;
     var yearsAgo = yr ? (today.getFullYear() - yr) : 0;
     var catPH = {'legend':'👤','moment':'⚽','club':'🏟️','record':'📈'}[otdItem.category]||'⚽';
-    var enc = encodeURIComponent(JSON.stringify(otdItem));
+    var enc = encodeURIComponent(JSON.stringify(otdItem)).replace(/'/g, '%27');
     html += '<div class="hist-otd-wrap"><div class="hist-otd-card" onclick="openOtdModal(\'' + enc + '\')">'; 
     html += '<div class="hist-otd-img-ph"><span class="hist-otd-img-ph-icon">'+catPH+'</span></div>';
     html += '<div class="hist-otd-overlay"></div>';
@@ -1144,15 +1144,10 @@ function renderTrophiesSection(){
     return '<div style="padding:40px;text-align:center;color:var(--text-dim)">로딩 중...</div>';
   }
   var trophies = archive.trophies;
-  var total = trophies.reduce(function(s,t){ return s+(t.count||0); }, 0);
   var html = '';
-  html += '<div style="text-align:center;padding:14px 0 18px;">';
-  html += '<div style="font-size:11px;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">TOTAL MAJOR TROPHIES</div>';
-  html += '<div style="font-size:48px;font-weight:900;color:var(--red);font-family:var(--fd);">'+total+'</div>';
-  html += '</div>';
   html += '<div class="trophy-grid">';
   trophies.forEach(function(t){
-    var enc = encodeURIComponent(JSON.stringify(t));
+    var enc = encodeURIComponent(JSON.stringify(t)).replace(/'/g, '%27');
     var countColor = t.color==='#FFD700' ? 'gold' : (t.color==='#9B9B9B' ? 'silver' : '');
     html += '<div class="trophy-card" onclick="openTrophyDetailModal(\'' + enc + '\')">';
     html += '<div class="trophy-card-img-wrap">';
@@ -1185,7 +1180,7 @@ function renderManagersSection(){
   }
   var html = '<div class="mgr-grid">';
   managers.forEach(function(mgr){
-    var enc = encodeURIComponent(JSON.stringify(mgr));
+    var enc = encodeURIComponent(JSON.stringify(mgr)).replace(/'/g, '%27');
     html += '<div class="mgr-card'+(mgr.highlight?' highlight':'')+'" onclick="openManagerModal(\'' + enc + '\')">'; 
     html += '<div class="mgr-card-img-wrap">';
     html += '<div class="mgr-card-img-ph">👔</div>';
@@ -1194,9 +1189,6 @@ function renderManagersSection(){
     html += '<div class="mgr-card-period-badge">'+mgr.period+' <span class="mgr-card-flag">'+(mgr.nationality||'')+'</span></div>';
     html += '<div class="mgr-card-name">'+mgr.name+'</div>';
     html += '</div>';
-    if(mgr.trophies && mgr.trophies.length){
-      html += '<div class="mgr-card-trophy-dot">🏆'+mgr.trophies.length+'</div>';
-    }
     html += '</div>';
     html += '</div>';
   });
@@ -1249,7 +1241,6 @@ function openTrophyDetailModal(enc){
   }
   html += '<div style="padding:14px 16px 14px;width:100%;box-sizing:border-box;">';
   html += '<div style="font-size:18px;font-weight:800;color:var(--text);">'+(t.title||t.name)+'</div>';
-  html += '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+t.name_en+'</div>';
   html += '<div style="font-size:38px;font-weight:900;color:var(--red);font-family:var(--fd);margin-top:6px;line-height:1;">'+t.count+'<span style="font-size:14px;font-weight:700;margin-left:4px;">회 우승</span></div>';
   html += '</div>';
   html += '</div>';
@@ -1265,7 +1256,17 @@ function openTrophyDetailModal(enc){
     html += '<div class="trophy-modal-keystat" style="margin:14px 0 0;"><span class="trophy-modal-keystat-icon">⭐</span>'+t.key_stat+'</div>';
   }
 
-  if(t.years && t.years.length){
+  if(t.year_groups && t.year_groups.length){
+    t.year_groups.forEach(function(g){
+      html += '<div class="trophy-modal-years-label" style="padding:14px 0 8px 0;">'+g.label+'</div>';
+      html += '<div class="trophy-years-chips" style="padding:0;">';
+      var last = g.years[g.years.length-1];
+      g.years.forEach(function(y){
+        html += '<span class="trophy-year-chip'+(y===last?' latest':'')+'">'+y+'</span>';
+      });
+      html += '</div>';
+    });
+  } else if(t.years && t.years.length){
     html += '<div class="trophy-modal-years-label" style="padding:14px 0 8px 0;">우승 연도</div>';
     html += '<div class="trophy-years-chips" style="padding:0;">';
     var lastYear = t.years[t.years.length-1];
@@ -1296,7 +1297,12 @@ function openManagerModal(enc){
   var html = '';
   // 사진 영역
   html += '<div class="mgr-modal-photo">';
-  html += '<span>👔</span>';
+  if(mgr.photo){
+    html += '<img src="'+mgr.photo+'" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">';
+    html += '<span style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:72px;">👔</span>';
+  } else {
+    html += '<span>👔</span>';
+  }
   html += '<div class="mgr-modal-photo-overlay"></div>';
   html += '</div>';
   // 헤더
