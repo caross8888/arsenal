@@ -149,12 +149,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .media-seg-btn.active{background:var(--surface3);color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.3);}
 /* ── History Tab ─────────────────────────── */
 .hist-otd-wrap{margin-bottom:16px;}
-.hist-otd-card{border-radius:14px;background:var(--surface2);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:16px 18px 18px;border:1px solid var(--border);}
+.hist-otd-card{border-radius:14px;background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:14px 16px 16px;border:1px solid rgba(212,175,55,.18);}
 .hist-otd-card:active{opacity:.88;}
 .hist-otd-tag{font-size:9px;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
-.hist-otd-date{font-size:22px;font-weight:900;color:var(--text);font-family:var(--fd);line-height:1.1;margin-bottom:4px;}
-.hist-otd-years-ago{font-size:11px;color:var(--text-dim);font-weight:600;margin-bottom:10px;}
-.hist-otd-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:6px;}
+.hist-otd-date-row{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+.hist-otd-date{font-size:20px;font-weight:900;color:#fff;font-family:var(--fd);line-height:1;}
+.hist-otd-years-ago{font-size:11px;color:rgba(255,255,255,.45);font-weight:600;}
+.hist-otd-title{font-size:13px;font-weight:700;color:#fff;line-height:1.35;margin-bottom:4px;}
 .hist-otd-summary{font-size:12px;color:var(--text-muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
 
 .hist-filter{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none;}
@@ -1083,8 +1084,10 @@ function renderHistoryNew(){
     var enc = encodeURIComponent(JSON.stringify(otdItem)).replace(/'/g, '%27');
     html += '<div class="hist-otd-wrap"><div class="hist-otd-card" onclick="openOtdModal(\'' + enc + '\')">';
     html += '<div class="hist-otd-tag">ON THIS DAY</div>';
+    html += '<div class="hist-otd-date-row">';
     html += '<div class="hist-otd-date">'+dayStr+' '+monthStr+(yr?' '+yr:'')+'</div>';
     if(yearsAgo>0) html += '<div class="hist-otd-years-ago">'+yearsAgo+'년전 오늘</div>';
+    html += '</div>';
     html += '<div class="hist-otd-title">'+otdItem.title+'</div>';
     if(otdItem.summary) html += '<div class="hist-otd-summary">'+otdItem.summary+'</div>';
     html += '</div></div>';
@@ -1261,6 +1264,17 @@ function openTrophyDetailModal(enc){
       });
       html += '</div>';
     });
+  } else if(t.years_detail && t.years_detail.length){
+    html += '<div class="trophy-modal-years-label" style="padding:14px 0 8px 0;">우승 연도</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:0;">';
+    t.years_detail.forEach(function(d, i){
+      var isLast = i === t.years_detail.length - 1;
+      html += '<div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid var(--border)'+(isLast?';border-bottom:none':'')+'">';
+      html += '<span style="font-family:var(--fd);font-size:15px;font-weight:800;color:var(--red);min-width:36px;">'+d.year+'</span>';
+      html += '<span style="font-size:12px;color:var(--text-muted);">'+d.final+'</span>';
+      html += '</div>';
+    });
+    html += '</div>';
   } else if(t.years && t.years.length){
     html += '<div class="trophy-modal-years-label" style="padding:14px 0 8px 0;">우승 연도</div>';
     html += '<div class="trophy-years-chips" style="padding:0;">';
