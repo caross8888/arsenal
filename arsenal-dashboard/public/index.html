@@ -170,6 +170,45 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hist-filter-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:6px 13px;border:1px solid var(--border);border-radius:20px;background:none;font-size:11px;font-weight:600;color:var(--text-dim);cursor:pointer;transition:all .18s;white-space:nowrap;}
 .hist-filter-btn.active{background:var(--red);color:#fff;border-color:var(--red);}
 .hist-filter-btn .hf-icon{font-size:13px;}
+.hist-nav{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.hist-nav::-webkit-scrollbar{display:none;}
+.hist-nav-btn{flex-shrink:0;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .18s;}
+.hist-nav-btn.active{color:var(--red);border-bottom-color:var(--red);}
+.hist-section{animation:fadeIn .2s ease;}
+/* Managers */
+.mgr-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding-bottom:24px;}
+.mgr-card{background:var(--card);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;}
+.mgr-card:active{transform:scale(.97);}
+.mgr-card.highlight{border-color:rgba(239,1,7,.35);box-shadow:0 0 0 1px rgba(239,1,7,.15);}
+.mgr-card-img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;}
+.mgr-card-img{width:100%;height:100%;object-fit:cover;object-position:top;}
+.mgr-card-img-ph{width:100%;height:100%;background:linear-gradient(160deg,#1a0a0a 0%,#0d0d18 100%);display:flex;align-items:center;justify-content:center;font-size:52px;}
+.mgr-card-gradient{position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 100%);}
+.mgr-card-overlay{position:absolute;bottom:0;left:0;right:0;padding:10px 10px 10px;}
+.mgr-card-period-badge{display:inline-block;font-size:9px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.3px;margin-bottom:4px;}
+.mgr-card-name{font-size:13px;font-weight:800;color:#fff;line-height:1.2;}
+.mgr-card-flag{font-size:10px;margin-left:2px;}
+.mgr-card-trophy-dot{position:absolute;top:8px;right:8px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;}
+/* Trophy Cabinet */
+.trophy-cab-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-bottom:24px;}
+.trophy-cab-card{background:var(--card);border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;border:1px solid var(--border);transition:transform .15s;}
+.trophy-cab-card:active{transform:scale(.97);}
+.trophy-cab-icon{font-size:30px;margin-bottom:6px;}
+.trophy-cab-name{font-size:11px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:4px;}
+.trophy-cab-count{font-size:22px;font-weight:900;color:var(--red);font-family:var(--fd);}
+/* Mgr Modal */
+.mgr-modal-photo{width:100%;aspect-ratio:16/9;background:linear-gradient(160deg,#1a0a0a 0%,#0d0d18 100%);display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;flex-shrink:0;}
+.mgr-modal-photo img{width:100%;height:100%;object-fit:cover;object-position:top;}
+.mgr-modal-photo-overlay{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,rgba(10,10,16,.95),transparent);}
+.mgr-modal-name{font-size:20px;font-weight:900;color:var(--text);}
+.mgr-modal-period{font-size:12px;color:var(--text-dim);margin-top:2px;}
+.mgr-modal-meta{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.mgr-modal-badge{font-size:10px;padding:3px 8px;border-radius:10px;background:var(--surface);color:var(--text-muted);font-weight:600;}
+.mgr-modal-badge.red{background:rgba(239,1,7,.15);color:var(--red);}
+.mgr-modal-bio{padding:14px 16px;font-size:13px;color:var(--text-muted);line-height:1.7;}
+.mgr-modal-trophies{padding:0 16px 20px;}
+.mgr-modal-trophies-title{font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;}
+.mgr-trophy-row{font-size:12px;color:var(--text-muted);padding:6px 0;border-bottom:1px solid var(--border);}
 
 .hist-section-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;}
 .history-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -349,9 +388,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .match-modal-overlay.open{display:flex;}
 .match-modal-sheet{background:#1a1c22;border-radius:20px 20px 0 0;width:100%;max-width:540px;max-height:92vh;overflow:hidden;animation:slideUp .28s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}
 .match-modal-inner{overflow-y:auto;flex:1;padding-bottom:32px;}
-.mm-header{display:flex;flex-direction:column;padding:16px 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;background:linear-gradient(180deg,rgba(239,1,7,.08) 0%,transparent 100%);}
+.mm-header{background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);padding:18px 16px 14px;position:relative;}
 .mm-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 14px;}
-.mm-header-title{font-size:15px;font-weight:700;color:var(--text);padding-right:32px;}
+.mm-header{display:flex;align-items:center;padding:16px 48px 16px 18px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.mm-header-title{font-size:15px;font-weight:700;color:var(--text);}
 .mm-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
 .mm-scoreboard{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px;}
 .mm-team{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0;}
@@ -513,6 +553,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <!-- MATCH DETAIL MODAL -->
 <div class="match-modal-overlay" id="matchModal" onclick="closeMatchModal(event)">
   <div class="match-modal-sheet">
+    <button class="mm-close" onclick="closeMatchModal()">&#10005;</button>
     <div class="match-modal-inner" id="matchModalContent"></div>
   </div>
 </div>
@@ -997,272 +1038,255 @@ function loadMedia(){
 }
 
 function loadHistory(){
-  var el = document.getElementById('historyContent');
   if(window._historyLoaded){ return; }
   window._historyLoaded = true;
-  var badge = document.getElementById('histBadge');
-  // history.json 로드
-  fetch('/data/history.json').then(function(r){
-    if(!r.ok) throw new Error('history.json 없음');
-    return r.json();
-  }).then(function(data){
-    badge.textContent = data.length + '개';
-    renderHistory(data);
-  }).catch(function(){
-    // 파일 없을 때 준비 중 표시
-    badge.textContent = '준비 중';
-    el.innerHTML = '<div class="loading-state" style="padding:40px;flex-direction:column;gap:12px">'+
-      '<span style="font-size:32px">⚽</span>'+
-      '<span style="color:var(--text-muted);font-size:13px">History 콘텐츠 준비 중...</span>'+
-      '<span style="color:var(--text-dim);font-size:11px">history.json을 /data/ 폴더에 추가하면 표시됩니다</span>'+
-    '</div>';
+  // 두 파일 병렬 로드
+  Promise.all([
+    fetch('/data/otd_matches.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+    fetch('/data/club_archive_trophies.json').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
+    fetch('/data/managers.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
+  ]).then(function(results){
+    window._otdData     = results[0];
+    window._archiveData = results[1];
+    window._managersData = results[2];
+    renderHistoryNew();
   });
 }
 
-var _histFilter = 'trophy';
+var _histTab = 'TROPHIES';
 
-var HIST_CAT = {
-  trophy:  { label: 'Trophies',          icon: '🏆' },
-  legend:  { label: 'Legends',           icon: '👤' },
-  moment:  { label: 'Memorable Moments', icon: '⚽' },
-  club:    { label: 'Club & Stadium',    icon: '🏟️' },
-  record:  { label: 'Records',           icon: '📈' }
+var HIST_TABS = ['TROPHIES','MANAGERS','LEGENDS','TIMELINE','MOMENTS','RECORDS','STADIUM'];
+var HIST_TAB_LABELS = {
+  TROPHIES: '🏆 TROPHIES',
+  MANAGERS: '👔 MANAGERS',
+  LEGENDS:  '⭐ LEGENDS',
+  TIMELINE: '📅 TIMELINE',
+  MOMENTS:  '⚽ MOMENTS',
+  RECORDS:  '📈 RECORDS',
+  STADIUM:  '🏟️ STADIUM'
 };
 
-var HIST_CAT_PH = {
-  trophy: '🏆', legend: '👤', moment: '⚽', club: '🏟️', record: '📈'
-};
-
-function _histDateLabel(dateStr){
-  if(!dateStr) return '';
-  var y = dateStr.slice(0,4);
-  var m = dateStr.length>=7 ? parseInt(dateStr.slice(5,7)) : null;
-  var d = dateStr.length>=10 ? parseInt(dateStr.slice(8,10)) : null;
-  var r = y+'년';
-  if(m) r += ' '+m+'월';
-  if(d) r += ' '+d+'일';
-  return r;
-}
-
-function renderHistory(data){
+function renderHistoryNew(){
   var el = document.getElementById('historyContent');
+  var html = '';
+
+  // ── On This Day 카드 (항상 상단) ──
+  var otdData = window._otdData || [];
   var today = new Date();
   var mm = String(today.getMonth()+1).padStart(2,'0');
   var dd = String(today.getDate()).padStart(2,'0');
   var todayMD = mm+'-'+dd;
+  var todayItems = otdData.filter(function(d){ return d.month_day === todayMD; });
+  var otdItem = todayItems.length
+    ? todayItems[Math.floor(Math.random()*todayItems.length)]
+    : (otdData.length ? otdData[Math.floor(Math.random()*otdData.length)] : null);
 
-  // On This Day — 오늘 날짜 항목 중 첫번째
-  // 오늘 날짜 매칭 항목 전부 수집 → 랜덤 선택
-  var todayItems = data.filter(function(d){ return (d.date||'').slice(5)===todayMD; });
-  var otdItem = null;
-  if(todayItems.length){
-    otdItem = todayItems[Math.floor(Math.random() * todayItems.length)];
-  } else {
-    otdItem = data[Math.floor(Math.random() * data.length)];
+  if(otdItem){
+    var MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    var otdMD = (otdItem.month_day||todayMD).split('-');
+    var monthStr = MONTHS[parseInt(otdMD[0])-1] || '';
+    var dayStr = parseInt(otdMD[1]) || parseInt(dd);
+    var yr = otdItem.year || 0;
+    var yearsAgo = yr ? (today.getFullYear() - yr) : 0;
+    var catPH = {'legend':'👤','moment':'⚽','club':'🏟️','record':'📈'}[otdItem.category]||'⚽';
+    var enc = encodeURIComponent(JSON.stringify(otdItem));
+    html += '<div class="hist-otd-wrap"><div class="hist-otd-card" onclick="openOtdModal(\'' + enc + '\')">'; 
+    html += '<div class="hist-otd-img-ph"><span class="hist-otd-img-ph-icon">'+catPH+'</span></div>';
+    html += '<div class="hist-otd-overlay"></div>';
+    html += '<div class="hist-otd-content">';
+    html += '<div class="hist-otd-date-row">';
+    html += '<div class="hist-otd-day">'+dayStr+'</div>';
+    html += '<div class="hist-otd-label-block">';
+    html += '<div class="hist-otd-month">'+monthStr+(yr?' '+yr:'')+'</div>';
+    html += '<div class="hist-otd-label">ON THIS DAY'+(yearsAgo>0?' · '+yearsAgo+'년 전':'')+'</div>';
+    html += '</div></div>';
+    html += '<div class="hist-otd-title">'+otdItem.title+'</div>';
+    if(otdItem.summary) html += '<div class="hist-otd-summary">'+otdItem.summary+'</div>';
+    html += '<div class="hist-otd-readmore">Read more...</div>';
+    html += '</div></div></div>';
   }
 
-  var html = '';
-
-  // ── On This Day 카드 ──
-  html += '<div class="hist-otd-wrap">';
-  html += '<div class="hist-otd-card" data-hist="'+encodeURIComponent(JSON.stringify(otdItem))+'" onclick="openHistModal(this.dataset.hist)">';
-  if(otdItem.image){
-    html += '<img class="hist-otd-img" src="'+otdItem.image+'" alt="" onerror="this.parentNode.querySelector(\'.hist-otd-img-ph\').style.display=\'flex\';this.style.display=\'none\'">';
-    html += '<div class="hist-otd-img-ph" style="display:none;position:absolute;inset:0"><span class="hist-otd-img-ph-icon">'+( HIST_CAT_PH[otdItem.category]||'⚽')+'</span></div>';
-  } else {
-    html += '<div class="hist-otd-img-ph"><span class="hist-otd-img-ph-icon">'+(HIST_CAT_PH[otdItem.category]||'⚽')+'</span></div>';
-  }
-  html += '<div class="hist-otd-overlay"></div>';
-  html += '<div class="hist-otd-content">';
-  html += '<div class="hist-otd-date-row">';
-  var otdMM = (otdItem.date||'').slice(5,7);
-  var otdDD = (otdItem.date||'').slice(8,10);
-  var otdYYYY = parseInt((otdItem.date||'').slice(0,4));
-  var MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  var monthStr = otdMM ? MONTHS[parseInt(otdMM)-1] : mm;
-  var dayStr = otdDD || dd;
-  var yearsAgo = otdYYYY ? (today.getFullYear() - otdYYYY) : 0;
-  html += '<div class="hist-otd-day">'+parseInt(dayStr)+'</div>';
-  html += '<div class="hist-otd-label-block">';
-  html += '<div class="hist-otd-month">'+monthStr+' '+otdYYYY+'</div>';
-  html += '<div class="hist-otd-label">ON THIS DAY'+(yearsAgo>0?' · '+yearsAgo+'년 전':'')+'</div>';
-  html += '</div>';
-  html += '</div>';
-  html += '<div class="hist-otd-title">'+otdItem.title+'</div>';
-  if(otdItem.summary) html += '<div class="hist-otd-summary">'+otdItem.summary+'</div>';
-  html += '<div class="hist-otd-readmore">Read more...</div>';
-  html += '</div>';
-  html += '</div></div>';
-
-  // ── 카테고리 필터 ──
-  html += '<div class="hist-filter">';
-  Object.keys(HIST_CAT).forEach(function(key){
-    var c = HIST_CAT[key];
-    html += '<button class="hist-filter-btn'+(_histFilter===key?' active':'')+'" onclick="filterHistory(\''+key+'\',this)">';
-    html += '<span class="hf-icon">'+c.icon+'</span> '+c.label;
+  // ── 탭 내비게이션 ──
+  html += '<div class="hist-nav">';
+  HIST_TABS.forEach(function(tab){
+    html += '<button class="hist-nav-btn'+(_histTab===tab?' active':'')+'" onclick="switchHistTab(\'' + tab + '\')">'; 
+    html += HIST_TAB_LABELS[tab];
     html += '</button>';
   });
   html += '</div>';
 
-  // ── TROPHY 탭: Trophy Cabinet ──
-  if(_histFilter === 'trophy'){
-    html += renderTrophyCabinet(data);
-  } else {
-    // ── 일반 탭: 2열 그리드 ──
-    var filtered = data.filter(function(d){ return d.category===_histFilter; });
-    html += '<div class="hist-section-label">ALL '+( HIST_CAT[_histFilter]?HIST_CAT[_histFilter].label.toUpperCase():_histFilter.toUpperCase() )+' · '+filtered.length+'</div>';
-    html += '<div class="history-grid">';
-    filtered.forEach(function(item){
-      var ph = HIST_CAT_PH[item.category]||'⚽';
-      var enc = encodeURIComponent(JSON.stringify(item));
-      html += '<div class="hist-card" data-hist="'+enc+'" onclick="openHistModal(this.dataset.hist)">';
-      html += '<div class="hist-card-img-wrap">';
-      if(item.image){
-        html += '<img class="hist-card-img" src="'+item.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
-        html += '<div class="hist-card-img-ph" style="display:none">'+ph+'</div>';
-      } else {
-        html += '<div class="hist-card-img-ph">'+ph+'</div>';
-      }
-      html += '<div class="hist-card-cat-icon">'+ph+'</div>';
-      html += '</div>';
-      html += '<div class="hist-card-body">';
-      html += '<div class="hist-card-title">'+item.title+'</div>';
-      html += '<div class="hist-card-year">'+((item.date||'').slice(0,4)||'')+'</div>';
-      html += '</div>';
-      html += '</div>';
-    });
-    html += '</div>';
-  }
+  // ── 탭 콘텐츠 ──
+  html += '<div class="hist-section" id="histSection">';
+  html += renderHistSection(_histTab);
+  html += '</div>';
 
   el.innerHTML = html;
-  window._historyData = data;
 }
 
-function filterHistory(cat, btn){
-  _histFilter = cat;
-  document.querySelectorAll('.hist-filter-btn').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  if(window._historyData) renderHistory(window._historyData);
+function switchHistTab(tab){
+  _histTab = tab;
+  document.querySelectorAll('.hist-nav-btn').forEach(function(b){
+    b.classList.toggle('active', b.textContent.trim() === HIST_TAB_LABELS[tab]);
+  });
+  document.getElementById('histSection').innerHTML = renderHistSection(tab);
 }
 
-function renderTrophyCabinet(data){
-  var cabinet = data.filter(function(d){ return d.category==='trophy' && d.count; });
-  var totalMajor = 0;
-  cabinet.forEach(function(t){ totalMajor += (t.count||0); });
+function renderHistSection(tab){
+  if(tab === 'TROPHIES') return renderTrophiesSection();
+  if(tab === 'MANAGERS') return renderManagersSection();
+  return '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:13px;">준비 중...</div>';
+}
 
-  var tierMap = {
-    'Premier League':'gold','First Division':'gold','FA Cup':'gold',
-    'League Cup':'silver','European':'silver','Cup Winners':'silver','Champions':'silver',
-    'Community Shield':'bronze','Inter-Cities Fairs':'bronze'
-  };
-  function getTier(title){
-    var t = 'silver';
-    Object.keys(tierMap).forEach(function(k){ if(title.indexOf(k)!==-1) t=tierMap[k]; });
-    return t;
+// ── TROPHIES 섹션 ──
+function renderTrophiesSection(){
+  var archive = window._archiveData;
+  if(!archive || !archive.trophies){
+    return '<div style="padding:40px;text-align:center;color:var(--text-dim)">로딩 중...</div>';
   }
-
-  var html = '<div class="trophy-cabinet">';
-  html += '<div class="trophy-cabinet-header">';
-  html += '<span class="trophy-cabinet-title">🏆 Trophy Cabinet</span>';
-  html += '<span class="trophy-cabinet-total">총 '+totalMajor+'회 우승</span>';
+  var trophies = archive.trophies;
+  var total = trophies.reduce(function(s,t){ return s+(t.count||0); }, 0);
+  var html = '';
+  html += '<div style="text-align:center;padding:14px 0 18px;">';
+  html += '<div style="font-size:11px;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">TOTAL MAJOR TROPHIES</div>';
+  html += '<div style="font-size:48px;font-weight:900;color:var(--red);font-family:var(--fd);">'+total+'</div>';
   html += '</div>';
-  html += '<div class="trophy-grid">';
-
-  cabinet.forEach(function(t){
-    var tier = getTier(t.title);
+  html += '<div class="trophy-cab-grid">';
+  trophies.forEach(function(t){
     var enc = encodeURIComponent(JSON.stringify(t));
-    html += '<div class="trophy-card" data-hist="'+enc+'" onclick="openTrophyModal(this.dataset.hist)">';
-    // 이미지 영역
-    html += '<div class="trophy-card-img-wrap">';
-    if(t.image){
-      html += '<img class="trophy-card-img" src="'+t.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
-      html += '<div class="trophy-card-img-ph" style="display:none">'+(t.icon||'🏆')+'</div>';
-    } else {
-      html += '<div class="trophy-card-img-ph">'+(t.icon||'🏆')+'</div>';
-    }
-    if(t.record) html += '<div class="trophy-card-cat">RECORD</div>';
-    html += '</div>';
-    // 하단 정보
-    html += '<div class="trophy-card-info">';
-    html += '<div class="trophy-card-name">'+t.title+'</div>';
-    html += '<div class="trophy-card-count-wrap">';
-    html += '<div class="trophy-card-count '+tier+'">'+t.count+'</div>';
-    html += '<div class="trophy-card-wins">회</div>';
-    html += '</div>';
-    if(t.record) html += '<div class="trophy-card-record">'+t.record+'</div>';
-    html += '</div>';
+    html += '<div class="trophy-cab-card" onclick="openTrophyDetailModal(\'' + enc + '\')">'; 
+    html += '<div class="trophy-cab-icon">'+t.icon+'</div>';
+    html += '<div class="trophy-cab-name">'+t.name+'</div>';
+    html += '<div class="trophy-cab-count">'+t.count+'</div>';
     html += '</div>';
   });
-
-  html += '</div></div>';
-
-  // count 없는 trophy 항목 (On This Day 데이터 등) — 별도 그리드
-  var extras = data.filter(function(d){ return d.category==='trophy' && !d.count; });
-  if(extras.length){
-    html += '<div class="hist-section-label" style="margin-top:16px">TROPHY MOMENTS · '+extras.length+'</div>';
-    html += '<div class="history-grid">';
-    extras.forEach(function(item){
-      var enc = encodeURIComponent(JSON.stringify(item));
-      html += '<div class="hist-card" data-hist="'+enc+'" onclick="openHistModal(this.dataset.hist)">';
-      html += '<div class="hist-card-img-wrap">';
-      if(item.image){
-        html += '<img class="hist-card-img" src="'+item.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
-        html += '<div class="hist-card-img-ph" style="display:none">🏆</div>';
-      } else {
-        html += '<div class="hist-card-img-ph">🏆</div>';
-      }
-      html += '<div class="hist-card-cat-icon">🏆</div>';
-      html += '</div>';
-      html += '<div class="hist-card-body">';
-      html += '<div class="hist-card-title">'+item.title+'</div>';
-      html += '<div class="hist-card-year">'+((item.date||'').slice(0,4)||'')+'</div>';
-      html += '</div></div>';
-    });
-    html += '</div>';
-  }
+  html += '</div>';
   return html;
 }
 
-function openTrophyModal(enc){
-  var t = JSON.parse(decodeURIComponent(enc));
-  var mc = document.getElementById('matchModalContent');
-  var tierMap = {'Premier League':'gold','First Division':'gold','FA Cup':'gold','League Cup':'silver','European':'silver','Cup Winners':'silver','Champions':'silver','Community Shield':'bronze','Inter-Cities Fairs':'bronze'};
-  var tier = 'silver';
-  Object.keys(tierMap).forEach(function(k){ if(t.title.indexOf(k)!==-1) tier=tierMap[k]; });
-  var html = '';
-  html += '<div class="mm-header"><span class="mm-header-title">'+t.title+'</span><button class="mm-close" onclick="closeMatchModal()">&#10005;</button></div>';
-  html += '<div class="trophy-modal-top">';
-  html += '<div class="trophy-modal-img-wrap">';
-  if(t.image){
-    html += '<img class="trophy-modal-img" src="'+t.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
-    html += '<div class="trophy-modal-img-ph" style="display:none">'+(t.icon||'🏆')+'</div>';
-  } else {
-    html += '<div class="trophy-modal-img-ph">'+(t.icon||'🏆')+'</div>';
+// ── MANAGERS 섹션 ──
+function renderManagersSection(){
+  var managers = window._managersData || [];
+  if(!managers.length){
+    return '<div style="padding:40px;text-align:center;color:var(--text-dim)">로딩 중...</div>';
+  }
+  var html = '<div class="mgr-grid">';
+  managers.forEach(function(mgr){
+    var enc = encodeURIComponent(JSON.stringify(mgr));
+    html += '<div class="mgr-card'+(mgr.highlight?' highlight':'')+'" onclick="openManagerModal(\'' + enc + '\')">'; 
+    html += '<div class="mgr-card-img-wrap">';
+    html += '<div class="mgr-card-img-ph">👔</div>';
+    html += '<div class="mgr-card-gradient"></div>';
+    html += '<div class="mgr-card-overlay">';
+    html += '<div class="mgr-card-period-badge">'+mgr.period+' <span class="mgr-card-flag">'+(mgr.nationality||'')+'</span></div>';
+    html += '<div class="mgr-card-name">'+mgr.name+'</div>';
+    html += '</div>';
+    if(mgr.trophies && mgr.trophies.length){
+      html += '<div class="mgr-card-trophy-dot">🏆'+mgr.trophies.length+'</div>';
+    }
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+// ── OTD 모달 ──
+function openOtdModal(enc){
+  var item;
+  try{ item = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
+  var modal = document.getElementById('matchModal');
+  var content = document.getElementById('matchModalContent');
+  var catPH = {'legend':'👤','moment':'⚽','club':'🏟️','record':'📈'}[item.category]||'⚽';
+  var MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  var mArr = (item.month_day||'').split('-');
+  var dateStr = item.year ? item.year+'년 '+MONTHS_KO[parseInt(mArr[0]||1)-1]+' '+parseInt(mArr[1]||1)+'일' : '';
+  var html = '<div class="mm-header">';
+  html += '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>';
+  html += '<div style="font-size:32px;margin-bottom:8px;">'+catPH+'</div>';
+  html += '<div style="font-size:16px;font-weight:800;color:var(--text);">'+item.title+'</div>';
+  if(dateStr) html += '<div style="font-size:11px;color:var(--text-dim);margin-top:4px;">'+dateStr+'</div>';
+  html += '</div>';
+  html += '<div style="padding:16px;">';
+  if(item.summary) html += '<p style="font-size:13px;color:var(--text-muted);line-height:1.7;margin:0;">'+item.summary+'</p>';
+  if(item.headline) html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(239,1,7,.08);border-left:3px solid var(--red);border-radius:4px;font-size:12px;font-weight:700;color:var(--red);">'+item.headline+'</div>';
+  html += '</div>';
+  content.innerHTML = html;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  window.history.pushState({modal:'hist'},'','#hist-modal');
+}
+
+// ── 트로피 상세 모달 ──
+function openTrophyDetailModal(enc){
+  var t;
+  try{ t = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
+  var modal = document.getElementById('matchModal');
+  var content = document.getElementById('matchModalContent');
+  var html = '<div class="mm-header">';
+  html += '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>';
+  html += '<div style="font-size:32px;margin-bottom:6px;">'+t.icon+'</div>';
+  html += '<div style="font-size:17px;font-weight:800;color:var(--text);">'+t.name+'</div>';
+  html += '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+t.name_en+'</div>';
+  html += '<div style="font-size:36px;font-weight:900;color:var(--red);font-family:var(--fd);margin-top:8px;">'+t.count+'회 우승</div>';
+  if(t.note) html += '<div style="font-size:11px;color:var(--text-dim);margin-top:4px;">'+t.note+'</div>';
+  html += '</div>';
+  html += '<div style="padding:14px 16px 20px;">';
+  if(t.years && t.years.length){
+    html += '<div style="font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;">우승 연도</div>';
+    t.years.forEach(function(y){
+      html += '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start;">';
+      html += '<div style="font-size:15px;font-weight:800;color:var(--red);font-family:var(--fd);min-width:36px;">'+y.year+'</div>';
+      html += '<div style="flex:1;">';
+      if(y.manager) html += '<div style="font-size:11px;color:var(--text-muted);">👔 '+y.manager+'</div>';
+      if(y.final) html += '<div style="font-size:11px;color:var(--text-muted);">🏆 결승: '+y.final+'</div>';
+      if(y.note) html += '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+y.note+'</div>';
+      html += '</div></div>';
+    });
   }
   html += '</div>';
-  html += '<div class="trophy-modal-count-block">';
-  html += '<div class="trophy-modal-count '+tier+'">'+t.count+'</div>';
-  html += '<div class="trophy-modal-wins-label">WINS</div>';
-  html += '</div></div>';
-  html += '<div class="trophy-modal-title">'+t.title+'</div>';
-  if(t.summary) html += '<div class="trophy-modal-summary">'+t.summary+'</div>';
-  if(t.content) html += '<div class="trophy-modal-body">'+t.content+'</div>';
-  if(t.key_stat) html += '<div class="trophy-modal-keystat"><span class="trophy-modal-keystat-icon">💡</span>'+t.key_stat+'</div>';
-  if(t.years && t.years.length){
-    var latestYear = t.years[t.years.length-1];
-    html += '<div class="trophy-modal-years-label">Winning Years</div>';
-    html += '<div class="trophy-years-chips">';
-    t.years.forEach(function(y){ html += '<span class="trophy-year-chip'+(y===latestYear?' latest':'')+'">'+y+'</span>'; });
-    html += '</div>';
-  }
-  if(t.link){
-    html += '<div style="padding:0 16px 20px">';
-    html += '<a class="hist-modal-link" href="'+t.link+'" target="_blank" rel="noopener" style="display:inline-block;padding:10px 20px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;text-decoration:none;font-size:12px;color:var(--text)">Link to arsenal.com</a>';
-    html += '</div>';
-  }
-  mc.innerHTML = html;
+  content.innerHTML = html;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  window.history.pushState({modal:'hist'},'','#hist-modal');
+}
+
+// ── 감독 상세 모달 ──
+function openManagerModal(enc){
+  var mgr;
+  try{ mgr = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
   var modal = document.getElementById('matchModal');
-  modal.style.display='flex';
+  var content = document.getElementById('matchModalContent');
+  var games = mgr.games ? mgr.games+'경기' : '기록 없음';
+  var html = '';
+  // 사진 영역
+  html += '<div class="mgr-modal-photo">';
+  html += '<span>👔</span>';
+  html += '<div class="mgr-modal-photo-overlay"></div>';
+  html += '</div>';
+  // 헤더
+  html += '<div class="mm-header">';
+  html += '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>';
+  html += '<div class="mgr-modal-name">'+(mgr.nationality||'')+'  '+mgr.name+'</div>';
+  html += '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+mgr.name_en+'</div>';
+  html += '<div class="mgr-modal-period">'+mgr.period+'</div>';
+  html += '<div class="mgr-modal-meta">';
+  html += '<span class="mgr-modal-badge">⚽ '+games+'</span>';
+  if(mgr.trophies && mgr.trophies.length) html += '<span class="mgr-modal-badge red">🏆 '+mgr.trophies.length+'회 우승</span>';
+  html += '</div></div>';
+  // 바이오
+  html += '<div class="mgr-modal-bio">'+mgr.bio+'</div>';
+  // 트로피
+  if(mgr.trophies && mgr.trophies.length){
+    html += '<div class="mgr-modal-trophies">';
+    html += '<div class="mgr-modal-trophies-title">주요 트로피</div>';
+    mgr.trophies.forEach(function(tr){
+      html += '<div class="mgr-trophy-row">🏆 '+tr+'</div>';
+    });
+    html += '</div>';
+  }
+  content.innerHTML = html;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
   window.history.pushState({modal:'hist'},'','#hist-modal');
 }
 
@@ -1272,7 +1296,7 @@ function openHistModal(enc){
   var ph = HIST_CAT_PH[item.category]||'⚽';
   var catInfo = HIST_CAT[item.category]||{label:item.category,icon:ph};
   var html = '';
-  html += '<div class="mm-header"><span class="mm-header-title">'+(catInfo.icon||ph)+' '+catInfo.label+'</span><button class="mm-close" onclick="closeMatchModal()">&#10005;</button></div>';
+  html += '<div class="mm-header"><span class="mm-header-title">'+(catInfo.icon||ph)+' '+catInfo.label+'</span></div>';
   // 이미지
   if(item.image){
     html += '<img class="hist-modal-img" src="'+item.image+'" alt="" onerror="this.nextSibling.style.display=\'flex\';this.style.display=\'none\'">';
@@ -1291,7 +1315,7 @@ function openHistModal(enc){
   html += '</div>';
   mc.innerHTML = html;
   var modal = document.getElementById('matchModal');
-  modal.classList.add('open');
+  modal.style.display='flex';
   window.history.pushState({modal:'hist'},'','#hist-modal');
 }
 
@@ -1402,19 +1426,19 @@ function openMatchModal(m){
   // 로딩 상태
   content.innerHTML=
     '<div class="mm-header">'+
+      '<div class="mm-handle"></div>'+
       '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>'+
       '<div class="mm-scoreboard">'+
         '<div class="mm-team">'+
           (m.homeTeam.crest?'<img class="mm-crest" src="'+m.homeTeam.crest+'" onerror="this.style.display=\'none\'">':'')+
           '<div class="mm-team-name">'+(m.homeTeam.shortName||m.homeTeam.name||'')+'</div>'+
         '</div>'+
-        '<div class="mm-score">'+(m.score.fullTime.home!=null?m.score.fullTime.home:'-')+' : '+(m.score.fullTime.away!=null?m.score.fullTime.away:'-')+'</div>'+
+        '<div class="mm-score">'+(m.score.fullTime.home||0)+' : '+(m.score.fullTime.away||0)+'</div>'+
         '<div class="mm-team">'+
           (m.awayTeam.crest?'<img class="mm-crest" src="'+m.awayTeam.crest+'" onerror="this.style.display=\'none\'">':'')+
           '<div class="mm-team-name">'+(m.awayTeam.shortName||m.awayTeam.name||'')+'</div>'+
         '</div>'+
       '</div>'+
-      '<div class="mm-match-date">'+formatDate(m.utcDate||m.date,m.tbd)+'</div>'+
       '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
     '</div>'+
     '<div style="padding:24px;text-align:center"><div class="spinner"></div></div>';
@@ -1747,8 +1771,7 @@ function mmSwitchTab(side){
 function closeMatchModal(e){
   if(e && e.target !== document.getElementById('matchModal')) return;
   var overlay=document.getElementById('matchModal');
-  overlay.classList.remove('open');
-  overlay.style.display='';
+  overlay.style.display='none';
   document.body.style.overflow='';
   var h = location.hash;
   if(h.includes('match') || h.includes('hist-modal')) window.history.replaceState(null,'',location.href.split('#')[0]);
@@ -1791,8 +1814,8 @@ function showSec(id,btn){
     if(playerModal && playerModal.classList.contains('open')){
       closePlayerModal(true); return;
     }
-    if(matchModal && matchModal.classList.contains('open')){
-      matchModal.classList.remove('open');
+    if(matchModal && matchModal.style.display==='flex'){
+      matchModal.style.display='none';
       document.body.style.overflow=''; return;
     }
     var hash = location.hash.replace('#','').trim();
