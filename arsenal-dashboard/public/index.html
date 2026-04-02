@@ -270,7 +270,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .trophy-modal-keystat-icon{flex-shrink:0;font-size:13px;}
 .trophy-modal-years-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);padding:0 16px 8px;}
 .trophy-years-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 24px;}
-.trophy-year-chip{padding:4px 10px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text);}
+.trophy-year-chip{padding:5px 12px;border-radius:6px;background:rgba(239,1,7,.08);border:1px solid rgba(239,1,7,.2);font-size:12px;font-weight:700;color:var(--text);font-family:var(--fd);}
 .trophy-year-chip.latest{background:var(--red);border-color:var(--red);color:#fff;}
 
 .news-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-decoration:none;display:block;color:inherit;-webkit-tap-highlight-color:transparent}
@@ -1173,7 +1173,7 @@ function renderManagersSection(){
     if(mgr.photo){
       html += '<img src="'+mgr.photo+'" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;position:absolute;inset:0;" onerror="this.style.display=\'none\'">';
     }
-    html += '<div class="mgr-card-img-ph"'+(mgr.photo?' style="display:none"':'')+'>👔</div>';
+    html += '<img src="/data/history_images/manager_default.jpg" style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;'+(mgr.photo?'display:none':'')+'" class="mgr-card-img-ph">';
     html += '<div class="mgr-card-gradient"></div>';
     html += '<div class="mgr-card-overlay">';
     html += '<div class="mgr-card-period-badge">'+mgr.period+'</div>';
@@ -1257,10 +1257,12 @@ function openTrophyDetailModal(enc){
   if(t.year_groups && t.year_groups.length){
     t.year_groups.forEach(function(g){
       html += '<div class="trophy-modal-years-label" style="padding:14px 0 8px 0;">'+g.label+'</div>';
-      html += '<div class="trophy-years-chips" style="padding:0;">';
-      var last = g.years[g.years.length-1];
-      g.years.forEach(function(y){
-        html += '<span class="trophy-year-chip'+(y===last?' latest':'')+'">'+y+'</span>';
+      html += '<div style="display:flex;flex-direction:column;gap:0;">';
+      g.years.forEach(function(y, i){
+        var isLast = i === g.years.length - 1;
+        html += '<div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid var(--border)'+(isLast?';border-bottom:none':'')+'">';
+        html += '<span style="font-family:var(--fd);font-size:15px;font-weight:800;color:var(--red);min-width:52px;">'+y+'</span>';
+        html += '</div>';
       });
       html += '</div>';
     });
@@ -1307,10 +1309,9 @@ function openManagerModal(enc){
   // 사진 영역
   html += '<div class="mgr-modal-photo">';
   if(mgr.photo){
-    html += '<img src="'+mgr.photo+'" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">';
-    html += '<span style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:72px;">👔</span>';
+    html += '<img src="'+mgr.photo+'" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;" onerror="this.src=\'/data/history_images/manager_default.jpg\';this.style.objectPosition=\'center\'">';
   } else {
-    html += '<span>👔</span>';
+    html += '<img src="/data/history_images/manager_default.jpg" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">';
   }
   html += '<div class="mgr-modal-photo-overlay"></div>';
   html += '</div>';
