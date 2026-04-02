@@ -396,13 +396,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-header{display:flex;flex-direction:column;align-items:center;padding:16px 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .mm-header-title{font-size:15px;font-weight:700;color:var(--text);}
 .mm-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
-.mm-scoreboard{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px;}
-.mm-team{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;min-width:0;}
-.mm-crest{width:44px;height:44px;object-fit:contain;border-radius:50%;background:rgba(255,255,255,.05);padding:3px;}
-.mm-team-name{font-size:11px;font-weight:700;text-align:center;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;}
-.mm-score{font-family:var(--fd);font-size:42px;font-weight:900;color:#fff;letter-spacing:2px;text-align:center;min-width:80px;}
-.mm-comp-badge{text-align:center;margin-top:10px;}
-.mm-comp-tag{display:inline-block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.08);color:var(--text-muted);border:1px solid var(--border);}
+/* Match modal 3-col header */
+.mm-scoreboard{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:16px 14px 14px;width:100%;box-sizing:border-box;}
+.mm-team{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;}
+.mm-team.away{align-items:center;}
+.mm-crest{width:52px;height:52px;object-fit:contain;}
+.mm-team-name{font-size:11px;font-weight:800;text-align:center;color:var(--text);line-height:1.25;max-width:90px;}
+.mm-center-col{display:flex;flex-direction:column;align-items:center;gap:5px;padding:0 6px;}
+.mm-score{font-family:var(--fd);font-size:38px;font-weight:900;color:#fff;letter-spacing:2px;line-height:1;}
+.mm-center-meta{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;}
+.mm-meta-row{font-size:9px;color:var(--text-dim);text-align:center;white-space:nowrap;letter-spacing:.3px;}
+.mm-meta-date{font-size:10px;font-weight:700;color:var(--text-muted);}
+.mm-meta-comp{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.07);color:var(--text-dim);border:1px solid var(--border);margin-top:1px;}
 .mm-section{padding:14px 16px 0;}
 .mm-section-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
 .mm-events{display:flex;flex-direction:column;gap:4px;}
@@ -414,8 +419,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-event-icon{font-size:14px;flex-shrink:0;}
 .mm-event-player{font-size:12px;font-weight:700;color:var(--text);flex:1;}
 .mm-event.away .mm-event-player{text-align:right;}
-.mm-venue{text-align:center;font-size:10px;color:var(--text-dim);margin-top:6px;}
-.mm-match-date{text-align:center;font-size:11px;color:var(--text-muted);margin-top:4px;}
+.mm-comp-badge{display:none;}
+.mm-venue{display:none;}
+.mm-match-date{display:none;}
 .mm-events-table{width:100%;border-collapse:collapse;table-layout:fixed;}
 .mm-events-table td{padding:4px 0;vertical-align:middle;}
 .mm-evt-home{width:calc(50% - 1px);text-align:right;}
@@ -1578,21 +1584,26 @@ function openMatchModal(m){
 
   // 로딩 상태
   content.innerHTML=
-    '<div class="mm-header">'+
-      '<div class="mm-handle"></div>'+
+    '<div class="mm-header" style="padding:0;position:relative;">'+
+      '<div class="mm-handle" style="margin:10px auto 0;"></div>'+
       '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>'+
       '<div class="mm-scoreboard">'+
         '<div class="mm-team">'+
           (m.homeTeam.crest?'<img class="mm-crest" src="'+m.homeTeam.crest+'" onerror="this.style.display=\'none\'">':'')+
           '<div class="mm-team-name">'+(m.homeTeam.shortName||m.homeTeam.name||'')+'</div>'+
         '</div>'+
-        '<div class="mm-score">'+(m.score.fullTime.home||0)+' : '+(m.score.fullTime.away||0)+'</div>'+
-        '<div class="mm-team">'+
+        '<div class="mm-center-col">'+
+          '<div class="mm-meta-date">'+formatDate(m.utcDate||m.date,m.tbd)+'</div>'+
+          '<div class="mm-score">'+(m.score.fullTime.home||0)+' : '+(m.score.fullTime.away||0)+'</div>'+
+          '<div class="mm-center-meta">'+
+            (m.competition&&m.competition.name?'<span class="mm-meta-comp">'+(m.competition.name)+'</span>':'')+
+          '</div>'+
+        '</div>'+
+        '<div class="mm-team away">'+
           (m.awayTeam.crest?'<img class="mm-crest" src="'+m.awayTeam.crest+'" onerror="this.style.display=\'none\'">':'')+
           '<div class="mm-team-name">'+(m.awayTeam.shortName||m.awayTeam.name||'')+'</div>'+
         '</div>'+
       '</div>'+
-      '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
     '</div>'+
     '<div style="padding:24px;text-align:center"><div class="spinner"></div></div>';
 
@@ -1629,18 +1640,34 @@ function renderMatchModal(content, m, data){
   var STAT_LABELS={possessionPct:'점유율',totalShots:'슈팅',shotsOnTarget:'유효슈팅',passingAccuracy:'패스성공',cornerKicks:'코너킥',offsides:'오프사이드',yellowCards:'경고',redCards:'퇴장'};
   var scoreColor=isArsHome?(h.score>a.score?'#22C55E':h.score===a.score?'#F59E0B':'#EF4444'):(a.score>h.score?'#22C55E':a.score===h.score?'#F59E0B':'#EF4444');
 
+  var dateStr = formatDate(m.utcDate||m.date, m.tbd);
+  var compName = (m.competition&&m.competition.name)||'';
+  var venueStr = data.venue||'';
   var html=
-    '<div class="mm-header">'+
-      '<div class="mm-handle"></div>'+
+    '<div class="mm-header" style="padding:0;position:relative;">'+
+      '<div class="mm-handle" style="margin:10px auto 0;"></div>'+
       '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>'+
       '<div class="mm-scoreboard">'+
-        '<div class="mm-team">'+(h.crest?'<img class="mm-crest" src="'+h.crest+'" onerror="this.style.display=&quot;none&quot;">':'')+'<div class="mm-team-name">'+(h.name||'')+'</div></div>'+
-        '<div class="mm-score" style="color:'+scoreColor+'">'+h.score+' : '+a.score+'</div>'+
-        '<div class="mm-team">'+(a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display=&quot;none&quot;">':'')+'<div class="mm-team-name">'+(a.name||'')+'</div></div>'+
+        // 1열: 홈팀
+        '<div class="mm-team">'+
+          (h.crest?'<img class="mm-crest" src="'+h.crest+'" onerror="this.style.display=\'none\'">':'')+
+          '<div class="mm-team-name">'+(h.name||'')+'</div>'+
+        '</div>'+
+        // 2열: 날짜·스코어·경기장·대회
+        '<div class="mm-center-col">'+
+          '<div class="mm-meta-date">'+dateStr+'</div>'+
+          '<div class="mm-score" style="color:'+scoreColor+'">'+h.score+' : '+a.score+'</div>'+
+          '<div class="mm-center-meta">'+
+            (venueStr?'<div class="mm-meta-row">&#128205; '+venueStr+'</div>':'')+
+            (compName?'<span class="mm-meta-comp">'+compName+'</span>':'')+
+          '</div>'+
+        '</div>'+
+        // 3열: 어웨이팀
+        '<div class="mm-team away">'+
+          (a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display=\'none\'">':'')+
+          '<div class="mm-team-name">'+(a.name||'')+'</div>'+
+        '</div>'+
       '</div>'+
-      '<div class="mm-match-date">'+formatDate(m.utcDate||m.date,m.tbd)+'</div>'+
-      (data.venue?'<div class="mm-venue">📍 '+data.venue+'</div>':'')+
-      '<div class="mm-comp-badge"><span class="mm-comp-tag">'+(m.competition&&m.competition.name||'')+'</span></div>'+
     '</div>';
 
   // 이벤트 (좌우 2컬럼)
