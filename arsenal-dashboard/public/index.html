@@ -168,6 +168,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hist-nav-btn{flex-shrink:0;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .18s;}
 .hist-nav-btn.active{color:var(--red);border-bottom-color:var(--red);}
 .hist-section{animation:fadeIn .2s ease;}
+/* Legends */
+.lgd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-bottom:24px;}
+.lgd-card{background:var(--card);border-radius:12px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;}
+.lgd-card:active{transform:scale(.97);}
+.lgd-card-img-wrap{position:relative;width:100%;aspect-ratio:2/3;overflow:hidden;}
+.lgd-card-gradient{position:absolute;bottom:0;left:0;right:0;height:65%;background:linear-gradient(to top,rgba(0,0,0,.9) 0%,transparent 100%);}
+.lgd-card-rank{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.65);color:var(--gold);font-size:9px;font-weight:800;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(212,175,55,.4);}
+.lgd-card-overlay{position:absolute;bottom:0;left:0;right:0;padding:8px 8px 9px;}
+.lgd-card-name{font-size:11px;font-weight:800;color:#fff;line-height:1.2;}
+.lgd-card-sub{font-size:9px;color:rgba(255,255,255,.5);margin-top:2px;letter-spacing:.2px;}
 /* Managers */
 .mgr-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding-bottom:24px;}
 .mgr-card{background:var(--card);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;}
@@ -1037,11 +1047,13 @@ function loadHistory(){
   Promise.all([
     fetch('/data/otd_matches.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
     fetch('/data/club_archive_trophies.json').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
-    fetch('/data/managers.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
+    fetch('/data/managers.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+    fetch('/data/legends.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
   ]).then(function(results){
-    window._otdData     = results[0];
-    window._archiveData = results[1];
+    window._otdData      = results[0];
+    window._archiveData  = results[1];
     window._managersData = results[2];
+    window._legendsData  = results[3];
     renderHistoryNew();
   });
 }
@@ -1121,6 +1133,7 @@ function switchHistTab(tab){
 function renderHistSection(tab){
   if(tab === 'TROPHIES') return renderTrophiesSection();
   if(tab === 'MANAGERS') return renderManagersSection();
+  if(tab === 'LEGENDS')  return renderLegendsSection();
   return '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:13px;">준비 중...</div>';
 }
 
@@ -1184,6 +1197,93 @@ function renderManagersSection(){
   });
   html += '</div>';
   return html;
+}
+
+// ── LEGENDS 섹션 ──
+function renderLegendsSection(){
+  var legends = window._legendsData || [];
+  if(!legends.length){
+    return '<div style="padding:40px;text-align:center;color:var(--text-dim)">로딩 중...</div>';
+  }
+  var html = '<div class="lgd-grid">';
+  legends.forEach(function(lgd){
+    var enc = encodeURIComponent(JSON.stringify(lgd)).replace(/'/g, '%27');
+    var nameParts = lgd.name.split(' ');
+    var firstName = nameParts[0];
+    var lastName  = nameParts.slice(1).join(' ');
+    html += '<div class="lgd-card" onclick="openLegendModal(\'' + enc + '\')">';
+    html += '<div class="lgd-card-img-wrap">';
+    if(lgd.photo){
+      html += '<img src="'+lgd.photo+'" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">';
+      html += '<div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:linear-gradient(160deg,#1a0a0a,#0d0d18);font-size:36px;">&#9733;</div>';
+    } else {
+      html += '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#1a0a0a,#0d0d18);font-size:36px;">&#9733;</div>';
+    }
+    html += '<div class="lgd-card-gradient"></div>';
+    html += '<div class="lgd-card-rank">'+lgd.rank+'</div>';
+    html += '<div class="lgd-card-overlay">';
+    html += '<div class="lgd-card-name">'+firstName+'<br>'+lastName+'</div>';
+    html += '<div class="lgd-card-sub">'+lgd.position+' &middot; '+lgd.years+'</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function openLegendModal(enc){
+  var lgd;
+  try{ lgd = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
+  var modal   = document.getElementById('matchModal');
+  var content = document.getElementById('matchModalContent');
+
+  var html = '<div class="mm-header" style="padding:0;">';
+  html += '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>';
+  // 사진 헤더
+  html += '<div style="width:100%;height:220px;overflow:hidden;position:relative;">';
+  if(lgd.photo){
+    html += '<img src="'+lgd.photo+'" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">';
+    html += '<div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(239,1,7,.18),rgba(212,175,55,.12));font-size:72px;">&#9733;</div>';
+  } else {
+    html += '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(239,1,7,.18),rgba(212,175,55,.12));font-size:72px;">&#9733;</div>';
+  }
+  // 랭크 뱃지 오버레이
+  html += '<div style="position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(to top,rgba(0,0,0,.85),transparent);"></div>';
+  html += '<div style="position:absolute;top:12px;left:14px;background:var(--red);color:#fff;font-size:10px;font-weight:900;padding:3px 8px;border-radius:10px;letter-spacing:.5px;">#'+lgd.rank+'</div>';
+  html += '</div>';
+  // 이름/기본정보
+  html += '<div style="padding:14px 16px 10px;width:100%;box-sizing:border-box;">';
+  html += '<div style="font-size:22px;font-weight:900;color:var(--text);line-height:1.15;">'+lgd.name+'</div>';
+  html += '<div style="margin-top:5px;display:flex;gap:10px;align-items:center;">';
+  html += '<span style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.5px;">'+lgd.position+'</span>';
+  html += '<span style="font-size:10px;color:var(--text-dim);">'+lgd.nationality+'</span>';
+  html += '<span style="font-size:10px;color:var(--text-dim);">'+lgd.years+'</span>';
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+  // 스탯 + 바이오
+  html += '<div style="padding:0 16px 28px;">';
+  // 스탯 박스
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">';
+  html += '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">';
+  html += '<div style="font-size:24px;font-weight:900;color:var(--text);">'+lgd.apps+'</div>';
+  html += '<div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-top:3px;">출장</div>';
+  html += '</div>';
+  html += '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">';
+  html += '<div style="font-size:24px;font-weight:900;color:var(--red);">'+lgd.goals+'</div>';
+  html += '<div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);margin-top:3px;">득점</div>';
+  html += '</div>';
+  html += '</div>';
+  if(lgd.bio){
+    html += '<p style="font-size:13px;color:var(--text-muted);line-height:1.75;margin:0;">'+lgd.bio+'</p>';
+  }
+  html += '</div>';
+
+  content.innerHTML = html;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  window.history.pushState({modal:'hist'},'','#hist-modal');
 }
 
 // ── OTD 모달 ──
