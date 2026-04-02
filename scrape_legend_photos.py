@@ -19,7 +19,7 @@ import json, os, re, sys, shutil, urllib.parse
 BASE       = os.path.dirname(os.path.abspath(__file__))
 LEGENDS_JSON = os.path.join(BASE, "arsenal-dashboard", "public", "data", "legends.json")
 OUT_DIR    = os.path.join(BASE, "arsenal-dashboard", "public", "data", "history_images", "legends")
-RAW_DIR    = os.path.join(OUT_DIR, "raw")
+RAW_DIR    = os.path.join(BASE, "arsenal-dashboard", "public", "data", "legends_raw")
 
 def load_legends():
     with open(LEGENDS_JSON, encoding="utf-8") as f:
@@ -34,7 +34,7 @@ def cmd_list():
     print("=" * 70)
     print("Arsenal Legends - Fotmob Search URLs")
     print("=" * 70)
-    print("Save each image as   arsenal-dashboard/public/data/history_images/legends/raw/<rank>.jpg")
+    print("Save each image as   public/data/legends_raw/<rank>.jpg  (e.g. 1.jpg, 23.jpg)")
     print("")
     for lgd in legends:
         rank = lgd["rank"]
@@ -48,7 +48,7 @@ def cmd_list():
     txt_path = os.path.join(BASE, "legend_fotmob_urls.txt")
     with open(txt_path, "w", encoding="utf-8") as f:
         f.write("Arsenal Legends - Fotmob Search URLs\n")
-        f.write("Save each image as: raw/<rank>.jpg  (e.g. raw/1.jpg)\n\n")
+        f.write("Save each image as: arsenal-dashboard/public/data/legends_raw/<rank>.jpg\n\n")
         for lgd in legends:
             f.write("[{:>2}] {:<30} https://www.fotmob.com/search?term={}\n".format(
                 lgd["rank"], lgd["name"], urllib.parse.quote(lgd["name"])))
@@ -65,7 +65,7 @@ def cmd_apply():
 
     if not raw_files:
         print("No files found in:", RAW_DIR)
-        print("Put images there named <rank>.jpg  (e.g. 1.jpg, 23.jpg)")
+        print("Save fotmob images there named <rank>.jpg  (e.g. 1.jpg, 23.jpg)")
         return
 
     updated = 0
