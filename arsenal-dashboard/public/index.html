@@ -1245,9 +1245,9 @@ function openLegendModal(enc){
   var content = document.getElementById('matchModalContent');
 
   var html = '<div class="mm-header" style="padding:0;">';
-  html += '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>';
   // 사진 헤더
   html += '<div style="width:100%;height:220px;overflow:hidden;position:relative;">';
+  html += '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>';
   if(lgd.photo){
     html += '<img src="'+lgd.photo+'" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">';
     html += '<div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(239,1,7,.18),rgba(212,175,55,.12));font-size:72px;">&#9733;</div>';
@@ -1420,10 +1420,10 @@ function openManagerModal(enc){
     html += '<img src="/data/history_images/manager_default.jpg" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">';
   }
   html += '<div class="mgr-modal-photo-overlay"></div>';
+  html += '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>';
   html += '</div>';
   // 헤더
   html += '<div class="mm-header">';
-  html += '<button class="mm-close" onclick="closeMatchModal()">&#10005;</button>';
   html += '<div class="mgr-modal-name">'+mgr.name+'</div>';
   html += '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">'+mgr.name_en+'</div>';
   html += '<div class="mgr-modal-period">'+mgr.period+'</div>';
