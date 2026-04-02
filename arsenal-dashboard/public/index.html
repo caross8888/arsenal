@@ -169,7 +169,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hist-nav-btn.active{color:var(--red);border-bottom-color:var(--red);}
 .hist-section{animation:fadeIn .2s ease;}
 /* Legends */
-.lgd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-bottom:24px;}
+.lgd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-bottom:24px;}
 .lgd-card{background:var(--card);border-radius:12px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;}
 .lgd-card:active{transform:scale(.97);}
 .lgd-card-img-wrap{position:relative;width:100%;aspect-ratio:2/3;overflow:hidden;}
@@ -178,6 +178,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .lgd-card-overlay{position:absolute;bottom:0;left:0;right:0;padding:8px 8px 9px;}
 .lgd-card-name{font-size:11px;font-weight:800;color:#fff;line-height:1.2;}
 .lgd-card-sub{font-size:9px;color:rgba(255,255,255,.5);margin-top:2px;letter-spacing:.2px;}
+.lgd-section{margin-top:22px;}
+.lgd-section-title{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(239,1,7,.2);}
+.lgd-section-body{font-size:13px;color:var(--text-muted);line-height:1.8;margin:0;}
+.lgd-section-body strong{color:var(--gold);font-weight:800;}
 /* Managers */
 .mgr-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding-bottom:24px;}
 .mgr-card{background:var(--card);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;}
@@ -1284,6 +1288,14 @@ function openLegendModal(enc){
   if(lgd.bio){
     html += '<p style="font-size:13px;color:var(--text-muted);line-height:1.75;margin:0;">'+lgd.bio+'</p>';
   }
+  if(lgd.sections && lgd.sections.length){
+    lgd.sections.forEach(function(s){
+      html += '<div class="lgd-section">';
+      html += '<div class="lgd-section-title">'+s.title+'</div>';
+      html += '<p class="lgd-section-body">'+s.body+'</p>';
+      html += '</div>';
+    });
+  }
   html += '</div>';
 
   content.innerHTML = html;
@@ -1332,11 +1344,22 @@ function openTrophyDetailModal(enc){
   var modal = document.getElementById('matchModal');
   var content = document.getElementById('matchModalContent');
 
+  var TROPHY_MODAL_IMAGES={
+    'trophy_pl':            'https://www.arsenal.com/sites/default/files/styles/large_16x9/public/images/champions_2004.jpg?h=6dff888f&auto=webp&itok=K03lQk1O',
+    'trophy_first_division':'https://www.arsenal.com/sites/default/files/styles/large_16x9/public/images/champions_2004.jpg?h=6dff888f&auto=webp&itok=K03lQk1O',
+    'trophy_facup':         'https://www.arsenal.com/sites/default/files/styles/large/public/images/fa-cup-winners-2020.png?auto=webp&itok=jRh1OpH6',
+    'trophy_leaguecup':     'https://www.arsenal.com/sites/default/files/styles/large/public/images/leaguecup_1993_2.jpg?auto=webp&itok=hXH5eDBC',
+    'trophy_fairs':         'https://www.arsenal.com/sites/default/files/styles/large/public/images/fairs_cup_mee_0.jpg?auto=webp&itok=GAnzvk1U',
+    'trophy_cwc':           'https://www.arsenal.com/sites/default/files/styles/large/public/images/cupwinnerscup_1994.jpg?auto=webp&itok=nvMBBf2e',
+    'trophy_communityshield':'https://www.arsenal.com/sites/default/files/styles/large/public/images/community-shield-lift-2023.png?auto=webp&itok=VTGQrvwH'
+  };
+  var modalImg = TROPHY_MODAL_IMAGES[t.id] || t.image;
   var html = '<div class="mm-header" style="padding:0;">';
   // 이미지 or 아이콘 헤더
-  if(t.image){
-    html += '<div style="width:100%;height:160px;overflow:hidden;border-radius:0;position:relative;">';
-    html += '<img src="'+t.image+'" style="width:100%;height:100%;object-fit:contain;background:#0d0d18;" onerror="this.parentNode.innerHTML=\'<div style=&quot;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:72px;background:#0d0d18;&quot;>'+t.icon+'</div>\'">';
+  if(modalImg){
+    html += '<div style="width:100%;height:200px;overflow:hidden;border-radius:0;position:relative;">';
+    html += '<img src="'+modalImg+'" style="width:100%;height:100%;object-fit:cover;object-position:center top;" onerror="this.parentNode.innerHTML=\'<div style=&quot;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:72px;background:#0d0d18;&quot;>'+t.icon+'</div>\'">';
+    html += '<div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,rgba(0,0,0,.7),transparent);"></div>';
     html += '</div>';
   } else {
     html += '<div style="font-size:52px;padding:24px 0 8px;">'+t.icon+'</div>';
@@ -1857,10 +1880,13 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     var c=coords[p.formationPlace]; if(!c) return;
     var lastName=(p.name||'').split(' ').pop();
     var wasSubbed=subbedOutMap[p.formationPlace];
+    var isGK=p.position==='G'||p.position==='GK';
+    var circleColor=isGK?'#888888':fillColor;
+    var circleTextColor=isGK?'#fff':jerseyTextColor;
     // 원
-    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'" fill="'+fillColor+'" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>';
+    svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="'+r+'" fill="'+circleColor+'" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>';
     // 등번호
-    svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="'+jerseyTextColor+'" font-family="sans-serif">'+p.jersey+'</text>';
+    svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="'+circleTextColor+'" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
     svg+='<text x="'+c.x+'" y="'+(c.y+r+8)+'" text-anchor="middle" font-size="7.5" font-weight="600" fill="'+nameTextColor+'" font-family="sans-serif">'+lastName+'</text>';
     // 교체 아이콘 (ESPN substitution icon)
