@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-04T14:01:55.721449",
+  "updated_at": "2026-04-05T00:01:55.453580",
   "season": "2025/2026",
   "source": "Fotmob",
   "players": [
@@ -27,7 +27,7 @@
           "startDate": "2025-07",
           "endDate": null,
           "active": true,
-          "appearances": "10",
+          "appearances": "11",
           "goals": "0",
           "assists": "0"
         },
@@ -96,6 +96,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 4,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 357,
+          "cleanSheets": 1,
+          "goalsConceded": 4,
+          "avgRating": 7.2
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 6,
@@ -134,130 +147,16 @@
           "cleanSheets": 0,
           "goalsConceded": 0,
           "avgRating": null
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 3,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 267,
-          "cleanSheets": 1,
-          "goalsConceded": 2,
-          "avgRating": 7.5
         }
       },
-      "stats": {
-        "saves": {
-          "value": "10",
-          "per90": 3.37,
-          "percentile": 89
-        },
-        "save_percentage": {
-          "value": "83.3",
-          "per90": 83.33,
-          "percentile": 84
-        },
-        "goals_conceded": {
-          "value": "2",
-          "per90": 0.67,
-          "percentile": 44
-        },
-        "goals_prevented": {
-          "value": "0.53",
-          "per90": 0.18,
-          "percentile": 89
-        },
-        "clean_sheet_team_title": {
-          "value": "0",
-          "per90": 0,
-          "percentile": -1
-        },
-        "error_led_to_goal": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
-        },
-        "keeper_sweeper": {
-          "value": "4",
-          "per90": 1.35,
-          "percentile": 100
-        },
-        "keeper_high_claim": {
-          "value": "1",
-          "per90": 0.34,
-          "percentile": 58
-        },
-        "successful_passes": {
-          "value": "98",
-          "per90": 33.03,
-          "percentile": 98
-        },
-        "successful_passes_accuracy": {
-          "value": "84.5",
-          "per90": 84.48,
-          "percentile": 92
-        },
-        "long_balls_accurate": {
-          "value": "16",
-          "per90": 5.39,
-          "percentile": 91
-        },
-        "long_ball_succeeeded_accuracy": {
-          "value": "48.5",
-          "per90": 48.48,
-          "percentile": 93
-        },
-        "expected_assists": {
-          "value": "0.30",
-          "per90": 0.1,
-          "percentile": 100
-        },
-        "yellow_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
-        },
-        "red_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
-        },
-        "clean_sheet_title": {
-          "value": "0",
-          "per90": 0,
-          "percentile": -1
-        },
-        "rating": {
-          "value": "7.44",
-          "per90": 7.44,
-          "percentile": 86
-        },
-        "matches_uppercase": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 85
-        },
-        "player_started_matches": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 85
-        },
-        "saved_penalties": {
-          "value": "0/0",
-          "per90": 0,
-          "percentile": 0
-        }
-      },
+      "stats": {},
       "traits": {
         "title": "Stats compared to other keepers",
         "items": [
           {
             "key": "keeper_sweeper_actions",
             "title": "Sweeper actions",
-            "value": 93
+            "value": 92
           },
           {
             "key": "goals_conceded",
@@ -277,7 +176,7 @@
           {
             "key": "clean_sheet",
             "title": "Clean sheets",
-            "value": 71
+            "value": 72
           },
           {
             "key": "long_ball_succeeeded_accuracy",
@@ -372,6 +271,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 0,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 0,
+          "cleanSheets": 0,
+          "goalsConceded": 0,
+          "avgRating": null
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 0,
@@ -410,128 +322,9 @@
           "cleanSheets": 15,
           "goalsConceded": 22,
           "avgRating": 7.2
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 0,
-          "starts": 0,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 0,
-          "cleanSheets": 0,
-          "goalsConceded": 0,
-          "avgRating": null
         }
       },
-      "stats": {
-        "saves": {
-          "value": "50",
-          "per90": 1.61,
-          "percentile": 44
-        },
-        "save_percentage": {
-          "value": "69.4",
-          "per90": 69.44,
-          "percentile": 68
-        },
-        "goals_conceded": {
-          "value": "22",
-          "per90": 0.71,
-          "percentile": 59
-        },
-        "goals_prevented": {
-          "value": "-0.88",
-          "per90": -0.03,
-          "percentile": 50
-        },
-        "clean_sheet_team_title": {
-          "value": "15",
-          "per90": 0.48,
-          "percentile": 100
-        },
-        "error_led_to_goal": {
-          "value": "1",
-          "per90": 0.03,
-          "percentile": 32
-        },
-        "keeper_sweeper": {
-          "value": "30",
-          "per90": 0.97,
-          "percentile": 100
-        },
-        "keeper_high_claim": {
-          "value": "35",
-          "per90": 1.13,
-          "percentile": 88
-        },
-        "successful_passes": {
-          "value": "604",
-          "per90": 19.48,
-          "percentile": 71
-        },
-        "successful_passes_accuracy": {
-          "value": "66.5",
-          "per90": 66.52,
-          "percentile": 56
-        },
-        "long_balls_accurate": {
-          "value": "163",
-          "per90": 5.26,
-          "percentile": 85
-        },
-        "long_ball_succeeeded_accuracy": {
-          "value": "35.3",
-          "per90": 35.28,
-          "percentile": 59
-        },
-        "chances_created": {
-          "value": "3",
-          "per90": 0.1,
-          "percentile": 91
-        },
-        "expected_assists": {
-          "value": "0.10",
-          "per90": 0.0,
-          "percentile": 85
-        },
-        "yellow_cards": {
-          "value": "1",
-          "per90": 0.03,
-          "percentile": 38
-        },
-        "red_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
-        },
-        "clean_sheet_title": {
-          "value": "15",
-          "per90": 0.48,
-          "percentile": 100
-        },
-        "rating": {
-          "value": "7.22",
-          "per90": 7.22,
-          "percentile": 88
-        },
-        "matches_uppercase": {
-          "value": "31",
-          "per90": 31,
-          "percentile": 100
-        },
-        "player_started_matches": {
-          "value": "31",
-          "per90": 31,
-          "percentile": 100
-        },
-        "saved_penalties": {
-          "value": "0/0",
-          "per90": 0,
-          "percentile": 0
-        }
-      },
+      "stats": {},
       "traits": {
         "title": "Stats compared to other keepers",
         "items": [
@@ -644,98 +437,7 @@
           "avgRating": null
         }
       },
-      "stats": {
-        "saves": {
-          "value": "20",
-          "per90": 2.67,
-          "percentile": 69
-        },
-        "save_percentage": {
-          "value": "71.4",
-          "per90": 71.43,
-          "percentile": 77
-        },
-        "goals_conceded": {
-          "value": "8",
-          "per90": 1.07,
-          "percentile": 43
-        },
-        "clean_sheet_team_title": {
-          "value": "3",
-          "per90": 0.4,
-          "percentile": 88
-        },
-        "error_led_to_goal": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
-        },
-        "keeper_sweeper": {
-          "value": "2",
-          "per90": 0.27,
-          "percentile": 32
-        },
-        "keeper_high_claim": {
-          "value": "3",
-          "per90": 0.4,
-          "percentile": 65
-        },
-        "successful_passes": {
-          "value": "261",
-          "per90": 34.9,
-          "percentile": 90
-        },
-        "successful_passes_accuracy": {
-          "value": "78.6",
-          "per90": 78.61,
-          "percentile": 77
-        },
-        "long_balls_accurate": {
-          "value": "38",
-          "per90": 5.08,
-          "percentile": 80
-        },
-        "long_ball_succeeeded_accuracy": {
-          "value": "35.2",
-          "per90": 35.19,
-          "percentile": 68
-        },
-        "yellow_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
-        },
-        "red_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
-        },
-        "clean_sheet_title": {
-          "value": "3",
-          "per90": 0.4,
-          "percentile": 88
-        },
-        "rating": {
-          "value": "6.93",
-          "per90": 6.93,
-          "percentile": 79
-        },
-        "matches_uppercase": {
-          "value": "8",
-          "per90": 8,
-          "percentile": 77
-        },
-        "player_started_matches": {
-          "value": "8",
-          "per90": 8,
-          "percentile": 77
-        },
-        "saved_penalties": {
-          "value": "0/0",
-          "per90": 0,
-          "percentile": 0
-        }
-      },
+      "stats": {},
       "traits": null,
       "season": "2025/2026"
     },
@@ -763,7 +465,7 @@
           "startDate": "2021-07",
           "endDate": null,
           "active": true,
-          "appearances": "181",
+          "appearances": "182",
           "goals": "7",
           "assists": "14"
         },
@@ -832,6 +534,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 3,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 238,
+          "cleanSheets": 1,
+          "goalsConceded": 3,
+          "avgRating": 6.6
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 4,
@@ -870,250 +585,16 @@
           "cleanSheets": 3,
           "goalsConceded": 7,
           "avgRating": 7.1
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 2,
-          "starts": 2,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 148,
-          "cleanSheets": 1,
-          "goalsConceded": 1,
-          "avgRating": 7.1
         }
       },
-      "stats": {
-        "goals": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 0
-        },
-        "expected_goals": {
-          "value": "0.44",
-          "per90": 0.1,
-          "percentile": 47
-        },
-        "expected_goals_on_target": {
-          "value": "0.33",
-          "per90": 0.07,
-          "percentile": 48
-        },
-        "non_penalty_xg": {
-          "value": "0.44",
-          "per90": 0.1,
-          "percentile": 47
-        },
-        "shots": {
-          "value": "4",
-          "per90": 0.88,
-          "percentile": 33
-        },
-        "ShotsOnTarget": {
-          "value": "1",
-          "per90": 0.22,
-          "percentile": 28
-        },
-        "assists": {
-          "value": "1",
-          "per90": 0.22,
-          "percentile": 39
-        },
-        "expected_assists": {
-          "value": "0.48",
-          "per90": 0.11,
-          "percentile": 25
-        },
-        "successful_passes": {
-          "value": "170",
-          "per90": 37.23,
-          "percentile": 16
-        },
-        "successful_passes_accuracy": {
-          "value": "82.9",
-          "per90": 82.93,
-          "percentile": 47
-        },
-        "long_balls_accurate": {
-          "value": "6",
-          "per90": 1.31,
-          "percentile": 19
-        },
-        "long_ball_succeeeded_accuracy": {
-          "value": "35.3",
-          "per90": 35.29,
-          "percentile": 42
-        },
-        "chances_created": {
-          "value": "6",
-          "per90": 1.31,
-          "percentile": 32
-        },
-        "big_chance_created_team_title": {
-          "value": "2",
-          "per90": 0.44,
-          "percentile": 43
-        },
-        "crosses_succeeeded": {
-          "value": "2",
-          "per90": 0.44,
-          "percentile": 19
-        },
-        "crosses_succeeeded_accuracy": {
-          "value": "15.4",
-          "per90": 15.38,
-          "percentile": 29
-        },
-        "dribbles_succeeded": {
-          "value": "2",
-          "per90": 0.44,
-          "percentile": 19
-        },
-        "won_contest_subtitle": {
-          "value": "66.7",
-          "per90": 66.67,
-          "percentile": 89
-        },
-        "duel_won": {
-          "value": "28",
-          "per90": 6.13,
-          "percentile": 22
-        },
-        "duel_won_percent": {
-          "value": "53.8",
-          "per90": 53.85,
-          "percentile": 61
-        },
-        "aerials_won": {
-          "value": "9",
-          "per90": 1.97,
-          "percentile": 27
-        },
-        "aerials_won_percent": {
-          "value": "42.9",
-          "per90": 42.86,
-          "percentile": 20
-        },
-        "touches": {
-          "value": "326",
-          "per90": 71.39,
-          "percentile": 18
-        },
-        "touches_opp_box": {
-          "value": "13",
-          "per90": 2.85,
-          "percentile": 30
-        },
-        "dispossessed": {
-          "value": "1",
-          "per90": 0.22,
-          "percentile": 77
-        },
-        "fouls_won": {
-          "value": "4",
-          "per90": 0.88,
-          "percentile": 22
-        },
-        "defensive_actions": {
-          "value": "36",
-          "per90": 7.88,
-          "percentile": 19
-        },
-        "matchstats.headers.tackles": {
-          "value": "13",
-          "per90": 2.85,
-          "percentile": 24
-        },
-        "interceptions": {
-          "value": "3",
-          "per90": 0.66,
-          "percentile": 14
-        },
-        "blocked_shots": {
-          "value": "3",
-          "per90": 0.66,
-          "percentile": 38
-        },
-        "fouls": {
-          "value": "5",
-          "per90": 1.09,
-          "percentile": 22
-        },
-        "recoveries": {
-          "value": "18",
-          "per90": 3.94,
-          "percentile": 20
-        },
-        "poss_won_att_3rd_team_title": {
-          "value": "2",
-          "per90": 0.44,
-          "percentile": 28
-        },
-        "dribbled_past": {
-          "value": "5",
-          "per90": 1.09,
-          "percentile": 75
-        },
-        "clearances": {
-          "value": "17",
-          "per90": 3.72,
-          "percentile": 20
-        },
-        "clean_sheet_team_title": {
-          "value": "2",
-          "per90": 0.44,
-          "percentile": 33
-        },
-        "goals_conceded_while_on_pitch": {
-          "value": "4",
-          "per90": 0.88,
-          "percentile": 86
-        },
-        "expected_goals_against_while_on_pitch": {
-          "value": "6.05",
-          "per90": 1.32,
-          "percentile": 81
-        },
-        "yellow_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
-        },
-        "red_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
-        },
-        "rating": {
-          "value": "7.07",
-          "per90": 7.07,
-          "percentile": 77
-        },
-        "matches_uppercase": {
-          "value": "7",
-          "per90": 7,
-          "percentile": 10
-        },
-        "player_started_matches": {
-          "value": "5",
-          "per90": 5,
-          "percentile": 18
-        },
-        "minutes_played": {
-          "value": "411",
-          "per90": 90,
-          "percentile": 18
-        }
-      },
+      "stats": {},
       "traits": {
         "title": "Stats compared to other fullbacks",
         "items": [
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 62
+            "value": 63
           },
           {
             "key": "aerials_won",
@@ -1123,7 +604,7 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 54
+            "value": 53
           },
           {
             "key": "goals",
@@ -1237,6 +718,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 2,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 79,
+          "cleanSheets": 1,
+          "goalsConceded": 2,
+          "avgRating": 6.8
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 5,
@@ -1275,19 +769,6 @@
           "cleanSheets": 12,
           "goalsConceded": 18,
           "avgRating": 7.2
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 1,
-          "starts": 1,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 61,
-          "cleanSheets": 1,
-          "goalsConceded": 0,
-          "avgRating": 7.4
         }
       },
       "stats": {
@@ -1523,7 +1004,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 48
+            "value": 47
           },
           {
             "key": "defensive_actions",
@@ -1533,12 +1014,12 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 32
+            "value": 31
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 4
+            "value": 3
           },
           {
             "key": "touches",
@@ -1642,6 +1123,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 2,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 148,
+          "cleanSheets": 0,
+          "goalsConceded": 3,
+          "avgRating": 6.5
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 5,
@@ -1680,19 +1174,6 @@
           "cleanSheets": 13,
           "goalsConceded": 17,
           "avgRating": 7.5
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 1,
-          "starts": 1,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 76,
-          "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 6.3
         }
       },
       "stats": {
@@ -2404,6 +1885,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 2,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 106,
+          "cleanSheets": 0,
+          "goalsConceded": 3,
+          "avgRating": 6.5
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 2,
@@ -2442,19 +1936,6 @@
           "cleanSheets": 13,
           "goalsConceded": 12,
           "avgRating": 7.2
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 1,
-          "starts": 1,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 76,
-          "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 7.0
         }
       },
       "stats": {
@@ -2695,7 +2176,7 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 66
+            "value": 65
           },
           {
             "key": "goals",
@@ -3068,7 +2549,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 97
+            "value": 98
           },
           {
             "key": "defensive_actions",
@@ -3142,6 +2623,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 3,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 270,
+          "cleanSheets": 1,
+          "goalsConceded": 3,
+          "avgRating": 6.9
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 2,
@@ -3180,19 +2674,6 @@
           "cleanSheets": 6,
           "goalsConceded": 9,
           "avgRating": 6.9
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 2,
-          "starts": 2,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 180,
-          "cleanSheets": 1,
-          "goalsConceded": 1,
-          "avgRating": 7.3
         }
       },
       "stats": {
@@ -3398,7 +2879,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 82
+            "value": 81
           }
         ]
       },
@@ -3428,12 +2909,25 @@
           "startDate": "2022-12",
           "endDate": null,
           "active": true,
-          "appearances": "66",
+          "appearances": "67",
           "goals": "1",
           "assists": "5"
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 3,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 240,
+          "cleanSheets": 1,
+          "goalsConceded": 3,
+          "avgRating": 6.7
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 3,
@@ -3472,19 +2966,6 @@
           "cleanSheets": 7,
           "goalsConceded": 8,
           "avgRating": 6.4
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 2,
-          "starts": 2,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 2,
-          "redCards": 0,
-          "minutesPlayed": 180,
-          "cleanSheets": 1,
-          "goalsConceded": 1,
-          "avgRating": 6.7
         }
       },
       "stats": {
@@ -3700,7 +3181,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 23
+            "value": 24
           },
           {
             "key": "touches",
@@ -3738,19 +3219,6 @@
         }
       ],
       "competitions": {
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 1,
-          "starts": 0,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 7,
-          "cleanSheets": 1,
-          "goalsConceded": 0,
-          "avgRating": null
-        },
         "FAC": {
           "name": "FA컵",
           "appearances": 3,
@@ -3763,6 +3231,19 @@
           "cleanSheets": 1,
           "goalsConceded": 2,
           "avgRating": 6.3
+        },
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 1,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 7,
+          "cleanSheets": 1,
+          "goalsConceded": 0,
+          "avgRating": null
         },
         "PL": {
           "name": "프리미어리그",
@@ -3800,7 +3281,7 @@
         "shots": {
           "value": "4",
           "per90": 0.39,
-          "percentile": 62
+          "percentile": 61
         },
         "ShotsOnTarget": {
           "value": "1",
@@ -3825,7 +3306,7 @@
         "successful_passes_accuracy": {
           "value": "87.3",
           "per90": 87.31,
-          "percentile": 65
+          "percentile": 66
         },
         "long_balls_accurate": {
           "value": "30",
@@ -3840,7 +3321,7 @@
         "chances_created": {
           "value": "1",
           "per90": 0.1,
-          "percentile": 29
+          "percentile": 30
         },
         "big_chance_created_team_title": {
           "value": "1",
@@ -3960,7 +3441,7 @@
         "yellow_cards": {
           "value": "3",
           "per90": 0.29,
-          "percentile": 12
+          "percentile": 13
         },
         "red_cards": {
           "value": "1",
@@ -3970,7 +3451,7 @@
         "rating": {
           "value": "6.59",
           "per90": 6.59,
-          "percentile": 39
+          "percentile": 38
         },
         "matches_uppercase": {
           "value": "12",
@@ -4015,7 +3496,7 @@
           "startDate": "2021-08",
           "endDate": null,
           "active": true,
-          "appearances": "205",
+          "appearances": "206",
           "goals": "40",
           "assists": "40"
         },
@@ -4084,6 +3565,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 2,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 82,
+          "cleanSheets": 0,
+          "goalsConceded": 3,
+          "avgRating": 7.2
+        },
         "PL": {
           "name": "프리미어리그",
           "appearances": 20,
@@ -4122,19 +3616,6 @@
           "cleanSheets": 0,
           "goalsConceded": 3,
           "avgRating": 6.5
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 1,
-          "starts": 0,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 21,
-          "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 6.9
         }
       },
       "stats": {
@@ -4821,6 +4302,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 3,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 30,
+          "cleanSheets": 1,
+          "goalsConceded": 3,
+          "avgRating": 6.4
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 3,
@@ -4859,19 +4353,6 @@
           "cleanSheets": 15,
           "goalsConceded": 22,
           "avgRating": 7.3
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 2,
-          "starts": 0,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 19,
-          "cleanSheets": 1,
-          "goalsConceded": 1,
-          "avgRating": 6.8
         }
       },
       "stats": {
@@ -5518,7 +4999,7 @@
           "startDate": "2025-07",
           "endDate": null,
           "active": true,
-          "appearances": "18",
+          "appearances": "19",
           "goals": "0",
           "assists": "2"
         },
@@ -5578,6 +5059,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 4,
+          "starts": 4,
+          "goals": 0,
+          "assists": 2,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 360,
+          "cleanSheets": 1,
+          "goalsConceded": 4,
+          "avgRating": 7.8
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 3,
@@ -5603,19 +5097,6 @@
           "cleanSheets": 5,
           "goalsConceded": 2,
           "avgRating": 7.0
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 3,
-          "starts": 3,
-          "goals": 0,
-          "assists": 2,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 270,
-          "cleanSheets": 1,
-          "goalsConceded": 2,
-          "avgRating": 7.9
         },
         "PL": {
           "name": "프리미어리그",
@@ -5710,7 +5191,7 @@
       "posGroup": "MF",
       "jersey": "56",
       "age": 16,
-      "height": "",
+      "height": "183 cm",
       "preferredFoot": "Left",
       "marketValue": null,
       "contractEnd": null,
@@ -5721,12 +5202,25 @@
           "startDate": "2025-07",
           "endDate": null,
           "active": true,
-          "appearances": "7",
+          "appearances": "8",
           "goals": "1",
           "assists": "0"
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 2,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 167,
+          "cleanSheets": 0,
+          "goalsConceded": 3,
+          "avgRating": 7.3
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 2,
@@ -5765,19 +5259,6 @@
           "cleanSheets": 2,
           "goalsConceded": 1,
           "avgRating": 7.4
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 1,
-          "starts": 1,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 77,
-          "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 7.7
         }
       },
       "stats": {
@@ -6187,7 +5668,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 34
+            "value": 33
           }
         ]
       },
@@ -6597,6 +6078,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 4,
+          "starts": 3,
+          "goals": 2,
+          "assists": 2,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 271,
+          "cleanSheets": 1,
+          "goalsConceded": 4,
+          "avgRating": 7.9
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 3,
@@ -6635,19 +6129,6 @@
           "cleanSheets": 9,
           "goalsConceded": 16,
           "avgRating": 6.8
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 3,
-          "starts": 3,
-          "goals": 2,
-          "assists": 2,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 242,
-          "cleanSheets": 1,
-          "goalsConceded": 2,
-          "avgRating": 8.4
         }
       },
       "stats": {
@@ -6893,7 +6374,7 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 40
+            "value": 39
           },
           {
             "key": "goals",
@@ -6908,7 +6389,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 62
+            "value": 64
           }
         ]
       },
@@ -6938,7 +6419,7 @@
           "startDate": "2019-07",
           "endDate": null,
           "active": true,
-          "appearances": "267",
+          "appearances": "268",
           "goals": "62",
           "assists": "32"
         },
@@ -6953,6 +6434,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 4,
+          "starts": 4,
+          "goals": 4,
+          "assists": 1,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 352,
+          "cleanSheets": 1,
+          "goalsConceded": 4,
+          "avgRating": 8.1
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 5,
@@ -6991,19 +6485,6 @@
           "cleanSheets": 13,
           "goalsConceded": 15,
           "avgRating": 6.5
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 3,
-          "starts": 3,
-          "goals": 4,
-          "assists": 1,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 262,
-          "cleanSheets": 1,
-          "goalsConceded": 2,
-          "avgRating": 8.4
         }
       },
       "stats": {
@@ -7254,7 +6735,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 74
+            "value": 73
           },
           {
             "key": "touches",
@@ -7699,7 +7180,7 @@
           "startDate": "2022-07",
           "endDate": null,
           "active": true,
-          "appearances": "117",
+          "appearances": "118",
           "goals": "31",
           "assists": "18"
         },
@@ -7723,6 +7204,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 4,
+          "starts": 4,
+          "goals": 1,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 309,
+          "cleanSheets": 1,
+          "goalsConceded": 4,
+          "avgRating": 7.0
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 3,
@@ -7761,19 +7255,6 @@
           "cleanSheets": 5,
           "goalsConceded": 10,
           "avgRating": 6.5
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 3,
-          "starts": 3,
-          "goals": 1,
-          "assists": 1,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 249,
-          "cleanSheets": 1,
-          "goalsConceded": 2,
-          "avgRating": 7.4
         }
       },
       "stats": {
@@ -7979,7 +7460,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 32
+            "value": 31
           },
           {
             "key": "aerials_won",
@@ -8004,7 +7485,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 91
+            "value": 92
           }
         ]
       },
@@ -8016,7 +7497,7 @@
       "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/749736.png",
       "localPhoto": "/data/player_images/749736.png",
       "nationality": "Germany",
-      "position": "striker",
+      "position": "centerattackingmidfielder",
       "posGroup": "FW",
       "jersey": "29",
       "age": 26,
@@ -8027,14 +7508,14 @@
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
-      "positionLabel": "Striker",
+      "positionLabel": "Attacking Midfielder",
       "career": [
         {
           "team": "Arsenal",
           "startDate": "2023-06",
           "endDate": null,
           "active": true,
-          "appearances": "101",
+          "appearances": "102",
           "goals": "32",
           "assists": "13"
         },
@@ -8058,6 +7539,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 3,
+          "starts": 2,
+          "goals": 0,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 162,
+          "cleanSheets": 0,
+          "goalsConceded": 4,
+          "avgRating": 6.7
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 3,
@@ -8095,19 +7589,6 @@
           "minutesPlayed": 264,
           "cleanSheets": 5,
           "goalsConceded": 1,
-          "avgRating": 6.7
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 2,
-          "starts": 1,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 83,
-          "cleanSheets": 0,
-          "goalsConceded": 2,
           "avgRating": 6.7
         }
       },
@@ -8319,7 +7800,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 74
+            "value": 73
           },
           {
             "key": "defensive_actions",
@@ -8329,7 +7810,7 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 69
+            "value": 70
           },
           {
             "key": "shot_attempts",
@@ -8339,7 +7820,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 83
+            "value": 84
           }
         ]
       },
@@ -8438,6 +7919,19 @@
         }
       ],
       "competitions": {
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 2,
+          "starts": 1,
+          "goals": 1,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 75,
+          "cleanSheets": 1,
+          "goalsConceded": 2,
+          "avgRating": 6.7
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 4,
@@ -8476,19 +7970,6 @@
           "cleanSheets": 15,
           "goalsConceded": 19,
           "avgRating": 6.8
-        },
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 1,
-          "starts": 1,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 45,
-          "cleanSheets": 1,
-          "goalsConceded": 0,
-          "avgRating": 6.0
         }
       },
       "stats": {
@@ -8744,12 +8225,12 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 91
+            "value": 90
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 46
+            "value": 47
           },
           {
             "key": "touches",
