@@ -1235,6 +1235,7 @@ function openTimelineModal(enc){
   html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:24px">'+eventHtml+'</div>';
   html += '</div>';
   document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalContent').scrollTop = 0;
   document.getElementById('playerModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -1390,6 +1391,7 @@ function openLegendModal(enc){
   html += '</div>';
 
   content.innerHTML = html;
+  content.scrollTop = 0;
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
   window.history.pushState({modal:'hist'},'','#hist-modal');
@@ -1423,6 +1425,7 @@ function openOtdModal(enc){
   if(item.headline) html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(239,1,7,.08);border-left:3px solid var(--red);border-radius:4px;font-size:12px;font-weight:700;color:var(--red);">'+item.headline+'</div>';
   html += '</div>';
   content.innerHTML = html;
+  content.scrollTop = 0;
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
   window.history.pushState({modal:'hist'},'','#hist-modal');
@@ -1510,6 +1513,7 @@ function openTrophyDetailModal(enc){
 
   html += '</div>';
   content.innerHTML = html;
+  content.scrollTop = 0;
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
   window.history.pushState({modal:'hist'},'','#hist-modal');
@@ -1553,6 +1557,7 @@ function openManagerModal(enc){
     html += '</div>';
   }
   content.innerHTML = html;
+  content.scrollTop = 0;
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
   window.history.pushState({modal:'hist'},'','#hist-modal');
@@ -1582,6 +1587,7 @@ function openHistModal(enc){
   if(item.link) html += '<a class="hist-modal-link" href="'+item.link+'" target="_blank" rel="noopener">🔗 더 알아보기</a>';
   html += '</div>';
   mc.innerHTML = html;
+  mc.scrollTop = 0;
   var modal = document.getElementById('matchModal');
   modal.classList.add('open');
   document.body.style.overflow='hidden';
@@ -1716,6 +1722,7 @@ function openMatchModal(m){
     '</div>'+
     '<div style="padding:24px;text-align:center"><div class="spinner"></div></div>';
 
+  var _mi=document.getElementById('matchModalContent'); if(_mi) _mi.scrollTop=0;
   overlay.classList.add('open');
   document.body.style.overflow='hidden';
   history.pushState({modal:'match'},'',' #match');
@@ -2701,6 +2708,7 @@ function openPlayerModal(p) {
   }
 
   content.innerHTML = h;
+  content.scrollTop = 0;
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
   history.pushState({modal:'player'},'',' #player');
