@@ -210,6 +210,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .rec-highlight{background:rgba(212,175,55,.07);border-radius:8px;padding:10px 12px;margin-bottom:12px;border:1px solid rgba(212,175,55,.15);}
 .rec-highlight .rec-label{color:var(--gold);font-weight:700;}
 .rec-highlight .rec-value{color:var(--gold);}
+/* Moments */
+.mom-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-bottom:24px;}
+.mom-card{position:relative;border-radius:12px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);cursor:default;}
+.mom-photo{width:100%;aspect-ratio:4/3;background:var(--surface3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px;color:rgba(255,255,255,.15);}
+.mom-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.mom-rank-badge{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.7);color:var(--gold);font-size:10px;font-weight:900;min-width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:1px solid rgba(200,168,75,.4);font-family:var(--fd);letter-spacing:.5px;}
+.mom-info{padding:8px 10px 10px;}
+.mom-title{font-size:11px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:3px;}
+.mom-year{font-size:10px;color:var(--text-dim);}
 /* Legends */
 .lgd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-bottom:24px;}
 .lgd-card{background:var(--card);border-radius:12px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;}
@@ -1104,7 +1113,8 @@ function loadHistory(){
     fetch('/data/legends.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
     fetch('/data/timeline.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
     fetch('/data/records.json').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; }),
-    fetch('/data/stadiums.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
+    fetch('/data/stadiums.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+    fetch('/data/moments.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
   ]).then(function(results){
     window._otdData      = results[0];
     window._archiveData  = results[1];
@@ -1113,6 +1123,7 @@ function loadHistory(){
     window._timelineData = results[4];
     window._recordsData  = results[5];
     window._stadiumsData = results[6];
+    window._momentsData  = results[7];
     renderHistoryNew();
   });
 }
@@ -1217,6 +1228,7 @@ function renderHistSection(tab){
   if(tab === 'TIMELINE') return renderTimelineSection();
   if(tab === 'RECORDS')  return renderRecordsSection();
   if(tab === 'STADIUM')  return renderStadiumSection();
+  if(tab === 'MOMENTS')  return renderMomentsSection();
   return '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:13px;">준비 중...</div>';
 }
 
@@ -1328,6 +1340,28 @@ function openStadiumModal(enc){
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
   requestAnimationFrame(function(){ content.scrollTop = 0; });
+}
+
+// ── MOMENTS 섹션 ──
+function renderMomentsSection(){
+  var list = window._momentsData || [];
+  if(!list.length) return '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:13px;">준비 중...</div>';
+  var html = '<div class="mom-grid">';
+  list.forEach(function(m){
+    html += '<div class="mom-card">';
+    html += '<div class="mom-photo">';
+    if(m.photo) html += '<img src="'+m.photo+'" alt="'+m.title+'" onerror="this.parentNode.innerHTML=\'⚽\'">';
+    else html += '⚽';
+    html += '</div>';
+    html += '<div class="mom-rank-badge">#'+m.rank+'</div>';
+    html += '<div class="mom-info">';
+    html += '<div class="mom-title">'+m.title+'</div>';
+    html += '<div class="mom-year">'+m.year+'</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
 }
 
 // ── RECORDS 섹션 ──
