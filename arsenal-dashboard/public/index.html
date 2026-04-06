@@ -1169,8 +1169,8 @@ function renderHistSection(tab){
 
 // ── TIMELINE 섹션 ──
 var TIMELINE_COLORS = ['#EF0107','#ff6b35','#ff8c00','#C8A84B','#4CAF50','#2196F3','#9C27B0','#EF0107','#ff6b35','#ff8c00'];
-var TIMELINE_DATA = window._timelineData || [];
 function renderTimelineSection(){
+  var TIMELINE_DATA = window._timelineData || [];
   var html = '<div class="tl-wrap">';
   TIMELINE_DATA.forEach(function(d, i){
     var color = TIMELINE_COLORS[i % TIMELINE_COLORS.length];
@@ -1199,7 +1199,8 @@ function renderTimelineSection(){
 }
 function openTimelineModal(enc){
   var d = JSON.parse(decodeURIComponent(enc));
-  var color = TIMELINE_COLORS[TIMELINE_DATA.findIndex(function(x){return x.year===d.year;}) % TIMELINE_COLORS.length];
+  var tlData = window._timelineData || [];
+  var color = TIMELINE_COLORS[tlData.findIndex(function(x){return x.year===d.year;}) % TIMELINE_COLORS.length];
   var html = '';
   html += '<div style="width:100%;aspect-ratio:16/9;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:56px;color:rgba(255,255,255,.15);margin:14px 0 0">';
   if(d.photo) html += '<img src="'+d.photo+'" style="width:100%;height:100%;object-fit:cover">';
