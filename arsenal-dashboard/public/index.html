@@ -219,6 +219,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mom-info{padding:8px 10px 10px;}
 .mom-title{font-size:11px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:3px;}
 .mom-year{font-size:10px;color:var(--text-dim);}
+.mom-more-badge{position:absolute;bottom:38px;right:8px;font-size:9px;font-weight:700;color:var(--red);background:rgba(239,1,7,.1);border:1px solid rgba(239,1,7,.2);border-radius:4px;padding:2px 6px;letter-spacing:.3px;}
 /* Legends */
 .lgd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-bottom:24px;}
 .lgd-card{background:var(--card);border-radius:12px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;}
@@ -1348,12 +1349,16 @@ function renderMomentsSection(){
   if(!list.length) return '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:13px;">준비 중...</div>';
   var html = '<div class="mom-grid">';
   list.forEach(function(m){
-    html += '<div class="mom-card">';
+    var hasBody = !!(m.body && m.body.trim());
+    var enc = encodeURIComponent(JSON.stringify(m)).replace(/'/g,'%27');
+    var clickAttr = hasBody ? ' onclick="openMomentModal(\''+enc+'\')" style="cursor:pointer"' : '';
+    html += '<div class="mom-card"'+clickAttr+'>';
     html += '<div class="mom-photo">';
     if(m.photo) html += '<img src="'+m.photo+'" alt="'+m.title+'" onerror="this.parentNode.innerHTML=\'⚽\'">';
     else html += '⚽';
     html += '</div>';
     html += '<div class="mom-rank-badge">#'+m.rank+'</div>';
+    if(hasBody) html += '<div class="mom-more-badge">자세히 →</div>';
     html += '<div class="mom-info">';
     html += '<div class="mom-title">'+m.title+'</div>';
     html += '<div class="mom-year">'+m.year+'</div>';
@@ -1362,6 +1367,28 @@ function renderMomentsSection(){
   });
   html += '</div>';
   return html;
+}
+
+function openMomentModal(enc){
+  var m = JSON.parse(decodeURIComponent(enc));
+  var content = document.getElementById('modalContent');
+  var modal = document.getElementById('playerModal');
+  var html = '';
+  html += '<div style="width:100%;aspect-ratio:16/9;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:56px;color:rgba(255,255,255,.15);">';
+  if(m.photo) html += '<img src="'+m.photo+'" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML=\'⚽\'">';
+  else html += '⚽';
+  html += '</div>';
+  html += '<div style="padding:16px 18px 0">';
+  html += '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--gold);margin-bottom:4px">#'+m.rank+' · '+m.year+'</div>';
+  html += '<div style="font-size:20px;font-weight:900;color:var(--text);line-height:1.3;margin-bottom:14px">'+m.title+'</div>';
+  if(m.person) html += '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:14px;padding:8px 10px;background:rgba(200,168,75,.08);border-radius:8px;border:1px solid rgba(200,168,75,.15)">'+m.person+'</div>';
+  var bodyHtml = (m.body||'').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+  html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:24px">'+bodyHtml+'</div>';
+  html += '</div>';
+  content.innerHTML = html;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(function(){ content.scrollTop = 0; });
 }
 
 // ── RECORDS 섹션 ──
