@@ -184,6 +184,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hist-nav-btn{flex-shrink:0;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .18s;}
 .hist-nav-btn.active{color:var(--red);border-bottom-color:var(--red);}
 .hist-section{animation:fadeIn .2s ease;}
+/* Records */
+.rec-subnav{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;margin-bottom:16px;border-bottom:1px solid var(--border);}
+.rec-subnav::-webkit-scrollbar{display:none;}
+.rec-subnav-btn{flex-shrink:0;padding:8px 13px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .18s;}
+.rec-subnav-btn.active{color:var(--red);border-bottom-color:var(--red);}
+.rec-group{margin-bottom:20px;}
+.rec-group-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.rec-row{display:flex;align-items:baseline;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px;}
+.rec-row:last-child{border-bottom:none;}
+.rec-label{font-size:12px;color:var(--text-muted);flex:1;line-height:1.4;}
+.rec-value{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;font-family:var(--fd);}
+.rec-note{font-size:10px;color:var(--text-dim);margin-top:2px;}
+.rec-highlight{background:rgba(212,175,55,.07);border-radius:8px;padding:10px 12px;margin-bottom:12px;border:1px solid rgba(212,175,55,.15);}
+.rec-highlight .rec-label{color:var(--gold);font-weight:700;}
+.rec-highlight .rec-value{color:var(--gold);}
 /* Legends */
 .lgd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-bottom:24px;}
 .lgd-card{background:var(--card);border-radius:12px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;}
@@ -1076,13 +1091,15 @@ function loadHistory(){
     fetch('/data/club_archive_trophies.json').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }),
     fetch('/data/managers.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
     fetch('/data/legends.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
-    fetch('/data/timeline.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
+    fetch('/data/timeline.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+    fetch('/data/records.json').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
   ]).then(function(results){
     window._otdData      = results[0];
     window._archiveData  = results[1];
     window._managersData = results[2];
     window._legendsData  = results[3];
     window._timelineData = results[4];
+    window._recordsData  = results[5];
     renderHistoryNew();
   });
 }
@@ -1185,6 +1202,7 @@ function renderHistSection(tab){
   if(tab === 'MANAGERS') return renderManagersSection();
   if(tab === 'LEGENDS')  return renderLegendsSection();
   if(tab === 'TIMELINE') return renderTimelineSection();
+  if(tab === 'RECORDS')  return renderRecordsSection();
   return '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:13px;">준비 중...</div>';
 }
 
@@ -1238,6 +1256,66 @@ function openTimelineModal(enc){
   document.getElementById('playerModal').classList.add('open');
   document.body.style.overflow = 'hidden';
   requestAnimationFrame(function(){ document.getElementById('modalContent').scrollTop = 0; });
+}
+
+// ── RECORDS 섹션 ──
+var REC_TABS = [
+  {key:'appearances', label:'Appearances & Attendances'},
+  {key:'goalscorers', label:'Goalscorers'},
+  {key:'scorelines',  label:'Scorelines'},
+  {key:'firsts',      label:'Firsts'},
+  {key:'unbeaten49',  label:'49 Unbeaten'},
+  {key:'nld',         label:'v Tottenham Hotspur'}
+];
+var _recTab = 'appearances';
+
+function renderRecordsSection(){
+  var DATA = window._recordsData || {};
+  var html = '';
+  // 서브 탭
+  html += '<div class="rec-subnav" id="recSubnav">';
+  REC_TABS.forEach(function(t){
+    html += '<button class="rec-subnav-btn'+(_recTab===t.key?' active':'')+'" onclick="switchRecTab(\''+t.key+'\')">'+t.label+'</button>';
+  });
+  html += '</div>';
+  html += '<div id="recSection">'+renderRecTab(_recTab, DATA)+'</div>';
+  setTimeout(function(){ initDragScroll(document.getElementById('recSubnav')); }, 0);
+  return html;
+}
+
+function switchRecTab(key){
+  _recTab = key;
+  document.querySelectorAll('.rec-subnav-btn').forEach(function(b){
+    b.classList.toggle('active', b.textContent.trim() === REC_TABS.find(function(t){return t.key===key;}).label);
+  });
+  var DATA = window._recordsData || {};
+  document.getElementById('recSection').innerHTML = renderRecTab(key, DATA);
+  var nav = document.getElementById('recSubnav');
+  if(nav) initDragScroll(nav);
+}
+
+function renderRecTab(key, DATA){
+  var sec = DATA[key];
+  if(!sec || !sec.groups || !sec.groups.length){
+    return '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:13px;">준비 중...</div>';
+  }
+  var html = '<div style="padding-bottom:24px;">';
+  sec.groups.forEach(function(g){
+    html += '<div class="rec-group">';
+    if(g.title) html += '<div class="rec-group-title">'+g.title+'</div>';
+    (g.rows||[]).forEach(function(r){
+      var cls = r.highlight ? 'rec-row rec-highlight' : 'rec-row';
+      html += '<div class="'+cls+'">';
+      html += '<div><div class="rec-label">'+r.label+'</div>';
+      if(r.note) html += '<div class="rec-note">'+r.note+'</div>';
+      html += '</div>';
+      html += '<div class="rec-value">'+r.value+'</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
 }
 
 // ── TROPHIES 섹션 ──
