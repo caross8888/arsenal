@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-06T00:02:04.641676",
+  "updated_at": "2026-04-06T14:01:54.612724",
   "season": "2025/2026",
   "source": "Fotmob",
   "players": [
@@ -149,39 +149,140 @@
           "avgRating": null
         }
       },
-      "stats": {},
+      "stats": {
+        "saves": {
+          "value": "12",
+          "per90": 3.03,
+          "percentile": 93
+        },
+        "save_percentage": {
+          "value": "75.0",
+          "per90": 75,
+          "percentile": 74
+        },
+        "goals_conceded": {
+          "value": "4",
+          "per90": 1.01,
+          "percentile": 15
+        },
+        "goals_prevented": {
+          "value": "0.11",
+          "per90": 0.03,
+          "percentile": 76
+        },
+        "clean_sheet_team_title": {
+          "value": "0",
+          "per90": 0,
+          "percentile": -1
+        },
+        "error_led_to_goal": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "keeper_sweeper": {
+          "value": "7",
+          "per90": 1.76,
+          "percentile": 100
+        },
+        "keeper_high_claim": {
+          "value": "1",
+          "per90": 0.25,
+          "percentile": 58
+        },
+        "successful_passes": {
+          "value": "116",
+          "per90": 29.24,
+          "percentile": 99
+        },
+        "successful_passes_accuracy": {
+          "value": "85.3",
+          "per90": 85.29,
+          "percentile": 94
+        },
+        "long_balls_accurate": {
+          "value": "18",
+          "per90": 4.54,
+          "percentile": 92
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "48.6",
+          "per90": 48.65,
+          "percentile": 93
+        },
+        "expected_assists": {
+          "value": "0.31",
+          "per90": 0.08,
+          "percentile": 100
+        },
+        "yellow_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "0",
+          "per90": 0,
+          "percentile": -1
+        },
+        "rating": {
+          "value": "7.16",
+          "per90": 7.17,
+          "percentile": 81
+        },
+        "matches_uppercase": {
+          "value": "4",
+          "per90": 4,
+          "percentile": 96
+        },
+        "player_started_matches": {
+          "value": "4",
+          "per90": 4,
+          "percentile": 96
+        },
+        "saved_penalties": {
+          "value": "0/0",
+          "per90": 0,
+          "percentile": 0
+        }
+      },
       "traits": {
         "title": "Stats compared to other keepers",
         "items": [
           {
             "key": "keeper_sweeper_actions",
             "title": "Sweeper actions",
-            "value": 92
+            "value": 95
           },
           {
             "key": "goals_conceded",
             "title": "Goals conceded",
-            "value": 91
+            "value": 92
           },
           {
             "key": "save_percentage",
             "title": "Save percentage",
-            "value": 82
+            "value": 81
           },
           {
             "key": "keeper_high_claim",
             "title": "High claims",
-            "value": 39
+            "value": 41
           },
           {
             "key": "clean_sheet",
             "title": "Clean sheets",
-            "value": 72
+            "value": 73
           },
           {
             "key": "long_ball_succeeeded_accuracy",
             "title": "Long ball percentage",
-            "value": 17
+            "value": 21
           }
         ]
       },
@@ -324,7 +425,113 @@
           "avgRating": 7.2
         }
       },
-      "stats": {},
+      "stats": {
+        "saves": {
+          "value": "50",
+          "per90": 1.61,
+          "percentile": 44
+        },
+        "save_percentage": {
+          "value": "69.4",
+          "per90": 69.44,
+          "percentile": 68
+        },
+        "goals_conceded": {
+          "value": "22",
+          "per90": 0.71,
+          "percentile": 59
+        },
+        "goals_prevented": {
+          "value": "-0.88",
+          "per90": -0.03,
+          "percentile": 50
+        },
+        "clean_sheet_team_title": {
+          "value": "15",
+          "per90": 0.48,
+          "percentile": 100
+        },
+        "error_led_to_goal": {
+          "value": "1",
+          "per90": 0.03,
+          "percentile": 32
+        },
+        "keeper_sweeper": {
+          "value": "30",
+          "per90": 0.97,
+          "percentile": 100
+        },
+        "keeper_high_claim": {
+          "value": "35",
+          "per90": 1.13,
+          "percentile": 88
+        },
+        "successful_passes": {
+          "value": "604",
+          "per90": 19.48,
+          "percentile": 71
+        },
+        "successful_passes_accuracy": {
+          "value": "66.5",
+          "per90": 66.52,
+          "percentile": 56
+        },
+        "long_balls_accurate": {
+          "value": "163",
+          "per90": 5.26,
+          "percentile": 85
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "35.3",
+          "per90": 35.28,
+          "percentile": 59
+        },
+        "chances_created": {
+          "value": "3",
+          "per90": 0.1,
+          "percentile": 91
+        },
+        "expected_assists": {
+          "value": "0.10",
+          "per90": 0.0,
+          "percentile": 85
+        },
+        "yellow_cards": {
+          "value": "1",
+          "per90": 0.03,
+          "percentile": 38
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "15",
+          "per90": 0.48,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "7.22",
+          "per90": 7.22,
+          "percentile": 88
+        },
+        "matches_uppercase": {
+          "value": "31",
+          "per90": 31,
+          "percentile": 100
+        },
+        "player_started_matches": {
+          "value": "31",
+          "per90": 31,
+          "percentile": 100
+        },
+        "saved_penalties": {
+          "value": "0/0",
+          "per90": 0,
+          "percentile": 0
+        }
+      },
       "traits": {
         "title": "Stats compared to other keepers",
         "items": [
@@ -346,7 +553,7 @@
           {
             "key": "keeper_high_claim",
             "title": "High claims",
-            "value": 88
+            "value": 85
           },
           {
             "key": "clean_sheet",
@@ -356,7 +563,7 @@
           {
             "key": "long_ball_succeeeded_accuracy",
             "title": "Long ball percentage",
-            "value": 28
+            "value": 30
           }
         ]
       },
@@ -486,7 +693,7 @@
         "long_balls_accurate": {
           "value": "38",
           "per90": 5.08,
-          "percentile": 80
+          "percentile": 79
         },
         "long_ball_succeeeded_accuracy": {
           "value": "35.2",
@@ -906,17 +1113,17 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 63
+            "value": 69
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 88
+            "value": 87
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 53
+            "value": 52
           },
           {
             "key": "goals",
@@ -926,12 +1133,12 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 54
+            "value": 50
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 60
+            "value": 61
           }
         ]
       },
@@ -1311,27 +1518,27 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 48
+            "value": 49
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 47
+            "value": 45
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 8
+            "value": 7
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 31
+            "value": 33
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 3
+            "value": 4
           },
           {
             "key": "touches",
@@ -1721,7 +1928,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 57
+            "value": 56
           },
           {
             "key": "aerials_won",
@@ -1741,12 +1948,12 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 87
+            "value": 86
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 62
+            "value": 63
           }
         ]
       },
@@ -2091,12 +2298,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 54
+            "value": 53
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 79
+            "value": 80
           },
           {
             "key": "defensive_actions",
@@ -2116,7 +2323,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 47
+            "value": 46
           }
         ]
       },
@@ -2478,7 +2685,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 20
+            "value": 19
           },
           {
             "key": "aerials_won",
@@ -2488,12 +2695,12 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 65
+            "value": 64
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 49
+            "value": 48
           },
           {
             "key": "shot_attempts",
@@ -2503,7 +2710,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 60
+            "value": 59
           }
         ]
       },
@@ -2856,12 +3063,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 10
+            "value": 11
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 98
+            "value": 97
           },
           {
             "key": "defensive_actions",
@@ -2871,12 +3078,12 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 39
+            "value": 40
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 28
+            "value": 26
           },
           {
             "key": "touches",
@@ -3166,17 +3373,17 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 50
+            "value": 61
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 30
+            "value": 33
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 18
+            "value": 16
           },
           {
             "key": "goals",
@@ -3186,12 +3393,12 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 23
+            "value": 24
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 81
+            "value": 84
           }
         ]
       },
@@ -3493,12 +3700,12 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 24
+            "value": 25
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 49
+            "value": 48
           }
         ]
       },
@@ -3628,12 +3835,12 @@
         "long_ball_succeeeded_accuracy": {
           "value": "49.2",
           "per90": 49.18,
-          "percentile": 67
+          "percentile": 66
         },
         "chances_created": {
           "value": "1",
           "per90": 0.1,
-          "percentile": 30
+          "percentile": 29
         },
         "big_chance_created_team_title": {
           "value": "1",
@@ -3708,7 +3915,7 @@
         "matchstats.headers.tackles": {
           "value": "8",
           "per90": 0.78,
-          "percentile": 47
+          "percentile": 46
         },
         "interceptions": {
           "value": "20",
@@ -3718,7 +3925,7 @@
         "blocked_shots": {
           "value": "9",
           "per90": 0.88,
-          "percentile": 75
+          "percentile": 74
         },
         "fouls": {
           "value": "8",
@@ -4173,12 +4380,12 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 94
+            "value": 95
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 79
+            "value": 80
           }
         ]
       },
@@ -4535,17 +4742,17 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 73
+            "value": 77
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 97
+            "value": 96
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 65
+            "value": 62
           },
           {
             "key": "goals",
@@ -4555,7 +4762,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 93
+            "value": 94
           },
           {
             "key": "touches",
@@ -4900,12 +5107,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 45
+            "value": 46
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 91
+            "value": 90
           },
           {
             "key": "defensive_actions",
@@ -5266,17 +5473,17 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 47
+            "value": 44
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 82
+            "value": 83
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 74
+            "value": 75
           },
           {
             "key": "touches",
@@ -5462,12 +5669,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 20
+            "value": 24
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 89
+            "value": 90
           },
           {
             "key": "defensive_actions",
@@ -5477,7 +5684,7 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 68
+            "value": 69
           },
           {
             "key": "shot_attempts",
@@ -5955,7 +6162,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 28
+            "value": 27
           },
           {
             "key": "aerials_won",
@@ -5975,7 +6182,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 81
+            "value": 82
           },
           {
             "key": "touches",
@@ -6307,27 +6514,27 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 58
+            "value": 60
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 52
+            "value": 53
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 68
+            "value": 70
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 92
+            "value": 91
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 59
+            "value": 60
           }
         ]
       },
@@ -6357,7 +6564,7 @@
           "startDate": "2025-07",
           "endDate": null,
           "active": true,
-          "appearances": "31",
+          "appearances": "32",
           "goals": "7",
           "assists": "3"
         },
@@ -7032,27 +7239,27 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 70
+            "value": 72
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 8
+            "value": 10
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 89
+            "value": 88
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 73
+            "value": 75
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 10
+            "value": 11
           }
         ]
       },
@@ -7437,32 +7644,32 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 40
+            "value": 42
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 26
+            "value": 28
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 24
+            "value": 21
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 64
+            "value": 61
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 74
+            "value": 75
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 51
+            "value": 52
           }
         ]
       },
@@ -7772,22 +7979,22 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 31
+            "value": 39
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 62
+            "value": 60
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 73
+            "value": 72
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 82
+            "value": 77
           },
           {
             "key": "shot_attempts",
@@ -7797,7 +8004,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 92
+            "value": 90
           }
         ]
       },
@@ -8102,37 +8309,37 @@
         }
       },
       "traits": {
-        "title": "Stats compared to other forwards",
+        "title": "Stats compared to other attacking midfielders/wingers",
         "items": [
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 93
+            "value": 60
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 73
+            "value": 98
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 73
+            "value": 56
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 70
+            "value": 92
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 50
+            "value": 73
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 84
+            "value": 12
           }
         ]
       },
@@ -8522,7 +8729,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 44
+            "value": 45
           },
           {
             "key": "aerials_won",
@@ -8532,17 +8739,17 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 21
+            "value": 20
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 90
+            "value": 91
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 47
+            "value": 48
           },
           {
             "key": "touches",
