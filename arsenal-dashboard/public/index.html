@@ -147,6 +147,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .media-seg{display:flex;gap:0;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:14px;}
 .media-seg-btn{flex:1;padding:7px 4px;border:none;background:none;border-radius:8px;font-size:11px;font-weight:700;color:var(--text-dim);cursor:pointer;transition:all .2s;letter-spacing:.3px;}
 .media-seg-btn.active{background:var(--surface3);color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+/* ── Timeline Section ───────────────────── */
+.tl-wrap{position:relative;}
+.tl-wrap::before{content:'';position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--red) 0%,#ff6b35 30%,var(--gold) 60%,#4CAF50 100%);opacity:.45;}
+.tl-item{display:grid;grid-template-columns:1fr 18px 1fr;margin-bottom:28px;position:relative;align-items:start;}
+.tl-left{padding-right:14px;display:flex;flex-direction:column;align-items:flex-end;gap:7px;}
+.tl-year{font-size:18px;font-weight:900;line-height:1;font-family:var(--fd);letter-spacing:.5px;}
+.tl-photo{width:58%;aspect-ratio:4/3;border-radius:8px;background:var(--surface2);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:28px;color:rgba(255,255,255,.2);}
+.tl-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.tl-dot-col{display:flex;justify-content:center;padding-top:4px;position:relative;z-index:2;}
+.tl-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--navy);flex-shrink:0;}
+.tl-right{padding-left:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.tl-right:active{opacity:.75;}
+.tl-right-spacer{height:18px;margin-bottom:7px;}
+.tl-title{font-size:13px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:6px;}
+.tl-summary{font-size:11px;color:var(--text-muted);line-height:1.65;}
+.tl-more{display:inline-block;margin-top:6px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--red);}
 /* ── History Tab ─────────────────────────── */
 .hist-otd-wrap{margin-bottom:16px;}
 .hist-otd-card{border-radius:14px;background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:14px 16px 16px;border:1px solid rgba(212,175,55,.18);}
@@ -1145,7 +1161,84 @@ function renderHistSection(tab){
   if(tab === 'TROPHIES') return renderTrophiesSection();
   if(tab === 'MANAGERS') return renderManagersSection();
   if(tab === 'LEGENDS')  return renderLegendsSection();
+  if(tab === 'TIMELINE') return renderTimelineSection();
   return '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:13px;">준비 중...</div>';
+}
+
+// ── TIMELINE 섹션 ──
+var TIMELINE_COLORS = ['#EF0107','#ff6b35','#ff8c00','#C8A84B','#4CAF50','#2196F3','#9C27B0','#EF0107','#ff6b35','#ff8c00'];
+var TIMELINE_DATA = [
+  {
+    year:'1886', icon:'⚒️', photo:'',
+    title:'다이얼 스퀘어의 탄생',
+    summary:'울위치 무기 공장 노동자들이 창단, 이스턴 원더러스를 6-0으로 꺾으며 역사 시작.',
+    person:'👤 주요 인물: 데이비드 단스킨 (창단 주도)',
+    event:'런던 남동부 울위치의 로열 아스날 무기 공장 노동자들이 \'다이얼 스퀘어\'라는 이름으로 팀을 창단했습니다.',
+    key:'첫 경기에서 이스턴 원더러스를 6-0으로 꺾으며 역사가 시작되었습니다. 이후 팀명은 \'로열 아스날\'을 거쳐 1893년 \'울위치 아스날\'로 바뀌며 프로 리그에 가입하게 됩니다.'
+  },
+  {
+    year:'1913', icon:'🏟️', photo:'',
+    title:'운명적인 하이버리 이주',
+    summary:'재정난 속 북런던 하이버리로 이전, 북런던 더비의 서막이 오르다.',
+    person:'👤 주요 인물: 헨리 노리스 (구단주)',
+    event:'재정난에 시달리던 구단이 북런던 하이버리에 위치한 \'아스날 스타디움\'으로 근거지를 옮겼습니다.',
+    key:'지리적으로 토트넘 홋스퍼와 가까워지며 오늘날 가장 치열한 라이벌전인 \'북런던 더비\'의 서막이 올랐습니다. 연고지 이전과 함께 팀명에서 \'울위치\'를 떼고 \'더 아스날(The Arsenal)\'로 불리기 시작했습니다.'
+  },
+  {
+    year:'1919', icon:'🏆', photo:'',
+    title:'1부 리그 승격과 최장수 기록의 시작',
+    summary:'논란 속 1부 승격, 이후 단 한 번도 강등되지 않은 역사적 기록 시작.',
+    person:'👔 감독: 레슬리 나이튼 · 2부 리그 5위 (1914/15)',
+    event:'제1차 세계대전 종료 후 리그가 재개되면서 1부 리그 팀 수가 늘어났고, 아스날은 논란 속에 1부로 승격되었습니다.',
+    key:'이때부터 지금까지 아스날은 잉글랜드 역사상 단 한 번도 강등되지 않은 \'최장수 1부 리그 체류\' 기록을 이어오고 있습니다.'
+  }
+];
+function renderTimelineSection(){
+  var html = '<div class="tl-wrap">';
+  TIMELINE_DATA.forEach(function(d, i){
+    var color = TIMELINE_COLORS[i % TIMELINE_COLORS.length];
+    var enc = encodeURIComponent(JSON.stringify(d)).replace(/'/g,'%27');
+    html += '<div class="tl-item">';
+    // left
+    html += '<div class="tl-left">';
+    html += '<div class="tl-year" style="color:'+color+'">'+d.year+'</div>';
+    html += '<div class="tl-photo">';
+    if(d.photo) html += '<img src="'+d.photo+'" alt="">';
+    else html += d.icon;
+    html += '</div></div>';
+    // dot
+    html += '<div class="tl-dot-col"><div class="tl-dot" style="background:'+color+'"></div></div>';
+    // right
+    html += '<div class="tl-right" onclick="openTimelineModal(\''+enc+'\')">';
+    html += '<div class="tl-right-spacer"></div>';
+    html += '<div class="tl-title">'+d.title+'</div>';
+    html += '<div class="tl-summary">'+d.summary+'</div>';
+    html += '<span class="tl-more" style="color:'+color+'">자세히 보기 →</span>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+function openTimelineModal(enc){
+  var d = JSON.parse(decodeURIComponent(enc));
+  var color = TIMELINE_COLORS[TIMELINE_DATA.findIndex(function(x){return x.year===d.year;}) % TIMELINE_COLORS.length];
+  var html = '';
+  html += '<div style="width:100%;aspect-ratio:16/9;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:56px;color:rgba(255,255,255,.15);margin:14px 0 0">';
+  if(d.photo) html += '<img src="'+d.photo+'" style="width:100%;height:100%;object-fit:cover">';
+  else html += d.icon;
+  html += '</div>';
+  html += '<div style="padding:16px 18px 0">';
+  html += '<div style="font-size:13px;font-weight:800;letter-spacing:1px;margin-bottom:4px;color:'+color+'">'+d.year+'</div>';
+  html += '<div style="font-size:20px;font-weight:900;color:var(--text);line-height:1.3;margin-bottom:14px">'+d.title+'</div>';
+  html += '<div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:14px;padding:8px 10px;background:rgba(200,168,75,.08);border-radius:8px;border:1px solid rgba(200,168,75,.15)">'+d.person+'</div>';
+  html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px">사건</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:12px">'+d.event+'</div>';
+  html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px">핵심</div>';
+  html += '<div style="font-size:12px;color:var(--text-dim);line-height:1.7;padding:10px 12px;background:rgba(255,255,255,.03);border-left:2px solid '+color+';border-radius:0 8px 8px 0;margin-bottom:24px">'+d.key+'</div>';
+  html += '</div>';
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('playerModal').style.display='flex';
 }
 
 // ── TROPHIES 섹션 ──
