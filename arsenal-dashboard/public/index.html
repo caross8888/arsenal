@@ -219,7 +219,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mom-info{padding:8px 10px 10px;}
 .mom-title{font-size:11px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:3px;}
 .mom-year{font-size:10px;color:var(--text-dim);}
-.mom-more-badge{position:absolute;bottom:38px;right:8px;font-size:9px;font-weight:700;color:var(--red);background:rgba(239,1,7,.1);border:1px solid rgba(239,1,7,.2);border-radius:4px;padding:2px 6px;letter-spacing:.3px;}
 /* Legends */
 .lgd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-bottom:24px;}
 .lgd-card{background:var(--card);border-radius:12px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;}
@@ -1358,7 +1357,6 @@ function renderMomentsSection(){
     else html += '⚽';
     html += '</div>';
     html += '<div class="mom-rank-badge">#'+m.rank+'</div>';
-    if(hasBody) html += '<div class="mom-more-badge">자세히 →</div>';
     html += '<div class="mom-info">';
     html += '<div class="mom-title">'+m.title+'</div>';
     html += '<div class="mom-year">'+m.year+'</div>';
