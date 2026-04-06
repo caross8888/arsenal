@@ -1350,7 +1350,7 @@ function openTimelineModal(enc){
   html += '<div style="font-size:12px;color:var(--text-dim);line-height:1.7;padding:10px 12px;background:rgba(255,255,255,.03);border-left:2px solid '+color+';border-radius:0 8px 8px 0;margin-bottom:24px">'+d.key+'</div>';
   html += '</div>';
   document.getElementById('modalContent').innerHTML = html;
-  document.getElementById('playerModal').style.display='flex';
+  document.getElementById('playerModal').classList.add('open');
 }
 
 // ── TROPHIES 섹션 ──
