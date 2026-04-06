@@ -184,6 +184,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hist-nav-btn{flex-shrink:0;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .18s;}
 .hist-nav-btn.active{color:var(--red);border-bottom-color:var(--red);}
 .hist-section{animation:fadeIn .2s ease;}
+/* Stadium */
+.stad-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:24px;}
+.stad-card{border-radius:14px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);cursor:pointer;transition:transform .18s,box-shadow .18s;}
+.stad-card:active{transform:scale(.97);}
+.stad-photo{width:100%;aspect-ratio:16/9;background:var(--surface3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px;color:rgba(255,255,255,.15);}
+.stad-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.stad-info{padding:10px 12px 12px;}
+.stad-name{font-size:13px;font-weight:900;color:var(--text);margin-bottom:2px;}
+.stad-sub{font-size:10px;color:var(--text-dim);margin-bottom:6px;}
+.stad-years{display:inline-block;font-size:10px;font-weight:700;color:var(--red);background:rgba(239,1,7,.08);border:1px solid rgba(239,1,7,.2);border-radius:4px;padding:2px 7px;}
+.stad-cap{font-size:10px;color:var(--text-muted);margin-top:5px;}
 /* Records */
 .rec-subnav{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;margin-bottom:16px;border-bottom:1px solid var(--border);}
 .rec-subnav::-webkit-scrollbar{display:none;}
@@ -1092,7 +1103,8 @@ function loadHistory(){
     fetch('/data/managers.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
     fetch('/data/legends.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
     fetch('/data/timeline.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
-    fetch('/data/records.json').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
+    fetch('/data/records.json').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; }),
+    fetch('/data/stadiums.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
   ]).then(function(results){
     window._otdData      = results[0];
     window._archiveData  = results[1];
@@ -1100,6 +1112,7 @@ function loadHistory(){
     window._legendsData  = results[3];
     window._timelineData = results[4];
     window._recordsData  = results[5];
+    window._stadiumsData = results[6];
     renderHistoryNew();
   });
 }
@@ -1203,6 +1216,7 @@ function renderHistSection(tab){
   if(tab === 'LEGENDS')  return renderLegendsSection();
   if(tab === 'TIMELINE') return renderTimelineSection();
   if(tab === 'RECORDS')  return renderRecordsSection();
+  if(tab === 'STADIUM')  return renderStadiumSection();
   return '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:13px;">준비 중...</div>';
 }
 
@@ -1256,6 +1270,64 @@ function openTimelineModal(enc){
   document.getElementById('playerModal').classList.add('open');
   document.body.style.overflow = 'hidden';
   requestAnimationFrame(function(){ document.getElementById('modalContent').scrollTop = 0; });
+}
+
+// ── STADIUM 섹션 ──
+function renderStadiumSection(){
+  var list = window._stadiumsData || [];
+  if(!list.length) return '<div style="padding:40px;text-align:center;color:var(--text-dim);font-size:13px;">준비 중...</div>';
+  var html = '<div class="stad-grid">';
+  list.forEach(function(s){
+    var enc = encodeURIComponent(JSON.stringify(s)).replace(/'/g,'%27');
+    html += '<div class="stad-card" onclick="openStadiumModal(\''+enc+'\')">';
+    html += '<div class="stad-photo">';
+    if(s.photo) html += '<img src="'+s.photo+'" alt="'+s.name+'" onerror="this.parentNode.innerHTML=\'🏟️\'">';
+    else html += '🏟️';
+    html += '</div>';
+    html += '<div class="stad-info">';
+    html += '<div class="stad-name">'+s.name+'</div>';
+    html += '<div class="stad-sub">'+s.subtitle+'</div>';
+    html += '<div class="stad-years">'+s.years+'</div>';
+    html += '<div class="stad-cap">수용 인원 · '+s.capacity+'</div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function openStadiumModal(enc){
+  var s = JSON.parse(decodeURIComponent(enc));
+  var content = document.getElementById('modalContent');
+  var modal = document.getElementById('playerModal');
+  var html = '';
+  // 사진
+  html += '<div style="width:100%;aspect-ratio:16/9;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:56px;color:rgba(255,255,255,.15);">';
+  if(s.photo) html += '<img src="'+s.photo+'" style="width:100%;height:100%;object-fit:cover" onerror="this.parentNode.innerHTML=\'🏟️\'">';
+  else html += '🏟️';
+  html += '</div>';
+  html += '<div style="padding:16px 18px 0">';
+  // 헤더
+  html += '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:4px">'+s.years+'</div>';
+  html += '<div style="font-size:22px;font-weight:900;color:var(--text);line-height:1.2;margin-bottom:4px">'+s.name+'</div>';
+  html += '<div style="font-size:12px;color:var(--text-dim);margin-bottom:14px">'+s.subtitle+'</div>';
+  // 기본 정보 칩
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">';
+  html += '<div style="padding:6px 12px;border-radius:8px;background:rgba(239,1,7,.08);border:1px solid rgba(239,1,7,.2);font-size:11px;font-weight:700;color:var(--red)">🏟️ 수용 '+s.capacity+'명</div>';
+  html += '<div style="padding:6px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:11px;color:var(--text-muted)">📍 '+s.location+'</div>';
+  html += '<div style="padding:6px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:11px;color:var(--text-muted)">🗓️ 개장 '+s.opened+'</div>';
+  if(s.closed) html += '<div style="padding:6px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:11px;color:var(--text-muted)">🔒 폐장 '+s.closed+'</div>';
+  html += '</div>';
+  // 섹션 내용
+  (s.sections||[]).forEach(function(sec){
+    html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;">'+sec.title+'</div>';
+    var bodyHtml = (sec.body||'').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+    html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:16px;">'+bodyHtml+'</div>';
+  });
+  html += '</div>';
+  content.innerHTML = html;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(function(){ content.scrollTop = 0; });
 }
 
 // ── RECORDS 섹션 ──
