@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-07T00:02:11.197334",
+  "updated_at": "2026-04-08T00:41:33.985299",
   "season": "2025/2026",
   "source": "Fotmob",
   "players": [
@@ -96,6 +96,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 90,
+          "cleanSheets": 0,
+          "goalsConceded": 2,
+          "avgRating": 6.4
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 4,
@@ -122,19 +135,6 @@
           "goalsConceded": 5,
           "avgRating": 7.0
         },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 1,
-          "starts": 1,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 90,
-          "cleanSheets": 0,
-          "goalsConceded": 2,
-          "avgRating": 6.4
-        },
         "PL": {
           "name": "프리미어리그",
           "appearances": 0,
@@ -149,7 +149,108 @@
           "avgRating": null
         }
       },
-      "stats": {},
+      "stats": {
+        "saves": {
+          "value": "12",
+          "per90": 3.03,
+          "percentile": 93
+        },
+        "save_percentage": {
+          "value": "75.0",
+          "per90": 75,
+          "percentile": 74
+        },
+        "goals_conceded": {
+          "value": "4",
+          "per90": 1.01,
+          "percentile": 15
+        },
+        "goals_prevented": {
+          "value": "0.11",
+          "per90": 0.03,
+          "percentile": 76
+        },
+        "clean_sheet_team_title": {
+          "value": "0",
+          "per90": 0,
+          "percentile": -1
+        },
+        "error_led_to_goal": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "keeper_sweeper": {
+          "value": "7",
+          "per90": 1.76,
+          "percentile": 100
+        },
+        "keeper_high_claim": {
+          "value": "1",
+          "per90": 0.25,
+          "percentile": 58
+        },
+        "successful_passes": {
+          "value": "116",
+          "per90": 29.24,
+          "percentile": 99
+        },
+        "successful_passes_accuracy": {
+          "value": "85.3",
+          "per90": 85.29,
+          "percentile": 94
+        },
+        "long_balls_accurate": {
+          "value": "18",
+          "per90": 4.54,
+          "percentile": 92
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "48.6",
+          "per90": 48.65,
+          "percentile": 93
+        },
+        "expected_assists": {
+          "value": "0.31",
+          "per90": 0.08,
+          "percentile": 100
+        },
+        "yellow_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "0",
+          "per90": 0,
+          "percentile": -1
+        },
+        "rating": {
+          "value": "7.16",
+          "per90": 7.17,
+          "percentile": 81
+        },
+        "matches_uppercase": {
+          "value": "4",
+          "per90": 4,
+          "percentile": 96
+        },
+        "player_started_matches": {
+          "value": "4",
+          "per90": 4,
+          "percentile": 96
+        },
+        "saved_penalties": {
+          "value": "0/0",
+          "per90": 0,
+          "percentile": 0
+        }
+      },
       "traits": {
         "title": "Stats compared to other keepers",
         "items": [
@@ -166,17 +267,17 @@
           {
             "key": "save_percentage",
             "title": "Save percentage",
-            "value": 81
+            "value": 82
           },
           {
             "key": "keeper_high_claim",
             "title": "High claims",
-            "value": 41
+            "value": 42
           },
           {
             "key": "clean_sheet",
             "title": "Clean sheets",
-            "value": 73
+            "value": 72
           },
           {
             "key": "long_ball_succeeeded_accuracy",
@@ -211,7 +312,7 @@
           "startDate": "2024-07",
           "endDate": null,
           "active": true,
-          "appearances": "95",
+          "appearances": "96",
           "goals": "0",
           "assists": "0"
         },
@@ -271,6 +372,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 10,
+          "starts": 10,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 900,
+          "cleanSheets": 7,
+          "goalsConceded": 3,
+          "avgRating": 7.8
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 0,
@@ -297,19 +411,6 @@
           "goalsConceded": 0,
           "avgRating": null
         },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 9,
-          "starts": 9,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 810,
-          "cleanSheets": 6,
-          "goalsConceded": 3,
-          "avgRating": 7.7
-        },
         "PL": {
           "name": "프리미어리그",
           "appearances": 31,
@@ -324,7 +425,113 @@
           "avgRating": 7.2
         }
       },
-      "stats": {},
+      "stats": {
+        "saves": {
+          "value": "50",
+          "per90": 1.61,
+          "percentile": 44
+        },
+        "save_percentage": {
+          "value": "69.4",
+          "per90": 69.44,
+          "percentile": 68
+        },
+        "goals_conceded": {
+          "value": "22",
+          "per90": 0.71,
+          "percentile": 59
+        },
+        "goals_prevented": {
+          "value": "-0.88",
+          "per90": -0.03,
+          "percentile": 50
+        },
+        "clean_sheet_team_title": {
+          "value": "15",
+          "per90": 0.48,
+          "percentile": 100
+        },
+        "error_led_to_goal": {
+          "value": "1",
+          "per90": 0.03,
+          "percentile": 32
+        },
+        "keeper_sweeper": {
+          "value": "30",
+          "per90": 0.97,
+          "percentile": 100
+        },
+        "keeper_high_claim": {
+          "value": "35",
+          "per90": 1.13,
+          "percentile": 88
+        },
+        "successful_passes": {
+          "value": "604",
+          "per90": 19.48,
+          "percentile": 71
+        },
+        "successful_passes_accuracy": {
+          "value": "66.5",
+          "per90": 66.52,
+          "percentile": 56
+        },
+        "long_balls_accurate": {
+          "value": "163",
+          "per90": 5.26,
+          "percentile": 85
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "35.3",
+          "per90": 35.28,
+          "percentile": 59
+        },
+        "chances_created": {
+          "value": "3",
+          "per90": 0.1,
+          "percentile": 91
+        },
+        "expected_assists": {
+          "value": "0.10",
+          "per90": 0.0,
+          "percentile": 85
+        },
+        "yellow_cards": {
+          "value": "1",
+          "per90": 0.03,
+          "percentile": 38
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "15",
+          "per90": 0.48,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "7.22",
+          "per90": 7.22,
+          "percentile": 88
+        },
+        "matches_uppercase": {
+          "value": "31",
+          "per90": 31,
+          "percentile": 100
+        },
+        "player_started_matches": {
+          "value": "31",
+          "per90": 31,
+          "percentile": 100
+        },
+        "saved_penalties": {
+          "value": "0/0",
+          "per90": 0,
+          "percentile": 0
+        }
+      },
       "traits": {
         "title": "Stats compared to other keepers",
         "items": [
@@ -437,7 +644,98 @@
           "avgRating": null
         }
       },
-      "stats": {},
+      "stats": {
+        "saves": {
+          "value": "20",
+          "per90": 2.67,
+          "percentile": 68
+        },
+        "save_percentage": {
+          "value": "71.4",
+          "per90": 71.43,
+          "percentile": 77
+        },
+        "goals_conceded": {
+          "value": "8",
+          "per90": 1.07,
+          "percentile": 43
+        },
+        "clean_sheet_team_title": {
+          "value": "3",
+          "per90": 0.4,
+          "percentile": 88
+        },
+        "error_led_to_goal": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "keeper_sweeper": {
+          "value": "2",
+          "per90": 0.27,
+          "percentile": 32
+        },
+        "keeper_high_claim": {
+          "value": "3",
+          "per90": 0.4,
+          "percentile": 64
+        },
+        "successful_passes": {
+          "value": "261",
+          "per90": 34.9,
+          "percentile": 88
+        },
+        "successful_passes_accuracy": {
+          "value": "78.6",
+          "per90": 78.61,
+          "percentile": 77
+        },
+        "long_balls_accurate": {
+          "value": "38",
+          "per90": 5.08,
+          "percentile": 79
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "35.2",
+          "per90": 35.19,
+          "percentile": 68
+        },
+        "yellow_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "3",
+          "per90": 0.4,
+          "percentile": 88
+        },
+        "rating": {
+          "value": "6.93",
+          "per90": 6.93,
+          "percentile": 78
+        },
+        "matches_uppercase": {
+          "value": "8",
+          "per90": 8,
+          "percentile": 77
+        },
+        "player_started_matches": {
+          "value": "8",
+          "per90": 8,
+          "percentile": 77
+        },
+        "saved_penalties": {
+          "value": "0/0",
+          "per90": 0,
+          "percentile": 0
+        }
+      },
       "traits": null,
       "season": "2025/2026"
     },
@@ -465,7 +763,7 @@
           "startDate": "2021-07",
           "endDate": null,
           "active": true,
-          "appearances": "182",
+          "appearances": "183",
           "goals": "7",
           "assists": "14"
         },
@@ -534,6 +832,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 9,
+          "starts": 5,
+          "goals": 0,
+          "assists": 1,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 449,
+          "cleanSheets": 6,
+          "goalsConceded": 4,
+          "avgRating": 6.9
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 3,
@@ -559,19 +870,6 @@
           "cleanSheets": 2,
           "goalsConceded": 4,
           "avgRating": 7.0
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 8,
-          "starts": 4,
-          "goals": 0,
-          "assists": 1,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 359,
-          "cleanSheets": 5,
-          "goalsConceded": 4,
-          "avgRating": 6.8
         },
         "PL": {
           "name": "프리미어리그",
@@ -815,17 +1113,17 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 69
+            "value": 68
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 87
+            "value": 86
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 52
+            "value": 53
           },
           {
             "key": "goals",
@@ -870,7 +1168,7 @@
           "startDate": "2022-07",
           "endDate": null,
           "active": true,
-          "appearances": "173",
+          "appearances": "174",
           "goals": "8",
           "assists": "3"
         },
@@ -939,6 +1237,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 8,
+          "starts": 8,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 720,
+          "cleanSheets": 5,
+          "goalsConceded": 3,
+          "avgRating": 7.2
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 2,
@@ -964,19 +1275,6 @@
           "cleanSheets": 2,
           "goalsConceded": 5,
           "avgRating": 7.3
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 7,
-          "starts": 7,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 630,
-          "cleanSheets": 4,
-          "goalsConceded": 3,
-          "avgRating": 7.1
         },
         "PL": {
           "name": "프리미어리그",
@@ -1225,7 +1523,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 45
+            "value": 46
           },
           {
             "key": "defensive_actions",
@@ -1235,7 +1533,7 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 33
+            "value": 32
           },
           {
             "key": "shot_attempts",
@@ -1275,7 +1573,7 @@
           "startDate": "2020-09",
           "endDate": null,
           "active": true,
-          "appearances": "249",
+          "appearances": "250",
           "goals": "24",
           "assists": "7"
         },
@@ -1344,6 +1642,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 8,
+          "starts": 7,
+          "goals": 1,
+          "assists": 1,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 612,
+          "cleanSheets": 6,
+          "goalsConceded": 2,
+          "avgRating": 7.3
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 2,
@@ -1369,19 +1680,6 @@
           "cleanSheets": 3,
           "goalsConceded": 4,
           "avgRating": 6.6
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 7,
-          "starts": 6,
-          "goals": 1,
-          "assists": 1,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 522,
-          "cleanSheets": 5,
-          "goalsConceded": 2,
-          "avgRating": 7.3
         },
         "PL": {
           "name": "프리미어리그",
@@ -1630,7 +1928,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 56
+            "value": 55
           },
           {
             "key": "aerials_won",
@@ -1640,7 +1938,7 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 56
+            "value": 55
           },
           {
             "key": "goals",
@@ -1650,7 +1948,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 86
+            "value": 87
           },
           {
             "key": "touches",
@@ -2005,7 +2303,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 80
+            "value": 79
           },
           {
             "key": "defensive_actions",
@@ -2020,12 +2318,12 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 68
+            "value": 67
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 46
+            "value": 47
           }
         ]
       },
@@ -2055,7 +2353,7 @@
           "startDate": "2024-07",
           "endDate": null,
           "active": true,
-          "appearances": "59",
+          "appearances": "60",
           "goals": "4",
           "assists": "5"
         },
@@ -2106,6 +2404,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 5,
+          "starts": 3,
+          "goals": 0,
+          "assists": 1,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 273,
+          "cleanSheets": 3,
+          "goalsConceded": 3,
+          "avgRating": 7.2
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 2,
@@ -2129,19 +2440,6 @@
           "redCards": 0,
           "minutesPlayed": 115,
           "cleanSheets": 0,
-          "goalsConceded": 3,
-          "avgRating": 7.2
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 4,
-          "starts": 2,
-          "goals": 0,
-          "assists": 1,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 183,
-          "cleanSheets": 2,
           "goalsConceded": 3,
           "avgRating": 7.2
         },
@@ -2402,7 +2700,7 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 48
+            "value": 49
           },
           {
             "key": "shot_attempts",
@@ -2412,7 +2710,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 59
+            "value": 58
           }
         ]
       },
@@ -2770,7 +3068,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 97
+            "value": 98
           },
           {
             "key": "defensive_actions",
@@ -2780,17 +3078,17 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 40
+            "value": 41
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 26
+            "value": 25
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 81
+            "value": 80
           }
         ]
       },
@@ -2844,6 +3142,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 7,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 399,
+          "cleanSheets": 4,
+          "goalsConceded": 4,
+          "avgRating": 6.7
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 3,
@@ -2869,19 +3180,6 @@
           "cleanSheets": 2,
           "goalsConceded": 0,
           "avgRating": 7.2
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 7,
-          "starts": 4,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 399,
-          "cleanSheets": 4,
-          "goalsConceded": 4,
-          "avgRating": 6.7
         },
         "PL": {
           "name": "프리미어리그",
@@ -3075,7 +3373,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 61
+            "value": 60
           },
           {
             "key": "aerials_won",
@@ -3100,7 +3398,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 84
+            "value": 85
           }
         ]
       },
@@ -3136,6 +3434,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 8,
+          "starts": 6,
+          "goals": 0,
+          "assists": 2,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 536,
+          "cleanSheets": 5,
+          "goalsConceded": 4,
+          "avgRating": 7.3
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 3,
@@ -3161,19 +3472,6 @@
           "cleanSheets": 2,
           "goalsConceded": 1,
           "avgRating": 8.1
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 8,
-          "starts": 6,
-          "goals": 0,
-          "assists": 2,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 536,
-          "cleanSheets": 5,
-          "goalsConceded": 4,
-          "avgRating": 7.3
         },
         "PL": {
           "name": "프리미어리그",
@@ -3382,12 +3680,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 33
+            "value": 32
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 49
+            "value": 48
           },
           {
             "key": "defensive_actions",
@@ -3402,7 +3700,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 25
+            "value": 24
           },
           {
             "key": "touches",
@@ -3440,19 +3738,6 @@
         }
       ],
       "competitions": {
-        "FAC": {
-          "name": "FA컵",
-          "appearances": 3,
-          "starts": 1,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 105,
-          "cleanSheets": 1,
-          "goalsConceded": 2,
-          "avgRating": 6.3
-        },
         "UCL": {
           "name": "챔피언스리그",
           "appearances": 1,
@@ -3465,6 +3750,19 @@
           "cleanSheets": 1,
           "goalsConceded": 0,
           "avgRating": null
+        },
+        "FAC": {
+          "name": "FA컵",
+          "appearances": 3,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 105,
+          "cleanSheets": 1,
+          "goalsConceded": 2,
+          "avgRating": 6.3
         },
         "PL": {
           "name": "프리미어리그",
@@ -3542,7 +3840,7 @@
         "chances_created": {
           "value": "1",
           "per90": 0.1,
-          "percentile": 30
+          "percentile": 29
         },
         "big_chance_created_team_title": {
           "value": "1",
@@ -3567,7 +3865,7 @@
         "won_contest_subtitle": {
           "value": "66.7",
           "per90": 66.67,
-          "percentile": 59
+          "percentile": 58
         },
         "duel_won": {
           "value": "47",
@@ -3717,7 +4015,7 @@
           "startDate": "2021-08",
           "endDate": null,
           "active": true,
-          "appearances": "206",
+          "appearances": "207",
           "goals": "40",
           "assists": "40"
         },
@@ -3786,6 +4084,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 5,
+          "starts": 4,
+          "goals": 0,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 285,
+          "cleanSheets": 3,
+          "goalsConceded": 3,
+          "avgRating": 7.4
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 2,
@@ -3811,19 +4122,6 @@
           "cleanSheets": 9,
           "goalsConceded": 15,
           "avgRating": 7.0
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 4,
-          "starts": 3,
-          "goals": 0,
-          "assists": 1,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 215,
-          "cleanSheets": 2,
-          "goalsConceded": 3,
-          "avgRating": 7.5
         },
         "EFL": {
           "name": "카라바오컵",
@@ -4449,7 +4747,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 96
+            "value": 97
           },
           {
             "key": "defensive_actions",
@@ -4469,7 +4767,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 16
+            "value": 17
           }
         ]
       },
@@ -4481,7 +4779,7 @@
       "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/1031325.png",
       "localPhoto": "/data/player_images/1031325.png",
       "nationality": "Spain",
-      "position": "centerdefensivemidfielder",
+      "position": "centermidfielder",
       "posGroup": "MF",
       "jersey": "36",
       "age": 27,
@@ -4492,14 +4790,14 @@
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
-      "positionLabel": "Defensive Midfielder",
+      "positionLabel": "Central Midfielder",
       "career": [
         {
           "team": "Arsenal",
           "startDate": "2025-07",
           "endDate": null,
           "active": true,
-          "appearances": "45",
+          "appearances": "46",
           "goals": "6",
           "assists": "3"
         },
@@ -4523,6 +4821,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 9,
+          "starts": 9,
+          "goals": 0,
+          "assists": 2,
+          "yellowCards": 4,
+          "redCards": 0,
+          "minutesPlayed": 771,
+          "cleanSheets": 6,
+          "goalsConceded": 3,
+          "avgRating": 7.3
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 3,
@@ -4548,19 +4859,6 @@
           "cleanSheets": 1,
           "goalsConceded": 4,
           "avgRating": 7.0
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 8,
-          "starts": 8,
-          "goals": 0,
-          "assists": 2,
-          "yellowCards": 4,
-          "redCards": 0,
-          "minutesPlayed": 681,
-          "cleanSheets": 5,
-          "goalsConceded": 3,
-          "avgRating": 7.4
         },
         "PL": {
           "name": "프리미어리그",
@@ -4809,7 +5107,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 46
+            "value": 47
           },
           {
             "key": "aerials_won",
@@ -4819,22 +5117,22 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 55
+            "value": 53
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 73
+            "value": 74
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 42
+            "value": 43
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 78
+            "value": 79
           }
         ]
       },
@@ -4864,7 +5162,7 @@
           "startDate": "2023-07",
           "endDate": null,
           "active": true,
-          "appearances": "147",
+          "appearances": "148",
           "goals": "21",
           "assists": "28"
         },
@@ -4879,6 +5177,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 9,
+          "starts": 7,
+          "goals": 1,
+          "assists": 2,
+          "yellowCards": 3,
+          "redCards": 0,
+          "minutesPlayed": 679,
+          "cleanSheets": 6,
+          "goalsConceded": 3,
+          "avgRating": 7.5
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 6,
@@ -4891,19 +5202,6 @@
           "cleanSheets": 3,
           "goalsConceded": 5,
           "avgRating": 7.1
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 8,
-          "starts": 6,
-          "goals": 1,
-          "assists": 2,
-          "yellowCards": 3,
-          "redCards": 0,
-          "minutesPlayed": 589,
-          "cleanSheets": 5,
-          "goalsConceded": 3,
-          "avgRating": 7.4
         },
         "PL": {
           "name": "프리미어리그",
@@ -5165,7 +5463,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 92
+            "value": 93
           },
           {
             "key": "aerials_won",
@@ -5175,7 +5473,7 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 44
+            "value": 45
           },
           {
             "key": "goals",
@@ -5280,6 +5578,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 6,
+          "starts": 3,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 2,
+          "redCards": 0,
+          "minutesPlayed": 309,
+          "cleanSheets": 5,
+          "goalsConceded": 2,
+          "avgRating": 7.0
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 4,
@@ -5305,19 +5616,6 @@
           "cleanSheets": 2,
           "goalsConceded": 1,
           "avgRating": 7.4
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 6,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 2,
-          "redCards": 0,
-          "minutesPlayed": 309,
-          "cleanSheets": 5,
-          "goalsConceded": 2,
-          "avgRating": 7.0
         },
         "PL": {
           "name": "프리미어리그",
@@ -5371,7 +5669,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 24
+            "value": 27
           },
           {
             "key": "aerials_won",
@@ -5381,22 +5679,22 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 77
+            "value": 72
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 69
+            "value": 71
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 43
+            "value": 46
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 85
+            "value": 87
           }
         ]
       },
@@ -5429,6 +5727,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 2,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 32,
+          "cleanSheets": 2,
+          "goalsConceded": 0,
+          "avgRating": 6.4
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 2,
@@ -5454,19 +5765,6 @@
           "cleanSheets": 2,
           "goalsConceded": 0,
           "avgRating": 6.8
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 1,
-          "starts": 0,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 18,
-          "cleanSheets": 1,
-          "goalsConceded": 0,
-          "avgRating": 6.6
         },
         "PL": {
           "name": "프리미어리그",
@@ -5864,12 +6162,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 27
+            "value": 26
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 49
+            "value": 50
           },
           {
             "key": "defensive_actions",
@@ -5884,7 +6182,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 82
+            "value": 81
           },
           {
             "key": "touches",
@@ -6211,7 +6509,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 88
+            "value": 89
           },
           {
             "key": "aerials_won",
@@ -6221,12 +6519,12 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 53
+            "value": 54
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 70
+            "value": 69
           },
           {
             "key": "shot_attempts",
@@ -6236,7 +6534,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 60
+            "value": 59
           }
         ]
       },
@@ -6299,6 +6597,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 6,
+          "starts": 5,
+          "goals": 3,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 408,
+          "cleanSheets": 3,
+          "goalsConceded": 4,
+          "avgRating": 7.6
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 4,
@@ -6324,19 +6635,6 @@
           "cleanSheets": 1,
           "goalsConceded": 3,
           "avgRating": 6.7
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 5,
-          "starts": 4,
-          "goals": 3,
-          "assists": 0,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 332,
-          "cleanSheets": 2,
-          "goalsConceded": 4,
-          "avgRating": 7.7
         },
         "PL": {
           "name": "프리미어리그",
@@ -6585,17 +6883,17 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 66
+            "value": 68
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 57
+            "value": 60
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 38
+            "value": 37
           },
           {
             "key": "goals",
@@ -6605,7 +6903,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 78
+            "value": 77
           },
           {
             "key": "touches",
@@ -6655,6 +6953,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 10,
+          "starts": 5,
+          "goals": 6,
+          "assists": 2,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 507,
+          "cleanSheets": 6,
+          "goalsConceded": 5,
+          "avgRating": 7.5
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 4,
@@ -6680,19 +6991,6 @@
           "cleanSheets": 2,
           "goalsConceded": 5,
           "avgRating": 6.8
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 9,
-          "starts": 5,
-          "goals": 6,
-          "assists": 1,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 493,
-          "cleanSheets": 5,
-          "goalsConceded": 5,
-          "avgRating": 7.6
         },
         "PL": {
           "name": "프리미어리그",
@@ -6941,7 +7239,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 72
+            "value": 73
           },
           {
             "key": "defensive_actions",
@@ -6956,7 +7254,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 75
+            "value": 74
           },
           {
             "key": "touches",
@@ -6991,7 +7289,7 @@
           "startDate": "2023-01",
           "endDate": null,
           "active": true,
-          "appearances": "164",
+          "appearances": "165",
           "goals": "35",
           "assists": "29"
         },
@@ -7060,6 +7358,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 7,
+          "starts": 5,
+          "goals": 1,
+          "assists": 3,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 432,
+          "cleanSheets": 5,
+          "goalsConceded": 2,
+          "avgRating": 7.5
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 6,
@@ -7072,19 +7383,6 @@
           "cleanSheets": 3,
           "goalsConceded": 5,
           "avgRating": 6.4
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 6,
-          "starts": 4,
-          "goals": 1,
-          "assists": 3,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 356,
-          "cleanSheets": 4,
-          "goalsConceded": 2,
-          "avgRating": 7.5
         },
         "FAC": {
           "name": "FA컵",
@@ -7366,12 +7664,12 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 75
+            "value": 74
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 52
+            "value": 51
           }
         ]
       },
@@ -7425,6 +7723,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 4,
+          "starts": 1,
+          "goals": 2,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 124,
+          "cleanSheets": 1,
+          "goalsConceded": 4,
+          "avgRating": 7.5
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 4,
@@ -7450,19 +7761,6 @@
           "cleanSheets": 0,
           "goalsConceded": 5,
           "avgRating": 7.0
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 4,
-          "starts": 1,
-          "goals": 2,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 124,
-          "cleanSheets": 1,
-          "goalsConceded": 4,
-          "avgRating": 7.5
         },
         "PL": {
           "name": "프리미어리그",
@@ -7681,7 +7979,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 39
+            "value": 36
           },
           {
             "key": "aerials_won",
@@ -7696,7 +7994,7 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 77
+            "value": 76
           },
           {
             "key": "shot_attempts",
@@ -7760,6 +8058,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 4,
+          "starts": 1,
+          "goals": 3,
+          "assists": 1,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 102,
+          "cleanSheets": 2,
+          "goalsConceded": 3,
+          "avgRating": 7.2
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 3,
@@ -7785,19 +8096,6 @@
           "cleanSheets": 1,
           "goalsConceded": 4,
           "avgRating": 6.4
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 3,
-          "starts": 1,
-          "goals": 2,
-          "assists": 1,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 82,
-          "cleanSheets": 1,
-          "goalsConceded": 3,
-          "avgRating": 7.2
         },
         "PL": {
           "name": "프리미어리그",
@@ -8011,37 +8309,37 @@
         }
       },
       "traits": {
-        "title": "Stats compared to other attacking midfielders/wingers",
+        "title": "Stats compared to other forwards",
         "items": [
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 60
+            "value": 91
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 98
+            "value": 67
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 56
+            "value": 68
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 92
+            "value": 66
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 73
+            "value": 44
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 12
+            "value": 85
           }
         ]
       },
@@ -8071,7 +8369,7 @@
           "startDate": "2025-07",
           "endDate": null,
           "active": true,
-          "appearances": "43",
+          "appearances": "44",
           "goals": "17",
           "assists": "2"
         },
@@ -8140,6 +8438,19 @@
         }
       ],
       "competitions": {
+        "UCL": {
+          "name": "챔피언스리그",
+          "appearances": 9,
+          "starts": 8,
+          "goals": 4,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 645,
+          "cleanSheets": 6,
+          "goalsConceded": 4,
+          "avgRating": 7.2
+        },
         "FAC": {
           "name": "FA컵",
           "appearances": 2,
@@ -8165,19 +8476,6 @@
           "cleanSheets": 2,
           "goalsConceded": 4,
           "avgRating": 6.7
-        },
-        "UCL": {
-          "name": "챔피언스리그",
-          "appearances": 8,
-          "starts": 7,
-          "goals": 4,
-          "assists": 1,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 555,
-          "cleanSheets": 5,
-          "goalsConceded": 4,
-          "avgRating": 7.3
         },
         "PL": {
           "name": "프리미어리그",
@@ -8431,12 +8729,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 45
+            "value": 44
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 25
+            "value": 26
           },
           {
             "key": "defensive_actions",
