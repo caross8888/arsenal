@@ -2397,8 +2397,6 @@ function loadLiveExpand(m, panel){
     if(el) el.innerHTML = '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">데이터를 불러올 수 없어요</div>';
   });
 
-  // 프로그레스바 시작
-  startProgressBar(m.id);
 }
 
 function startProgressBar(matchId){
@@ -2419,9 +2417,10 @@ function startProgressBar(matchId){
 }
 
 function startLiveExpandPolling(m, panel){
-  stopLiveExpandPolling(m.id);
-  _liveExpandTimers[m.id] = {};
-  startProgressBar(m.id);
+  // 기존 detail 폴링 타이머만 제거, progress bar 건드리지 않음
+  var st = _liveExpandTimers[m.id];
+  if(st && st.timer){ clearInterval(st.timer); st.timer = null; }
+  if(!st){ _liveExpandTimers[m.id] = {}; startProgressBar(m.id); }
   var timer = setInterval(function(){
     var p = document.getElementById('live-expand-'+m.id);
     if(!p || !p.classList.contains('open')){
