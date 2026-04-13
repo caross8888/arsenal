@@ -859,7 +859,12 @@ function buildFixCard(m){
       } else {
         expandPanel.classList.remove('open');
         expandBtn.textContent = '▼ 상세 보기';
-        setTimeout(function(){ expandPanel.innerHTML=''; stopLiveExpandPolling(m.id); }, 350);
+        setTimeout(function(){
+          expandPanel.innerHTML='';
+          // 상세 폴링만 중단, progress bar는 유지
+          var st = _liveExpandTimers[m.id];
+          if(st){ if(st.timer){ clearInterval(st.timer); st.timer=null; } }
+        }, 350);
       }
     };
   }
