@@ -2368,12 +2368,13 @@ function loadLiveExpand(m, panel){
     }
   }
 
-  panel.innerHTML =
-    '<div id="live-detail-'+m.id+'"><div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">로딩 중...</div></div>';
+  // 기존 콘텐츠 없을 때만 로딩 스피너 표시
+  if(!document.getElementById('live-detail-'+m.id)){
+    panel.innerHTML = '<div id="live-detail-'+m.id+'"><div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">로딩 중...</div></div>';
+  }
 
-  // 매치 상세 API 호출 (실패 시 3초 후 1회 재시도)
   var matchApiUrl = FN+'/match?id='+m.id+'&slug='+slug;
-  function applyDetail(data){
+  (window.apiFetch||apiFetch)(matchApiUrl).then(function(data){
     var el = document.getElementById('live-detail-'+m.id);
     if(!el) return;
     el.innerHTML = buildLiveDetail(data);
@@ -2381,24 +2382,8 @@ function loadLiveExpand(m, panel){
       var btn = el.querySelector('[data-tab="'+activeTab+'"]');
       if(btn) liveSwitchTab(btn, activeTab);
     }
-    if(activeSide === 'away'){
-      setTimeout(function(){
-        var activePanel = el.querySelector('.live-tab-panel:not([style*="none"]),.live-tab-panel:not([style])');
-        if(activePanel){
-          var sideBtn = activePanel.querySelector('[data-side="away"]');
-          if(sideBtn) sideBtn.click();
-        }
-      }, 50);
-    }
-  }
-  (window.apiFetch||apiFetch)(matchApiUrl).then(applyDetail).catch(function(){
-    // 실패 시 3초 후 1회 재시도
-    setTimeout(function(){
-      (window.apiFetch||apiFetch)(matchApiUrl+'&retry=1').then(applyDetail).catch(function(){
-        var el = document.getElementById('live-detail-'+m.id);
-        if(el) el.innerHTML = '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">데이터를 불러올 수 없어요</div>';
-      });
-    }, 3000);
+  }).catch(function(){
+    // 실패 시 기존 콘텐츠 유지 (있으면), 없으면 조용히 대기
   });
 
 }
