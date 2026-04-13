@@ -2643,6 +2643,115 @@ function stopLivePolling(){
   if(_liveTimer){clearInterval(_liveTimer);_liveTimer=null;}
 }
 
+// ── 라이브 Mock 테스트 (콘솔에서 testLiveMatch() 호출) ──
+var _mockMatchDetail = null;
+
+window.testLiveMatch = function(opts){
+  opts = opts || {};
+  var homeScore = opts.homeScore !== undefined ? opts.homeScore : 2;
+  var awayScore = opts.awayScore !== undefined ? opts.awayScore : 1;
+  var clock     = opts.clock || "67'";
+
+  var mockFixture = {
+    id: 'mock-live-001',
+    status: 'IN_PLAY',
+    clock: clock,
+    isHT: opts.isHT || false,
+    utcDate: new Date().toISOString(),
+    competition: { name: 'Premier League', short: 'PL' },
+    homeTeam: { id: '359', name: 'Arsenal',       shortName: 'Arsenal',   crest: 'https://a.espncdn.com/i/teamlogos/soccer/500/359.png' },
+    awayTeam: { id: '382', name: 'Manchester City', shortName: 'Man City', crest: 'https://a.espncdn.com/i/teamlogos/soccer/500/382.png' },
+    score: { fullTime: { home: homeScore, away: awayScore } },
+    venue: 'Emirates Stadium'
+  };
+
+  // 상세 패널용 mock 데이터 (buildLiveDetail 포맷)
+  _mockMatchDetail = {
+    homeTeam: { name: 'Arsenal',        color: '#EF0107' },
+    awayTeam: { name: 'Manchester City', color: '#6CABDD' },
+    events: [
+      { type: 'goal',         team: 'home', player: '살라카 (12\')',           time: "12'" },
+      { type: 'yellowCard',   team: 'away', player: 'B. 실바 (28\')',           time: "28'" },
+      { type: 'goal',         team: 'home', player: '하버츠 (41\')',            time: "41'" },
+      { type: 'goal',         team: 'away', player: '홀란드 (54\')',            time: "54'" },
+      { type: 'substitution', team: 'away', player: '구운두지 → B.실바 (61\')', time: "61'" },
+    ],
+    teamStats: [
+      { label: '점유율 (%)',   home: 56,  away: 44  },
+      { label: '슈팅',         home: 12,  away: 8   },
+      { label: '유효 슈팅',    home: 5,   away: 3   },
+      { label: '코너킥',       home: 6,   away: 3   },
+      { label: '파울',         home: 9,   away: 13  },
+      { label: '오프사이드',   home: 2,   away: 1   },
+      { label: '경고',         home: 0,   away: 1   },
+    ],
+    players: {
+      homeFormation: '4-3-3',
+      awayFormation: '4-3-3',
+      home: [
+        // 선발 (starter:true, formationPlace 필수)
+        { starter:true, formationPlace:1,  jersey:1,  name:'D. Raya',       position:'GK', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:0,yellowCards:0} },
+        { starter:true, formationPlace:2,  jersey:2,  name:'B. White',      position:'RB', stats:{goals:0,assists:0,shots:1,shotsOnTarget:0,fouls:1,yellowCards:0} },
+        { starter:true, formationPlace:3,  jersey:6,  name:'G. Magalhães',  position:'CB', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:2,yellowCards:0} },
+        { starter:true, formationPlace:4,  jersey:12, name:'J. Timber',     position:'CB', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:1,yellowCards:0} },
+        { starter:true, formationPlace:5,  jersey:35, name:'O. Zinchenko',  position:'LB', stats:{goals:0,assists:1,shots:0,shotsOnTarget:0,fouls:0,yellowCards:0} },
+        { starter:true, formationPlace:6,  jersey:29, name:'K. Havertz',    position:'CM', stats:{goals:1,assists:0,shots:2,shotsOnTarget:1,fouls:1,yellowCards:0} },
+        { starter:true, formationPlace:7,  jersey:8,  name:'M. Ødegaard',   position:'CM', stats:{goals:0,assists:1,shots:2,shotsOnTarget:1,fouls:0,yellowCards:0} },
+        { starter:true, formationPlace:8,  jersey:34, name:'G. Ramsdale',   position:'DM', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:2,yellowCards:0} },
+        { starter:true, formationPlace:9,  jersey:11, name:'L. Trossard',   position:'LW', stats:{goals:0,assists:0,shots:1,shotsOnTarget:1,fouls:0,yellowCards:0} },
+        { starter:true, formationPlace:10, jersey:9,  name:'G. Jesus',      position:'ST', stats:{goals:0,assists:0,shots:3,shotsOnTarget:1,fouls:2,yellowCards:0},
+          subbedOut:true, subTime:"58'", subFor:{name:'E. Nketiah', jersey:14} },
+        { starter:true, formationPlace:11, jersey:7,  name:'B. Saka',       position:'RW', stats:{goals:1,assists:0,shots:3,shotsOnTarget:2,fouls:1,yellowCards:0} },
+        // 교체 (starter:false)
+        { starter:false, jersey:14, name:'E. Nketiah',   position:'ST', stats:{goals:0,assists:0,shots:1,shotsOnTarget:0,fouls:0,yellowCards:0} },
+        { starter:false, jersey:15, name:'F. Tomiyasu',  position:'RB', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:0,yellowCards:0} },
+        { starter:false, jersey:21, name:'F. Vieira',    position:'CM', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:0,yellowCards:0} },
+      ],
+      away: [
+        { starter:true, formationPlace:1,  jersey:31, name:'E. Ederson',    position:'GK', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:0,yellowCards:0} },
+        { starter:true, formationPlace:2,  jersey:2,  name:'K. Walker',     position:'RB', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:1,yellowCards:0} },
+        { starter:true, formationPlace:3,  jersey:5,  name:'M. Akanji',     position:'CB', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:1,yellowCards:0} },
+        { starter:true, formationPlace:4,  jersey:14, name:'A. Laporte',    position:'CB', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:0,yellowCards:0} },
+        { starter:true, formationPlace:5,  jersey:11, name:'J. Gvardiol',   position:'LB', stats:{goals:0,assists:0,shots:1,shotsOnTarget:0,fouls:0,yellowCards:0} },
+        { starter:true, formationPlace:6,  jersey:16, name:'R. Dias',       position:'DM', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:2,yellowCards:0} },
+        { starter:true, formationPlace:7,  jersey:20, name:'B. Silva',      position:'CM', stats:{goals:0,assists:1,shots:1,shotsOnTarget:0,fouls:1,yellowCards:1} },
+        { starter:true, formationPlace:8,  jersey:17, name:'K. De Bruyne',  position:'CM', stats:{goals:0,assists:0,shots:2,shotsOnTarget:1,fouls:0,yellowCards:0} },
+        { starter:true, formationPlace:9,  jersey:10, name:'J. Doku',       position:'LW', stats:{goals:0,assists:0,shots:1,shotsOnTarget:0,fouls:1,yellowCards:0} },
+        { starter:true, formationPlace:10, jersey:9,  name:'E. Haaland',    position:'ST', stats:{goals:1,assists:0,shots:4,shotsOnTarget:2,fouls:1,yellowCards:0} },
+        { starter:true, formationPlace:11, jersey:26, name:'S. Savinho',    position:'RW', stats:{goals:0,assists:0,shots:1,shotsOnTarget:1,fouls:1,yellowCards:0} },
+        // 교체
+        { starter:false, jersey:25, name:'M. Gündogan',  position:'CM', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:0,yellowCards:0} },
+        { starter:false, jersey:7,  name:'İ. Gündoğan', position:'CM', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:0,yellowCards:0} },
+        { starter:false, jersey:3,  name:'R. Lewis',     position:'LB', stats:{goals:0,assists:0,shots:0,shotsOnTarget:0,fouls:0,yellowCards:0} },
+      ]
+    }
+  };
+
+  // apiFetch 인터셉트: mock-live-001 match 요청 가로채기
+  if(!window._origApiFetch) window._origApiFetch = window.apiFetch || apiFetch;
+  window.apiFetch = function(url){
+    if(url && url.includes('match') && url.includes('mock-live-001')){
+      return Promise.resolve(_mockMatchDetail);
+    }
+    return window._origApiFetch(url);
+  };
+
+  var upEl = document.getElementById('upcomingList');
+  if(!upEl) return console.warn('upcomingList 요소를 찾을 수 없습니다.');
+  upEl.innerHTML = '';
+  upEl.appendChild(buildFixCard(mockFixture));
+  console.log('[Mock Live] 완료. ▼ 상세 보기 버튼을 클릭해 모든 탭을 확인하세요.');
+  console.log('종료: testLiveStop()');
+};
+
+window.testLiveStop = function(){
+  if(window._origApiFetch){ window.apiFetch = window._origApiFetch; delete window._origApiFetch; }
+  _mockMatchDetail = null;
+  stopLivePolling();
+  loadFixtures();
+  console.log('[Mock Live] 종료, 실제 데이터로 복원됨.');
+};
+
 function filterSq(f,btn){
   document.querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');renderSq(f);
