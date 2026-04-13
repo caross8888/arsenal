@@ -2416,6 +2416,7 @@ function startProgressBar(matchId){
 function startLiveExpandPolling(m, panel){
   stopLiveExpandPolling(m.id);
   _liveExpandTimers[m.id] = {};
+  startProgressBar(m.id);
   var timer = setInterval(function(){
     var p = document.getElementById('live-expand-'+m.id);
     if(!p || !p.classList.contains('open')){
