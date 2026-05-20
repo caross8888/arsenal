@@ -3196,6 +3196,30 @@ loadESPNStats();
 loadConfig();
 loadFixtures();
 loadStandings();
+
+// ── 폭죽 이펙트 (세션당 1회) ──
+(function(){
+  if(sessionStorage.getItem('confetti_done')) return;
+  sessionStorage.setItem('confetti_done','1');
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
+  s.onload = function(){
+    var duration = 3500;
+    var end = Date.now() + duration;
+    var colors = ['#EF0107','#ffffff','#C8A84B'];
+    // 좌우에서 폭죽 발사
+    (function frame(){
+      confetti({ particleCount: 3, angle: 60, spread: 55, origin:{x:0}, colors:colors });
+      confetti({ particleCount: 3, angle: 120, spread: 55, origin:{x:1}, colors:colors });
+      if(Date.now() < end) requestAnimationFrame(frame);
+    })();
+    // 중앙 한방
+    setTimeout(function(){
+      confetti({ particleCount: 120, spread: 100, origin:{x:0.5, y:0.4}, colors:colors, scalar:1.2 });
+    }, 400);
+  };
+  document.head.appendChild(s);
+})();
 </script>
 </body>
 </html>
