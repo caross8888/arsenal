@@ -1681,7 +1681,10 @@ function openTrophyDetailModal(enc){
   html += '<div style="padding:0 16px 24px;">';
 
   if(t.content){
-    html += '<p style="font-size:13px;color:var(--text-muted);line-height:1.75;margin:14px 0 0;">'+t.content+'</p>';
+    var paras = t.content.split(/\n\n+/).filter(function(p){ return p.trim(); });
+    html += paras.map(function(p){
+      return '<p style="font-size:13px;color:var(--text-muted);line-height:1.75;margin:14px 0 0;">'+p.trim()+'</p>';
+    }).join('');
   }
 
   if(t.key_stat){
