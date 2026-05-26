@@ -550,7 +550,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </div>
 <div class="page">
 <section id="fixtures" class="section active">
-  <div class="sec-head"><h1 class="sec-title">&#44221;&#44592; &#51068;&#51221;</h1><span class="sec-badge" id="fixBadge">&#47196;&#46377; &#51473;</span></div>
+  <div class="sec-head"><h1 class="sec-title">&#44221;&#44592; &#51068;&#51221;</h1><span class="sec-badge" id="fixBadge" onclick="toggleMockLive()" style="cursor:pointer;user-select:none;">&#47196;&#46377; &#51473;</span></div>
   <div id="upcomingWrap">
     <div class="fix-section-label">&#128197; &#50696;&#51221; &#44221;&#44592;</div>
     <div class="fix-list" id="upcomingList"><div class="loading-state"><div class="spinner"></div></div></div>
@@ -2781,6 +2781,21 @@ window.testLiveStop = function(){
   stopLivePolling();
   loadFixtures();
   console.log('[Mock Live] 종료, 실제 데이터로 복원됨.');
+};
+
+// ── ESPN 배지 탭 → Mock 라이브 토글 ──
+var _mockLiveActive = false;
+window.toggleMockLive = function(){
+  var badge = document.getElementById('fixBadge');
+  if(!_mockLiveActive){
+    _mockLiveActive = true;
+    if(badge){ badge.textContent = '🔴 MOCK ON'; badge.style.background = 'rgba(239,1,7,0.25)'; badge.style.color = '#ff6b6b'; }
+    window.testLiveMatch();
+  } else {
+    _mockLiveActive = false;
+    if(badge){ badge.textContent = 'ESPN'; badge.style.background = ''; badge.style.color = ''; }
+    window.testLiveStop();
+  }
 };
 
 function filterSq(f,btn){
