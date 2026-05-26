@@ -820,7 +820,13 @@ function buildFixCard(m){
     clk.textContent=m.isHT?'HT':(m.clock||'');
     card.appendChild(clk);
   }
-  if(m.venue){var v=document.createElement('div');v.className='fix-venue';v.textContent=m.venue;card.appendChild(v);}
+  if(m.venue){
+    var venueWrap=document.createElement('div');
+    venueWrap.className='fix-venue';
+    venueWrap.id='fix-venue-'+m.id;
+    venueWrap.innerHTML='<span>📍 '+m.venue+'</span>';
+    card.appendChild(venueWrap);
+  }
   if(isLive && m.id){
     // 라이브 카드 - 확장 패널
     // 항상 보이는 프로그레스바 영역
@@ -2385,6 +2391,15 @@ function loadLiveExpand(m, panel){
       var btn = el.querySelector('[data-tab="'+activeTab+'"]');
       if(btn) liveSwitchTab(btn, activeTab);
     }
+    // 카드의 venue 영역에 주심·관중수 업데이트
+    var venueEl = document.getElementById('fix-venue-'+m.id);
+    if(venueEl && (data.referee || data.venue || data.attendance)){
+      var html = '';
+      if(data.referee)    html += '<span style="display:block;font-size:9px;margin-bottom:2px;">🟨 주심 '+data.referee+'</span>';
+      if(data.venue)      html += '<span style="display:block;">📍 '+data.venue+'</span>';
+      if(data.attendance) html += '<span style="display:block;font-size:9px;margin-top:2px;">👥 '+Number(data.attendance).toLocaleString()+'명</span>';
+      venueEl.innerHTML = html;
+    }
   }).catch(function(){
     // 실패 시 기존 콘텐츠 유지 (있으면), 없으면 조용히 대기
   });
@@ -2472,17 +2487,6 @@ function buildLiveDetail(data){
 
   var h = '';
 
-  // ── 주심 · 경기장 · 관중수 ──
-  if(data.referee || data.venue || data.attendance){
-    h += '<div style="text-align:center;padding:8px 4px 6px;border-bottom:1px solid var(--border);margin-bottom:4px;">';
-    if(data.referee)
-      h += '<div style="font-size:10px;color:var(--text-dim);margin-bottom:3px;">🟨 주심 ' + data.referee + '</div>';
-    if(data.venue)
-      h += '<div style="font-size:11px;font-weight:700;color:var(--text);">📍 ' + data.venue + '</div>';
-    if(data.attendance)
-      h += '<div style="font-size:10px;color:var(--text-dim);margin-top:3px;">👥 ' + Number(data.attendance).toLocaleString() + '명</div>';
-    h += '</div>';
-  }
 
   // ── 탭: 이벤트 / 스탯 / 라인업 ──
   h += '<div style="display:flex;gap:6px;margin-bottom:0;padding-top:4px;flex-wrap:wrap;">';
