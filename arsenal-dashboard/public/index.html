@@ -2472,13 +2472,15 @@ function buildLiveDetail(data){
 
   var h = '';
 
-  // ── 주심 · 관중 메타 ──
-  var meta = [];
-  if(data.referee)    meta.push('🟨 주심 ' + data.referee);
-  if(data.attendance) meta.push('👥 ' + Number(data.attendance).toLocaleString() + '명');
-  if(meta.length){
-    h += '<div style="display:flex;gap:12px;flex-wrap:wrap;padding:6px 2px 4px;font-size:10px;color:var(--text-dim);">';
-    meta.forEach(function(m){ h += '<span>'+m+'</span>'; });
+  // ── 주심 · 경기장 · 관중수 ──
+  if(data.referee || data.venue || data.attendance){
+    h += '<div style="text-align:center;padding:8px 4px 6px;border-bottom:1px solid var(--border);margin-bottom:4px;">';
+    if(data.referee)
+      h += '<div style="font-size:10px;color:var(--text-dim);margin-bottom:3px;">🟨 주심 ' + data.referee + '</div>';
+    if(data.venue)
+      h += '<div style="font-size:11px;font-weight:700;color:var(--text);">📍 ' + data.venue + '</div>';
+    if(data.attendance)
+      h += '<div style="font-size:10px;color:var(--text-dim);margin-top:3px;">👥 ' + Number(data.attendance).toLocaleString() + '명</div>';
     h += '</div>';
   }
 
