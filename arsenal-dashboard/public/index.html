@@ -2496,8 +2496,9 @@ function buildLiveDetail(data){
   if(events.length){
     h += '<div style="padding:4px 0">';
     events.forEach(function(ev){
-      var icon = ev.type==='goal'?'⚽':ev.type==='yellowCard'?'🟨':ev.type==='redCard'?'🟥':ev.type==='substitution'?'🔄':'📌';
-      var isHome = ev.team==='home';
+      var icon = (ev.type==='goal'||ev.type==='pen_goal')?'⚽':ev.type==='own_goal'?'🔴':ev.type==='yellowCard'?'🟨':ev.type==='red_card'||ev.type==='redCard'?'🟥':ev.type==='substitution'?'🔄':'📌';
+      var isHome = (ev.homeAway||ev.team)==='home';
+      var min = ev.minute || ev.time || '';
       h += '<div style="display:flex;align-items:center;padding:5px 0;">';
       // 홈 (좌측)
       h += '<div style="flex:1;text-align:right;padding-right:8px;">';
@@ -2505,7 +2506,7 @@ function buildLiveDetail(data){
       h += '</div>';
       // 중앙 시간+아이콘
       h += '<div style="display:flex;align-items:center;gap:4px;min-width:60px;justify-content:center;">';
-      h += '<span style="font-size:10px;color:rgba(255,255,255,0.5);">'+ev.time+'</span>';
+      h += '<span style="font-size:10px;color:rgba(255,255,255,0.5);">'+min+'</span>';
       h += '<span style="font-size:13px;">'+icon+'</span>';
       h += '</div>';
       // 어웨이 (우측)
