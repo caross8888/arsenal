@@ -122,10 +122,22 @@ export default async function handler(req, res) {
       const isOwnGoal = typeText.includes('own goal') || typeText.includes('own-goal');
       const isRed = typeText.includes('red card') || typeText.includes('straight red') || typeText.includes('second yellow');
       if (!isGoal && !isOwnGoal && !isRed) continue;
-      const min = ev.clock?.displayValue || ev.period?.clock?.displayValue || ev.time?.displayValue || (ev.period?.number === 2 ? '45+?' : '?');
+      const rawMin = ev.clock?.displayValue || ev.period?.clock?.displayValue || ev.time?.displayValue || '';
+      // ESPN은 "22:37" (MM:SS 경과시간) 포맷으로 내려옴 → "22'" 형태로 변환
+      let min = rawMin;
+      if (/^\d{1,2}:\d{2}$/.test(rawMin)) {
+        const elapsed = parseInt(rawMin.split(':')[0], 10);
+        const periodNum = ev.period?.number || 1;
+        // 추가 시간 보정: 전반 45분 초과, 후반 90분 초과
+        const base = periodNum === 2 ? 45 : periodNum === 3 ? 90 : periodNum === 4 ? 105 : 0;
+        min = (base + elapsed) + "'";
+      } else if (!min) {
+        min = ev.period?.number === 2 ? '45+?' : '?';
+      }
       const player = ev.participants?.[0]?.athlete?.shortName || ev.participants?.[0]?.athlete?.displayName || ev.athlete?.shortName || ev.athlete?.displayName || ev.text?.split(' ')?.[0] || '';
       const evTeamId = ev.team?.id || ev.teamId;
-      const homeAway = evTeamId === home.id ? 'home' : 'away';
+      // 타입 불일치 방지: 숫자/문자열 모두 문자열로 변환 후 비교
+      const homeAway = String(evTeamId) === String(home.id) ? 'home' : 'away';
       events.push({ minute: min, type: isOwnGoal ? 'own_goal' : isPenGoal ? 'pen_goal' : isGoal ? 'goal' : 'red_card', player, homeAway });
     }
 
