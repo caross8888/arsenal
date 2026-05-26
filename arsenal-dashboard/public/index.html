@@ -2483,7 +2483,7 @@ function buildLiveDetail(data){
   }
 
   // ── 탭: 이벤트 / 스탯 / 라인업 ──
-  h += '<div style="display:flex;gap:0;margin-bottom:0;padding-top:4px;">';
+  h += '<div style="display:flex;gap:6px;margin-bottom:0;padding-top:4px;flex-wrap:wrap;">';
   h += '<button class="mm-tab active" data-tab="events" onclick="liveSwitchTab(this,&quot;events&quot;)">골&이벤트</button>';
   h += '<button class="mm-tab" data-tab="stats" onclick="liveSwitchTab(this,&quot;stats&quot;)">팀 스탯</button>';
   h += '<button class="mm-tab" data-tab="lineup" onclick="liveSwitchTab(this,&quot;lineup&quot;)">라인업</button>';
@@ -2557,7 +2557,7 @@ function buildLiveDetail(data){
     var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
     var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
     // 홈/어웨이 탭 버튼
-    h += '<div style="display:flex;gap:0;padding:10px 0 6px;">';
+    h += '<div style="display:flex;gap:6px;padding:10px 0 6px;">';
     h += '<button class="mm-tab active" data-side="home" onclick="liveSwitchSide(this,\'lineup\',\'home\')">'+(data.homeTeam&&data.homeTeam.name||'홈')+'</button>';
     h += '<button class="mm-tab" data-side="away" onclick="liveSwitchSide(this,\'lineup\',\'away\')">'+(data.awayTeam&&data.awayTeam.name||'어웨이')+'</button>';
     h += '</div>';
@@ -2592,7 +2592,7 @@ function buildLiveDetail(data){
   if(data.players){
     var hP2=data.players.home||[], aP2=data.players.away||[];
     // 홈/어웨이 탭 버튼
-    h += '<div style="display:flex;gap:0;padding:10px 0 6px;">';
+    h += '<div style="display:flex;gap:6px;padding:10px 0 6px;">';
     h += '<button class="mm-tab active" data-side="home" onclick="liveSwitchSide(this,\'players\',\'home\')">'+(data.homeTeam&&data.homeTeam.name||'홈')+'</button>';
     h += '<button class="mm-tab" data-side="away" onclick="liveSwitchSide(this,\'players\',\'away\')">'+(data.awayTeam&&data.awayTeam.name||'어웨이')+'</button>';
     h += '</div>';
