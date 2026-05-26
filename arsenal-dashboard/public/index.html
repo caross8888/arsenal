@@ -2472,6 +2472,16 @@ function buildLiveDetail(data){
 
   var h = '';
 
+  // ── 주심 · 관중 메타 ──
+  var meta = [];
+  if(data.referee)    meta.push('🟨 주심 ' + data.referee);
+  if(data.attendance) meta.push('👥 ' + Number(data.attendance).toLocaleString() + '명');
+  if(meta.length){
+    h += '<div style="display:flex;gap:12px;flex-wrap:wrap;padding:6px 2px 4px;font-size:10px;color:var(--text-dim);">';
+    meta.forEach(function(m){ h += '<span>'+m+'</span>'; });
+    h += '</div>';
+  }
+
   // ── 탭: 이벤트 / 스탯 / 라인업 ──
   h += '<div style="display:flex;gap:0;margin-bottom:0;padding-top:4px;">';
   h += '<button class="mm-tab active" data-tab="events" onclick="liveSwitchTab(this,&quot;events&quot;)">골&이벤트</button>';
@@ -2551,8 +2561,26 @@ function buildLiveDetail(data){
     h += '<button class="mm-tab" data-side="away" onclick="liveSwitchSide(this,\'lineup\',\'away\')">'+(data.awayTeam&&data.awayTeam.name||'어웨이')+'</button>';
     h += '</div>';
     // 피치
-    h += '<div class="live-side-panel" data-suffix="lineup-home">'+renderPitch(hS,hF,hColor,hP)+'</div>';
-    h += '<div class="live-side-panel" data-suffix="lineup-away" style="display:none">'+renderPitch(aS,aF,aColor,aP)+'</div>';
+    // 교체 목록 렌더 함수
+    function renderSubList(players){
+      var subs = players.filter(function(p){ return p.starter && p.subbedOut && p.subTime; });
+      if(!subs.length) return '';
+      var s = '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px;">';
+      s += '<div style="font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px;">교체</div>';
+      subs.forEach(function(p){
+        var inName = p.subFor ? p.subFor.name : '?';
+        s += '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px;">';
+        s += '<span style="color:var(--text-dim);min-width:30px;">'+p.subTime+'</span>';
+        s += '<span style="color:#F87171;">↓ '+p.name+'</span>';
+        s += '<span style="color:var(--text-dim);margin:0 2px;">→</span>';
+        s += '<span style="color:#4ADE80;">↑ '+inName+'</span>';
+        s += '</div>';
+      });
+      s += '</div>';
+      return s;
+    }
+    h += '<div class="live-side-panel" data-suffix="lineup-home">'+renderPitch(hS,hF,hColor,hP)+renderSubList(hP)+'</div>';
+    h += '<div class="live-side-panel" data-suffix="lineup-away" style="display:none">'+renderPitch(aS,aF,aColor,aP)+renderSubList(aP)+'</div>';
   } else {
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
   }
