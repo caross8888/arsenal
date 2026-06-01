@@ -755,6 +755,7 @@ function buildFixCard(m){
   }
   var card=document.createElement('div');
   card.className='fix-card '+(isLive?'live-match':isDone?'finished '+resultCls:'upcoming');
+  card.id='fix-card-'+m.id;
   if(resultBg) card.style.background=resultBg;
 
   // 5레이어 grid 구조
@@ -2650,24 +2651,29 @@ function startLivePolling(){
     if(document.hidden) return; // 백그라운드면 스킵
     apiFetch(FN+'/football?type=fixtures&nocache=1').then(function(data){
       var hasLive = (data.matches||[]).some(function(m){return m.status==='IN_PLAY';});
-      var upEl = document.getElementById('upcomingList');
-      var fnEl = document.getElementById('finishedList');
-      if(upEl && fnEl){
-        var finishedAll = (data.finished||[]).slice().reverse();
-        var upcomingAll = data.upcoming||[];
-        // PL 라운드 재계산
-        var allPL=[...(data.finished||[]),...(data.upcoming||[])]
-          .filter(function(m){return m.competition&&m.competition.short==='PL';})
-          .sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);});
-        var round=1;
-        allPL.forEach(function(m){
-          if(m.tbd==='postponed'||m.tbd==='canceled'){m.round=null;return;}
-          m.round='pl'+round; ROUND_LABEL['pl'+round]=round+'라운드'; round++;
-        });
-        renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
-        renderList(fnEl, finishedAll.slice(0,5), finishedAll);
+      // 라이브 카드만 clock · score 부분 업데이트 (전체 재빌드 안 함)
+      (data.matches||[]).filter(function(m){return m.status==='IN_PLAY';}).forEach(function(m){
+        // clock
+        var clkEl = document.querySelector('#fix-card-'+m.id+' .fix-live-clock');
+        if(clkEl) clkEl.textContent = m.isHT ? 'HT' : (m.clock||'');
+        // score
+        var scoreEl = document.querySelector('#fix-card-'+m.id+' .fix-score');
+        var hs = m.score&&m.score.fullTime?m.score.fullTime.home:0;
+        var as_ = m.score&&m.score.fullTime?m.score.fullTime.away:0;
+        if(scoreEl) scoreEl.textContent = (hs||0)+' : '+(as_||0);
+      });
+      // 라이브 → 종료로 바뀐 경기가 있으면 전체 리스트 갱신
+      if(!hasLive){
+        var upEl = document.getElementById('upcomingList');
+        var fnEl = document.getElementById('finishedList');
+        if(upEl && fnEl){
+          var finishedAll = (data.finished||[]).slice().reverse();
+          var upcomingAll = data.upcoming||[];
+          renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
+          renderList(fnEl, finishedAll.slice(0,5), finishedAll);
+        }
+        stopLivePolling();
       }
-      if(!hasLive) stopLivePolling();
     }).catch(function(){});
   }, 30000);
 }
@@ -3256,55 +3262,6 @@ loadConfig();
 loadFixtures();
 loadStandings();
 
-// ── 폭죽 이펙트 (세션당 1회) ──
-(function(){
-  if(sessionStorage.getItem('confetti_done')) return;
-  sessionStorage.setItem('confetti_done','1');
-
-  // 우승 문구 오버레이
-  var overlay = document.createElement('div');
-  overlay.style.cssText = [
-    'position:fixed','top:0','left:0','right:0','bottom:0',
-    'display:flex','flex-direction:column','align-items:center','justify-content:center',
-    'z-index:9999','pointer-events:none',
-    'background:rgba(0,0,0,0.72)',
-    'opacity:0','transition:opacity 0.7s ease'
-  ].join(';');
-  overlay.innerHTML =
-    '<div style="text-align:center;padding:0 32px;">' +
-      '<img src="/data/history_images/trophy_league.png" style="width:120px;height:auto;object-fit:contain;margin-bottom:18px;filter:drop-shadow(0 0 24px rgba(200,168,75,0.7))" onerror="this.style.display=\'none\'">' +
-      '<div style="font-size:12px;letter-spacing:5px;color:#C8A84B;font-weight:800;text-transform:uppercase;margin-bottom:10px;">2025 — 2026</div>' +
-      '<div style="font-size:30px;font-weight:900;color:#ffffff;line-height:1.3;letter-spacing:1px;">아스날<br>프리미어리그 우승</div>' +
-      '<div style="margin-top:14px;width:60px;height:2px;background:linear-gradient(90deg,transparent,#C8A84B,transparent);margin-left:auto;margin-right:auto;"></div>' +
-    '</div>';
-  document.body.appendChild(overlay);
-
-  // 페이드인
-  requestAnimationFrame(function(){ overlay.style.opacity = '1'; });
-  // 2.5초 후 페이드아웃 후 제거
-  setTimeout(function(){
-    overlay.style.opacity = '0';
-    setTimeout(function(){ overlay.parentNode && overlay.parentNode.removeChild(overlay); }, 700);
-  }, 2500);
-
-  // 폭죽 라이브러리 로드
-  var s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
-  s.onload = function(){
-    var duration = 3500;
-    var end = Date.now() + duration;
-    var colors = ['#EF0107','#ffffff','#C8A84B'];
-    (function frame(){
-      confetti({ particleCount: 3, angle: 60, spread: 55, origin:{x:0}, colors:colors });
-      confetti({ particleCount: 3, angle: 120, spread: 55, origin:{x:1}, colors:colors });
-      if(Date.now() < end) requestAnimationFrame(frame);
-    })();
-    setTimeout(function(){
-      confetti({ particleCount: 120, spread: 100, origin:{x:0.5, y:0.4}, colors:colors, scalar:1.2 });
-    }, 400);
-  };
-  document.head.appendChild(s);
-})();
 </script>
 </body>
 </html>
