@@ -92,7 +92,18 @@ export default async function handler(req, res) {
           competition: {name, short},
           round:       e.season?.slug||e.seasonType?.name?.toLowerCase()||null,
           status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
-          clock:       live ? (comp?.status?.displayClock||'') : null,
+          clock:       live ? (() => {
+            const raw = comp?.status?.displayClock || '';
+            const period = comp?.status?.period || 1;
+            // "67:34" → "67'" / "90+2:11" → "90+2'"
+            const mm = raw.match(/^(\d{1,3}(?:\+\d+)?):/);
+            if (mm) {
+              const mins = parseInt(mm[1], 10);
+              const base = period === 2 ? 45 : period === 3 ? 90 : period === 4 ? 105 : 0;
+              return (base + mins) + "'";
+            }
+            return raw; // 이미 "67'" 등 포맷이면 그대로
+          })() : null,
           period:      live ? (comp?.status?.period||null) : null,
           isHT:        live && comp?.status?.type?.description === 'Halftime',
           tbd:         status?.id === '5' || status?.description === 'Postponed' ? 'postponed' : status?.id === '6' || status?.description === 'Canceled' ? 'canceled' : status?.id === '8' ? 'tbd' : null,

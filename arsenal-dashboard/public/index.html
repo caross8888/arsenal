@@ -755,6 +755,7 @@ function buildFixCard(m){
   }
   var card=document.createElement('div');
   card.className='fix-card '+(isLive?'live-match':isDone?'finished '+resultCls:'upcoming');
+  card.id='fix-card-'+m.id;
   if(resultBg) card.style.background=resultBg;
 
   // 5레이어 grid 구조
@@ -2650,24 +2651,29 @@ function startLivePolling(){
     if(document.hidden) return; // 백그라운드면 스킵
     apiFetch(FN+'/football?type=fixtures&nocache=1').then(function(data){
       var hasLive = (data.matches||[]).some(function(m){return m.status==='IN_PLAY';});
-      var upEl = document.getElementById('upcomingList');
-      var fnEl = document.getElementById('finishedList');
-      if(upEl && fnEl){
-        var finishedAll = (data.finished||[]).slice().reverse();
-        var upcomingAll = data.upcoming||[];
-        // PL 라운드 재계산
-        var allPL=[...(data.finished||[]),...(data.upcoming||[])]
-          .filter(function(m){return m.competition&&m.competition.short==='PL';})
-          .sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);});
-        var round=1;
-        allPL.forEach(function(m){
-          if(m.tbd==='postponed'||m.tbd==='canceled'){m.round=null;return;}
-          m.round='pl'+round; ROUND_LABEL['pl'+round]=round+'라운드'; round++;
-        });
-        renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
-        renderList(fnEl, finishedAll.slice(0,5), finishedAll);
+      // 라이브 카드만 clock · score 부분 업데이트 (전체 재빌드 안 함)
+      (data.matches||[]).filter(function(m){return m.status==='IN_PLAY';}).forEach(function(m){
+        // clock
+        var clkEl = document.querySelector('#fix-card-'+m.id+' .fix-live-clock');
+        if(clkEl) clkEl.textContent = m.isHT ? 'HT' : (m.clock||'');
+        // score
+        var scoreEl = document.querySelector('#fix-card-'+m.id+' .fix-score');
+        var hs = m.score&&m.score.fullTime?m.score.fullTime.home:0;
+        var as_ = m.score&&m.score.fullTime?m.score.fullTime.away:0;
+        if(scoreEl) scoreEl.textContent = (hs||0)+' : '+(as_||0);
+      });
+      // 라이브 → 종료로 바뀐 경기가 있으면 전체 리스트 갱신
+      if(!hasLive){
+        var upEl = document.getElementById('upcomingList');
+        var fnEl = document.getElementById('finishedList');
+        if(upEl && fnEl){
+          var finishedAll = (data.finished||[]).slice().reverse();
+          var upcomingAll = data.upcoming||[];
+          renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
+          renderList(fnEl, finishedAll.slice(0,5), finishedAll);
+        }
+        stopLivePolling();
       }
-      if(!hasLive) stopLivePolling();
     }).catch(function(){});
   }, 30000);
 }
