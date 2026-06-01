@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-01T00:02:12.249667",
+  "updated_at": "2026-06-01T14:01:57.795439",
   "season": "2025/2026",
   "source": "Fotmob",
   "players": [
@@ -16,7 +16,7 @@
       "height": "189 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 6336219,
+        "value": 6380064,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
@@ -149,24 +149,125 @@
           "avgRating": 7.0
         }
       },
-      "stats": {},
+      "stats": {
+        "saves": {
+          "value": "2",
+          "per90": 2,
+          "percentile": 3
+        },
+        "save_percentage": {
+          "value": "66.7",
+          "per90": 66.67,
+          "percentile": 44
+        },
+        "goals_conceded": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 95
+        },
+        "goals_prevented": {
+          "value": "-0.06",
+          "per90": -0.06,
+          "percentile": 62
+        },
+        "clean_sheet_team_title": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "error_led_to_goal": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "keeper_sweeper": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 8
+        },
+        "keeper_high_claim": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 8
+        },
+        "successful_passes": {
+          "value": "15",
+          "per90": 15,
+          "percentile": 0
+        },
+        "successful_passes_accuracy": {
+          "value": "75.0",
+          "per90": 75,
+          "percentile": 82
+        },
+        "long_balls_accurate": {
+          "value": "3",
+          "per90": 3,
+          "percentile": 0
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "37.5",
+          "per90": 37.5,
+          "percentile": 79
+        },
+        "expected_assists": {
+          "value": "0.00",
+          "per90": 0.0,
+          "percentile": 0
+        },
+        "yellow_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "rating": {
+          "value": "7.25",
+          "per90": 7.25,
+          "percentile": 87
+        },
+        "matches_uppercase": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 0
+        },
+        "player_started_matches": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 0
+        },
+        "saved_penalties": {
+          "value": "0/0",
+          "per90": 0,
+          "percentile": 0
+        }
+      },
       "traits": {
         "title": "Stats compared to other keepers",
         "items": [
           {
             "key": "keeper_sweeper_actions",
             "title": "Sweeper actions",
-            "value": 98
+            "value": 99
           },
           {
             "key": "goals_conceded",
             "title": "Goals conceded",
-            "value": 91
+            "value": 90
           },
           {
             "key": "save_percentage",
             "title": "Save percentage",
-            "value": 59
+            "value": 60
           },
           {
             "key": "keeper_high_claim",
@@ -176,12 +277,12 @@
           {
             "key": "clean_sheet",
             "title": "Clean sheets",
-            "value": 42
+            "value": 43
           },
           {
             "key": "long_ball_succeeeded_accuracy",
             "title": "Long ball percentage",
-            "value": 8
+            "value": 9
           }
         ]
       },
@@ -200,7 +301,7 @@
       "height": "183 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 27735546,
+        "value": 30509101,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
@@ -324,14 +425,120 @@
           "avgRating": null
         }
       },
-      "stats": {},
+      "stats": {
+        "saves": {
+          "value": "60",
+          "per90": 1.62,
+          "percentile": 51
+        },
+        "save_percentage": {
+          "value": "69.8",
+          "per90": 69.77,
+          "percentile": 72
+        },
+        "goals_conceded": {
+          "value": "26",
+          "per90": 0.7,
+          "percentile": 54
+        },
+        "goals_prevented": {
+          "value": "-1.13",
+          "per90": -0.03,
+          "percentile": 41
+        },
+        "clean_sheet_team_title": {
+          "value": "19",
+          "per90": 0.51,
+          "percentile": 100
+        },
+        "error_led_to_goal": {
+          "value": "1",
+          "per90": 0.03,
+          "percentile": 33
+        },
+        "keeper_sweeper": {
+          "value": "32",
+          "per90": 0.86,
+          "percentile": 95
+        },
+        "keeper_high_claim": {
+          "value": "39",
+          "per90": 1.05,
+          "percentile": 87
+        },
+        "successful_passes": {
+          "value": "707",
+          "per90": 19.11,
+          "percentile": 77
+        },
+        "successful_passes_accuracy": {
+          "value": "64.8",
+          "per90": 64.8,
+          "percentile": 54
+        },
+        "long_balls_accurate": {
+          "value": "196",
+          "per90": 5.3,
+          "percentile": 82
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "34.2",
+          "per90": 34.21,
+          "percentile": 59
+        },
+        "chances_created": {
+          "value": "3",
+          "per90": 0.08,
+          "percentile": 92
+        },
+        "expected_assists": {
+          "value": "0.12",
+          "per90": 0.0,
+          "percentile": 85
+        },
+        "yellow_cards": {
+          "value": "1",
+          "per90": 0.03,
+          "percentile": 38
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "19",
+          "per90": 0.51,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "7.21",
+          "per90": 7.21,
+          "percentile": 82
+        },
+        "matches_uppercase": {
+          "value": "37",
+          "per90": 37,
+          "percentile": 82
+        },
+        "player_started_matches": {
+          "value": "37",
+          "per90": 37,
+          "percentile": 82
+        },
+        "saved_penalties": {
+          "value": "0/0",
+          "per90": 0,
+          "percentile": 0
+        }
+      },
       "traits": {
         "title": "Stats compared to other keepers",
         "items": [
           {
             "key": "keeper_sweeper_actions",
             "title": "Sweeper actions",
-            "value": 83
+            "value": 82
           },
           {
             "key": "goals_conceded",
@@ -346,7 +553,7 @@
           {
             "key": "keeper_high_claim",
             "title": "High claims",
-            "value": 79
+            "value": 80
           },
           {
             "key": "clean_sheet",
@@ -356,7 +563,7 @@
           {
             "key": "long_ball_succeeeded_accuracy",
             "title": "Long ball percentage",
-            "value": 32
+            "value": 35
           }
         ]
       },
@@ -450,7 +657,113 @@
           "avgRating": null
         }
       },
-      "stats": {},
+      "stats": {
+        "saves": {
+          "value": "25",
+          "per90": 2.95,
+          "percentile": 75
+        },
+        "save_percentage": {
+          "value": "69.4",
+          "per90": 69.44,
+          "percentile": 72
+        },
+        "goals_conceded": {
+          "value": "11",
+          "per90": 1.3,
+          "percentile": 30
+        },
+        "clean_sheet_team_title": {
+          "value": "3",
+          "per90": 0.35,
+          "percentile": 85
+        },
+        "penalty_saves": {
+          "value": "1",
+          "per90": 0.12,
+          "percentile": 81
+        },
+        "penalty_goals_conceded": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "penalty_save_percent": {
+          "value": "100.0",
+          "per90": 100,
+          "percentile": 100
+        },
+        "error_led_to_goal": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "keeper_sweeper": {
+          "value": "2",
+          "per90": 0.24,
+          "percentile": 33
+        },
+        "keeper_high_claim": {
+          "value": "4",
+          "per90": 0.47,
+          "percentile": 67
+        },
+        "successful_passes": {
+          "value": "283",
+          "per90": 33.38,
+          "percentile": 87
+        },
+        "successful_passes_accuracy": {
+          "value": "77.5",
+          "per90": 77.53,
+          "percentile": 77
+        },
+        "long_balls_accurate": {
+          "value": "39",
+          "per90": 4.6,
+          "percentile": 78
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "32.5",
+          "per90": 32.5,
+          "percentile": 50
+        },
+        "yellow_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "clean_sheet_title": {
+          "value": "3",
+          "per90": 0.35,
+          "percentile": 85
+        },
+        "rating": {
+          "value": "7.02",
+          "per90": 7.02,
+          "percentile": 83
+        },
+        "matches_uppercase": {
+          "value": "9",
+          "per90": 9,
+          "percentile": 76
+        },
+        "player_started_matches": {
+          "value": "9",
+          "per90": 9,
+          "percentile": 78
+        },
+        "saved_penalties": {
+          "value": "1/1",
+          "per90": 1,
+          "percentile": 0
+        }
+      },
       "traits": null,
       "season": "2025/2026"
     },
@@ -467,7 +780,7 @@
       "height": "186 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 36571022,
+        "value": 34454890,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
@@ -600,7 +913,228 @@
           "avgRating": 7.0
         }
       },
-      "stats": {},
+      "stats": {
+        "goals": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "expected_goals": {
+          "value": "0.46",
+          "per90": 0.06,
+          "percentile": 40
+        },
+        "expected_goals_on_target": {
+          "value": "0.33",
+          "per90": 0.04,
+          "percentile": 44
+        },
+        "non_penalty_xg": {
+          "value": "0.46",
+          "per90": 0.06,
+          "percentile": 42
+        },
+        "shots": {
+          "value": "5",
+          "per90": 0.64,
+          "percentile": 35
+        },
+        "ShotsOnTarget": {
+          "value": "1",
+          "per90": 0.13,
+          "percentile": 26
+        },
+        "assists": {
+          "value": "1",
+          "per90": 0.13,
+          "percentile": 38
+        },
+        "expected_assists": {
+          "value": "0.68",
+          "per90": 0.09,
+          "percentile": 31
+        },
+        "successful_passes": {
+          "value": "289",
+          "per90": 36.95,
+          "percentile": 25
+        },
+        "successful_passes_accuracy": {
+          "value": "81.6",
+          "per90": 81.64,
+          "percentile": 44
+        },
+        "long_balls_accurate": {
+          "value": "10",
+          "per90": 1.28,
+          "percentile": 26
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "32.3",
+          "per90": 32.26,
+          "percentile": 31
+        },
+        "chances_created": {
+          "value": "8",
+          "per90": 1.02,
+          "percentile": 33
+        },
+        "big_chance_created_team_title": {
+          "value": "3",
+          "per90": 0.38,
+          "percentile": 52
+        },
+        "crosses_succeeeded": {
+          "value": "3",
+          "per90": 0.38,
+          "percentile": 25
+        },
+        "crosses_succeeeded_accuracy": {
+          "value": "18.8",
+          "per90": 18.75,
+          "percentile": 36
+        },
+        "dribbles_succeeded": {
+          "value": "3",
+          "per90": 0.38,
+          "percentile": 26
+        },
+        "won_contest_subtitle": {
+          "value": "75.0",
+          "per90": 75,
+          "percentile": 95
+        },
+        "duel_won": {
+          "value": "36",
+          "per90": 4.6,
+          "percentile": 25
+        },
+        "duel_won_percent": {
+          "value": "53.7",
+          "per90": 53.73,
+          "percentile": 54
+        },
+        "aerials_won": {
+          "value": "12",
+          "per90": 1.53,
+          "percentile": 32
+        },
+        "aerials_won_percent": {
+          "value": "44.4",
+          "per90": 44.44,
+          "percentile": 25
+        },
+        "touches": {
+          "value": "546",
+          "per90": 69.8,
+          "percentile": 24
+        },
+        "touches_opp_box": {
+          "value": "16",
+          "per90": 2.05,
+          "percentile": 37
+        },
+        "dispossessed": {
+          "value": "2",
+          "per90": 0.26,
+          "percentile": 75
+        },
+        "fouls_won": {
+          "value": "6",
+          "per90": 0.77,
+          "percentile": 29
+        },
+        "defensive_actions": {
+          "value": "53",
+          "per90": 6.78,
+          "percentile": 24
+        },
+        "matchstats.headers.tackles": {
+          "value": "15",
+          "per90": 1.92,
+          "percentile": 23
+        },
+        "interceptions": {
+          "value": "9",
+          "per90": 1.15,
+          "percentile": 30
+        },
+        "blocked_shots": {
+          "value": "4",
+          "per90": 0.51,
+          "percentile": 42
+        },
+        "fouls": {
+          "value": "5",
+          "per90": 0.64,
+          "percentile": 18
+        },
+        "recoveries": {
+          "value": "28",
+          "per90": 3.58,
+          "percentile": 23
+        },
+        "poss_won_att_3rd_team_title": {
+          "value": "4",
+          "per90": 0.51,
+          "percentile": 50
+        },
+        "dribbled_past": {
+          "value": "8",
+          "per90": 1.02,
+          "percentile": 67
+        },
+        "clearances": {
+          "value": "25",
+          "per90": 3.2,
+          "percentile": 23
+        },
+        "clean_sheet_team_title": {
+          "value": "3",
+          "per90": 0.38,
+          "percentile": 38
+        },
+        "goals_conceded_while_on_pitch": {
+          "value": "6",
+          "per90": 0.77,
+          "percentile": 81
+        },
+        "expected_goals_against_while_on_pitch": {
+          "value": "8.60",
+          "per90": 1.1,
+          "percentile": 80
+        },
+        "yellow_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "6.92",
+          "per90": 6.92,
+          "percentile": 61
+        },
+        "matches_uppercase": {
+          "value": "12",
+          "per90": 12,
+          "percentile": 20
+        },
+        "player_started_matches": {
+          "value": "9",
+          "per90": 9,
+          "percentile": 23
+        },
+        "minutes_played": {
+          "value": "704",
+          "per90": 90,
+          "percentile": 24
+        }
+      },
       "traits": {
         "title": "Stats compared to other fullbacks",
         "items": [
@@ -627,7 +1161,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 39
+            "value": 40
           },
           {
             "key": "touches",
@@ -651,7 +1185,7 @@
       "height": "193 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 88508213,
+        "value": 97359035,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
@@ -784,7 +1318,233 @@
           "avgRating": 7.3
         }
       },
-      "stats": {},
+      "stats": {
+        "goals": {
+          "value": "1",
+          "per90": 0.03,
+          "percentile": 58
+        },
+        "expected_goals": {
+          "value": "0.86",
+          "per90": 0.03,
+          "percentile": 51
+        },
+        "expected_goals_on_target": {
+          "value": "0.86",
+          "per90": 0.03,
+          "percentile": 56
+        },
+        "non_penalty_xg": {
+          "value": "0.86",
+          "per90": 0.03,
+          "percentile": 51
+        },
+        "shots": {
+          "value": "5",
+          "per90": 0.17,
+          "percentile": 32
+        },
+        "ShotsOnTarget": {
+          "value": "1",
+          "per90": 0.03,
+          "percentile": 24
+        },
+        "headed_shots": {
+          "value": "4",
+          "per90": 0.14,
+          "percentile": 44
+        },
+        "assists": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "expected_assists": {
+          "value": "1.42",
+          "per90": 0.05,
+          "percentile": 88
+        },
+        "successful_passes": {
+          "value": "1954",
+          "per90": 67.25,
+          "percentile": 91
+        },
+        "successful_passes_accuracy": {
+          "value": "92.9",
+          "per90": 92.87,
+          "percentile": 91
+        },
+        "long_balls_accurate": {
+          "value": "59",
+          "per90": 2.03,
+          "percentile": 72
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "50.9",
+          "per90": 50.86,
+          "percentile": 87
+        },
+        "chances_created": {
+          "value": "10",
+          "per90": 0.34,
+          "percentile": 82
+        },
+        "big_chance_created_team_title": {
+          "value": "1",
+          "per90": 0.03,
+          "percentile": 46
+        },
+        "crosses_succeeeded": {
+          "value": "4",
+          "per90": 0.14,
+          "percentile": 88
+        },
+        "crosses_succeeeded_accuracy": {
+          "value": "44.4",
+          "per90": 44.44,
+          "percentile": 88
+        },
+        "dribbles_succeeded": {
+          "value": "7",
+          "per90": 0.24,
+          "percentile": 78
+        },
+        "won_contest_subtitle": {
+          "value": "70.0",
+          "per90": 70,
+          "percentile": 58
+        },
+        "duel_won": {
+          "value": "131",
+          "per90": 4.51,
+          "percentile": 68
+        },
+        "duel_won_percent": {
+          "value": "56.7",
+          "per90": 56.71,
+          "percentile": 41
+        },
+        "aerials_won": {
+          "value": "73",
+          "per90": 2.51,
+          "percentile": 68
+        },
+        "aerials_won_percent": {
+          "value": "55.3",
+          "per90": 55.3,
+          "percentile": 32
+        },
+        "touches": {
+          "value": "2412",
+          "per90": 83.01,
+          "percentile": 89
+        },
+        "touches_opp_box": {
+          "value": "22",
+          "per90": 0.76,
+          "percentile": 57
+        },
+        "dispossessed": {
+          "value": "9",
+          "per90": 0.31,
+          "percentile": 9
+        },
+        "fouls_won": {
+          "value": "16",
+          "per90": 0.55,
+          "percentile": 73
+        },
+        "defensive_actions": {
+          "value": "192",
+          "per90": 6.61,
+          "percentile": 58
+        },
+        "matchstats.headers.tackles": {
+          "value": "35",
+          "per90": 1.2,
+          "percentile": 66
+        },
+        "interceptions": {
+          "value": "17",
+          "per90": 0.59,
+          "percentile": 48
+        },
+        "blocked_shots": {
+          "value": "7",
+          "per90": 0.24,
+          "percentile": 26
+        },
+        "fouls": {
+          "value": "22",
+          "per90": 0.76,
+          "percentile": 74
+        },
+        "recoveries": {
+          "value": "113",
+          "per90": 3.89,
+          "percentile": 84
+        },
+        "poss_won_att_3rd_team_title": {
+          "value": "2",
+          "per90": 0.07,
+          "percentile": 66
+        },
+        "dribbled_past": {
+          "value": "7",
+          "per90": 0.24,
+          "percentile": 39
+        },
+        "clearances": {
+          "value": "133",
+          "per90": 4.58,
+          "percentile": 68
+        },
+        "clean_sheet_team_title": {
+          "value": "15",
+          "per90": 0.52,
+          "percentile": 98
+        },
+        "goals_conceded_while_on_pitch": {
+          "value": "20",
+          "per90": 0.69,
+          "percentile": 58
+        },
+        "expected_goals_against_while_on_pitch": {
+          "value": "20.20",
+          "per90": 0.7,
+          "percentile": 61
+        },
+        "yellow_cards": {
+          "value": "2",
+          "per90": 0.07,
+          "percentile": 49
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "7.16",
+          "per90": 7.16,
+          "percentile": 89
+        },
+        "matches_uppercase": {
+          "value": "31",
+          "per90": 31,
+          "percentile": 70
+        },
+        "player_started_matches": {
+          "value": "30",
+          "per90": 30,
+          "percentile": 74
+        },
+        "minutes_played": {
+          "value": "2615",
+          "per90": 90,
+          "percentile": 74
+        }
+      },
       "traits": {
         "title": "Stats compared to other center-backs",
         "items": [
@@ -835,7 +1595,7 @@
       "height": "190 cm",
       "preferredFoot": "Left",
       "marketValue": {
-        "value": 75583929,
+        "value": 55463901,
         "currency": "EUR"
       },
       "contractEnd": "2029-06-30",
@@ -1206,7 +1966,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 81
+            "value": 80
           },
           {
             "key": "defensive_actions",
@@ -1245,7 +2005,7 @@
       "height": "179 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 71808735,
+        "value": 78989608,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
@@ -1256,7 +2016,7 @@
           "startDate": "2023-07",
           "endDate": null,
           "active": true,
-          "appearances": "94",
+          "appearances": "95",
           "goals": "6",
           "assists": "10"
         },
@@ -1596,7 +2356,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 48
+            "value": 49
           }
         ]
       },
@@ -1615,7 +2375,7 @@
       "height": "188 cm",
       "preferredFoot": "Left",
       "marketValue": {
-        "value": 56383847,
+        "value": 62022231,
         "currency": "EUR"
       },
       "contractEnd": "2029-06-30",
@@ -1730,7 +2490,228 @@
           "avgRating": 7.2
         }
       },
-      "stats": {},
+      "stats": {
+        "goals": {
+          "value": "1",
+          "per90": 0.05,
+          "percentile": 52
+        },
+        "expected_goals": {
+          "value": "3.34",
+          "per90": 0.18,
+          "percentile": 96
+        },
+        "expected_goals_on_target": {
+          "value": "2.32",
+          "per90": 0.12,
+          "percentile": 92
+        },
+        "non_penalty_xg": {
+          "value": "3.34",
+          "per90": 0.18,
+          "percentile": 96
+        },
+        "shots": {
+          "value": "32",
+          "per90": 1.69,
+          "percentile": 94
+        },
+        "ShotsOnTarget": {
+          "value": "8",
+          "per90": 0.42,
+          "percentile": 88
+        },
+        "headed_shots": {
+          "value": "11",
+          "per90": 0.58,
+          "percentile": 96
+        },
+        "assists": {
+          "value": "2",
+          "per90": 0.11,
+          "percentile": 63
+        },
+        "expected_assists": {
+          "value": "0.76",
+          "per90": 0.04,
+          "percentile": 36
+        },
+        "successful_passes": {
+          "value": "647",
+          "per90": 34.11,
+          "percentile": 55
+        },
+        "successful_passes_accuracy": {
+          "value": "85.6",
+          "per90": 85.58,
+          "percentile": 73
+        },
+        "long_balls_accurate": {
+          "value": "20",
+          "per90": 1.05,
+          "percentile": 44
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "47.6",
+          "per90": 47.62,
+          "percentile": 75
+        },
+        "chances_created": {
+          "value": "9",
+          "per90": 0.47,
+          "percentile": 37
+        },
+        "crosses_succeeeded": {
+          "value": "3",
+          "per90": 0.16,
+          "percentile": 25
+        },
+        "crosses_succeeeded_accuracy": {
+          "value": "14.3",
+          "per90": 14.29,
+          "percentile": 21
+        },
+        "dribbles_succeeded": {
+          "value": "16",
+          "per90": 0.84,
+          "percentile": 74
+        },
+        "won_contest_subtitle": {
+          "value": "66.7",
+          "per90": 66.67,
+          "percentile": 92
+        },
+        "duel_won": {
+          "value": "104",
+          "per90": 5.48,
+          "percentile": 61
+        },
+        "duel_won_percent": {
+          "value": "56.5",
+          "per90": 56.52,
+          "percentile": 73
+        },
+        "aerials_won": {
+          "value": "48",
+          "per90": 2.53,
+          "percentile": 90
+        },
+        "aerials_won_percent": {
+          "value": "62.3",
+          "per90": 62.34,
+          "percentile": 83
+        },
+        "touches": {
+          "value": "1160",
+          "per90": 61.16,
+          "percentile": 50
+        },
+        "touches_opp_box": {
+          "value": "56",
+          "per90": 2.95,
+          "percentile": 83
+        },
+        "dispossessed": {
+          "value": "10",
+          "per90": 0.53,
+          "percentile": 46
+        },
+        "fouls_won": {
+          "value": "10",
+          "per90": 0.53,
+          "percentile": 37
+        },
+        "defensive_actions": {
+          "value": "102",
+          "per90": 5.38,
+          "percentile": 46
+        },
+        "matchstats.headers.tackles": {
+          "value": "32",
+          "per90": 1.69,
+          "percentile": 45
+        },
+        "interceptions": {
+          "value": "15",
+          "per90": 0.79,
+          "percentile": 43
+        },
+        "blocked_shots": {
+          "value": "5",
+          "per90": 0.26,
+          "percentile": 49
+        },
+        "fouls": {
+          "value": "26",
+          "per90": 1.37,
+          "percentile": 70
+        },
+        "recoveries": {
+          "value": "73",
+          "per90": 3.85,
+          "percentile": 49
+        },
+        "poss_won_att_3rd_team_title": {
+          "value": "5",
+          "per90": 0.26,
+          "percentile": 56
+        },
+        "dribbled_past": {
+          "value": "8",
+          "per90": 0.42,
+          "percentile": 67
+        },
+        "clearances": {
+          "value": "50",
+          "per90": 2.64,
+          "percentile": 51
+        },
+        "clean_sheet_team_title": {
+          "value": "4",
+          "per90": 0.21,
+          "percentile": 56
+        },
+        "goals_conceded_while_on_pitch": {
+          "value": "8",
+          "per90": 0.42,
+          "percentile": 77
+        },
+        "expected_goals_against_while_on_pitch": {
+          "value": "9.65",
+          "per90": 0.51,
+          "percentile": 76
+        },
+        "yellow_cards": {
+          "value": "5",
+          "per90": 0.26,
+          "percentile": 23
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "7.15",
+          "per90": 7.15,
+          "percentile": 87
+        },
+        "matches_uppercase": {
+          "value": "26",
+          "per90": 26,
+          "percentile": 52
+        },
+        "player_started_matches": {
+          "value": "22",
+          "per90": 22,
+          "percentile": 61
+        },
+        "minutes_played": {
+          "value": "1707",
+          "per90": 90,
+          "percentile": 51
+        }
+      },
       "traits": {
         "title": "Stats compared to other fullbacks",
         "items": [
@@ -1752,7 +2733,7 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 42
+            "value": 41
           },
           {
             "key": "shot_attempts",
@@ -1781,7 +2762,7 @@
       "height": "184 cm",
       "preferredFoot": "Left",
       "marketValue": {
-        "value": 62249813,
+        "value": 63074996,
         "currency": "EUR"
       },
       "contractEnd": "2029-06-30",
@@ -2125,7 +3106,7 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 93
+            "value": 94
           },
           {
             "key": "goals",
@@ -2140,7 +3121,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 59
+            "value": 60
           }
         ]
       },
@@ -2159,7 +3140,7 @@
       "height": "191 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 53935437,
+        "value": 51743911,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
@@ -2485,7 +3466,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 83
+            "value": 82
           }
         ]
       },
@@ -2504,7 +3485,7 @@
       "height": "178 cm",
       "preferredFoot": "Left",
       "marketValue": {
-        "value": 50915925,
+        "value": 51753239,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
@@ -2777,12 +3758,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 26
+            "value": 25
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 59
+            "value": 60
           },
           {
             "key": "defensive_actions",
@@ -3104,7 +4085,7 @@
       "height": "176 cm",
       "preferredFoot": "Left",
       "marketValue": {
-        "value": 68756503,
+        "value": 65354694,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
@@ -3504,7 +4485,7 @@
       "height": "187 cm",
       "preferredFoot": "Left",
       "marketValue": {
-        "value": 36317770,
+        "value": 33428236,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
@@ -3842,7 +4823,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 77
+            "value": 76
           },
           {
             "key": "aerials_won",
@@ -3852,7 +4833,7 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 64
+            "value": 65
           },
           {
             "key": "goals",
@@ -4217,12 +5198,12 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 57
+            "value": 58
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 75
+            "value": 76
           },
           {
             "key": "shot_attempts",
@@ -4251,7 +5232,7 @@
       "height": "185 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 102805376,
+        "value": 112914423,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
@@ -4568,7 +5549,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 66
+            "value": 67
           },
           {
             "key": "defensive_actions",
@@ -4583,7 +5564,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 61
+            "value": 62
           },
           {
             "key": "touches",
@@ -4607,7 +5588,7 @@
       "height": "185 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 6766408,
+        "value": 5891324,
         "currency": "EUR"
       },
       "contractEnd": "2027-06-30",
@@ -4924,7 +5905,7 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 67
+            "value": 68
           },
           {
             "key": "shot_attempts",
@@ -4934,7 +5915,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 93
+            "value": 94
           }
         ]
       },
@@ -5238,7 +6219,7 @@
       "height": "178 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 61247771,
+        "value": 61158147,
         "currency": "EUR"
       },
       "contractEnd": "2029-06-30",
@@ -5577,7 +6558,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 32
+            "value": 33
           },
           {
             "key": "aerials_won",
@@ -5597,12 +6578,12 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 81
+            "value": 80
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 39
+            "value": 40
           }
         ]
       },
@@ -5621,7 +6602,7 @@
       "height": "178 cm",
       "preferredFoot": "Left",
       "marketValue": {
-        "value": 98450000,
+        "value": 95207402,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
@@ -5944,7 +6925,7 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 76
+            "value": 77
           },
           {
             "key": "shot_attempts",
@@ -5954,7 +6935,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 61
+            "value": 62
           }
         ]
       },
@@ -5973,7 +6954,7 @@
       "height": "182 cm",
       "preferredFoot": "Left",
       "marketValue": {
-        "value": 64005171,
+        "value": 68218528,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
@@ -6303,7 +7284,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 77
+            "value": 78
           },
           {
             "key": "aerials_won",
@@ -6318,17 +7299,17 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 63
+            "value": 62
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 65
+            "value": 64
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 63
+            "value": 64
           }
         ]
       },
@@ -6347,7 +7328,7 @@
       "height": "180 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 55183576,
+        "value": 49665219,
         "currency": "EUR"
       },
       "contractEnd": "2027-06-30",
@@ -6659,7 +7640,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 38
+            "value": 39
           },
           {
             "key": "aerials_won",
@@ -6703,7 +7684,7 @@
       "height": "175 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 18891315,
+        "value": 17002183,
         "currency": "EUR"
       },
       "contractEnd": "2027-06-30",
@@ -7074,7 +8055,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 22
+            "value": 23
           },
           {
             "key": "defensive_actions",
@@ -7084,17 +8065,17 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 51
+            "value": 50
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 72
+            "value": 71
           },
           {
             "key": "touches",
             "title": "Touches",
-            "value": 53
+            "value": 54
           }
         ]
       },
@@ -7404,7 +8385,7 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 44
+            "value": 45
           },
           {
             "key": "aerials_won",
@@ -7414,7 +8395,7 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 78
+            "value": 76
           },
           {
             "key": "goals",
@@ -7424,7 +8405,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 88
+            "value": 89
           },
           {
             "key": "touches",
@@ -7448,7 +8429,7 @@
       "height": "193 cm",
       "preferredFoot": "Left",
       "marketValue": {
-        "value": 60182208,
+        "value": 60710978,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
@@ -7769,7 +8750,7 @@
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 68
+            "value": 67
           },
           {
             "key": "goals",
@@ -7779,7 +8760,7 @@
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 61
+            "value": 62
           },
           {
             "key": "touches",
@@ -7803,7 +8784,7 @@
       "height": "187 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 67059943,
+        "value": 67519407,
         "currency": "EUR"
       },
       "contractEnd": "2030-06-30",
@@ -8179,7 +9160,7 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 27
+            "value": 26
           },
           {
             "key": "defensive_actions",
@@ -8189,12 +9170,12 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 80
+            "value": 81
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 32
+            "value": 33
           },
           {
             "key": "touches",
