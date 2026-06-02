@@ -62,19 +62,26 @@ def fetch_arsenal_squad():
             raise ValueError('__NEXT_DATA__ 없음')
 
         page_data = json.loads(m.group(1))
-        # 스쿼드 데이터 경로 탐색
-        squad_raw = (
+        # 실제 경로: fallback → team-9825 → squad → squad
+        squad_groups = (
             page_data.get('props', {})
                      .get('pageProps', {})
-                     .get('data', {})
+                     .get('fallback', {})
+                     .get(f'team-{ARSENAL_TEAM_ID}', {})
                      .get('squad', {})
+                     .get('squad', [])
         )
         players = []
-        # roles: 'coaches', 'squad' → squad 안에 포지션별 그룹
-        for group in squad_raw.get('squad', []):
+        SKIP_ROLES = {'coach', 'manager', 'assistant'}
+        for group in squad_groups:
             for member in group.get('members', []):
+                # 감독/코치 제외 (role은 dict {'key': 'coach', 'fallback': 'Coach'})
+                role_raw = member.get('role') or {}
+                role = (role_raw.get('key') or role_raw.get('fallback') or str(role_raw)).lower()
+                if any(s in role for s in SKIP_ROLES):
+                    continue
                 pid  = member.get('id')
-                name = member.get('name') or member.get('fullName') or ''
+                name = member.get('name') or ''
                 slug = to_slug(name)
                 if pid and name:
                     players.append({'id': int(pid), 'slug': slug})
