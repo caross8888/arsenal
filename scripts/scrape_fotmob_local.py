@@ -443,11 +443,53 @@ def parse_stats(data):
     return result
 
 
+# ── football.js FOTMOB_IDS 자동 업데이트 ──────────────
+FOOTBALL_JS_PATH = Path('arsenal-dashboard/api/football.js')
+
+def update_fotmob_ids(squad):
+    """
+    스쿼드 리스트로 football.js의 FOTMOB_IDS 블록을 덮어쓴다.
+    slug의 첫 번째 파트(성 or 특이 이름)를 key로 사용.
+    """
+    if not FOOTBALL_JS_PATH.exists():
+        print('⚠️  football.js 없음 — FOTMOB_IDS 업데이트 스킵')
+        return
+
+    # key: slug에서 마지막 파트(성) 사용, 단 한 단어 slug면 그대로
+    def slug_to_key(slug):
+        parts = slug.split('-')
+        return parts[-1] if len(parts) > 1 else parts[0]
+
+    lines = ["const FOTMOB_IDS = {\n"]
+    for p in squad:
+        key = slug_to_key(p['slug'])
+        lines.append(f"  '{key}':{' ' * max(1, 14 - len(key))}{p['id']},\n")
+    lines.append("};\n")
+    new_block = ''.join(lines)
+
+    content = FOOTBALL_JS_PATH.read_text(encoding='utf-8')
+    # FOTMOB_IDS 블록 교체
+    updated = re.sub(
+        r'const FOTMOB_IDS = \{.*?\};',
+        new_block.strip(),
+        content,
+        flags=re.DOTALL
+    )
+    if updated == content:
+        print('⚠️  FOTMOB_IDS 블록을 찾지 못함 — 스킵')
+        return
+
+    FOOTBALL_JS_PATH.write_text(updated, encoding='utf-8')
+    print(f'✅ football.js FOTMOB_IDS 업데이트 완료 ({len(squad)}명)')
+
+
 # ── Git push ───────────────────────────────────────
 
 def git_push(filepath):
     try:
-        subprocess.run(['git', 'add', str(filepath)], check=True)
+        paths = [filepath] if not isinstance(filepath, list) else filepath
+        for p in paths:
+            subprocess.run(['git', 'add', str(p)], check=True)
         msg    = f'📊 Fotmob stats update {datetime.now().strftime("%Y-%m-%d %H:%M")}'
         result = subprocess.run(['git', 'diff', '--staged', '--quiet'])
         if result.returncode != 0:
@@ -471,11 +513,14 @@ def main():
     squad = fetch_arsenal_squad()
     print(f'🔍 Fotmob 선수 스탯 스크래핑 시작 ({len(squad)}명)')
 
+    # football.js FOTMOB_IDS 즉시 업데이트
+    update_fotmob_ids(squad)
+
     players = []
     detected_season = None
 
     for i, p in enumerate(squad):
-        print(f'  [{i+1}/{len(ARSENAL_PLAYERS)}] {p["slug"]}...', end=' ', flush=True)
+        print(f'  [{i+1}/{len(squad)}] {p["slug"]}...', end=' ', flush=True)
         data = fetch_player(p['id'], p['slug'])
         if data:
             parsed = parse_stats(data)
@@ -504,10 +549,10 @@ def main():
     print(f'\n✅ 완료! {len(players)}명 → {OUTPUT_PATH}  (시즌: {detected_season})')
 
     if GITHUB_TOKEN:
-        git_push(OUTPUT_PATH)
+        git_push([OUTPUT_PATH, FOOTBALL_JS_PATH])
     else:
         print('\n⚠️  GITHUB_TOKEN 미설정 — 수동으로 git push 해주세요')
-        print('   git add arsenal-dashboard/public/data/players.json arsenal-dashboard/public/data/player_images/')
+        print('   git add arsenal-dashboard/public/data/players.json arsenal-dashboard/public/data/player_images/ arsenal-dashboard/api/football.js')
         print('   git commit -m "📊 stats update"')
         print('   git push')
 
