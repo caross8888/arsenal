@@ -36,8 +36,62 @@ HEADERS = {
 
 ARSENAL_TEAM_ID = 9825
 
-# ── 아스날 선수 목록 (Fotmob ID) ──────────────────
-ARSENAL_PLAYERS = [
+# ── Fotmob 아스날 스쿼드 자동 크롤 ──────────────────
+def fetch_arsenal_squad():
+    """
+    Fotmob 아스날 스쿼드 페이지에서 현재 선수 목록(ID + slug)을 자동으로 가져온다.
+    실패 시 하드코딩 폴백 리스트를 반환한다.
+    """
+    import unicodedata
+
+    def to_slug(name: str) -> str:
+        """'Viktor Gyökeres' → 'viktor-gyokeres'"""
+        nfkd = unicodedata.normalize('NFKD', name)
+        ascii_name = nfkd.encode('ascii', 'ignore').decode('ascii')
+        return re.sub(r'[^a-z0-9]+', '-', ascii_name.lower()).strip('-')
+
+    url = f'https://www.fotmob.com/ko/teams/{ARSENAL_TEAM_ID}/arsenal/squad'
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=15)
+        r.raise_for_status()
+        m = re.search(
+            r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
+            r.text, re.DOTALL
+        )
+        if not m:
+            raise ValueError('__NEXT_DATA__ 없음')
+
+        page_data = json.loads(m.group(1))
+        # 스쿼드 데이터 경로 탐색
+        squad_raw = (
+            page_data.get('props', {})
+                     .get('pageProps', {})
+                     .get('data', {})
+                     .get('squad', {})
+        )
+        players = []
+        # roles: 'coaches', 'squad' → squad 안에 포지션별 그룹
+        for group in squad_raw.get('squad', []):
+            for member in group.get('members', []):
+                pid  = member.get('id')
+                name = member.get('name') or member.get('fullName') or ''
+                slug = to_slug(name)
+                if pid and name:
+                    players.append({'id': int(pid), 'slug': slug})
+
+        if not players:
+            raise ValueError('선수 목록 파싱 실패 — 폴백 사용')
+
+        print(f'✅ 스쿼드 자동 크롤 완료: {len(players)}명')
+        return players
+
+    except Exception as e:
+        print(f'⚠️  스쿼드 크롤 실패 ({e}) → 하드코딩 폴백 사용')
+        return ARSENAL_PLAYERS_FALLBACK
+
+
+# 폴백: 크롤 실패 시 사용하는 마지막 알려진 스쿼드
+ARSENAL_PLAYERS_FALLBACK = [
     {'id': 317564,  'slug': 'kepa-arrizabalaga'},
     {'id': 562727,  'slug': 'david-raya'},
     {'id': 1243239, 'slug': 'tommy-setford'},
@@ -409,14 +463,18 @@ def git_push(filepath):
 # ── 실행 ──────────────────────────────────────────
 
 def main():
-    print(f'🔍 Fotmob 스크래핑 시작 ({len(ARSENAL_PLAYERS)}명)')
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     IMAGES_PATH.mkdir(parents=True, exist_ok=True)
+
+    # 스쿼드 자동 크롤 (실패 시 폴백)
+    print('🔍 Fotmob 아스날 스쿼드 크롤 중...')
+    squad = fetch_arsenal_squad()
+    print(f'🔍 Fotmob 선수 스탯 스크래핑 시작 ({len(squad)}명)')
 
     players = []
     detected_season = None
 
-    for i, p in enumerate(ARSENAL_PLAYERS):
+    for i, p in enumerate(squad):
         print(f'  [{i+1}/{len(ARSENAL_PLAYERS)}] {p["slug"]}...', end=' ', flush=True)
         data = fetch_player(p['id'], p['slug'])
         if data:
