@@ -2143,43 +2143,125 @@ function renderPitch(starters, formation, teamColor, allPlayers){
   var rows = formation ? formation.split('-').map(Number) : [4,4,2];
   var expected = [1].concat(rows);
 
-  // 전통 축구 포지션 번호 → x 비율
-  // 2=RB(우), 3=LB(좌), 5=CB우, 6=CB좌
-  // 4=왼쪽DM, 8=오른쪽DM, 7=RW(우), 11=LW(좌), 9=ST(중), 10=CAM(중)
-  var FP_X = {
-    1:0.50,
-    2:0.88, 3:0.12,
-    4:0.25, 5:0.70, 6:0.30,
-    7:0.88, 8:0.70, 9:0.50, 10:0.50, 11:0.12
+  // ── 포메이션별 fp → {r:row, c:col} 슬롯 테이블 ──
+  // r: 0=GK row(아래), 숫자 클수록 위(공격방향)
+  // c: 0=왼쪽, 숫자 클수록 오른쪽
+  var FORM_MAP = {
+    '4-3-3': {
+      1:{r:0,c:0},
+      3:{r:1,c:0},6:{r:1,c:1},5:{r:1,c:2},2:{r:1,c:3},
+      4:{r:2,c:0},10:{r:2,c:1},8:{r:2,c:2},
+      11:{r:3,c:0},9:{r:3,c:1},7:{r:3,c:2}
+    },
+    '4-2-3-1': {
+      1:{r:0,c:0},
+      3:{r:1,c:0},6:{r:1,c:1},5:{r:1,c:2},2:{r:1,c:3},
+      4:{r:2,c:0},8:{r:2,c:1},
+      11:{r:3,c:0},10:{r:3,c:1},7:{r:3,c:2},
+      9:{r:4,c:0}
+    },
+    '4-4-2': {
+      1:{r:0,c:0},
+      3:{r:1,c:0},6:{r:1,c:1},5:{r:1,c:2},2:{r:1,c:3},
+      11:{r:2,c:0},4:{r:2,c:1},8:{r:2,c:2},7:{r:2,c:3},
+      10:{r:3,c:0},9:{r:3,c:1}
+    },
+    '4-1-4-1': {
+      1:{r:0,c:0},
+      3:{r:1,c:0},6:{r:1,c:1},5:{r:1,c:2},2:{r:1,c:3},
+      4:{r:2,c:0},
+      11:{r:3,c:0},8:{r:3,c:1},10:{r:3,c:2},7:{r:3,c:3},
+      9:{r:4,c:0}
+    },
+    '3-5-2': {
+      1:{r:0,c:0},
+      6:{r:1,c:0},5:{r:1,c:1},4:{r:1,c:2},
+      3:{r:2,c:0},11:{r:2,c:1},10:{r:2,c:2},8:{r:2,c:3},2:{r:2,c:4},
+      9:{r:3,c:0},7:{r:3,c:1}
+    },
+    '3-4-3': {
+      1:{r:0,c:0},
+      6:{r:1,c:0},5:{r:1,c:1},4:{r:1,c:2},
+      3:{r:2,c:0},8:{r:2,c:1},10:{r:2,c:2},2:{r:2,c:3},
+      11:{r:3,c:0},9:{r:3,c:1},7:{r:3,c:2}
+    },
+    '3-4-2-1': {
+      1:{r:0,c:0},
+      6:{r:1,c:0},5:{r:1,c:1},4:{r:1,c:2},
+      3:{r:2,c:0},8:{r:2,c:1},10:{r:2,c:2},2:{r:2,c:3},
+      11:{r:3,c:0},7:{r:3,c:1},
+      9:{r:4,c:0}
+    },
+    '4-3-2-1': {
+      1:{r:0,c:0},
+      3:{r:1,c:0},6:{r:1,c:1},5:{r:1,c:2},2:{r:1,c:3},
+      4:{r:2,c:0},10:{r:2,c:1},8:{r:2,c:2},
+      11:{r:3,c:0},7:{r:3,c:1},
+      9:{r:4,c:0}
+    },
+    '5-3-2': {
+      1:{r:0,c:0},
+      3:{r:1,c:0},6:{r:1,c:1},5:{r:1,c:2},4:{r:1,c:3},2:{r:1,c:4},
+      11:{r:2,c:0},8:{r:2,c:1},7:{r:2,c:2},
+      10:{r:3,c:0},9:{r:3,c:1}
+    },
+    '4-5-1': {
+      1:{r:0,c:0},
+      3:{r:1,c:0},6:{r:1,c:1},5:{r:1,c:2},2:{r:1,c:3},
+      11:{r:2,c:0},4:{r:2,c:1},8:{r:2,c:2},10:{r:2,c:3},7:{r:2,c:4},
+      9:{r:3,c:0}
+    }
   };
 
-  var sorted = starters.slice().sort(function(a,b){
-    var pa=POS_PRIORITY[a.position]!=null?POS_PRIORITY[a.position]:35;
-    var pb=POS_PRIORITY[b.position]!=null?POS_PRIORITY[b.position]:35;
-    return pa-pb;
-  });
-
-  var finalLines=[], idx=0;
-  expected.forEach(function(cnt){
-    finalLines.push(sorted.slice(idx,idx+cnt));
-    idx+=cnt;
-  });
-
-  var totalLines=finalLines.length;
   var coords={};
-  finalLines.forEach(function(line,li){
-    if(!line.length) return;
-    var yRatio=totalLines<=1?0:li/(totalLines-1);
-    var cy=Math.round(LAST_Y-yRatio*(LAST_Y-FIRST_Y));
-    line.forEach(function(p,ci){
-      var fp=p.formationPlace;
-      // x: fp 있으면 전통 번호 체계로 결정, 없으면 줄 내 균등 배치
-      var cx = (fp && FP_X[fp]!=null)
-        ? Math.round(FP_X[fp]*W)
-        : Math.round((W/(line.length+1))*(ci+1));
-      coords[fp||('_'+ci)]={x:cx, y:cy};
+  var formMap = formation ? FORM_MAP[formation] : null;
+
+  if(formMap){
+    // ── 포메이션 테이블로 직접 배치 ──
+    // row별 col 수 계산
+    var rowMeta={};
+    Object.keys(formMap).forEach(function(fp){
+      var pos=formMap[fp];
+      if(!rowMeta[pos.r]) rowMeta[pos.r]={count:0};
+      rowMeta[pos.r].count=Math.max(rowMeta[pos.r].count, pos.c+1);
     });
-  });
+    var rowNums=Object.keys(rowMeta).map(Number).sort(function(a,b){return a-b;});
+    var numRows=rowNums.length;
+
+    starters.forEach(function(p){
+      var fp=p.formationPlace;
+      var slot=fp && formMap[fp];
+      if(!slot) return;
+      var ri=rowNums.indexOf(slot.r);
+      var yRatio=numRows<=1?0:ri/(numRows-1);
+      var cy=Math.round(LAST_Y-yRatio*(LAST_Y-FIRST_Y));
+      var colCount=rowMeta[slot.r].count;
+      var cx=Math.round((W/(colCount+1))*(slot.c+1));
+      coords[fp]={x:cx,y:cy};
+    });
+
+  } else {
+    // ── 폴백: 포메이션 테이블 없으면 POS_PRIORITY 기반 기존 방식 ──
+    var sorted=starters.slice().sort(function(a,b){
+      var pa=POS_PRIORITY[a.position]!=null?POS_PRIORITY[a.position]:35;
+      var pb=POS_PRIORITY[b.position]!=null?POS_PRIORITY[b.position]:35;
+      return pa-pb;
+    });
+    var finalLines=[],idx2=0;
+    expected.forEach(function(cnt){
+      finalLines.push(sorted.slice(idx2,idx2+cnt));
+      idx2+=cnt;
+    });
+    var totalLines=finalLines.length;
+    finalLines.forEach(function(line,li){
+      if(!line.length) return;
+      var yRatio=totalLines<=1?0:li/(totalLines-1);
+      var cy=Math.round(LAST_Y-yRatio*(LAST_Y-FIRST_Y));
+      line.forEach(function(p,ci){
+        coords[p.formationPlace||('_'+ci)]={x:Math.round((W/(line.length+1))*(ci+1)),y:cy};
+      });
+    });
+  }
 
   // 교체된 선수 맵 (subbedOut 선수 formationPlace 기준)
   var subbedOutMap={};
