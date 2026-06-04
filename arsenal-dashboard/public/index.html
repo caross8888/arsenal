@@ -2153,10 +2153,15 @@ function renderPitch(starters, formation, teamColor, allPlayers){
   expected.forEach(function(cnt){
     var line=sorted.slice(idx,idx+cnt);
     line.sort(function(a,b){
+      // ESPN이 'AM','M','F','D' 같은 generic 코드를 줄 때는
+      // POS_ORDER가 실제 좌우를 반영 못하므로 formationPlace 우선 사용
+      var GENERIC={'AM':1,'M':1,'F':1,'D':1,'MF':1,'FW':1,'DF':1};
+      if(GENERIC[a.position]||GENERIC[b.position]){
+        return (b.formationPlace||0)-(a.formationPlace||0);
+      }
       var oa=POS_ORDER[a.position]!=null?POS_ORDER[a.position]:0;
       var ob=POS_ORDER[b.position]!=null?POS_ORDER[b.position]:0;
       if(oa!==ob) return oa-ob;
-      // POS_ORDER가 같으면(generic 포지션) formationPlace 내림차순 = 왼쪽→오른쪽
       return (b.formationPlace||0)-(a.formationPlace||0);
     });
     finalLines.push(line);
