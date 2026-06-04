@@ -2143,6 +2143,16 @@ function renderPitch(starters, formation, teamColor, allPlayers){
   var rows = formation ? formation.split('-').map(Number) : [4,4,2];
   var expected = [1].concat(rows);
 
+  // 전통 축구 포지션 번호 → x 비율
+  // 2=RB(우), 3=LB(좌), 5=CB우, 6=CB좌
+  // 4=왼쪽DM, 8=오른쪽DM, 7=RW(우), 11=LW(좌), 9=ST(중), 10=CAM(중)
+  var FP_X = {
+    1:0.50,
+    2:0.88, 3:0.12,
+    4:0.25, 5:0.70, 6:0.30,
+    7:0.88, 8:0.70, 9:0.50, 10:0.50, 11:0.12
+  };
+
   var sorted = starters.slice().sort(function(a,b){
     var pa=POS_PRIORITY[a.position]!=null?POS_PRIORITY[a.position]:35;
     var pb=POS_PRIORITY[b.position]!=null?POS_PRIORITY[b.position]:35;
@@ -2151,13 +2161,7 @@ function renderPitch(starters, formation, teamColor, allPlayers){
 
   var finalLines=[], idx=0;
   expected.forEach(function(cnt){
-    var line=sorted.slice(idx,idx+cnt);
-    // 전통 축구 번호 체계: 높은 번호 = 왼쪽 (11=LW, 3=LB), 낮은 번호 = 오른쪽 (2=RB, 7=RW)
-    // formationPlace 내림차순 정렬 → 줄 내 왼쪽→오른쪽 순서
-    line.sort(function(a,b){
-      return (b.formationPlace||0)-(a.formationPlace||0);
-    });
-    finalLines.push(line);
+    finalLines.push(sorted.slice(idx,idx+cnt));
     idx+=cnt;
   });
 
@@ -2168,7 +2172,12 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     var yRatio=totalLines<=1?0:li/(totalLines-1);
     var cy=Math.round(LAST_Y-yRatio*(LAST_Y-FIRST_Y));
     line.forEach(function(p,ci){
-      coords[p.formationPlace]={x:Math.round((W/(line.length+1))*(ci+1)),y:cy};
+      var fp=p.formationPlace;
+      // x: fp 있으면 전통 번호 체계로 결정, 없으면 줄 내 균등 배치
+      var cx = (fp && FP_X[fp]!=null)
+        ? Math.round(FP_X[fp]*W)
+        : Math.round((W/(line.length+1))*(ci+1));
+      coords[fp||('_'+ci)]={x:cx, y:cy};
     });
   });
 
