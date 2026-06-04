@@ -2143,6 +2143,16 @@ function renderPitch(starters, formation, teamColor, allPlayers){
   var rows = formation ? formation.split('-').map(Number) : [4,4,2];
   var expected = [1].concat(rows);
 
+  // 전통 축구 포지션 번호 → x 비율 (formationPlace = 축구 전통 등번호 체계)
+  // 1=GK, 2=RB, 3=LB, 4=왼쪽DM, 5=오른쪽CB, 6=왼쪽CB,
+  // 7=RW, 8=오른쪽CM, 9=ST, 10=CAM, 11=LW
+  var FP_X = {
+    1:0.50,
+    2:0.85, 3:0.15,
+    4:0.28, 5:0.72, 6:0.28,
+    7:0.85, 8:0.72, 9:0.50, 10:0.50, 11:0.15
+  };
+
   var sorted = starters.slice().sort(function(a,b){
     var pa=POS_PRIORITY[a.position]!=null?POS_PRIORITY[a.position]:35;
     var pb=POS_PRIORITY[b.position]!=null?POS_PRIORITY[b.position]:35;
@@ -2151,20 +2161,7 @@ function renderPitch(starters, formation, teamColor, allPlayers){
 
   var finalLines=[], idx=0;
   expected.forEach(function(cnt){
-    var line=sorted.slice(idx,idx+cnt);
-    line.sort(function(a,b){
-      // ESPN이 'AM','M','F','D' 같은 generic 코드를 줄 때는
-      // POS_ORDER가 실제 좌우를 반영 못하므로 formationPlace 우선 사용
-      var GENERIC={'AM':1,'M':1,'F':1,'D':1,'MF':1,'FW':1,'DF':1};
-      if(GENERIC[a.position]||GENERIC[b.position]){
-        return (b.formationPlace||0)-(a.formationPlace||0);
-      }
-      var oa=POS_ORDER[a.position]!=null?POS_ORDER[a.position]:0;
-      var ob=POS_ORDER[b.position]!=null?POS_ORDER[b.position]:0;
-      if(oa!==ob) return oa-ob;
-      return (b.formationPlace||0)-(a.formationPlace||0);
-    });
-    finalLines.push(line);
+    finalLines.push(sorted.slice(idx,idx+cnt));
     idx+=cnt;
   });
 
@@ -2175,7 +2172,9 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     var yRatio=totalLines<=1?0:li/(totalLines-1);
     var cy=Math.round(LAST_Y-yRatio*(LAST_Y-FIRST_Y));
     line.forEach(function(p,ci){
-      coords[p.formationPlace]={x:Math.round((W/(line.length+1))*(ci+1)),y:cy};
+      var fp=p.formationPlace;
+      var xFrac = (fp && FP_X[fp]!=null) ? FP_X[fp] : (ci+1)/(line.length+1);
+      coords[fp||('_'+ci)]={x:Math.round(xFrac*W), y:cy};
     });
   });
 
