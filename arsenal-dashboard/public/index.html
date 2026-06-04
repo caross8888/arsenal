@@ -2155,7 +2155,9 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     line.sort(function(a,b){
       var oa=POS_ORDER[a.position]!=null?POS_ORDER[a.position]:0;
       var ob=POS_ORDER[b.position]!=null?POS_ORDER[b.position]:0;
-      return oa-ob;
+      if(oa!==ob) return oa-ob;
+      // POS_ORDER가 같으면(generic 포지션) formationPlace 내림차순 = 왼쪽→오른쪽
+      return (b.formationPlace||0)-(a.formationPlace||0);
     });
     finalLines.push(line);
     idx+=cnt;
