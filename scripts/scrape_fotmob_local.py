@@ -483,7 +483,7 @@ def update_fotmob_ids(squad):
         flags=re.DOTALL
     )
     if updated == content:
-        print('⚠️  FOTMOB_IDS 블록을 찾지 못함 — 스킵')
+        print('✅ football.js FOTMOB_IDS 변경 없음 (스쿼드 동일)')
         return
 
     FOOTBALL_JS_PATH.write_text(updated, encoding='utf-8')
