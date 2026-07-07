@@ -314,8 +314,11 @@ def parse_stats(data):
     player_id = data.get('id')
 
     # ── 현재 시즌 자동 감지 ──
+    # statSeasons[0]는 월드컵/유로 등 국가대표 소집 시즌("2026")이 클럽 시즌보다
+    # 앞에 올 수 있어, "YYYY/YYYY" 형식의 클럽 시즌 항목을 우선으로 찾는다.
     stat_seasons = data.get('statSeasons', [])
-    current_season_name = stat_seasons[0]['seasonName'] if stat_seasons else str(datetime.utcnow().year - 1) + '/' + str(datetime.utcnow().year)
+    club_season = next((s for s in stat_seasons if re.match(r'^\d{4}/\d{4}$', s.get('seasonName', ''))), None)
+    current_season_name = (club_season or stat_seasons[0])['seasonName'] if stat_seasons else str(datetime.utcnow().year - 1) + '/' + str(datetime.utcnow().year)
     season_start = season_start_date(current_season_name)
 
     result = {
