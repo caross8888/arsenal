@@ -240,6 +240,7 @@ export default async function handler(req, res) {
       const availableCount = squadPlayers.filter(p => p.chance_of_playing_next_round === null || p.chance_of_playing_next_round === 100).length;
       const injured = squadPlayers
         .filter(p => p.chance_of_playing_next_round !== null && p.chance_of_playing_next_round < 100)
+        .filter(p => !LOAN_KEYWORDS.test(p.news || ''))
         .map(p => ({
           id:       p.id,
           name:     p.web_name,
