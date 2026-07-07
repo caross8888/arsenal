@@ -93,7 +93,10 @@ export default async function handler(req, res) {
 
       const now = new Date();
       const fmtDate = d => d.toISOString().slice(0,10).replace(/-/g,'');
-      const futureEnd = fmtDate(new Date(now.getFullYear(), 7, 31));
+      // 시즌 종료(5월 31일)까지 조회 — 1~5월(시즌 중)이면 올해 5월,
+      // 6~12월(오프시즌 또는 새 시즌 진행 중)이면 다음 해 5월
+      const seasonEndYear = now.getMonth() + 1 <= 5 ? now.getFullYear() : now.getFullYear() + 1;
+      const futureEnd = fmtDate(new Date(seasonEndYear, 4, 31));
 
       const parseEvent = (e, name, short) => {
         const comp = e.competitions?.[0];
@@ -156,7 +159,7 @@ export default async function handler(req, res) {
 
           const todayStr = fmtDate(now);
           const br = await fetch(
-            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard?dates=${todayStr}-${futureEnd}&limit=50`,
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard?dates=${todayStr}-${futureEnd}&limit=500`,
             {signal: AbortSignal.timeout(8000)}
           );
           const bj = br.ok ? await br.json() : {events:[]};

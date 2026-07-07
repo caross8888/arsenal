@@ -427,6 +427,31 @@ def parse_stats(data):
     )
     result['competitions'] = _collect_comp_stats(recent, season_start)
 
+    # ── 핵심 지표 보정 ──
+    # firstSeasonStats(topStatCard 등)는 정상적인 경우 프리미어리그 단일 대회
+    # 기준인데, Fotmob이 "가장 최근 시즌"을 월드컵 등 국가대표 소집으로 잡은
+    # 선수는 이 값이 전부 그쪽 기준으로 나온다. competitions.PL(이미 올바르게
+    # 필터링됨)로 덮어써서 나머지 선수들과 동일한 프리미어리그 기준으로 맞춘다.
+    pl = result['competitions'].get('PL')
+    if pl:
+        def _override(key, value):
+            prev = all_stats.get(key, {})
+            all_stats[key] = {
+                'value':      str(value),
+                'per90':      prev.get('per90', 0),
+                'percentile': prev.get('percentile', 0),
+            }
+
+        _override('goals', pl['goals'])
+        _override('assists', pl['assists'])
+        _override('matches_uppercase', pl['appearances'])
+        _override('player_started_matches', pl['starts'])
+        _override('minutes_played', pl['minutesPlayed'])
+        _override('yellow_cards', pl['yellowCards'])
+        _override('red_cards', pl['redCards'])
+        if pl['avgRating']:
+            _override('rating', pl['avgRating'])
+
     # ── traits (레이더 차트) ──
     traits_raw = data.get('traits') or {}
     if traits_raw and traits_raw.get('items'):
