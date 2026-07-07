@@ -36,6 +36,15 @@ HEADERS = {
 
 ARSENAL_TEAM_ID = 9825
 
+# Fotmob playerInformation에 등번호가 누락되는 선수용 수동 보정
+# (Fotmob 페이지 자체에 구조화 데이터가 없는 경우 확인 후 갱신 필요)
+JERSEY_OVERRIDES = {
+    1137667: '5',   # Piero Hincapié
+    1254234: '22',  # Ethan Nwaneri
+    1025462: '21',  # Fábio Vieira
+    748382:  '28',  # Reiss Nelson
+}
+
 # ── Fotmob 아스날 스쿼드 자동 크롤 ──────────────────
 def fetch_arsenal_squad():
     """
@@ -351,6 +360,9 @@ def parse_stats(data):
 
     if not result.get('nationality'):
         result['nationality'] = data.get('citizenship', '')
+
+    if not result.get('jersey') and player_id in JERSEY_OVERRIDES:
+        result['jersey'] = JERSEY_OVERRIDES[player_id]
 
     # ── 계약 만료 ──
     ce = data.get('contractEnd') or {}
