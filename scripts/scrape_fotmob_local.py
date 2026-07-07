@@ -205,7 +205,7 @@ def _pos_to_group(pos_key):
         return 'GK'
     if any(x in pos_key for x in ['back', 'defender', 'centreback', 'wingback']):
         return 'DF'
-    if any(x in pos_key for x in ['forward', 'striker', 'centreforward', 'winger', 'attackingmidfielder']):
+    if any(x in pos_key for x in ['forward', 'striker', 'centreforward', 'winger']):
         return 'FW'
     if any(x in pos_key for x in ['midfielder', 'midfield']):
         return 'MF'

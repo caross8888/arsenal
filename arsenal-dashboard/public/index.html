@@ -973,7 +973,8 @@ function loadSquad(){
 
 function renderSq(filter){
   var el=document.getElementById('sqGrid');
-  var list=filter==='all'?allPlayers:allPlayers.filter(function(p){return p.posGroup===filter;});
+  var SQ_GROUP_ORDER={GK:0,DF:1,MF:2,FW:3};
+  var list=filter==='all'?allPlayers.slice().sort(function(a,b){return (SQ_GROUP_ORDER[a.posGroup]??9)-(SQ_GROUP_ORDER[b.posGroup]??9);}):allPlayers.filter(function(p){return p.posGroup===filter;});
   if(!list.length){el.innerHTML='<div class="loading-state" style="grid-column:1/-1">선수 데이터 없음</div>';return;}
   el.innerHTML='';
 

@@ -1,5 +1,5 @@
 @echo off
-cd /d C:\Users\caros\arsenal
+cd /d C:\arsenal
 
 echo [%date% %time%] git pull...
 git pull
