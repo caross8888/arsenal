@@ -119,7 +119,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .f-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:11px;padding:6px 14px;border-radius:20px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .f-btn.active{background:var(--red);border-color:var(--red);color:#fff}
 .sq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.pl-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s}
+.pl-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s;position:relative}
+.pl-contract-badge{position:absolute;top:6px;right:6px;z-index:2;background:rgba(239,68,68,.92);color:#fff;font-size:8px;font-weight:800;letter-spacing:.3px;padding:2px 6px;border-radius:10px;display:flex;align-items:center;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .pl-card:active{transform:scale(.98)}
 .pl-top{display:grid;grid-template-columns:70px 1fr;height:90px}
 .pl-left{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
@@ -710,6 +711,12 @@ var CNAME={PL:'PL',CL:'UCL',UCL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup',EFL:'E
 function ctag(c){return CTAG[c]||'tag-oth';}
 function cname(c,fb){return CNAME[c]||fb||c;}
 
+function isContractSoon(dateStr){
+  if(!dateStr) return false;
+  var diffDays=(new Date(dateStr).getTime()-Date.now())/86400000;
+  return diffDays>=0 && diffDays<=365;
+}
+
 function formatDate(utcDate, tbd){
   var d=new Date(utcDate);
   var date=d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'});
@@ -1084,6 +1091,13 @@ function renderSq(filter){
     var nm=document.createElement('div');nm.className='pl-card-name';nm.textContent=p.name;
 
     card.appendChild(top);card.appendChild(div);card.appendChild(nm);
+
+    if(isContractSoon(p.contractEnd)){
+      var cBadge=document.createElement('div');cBadge.className='pl-contract-badge';
+      cBadge.textContent='⏳ '+p.contractEnd.slice(2,4)+"'만료";
+      card.appendChild(cBadge);
+    }
+
     el.appendChild(card);
   });
 }
@@ -3106,7 +3120,7 @@ function openPlayerModal(p) {
   if(height) infoItems.push({val:height, lbl:'\ud0a4'});
   if(flagUrl) infoItems.push({val:'<img src="'+flagUrl+'" style="width:22px;height:16px;border-radius:2px;object-fit:cover;vertical-align:middle"> '+nationality, lbl:'\uad6d\uac00', html:true});
   if(prefFoot) infoItems.push({val:prefFoot==='Right'?'\uc624\ub978\ubc1c':prefFoot==='Left'?'\uc67c\ubc1c':prefFoot, lbl:'\uc8fc\uc0ac\uc6a9 \ubc1c'});
-  if(contractEnd) infoItems.push({val:contractEnd, lbl:'\uacc4\uc57d \ub9cc\ub8cc'});
+  if(contractEnd) infoItems.push({val:contractEnd, lbl:'\uacc4\uc57d \ub9cc\ub8cc', color: isContractSoon(p.contractEnd) ? '#EF4444' : undefined});
   // FPL 지표
   if(p.xG) infoItems.push({val:'xG '+p.xG.toFixed(1), lbl:'\uae30\ub300 \ub4dd\uc810 (PL)'});
   if(p.xA) infoItems.push({val:'xA '+p.xA.toFixed(1), lbl:'\uae30\ub300 \uc5b4\uc2dc\uc2a4\ud2b8 (PL)'});
