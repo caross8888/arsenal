@@ -48,6 +48,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:8px}
+.dday-card{background:linear-gradient(135deg,var(--red) 0%,#7a0010 100%);border-radius:14px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;color:#fff;position:relative;overflow:hidden;}
+.dday-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 90% -20%,rgba(255,255,255,.15),transparent 60%);pointer-events:none;}
+.dday-num{font-family:var(--fd);font-size:32px;letter-spacing:1px;line-height:1;flex-shrink:0;position:relative;z-index:1;min-width:64px;}
+.dday-info{flex:1;min-width:0;position:relative;z-index:1;}
+.dday-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:.75;margin-bottom:4px;}
+.dday-match{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:14px;font-weight:700;margin-bottom:4px;}
+.dday-comp{font-size:8px;letter-spacing:1px;text-transform:uppercase;background:rgba(255,255,255,.18);padding:2px 7px;border-radius:20px;}
+.dday-time{font-size:11px;opacity:.85;position:relative;z-index:1;}
 .fix-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:6px;padding-left:2px}
 .fix-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
 .fix-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;}
@@ -551,6 +559,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <div class="page">
 <section id="fixtures" class="section active">
   <div class="sec-head"><h1 class="sec-title">&#44221;&#44592; &#51068;&#51221;</h1><span class="sec-badge" id="fixBadge" onclick="toggleMockLive()" style="cursor:pointer;user-select:none;">&#47196;&#46377; &#51473;</span></div>
+  <div class="dday-card" id="ddayCard" style="display:none"></div>
   <div id="upcomingWrap">
     <div class="fix-section-label">&#128197; &#50696;&#51221; &#44221;&#44592;</div>
     <div class="fix-list" id="upcomingList"><div class="loading-state"><div class="spinner"></div></div></div>
@@ -733,6 +742,41 @@ function renderCrest(c){
     return img;
   }
   var ph=document.createElement('div');ph.className=c.phCls;ph.textContent=c.short;return ph;
+}
+
+function renderDday(list){
+  var el=document.getElementById('ddayCard');
+  if(!el) return;
+  var next=(list||[]).find(function(m){return m.tbd!=='postponed'&&m.tbd!=='canceled';});
+  if(!next){el.style.display='none';return;}
+
+  var isLive=next.status==='IN_PLAY'||next.status==='PAUSED';
+  var ARSENAL_ESPN='359';
+  var isArsHome=next.homeTeam&&(next.homeTeam.id===57||next.homeTeam.id===ARSENAL_ESPN||(next.homeTeam.name||'').includes('Arsenal'));
+  var opp=isArsHome?next.awayTeam:next.homeTeam;
+  var oppName=opp&&(opp.shortName||opp.displayName||opp.name)||'';
+  var venuePrefix=isArsHome?'(H) vs ':'(A) @ ';
+  var compObj=next.competition||{};
+  var code=compObj.short||'PL';
+
+  var ddayText;
+  if(isLive){
+    ddayText='LIVE';
+  } else {
+    var KST=9*60*60*1000;
+    var kstDay=function(ts){return Math.floor((ts+KST)/86400000);};
+    var diff=kstDay(new Date(next.utcDate).getTime())-kstDay(Date.now());
+    ddayText=diff<=0?'D-DAY':'D-'+diff;
+  }
+
+  el.style.display='flex';
+  el.innerHTML=
+    '<div class="dday-num" style="'+(isLive?'color:#FDE047;':'')+'">'+ddayText+'</div>'+
+    '<div class="dday-info">'+
+      '<div class="dday-label">다음 경기</div>'+
+      '<div class="dday-match">'+venuePrefix+oppName+'<span class="dday-comp">'+cname(code,compObj.name)+'</span></div>'+
+      '<div class="dday-time">'+(isLive?'● 진행 중':formatDate(next.utcDate,next.tbd))+'</div>'+
+    '</div>';
 }
 
 function buildFixCard(m){
@@ -920,6 +964,7 @@ function loadFixtures(){
     }
     renderList(upEl,upcomingAll.slice(0,3),upcomingAll);
     renderList(fnEl,finishedAll.slice(0,5),finishedAll);
+    renderDday(upcomingAll);
     // 라이브 경기 있으면 폴링 시작
     if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})) startLivePolling();
     else stopLivePolling();
@@ -2764,6 +2809,7 @@ function startLivePolling(){
           var upcomingAll = data.upcoming||[];
           renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
           renderList(fnEl, finishedAll.slice(0,5), finishedAll);
+          renderDday(upcomingAll);
         }
         stopLivePolling();
       }
