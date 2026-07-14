@@ -3342,7 +3342,9 @@ function renderShotmapSVG(shots){
   // (전엔 106이라 ~1.8 유닛만큼 선이 골대 앞에서 끊겨 보였음)
   var xMin=68, xMax=105, yMin=6, yMax=62;
   var VW=100, VH=VW*(xMax-xMin)/(yMax-yMin);
-  var toSX=function(y){ return (Math.min(yMax,Math.max(yMin,y))-yMin)/(yMax-yMin)*VW; };
+  // 골대를 아래→위로 옮기는 건 세로축만 뒤집는 반사가 아니라 180도 회전이라
+  // 가로축(y)도 같이 뒤집어야 한다
+  var toSX=function(y){ return VW - (Math.min(yMax,Math.max(yMin,y))-yMin)/(yMax-yMin)*VW; };
   var toSY=function(x){ return (xMax-Math.min(xMax,Math.max(xMin,x)))/(xMax-xMin)*VH; };
 
   var dots='', lines='';
