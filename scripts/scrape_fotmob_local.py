@@ -441,7 +441,8 @@ def parse_stats(data):
         comp = COMP_MAP.get(match_league.get(s.get('matchId')))
         if not comp:
             continue
-        # 슛 방향(궤적) 끝점 — 블록된 슛은 블록 지점, 유효슈팅/골은 골라인 통과 지점
+        # 슛 방향(궤적) 끝점 — 블록된 슛은 실제로 막힌 지점까지만(의미 있는 정보),
+        # 빗나감/유효슈팅/골은 골라인까지 끝까지 그린다.
         end_x, end_y = None, None
         if s.get('isBlocked') and s.get('blockedX') is not None and s.get('blockedY') is not None:
             end_x, end_y = s['blockedX'], s['blockedY']
