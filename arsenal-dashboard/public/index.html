@@ -3221,26 +3221,33 @@ function openPlayerModal(p) {
   }
 
   // ── 슛맵 (PL/UCL/FAC/EFL 경기만 필터링됨) ──
-  if(shotmap && shotmap.length){
+  var NO_DATA_NOTE = '이번 시즌 데이터 없음 — 국가대표 소집(월드컵 등) 직후라 Fotmob이 클럽 기록을 아직 안 채워둔 선수는 정확한 데이터가 쌓일 때까지 표시하지 않습니다.';
+  if(pos!=='GK'){
     h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
     h += '<div class="pm-section-title">슛맵</div>';
-    h += '<div class="pm-section-sub">이번 시즌 PL·UCL·FA컵·EFL컵 슈팅 위치 ('+shotmap.length+')</div>';
-    h += renderShotmapSVG(shotmap);
-    h += '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:9px;color:var(--text-dim);margin-top:8px;">'+
-         '<span style="color:var(--gold)">● 골</span>'+
-         '<span style="color:#60A5FA">○ 유효슈팅</span>'+
-         '<span>○ 빗나감</span>'+
-         '<span>▪ 블록</span>'+
-         '</div>';
+    if(shotmap && shotmap.length){
+      h += '<div class="pm-section-sub">이번 시즌 PL·UCL·FA컵·EFL컵 슈팅 위치 ('+shotmap.length+')</div>';
+      h += renderShotmapSVG(shotmap);
+      h += '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:9px;color:var(--text-dim);margin-top:8px;">'+
+           '<span style="color:var(--gold)">● 골</span>'+
+           '<span style="color:#60A5FA">○ 유효슈팅</span>'+
+           '<span>○ 빗나감</span>'+
+           '<span>▪ 블록</span>'+
+           '</div>';
+    } else {
+      h += '<div class="pm-section-sub" style="color:var(--text-dim);line-height:1.5;">'+NO_DATA_NOTE+'</div>';
+    }
     h += '</div>';
-  }
 
-  // ── 터치 히트맵 (Fotmob 최근 시즌 기준, 대회 구분 없음) ──
-  if(heatmap && heatmap.length){
+    // ── 터치 히트맵 (Fotmob 최근 시즌 기준, 대회 구분 없음) ──
     h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
     h += '<div class="pm-section-title">터치 히트맵</div>';
-    h += '<div class="pm-section-sub">Fotmob 최근 시즌 기준 (대회 구분 없음)</div>';
-    h += renderHeatmapSVG(heatmap);
+    if(heatmap && heatmap.length){
+      h += '<div class="pm-section-sub">Fotmob 최근 시즌 기준 (대회 구분 없음)</div>';
+      h += renderHeatmapSVG(heatmap);
+    } else {
+      h += '<div class="pm-section-sub" style="color:var(--text-dim);line-height:1.5;">'+NO_DATA_NOTE+'</div>';
+    }
     h += '</div>';
   }
 
@@ -3341,14 +3348,14 @@ function renderHeatmapSVG(points){
     for(var c=0;c<cols;c++){
       var v=grid[r*cols+c];
       if(!v) continue;
-      var t=v/max;
+      var t=Math.pow(v/max, 0.6); // 대비 강조 (흐릿하게 뭉개지지 않도록)
       var color = t<0.33 ? '59,130,246' : t<0.66 ? '245,158,11' : '239,68,68';
-      // 셀보다 살짝 크게 그려서 블러 시 격자 사이 빈틈 없이 매끄럽게 이어지도록 함
-      cells+='<rect x="'+(c*cellW).toFixed(2)+'" y="'+(r*cellH).toFixed(2)+'" width="'+(cellW*1.7).toFixed(2)+'" height="'+(cellH*1.7).toFixed(2)+'" fill="rgb('+color+')" fill-opacity="'+(0.2+t*0.6).toFixed(2)+'"/>';
+      // 셀보다 살짝 크게 그려서 블러 시 격자 사이 빈틈 없이 이어지도록 함
+      cells+='<rect x="'+(c*cellW).toFixed(2)+'" y="'+(r*cellH).toFixed(2)+'" width="'+(cellW*1.25).toFixed(2)+'" height="'+(cellH*1.25).toFixed(2)+'" fill="rgb('+color+')" fill-opacity="'+(0.12+t*0.68).toFixed(2)+'"/>';
     }
   }
   var fid='heatBlur'+(_heatmapFilterSeq++);
-  var defs='<defs><filter id="'+fid+'" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.6"/></filter></defs>';
+  var defs='<defs><filter id="'+fid+'" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.9"/></filter></defs>';
   return '<svg viewBox="0 0 '+VW+' '+VH+'" style="width:100%;height:auto;display:block;border-radius:8px;">'+defs+pitchSVGBackground(VW,VH)+'<g filter="url(#'+fid+')">'+cells+'</g></svg>';
 }
 

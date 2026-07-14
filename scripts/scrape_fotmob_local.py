@@ -320,6 +320,10 @@ def parse_stats(data):
     club_season = next((s for s in stat_seasons if re.match(r'^\d{4}/\d{4}$', s.get('seasonName', ''))), None)
     current_season_name = (club_season or stat_seasons[0])['seasonName'] if stat_seasons else str(datetime.utcnow().year - 1) + '/' + str(datetime.utcnow().year)
     season_start = season_start_date(current_season_name)
+    # firstSeasonStats(슛맵/히트맵/topStatCard 원본)는 Fotmob이 statSeasons[0]로
+    # 잡은 시즌 기준으로 내려온다. 그게 클럽 시즌이 아니면(월드컵 등 국가대표
+    # 소집) 히트맵도 그 대회 기준이라 신뢰할 수 없다.
+    first_season_reliable = (not stat_seasons) or (stat_seasons[0].get('seasonName') == current_season_name)
 
     result = {
         'id':           player_id,
@@ -460,8 +464,13 @@ def parse_stats(data):
     result['shotmap'] = shotmap
 
     # ── 터치 히트맵 (Fotmob이 잡은 최근 시즌 기준 전체, 대회 구분 없음) ──
-    heatmap_raw = first_stats.get('heatmap') or {}
-    result['heatmap'] = heatmap_raw.get('coordinates') or []
+    # firstSeasonStats가 클럽 시즌이 아니면(국가대표 소집 등) 히트맵도 그
+    # 대회 기준이라 아스날 데이터로 보여줄 수 없어 비운다.
+    if first_season_reliable:
+        heatmap_raw = first_stats.get('heatmap') or {}
+        result['heatmap'] = heatmap_raw.get('coordinates') or []
+    else:
+        result['heatmap'] = []
 
     # ── 핵심 지표 보정 ──
     # firstSeasonStats(topStatCard 등)는 정상적인 경우 프리미어리그 단일 대회
