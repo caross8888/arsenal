@@ -3244,7 +3244,7 @@ function openPlayerModal(p) {
     h += '<div class="pm-section-title">터치 히트맵</div>';
     if(heatmap && heatmap.length){
       h += '<div class="pm-section-sub">Fotmob 최근 시즌 기준 (대회 구분 없음)</div>';
-      h += renderHeatmapSVG(heatmap);
+      h += '<canvas id="heatmap_canvas" width="320" height="207" style="width:100%;height:auto;display:block;border-radius:8px;"></canvas>';
     } else {
       h += '<div class="pm-section-sub" style="color:var(--text-dim);line-height:1.5;">'+NO_DATA_NOTE+'</div>';
     }
@@ -3283,6 +3283,9 @@ function openPlayerModal(p) {
         return {key: item.key, title: TRAIT_LABELS[item.key]||item.title, value: item.value};
       });
       drawFotmobRadar('radar_traits', translated);
+    }
+    if(heatmap && heatmap.length){
+      drawHeatmapCanvas('heatmap_canvas', heatmap);
     }
   }, 60);
 }
@@ -3330,33 +3333,76 @@ function renderShotmapSVG(shots){
   return '<svg viewBox="0 0 '+VW+' '+VH+'" style="width:100%;height:auto;display:block;border-radius:8px;">'+pitchSVGBackground(VW,VH)+lines+dots+'</svg>';
 }
 
-var _heatmapFilterSeq=0;
-function renderHeatmapSVG(points){
-  var VW=100, VH=64.76, cols=34, rows=22;
-  var grid=new Array(cols*rows).fill(0);
+// ── 터치 히트맵 (캔버스 기반 부드러운 열분포) ──
+function drawPitchLinesOnCanvas(ctx, W, H){
+  ctx.fillStyle='#0d2818';
+  ctx.fillRect(0,0,W,H);
+  var lc='rgba(255,255,255,0.35)';
+  ctx.strokeStyle=lc; ctx.lineWidth=1;
+  ctx.strokeRect(1,1,W-2,H-2);
+  ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
+  ctx.beginPath();ctx.arc(W/2,H/2,H*0.15,0,Math.PI*2);ctx.stroke();
+  var bw=W*0.16, bh=H*0.6, by=(H-bh)/2;
+  ctx.strokeRect(0,by,bw,bh); ctx.strokeRect(W-bw,by,bw,bh);
+  var bw2=W*0.055, bh2=H*0.28, by2=(H-bh2)/2;
+  ctx.strokeRect(0,by2,bw2,bh2); ctx.strokeRect(W-bw2,by2,bw2,bh2);
+}
+
+function drawHeatmapCanvas(canvasId, points){
+  var canvas=document.getElementById(canvasId);
+  if(!canvas) return;
+  var W=canvas.width, H=canvas.height;
+  var ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  drawPitchLinesOnCanvas(ctx, W, H);
+
+  // 점마다 부드러운 방사형 그라디언트를 가산 합성해 밀도(alpha)를 누적
+  var heat=document.createElement('canvas');
+  heat.width=W; heat.height=H;
+  var hctx=heat.getContext('2d');
+  hctx.globalCompositeOperation='lighter';
+  var radius=Math.max(14, Math.min(W,H)*0.075);
   points.forEach(function(p){
-    var x=Math.min(99.999,Math.max(0,p.x||0));
-    var y=Math.min(99.999,Math.max(0,p.y||0));
-    var cx=Math.floor(x/100*cols);
-    var cy=Math.floor(y/100*rows);
-    grid[cy*cols+cx]++;
+    var x=Math.min(100,Math.max(0,p.x||0))/100*W;
+    var y=Math.min(100,Math.max(0,p.y||0))/100*H;
+    var grad=hctx.createRadialGradient(x,y,0,x,y,radius);
+    grad.addColorStop(0,'rgba(255,255,255,0.13)');
+    grad.addColorStop(1,'rgba(255,255,255,0)');
+    hctx.fillStyle=grad;
+    hctx.beginPath();hctx.arc(x,y,radius,0,Math.PI*2);hctx.fill();
   });
-  var max=Math.max.apply(null, grid) || 1;
-  var cellW=VW/cols, cellH=VH/rows;
-  var cells='';
-  for(var r=0;r<rows;r++){
-    for(var c=0;c<cols;c++){
-      var v=grid[r*cols+c];
-      if(!v) continue;
-      var t=Math.pow(v/max, 0.6); // 대비 강조 (흐릿하게 뭉개지지 않도록)
-      var color = t<0.33 ? '59,130,246' : t<0.66 ? '245,158,11' : '239,68,68';
-      // 셀보다 살짝 크게 그려서 블러 시 격자 사이 빈틈 없이 이어지도록 함
-      cells+='<rect x="'+(c*cellW).toFixed(2)+'" y="'+(r*cellH).toFixed(2)+'" width="'+(cellW*1.25).toFixed(2)+'" height="'+(cellH*1.25).toFixed(2)+'" fill="rgb('+color+')" fill-opacity="'+(0.12+t*0.68).toFixed(2)+'"/>';
+
+  // 누적된 밀도를 색상 램프(파랑→초록→노랑→빨강)로 변환
+  var img=hctx.getImageData(0,0,W,H);
+  var d=img.data;
+  var maxA=1;
+  for(var i=3;i<d.length;i+=4){ if(d[i]>maxA) maxA=d[i]; }
+  var stops=[
+    {t:0.00,r:13, g:40, b:60, a:0},
+    {t:0.15,r:59, g:130,b:246,a:110},
+    {t:0.40,r:34, g:197,b:94, a:170},
+    {t:0.65,r:245,g:158,b:11, a:215},
+    {t:1.00,r:239,g:68, b:68, a:235},
+  ];
+  function colorAt(t){
+    for(var k=0;k<stops.length-1;k++){
+      var a=stops[k], b=stops[k+1];
+      if(t>=a.t && t<=b.t){
+        var f=(t-a.t)/((b.t-a.t)||1);
+        return {r:a.r+(b.r-a.r)*f, g:a.g+(b.g-a.g)*f, b:a.b+(b.b-a.b)*f, a:a.a+(b.a-a.a)*f};
+      }
     }
+    return stops[stops.length-1];
   }
-  var fid='heatBlur'+(_heatmapFilterSeq++);
-  var defs='<defs><filter id="'+fid+'" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.9"/></filter></defs>';
-  return '<svg viewBox="0 0 '+VW+' '+VH+'" style="width:100%;height:auto;display:block;border-radius:8px;">'+defs+pitchSVGBackground(VW,VH)+'<g filter="url(#'+fid+')">'+cells+'</g></svg>';
+  for(var j=0;j<d.length;j+=4){
+    var alpha=d[j+3];
+    if(alpha<=0){ d[j+3]=0; continue; }
+    var t=Math.min(1, alpha/maxA);
+    var c=colorAt(t);
+    d[j]=c.r; d[j+1]=c.g; d[j+2]=c.b; d[j+3]=c.a;
+  }
+  hctx.putImageData(img,0,0);
+  ctx.drawImage(heat,0,0);
 }
 
 // ── Fotmob 스타일 6각형 레이더 ──
