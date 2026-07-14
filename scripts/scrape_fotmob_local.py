@@ -446,7 +446,7 @@ def parse_stats(data):
         if s.get('isBlocked') and s.get('blockedX') is not None and s.get('blockedY') is not None:
             end_x, end_y = s['blockedX'], s['blockedY']
         elif s.get('goalCrossedY') is not None:
-            end_x, end_y = 100, s['goalCrossedY']
+            end_x, end_y = 105, s['goalCrossedY']  # 105 = 실제 골라인(PITCH_LEN)
         shotmap.append({
             'x':        s.get('x'),
             'y':        s.get('y'),

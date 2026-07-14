@@ -406,6 +406,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-info-lbl{font-size:10px;color:rgba(255,255,255,.4);}
 /* 선수 특성 (레이더) */
 .pm-traits{padding:16px 16px 8px;}
+.shot-line{opacity:0;transition:opacity .15s;pointer-events:none;}
+.shot-line.active{opacity:0.85;}
 .pm-section-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
 .pm-section-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:14px;}
 .pm-radar-wrap{display:flex;justify-content:center;position:relative;}
@@ -3220,11 +3222,11 @@ function openPlayerModal(p) {
     h += '</div>';
   }
 
-  // ── 슛맵 (PL/UCL/FAC/EFL 경기만 필터링됨) ──
+  // ── 슈팅맵 (PL/UCL/FAC/EFL 경기만 필터링됨) ──
   var NO_DATA_NOTE = '이번 시즌 데이터 없음 — 국가대표 소집(월드컵 등) 직후라 Fotmob이 클럽 기록을 아직 안 채워둔 선수는 정확한 데이터가 쌓일 때까지 표시하지 않습니다.';
   if(pos!=='GK'){
     h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
-    h += '<div class="pm-section-title">슛맵</div>';
+    h += '<div class="pm-section-title">슈팅맵</div>';
     if(shotmap && shotmap.length){
       var onTargetCnt = shotmap.filter(function(s){return s.event==='goal'||s.event==='onTarget';}).length;
       var onTargetPct = Math.round(onTargetCnt/shotmap.length*100);
@@ -3295,27 +3297,37 @@ function openPlayerModal(p) {
 // Fotmob 좌표는 0~100 정규화가 아니라 실제 피치 크기(미터) 기준으로 내려온다
 var PITCH_LEN=105, PITCH_WID=68;
 
-// 페널티박스 중심으로 확대한 세로형(골대가 위) 슛맵 배경
+// 페널티박스 중심으로 확대한 세로형(골대가 위) 슈팅맵 배경
 function boxSVGBackground(VW, VH, xMin, xMax, yMin, yMax){
-  var lc='rgba(255,255,255,0.4)';
+  var lc='rgba(255,255,255,0.5)';
   var toSX=function(y){ return (y-yMin)/(yMax-yMin)*VW; };
   var toSY=function(x){ return (xMax-x)/(xMax-xMin)*VH; };
-  var s='<rect x="0" y="0" width="'+VW+'" height="'+VH+'" fill="#181b22" rx="4"/>';
-  // 골문
+  var goalDepth=2.6;
+  var s='<rect x="0" y="'+(-goalDepth)+'" width="'+VW+'" height="'+(VH+goalDepth)+'" fill="#0d2818" rx="3"/>';
+  // 잔디결 줄무늬 (은은하게)
+  var stripes=7;
+  for(var i=0;i<stripes;i++){
+    if(i%2===0) continue;
+    var sy=VH/stripes*i;
+    s+='<rect x="0" y="'+sy.toFixed(2)+'" width="'+VW+'" height="'+(VH/stripes).toFixed(2)+'" fill="rgba(255,255,255,0.025)"/>';
+  }
+  // 페널티 박스 (16.5m x 40.32m) — 골(y=0)에 붙어 아래로 뻗는 형태
+  // depth(x)는 toSY, 폭(y)은 toSX
+  var pbY1=toSY(105-16.5), pbX1=toSX(34-20.16), pbX2=toSX(34+20.16);
+  s+='<rect x="'+pbX1.toFixed(2)+'" y="0" width="'+(pbX2-pbX1).toFixed(2)+'" height="'+pbY1.toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
+  // 골에어리어 (5.5m x 18.32m)
+  var gbY1=toSY(105-5.5), gbX1=toSX(34-9.16), gbX2=toSX(34+9.16);
+  s+='<rect x="'+gbX1.toFixed(2)+'" y="0" width="'+(gbX2-gbX1).toFixed(2)+'" height="'+gbY1.toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
+  // 페널티 스팟 + 아크
+  var spotY=toSY(105-11), spotX=toSX(34);
+  s+='<circle cx="'+spotX.toFixed(2)+'" cy="'+spotY.toFixed(2)+'" r="0.6" fill="'+lc+'"/>';
+  var arcR=9.15*(VW/(yMax-yMin));
+  s+='<path d="M '+toSX(34-9.15).toFixed(2)+' '+toSY(105-16.5).toFixed(2)+' A '+arcR.toFixed(2)+' '+arcR.toFixed(2)+' 0 0 1 '+toSX(34+9.15).toFixed(2)+' '+toSY(105-16.5).toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
+  // 골문 (골라인 뒤 네트 프레임)
   var goalW=7.32;
   var gx1=toSX(34-goalW/2), gx2=toSX(34+goalW/2);
-  s+='<line x1="'+gx1.toFixed(2)+'" y1="0" x2="'+gx1.toFixed(2)+'" y2="-3" stroke="'+lc+'" stroke-width="1"/>';
-  s+='<rect x="'+gx1.toFixed(2)+'" y="-2.5" width="'+(gx2-gx1).toFixed(2)+'" height="2.5" fill="none" stroke="'+lc+'" stroke-width="1"/>';
-  // 페널티 박스 (16.5m x 40.32m)
-  var pbY1=toSX(105-16.5), pbX1=toSX(34-20.16), pbX2=toSX(34+20.16);
-  s+='<rect x="'+pbX1.toFixed(2)+'" y="'+pbY1.toFixed(2)+'" width="'+(pbX2-pbX1).toFixed(2)+'" height="'+(VH-pbY1).toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
-  // 골에어리어 (5.5m x 18.32m)
-  var gbY1=toSX(105-5.5), gbX1=toSX(34-9.16), gbX2=toSX(34+9.16);
-  s+='<rect x="'+gbX1.toFixed(2)+'" y="'+gbY1.toFixed(2)+'" width="'+(gbX2-gbX1).toFixed(2)+'" height="'+(VH-gbY1).toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
-  // 페널티 스팟 + 아크
-  var spotY=toSX(105-11), spotX=toSX(34);
-  s+='<circle cx="'+spotX.toFixed(2)+'" cy="'+spotY.toFixed(2)+'" r="0.6" fill="'+lc+'"/>';
-  s+='<path d="M '+toSX(34-9.15).toFixed(2)+' '+toSX(105-16.5).toFixed(2)+' A 9.15 9.15 0 0 1 '+toSX(34+9.15).toFixed(2)+' '+toSX(105-16.5).toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
+  s+='<rect x="'+gx1.toFixed(2)+'" y="'+(-goalDepth).toFixed(2)+'" width="'+(gx2-gx1).toFixed(2)+'" height="'+goalDepth.toFixed(2)+'" fill="rgba(255,255,255,0.07)" stroke="'+lc+'" stroke-width="0.6"/>';
+  s+='<line x1="'+gx1.toFixed(2)+'" y1="0" x2="'+gx2.toFixed(2)+'" y2="0" stroke="#fff" stroke-width="0.9"/>';
   return s;
 }
 
@@ -3326,26 +3338,42 @@ function renderShotmapSVG(shots){
   var toSX=function(y){ return (Math.min(yMax,Math.max(yMin,y))-yMin)/(yMax-yMin)*VW; };
   var toSY=function(x){ return (xMax-Math.min(xMax,Math.max(xMin,x)))/(xMax-xMin)*VH; };
 
-  var dots='';
-  shots.forEach(function(s){
+  var dots='', lines='';
+  shots.forEach(function(s, i){
     var cx=toSX(s.y||0), cy=toSY(s.x||0);
     var isGoal = s.event==='goal';
     var r=(1.6+Math.sqrt(Math.max(0,s.xg||0))*3.4).toFixed(2);
-    var fillStyle;
-    if(isGoal)                     fillStyle=null; // 공 아이콘으로 별도 표시
-    else if(s.event==='ownGoal')    fillStyle='fill="#EF4444" fill-opacity="0.85" stroke="#fff" stroke-width="0.25"';
-    else if(s.event==='onTarget')   fillStyle='fill="#60A5FA" fill-opacity="0.85" stroke="#fff" stroke-width="0.2"';
-    else if(s.event==='blocked')    fillStyle='fill="rgba(255,255,255,0.35)" stroke="none"';
-    else                            fillStyle='fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.4"';
+    var strokeColor, fillStyle;
+    if(isGoal){                     strokeColor='var(--gold)'; }
+    else if(s.event==='ownGoal'){   strokeColor='#EF4444'; fillStyle='fill="#EF4444" fill-opacity="0.85" stroke="#fff" stroke-width="0.25"'; }
+    else if(s.event==='onTarget'){  strokeColor='#60A5FA'; fillStyle='fill="#60A5FA" fill-opacity="0.85" stroke="#fff" stroke-width="0.2"'; }
+    else if(s.event==='blocked'){   strokeColor='rgba(255,255,255,0.55)'; fillStyle='fill="rgba(255,255,255,0.35)" stroke="none"'; }
+    else{                           strokeColor='rgba(255,255,255,0.55)'; fillStyle='fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.4"'; }
+
+    if(s.endX!=null && s.endY!=null){
+      var ex=toSX(s.endY), ey=toSY(s.endX);
+      lines+='<line id="shotline_'+i+'" class="shot-line" x1="'+cx.toFixed(2)+'" y1="'+cy.toFixed(2)+'" x2="'+ex.toFixed(2)+'" y2="'+ey.toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.5"/>';
+    }
     var title='<title>'+(s.min!=null?s.min+"'":'')+' · xG '+(s.xg||0).toFixed(2)+'</title>';
+    var tap='onclick="toggleShotLine('+i+')" style="cursor:pointer"';
     if(isGoal){
-      dots+='<circle cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+(parseFloat(r)+1.4).toFixed(2)+'" fill="#12151b" stroke="var(--gold)" stroke-width="0.4"><title></title></circle>';
-      dots+='<text x="'+cx.toFixed(2)+'" y="'+cy.toFixed(2)+'" font-size="'+(parseFloat(r)*1.7).toFixed(2)+'" text-anchor="middle" dominant-baseline="central">⚽'+title+'</text>';
+      dots+='<g '+tap+'>'+
+            '<circle cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+(parseFloat(r)+1.4).toFixed(2)+'" fill="#12151b" stroke="var(--gold)" stroke-width="0.4"></circle>'+
+            '<text x="'+cx.toFixed(2)+'" y="'+cy.toFixed(2)+'" font-size="'+(parseFloat(r)*1.7).toFixed(2)+'" text-anchor="middle" dominant-baseline="central">⚽</text>'+
+            title+'</g>';
     } else {
-      dots+='<circle cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+r+'" '+fillStyle+'>'+title+'</circle>';
+      dots+='<circle '+tap+' cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+r+'" '+fillStyle+'>'+title+'</circle>';
     }
   });
-  return '<svg viewBox="0 -3 '+VW+' '+(VH+3)+'" style="width:100%;height:auto;display:block;border-radius:8px;">'+boxSVGBackground(VW,VH,xMin,xMax,yMin,yMax)+dots+'</svg>';
+  return '<svg viewBox="0 -3 '+VW+' '+(VH+3)+'" style="width:100%;height:auto;display:block;border-radius:8px;">'+boxSVGBackground(VW,VH,xMin,xMax,yMin,yMax)+lines+dots+'</svg>';
+}
+
+function toggleShotLine(idx){
+  var target=document.getElementById('shotline_'+idx);
+  if(!target) return;
+  var wasActive=target.classList.contains('active');
+  document.querySelectorAll('.shot-line.active').forEach(function(l){ l.classList.remove('active'); });
+  if(!wasActive) target.classList.add('active');
 }
 
 // ── 터치 히트맵 (캔버스 기반 부드러운 열분포) ──
