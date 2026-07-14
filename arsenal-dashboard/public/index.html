@@ -3344,7 +3344,7 @@ function renderShotmapSVG(shots){
   shots.forEach(function(s, i){
     var cx=toSX(s.y||0), cy=toSY(s.x||0);
     var isGoal = s.event==='goal';
-    var r=(1.0+Math.sqrt(Math.max(0,s.xg||0))*1.8).toFixed(2);
+    var r='1.6'; // Fotmob처럼 xG와 무관하게 전부 동일한 크기
     var strokeColor, fillStyle;
     if(isGoal){                     strokeColor='var(--gold)'; }
     else if(s.event==='ownGoal'){   strokeColor='#EF4444'; fillStyle='fill="#EF4444" fill-opacity="0.85" stroke="#fff" stroke-width="0.25"'; }
@@ -3354,21 +3354,30 @@ function renderShotmapSVG(shots){
 
     // 점(아이콘/하이라이트 링) 반지름을 먼저 정해서, 방향선이 중심이 아니라
     // 그 원 가장자리에서 시작하도록 한다
-    var fs, hlR;
+    var fs, hlR, ringR;
     if(isGoal){
-      fs=(2.2+parseFloat(r)*0.8).toFixed(2);
-      hlR=(parseFloat(fs)*0.42).toFixed(2);
+      fs=(1.8+parseFloat(r)*0.65).toFixed(2);
+      hlR=(parseFloat(fs)*0.4).toFixed(2);
+      ringR=(parseFloat(hlR)+0.9).toFixed(2); // 공 아이콘이랑 겹치지 않게 간격을 둠
     } else {
-      hlR=(parseFloat(r)+1).toFixed(2);
+      hlR=r;
+      ringR=(parseFloat(r)+1).toFixed(2);
     }
 
     if(s.endX!=null && s.endY!=null){
       var ex=toSX(s.endY), ey=toSY(s.endX);
       var dx=ex-cx, dy=ey-cy;
-      var dist=Math.sqrt(dx*dx+dy*dy)||1;
-      var startX=cx+dx/dist*parseFloat(hlR);
-      var startY=cy+dy/dist*parseFloat(hlR);
-      lines+='<line id="shotline_'+i+'" class="shot-line" x1="'+startX.toFixed(2)+'" y1="'+startY.toFixed(2)+'" x2="'+ex.toFixed(2)+'" y2="'+ey.toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.5"/>';
+      var dist=Math.sqrt(dx*dx+dy*dy)||0.01;
+      var ux=dx/dist, uy=dy/dist;
+      // 골대 바로 앞 슛은 원점-도착점이 거의 붙어있어 선이 안 보이므로
+      // 방향은 유지한 채 최소 길이를 보장해 도착점을 늘린다
+      var minLen=(parseFloat(hlR)+4);
+      var drawDist=Math.max(dist, minLen);
+      var startX=cx+ux*parseFloat(hlR);
+      var startY=cy+uy*parseFloat(hlR);
+      var endX2=cx+ux*drawDist;
+      var endY2=cy+uy*drawDist;
+      lines+='<line id="shotline_'+i+'" class="shot-line" x1="'+startX.toFixed(2)+'" y1="'+startY.toFixed(2)+'" x2="'+endX2.toFixed(2)+'" y2="'+endY2.toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.5"/>';
     }
     var title='<title>'+(s.min!=null?s.min+"'":'')+' · xG '+(s.xg||0).toFixed(2)+'</title>';
     // fill="none"인 원(빗나감)은 가운데 빈 공간이 기본적으로 클릭 안 되므로
@@ -3381,8 +3390,8 @@ function renderShotmapSVG(shots){
     } else {
       dots+='<circle '+tap+' cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+r+'" '+fillStyle+'>'+title+'</circle>';
     }
-    // 탭해서 선택한 슛을 표시하는 하이라이트 링 (기본은 투명)
-    dots+='<circle id="shothl_'+i+'" class="shot-highlight" cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+hlR+'" fill="none" stroke="#fff" stroke-width="0.6"/>';
+    // 탭해서 선택한 슛을 표시하는 하이라이트 링 (기본은 투명, 슈팅라인과 동일한 굵기)
+    dots+='<circle id="shothl_'+i+'" class="shot-highlight" cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+ringR+'" fill="none" stroke="#fff" stroke-width="0.5"/>';
   });
   return '<svg viewBox="0 -3 '+VW+' '+(VH+3)+'" style="width:100%;height:auto;display:block;border-radius:8px;">'+boxSVGBackground(VW,VH,xMin,xMax,yMin,yMax)+lines+dots+'</svg>';
 }
