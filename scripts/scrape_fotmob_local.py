@@ -192,6 +192,28 @@ def fetch_player(player_id, slug):
         return None
 
 
+def fetch_player_stats_for_season(player_id, entry_id):
+    """
+    Fotmob의 시즌/대회 선택 드롭다운이 실제로 호출하는 API.
+    firstSeasonStats는 Fotmob이 "가장 최근"으로 잡은 시즌(월드컵 등)만 주는데,
+    이 엔드포인트는 entryId(statSeasons[].tournaments[].entryId)로 특정
+    대회의 슛맵/히트맵/스탯을 정확히 지정해서 받아올 수 있다.
+    """
+    url = 'https://www.fotmob.com/api/data/playerStats'
+    try:
+        r = requests.get(
+            url,
+            params={'playerId': player_id, 'seasonId': entry_id, 'isFirstSeason': 'false'},
+            headers={**HEADERS, 'Accept': 'application/json'},
+            timeout=15,
+        )
+        if r.status_code != 200:
+            return None
+        return r.json()
+    except Exception:
+        return None
+
+
 def _get_primary_pos_key(pos_desc):
     if not pos_desc:
         return ''
@@ -401,30 +423,6 @@ def parse_stats(data):
             primary_label = (best.get('strPos') or {}).get('label', '')
     result['positionLabel'] = primary_label
 
-    # ── 전체 스탯 (firstSeasonStats) ──
-    first_stats   = data.get('firstSeasonStats') or {}
-    stats_section = first_stats.get('statsSection') or {}
-    all_stats = {}
-    for group in stats_section.get('items', []):
-        for stat in group.get('items', []):
-            key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
-            all_stats[key] = {
-                'value':      stat.get('statValue'),
-                'per90':      round(stat.get('per90', 0), 2),
-                'percentile': round(stat.get('percentileRank', 0)),
-            }
-    # topStatCard 도 합산 (appearances 등)
-    top_card = first_stats.get('topStatCard') or {}
-    for stat in top_card.get('items', []):
-        key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
-        if key not in all_stats:
-            all_stats[key] = {
-                'value':      stat.get('statValue'),
-                'per90':      round(stat.get('per90', 0), 2),
-                'percentile': round(stat.get('percentileRank', 0)),
-            }
-    result['stats'] = all_stats
-
     # ── 대회별 스탯 (현재 시즌만, 자동 필터) ──
     recent_raw = data.get('recentMatches', {})
     recent = (
@@ -433,45 +431,116 @@ def parse_stats(data):
     )
     result['competitions'] = _collect_comp_stats(recent, season_start)
 
-    # ── 슛맵 (matchId → leagueId 매칭해 PL/UCL/FAC/EFL 경기만 필터) ──
-    match_league = {m.get('id'): m.get('leagueId') for m in recent if m.get('id') is not None}
-    raw_shots = first_stats.get('shotmap') or []
+    # ── 슛맵/히트맵/전체 스탯 ──
+    # firstSeasonStats는 Fotmob이 statSeasons[0]로 잡은 시즌(월드컵 등 국가대표
+    # 소집일 수 있음) 기준이라 신뢰할 수 없다. 대신 Fotmob 시즌 선택 드롭다운이
+    # 실제로 호출하는 playerStats API를 club_season의 각 대회 entryId로 직접
+    # 불러와 PL/FAC/EFL/UCL 슛맵·히트맵을 정확히 합친다.
     shotmap = []
-    for s in raw_shots:
-        comp = COMP_MAP.get(match_league.get(s.get('matchId')))
-        if not comp:
-            continue
-        # 슛 방향(궤적) 끝점 — 블록된 슛은 실제로 막힌 지점까지만(의미 있는 정보),
-        # 빗나감/유효슈팅/골은 골라인까지 끝까지 그린다.
-        end_x, end_y = None, None
-        if s.get('isBlocked') and s.get('blockedX') is not None and s.get('blockedY') is not None:
-            end_x, end_y = s['blockedX'], s['blockedY']
-        elif s.get('goalCrossedY') is not None:
-            end_x, end_y = 105, s['goalCrossedY']  # 105 = 실제 골라인(PITCH_LEN)
-        shotmap.append({
-            'x':        s.get('x'),
-            'y':        s.get('y'),
-            'endX':     end_x,
-            'endY':     end_y,
-            'min':      s.get('min'),
-            'xg':       round(s.get('expectedGoals') or 0, 3),
-            'event':    'goal' if s.get('eventType') == 'Goal' else
-                        'ownGoal' if s.get('isOwnGoal') else
-                        'blocked' if s.get('isBlocked') else
-                        'onTarget' if s.get('isOnTarget') else 'off',
-            'situation': s.get('situation'),
-            'comp':     comp,
-        })
-    result['shotmap'] = shotmap
+    heatmap_coords = []
+    all_stats = {}
+    pl_stats_used = False
+    if club_season:
+        for t in club_season.get('tournaments', []):
+            comp = COMP_MAP.get(t.get('tournamentId'))
+            if not comp or not t.get('entryId'):
+                continue
+            season_stats = fetch_player_stats_for_season(player_id, t['entryId'])
+            time.sleep(0.4)
+            if not season_stats:
+                continue
+            for s in season_stats.get('shotmap') or []:
+                end_x, end_y = None, None
+                if s.get('isBlocked') and s.get('blockedX') is not None and s.get('blockedY') is not None:
+                    end_x, end_y = s['blockedX'], s['blockedY']
+                elif s.get('goalCrossedY') is not None:
+                    end_x, end_y = 105, s['goalCrossedY']  # 105 = 실제 골라인(PITCH_LEN)
+                shotmap.append({
+                    'x':        s.get('x'),
+                    'y':        s.get('y'),
+                    'endX':     end_x,
+                    'endY':     end_y,
+                    'min':      s.get('min'),
+                    'xg':       round(s.get('expectedGoals') or 0, 3),
+                    'event':    'goal' if s.get('eventType') == 'Goal' else
+                                'ownGoal' if s.get('isOwnGoal') else
+                                'blocked' if s.get('isBlocked') else
+                                'onTarget' if s.get('isOnTarget') else 'off',
+                    'situation': s.get('situation'),
+                    'comp':     comp,
+                })
+            for pt in (season_stats.get('heatmap') or {}).get('coordinates') or []:
+                heatmap_coords.append({'x': pt.get('x'), 'y': pt.get('y'), 'comp': comp})
+            # PL을 대표 대회 스탯(고급 지표)으로 사용 — 나머지 선수들과 동일 기준
+            if comp == 'PL' and not pl_stats_used:
+                pl_stats_used = True
+                for group in (season_stats.get('statsSection') or {}).get('items', []):
+                    for stat in group.get('items', []):
+                        key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
+                        all_stats[key] = {
+                            'value':      stat.get('statValue'),
+                            'per90':      round(stat.get('per90', 0), 2),
+                            'percentile': round(stat.get('percentileRank', 0)),
+                        }
+                for stat in (season_stats.get('topStatCard') or {}).get('items', []):
+                    key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
+                    if key not in all_stats:
+                        all_stats[key] = {
+                            'value':      stat.get('statValue'),
+                            'per90':      round(stat.get('per90', 0), 2),
+                            'percentile': round(stat.get('percentileRank', 0)),
+                        }
 
-    # ── 터치 히트맵 (Fotmob이 잡은 최근 시즌 기준 전체, 대회 구분 없음) ──
-    # firstSeasonStats가 클럽 시즌이 아니면(국가대표 소집 등) 히트맵도 그
-    # 대회 기준이라 아스날 데이터로 보여줄 수 없어 비운다.
-    if first_season_reliable:
-        heatmap_raw = first_stats.get('heatmap') or {}
-        result['heatmap'] = heatmap_raw.get('coordinates') or []
-    else:
-        result['heatmap'] = []
+    # 위 API 호출이 전부 실패한 경우(네트워크 등)에는 기존 firstSeasonStats로 폴백
+    if not pl_stats_used:
+        first_stats = data.get('firstSeasonStats') or {}
+        stats_section = first_stats.get('statsSection') or {}
+        for group in stats_section.get('items', []):
+            for stat in group.get('items', []):
+                key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
+                all_stats[key] = {
+                    'value':      stat.get('statValue'),
+                    'per90':      round(stat.get('per90', 0), 2),
+                    'percentile': round(stat.get('percentileRank', 0)),
+                }
+        for stat in (first_stats.get('topStatCard') or {}).get('items', []):
+            key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
+            if key not in all_stats:
+                all_stats[key] = {
+                    'value':      stat.get('statValue'),
+                    'per90':      round(stat.get('per90', 0), 2),
+                    'percentile': round(stat.get('percentileRank', 0)),
+                }
+        if not shotmap:
+            match_league = {m.get('id'): m.get('leagueId') for m in recent if m.get('id') is not None}
+            for s in first_stats.get('shotmap') or []:
+                comp = COMP_MAP.get(match_league.get(s.get('matchId')))
+                if not comp:
+                    continue
+                end_x, end_y = None, None
+                if s.get('isBlocked') and s.get('blockedX') is not None and s.get('blockedY') is not None:
+                    end_x, end_y = s['blockedX'], s['blockedY']
+                elif s.get('goalCrossedY') is not None:
+                    end_x, end_y = 105, s['goalCrossedY']
+                shotmap.append({
+                    'x': s.get('x'), 'y': s.get('y'), 'endX': end_x, 'endY': end_y,
+                    'min': s.get('min'), 'xg': round(s.get('expectedGoals') or 0, 3),
+                    'event': 'goal' if s.get('eventType') == 'Goal' else
+                             'ownGoal' if s.get('isOwnGoal') else
+                             'blocked' if s.get('isBlocked') else
+                             'onTarget' if s.get('isOnTarget') else 'off',
+                    'situation': s.get('situation'), 'comp': comp,
+                })
+        if not heatmap_coords and first_season_reliable:
+            # firstSeasonStats는 보통 PL 기준으로 내려온다 (검증됨)
+            heatmap_coords = [
+                {'x': pt.get('x'), 'y': pt.get('y'), 'comp': 'PL'}
+                for pt in (first_stats.get('heatmap') or {}).get('coordinates') or []
+            ]
+
+    result['stats'] = all_stats
+    result['shotmap'] = shotmap
+    result['heatmap'] = heatmap_coords
 
     # ── 핵심 지표 보정 ──
     # firstSeasonStats(topStatCard 등)는 정상적인 경우 프리미어리그 단일 대회

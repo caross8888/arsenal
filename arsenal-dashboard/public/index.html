@@ -3171,7 +3171,7 @@ function openPlayerModal(p) {
   if(compKeys.length > 0){
     h += '<div class="stat-section">';
     h += '<div class="stat-section-title">\ub300\ud68c\ubcc4 \uc2a4\ud0ef</div>';
-    h += '<div class="pm-comp-tabs">';
+    h += '<div class="pm-comp-tabs" id="statCompTabs">';
     compKeys.forEach(function(k,i){
       h += '<button class="pm-comp-tab'+(i===0?' active':'')+'" data-comp="'+k+'" onclick="switchPMComp(this)">'+(compLabels[k]||k)+'</button>';
     });
@@ -3213,27 +3213,19 @@ function openPlayerModal(p) {
     h += '</div>'; // stat-section
   }
 
-  // ── 선수 특성 레이더 (Fotmob traits) ──
-  if(traits && traits.items && traits.items.length){
-    h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
-    h += '<div class="pm-section-title">\uc120\uc218 \ud2b9\uc131</div>';
-    h += '<div class="pm-section-sub">'+traits.title+'</div>';
-    h += '<div class="pm-radar-wrap">';
-    h += '<canvas id="radar_traits" width="240" height="220"></canvas>';
-    h += '</div>';
-    h += '</div>';
-  }
-
-  // ── 슈팅맵 (PL/UCL/FAC/EFL 경기만 필터링됨) ──
+  // ── 슈팅맵 / 히트맵 (위 "대회별 스탯" 탭 선택에 종속) ──
   var NO_DATA_NOTE = '이번 시즌 데이터 없음 — 국가대표 소집(월드컵 등) 직후라 Fotmob이 클럽 기록을 아직 안 채워둔 선수는 정확한 데이터가 쌓일 때까지 표시하지 않습니다.';
   if(pos!=='GK'){
+    window._pmShotmapAll = shotmap;
+    window._pmHeatmapAll = heatmap;
+    var initComp = compKeys.length ? compKeys[0] : null;
+    var initShots = initComp ? shotmap.filter(function(s){return s.comp===initComp;}) : shotmap;
+
     h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
     h += '<div class="pm-section-title">슈팅맵</div>';
-    if(shotmap && shotmap.length){
-      var onTargetCnt = shotmap.filter(function(s){return s.event==='goal'||s.event==='onTarget';}).length;
-      var onTargetPct = Math.round(onTargetCnt/shotmap.length*100);
-      h += '<div class="pm-section-sub">이번 시즌 PL·UCL·FA컵·EFL컵 슈팅 위치 ('+shotmap.length+') · 유효 '+onTargetPct+'%</div>';
-      h += renderShotmapSVG(shotmap);
+    if((shotmap && shotmap.length) || (heatmap && heatmap.length)){
+      h += '<div class="pm-section-sub" id="shotmapSubline">'+shotSublineText(initShots)+'</div>';
+      h += '<div id="shotmapChart">'+(initShots.length ? renderShotmapSVG(initShots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>')+'</div>';
       h += '<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:9px;color:var(--text-dim);margin-top:8px;">'+
            '<span>⚽ 골</span>'+
            '<span style="color:#60A5FA">● 유효슈팅</span>'+
@@ -3245,15 +3237,26 @@ function openPlayerModal(p) {
     }
     h += '</div>';
 
-    // ── 터치 히트맵 (Fotmob 최근 시즌 기준, 대회 구분 없음) ──
+    // ── 터치 히트맵 (위 "대회별 스탯" 탭 선택 공유) ──
     h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
     h += '<div class="pm-section-title">터치 히트맵</div>';
     if(heatmap && heatmap.length){
-      h += '<div class="pm-section-sub">Fotmob 최근 시즌 기준 (대회 구분 없음)</div>';
+      h += '<div class="pm-section-sub" id="heatmapSubline">Fotmob 시즌 누적 기준</div>';
       h += '<canvas id="heatmap_canvas" width="320" height="207" style="width:100%;height:auto;display:block;border-radius:8px;"></canvas>';
     } else {
       h += '<div class="pm-section-sub" style="color:var(--text-dim);line-height:1.5;">'+NO_DATA_NOTE+'</div>';
     }
+    h += '</div>';
+  }
+
+  // ── 선수 특성 레이더 (Fotmob traits) ──
+  if(traits && traits.items && traits.items.length){
+    h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
+    h += '<div class="pm-section-title">\uc120\uc218 \ud2b9\uc131</div>';
+    h += '<div class="pm-section-sub">'+traits.title+'</div>';
+    h += '<div class="pm-radar-wrap">';
+    h += '<canvas id="radar_traits" width="240" height="220"></canvas>';
+    h += '</div>';
     h += '</div>';
   }
 
@@ -3600,11 +3603,34 @@ function getPctStats(fotStats, pos){
 function switchPMComp(btn){
   var content=document.getElementById('modalContent');
   var comp=btn.getAttribute('data-comp');
-  content.querySelectorAll('.pm-comp-tab').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('statCompTabs').querySelectorAll('.pm-comp-tab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   content.querySelectorAll('.comp-stat-panel').forEach(function(panel){
     panel.style.display=panel.getAttribute('data-comp')===comp?'':'none';
   });
+
+  // 슈팅맵/히트맵도 같은 대회 선택을 따라간다
+  var shots=(window._pmShotmapAll||[]).filter(function(s){return s.comp===comp;});
+  var heats=(window._pmHeatmapAll||[]).filter(function(hp){return hp.comp===comp;});
+  var subline=document.getElementById('shotmapSubline');
+  if(subline) subline.textContent=shotSublineText(shots);
+  var chart=document.getElementById('shotmapChart');
+  if(chart) chart.innerHTML = shots.length ? renderShotmapSVG(shots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>';
+  var canvas=document.getElementById('heatmap_canvas');
+  if(canvas){
+    if(heats.length){
+      drawHeatmapCanvas('heatmap_canvas', heats);
+    } else {
+      canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+    }
+  }
+}
+
+function shotSublineText(list){
+  if(!list || !list.length) return '슈팅 없음';
+  var onTarget=list.filter(function(s){return s.event==='goal'||s.event==='onTarget';}).length;
+  var pct=Math.round(onTarget/list.length*100);
+  return '슈팅 위치 ('+list.length+') · 유효 '+pct+'%';
 }
 
 function makeFMStat(val, lbl, color){
