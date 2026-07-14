@@ -3365,11 +3365,15 @@ function drawHeatmapCanvas(canvasId, points){
   var hctx=heat.getContext('2d');
   hctx.globalCompositeOperation='lighter';
   var radius=Math.max(14, Math.min(W,H)*0.075);
+  // 점이 많은 선수(시즌 전체 수천 개)는 겹치는 원이 너무 많아 알파 채널이
+  // 금방 255로 포화돼(=화면 전체가 붉게) 밀도 차이가 안 보이게 된다.
+  // 점 개수에 반비례해 점당 알파를 낮춰 포화를 방지한다.
+  var perPointAlpha=Math.max(0.02, Math.min(0.12, 60/Math.max(1,points.length)));
   points.forEach(function(p){
     var x=Math.min(PITCH_LEN,Math.max(0,p.x||0))/PITCH_LEN*W;
     var y=Math.min(PITCH_WID,Math.max(0,p.y||0))/PITCH_WID*H;
     var grad=hctx.createRadialGradient(x,y,0,x,y,radius);
-    grad.addColorStop(0,'rgba(255,255,255,0.13)');
+    grad.addColorStop(0,'rgba(255,255,255,'+perPointAlpha+')');
     grad.addColorStop(1,'rgba(255,255,255,0)');
     hctx.fillStyle=grad;
     hctx.beginPath();hctx.arc(x,y,radius,0,Math.PI*2);hctx.fill();
