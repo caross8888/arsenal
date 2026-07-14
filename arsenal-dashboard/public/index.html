@@ -408,6 +408,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-traits{padding:16px 16px 8px;}
 .shot-line{opacity:0;transition:opacity .15s;pointer-events:none;}
 .shot-line.active{opacity:0.85;}
+.shot-highlight{opacity:0;transition:opacity .15s;pointer-events:none;}
+.shot-highlight.active{opacity:1;}
 .pm-section-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
 .pm-section-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:14px;}
 .pm-radar-wrap{display:flex;justify-content:center;position:relative;}
@@ -3342,7 +3344,7 @@ function renderShotmapSVG(shots){
   shots.forEach(function(s, i){
     var cx=toSX(s.y||0), cy=toSY(s.x||0);
     var isGoal = s.event==='goal';
-    var r=(1.6+Math.sqrt(Math.max(0,s.xg||0))*3.4).toFixed(2);
+    var r=(1.0+Math.sqrt(Math.max(0,s.xg||0))*1.8).toFixed(2);
     var strokeColor, fillStyle;
     if(isGoal){                     strokeColor='var(--gold)'; }
     else if(s.event==='ownGoal'){   strokeColor='#EF4444'; fillStyle='fill="#EF4444" fill-opacity="0.85" stroke="#fff" stroke-width="0.25"'; }
@@ -3350,30 +3352,50 @@ function renderShotmapSVG(shots){
     else if(s.event==='blocked'){   strokeColor='rgba(255,255,255,0.55)'; fillStyle='fill="rgba(255,255,255,0.35)" stroke="none"'; }
     else{                           strokeColor='rgba(255,255,255,0.55)'; fillStyle='fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.4"'; }
 
+    // 점(아이콘/하이라이트 링) 반지름을 먼저 정해서, 방향선이 중심이 아니라
+    // 그 원 가장자리에서 시작하도록 한다
+    var fs, hlR;
+    if(isGoal){
+      fs=(2.2+parseFloat(r)*0.8).toFixed(2);
+      hlR=(parseFloat(fs)*0.42).toFixed(2);
+    } else {
+      hlR=(parseFloat(r)+1).toFixed(2);
+    }
+
     if(s.endX!=null && s.endY!=null){
       var ex=toSX(s.endY), ey=toSY(s.endX);
-      lines+='<line id="shotline_'+i+'" class="shot-line" x1="'+cx.toFixed(2)+'" y1="'+cy.toFixed(2)+'" x2="'+ex.toFixed(2)+'" y2="'+ey.toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.5"/>';
+      var dx=ex-cx, dy=ey-cy;
+      var dist=Math.sqrt(dx*dx+dy*dy)||1;
+      var startX=cx+dx/dist*parseFloat(hlR);
+      var startY=cy+dy/dist*parseFloat(hlR);
+      lines+='<line id="shotline_'+i+'" class="shot-line" x1="'+startX.toFixed(2)+'" y1="'+startY.toFixed(2)+'" x2="'+ex.toFixed(2)+'" y2="'+ey.toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.5"/>';
     }
     var title='<title>'+(s.min!=null?s.min+"'":'')+' · xG '+(s.xg||0).toFixed(2)+'</title>';
-    var tap='onclick="toggleShotLine('+i+')" style="cursor:pointer"';
+    // fill="none"인 원(빗나감)은 가운데 빈 공간이 기본적으로 클릭 안 되므로
+    // pointer-events="all"로 원 전체 영역을 히트박스로 만든다
+    var tap='onclick="toggleShotLine('+i+')" style="cursor:pointer" pointer-events="all"';
     if(isGoal){
-      dots+='<g '+tap+'>'+
-            '<circle cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+(parseFloat(r)+1.4).toFixed(2)+'" fill="#12151b" stroke="var(--gold)" stroke-width="0.4"></circle>'+
-            '<text x="'+cx.toFixed(2)+'" y="'+cy.toFixed(2)+'" font-size="'+(parseFloat(r)*1.7).toFixed(2)+'" text-anchor="middle" dominant-baseline="central">⚽</text>'+
-            title+'</g>';
+      // 흰색 배경 원 — 공 이모지의 흰 부분이 짙은 배경에 묻히지 않게
+      dots+='<circle cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+hlR+'" fill="#fff"></circle>';
+      dots+='<text '+tap+' x="'+cx.toFixed(2)+'" y="'+cy.toFixed(2)+'" font-size="'+fs+'" text-anchor="middle" dominant-baseline="central">⚽'+title+'</text>';
     } else {
       dots+='<circle '+tap+' cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+r+'" '+fillStyle+'>'+title+'</circle>';
     }
+    // 탭해서 선택한 슛을 표시하는 하이라이트 링 (기본은 투명)
+    dots+='<circle id="shothl_'+i+'" class="shot-highlight" cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+hlR+'" fill="none" stroke="#fff" stroke-width="0.6"/>';
   });
   return '<svg viewBox="0 -3 '+VW+' '+(VH+3)+'" style="width:100%;height:auto;display:block;border-radius:8px;">'+boxSVGBackground(VW,VH,xMin,xMax,yMin,yMax)+lines+dots+'</svg>';
 }
 
 function toggleShotLine(idx){
-  var target=document.getElementById('shotline_'+idx);
-  if(!target) return;
-  var wasActive=target.classList.contains('active');
-  document.querySelectorAll('.shot-line.active').forEach(function(l){ l.classList.remove('active'); });
-  if(!wasActive) target.classList.add('active');
+  var line=document.getElementById('shotline_'+idx);
+  var hl=document.getElementById('shothl_'+idx);
+  var wasActive=(line && line.classList.contains('active')) || (hl && hl.classList.contains('active'));
+  document.querySelectorAll('.shot-line.active, .shot-highlight.active').forEach(function(el){ el.classList.remove('active'); });
+  if(!wasActive){
+    if(line) line.classList.add('active');
+    if(hl) hl.classList.add('active');
+  }
 }
 
 // ── 터치 히트맵 (캔버스 기반 부드러운 열분포) ──
