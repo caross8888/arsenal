@@ -340,6 +340,8 @@ def parse_stats(data):
         'competitions': {},
         'stats':        {},
         'traits':       None,
+        'shotmap':      [],
+        'heatmap':      [],
         'season':       current_season_name,
     }
 
@@ -426,6 +428,40 @@ def parse_stats(data):
         else (recent_raw if isinstance(recent_raw, list) else [])
     )
     result['competitions'] = _collect_comp_stats(recent, season_start)
+
+    # ── 슛맵 (matchId → leagueId 매칭해 PL/UCL/FAC/EFL 경기만 필터) ──
+    match_league = {m.get('id'): m.get('leagueId') for m in recent if m.get('id') is not None}
+    raw_shots = first_stats.get('shotmap') or []
+    shotmap = []
+    for s in raw_shots:
+        comp = COMP_MAP.get(match_league.get(s.get('matchId')))
+        if not comp:
+            continue
+        # 슛 방향(궤적) 끝점 — 블록된 슛은 블록 지점, 유효슈팅/골은 골라인 통과 지점
+        end_x, end_y = None, None
+        if s.get('isBlocked') and s.get('blockedX') is not None and s.get('blockedY') is not None:
+            end_x, end_y = s['blockedX'], s['blockedY']
+        elif s.get('goalCrossedY') is not None:
+            end_x, end_y = 100, s['goalCrossedY']
+        shotmap.append({
+            'x':        s.get('x'),
+            'y':        s.get('y'),
+            'endX':     end_x,
+            'endY':     end_y,
+            'min':      s.get('min'),
+            'xg':       round(s.get('expectedGoals') or 0, 3),
+            'event':    'goal' if s.get('eventType') == 'Goal' else
+                        'ownGoal' if s.get('isOwnGoal') else
+                        'blocked' if s.get('isBlocked') else
+                        'onTarget' if s.get('isOnTarget') else 'off',
+            'situation': s.get('situation'),
+            'comp':     comp,
+        })
+    result['shotmap'] = shotmap
+
+    # ── 터치 히트맵 (Fotmob이 잡은 최근 시즌 기준 전체, 대회 구분 없음) ──
+    heatmap_raw = first_stats.get('heatmap') or {}
+    result['heatmap'] = heatmap_raw.get('coordinates') or []
 
     # ── 핵심 지표 보정 ──
     # firstSeasonStats(topStatCard 등)는 정상적인 경우 프리미어리그 단일 대회

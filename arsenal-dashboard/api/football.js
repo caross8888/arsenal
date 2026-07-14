@@ -8,6 +8,7 @@ const LOAN_KEYWORDS = /loan|loaned|joined|transferred|released|left the club/i;
 
 // Fotmob 선수 ID 매핑 (사진: images.fotmob.com/image_resources/playerimages/{id}.png)
 const FOTMOB_IDS = {
+  'meslier':       952029,
   'raya':          562727,
   'arrizabalaga':  317564,
   'setford':       1243239,
@@ -287,6 +288,8 @@ export default async function handler(req, res) {
           photo:       p.localPhoto || p.fotmobPhoto || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
           stats:       p.stats || {},
           traits:      p.traits || null,
+          shotmap:     p.shotmap || [],
+          heatmap:     p.heatmap || [],
           competitions: p.competitions || {},
           career:      p.career || [],
           season:      p.season || '',
