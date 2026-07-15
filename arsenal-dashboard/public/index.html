@@ -440,9 +440,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* Fotmob 대회별 스탯 그리드 */
 .fotmob-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.06);margin:0;border-top:1px solid rgba(255,255,255,.06);}
 .overall-stat-grid{grid-template-columns:repeat(5,1fr);}
+.shot-stat-grid{grid-template-columns:repeat(3,1fr);border-bottom:1px solid rgba(255,255,255,.06);}
 .fm-stat-cell{background:#1a1c22;padding:12px 8px;text-align:center;}
 .fm-stat-val{font-family:var(--fd);font-size:20px;font-weight:700;color:#fff;line-height:1;}
 .fm-stat-lbl{font-size:9px;color:rgba(255,255,255,.4);margin-top:4px;letter-spacing:.5px;}
+.overall-stat-grid .fm-stat-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;min-height:50px;}
+.overall-stat-grid .fm-stat-val{font-size:12px;line-height:1.3;}
+.overall-stat-grid .fm-stat-lbl{margin-top:3px;}
 /* Radar */
 .radar-wrap{padding:16px 20px;display:flex;justify-content:center;}
 .pl-modal-header{display:flex;gap:16px;padding:20px 20px 16px;border-bottom:1px solid var(--border);position:relative;}
@@ -3214,36 +3218,32 @@ function openPlayerModal(p) {
   }
 
   // ── 슈팅맵 / 히트맵 (위 "대회별 스탯" 탭 선택에 종속) ──
-  var NO_DATA_NOTE = '이번 시즌 데이터 없음 — 국가대표 소집(월드컵 등) 직후라 Fotmob이 클럽 기록을 아직 안 채워둔 선수는 정확한 데이터가 쌓일 때까지 표시하지 않습니다.';
   if(pos!=='GK'){
     window._pmShotmapAll = shotmap;
     window._pmHeatmapAll = heatmap;
     var initComp = compKeys.length ? compKeys[0] : null;
     var initShots = initComp ? shotmap.filter(function(s){return s.comp===initComp;}) : shotmap;
+    var initHeats = initComp ? heatmap.filter(function(hp){return hp.comp===initComp;}) : heatmap;
     window._pmCurrentShots = initShots;
 
-    h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
-    h += '<div class="pm-section-title">슈팅맵</div>';
-    if((shotmap && shotmap.length) || (heatmap && heatmap.length)){
+    if(shotmap && shotmap.length){
+      h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
+      h += '<div class="pm-section-title">슈팅맵</div>';
       h += '<div class="pm-section-sub" id="shotmapSubline">'+shotSublineText(initShots)+'</div>';
       h += '<div id="shotmapChart">'+(initShots.length ? renderShotmapSVG(initShots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>')+'</div>';
       h += '<div id="shotStatsRow">'+shotStatsRowHTML(initShots)+'</div>';
-      h += '<div id="shotDetailPanel">'+shotDetailHTML(null)+'</div>';
-    } else {
-      h += '<div class="pm-section-sub" style="color:var(--text-dim);line-height:1.5;">'+NO_DATA_NOTE+'</div>';
+      var initDefaultIdx = mostRecentShotIndex(initShots);
+      h += '<div id="shotDetailPanel">'+shotDetailHTML(initShots[initDefaultIdx]||null)+'</div>';
+      h += '</div>';
     }
-    h += '</div>';
 
     // ── 터치 히트맵 (위 "대회별 스탯" 탭 선택 공유) ──
-    h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
-    h += '<div class="pm-section-title">터치 히트맵</div>';
     if(heatmap && heatmap.length){
-      h += '<div class="pm-section-sub" id="heatmapSubline">Fotmob 시즌 누적 기준</div>';
+      h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
+      h += '<div class="pm-section-title">터치 히트맵</div>';
       h += '<canvas id="heatmap_canvas" width="320" height="207" style="width:100%;height:auto;display:block;border-radius:8px;"></canvas>';
-    } else {
-      h += '<div class="pm-section-sub" style="color:var(--text-dim);line-height:1.5;">'+NO_DATA_NOTE+'</div>';
+      h += '</div>';
     }
-    h += '</div>';
   }
 
   // ── 선수 특성 레이더 (Fotmob traits) ──
@@ -3290,8 +3290,11 @@ function openPlayerModal(p) {
       });
       drawFotmobRadar('radar_traits', translated);
     }
-    if(heatmap && heatmap.length){
-      drawHeatmapCanvas('heatmap_canvas', heatmap);
+    if(typeof initHeats!=='undefined' && initHeats && initHeats.length){
+      drawHeatmapCanvas('heatmap_canvas', initHeats);
+    }
+    if(typeof initDefaultIdx!=='undefined' && initDefaultIdx>=0){
+      toggleShotLine(initDefaultIdx);
     }
   }, 60);
 }
@@ -3625,8 +3628,15 @@ function switchPMComp(btn){
   if(chart) chart.innerHTML = shots.length ? renderShotmapSVG(shots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>';
   var statsRow=document.getElementById('shotStatsRow');
   if(statsRow) statsRow.innerHTML=shotStatsRowHTML(shots);
+  var defaultIdx=mostRecentShotIndex(shots);
+  if(defaultIdx>=0){
+    var dLine=document.getElementById('shotline_'+defaultIdx);
+    var dHl=document.getElementById('shothl_'+defaultIdx);
+    if(dLine) dLine.classList.add('active');
+    if(dHl) dHl.classList.add('active');
+  }
   var detailPanel=document.getElementById('shotDetailPanel');
-  if(detailPanel) detailPanel.innerHTML=shotDetailHTML(null);
+  if(detailPanel) detailPanel.innerHTML=shotDetailHTML(shots[defaultIdx]||null);
   var canvas=document.getElementById('heatmap_canvas');
   if(canvas){
     if(heats.length){
@@ -3649,11 +3659,8 @@ function shotStatsRowHTML(list){
   list = list||[];
   var goals=list.filter(function(s){return s.event==='goal';}).length;
   var xgSum=list.reduce(function(a,s){return a+(s.xg||0);},0);
-  var cell=function(val,lbl){
-    return '<div style="flex:1;text-align:center;"><div style="font-size:19px;font-weight:800;color:#fff;">'+val+'</div><div style="font-size:9px;color:var(--text-dim);margin-top:2px;">'+lbl+'</div></div>';
-  };
-  return '<div style="display:flex;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);">'+
-         cell(list.length,'슛')+cell(goals,'득점')+cell(xgSum.toFixed(2),'xG')+
+  return '<div class="fotmob-stat-grid shot-stat-grid" style="margin-top:12px;">'+
+         makeFMStat(list.length,'슛','')+makeFMStat(goals,'득점','#22C55E')+makeFMStat(xgSum.toFixed(2),'xG','')+
          '</div>';
 }
 
@@ -3663,32 +3670,53 @@ var SHOT_EVENT_LABEL={goal:'골',onTarget:'유효슈팅',off:'빗나감',blocked
 var SHOT_EVENT_COLOR={goal:'var(--gold)',onTarget:'#60A5FA',off:'#fff',blocked:'#fff',ownGoal:'#EF4444'};
 
 // 선택한 슛 1개의 상세 정보 (경기/슛 유형/상황/결과/xG)
+function fotmobCrest(teamId){
+  return teamId ? 'https://images.fotmob.com/image_resources/logo/teamlogo/'+teamId+'.png' : '';
+}
+
 function shotDetailHTML(s){
   if(!s){
-    return '<div style="font-size:11px;color:var(--text-dim);text-align:center;padding:4px 0;">슛을 선택하면 상세 정보가 여기에 표시됩니다</div>';
+    return '<div style="font-size:11px;color:var(--text-dim);text-align:center;padding:14px 0;">슛을 선택하면 상세 정보가 여기에 표시됩니다</div>';
   }
-  var row=function(lbl,val,color){
-    return '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,.05);">'+
-           '<span style="color:var(--text-dim);">'+lbl+'</span><span style="color:'+(color||'#fff')+';font-weight:600;">'+val+'</span></div>';
-  };
+  var m=s.match||{};
+  var hs=m.homeScore!=null?m.homeScore:'-';
+  var as=m.awayScore!=null?m.awayScore:'-';
+  var dateStr='';
+  if(m.date){
+    var d=new Date(m.date);
+    if(!isNaN(d)) dateStr=d.toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
+  }
   var h='';
-  if(s.match && (s.match.home || s.match.away)){
-    var hs=s.match.homeScore!=null?s.match.homeScore:'-';
-    var as=s.match.awayScore!=null?s.match.awayScore:'-';
-    var dateStr='';
-    if(s.match.date){
-      var d=new Date(s.match.date);
-      if(!isNaN(d)) dateStr=d.toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
-    }
-    h+='<div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:2px;">'+(s.match.home||'')+' '+hs+' - '+as+' '+(s.match.away||'')+'</div>';
-    h+='<div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;">'+dateStr+(s.min!=null?' · '+s.min+"'":'')+'</div>';
-  }
-  h+=row('슛 유형', SHOT_TYPE_LABEL[s.shotType]||s.shotType||'-');
-  h+=row('상황', SITUATION_LABEL[s.situation]||s.situation||'-');
-  h+=row('결과', SHOT_EVENT_LABEL[s.event]||s.event, SHOT_EVENT_COLOR[s.event]);
-  h+=row('xG', (s.xg||0).toFixed(2));
-  if(s.xgot!=null) h+=row('xGOT', s.xgot.toFixed(2));
+  // 팀/스코어 헤더 — 다른 섹션과 동일하게 배경/테두리 없이, 전부 중앙 정렬
+  h+='<div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 10px 4px;text-align:center;">';
+  h+='<div style="flex:1;min-width:0;font-size:11px;font-weight:600;color:#fff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(m.home||'')+'</div>';
+  if(m.homeId) h+='<img src="'+fotmobCrest(m.homeId)+'" style="width:18px;height:18px;object-fit:contain;flex-shrink:0;" onerror="this.style.display=\'none\'">';
+  h+='<div style="font-size:16px;font-weight:900;color:#fff;flex-shrink:0;padding:0 4px;">'+hs+' - '+as+'</div>';
+  if(m.awayId) h+='<img src="'+fotmobCrest(m.awayId)+'" style="width:18px;height:18px;object-fit:contain;flex-shrink:0;" onerror="this.style.display=\'none\'">';
+  h+='<div style="flex:1;min-width:0;font-size:11px;font-weight:600;color:#fff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(m.away||'')+'</div>';
+  h+='</div>';
+  h+='<div style="text-align:center;font-size:10px;color:var(--text-dim);padding-bottom:10px;">'+dateStr+(s.min!=null?' · '+s.min+"'":'')+'</div>';
+  // 슛 유형 / 상황 / 결과 / xG / xGOT — 위 "대회별 스탯"과 동일한 그리드 스타일
+  h+='<div class="fotmob-stat-grid overall-stat-grid">';
+  h+=makeFMStat(SHOT_TYPE_LABEL[s.shotType]||s.shotType||'-','슛 유형','');
+  h+=makeFMStat(SITUATION_LABEL[s.situation]||s.situation||'-','상황','');
+  h+=makeFMStat(SHOT_EVENT_LABEL[s.event]||s.event,'결과',SHOT_EVENT_COLOR[s.event]);
+  h+=makeFMStat((s.xg||0).toFixed(2),'xG','');
+  h+=makeFMStat(s.xgot!=null?s.xgot.toFixed(2):'-','xGOT','');
+  h+='</div>';
   return h;
+}
+
+function mostRecentShotIndex(list){
+  if(!list || !list.length) return -1;
+  var bestIdx=0, bestTime=-Infinity;
+  list.forEach(function(s,i){
+    var t = (s.match && s.match.date) ? new Date(s.match.date).getTime() : 0;
+    if(isNaN(t)) t=0;
+    t += (s.min||0)*60000; // 같은 날짜면 후반 슛을 더 최근으로
+    if(t>=bestTime){ bestTime=t; bestIdx=i; }
+  });
+  return bestIdx;
 }
 
 function makeFMStat(val, lbl, color){

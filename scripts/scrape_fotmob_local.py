@@ -473,6 +473,8 @@ def parse_stats(data):
                     'match': {
                         'home': s.get('homeTeamName'),
                         'away': s.get('awayTeamName'),
+                        'homeId': s.get('homeTeamId'),
+                        'awayId': s.get('awayTeamId'),
                         'homeScore': s.get('homeScore'),
                         'awayScore': s.get('awayScore'),
                         'date': s.get('matchDate'),
@@ -542,6 +544,7 @@ def parse_stats(data):
                     'situation': s.get('situation'), 'shotType': s.get('shotType'), 'comp': comp,
                     'match': {
                         'home': s.get('homeTeamName'), 'away': s.get('awayTeamName'),
+                        'homeId': s.get('homeTeamId'), 'awayId': s.get('awayTeamId'),
                         'homeScore': s.get('homeScore'), 'awayScore': s.get('awayScore'),
                         'date': s.get('matchDate'),
                     },
