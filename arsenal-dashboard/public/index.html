@@ -414,9 +414,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-section-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:14px;}
 .pm-radar-wrap{display:flex;justify-content:center;position:relative;}
 /* 대회 탭 */
-.pm-comp-tabs{display:flex;gap:6px;padding:14px 16px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.pm-comp-tab{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.5);cursor:pointer;font-family:var(--fb);}
-.pm-comp-tab.active{background:var(--red-dark);border-color:var(--red-dark);color:#fff;}
+.pm-comp-tabs{display:grid;gap:1px;background:rgba(255,255,255,.08);}
+.pm-comp-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:16px 6px;border:none;background:#23252b;color:rgba(255,255,255,.55);cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:700;transition:background .15s,color .15s;}
+.pm-comp-tab svg{width:24px;height:24px;fill:rgba(255,255,255,.32);transition:fill .15s;}
+.pm-comp-tab.active{background:var(--red-dark);color:#fff;}
+.pm-comp-tab.active svg{fill:var(--gold);}
+/* 대회별 기록 카드 — 탭/스탯/슈팅맵/히트맵을 하나의 카드로 묶음 */
+.pm-comp-card{margin:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;}
+.pm-comp-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.5);padding:14px 14px 0;}
+.pm-comp-subsection{padding:16px 14px 14px;border-top:1px solid rgba(255,255,255,.07);}
+.pm-comp-subtitle{font-size:12px;font-weight:700;color:#fff;margin-bottom:10px;}
 /* 스탯 섹션 */
 .stat-section{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);}
 .stat-section-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:10px;font-weight:700;}
@@ -433,7 +440,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pct-bar{height:100%;border-radius:3px;}
 .pct-val{font-size:11px;font-weight:700;width:36px;text-align:right;flex-shrink:0;}
 /* 경력 */
-.pm-career-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05);}
+.pm-career-card{margin:14px 16px 20px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;padding-top:14px;}
+.pm-career-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05);}
+.pm-career-row:last-child{border-bottom:none;}
 .pm-career-team{flex:1;font-size:13px;color:#fff;font-weight:600;}
 .pm-career-period{font-size:10px;color:rgba(255,255,255,.4);}
 .pm-career-stat{font-size:11px;color:rgba(255,255,255,.5);min-width:60px;text-align:right;}
@@ -3171,13 +3180,30 @@ function openPlayerModal(p) {
     h += '</div>';
   }
 
-  // ── 대회별 스탯 탭 ──
+  // ── 선수 특성 레이더 (Fotmob traits) — 대회 탭 카드보다 위에 배치 ──
+  if(traits && traits.items && traits.items.length){
+    h += '<div class="pm-traits">';
+    h += '<div class="pm-section-title">선수 특성</div>';
+    h += '<div class="pm-section-sub">'+traits.title+'</div>';
+    h += '<div class="pm-radar-wrap">';
+    h += '<canvas id="radar_traits" width="240" height="220"></canvas>';
+    h += '</div>';
+    h += '</div>';
+  }
+
+  // ── 대회별 기록 카드: 탭 + 스탯 + 슈팅맵 + 터치 히트맵을 하나로 묶음 ──
   if(compKeys.length > 0){
-    h += '<div class="stat-section">';
-    h += '<div class="stat-section-title">\ub300\ud68c\ubcc4 \uc2a4\ud0ef</div>';
-    h += '<div class="pm-comp-tabs" id="statCompTabs">';
+    window._pmShotmapAll = shotmap;
+    window._pmHeatmapAll = heatmap;
+    var initComp = compKeys.length ? compKeys[0] : null;
+    var initShots = initComp ? shotmap.filter(function(s){return s.comp===initComp;}) : shotmap;
+    var initHeats = initComp ? heatmap.filter(function(hp){return hp.comp===initComp;}) : heatmap;
+    window._pmCurrentShots = initShots;
+
+    h += '<div class="pm-comp-card">';
+    h += '<div class="pm-comp-tabs" id="statCompTabs" style="grid-template-columns:repeat('+compKeys.length+',1fr)">';
     compKeys.forEach(function(k,i){
-      h += '<button class="pm-comp-tab'+(i===0?' active':'')+'" data-comp="'+k+'" onclick="switchPMComp(this)">'+(compLabels[k]||k)+'</button>';
+      h += '<button class="pm-comp-tab'+(i===0?' active':'')+'" data-comp="'+k+'" onclick="switchPMComp(this)">'+(COMP_ICON[k]||COMP_ICON_DEFAULT)+'<span>'+(compLabels[k]||k)+'</span></button>';
     });
     h += '</div>';
 
@@ -3214,21 +3240,10 @@ function openPlayerModal(p) {
       h += '</div>';
       h += '</div>';
     });
-    h += '</div>'; // stat-section
-  }
 
-  // ── 슈팅맵 / 히트맵 (위 "대회별 스탯" 탭 선택에 종속) ──
-  if(pos!=='GK'){
-    window._pmShotmapAll = shotmap;
-    window._pmHeatmapAll = heatmap;
-    var initComp = compKeys.length ? compKeys[0] : null;
-    var initShots = initComp ? shotmap.filter(function(s){return s.comp===initComp;}) : shotmap;
-    var initHeats = initComp ? heatmap.filter(function(hp){return hp.comp===initComp;}) : heatmap;
-    window._pmCurrentShots = initShots;
-
-    if(shotmap && shotmap.length){
-      h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
-      h += '<div class="pm-section-title">슈팅맵</div>';
+    if(pos!=='GK' && shotmap && shotmap.length){
+      h += '<div class="pm-comp-subsection">';
+      h += '<div class="pm-comp-subtitle">슈팅맵</div>';
       h += '<div id="shotStatsRow">'+shotStatsRowHTML(initShots)+'</div>';
       h += '<div id="shotmapChart">'+(initShots.length ? renderShotmapSVG(initShots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>')+'</div>';
       var initDefaultIdx = mostRecentShotIndex(initShots);
@@ -3236,37 +3251,26 @@ function openPlayerModal(p) {
       h += '</div>';
     }
 
-    // ── 터치 히트맵 (위 "대회별 스탯" 탭 선택 공유, 대회에 데이터 없으면 섹션 자체를 숨김) ──
-    if(heatmap && heatmap.length){
-      h += '<div class="pm-traits" id="heatmapSection" style="border-top:1px solid rgba(255,255,255,.06);'+(initHeats.length?'':'display:none;')+'">';
-      h += '<div class="pm-section-title">터치 히트맵</div>';
+    if(pos!=='GK' && heatmap && heatmap.length){
+      h += '<div class="pm-comp-subsection" id="heatmapSection" style="'+(initHeats.length?'':'display:none;')+'">';
+      h += '<div class="pm-comp-subtitle">터치 히트맵</div>';
       h += '<canvas id="heatmap_canvas" width="320" height="207" style="width:100%;height:auto;display:block;border-radius:8px;"></canvas>';
       h += '</div>';
     }
-  }
-
-  // ── 선수 특성 레이더 (Fotmob traits) ──
-  if(traits && traits.items && traits.items.length){
-    h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
-    h += '<div class="pm-section-title">\uc120\uc218 \ud2b9\uc131</div>';
-    h += '<div class="pm-section-sub">'+traits.title+'</div>';
-    h += '<div class="pm-radar-wrap">';
-    h += '<canvas id="radar_traits" width="240" height="220"></canvas>';
-    h += '</div>';
-    h += '</div>';
+    h += '</div>'; // pm-comp-card
   }
 
   // ── 경력 ──
   if(career && career.length){
-    h += '<div style="padding:14px 0 0">';
-    h += '<div style="font-size:13px;font-weight:700;color:#fff;padding:0 16px 10px">\uacbd\ub825</div>';
+    h += '<div class="pm-career-card">';
+    h += '<div class="pm-section-title" style="padding:0 14px 10px">경력</div>';
     career.forEach(function(c){
       var period = c.startDate ? c.startDate.slice(0,4) : '';
       if(c.endDate) period += ' - '+c.endDate.slice(0,4);
-      else if(c.active) period += ' - \ud604\uc7ac';
+      else if(c.active) period += ' - 현재';
       var statStr = '';
-      if(c.appearances) statStr += c.appearances+'\uacbd\uae30';
-      if(c.goals) statStr += ' '+c.goals+'\uace8';
+      if(c.appearances) statStr += c.appearances+'경기';
+      if(c.goals) statStr += ' '+c.goals+'골';
       h += '<div class="pm-career-row">';
       h += '<div><div class="pm-career-team">'+c.team+'</div><div class="pm-career-period">'+period+'</div></div>';
       h += '<div class="pm-career-stat">'+statStr+'</div>';
@@ -3655,6 +3659,13 @@ function shotStatsRowHTML(list){
          '</div>';
 }
 
+var COMP_ICON={
+  PL:'<svg viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 4L12 3l3.5 6L21 5l-2 11H5z"/><path d="M5 18h14v2H5z"/></svg>',
+  UCL:'<svg viewBox="0 0 24 24"><path d="M12 17.3l-5.5 3 1.1-6.1L3 9.8l6.2-.9L12 3.3l2.8 5.6 6.2.9-4.6 4.4 1.1 6.1z"/></svg>',
+  FAC:'<svg viewBox="0 0 24 24"><path d="M6 4h12v2h2a1 1 0 0 1 1 1c0 2.8-1.9 5.1-4.4 5.7A5.5 5.5 0 0 1 13 16.4V19h3v2H8v-2h3v-2.6a5.5 5.5 0 0 1-3.6-3.7C4.9 12.1 3 9.8 3 7a1 1 0 0 1 1-1h2V4zm0 4H5c.3 1.6 1.3 2.9 2.7 3.4A7 7 0 0 1 6 8zm12 0a7 7 0 0 1-1.7 3.4C17.7 10.9 18.7 9.6 19 8h-1z"/></svg>',
+  EFL:'<svg viewBox="0 0 24 24"><path d="M7 4h10v3a5 5 0 0 1-4 4.9V15h3v2H8v-2h3v-3.1A5 5 0 0 1 7 7V4z"/><path d="M3.5 4.5h2.2v2.3c0 1.6.8 3 2 3.8C6 9.7 4.6 7.9 4.2 5.7c-.1-.5-.4-.9-.7-1.2zm17 0c-.3.3-.6.7-.7 1.2-.4 2.2-1.8 4-3.5 4.9 1.2-.8 2-2.2 2-3.8V4.5z"/></svg>'
+};
+var COMP_ICON_DEFAULT='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>';
 var SHOT_TYPE_LABEL={LeftFoot:'왼발',RightFoot:'오른발',Header:'헤더',OtherBodyPart:'기타'};
 var SITUATION_LABEL={RegularPlay:'일반 플레이',FromCorner:'코너킥',SetPiece:'세트피스',DirectFreekick:'프리킥',Penalty:'페널티',FastBreak:'속공',ThrowinSetPiece:'스로인',IndividualPlay:'개인 돌파'};
 var SHOT_EVENT_LABEL={goal:'골',onTarget:'유효슈팅',off:'빗나감',blocked:'블록',ownGoal:'자책골'};
