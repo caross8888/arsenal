@@ -2606,7 +2606,7 @@ function loadLiveExpand(m, panel){
   if(existing){
     var activeBtn = existing.querySelector('.mm-tab.active');
     if(activeBtn){
-      var tabMap={'골&이벤트':'events','팀 스탯':'stats','라인업':'lineup','선수 스탯':'players'};
+      var tabMap={'골&이벤트':'events','팀 스탯':'stats','라인업':'lineup','선수 스탯':'players','코멘터리':'commentary'};
       activeTab = tabMap[activeBtn.textContent] || 'events';
     }
   }
@@ -2728,6 +2728,7 @@ function buildLiveDetail(data){
   h += '<button class="mm-tab" data-tab="stats" onclick="liveSwitchTab(this,&quot;stats&quot;)">팀 스탯</button>';
   h += '<button class="mm-tab" data-tab="lineup" onclick="liveSwitchTab(this,&quot;lineup&quot;)">라인업</button>';
   h += '<button class="mm-tab" data-tab="players" onclick="liveSwitchTab(this,&quot;players&quot;)">선수 스탯</button>';
+  h += '<button class="mm-tab" data-tab="commentary" onclick="liveSwitchTab(this,&quot;commentary&quot;)">코멘터리</button>';
   h += '</div>';
 
   // ── 이벤트 패널 ──
@@ -2843,6 +2844,23 @@ function buildLiveDetail(data){
   }
   h += '</div>';
 
+  // ── 코멘터리 패널 ──
+  h += '<div class="live-tab-panel" id="live-panel-commentary" style="display:none;padding-top:10px;">';
+  var commentary = data.commentary||[];
+  if(commentary.length){
+    h += '<div style="max-height:360px;overflow-y:auto;">';
+    commentary.forEach(function(c){
+      h += '<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">';
+      h += '<span style="flex-shrink:0;min-width:32px;font-size:10px;color:rgba(255,255,255,0.4);font-family:var(--fm);">'+(c.minute||'')+'</span>';
+      h += '<span style="font-size:11px;color:rgba(255,255,255,0.85);line-height:1.5;">'+c.text+'</span>';
+      h += '</div>';
+    });
+    h += '</div>';
+  } else {
+    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘터리 없음</div>';
+  }
+  h += '</div>';
+
   return h;
 }
 
@@ -2868,7 +2886,7 @@ function liveSwitchTab(btn, panel){
   btn.classList.add('active');
   // 패널 표시 토글 (탭 행 다음 형제들)
   var panels = container.querySelectorAll('.live-tab-panel');
-  var idx = ['events','stats','lineup','players'].indexOf(panel);
+  var idx = ['events','stats','lineup','players','commentary'].indexOf(panel);
   panels.forEach(function(p,i){p.style.display=(i===idx)?'':'none';});
 }
 

@@ -150,6 +150,25 @@ export default async function handler(req, res) {
       away.score = parseInt(aComp?.score || 0);
     }
 
+    // ── 경기 코멘터리 (전체 텍스트 중계 피드) ──
+    const teamNameToSide = {};
+    for (const c of (comp?.competitors || [])) {
+      const nm = c.team?.displayName || c.team?.name;
+      if (nm) teamNameToSide[nm] = c.homeAway;
+    }
+    const commentary = (raw.commentary || [])
+      .filter(c => c.text)
+      .map(c => {
+        const rawMin = c.play?.clock?.displayValue || c.time?.displayValue || '';
+        const teamName = c.play?.team?.displayName;
+        return {
+          minute: rawMin || null,
+          text: c.text,
+          homeAway: teamName ? (teamNameToSide[teamName] || null) : null,
+        };
+      })
+      .reverse(); // 최신 코멘터리가 위로 오도록
+
     const venue = raw.header?.competitions?.[0]?.venue?.fullName || raw.gameInfo?.venue?.fullName || raw.venue?.fullName || null;
 
     // ── 주심 & 관중 ──
@@ -243,6 +262,7 @@ export default async function handler(req, res) {
       awayTeam: { id: away.id, name: away.name, crest: away.crest, score: away.score, stats: away.stats, color: away.color, alternateColor: away.alternateColor },
       teamStats,
       events,
+      commentary,
       players,
       status: comp?.status?.type?.description || '',
     };
