@@ -202,6 +202,45 @@ export default async function handler(req, res) {
         }))
       };
 
+    } else if(type === 'leaders'){
+      // EPL 전체 선수 득점/어시스트/클린시트 순위 (FPL bootstrap-static 재사용)
+      let fplData;
+      try {
+        const fplRes = await fetch(FPL_URL, {headers: FPL_HEADERS, signal: AbortSignal.timeout(10000)});
+        if(!fplRes.ok) throw new Error(`FPL API: ${fplRes.status}`);
+        const fplText = await fplRes.text();
+        if(!fplText || fplText.trim() === '') throw new Error('FPL 응답 빈 값');
+        fplData = JSON.parse(fplText);
+      } catch(fplErr) {
+        const stale = getStale('leaders');
+        if(stale) return res.json(stale);
+        throw fplErr;
+      }
+      const teamMap = {};
+      (fplData.teams||[]).forEach(t => {
+        teamMap[t.id] = {name: t.name, shortName: t.short_name, crest: `https://resources.premierleague.com/premierleague/badges/50/t${t.code}.png`};
+      });
+      const mapPlayer = (p, key) => ({
+        id:       p.id,
+        name:     p.web_name,
+        fullName: `${p.first_name} ${p.second_name}`,
+        team:     teamMap[p.team] || null,
+        photo:    `https://resources.premierleague.com/premierleague/photos/players/250x250/p${p.code}.png`,
+        isArsenal: p.team === ARSENAL_FPL_ID,
+        value:    p[key] || 0,
+      });
+      const topN = (key, n, filterFn) => (fplData.elements||[])
+        .filter(p => (p[key]||0) > 0 && (!filterFn || filterFn(p)))
+        .sort((a,b) => (b[key]||0) - (a[key]||0))
+        .slice(0, n)
+        .map(p => mapPlayer(p, key));
+
+      result = {
+        goals:       topN('goals_scored', 10),
+        assists:     topN('assists', 10),
+        cleanSheets: topN('clean_sheets', 10, p => p.element_type === 1),
+      };
+
     } else if(type === 'injuries'){
       // players.json로 현재 스쿼드 이름 목록 확보
       let squadNames = new Set();

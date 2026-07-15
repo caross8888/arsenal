@@ -113,6 +113,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .std-pts{font-family:var(--fm);font-weight:700;color:var(--text);text-align:right;font-size:12px}
 .more-btn{width:100%;padding:12px;border:none;background:var(--surface2);color:var(--text-muted);font-family:var(--fb);font-size:11px;letter-spacing:1px;cursor:pointer;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:6px;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;}
 .more-btn:hover{background:var(--surface3);color:var(--text)}
+.ldr-tabs{display:flex;gap:6px;padding:10px 14px 2px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.ldr-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px}
+.ldr-row:last-child{border-bottom:none}
+.ldr-row.afc-row{background:rgba(239,1,7,.05)}
+.ldr-rank{font-family:var(--fm);font-size:11px;color:var(--text-muted);width:16px;flex-shrink:0;text-align:center}
+.ldr-photo{width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0}
+.ldr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ldr-name{font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ldr-team{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted)}
+.ldr-team img{width:12px;height:12px;object-fit:contain}
+.ldr-val{font-family:var(--fm);font-weight:700;font-size:14px;color:var(--text);flex-shrink:0}
 .f-btns{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
 .f-btns
 ::-webkit-scrollbar{display:none}
@@ -595,6 +606,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div id="stdList"><div class="loading-state" style="padding:20px"><div class="spinner"></div></div></div>
     <button class="more-btn" id="moreStdBtn" onclick="toggleStandings()" style="display:none"><span id="moreStdText">&#51204;&#52404; &#49692;&#50948; &#48372;&#44592; &#8595;</span></button>
   </div>
+  <div class="card" style="margin-top:8px">
+    <div class="card-head">
+      <span class="card-title">&#49440;&#49688; &#49692;&#50948;</span>
+      <span style="font-size:9px;color:var(--text-dim)">EPL</span>
+    </div>
+    <div class="ldr-tabs" id="ldrTabs">
+      <button class="f-btn active" data-cat="goals" onclick="switchLeaders('goals',this)">&#46301;&#51216;</button>
+      <button class="f-btn" data-cat="assists" onclick="switchLeaders('assists',this)">&#50612;&#49884;&#49828;&#53944;</button>
+      <button class="f-btn" data-cat="cleanSheets" onclick="switchLeaders('cleanSheets',this)">&#53364;&#47536;&#49884;&#53944;</button>
+    </div>
+    <div id="ldrList"><div class="loading-state" style="padding:20px"><div class="spinner"></div></div></div>
+  </div>
 </section>
 <section id="squad" class="section">
   <div class="sec-head"><h1 class="sec-title">&#49440;&#49688;&#45800;</h1><span class="sec-badge" id="squadBadge">&#47196;&#46377; &#51473;</span></div>
@@ -1028,6 +1051,45 @@ function renderStandings(){
   }
 }
 function toggleStandings(){stdExpanded=!stdExpanded;renderStandings();}
+
+// ── 선수 순위 (EPL 전체, FPL 기반) ──
+var _leaders={goals:[],assists:[],cleanSheets:[]};
+var _leadersCat='goals';
+function loadLeaders(){
+  var el=document.getElementById('ldrList');
+  apiFetch(FN+'/football?type=leaders').then(function(data){
+    _leaders.goals=data.goals||[];
+    _leaders.assists=data.assists||[];
+    _leaders.cleanSheets=data.cleanSheets||[];
+    renderLeaders();
+  }).catch(function(err){showErr(el,err.message);});
+}
+function renderLeaders(){
+  var el=document.getElementById('ldrList');
+  var list=_leaders[_leadersCat]||[];
+  el.innerHTML='';
+  list.forEach(function(p,i){
+    var row=document.createElement('div');row.className='ldr-row'+(p.isArsenal?' afc-row':'');
+    var rank=document.createElement('span');rank.className='ldr-rank';rank.textContent=i+1;
+    var photo=document.createElement('img');photo.className='ldr-photo';photo.src=p.photo;photo.alt='';photo.onerror=function(){this.style.visibility='hidden';};
+    var info=document.createElement('div');info.className='ldr-info';
+    var nm=document.createElement('span');nm.className='ldr-name';nm.textContent=p.name;
+    var team=document.createElement('div');team.className='ldr-team';
+    if(p.team&&p.team.crest){var tImg=document.createElement('img');tImg.src=p.team.crest;tImg.alt='';tImg.onerror=function(){this.style.display='none';};team.appendChild(tImg);}
+    var tNm=document.createElement('span');tNm.textContent=p.team?(p.team.shortName||p.team.name):'';team.appendChild(tNm);
+    info.appendChild(nm);info.appendChild(team);
+    var val=document.createElement('span');val.className='ldr-val';val.textContent=p.value;
+    row.appendChild(rank);row.appendChild(photo);row.appendChild(info);row.appendChild(val);
+    el.appendChild(row);
+  });
+  if(!list.length){el.innerHTML='<div class="loading-state" style="padding:20px"><span>데이터 없음</span></div>';}
+}
+function switchLeaders(cat,btn){
+  _leadersCat=cat;
+  document.getElementById('ldrTabs').querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderLeaders();
+}
 
 // ── SQUAD (FPL 기반) ──
 function loadSquad(){
@@ -3764,6 +3826,7 @@ loadESPNStats();
 loadConfig();
 loadFixtures();
 loadStandings();
+loadLeaders();
 
 </script>
 </body>

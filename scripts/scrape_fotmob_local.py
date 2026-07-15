@@ -43,6 +43,7 @@ JERSEY_OVERRIDES = {
     1254234: '22',  # Ethan Nwaneri
     1025462: '21',  # Fábio Vieira
     748382:  '28',  # Reiss Nelson
+    952029:  '30',  # Illan Meslier
 }
 
 # ── Fotmob 아스날 스쿼드 자동 크롤 ──────────────────
