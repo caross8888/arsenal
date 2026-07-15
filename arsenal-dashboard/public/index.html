@@ -3242,10 +3242,10 @@ function openPlayerModal(p) {
     });
 
     if(pos!=='GK' && shotmap && shotmap.length){
-      h += '<div class="pm-comp-subsection">';
+      h += '<div class="pm-comp-subsection" id="shotmapSection" style="'+(initShots.length?'':'display:none;')+'">';
       h += '<div class="pm-comp-subtitle">슈팅맵</div>';
       h += '<div id="shotStatsRow">'+shotStatsRowHTML(initShots)+'</div>';
-      h += '<div id="shotmapChart">'+(initShots.length ? renderShotmapSVG(initShots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>')+'</div>';
+      h += '<div id="shotmapChart">'+(initShots.length ? renderShotmapSVG(initShots) : '')+'</div>';
       var initDefaultIdx = mostRecentShotIndex(initShots);
       h += '<div id="shotDetailPanel">'+shotDetailHTML(initShots[initDefaultIdx]||null)+'</div>';
       h += '</div>';
@@ -3622,8 +3622,10 @@ function switchPMComp(btn){
   var shots=(window._pmShotmapAll||[]).filter(function(s){return s.comp===comp;});
   var heats=(window._pmHeatmapAll||[]).filter(function(hp){return hp.comp===comp;});
   window._pmCurrentShots=shots;
+  var shotmapSection=document.getElementById('shotmapSection');
+  if(shotmapSection) shotmapSection.style.display = shots.length ? '' : 'none';
   var chart=document.getElementById('shotmapChart');
-  if(chart) chart.innerHTML = shots.length ? renderShotmapSVG(shots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>';
+  if(chart) chart.innerHTML = shots.length ? renderShotmapSVG(shots) : '';
   var statsRow=document.getElementById('shotStatsRow');
   if(statsRow) statsRow.innerHTML=shotStatsRowHTML(shots);
   var defaultIdx=mostRecentShotIndex(shots);
