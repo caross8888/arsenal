@@ -3048,11 +3048,18 @@ window.testLiveStop = function(){
   console.log('[Mock Live] 종료, 실제 데이터로 복원됨.');
 };
 
-// ── ESPN 배지 탭 → Mock 라이브 토글 ──
+// ── ESPN 배지 탭 → Mock 라이브 토글 (오작동 방지를 위해 3연속 클릭해야 켜짐) ──
 var _mockLiveActive = false;
+var _mockClickCount = 0;
+var _mockClickTimer = null;
 window.toggleMockLive = function(){
   var badge = document.getElementById('fixBadge');
   if(!_mockLiveActive){
+    _mockClickCount++;
+    clearTimeout(_mockClickTimer);
+    _mockClickTimer = setTimeout(function(){ _mockClickCount = 0; }, 1500);
+    if(_mockClickCount < 3) return;
+    _mockClickCount = 0;
     _mockLiveActive = true;
     if(badge){ badge.textContent = '🔴 MOCK ON'; badge.style.background = 'rgba(239,1,7,0.25)'; badge.style.color = '#ff6b6b'; }
     window.testLiveMatch();
