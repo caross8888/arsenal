@@ -462,12 +462,21 @@ def parse_stats(data):
                     'endY':     end_y,
                     'min':      s.get('min'),
                     'xg':       round(s.get('expectedGoals') or 0, 3),
+                    'xgot':     round(s['expectedGoalsOnTarget'], 3) if s.get('expectedGoalsOnTarget') is not None else None,
                     'event':    'goal' if s.get('eventType') == 'Goal' else
                                 'ownGoal' if s.get('isOwnGoal') else
                                 'blocked' if s.get('isBlocked') else
                                 'onTarget' if s.get('isOnTarget') else 'off',
                     'situation': s.get('situation'),
+                    'shotType': s.get('shotType'),
                     'comp':     comp,
+                    'match': {
+                        'home': s.get('homeTeamName'),
+                        'away': s.get('awayTeamName'),
+                        'homeScore': s.get('homeScore'),
+                        'awayScore': s.get('awayScore'),
+                        'date': s.get('matchDate'),
+                    },
                 })
             for pt in (season_stats.get('heatmap') or {}).get('coordinates') or []:
                 heatmap_coords.append({'x': pt.get('x'), 'y': pt.get('y'), 'comp': comp})
@@ -525,11 +534,17 @@ def parse_stats(data):
                 shotmap.append({
                     'x': s.get('x'), 'y': s.get('y'), 'endX': end_x, 'endY': end_y,
                     'min': s.get('min'), 'xg': round(s.get('expectedGoals') or 0, 3),
+                    'xgot': round(s['expectedGoalsOnTarget'], 3) if s.get('expectedGoalsOnTarget') is not None else None,
                     'event': 'goal' if s.get('eventType') == 'Goal' else
                              'ownGoal' if s.get('isOwnGoal') else
                              'blocked' if s.get('isBlocked') else
                              'onTarget' if s.get('isOnTarget') else 'off',
-                    'situation': s.get('situation'), 'comp': comp,
+                    'situation': s.get('situation'), 'shotType': s.get('shotType'), 'comp': comp,
+                    'match': {
+                        'home': s.get('homeTeamName'), 'away': s.get('awayTeamName'),
+                        'homeScore': s.get('homeScore'), 'awayScore': s.get('awayScore'),
+                        'date': s.get('matchDate'),
+                    },
                 })
         if not heatmap_coords and first_season_reliable:
             # firstSeasonStats는 보통 PL 기준으로 내려온다 (검증됨)

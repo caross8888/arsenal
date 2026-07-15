@@ -3220,18 +3220,15 @@ function openPlayerModal(p) {
     window._pmHeatmapAll = heatmap;
     var initComp = compKeys.length ? compKeys[0] : null;
     var initShots = initComp ? shotmap.filter(function(s){return s.comp===initComp;}) : shotmap;
+    window._pmCurrentShots = initShots;
 
     h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
     h += '<div class="pm-section-title">슈팅맵</div>';
     if((shotmap && shotmap.length) || (heatmap && heatmap.length)){
       h += '<div class="pm-section-sub" id="shotmapSubline">'+shotSublineText(initShots)+'</div>';
       h += '<div id="shotmapChart">'+(initShots.length ? renderShotmapSVG(initShots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>')+'</div>';
-      h += '<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;color:rgba(255,255,255,.8);margin-top:10px;align-items:center;">'+
-           '<span style="display:inline-flex;align-items:center;gap:5px;"><svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="5" fill="#fff"/><polygon points="5,2.3 6.7,3.5 6.1,5.5 3.9,5.5 3.3,3.5" fill="#1a1a1a"/></svg>골</span>'+
-           '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#60A5FA;"></span>유효슈팅</span>'+
-           '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;border:1.4px solid rgba(255,255,255,.65);box-sizing:border-box;"></span>빗나감</span>'+
-           '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);"></span>블록</span>'+
-           '</div>';
+      h += '<div id="shotStatsRow">'+shotStatsRowHTML(initShots)+'</div>';
+      h += '<div id="shotDetailPanel">'+shotDetailHTML(null)+'</div>';
     } else {
       h += '<div class="pm-section-sub" style="color:var(--text-dim);line-height:1.5;">'+NO_DATA_NOTE+'</div>';
     }
@@ -3411,9 +3408,16 @@ function toggleShotLine(idx){
   var hl=document.getElementById('shothl_'+idx);
   var wasActive=(line && line.classList.contains('active')) || (hl && hl.classList.contains('active'));
   document.querySelectorAll('.shot-line.active, .shot-highlight.active').forEach(function(el){ el.classList.remove('active'); });
+  var panel=document.getElementById('shotDetailPanel');
   if(!wasActive){
     if(line) line.classList.add('active');
     if(hl) hl.classList.add('active');
+    if(panel){
+      var list=window._pmCurrentShots||[];
+      panel.innerHTML=shotDetailHTML(list[idx]||null);
+    }
+  } else if(panel){
+    panel.innerHTML=shotDetailHTML(null);
   }
 }
 
@@ -3614,10 +3618,15 @@ function switchPMComp(btn){
   // 슈팅맵/히트맵도 같은 대회 선택을 따라간다
   var shots=(window._pmShotmapAll||[]).filter(function(s){return s.comp===comp;});
   var heats=(window._pmHeatmapAll||[]).filter(function(hp){return hp.comp===comp;});
+  window._pmCurrentShots=shots;
   var subline=document.getElementById('shotmapSubline');
   if(subline) subline.textContent=shotSublineText(shots);
   var chart=document.getElementById('shotmapChart');
   if(chart) chart.innerHTML = shots.length ? renderShotmapSVG(shots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>';
+  var statsRow=document.getElementById('shotStatsRow');
+  if(statsRow) statsRow.innerHTML=shotStatsRowHTML(shots);
+  var detailPanel=document.getElementById('shotDetailPanel');
+  if(detailPanel) detailPanel.innerHTML=shotDetailHTML(null);
   var canvas=document.getElementById('heatmap_canvas');
   if(canvas){
     if(heats.length){
@@ -3633,6 +3642,53 @@ function shotSublineText(list){
   var onTarget=list.filter(function(s){return s.event==='goal'||s.event==='onTarget';}).length;
   var pct=Math.round(onTarget/list.length*100);
   return '슈팅 위치 ('+list.length+') · 유효 '+pct+'%';
+}
+
+// Fotmob과 동일하게: 슛/득점/xG 3분할 요약
+function shotStatsRowHTML(list){
+  list = list||[];
+  var goals=list.filter(function(s){return s.event==='goal';}).length;
+  var xgSum=list.reduce(function(a,s){return a+(s.xg||0);},0);
+  var cell=function(val,lbl){
+    return '<div style="flex:1;text-align:center;"><div style="font-size:19px;font-weight:800;color:#fff;">'+val+'</div><div style="font-size:9px;color:var(--text-dim);margin-top:2px;">'+lbl+'</div></div>';
+  };
+  return '<div style="display:flex;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);">'+
+         cell(list.length,'슛')+cell(goals,'득점')+cell(xgSum.toFixed(2),'xG')+
+         '</div>';
+}
+
+var SHOT_TYPE_LABEL={LeftFoot:'왼발',RightFoot:'오른발',Header:'헤더',OtherBodyPart:'기타'};
+var SITUATION_LABEL={RegularPlay:'일반 플레이',FromCorner:'코너킥',SetPiece:'세트피스',DirectFreekick:'프리킥',Penalty:'페널티',FastBreak:'속공',ThrowinSetPiece:'스로인'};
+var SHOT_EVENT_LABEL={goal:'골',onTarget:'유효슈팅',off:'빗나감',blocked:'블록',ownGoal:'자책골'};
+var SHOT_EVENT_COLOR={goal:'var(--gold)',onTarget:'#60A5FA',off:'#fff',blocked:'#fff',ownGoal:'#EF4444'};
+
+// 선택한 슛 1개의 상세 정보 (경기/슛 유형/상황/결과/xG)
+function shotDetailHTML(s){
+  if(!s){
+    return '<div style="font-size:11px;color:var(--text-dim);text-align:center;padding:4px 0;">슛을 선택하면 상세 정보가 여기에 표시됩니다</div>';
+  }
+  var row=function(lbl,val,color){
+    return '<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,.05);">'+
+           '<span style="color:var(--text-dim);">'+lbl+'</span><span style="color:'+(color||'#fff')+';font-weight:600;">'+val+'</span></div>';
+  };
+  var h='';
+  if(s.match && (s.match.home || s.match.away)){
+    var hs=s.match.homeScore!=null?s.match.homeScore:'-';
+    var as=s.match.awayScore!=null?s.match.awayScore:'-';
+    var dateStr='';
+    if(s.match.date){
+      var d=new Date(s.match.date);
+      if(!isNaN(d)) dateStr=d.toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
+    }
+    h+='<div style="font-size:11px;color:#fff;font-weight:700;margin-bottom:2px;">'+(s.match.home||'')+' '+hs+' - '+as+' '+(s.match.away||'')+'</div>';
+    h+='<div style="font-size:10px;color:var(--text-dim);margin-bottom:8px;">'+dateStr+(s.min!=null?' · '+s.min+"'":'')+'</div>';
+  }
+  h+=row('슛 유형', SHOT_TYPE_LABEL[s.shotType]||s.shotType||'-');
+  h+=row('상황', SITUATION_LABEL[s.situation]||s.situation||'-');
+  h+=row('결과', SHOT_EVENT_LABEL[s.event]||s.event, SHOT_EVENT_COLOR[s.event]);
+  h+=row('xG', (s.xg||0).toFixed(2));
+  if(s.xgot!=null) h+=row('xGOT', s.xgot.toFixed(2));
+  return h;
 }
 
 function makeFMStat(val, lbl, color){
