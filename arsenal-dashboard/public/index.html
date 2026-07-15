@@ -119,6 +119,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ldr-row.afc-row{background:rgba(239,1,7,.05)}
 .ldr-rank{font-family:var(--fm);font-size:11px;color:var(--text-muted);width:16px;flex-shrink:0;text-align:center}
 .ldr-photo{width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0}
+.ldr-photo-ph{width:26px;height:26px;border-radius:50%;background:var(--surface2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:var(--text-muted);}
 .ldr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .ldr-name{font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ldr-team{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted)}
@@ -1071,7 +1072,8 @@ function renderLeaders(){
   list.forEach(function(p,i){
     var row=document.createElement('div');row.className='ldr-row'+(p.isArsenal?' afc-row':'');
     var rank=document.createElement('span');rank.className='ldr-rank';rank.textContent=i+1;
-    var photo=document.createElement('img');photo.className='ldr-photo';photo.src=p.photo;photo.alt='';photo.onerror=function(){this.style.visibility='hidden';};
+    var photo=document.createElement('img');photo.className='ldr-photo';photo.src=p.photo;photo.alt='';
+    photo.onerror=function(){var ph=document.createElement('div');ph.className='ldr-photo-ph';ph.textContent=p.position||'';this.replaceWith(ph);};
     var info=document.createElement('div');info.className='ldr-info';
     var nm=document.createElement('span');nm.className='ldr-name';nm.textContent=p.name;
     var team=document.createElement('div');team.className='ldr-team';

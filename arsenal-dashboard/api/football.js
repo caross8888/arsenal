@@ -226,6 +226,7 @@ export default async function handler(req, res) {
         fullName: `${p.first_name} ${p.second_name}`,
         team:     teamMap[p.team] || null,
         photo:    `https://resources.premierleague.com/premierleague/photos/players/250x250/p${p.code}.png`,
+        position: FPL_POS[p.element_type] || '',
         isArsenal: p.team === ARSENAL_FPL_ID,
         value:    p[key] || 0,
       });
