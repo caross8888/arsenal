@@ -90,6 +90,8 @@ export default async function handler(req, res) {
         {slug:'uefa.champions',name:'Champions League', short:'UCL'},
         {slug:'eng.league_cup',name:'EFL Cup',          short:'EFL'},
         {slug:'eng.fa',        name:'FA Cup',           short:'FAC'},
+        {slug:'eng.charity',   name:'Community Shield', short:'CS'},
+        {slug:'club.friendly', name:'Friendly',         short:'FR'},
       ];
 
       const now = new Date();

@@ -723,8 +723,8 @@ var ROUND_LABEL={
   'first round':'1라운드','sixth round':'6라운드',
   'round of 16':'16강','round of 32':'32강'
 };
-var CTAG={PL:'tag-pl',CL:'tag-cl',UCL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec',EFL:'tag-ec',CS:'tag-oth',CWC:'tag-oth'};
-var CNAME={PL:'PL',CL:'UCL',UCL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup',EFL:'EFL Cup',CS:'Shield',CWC:'CWC'};
+var CTAG={PL:'tag-pl',CL:'tag-cl',UCL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec',EFL:'tag-ec',CS:'tag-oth',CWC:'tag-oth',FR:'tag-oth'};
+var CNAME={PL:'PL',CL:'UCL',UCL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup',EFL:'EFL Cup',CS:'Shield',CWC:'CWC',FR:'Friendly'};
 function ctag(c){return CTAG[c]||'tag-oth';}
 function cname(c,fb){return CNAME[c]||fb||c;}
 
@@ -1992,7 +1992,7 @@ function loadSns(){
 }
 
 // ── MATCH DETAIL MODAL ──
-var COMP_SLUG_MAP={PL:'eng.1',UCL:'uefa.champions',EFL:'eng.league_cup',FAC:'eng.fa'};
+var COMP_SLUG_MAP={PL:'eng.1',UCL:'uefa.champions',EFL:'eng.league_cup',FAC:'eng.fa',CS:'eng.charity',FR:'club.friendly'};
 
 function openMatchModal(m){
   var overlay=document.getElementById('matchModal');
@@ -2605,7 +2605,7 @@ function startLiveExpandPolling(m, panel){
     }
     if(document.hidden) return;
     var comp = m.competition&&m.competition.short || 'PL';
-    var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':'eng.1';
+    var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':comp==='CS'?'eng.charity':comp==='FR'?'club.friendly':'eng.1';
     // 매치 상세 갱신
     var elPoll = document.getElementById('live-detail-'+m.id);
     var activeTabPoll = 'events';
