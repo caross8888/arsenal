@@ -3,6 +3,7 @@ const BASE = 'https://api.football-data.org/v4';
 const FPL_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/';
 const ARSENAL_ID = 57;
 const ARSENAL_FPL_ID = 1;
+const ARSENAL_TEAM_ID = 9825; // Fotmob 팀 ID
 const FPL_POS = {1:'GK',2:'DF',3:'MF',4:'FW'};
 const LOAN_KEYWORDS = /loan|loaned|joined|transferred|released|left the club/i;
 
@@ -55,7 +56,10 @@ function getFotmobId(p) {
 
 const cache = {};
 const TTL = 60 * 60 * 1000;
-function getCache(k){const c=cache[k];return(c&&Date.now()-c.ts<TTL)?c.data:null;}
+// 리더보드는 경기 끝나고 스탯 반영을 더 빨리 보여주기 위해 캐시를 짧게 둔다
+const TTL_OVERRIDES = { leaders: 10 * 60 * 1000 };
+function getTTL(k){ return TTL_OVERRIDES[k] || TTL; }
+function getCache(k){const c=cache[k];return(c&&Date.now()-c.ts<getTTL(k))?c.data:null;}
 function getStale(k){const c=cache[k];return c?c.data:null;}
 function setCache(k,d){cache[k]={data:d,ts:Date.now()};}
 
@@ -65,12 +69,16 @@ const FPL_HEADERS = {
   'Referer':'https://fantasy.premierleague.com/',
 };
 
+const FOTMOB_HEADERS = {
+  'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin','*');
-  res.setHeader('Cache-Control','public, max-age=3600');
 
   const type = req.query.type || 'fixtures';
   const nocache = req.query.nocache;
+  res.setHeader('Cache-Control', `public, max-age=${Math.floor(getTTL(type)/1000)}`);
 
   if(!nocache){
     const hit = getCache(type);
@@ -203,44 +211,71 @@ export default async function handler(req, res) {
       };
 
     } else if(type === 'leaders'){
-      // EPL 전체 선수 득점/어시스트/클린시트 순위 (FPL bootstrap-static 재사용)
-      let fplData;
+      // EPL 전체 선수 득점/어시스트/클린시트 순위 — Fotmob 공식 리그 통계(topstats) 사용.
+      // FPL bootstrap-static의 assists 필드는 공식 기록과 크게 어긋나서(예: 사카 10 vs 실제 5)
+      // 대신 Fotmob이 자기 사이트에서 쓰는 stats/{leagueId}/season/{tournamentId}/{stat}.json을 그대로 가져온다.
       try {
-        const fplRes = await fetch(FPL_URL, {headers: FPL_HEADERS, signal: AbortSignal.timeout(10000)});
-        if(!fplRes.ok) throw new Error(`FPL API: ${fplRes.status}`);
-        const fplText = await fplRes.text();
-        if(!fplText || fplText.trim() === '') throw new Error('FPL 응답 빈 값');
-        fplData = JSON.parse(fplText);
-      } catch(fplErr) {
+        const pageRes = await fetch(
+          'https://www.fotmob.com/leagues/47/stats/premier-league/players/goals',
+          {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(10000)}
+        );
+        if(!pageRes.ok) throw new Error(`Fotmob 페이지: ${pageRes.status}`);
+        const html = await pageRes.text();
+        const m = html.match(/<script id="__NEXT_DATA__" type="application\/json">(.*?)<\/script>/s);
+        if(!m) throw new Error('__NEXT_DATA__ 없음');
+        const pageData = JSON.parse(m[1]);
+        const seasonLinks = pageData?.props?.pageProps?.stats?.seasonStatLinks || [];
+        if(!seasonLinks.length) throw new Error('시즌 목록 없음');
+
+        const fetchStatList = async (tournamentId, statName) => {
+          try {
+            const r = await fetch(
+              `https://data.fotmob.com/stats/47/season/${tournamentId}/${statName}.json`,
+              {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(10000)}
+            );
+            if(!r.ok) return null;
+            const j = await r.json();
+            return j?.TopLists?.[0]?.StatList || null;
+          } catch(_){ return null; }
+        };
+
+        const mapRow = (row) => ({
+          id:        row.ParticiantId,
+          name:      row.ParticipantName,
+          fullName:  row.ParticipantName,
+          team: {
+            name:      row.TeamName,
+            shortName: row.TeamName,
+            crest:     `https://images.fotmob.com/image_resources/logo/teamlogo/${row.TeamId}.png`,
+          },
+          photo:     `https://images.fotmob.com/image_resources/playerimages/${row.ParticiantId}.png`,
+          position:  (row.Positions||[]).includes(11) ? 'GK' : '',
+          isArsenal: row.TeamId === ARSENAL_TEAM_ID,
+          value:     row.StatValue,
+        });
+
+        // 새 시즌이 아직 시작 전이면 해당 시즌 통계 파일이 비어있으므로,
+        // 데이터가 있는 첫 시즌(보통 직전 시즌)까지 순서대로 내려간다.
+        const getTopN = async (statName, n) => {
+          for(const link of seasonLinks){
+            const list = await fetchStatList(link.TournamentId, statName);
+            if(list && list.length) return list.slice(0, n).map(mapRow);
+          }
+          return [];
+        };
+
+        const [goals, assists, cleanSheets] = await Promise.all([
+          getTopN('goals', 10),
+          getTopN('goal_assist', 10),
+          getTopN('clean_sheet', 10),
+        ]);
+
+        result = { goals, assists, cleanSheets };
+      } catch(err) {
         const stale = getStale('leaders');
         if(stale) return res.json(stale);
-        throw fplErr;
+        throw err;
       }
-      const teamMap = {};
-      (fplData.teams||[]).forEach(t => {
-        teamMap[t.id] = {name: t.name, shortName: t.short_name, crest: `https://resources.premierleague.com/premierleague/badges/50/t${t.code}.png`};
-      });
-      const mapPlayer = (p, key) => ({
-        id:       p.id,
-        name:     p.web_name,
-        fullName: `${p.first_name} ${p.second_name}`,
-        team:     teamMap[p.team] || null,
-        photo:    `https://resources.premierleague.com/premierleague/photos/players/250x250/p${p.code}.png`,
-        position: FPL_POS[p.element_type] || '',
-        isArsenal: p.team === ARSENAL_FPL_ID,
-        value:    p[key] || 0,
-      });
-      const topN = (key, n, filterFn) => (fplData.elements||[])
-        .filter(p => (p[key]||0) > 0 && (!filterFn || filterFn(p)))
-        .sort((a,b) => (b[key]||0) - (a[key]||0))
-        .slice(0, n)
-        .map(p => mapPlayer(p, key));
-
-      result = {
-        goals:       topN('goals_scored', 10),
-        assists:     topN('assists', 10),
-        cleanSheets: topN('clean_sheets', 10, p => p.element_type === 1),
-      };
 
     } else if(type === 'injuries'){
       // players.json로 현재 스쿼드 이름 목록 확보
