@@ -440,7 +440,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* Fotmob 대회별 스탯 그리드 */
 .fotmob-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.06);margin:0;border-top:1px solid rgba(255,255,255,.06);}
 .overall-stat-grid{grid-template-columns:repeat(5,1fr);}
-.shot-stat-grid{grid-template-columns:repeat(3,1fr);border-bottom:1px solid rgba(255,255,255,.06);}
+.shot-stat-grid{grid-template-columns:repeat(4,1fr);}
 .fm-stat-cell{background:#1a1c22;padding:12px 8px;text-align:center;}
 .fm-stat-val{font-family:var(--fd);font-size:20px;font-weight:700;color:#fff;line-height:1;}
 .fm-stat-lbl{font-size:9px;color:rgba(255,255,255,.4);margin-top:4px;letter-spacing:.5px;}
@@ -3229,17 +3229,16 @@ function openPlayerModal(p) {
     if(shotmap && shotmap.length){
       h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
       h += '<div class="pm-section-title">슈팅맵</div>';
-      h += '<div class="pm-section-sub" id="shotmapSubline">'+shotSublineText(initShots)+'</div>';
-      h += '<div id="shotmapChart">'+(initShots.length ? renderShotmapSVG(initShots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>')+'</div>';
       h += '<div id="shotStatsRow">'+shotStatsRowHTML(initShots)+'</div>';
+      h += '<div id="shotmapChart">'+(initShots.length ? renderShotmapSVG(initShots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>')+'</div>';
       var initDefaultIdx = mostRecentShotIndex(initShots);
       h += '<div id="shotDetailPanel">'+shotDetailHTML(initShots[initDefaultIdx]||null)+'</div>';
       h += '</div>';
     }
 
-    // ── 터치 히트맵 (위 "대회별 스탯" 탭 선택 공유) ──
+    // ── 터치 히트맵 (위 "대회별 스탯" 탭 선택 공유, 대회에 데이터 없으면 섹션 자체를 숨김) ──
     if(heatmap && heatmap.length){
-      h += '<div class="pm-traits" style="border-top:1px solid rgba(255,255,255,.06)">';
+      h += '<div class="pm-traits" id="heatmapSection" style="border-top:1px solid rgba(255,255,255,.06);'+(initHeats.length?'':'display:none;')+'">';
       h += '<div class="pm-section-title">터치 히트맵</div>';
       h += '<canvas id="heatmap_canvas" width="320" height="207" style="width:100%;height:auto;display:block;border-radius:8px;"></canvas>';
       h += '</div>';
@@ -3323,11 +3322,13 @@ function boxSVGBackground(VW, VH, xMin, xMax, yMin, yMax){
   // 골에어리어 (5.5m x 18.32m)
   var gbY1=toSY(105-5.5), gbX1=toSX(34-9.16), gbX2=toSX(34+9.16);
   s+='<rect x="'+gbX1.toFixed(2)+'" y="0" width="'+(gbX2-gbX1).toFixed(2)+'" height="'+gbY1.toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
-  // 페널티 스팟 + 아크
-  var spotY=toSY(105-11), spotX=toSX(34);
-  s+='<circle cx="'+spotX.toFixed(2)+'" cy="'+spotY.toFixed(2)+'" r="0.6" fill="'+lc+'"/>';
-  var arcR=9.15*(VW/(yMax-yMin));
-  s+='<path d="M '+toSX(34-9.15).toFixed(2)+' '+toSY(105-16.5).toFixed(2)+' A '+arcR.toFixed(2)+' '+arcR.toFixed(2)+' 0 0 1 '+toSX(34+9.15).toFixed(2)+' '+toSY(105-16.5).toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
+  // 아크 (박스 바깥쪽으로 볼록: 페널티 스팟 중심 원이 박스 선과 만나는 두 점 사이만 그림,
+  // 반원이 아니라 박스 선까지 잘린 활 모양이 실제 규격과 맞음)
+  var spotDepth=105-11, boxEdgeDepth=105-16.5, arcRadiusM=9.15;
+  var halfChordM=Math.sqrt(arcRadiusM*arcRadiusM-(spotDepth-boxEdgeDepth)*(spotDepth-boxEdgeDepth));
+  var arcP1x=toSX(34-halfChordM), arcP2x=toSX(34+halfChordM), arcY=toSY(boxEdgeDepth);
+  var arcR=arcRadiusM*(VW/(yMax-yMin));
+  s+='<path d="M '+arcP1x.toFixed(2)+' '+arcY.toFixed(2)+' A '+arcR.toFixed(2)+' '+arcR.toFixed(2)+' 0 0 0 '+arcP2x.toFixed(2)+' '+arcY.toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
   // 골문 (골라인 뒤 네트 프레임)
   var goalW=7.32;
   var gx1=toSX(34-goalW/2), gx2=toSX(34+goalW/2);
@@ -3407,20 +3408,15 @@ function renderShotmapSVG(shots){
 }
 
 function toggleShotLine(idx){
+  document.querySelectorAll('.shot-line.active, .shot-highlight.active').forEach(function(el){ el.classList.remove('active'); });
   var line=document.getElementById('shotline_'+idx);
   var hl=document.getElementById('shothl_'+idx);
-  var wasActive=(line && line.classList.contains('active')) || (hl && hl.classList.contains('active'));
-  document.querySelectorAll('.shot-line.active, .shot-highlight.active').forEach(function(el){ el.classList.remove('active'); });
+  if(line) line.classList.add('active');
+  if(hl) hl.classList.add('active');
   var panel=document.getElementById('shotDetailPanel');
-  if(!wasActive){
-    if(line) line.classList.add('active');
-    if(hl) hl.classList.add('active');
-    if(panel){
-      var list=window._pmCurrentShots||[];
-      panel.innerHTML=shotDetailHTML(list[idx]||null);
-    }
-  } else if(panel){
-    panel.innerHTML=shotDetailHTML(null);
+  if(panel){
+    var list=window._pmCurrentShots||[];
+    panel.innerHTML=shotDetailHTML(list[idx]||null);
   }
 }
 
@@ -3622,8 +3618,6 @@ function switchPMComp(btn){
   var shots=(window._pmShotmapAll||[]).filter(function(s){return s.comp===comp;});
   var heats=(window._pmHeatmapAll||[]).filter(function(hp){return hp.comp===comp;});
   window._pmCurrentShots=shots;
-  var subline=document.getElementById('shotmapSubline');
-  if(subline) subline.textContent=shotSublineText(shots);
   var chart=document.getElementById('shotmapChart');
   if(chart) chart.innerHTML = shots.length ? renderShotmapSVG(shots) : '<div style="color:var(--text-dim);font-size:12px;padding:20px 0;text-align:center;">이 대회 슈팅 없음</div>';
   var statsRow=document.getElementById('shotStatsRow');
@@ -3637,6 +3631,8 @@ function switchPMComp(btn){
   }
   var detailPanel=document.getElementById('shotDetailPanel');
   if(detailPanel) detailPanel.innerHTML=shotDetailHTML(shots[defaultIdx]||null);
+  var heatmapSection=document.getElementById('heatmapSection');
+  if(heatmapSection) heatmapSection.style.display = heats.length ? '' : 'none';
   var canvas=document.getElementById('heatmap_canvas');
   if(canvas){
     if(heats.length){
@@ -3647,25 +3643,20 @@ function switchPMComp(btn){
   }
 }
 
-function shotSublineText(list){
-  if(!list || !list.length) return '슈팅 없음';
-  var onTarget=list.filter(function(s){return s.event==='goal'||s.event==='onTarget';}).length;
-  var pct=Math.round(onTarget/list.length*100);
-  return '슈팅 위치 ('+list.length+') · 유효 '+pct+'%';
-}
-
-// Fotmob과 동일하게: 슛/득점/xG 3분할 요약
+// Fotmob과 동일하게: 슛/득점/xG/유효% 4분할 요약
 function shotStatsRowHTML(list){
   list = list||[];
   var goals=list.filter(function(s){return s.event==='goal';}).length;
   var xgSum=list.reduce(function(a,s){return a+(s.xg||0);},0);
+  var onTarget=list.filter(function(s){return s.event==='goal'||s.event==='onTarget';}).length;
+  var pct=list.length?Math.round(onTarget/list.length*100):0;
   return '<div class="fotmob-stat-grid shot-stat-grid" style="margin-top:12px;">'+
-         makeFMStat(list.length,'슛','')+makeFMStat(goals,'득점','#22C55E')+makeFMStat(xgSum.toFixed(2),'xG','')+
+         makeFMStat(list.length,'슛','')+makeFMStat(goals,'득점','#22C55E')+makeFMStat(xgSum.toFixed(2),'xG','')+makeFMStat(pct+'%','유효','')+
          '</div>';
 }
 
 var SHOT_TYPE_LABEL={LeftFoot:'왼발',RightFoot:'오른발',Header:'헤더',OtherBodyPart:'기타'};
-var SITUATION_LABEL={RegularPlay:'일반 플레이',FromCorner:'코너킥',SetPiece:'세트피스',DirectFreekick:'프리킥',Penalty:'페널티',FastBreak:'속공',ThrowinSetPiece:'스로인'};
+var SITUATION_LABEL={RegularPlay:'일반 플레이',FromCorner:'코너킥',SetPiece:'세트피스',DirectFreekick:'프리킥',Penalty:'페널티',FastBreak:'속공',ThrowinSetPiece:'스로인',IndividualPlay:'개인 돌파'};
 var SHOT_EVENT_LABEL={goal:'골',onTarget:'유효슈팅',off:'빗나감',blocked:'블록',ownGoal:'자책골'};
 var SHOT_EVENT_COLOR={goal:'var(--gold)',onTarget:'#60A5FA',off:'#fff',blocked:'#fff',ownGoal:'#EF4444'};
 
