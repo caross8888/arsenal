@@ -416,8 +416,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-dow-row span:first-child{color:#F87171;}
 .cal-dow-row span:last-child{color:#60A5FA;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.cal-day{aspect-ratio:1/1.75;border-radius:8px;border:2px solid transparent;box-sizing:border-box;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;overflow:hidden;cursor:pointer;font-size:11px;color:var(--text-muted);-webkit-tap-highlight-color:transparent;padding:4px 2px 5px;}
-.cal-day.has-fixture{border-color:var(--red-dark);}
+.cal-day{aspect-ratio:1/1.75;border-radius:8px;border:2px solid transparent;box-sizing:border-box;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;overflow:hidden;cursor:default;font-size:11px;color:var(--text-muted);-webkit-tap-highlight-color:transparent;padding:4px 2px 5px;}
+.cal-day.has-fixture{border-color:var(--red-dark);cursor:pointer;}
 .cal-day.away-fixture{border-color:#3a5a8c;}
 .cal-day.neutral-fixture{border-color:var(--gold);}
 .cal-day.today{background:rgba(200,168,75,.15);color:var(--gold);font-weight:700;}
@@ -1091,11 +1091,31 @@ function switchFixView(view){
   document.querySelectorAll('.fix-view-btn').forEach(function(b){b.classList.toggle('active', b.getAttribute('data-view')===view);});
   document.getElementById('upcomingList').style.display = view==='list' ? '' : 'none';
   document.getElementById('upcomingCalView').style.display = view==='cal' ? '' : 'none';
-  if(view==='cal') renderCalendarMonth();
+  if(view==='cal') calGoToNearestMatch();
 }
 function calChangeMonth(delta){
   _calDate.setMonth(_calDate.getMonth()+delta);
   renderCalendarMonth();
+}
+function calGoToNearestMatch(){
+  var matches = (window._allMatchesForCal||[]).filter(function(m){return !!m.utcDate;});
+  var nearest = null, nearestDiff = Infinity;
+  var now = Date.now();
+  matches.forEach(function(m){
+    var diff = Math.abs(new Date(m.utcDate).getTime()-now);
+    if(diff<nearestDiff){ nearestDiff=diff; nearest=m; }
+  });
+  if(nearest){
+    var dt = new Date(nearest.utcDate);
+    var p = kstParts(dt.getTime());
+    _calDate = new Date(p.y, p.m, 1);
+    renderCalendarMonth();
+    var firstDow = new Date(p.y, p.m, 1).getDay();
+    var cell = document.getElementById('calGrid').children[firstDow+p.d-1];
+    if(cell) cell.click();
+  } else {
+    renderCalendarMonth();
+  }
 }
 function renderCalendarMonth(){
   var matches = window._allMatchesForCal || [];
@@ -1146,29 +1166,19 @@ function renderCalendarMonth(){
       var dt = new Date(m.utcDate);
       timeEl.textContent = dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
       cell.appendChild(timeEl);
+
+      (function(ms){
+        cell.onclick = function(){
+          document.querySelectorAll('.cal-day').forEach(function(c){c.classList.remove('selected');});
+          this.classList.add('selected');
+          var detail = document.getElementById('calDetail');
+          detail.innerHTML='';
+          ms.forEach(function(mm){ detail.appendChild(buildFixCard(mm)); });
+        };
+      })(dayMatches);
     }
 
-    (function(ms){
-      cell.onclick = function(){
-        document.querySelectorAll('.cal-day').forEach(function(c){c.classList.remove('selected');});
-        this.classList.add('selected');
-        var detail = document.getElementById('calDetail');
-        detail.innerHTML='';
-        if(ms.length){
-          ms.forEach(function(mm){ detail.appendChild(buildFixCard(mm)); });
-        } else {
-          detail.innerHTML = '<div style="text-align:center;font-size:11px;color:var(--text-dim);padding:14px 0;">경기 없음</div>';
-        }
-      };
-    })(dayMatches);
-
     grid.appendChild(cell);
-  }
-
-  if(todayParts.y===year && todayParts.m===month){
-    var idx = firstDow + todayParts.d - 1;
-    var todayCell = grid.children[idx];
-    if(todayCell) todayCell.click();
   }
 }
 
