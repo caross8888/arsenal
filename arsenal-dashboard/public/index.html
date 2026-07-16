@@ -113,7 +113,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .std-pts{font-family:var(--fm);font-weight:700;color:var(--text);text-align:right;font-size:12px}
 .more-btn{width:100%;padding:12px;border:none;background:var(--surface2);color:var(--text-muted);font-family:var(--fb);font-size:11px;letter-spacing:1px;cursor:pointer;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:6px;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;}
 .more-btn:hover{background:var(--surface3);color:var(--text)}
-.ldr-tabs{display:flex;gap:6px;padding:10px 14px 2px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.lb-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);}
+.lb-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px 4px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;font-family:var(--fb);font-size:11px;font-weight:700;-webkit-tap-highlight-color:transparent;}
+.lb-tab svg{stroke:var(--text-muted);transition:stroke .15s;}
+.lb-tab.active{background:var(--red-dark);color:#fff;}
+.lb-tab.active svg{stroke:var(--gold);}
 .ldr-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px}
 .ldr-row:last-child{border-bottom:none}
 .ldr-row.afc-row{background:rgba(239,1,7,.05)}
@@ -599,25 +603,35 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="fix-list" id="finishedList"></div>
   </div>
   <div class="card" style="margin-top:8px">
-    <div class="card-head">
-      <span class="card-title">&#54532;&#47532;&#48120;&#50612;&#47532;&#44536; &#49692;&#50948;</span>
-      <span style="font-size:9px;color:var(--text-dim)" id="stdMatchday"></span>
+    <div class="lb-tabs" id="lbTabs">
+      <button class="lb-tab active" data-tab="team" onclick="switchLbTab('team',this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/></svg>
+        &#54016; &#49692;&#50948;
+      </button>
+      <button class="lb-tab" data-tab="goals" onclick="switchLbTab('goals',this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 7l4.76 3.45l-1.76 5.55h-6l-1.76 -5.55l4.76 -3.45"/><path d="M12 7v-4m3 13l2.5 3m-.74 -8.55l3.74 -1.45m-11.44 7.05l-2.56 2.95m.74 -8.55l-3.74 -1.45"/></svg>
+        &#46301;&#51216;
+      </button>
+      <button class="lb-tab" data-tab="assists" onclick="switchLbTab('assists',this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h5.426a1 1 0 0 1 .863 .496l1.064 1.823a3 3 0 0 0 1.896 1.407l4.677 1.114a4 4 0 0 1 3.074 3.89v2.27a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1"/><path d="M14 13l1 -2"/><path d="M8 18v-1a4 4 0 0 0 -4 -4h-1"/><path d="M10 12l1.5 -3"/></svg>
+        &#50612;&#49884;&#49828;&#53944;
+      </button>
+      <button class="lb-tab" data-tab="cleanSheets" onclick="switchLbTab('cleanSheets',this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5"/><path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/><path d="M14 5.5a1.5 1.5 0 0 1 3 0v6.5"/><path d="M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></svg>
+        &#53364;&#47536;&#49884;&#53944;
+      </button>
     </div>
-    <div class="std-hdr" style="grid-template-columns:22px 1fr 24px 24px 24px 24px 36px"><span>#</span><span>&#44396;&#45800;&#47749;</span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:right">PTS</span></div>
-    <div id="stdList"><div class="loading-state" style="padding:20px"><div class="spinner"></div></div></div>
-    <button class="more-btn" id="moreStdBtn" onclick="toggleStandings()" style="display:none"><span id="moreStdText">&#51204;&#52404; &#49692;&#50948; &#48372;&#44592; &#8595;</span></button>
-  </div>
-  <div class="card" style="margin-top:8px">
-    <div class="card-head">
-      <span class="card-title">&#49440;&#49688; &#49692;&#50948;</span>
-      <span style="font-size:9px;color:var(--text-dim)">EPL</span>
+    <div id="lbPanel-team">
+      <div style="padding:10px 14px 0;display:flex;align-items:center;justify-content:flex-end;">
+        <span style="font-size:9px;color:var(--text-dim)" id="stdMatchday"></span>
+      </div>
+      <div class="std-hdr" style="grid-template-columns:22px 1fr 24px 24px 24px 24px 36px"><span>#</span><span>&#44396;&#45800;&#47749;</span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:right">PTS</span></div>
+      <div id="stdList"><div class="loading-state" style="padding:20px"><div class="spinner"></div></div></div>
+      <button class="more-btn" id="moreStdBtn" onclick="toggleStandings()" style="display:none"><span id="moreStdText">&#51204;&#52404; &#49692;&#50948; &#48372;&#44592; &#8595;</span></button>
     </div>
-    <div class="ldr-tabs" id="ldrTabs">
-      <button class="f-btn active" data-cat="goals" onclick="switchLeaders('goals',this)">&#46301;&#51216;</button>
-      <button class="f-btn" data-cat="assists" onclick="switchLeaders('assists',this)">&#50612;&#49884;&#49828;&#53944;</button>
-      <button class="f-btn" data-cat="cleanSheets" onclick="switchLeaders('cleanSheets',this)">&#53364;&#47536;&#49884;&#53944;</button>
+    <div id="lbPanel-stats" style="display:none">
+      <div id="ldrList"><div class="loading-state" style="padding:20px"><div class="spinner"></div></div></div>
     </div>
-    <div id="ldrList"><div class="loading-state" style="padding:20px"><div class="spinner"></div></div></div>
   </div>
 </section>
 <section id="squad" class="section">
@@ -1011,7 +1025,7 @@ function loadFixtures(){
         };el.appendChild(btn);}
     }
     renderList(upEl,upcomingAll.slice(0,3),upcomingAll);
-    renderList(fnEl,finishedAll.slice(0,5),finishedAll);
+    renderList(fnEl,finishedAll.slice(0,3),finishedAll);
     renderDday(upcomingAll);
     // 라이브 경기 있으면 폴링 시작
     if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})) startLivePolling();
@@ -1086,11 +1100,20 @@ function renderLeaders(){
   });
   if(!list.length){el.innerHTML='<div class="loading-state" style="padding:20px"><span>데이터 없음</span></div>';}
 }
-function switchLeaders(cat,btn){
-  _leadersCat=cat;
-  document.getElementById('ldrTabs').querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active');});
+function switchLbTab(tab,btn){
+  document.getElementById('lbTabs').querySelectorAll('.lb-tab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
-  renderLeaders();
+  var teamPanel=document.getElementById('lbPanel-team');
+  var statsPanel=document.getElementById('lbPanel-stats');
+  if(tab==='team'){
+    teamPanel.style.display='';
+    statsPanel.style.display='none';
+  } else {
+    teamPanel.style.display='none';
+    statsPanel.style.display='';
+    _leadersCat=tab;
+    renderLeaders();
+  }
 }
 
 // ── SQUAD (FPL 기반) ──
@@ -2921,7 +2944,7 @@ function startLivePolling(){
           var finishedAll = (data.finished||[]).slice().reverse();
           var upcomingAll = data.upcoming||[];
           renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
-          renderList(fnEl, finishedAll.slice(0,5), finishedAll);
+          renderList(fnEl, finishedAll.slice(0,3), finishedAll);
           renderDday(upcomingAll);
         }
         stopLivePolling();
