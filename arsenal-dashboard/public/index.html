@@ -29,9 +29,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(11,13,18,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-bottom);}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;gap:4px;background:none;border:none;color:var(--text-dim);font-family:var(--fb);font-size:9px;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:color .2s;position:relative;-webkit-tap-highlight-color:transparent;}
-.nav-btn.active{color:var(--gold)}.nav-btn.active .nav-icon{color:var(--red)}
-.nav-icon{font-size:18px;line-height:1}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;gap:4px;background:none;border:none;border-right:1px solid var(--border);color:var(--text-dim);font-family:var(--fb);font-size:9px;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;position:relative;-webkit-tap-highlight-color:transparent;}
+.nav-btn:last-child{border-right:none;}
+.nav-btn.active{background:var(--red-dark);color:#fff}.nav-btn.active .nav-icon{color:#fff}
+.nav-icon{width:20px;height:20px;color:var(--text-dim);}
 .nav-live-dot{position:absolute;top:8px;right:calc(50% - 16px);width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 2s infinite}
 .page{position:relative;z-index:1}
 .section{display:none;padding:16px;max-width:600px;margin:0 auto}
@@ -171,9 +172,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sum-val.r{color:var(--red)}.sum-val.a{color:var(--amber)}.sum-val.g{color:var(--green)}
 .sum-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:4px}
 .news-list{display:flex;flex-direction:column;gap:10px}
-.media-seg{display:flex;gap:0;background:var(--surface2);border-radius:10px;padding:3px;margin-bottom:14px;}
-.media-seg-btn{flex:1;padding:7px 4px;border:none;background:none;border-radius:8px;font-size:11px;font-weight:700;color:var(--text-dim);cursor:pointer;transition:all .2s;letter-spacing:.3px;}
-.media-seg-btn.active{background:var(--surface3);color:var(--gold);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.media-seg{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.media-seg-btn{background:var(--surface2);border:none;color:var(--text-muted);font-family:var(--fb);font-size:12px;font-weight:700;padding:10px 4px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
+.media-seg-btn.active{background:var(--red-dark);color:#fff;}
 /* ── Timeline Section ───────────────────── */
 .tl-wrap{position:relative;}
 .tl-wrap::before{content:'';position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--red) 0%,#ff6b35 30%,var(--gold) 60%,#4CAF50 100%);opacity:.45;}
@@ -689,11 +690,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </div>
 
 <nav class="bottom-nav">
-  <button class="nav-btn active" onclick="showSec('fixtures',this)"><span class="nav-icon">&#128197;</span><span>&#51068;&#51221;</span></button>
-  <button class="nav-btn" onclick="showSec('squad',this)"><span class="nav-icon">&#128085;</span><span>&#49440;&#49688;&#45800;</span></button>
-  <button class="nav-btn" onclick="showSec('injuries',this)"><span class="nav-icon">&#127973;</span><span>&#48512;&#49345;</span></button>
-  <button class="nav-btn" onclick="showSec('media',this)"><span class="nav-icon">&#128240;</span><span>미디어</span></button>
-  <button class="nav-btn" onclick="showSec('history',this)"><span class="nav-icon">&#128218;</span><span>History</span></button>
+  <button class="nav-btn active" onclick="showSec('fixtures',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg><span>&#51068;&#51221;</span></button>
+  <button class="nav-btn" onclick="showSec('squad',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l6 2v5h-3v8a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-8h-3v-5l6 -2a3 3 0 0 0 6 0"/><path d="M10.5 11h2.5l-1.5 5"/></svg><span>&#49440;&#49688;&#45800;</span></button>
+  <button class="nav-btn" onclick="showSec('injuries',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12l0 .01"/><path d="M10 12l0 .01"/><path d="M12 10l0 .01"/><path d="M12 14l0 .01"/><path d="M4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8a4.94 4.94 0 0 1 -7 -7"/></svg><span>&#48512;&#49345;</span></button>
+  <button class="nav-btn" onclick="showSec('media',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg><span>미디어</span></button>
+  <button class="nav-btn" onclick="showSec('history',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8l0 4l2 2"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg><span>History</span></button>
 </nav>
 <script>
 var FN='/api';
