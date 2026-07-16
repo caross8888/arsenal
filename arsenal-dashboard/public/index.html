@@ -402,6 +402,24 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .widget-iframe-wrap iframe{width:100%;min-height:420px;border:none;display:block}
 .more-fix-btn{width:100%;padding:10px;margin-top:6px;border:1px dashed var(--border);background:transparent;color:var(--text);font-weight:700;font-family:var(--fb);font-size:12px;border-radius:10px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
 .more-fix-btn:hover{background:var(--surface2);color:var(--text);}
+.fix-view-toggle{display:flex;gap:1px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden;flex-shrink:0;}
+.fix-view-btn{padding:5px 9px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;}
+.fix-view-btn svg{width:14px;height:14px;}
+.fix-view-btn.active{background:var(--red-dark);color:#fff;}
+.cal-nav-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;}
+.cal-nav-btn svg{width:16px;height:16px;}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
+.cal-dow-row span{text-align:center;font-size:9px;color:var(--text-dim);padding:4px 0;display:block;}
+.cal-dow-row span:first-child{color:rgba(239,80,80,.7);}
+.cal-dow-row span:last-child{color:rgba(120,160,255,.7);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-day{aspect-ratio:1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer;font-size:11px;color:var(--text-muted);-webkit-tap-highlight-color:transparent;}
+.cal-day.has-fixture{background:var(--surface2);border-top:2px solid var(--red-dark);}
+.cal-day.away-fixture{border-top-color:#3a5a8c;}
+.cal-day.today{background:rgba(200,168,75,.15);color:var(--gold);font-weight:700;}
+.cal-day.selected{outline:1.5px solid var(--gold);}
+.cal-day-num{font-size:8px;color:rgba(255,255,255,.45);position:absolute;top:3px;left:3px;}
+.cal-day-time{font-size:8px;color:rgba(255,255,255,.65);margin-top:2px;}
 
 /* PLAYER MODAL - Fotmob style */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
@@ -599,8 +617,24 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="sec-head"><h1 class="sec-title">&#44221;&#44592; &#51068;&#51221;</h1><span class="sec-badge" id="fixBadge" onclick="toggleMockLive()" style="cursor:pointer;user-select:none;">&#47196;&#46377; &#51473;</span></div>
   <div class="dday-card" id="ddayCard" style="display:none"></div>
   <div id="upcomingWrap" class="fix-section-card">
-    <div class="fix-section-label"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg> &#50696;&#51221; &#44221;&#44592;</div>
+    <div class="fix-section-label" style="display:flex;align-items:center;justify-content:space-between;">
+      <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg> &#50696;&#51221; &#44221;&#44592;</span>
+      <div class="fix-view-toggle" id="fixViewToggle">
+        <button class="fix-view-btn active" data-view="list" onclick="switchFixView('list')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l11 0"/><path d="M9 12l11 0"/><path d="M9 18l11 0"/><path d="M5 6l0 .01"/><path d="M5 12l0 .01"/><path d="M5 18l0 .01"/></svg></button>
+        <button class="fix-view-btn" data-view="cal" onclick="switchFixView('cal')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg></button>
+      </div>
+    </div>
     <div class="fix-list" id="upcomingList"><div class="loading-state"><div class="spinner"></div></div></div>
+    <div id="upcomingCalView" style="display:none;padding:0 14px 14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 8px;">
+        <button class="cal-nav-btn" onclick="calChangeMonth(-1)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+        <div id="calMonthLabel" style="font-size:13px;font-weight:700;color:#fff;"></div>
+        <button class="cal-nav-btn" onclick="calChangeMonth(1)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+      </div>
+      <div class="cal-dow-row"><span>&#51068;</span><span>&#50900;</span><span>&#54868;</span><span>&#49688;</span><span>&#47785;</span><span>&#44552;</span><span>&#53664;</span></div>
+      <div id="calGrid" class="cal-grid"></div>
+      <div id="calDetail" style="margin-top:10px;"></div>
+    </div>
   </div>
   <div id="finishedWrap" class="fix-section-card">
     <div class="fix-section-label"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg> &#52572;&#44540; &#44208;&#44284;</div>
@@ -1009,6 +1043,8 @@ function loadFixtures(){
       ROUND_LABEL['pl'+round]=round+'라운드';
       round++;
     });
+    window._allMatchesForCal = data.matches||[];
+    if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')) renderCalendarMonth();
     function renderList(el,showList,allList){
       el.innerHTML='';
       if(!showList.length){el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">데이터 없음</div>';return;}
@@ -1033,6 +1069,96 @@ function loadFixtures(){
     if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})) startLivePolling();
     else stopLivePolling();
   }).catch(function(err){showErr(upEl,err.message);badge.textContent='오류';});
+}
+
+// ── 예정 경기 달력 보기 ──
+var _calDate = new Date();
+function kstParts(ts){
+  var KST=9*60*60*1000;
+  var d=new Date(ts+KST);
+  return {y:d.getUTCFullYear(), m:d.getUTCMonth(), d:d.getUTCDate()};
+}
+function switchFixView(view){
+  document.querySelectorAll('.fix-view-btn').forEach(function(b){b.classList.toggle('active', b.getAttribute('data-view')===view);});
+  document.getElementById('upcomingList').style.display = view==='list' ? '' : 'none';
+  document.getElementById('upcomingCalView').style.display = view==='cal' ? '' : 'none';
+  if(view==='cal') renderCalendarMonth();
+}
+function calChangeMonth(delta){
+  _calDate.setMonth(_calDate.getMonth()+delta);
+  renderCalendarMonth();
+}
+function renderCalendarMonth(){
+  var matches = window._allMatchesForCal || [];
+  var year = _calDate.getFullYear(), month = _calDate.getMonth();
+  document.getElementById('calMonthLabel').textContent = year+'년 '+(month+1)+'월';
+
+  var byDay = {};
+  matches.forEach(function(m){
+    if(!m.utcDate) return;
+    var p = kstParts(new Date(m.utcDate).getTime());
+    if(p.y===year && p.m===month){
+      (byDay[p.d] = byDay[p.d] || []).push(m);
+    }
+  });
+
+  var grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  var firstDow = new Date(year, month, 1).getDay();
+  var daysInMonth = new Date(year, month+1, 0).getDate();
+  var todayParts = kstParts(Date.now());
+  var ARSENAL_ESPN='359';
+
+  for(var i=0;i<firstDow;i++){ grid.appendChild(document.createElement('div')); }
+
+  for(var d=1; d<=daysInMonth; d++){
+    var dayMatches = byDay[d] || [];
+    var cell = document.createElement('div');
+    cell.className = 'cal-day';
+    var isToday = (todayParts.y===year && todayParts.m===month && todayParts.d===d);
+    if(isToday) cell.classList.add('today');
+
+    if(dayMatches.length){
+      var m = dayMatches[0];
+      var isArsHome = m.homeTeam && (m.homeTeam.id===57 || m.homeTeam.id===ARSENAL_ESPN || (m.homeTeam.name||'').includes('Arsenal'));
+      var opp = isArsHome ? m.awayTeam : m.homeTeam;
+      cell.classList.add('has-fixture');
+      if(!isArsHome) cell.classList.add('away-fixture');
+      var dnum = document.createElement('div'); dnum.className='cal-day-num'; dnum.textContent=d;
+      cell.appendChild(dnum);
+      var crestEl = renderCrest(makeCrest(opp||{}, false));
+      crestEl.style.width='20px'; crestEl.style.height='20px'; crestEl.style.marginTop='6px'; crestEl.style.padding='2px'; crestEl.style.fontSize='7px';
+      cell.appendChild(crestEl);
+      var timeEl = document.createElement('div'); timeEl.className='cal-day-time';
+      var dt = new Date(m.utcDate);
+      timeEl.textContent = dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
+      cell.appendChild(timeEl);
+    } else {
+      cell.textContent = d;
+    }
+
+    (function(ms){
+      cell.onclick = function(){
+        document.querySelectorAll('.cal-day').forEach(function(c){c.classList.remove('selected');});
+        cell.classList.add('selected');
+        var detail = document.getElementById('calDetail');
+        detail.innerHTML='';
+        if(ms.length){
+          ms.forEach(function(mm){ detail.appendChild(buildFixCard(mm)); });
+        } else {
+          detail.innerHTML = '<div style="text-align:center;font-size:11px;color:var(--text-dim);padding:14px 0;">경기 없음</div>';
+        }
+      };
+    })(dayMatches);
+
+    grid.appendChild(cell);
+  }
+
+  if(todayParts.y===year && todayParts.m===month){
+    var idx = firstDow + todayParts.d - 1;
+    var todayCell = grid.children[idx];
+    if(todayCell) todayCell.click();
+  }
 }
 
 function loadStandings(){
