@@ -536,6 +536,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-meta-comp{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.07);color:var(--text-dim);border:1px solid var(--border);margin-top:1px;}
 .mm-section{padding:14px 16px 0;}
 .mm-section-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
+.mm-card{margin:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;}
+.mm-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.5);padding:14px 14px 0;}
+.mm-team-tabs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.08);margin-top:10px;}
+.mm-team-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px 6px;border:none;background:#23252b;color:rgba(255,255,255,.55);cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:700;}
+.mm-team-tab img{width:24px;height:24px;object-fit:contain;}
+.mm-team-tab.active{background:var(--red-dark);color:#fff;}
 .mm-events{display:flex;flex-direction:column;gap:4px;}
 .mm-event{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--surface2);}
 .mm-event.home{flex-direction:row;}
@@ -589,7 +595,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-player-table td:first-child{text-align:left;font-weight:600;}
 .mm-player-table tr:last-child td{border-bottom:none;}
 .mm-tab-row{display:flex;gap:6px;padding:12px 16px 0;}
-.mm-tab{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:10px;padding:5px 12px;border-radius:20px;cursor:pointer;}
+.mm-tab{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:10px;padding:5px 12px;border-radius:20px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.mm-tab img{border-radius:50%;object-fit:cover;flex-shrink:0;}
 .mm-tab.active{background:rgba(239,1,7,.15);border-color:rgba(239,1,7,.4);color:var(--red);}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
 /* ── SNS ── */
@@ -2338,8 +2345,8 @@ function renderMatchModal(content, m, data){
     var homeEvs=data.events.filter(function(e){return e.homeAway==='home';});
     var awayEvs=data.events.filter(function(e){return e.homeAway==='away';});
     var maxLen=Math.max(homeEvs.length,awayEvs.length);
-    html+='<div class="mm-section"><div class="mm-section-title">골 &amp; 이벤트</div>';
-    html+='<table class="mm-events-table"><tbody>';
+    html+='<div class="mm-card"><div class="mm-card-title">골 &amp; 이벤트</div>';
+    html+='<div style="padding:10px 14px 14px;"><table class="mm-events-table"><tbody>';
     for(var i=0;i<maxLen;i++){
       var ev=homeEvs[i];
       var ev2=awayEvs[i];
@@ -2367,14 +2374,14 @@ function renderMatchModal(content, m, data){
       }
       html+='</tr>';
     }
-    html+='</tbody></table></div>';
+    html+='</tbody></table></div></div>';
   }
 
   // 팀 스탯
   var statKeys=['possessionPct','totalShots','shotsOnTarget','passingAccuracy','cornerKicks','offsides','yellowCards','redCards'];
   var hasStats=statKeys.some(function(k){return h.stats[k]||a.stats[k];});
   if(hasStats){
-    html+='<div class="mm-section" style="margin-top:14px"><div class="mm-section-title">팀 스탯</div><div class="mm-stats-grid">';
+    html+='<div class="mm-card"><div class="mm-card-title">팀 스탯</div><div class="mm-stats-grid" style="padding:10px 14px 14px;">';
     statKeys.forEach(function(k){
       if(!h.stats[k]&&!a.stats[k]) return;
       var hvStr=h.stats[k]||'0'; var avStr=a.stats[k]||'0';
@@ -2403,9 +2410,10 @@ function renderMatchModal(content, m, data){
     // 라인업 피치
     var hFormation=data.players.homeFormation||'';
     var aFormation=data.players.awayFormation||'';
-    html+='<div class="mm-tab-row">'+
-      '<button class="mm-tab active" id="mm-tab-home" onclick="mmSwitchTab(&quot;home&quot;)">'+h.name+'</button>'+
-      '<button class="mm-tab" id="mm-tab-away" onclick="mmSwitchTab(&quot;away&quot;)">'+a.name+'</button>'+
+    html+='<div class="mm-card"><div class="mm-card-title">라인업</div>';
+    html+='<div class="mm-team-tabs">'+
+      '<button class="mm-team-tab active" id="mm-tab-home" onclick="mmSwitchTab(&quot;home&quot;)">'+(h.crest?'<img src="'+h.crest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+h.name+'</span></button>'+
+      '<button class="mm-team-tab" id="mm-tab-away" onclick="mmSwitchTab(&quot;away&quot;)">'+(a.crest?'<img src="'+a.crest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+a.name+'</span></button>'+
     '</div>';
     var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
     var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
@@ -2418,6 +2426,7 @@ function renderMatchModal(content, m, data){
       html+='<div style="margin:0 14px 8px"><div class="mm-pitch-wrap" id="mm-pitch-away" style="display:none">'+aHeader+renderPitch(aStarters,aFormation,aColor,aP)+'</div></div>';
     }
     html+=renderPlayerTable('home',hP,true)+renderPlayerTable('away',aP,false);
+    html+='</div>';
   }
 
   content.innerHTML=html;
@@ -2692,7 +2701,7 @@ function renderPlayerTable(side, players, visible){
 }
 
 function mmSwitchTab(side){
-  document.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.mm-team-tab').forEach(function(b){b.classList.remove('active');});
   var tb=document.getElementById('mm-tab-'+side);
   if(tb) tb.classList.add('active');
   // 피치 토글
