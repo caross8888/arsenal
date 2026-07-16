@@ -409,17 +409,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-nav-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;}
 .cal-nav-btn svg{width:16px;height:16px;}
 .cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
-.cal-dow-row span{text-align:center;font-size:9px;color:var(--text-dim);padding:4px 0;display:block;}
-.cal-dow-row span:first-child{color:rgba(239,80,80,.7);}
-.cal-dow-row span:last-child{color:rgba(120,160,255,.7);}
+.cal-dow-row span{text-align:center;font-size:10px;font-weight:700;color:var(--text);padding:4px 0;display:block;}
+.cal-dow-row span:first-child{color:#F87171;}
+.cal-dow-row span:last-child{color:#60A5FA;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
 .cal-day{aspect-ratio:1/1.75;border-radius:8px;border:2px solid transparent;box-sizing:border-box;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;overflow:hidden;cursor:pointer;font-size:11px;color:var(--text-muted);-webkit-tap-highlight-color:transparent;padding:4px 2px 5px;}
 .cal-day.has-fixture{border-color:var(--red-dark);}
 .cal-day.away-fixture{border-color:#3a5a8c;}
+.cal-day.neutral-fixture{border-color:var(--gold);}
 .cal-day.today{background:rgba(200,168,75,.15);color:var(--gold);font-weight:700;}
 .cal-day.selected{outline:2px solid #fff;outline-offset:-2px;}
 .cal-day-num{font-size:10px;color:rgba(255,255,255,.6);text-align:center;width:100%;flex-shrink:0;}
 .cal-day-crest-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;}
+.cal-day-crest-wrap .t-crest,.cal-day-crest-wrap .t-crest-ph{width:58%;height:auto;aspect-ratio:1;padding:8%;box-sizing:border-box;font-size:.6em;border:none;}
 .cal-day-time{font-size:9px;color:rgba(255,255,255,.6);flex-shrink:0;}
 
 /* PLAYER MODAL - Fotmob style */
@@ -1125,12 +1127,13 @@ function renderCalendarMonth(){
     if(dayMatches.length){
       var m = dayMatches[0];
       var isArsHome = m.homeTeam && (m.homeTeam.id===57 || m.homeTeam.id===ARSENAL_ESPN || (m.homeTeam.name||'').includes('Arsenal'));
+      var isNeutral = m.competition && m.competition.short === 'CS';
       var opp = isArsHome ? m.awayTeam : m.homeTeam;
       cell.classList.add('has-fixture');
-      if(!isArsHome) cell.classList.add('away-fixture');
+      if(isNeutral) cell.classList.add('neutral-fixture');
+      else if(!isArsHome) cell.classList.add('away-fixture');
       var crestWrap = document.createElement('div'); crestWrap.className='cal-day-crest-wrap';
       var crestEl = renderCrest(makeCrest(opp||{}, false));
-      crestEl.style.width='28px'; crestEl.style.height='28px'; crestEl.style.padding='3px'; crestEl.style.fontSize='8px';
       crestWrap.appendChild(crestEl);
       cell.appendChild(crestWrap);
       var timeEl = document.createElement('div'); timeEl.className='cal-day-time';
