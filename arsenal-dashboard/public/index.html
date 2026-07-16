@@ -2640,8 +2640,8 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     // 교체 아이콘 (ESPN substitution icon)
     if(wasSubbed){
       var ix=c.x+r, iy=c.y-r;
-      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="6" fill="rgba(0,0,0,0.65)"/>';
-      svg+='<g transform="translate('+(ix-5)+','+(iy-5)+') scale(0.42)"><path d="M6.873 3.845l4.221 4.317 0.868-0.868-5.764-5.957-5.74 5.957 0.893 0.868 4.221-4.317v11.745h1.302zM23.66 15.999l-0.917-0.869-4.221 4.317v-11.769h-1.302v11.769l-4.197-4.317-0.965 0.869 5.789 5.932z" fill="#fff"/></g>';
+      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="6" fill="#EF0107"/>';
+      svg+='<g transform="translate('+(ix-5)+','+(iy-5)+') scale(0.42)" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10h14l-4 -4"/><path d="M17 14h-14l4 4"/></g>';
     }
   });
   svg+='</svg>';
@@ -2663,7 +2663,7 @@ function renderPlayerRow(p){
     var subForName=p.subFor?p.subFor.name:'';
     var subForJersey=p.subFor&&p.subFor.jersey?p.subFor.jersey:'';
     nameCell+='<div style="display:flex;align-items:center;gap:4px;margin-top:3px;">'+
-      '<svg viewBox="0 0 24 24" width="10" height="10" style="flex-shrink:0"><path d="M6.873 3.845l4.221 4.317 0.868-0.868-5.764-5.957-5.74 5.957 0.893 0.868 4.221-4.317v11.745h1.302zM23.66 15.999l-0.917-0.869-4.221 4.317v-11.769h-1.302v11.769l-4.197-4.317-0.965 0.869 5.789 5.932z" fill="#fff"/></svg>'+
+      '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M7 10h14l-4 -4" stroke="#4ADE80"/><path d="M17 14h-14l4 4" stroke="#F87171"/></svg>'+
       '<span style="font-size:9px;color:#FBBF24;font-weight:700;">'+p.subTime+'</span>'+
       (subForName?'<span style="font-size:9px;color:#fff;font-weight:700;"> '+subForName+'</span>':'')+
       (subForJersey?'<span style="font-size:9px;color:var(--text-dim);"> #'+subForJersey+'</span>':'')+
