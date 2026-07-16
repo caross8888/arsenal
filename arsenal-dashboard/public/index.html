@@ -58,6 +58,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .dday-time{font-size:11px;opacity:.85;position:relative;z-index:1;}
 .fix-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:6px;padding-left:2px}
 .fix-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.fix-section-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;}
+.fix-section-card .fix-section-label{font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--text);padding:14px 14px 8px;margin:0;}
+.fix-section-card .fix-list{padding:0 14px 14px;margin-bottom:0;}
 .fix-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;}
 .fix-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
 .fix-card.upcoming::before{background:var(--gold)}
@@ -104,7 +107,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .std-row:last-child{border-bottom:none}
 .std-row.afc-row{background:rgba(239,1,7,.05)}
 .std-row.afc-row .std-pos{color:var(--red);font-weight:700}
-.std-hdr{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim)}
+.std-hdr{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);background:rgba(255,255,255,.03);padding-top:10px;padding-bottom:10px}
 .std-pos{font-family:var(--fm);font-size:11px;color:var(--text-muted)}
 .std-team{font-weight:500;display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}
 .std-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -114,7 +117,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .more-btn{width:100%;padding:12px;border:none;background:var(--surface2);color:var(--text-muted);font-family:var(--fb);font-size:11px;letter-spacing:1px;cursor:pointer;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:6px;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;}
 .more-btn:hover{background:var(--surface3);color:var(--text)}
 .lb-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);}
-.lb-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px 4px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;font-family:var(--fb);font-size:11px;font-weight:700;-webkit-tap-highlight-color:transparent;}
+.lb-tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px 4px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;font-family:var(--fb);font-size:11px;font-weight:700;-webkit-tap-highlight-color:transparent;}
+.lb-tab-badge{position:absolute;top:6px;right:8px;font-size:11px;font-weight:700;color:inherit;}
 .lb-tab svg{stroke:var(--text-muted);transition:stroke .15s;}
 .lb-tab.active{background:var(--red-dark);color:#fff;}
 .lb-tab.active svg{stroke:var(--gold);}
@@ -594,17 +598,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <section id="fixtures" class="section active">
   <div class="sec-head"><h1 class="sec-title">&#44221;&#44592; &#51068;&#51221;</h1><span class="sec-badge" id="fixBadge" onclick="toggleMockLive()" style="cursor:pointer;user-select:none;">&#47196;&#46377; &#51473;</span></div>
   <div class="dday-card" id="ddayCard" style="display:none"></div>
-  <div id="upcomingWrap">
+  <div id="upcomingWrap" class="fix-section-card">
     <div class="fix-section-label">&#128197; &#50696;&#51221; &#44221;&#44592;</div>
     <div class="fix-list" id="upcomingList"><div class="loading-state"><div class="spinner"></div></div></div>
   </div>
-  <div id="finishedWrap">
+  <div id="finishedWrap" class="fix-section-card">
     <div class="fix-section-label">&#9989; &#52572;&#44540; &#44208;&#44284;</div>
     <div class="fix-list" id="finishedList"></div>
   </div>
   <div class="card" style="margin-top:8px">
     <div class="lb-tabs" id="lbTabs">
       <button class="lb-tab active" data-tab="team" onclick="switchLbTab('team',this)">
+        <span class="lb-tab-badge" id="stdMatchday"></span>
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/></svg>
         &#54016; &#49692;&#50948;
       </button>
@@ -622,9 +627,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </button>
     </div>
     <div id="lbPanel-team">
-      <div style="padding:10px 14px 0;display:flex;align-items:center;justify-content:flex-end;">
-        <span style="font-size:9px;color:var(--text-dim)" id="stdMatchday"></span>
-      </div>
       <div class="std-hdr" style="grid-template-columns:22px 1fr 24px 24px 24px 24px 36px"><span>#</span><span>&#44396;&#45800;&#47749;</span><span style="text-align:center">P</span><span style="text-align:center">W</span><span style="text-align:center">D</span><span style="text-align:center">L</span><span style="text-align:right">PTS</span></div>
       <div id="stdList"><div class="loading-state" style="padding:20px"><div class="spinner"></div></div></div>
       <button class="more-btn" id="moreStdBtn" onclick="toggleStandings()" style="display:none"><span id="moreStdText">&#51204;&#52404; &#49692;&#50948; &#48372;&#44592; &#8595;</span></button>
@@ -1036,7 +1038,7 @@ function loadFixtures(){
 function loadStandings(){
   var el=document.getElementById('stdList');
   apiFetch(FN+'/football?type=standings').then(function(data){
-    if(data.season) document.getElementById('stdMatchday').textContent=data.season+'라운드';
+    if(data.season) document.getElementById('stdMatchday').textContent=data.season+'R';
     allStandings=data.standings||[];
     renderStandings();
   }).catch(function(err){showErr(el,err.message);});
