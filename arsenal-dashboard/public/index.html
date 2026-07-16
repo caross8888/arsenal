@@ -31,7 +31,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(11,13,18,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding-bottom:var(--safe-bottom);}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;gap:4px;background:none;border:none;border-right:1px solid var(--border);color:var(--text-dim);font-family:var(--fb);font-size:9px;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;position:relative;-webkit-tap-highlight-color:transparent;}
 .nav-btn:last-child{border-right:none;}
-.nav-btn.active{background:var(--red-dark);color:#fff}.nav-btn.active .nav-icon{color:#fff}
+.nav-btn.active{background:var(--red-dark);color:#fff}.nav-btn.active .nav-icon{color:var(--gold)}
 .nav-icon{width:20px;height:20px;color:var(--text-dim);}
 .nav-live-dot{position:absolute;top:8px;right:calc(50% - 16px);width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 2s infinite}
 .page{position:relative;z-index:1}
@@ -210,7 +210,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hist-nav{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);margin-bottom:16px;}
 .hist-nav::-webkit-scrollbar{display:none;}
 .hist-nav-btn{flex-shrink:0;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .18s;}
-.hist-nav-btn.active{color:var(--red);border-bottom-color:var(--red);}
+.hist-nav-btn.active{color:#fff;border-bottom-color:var(--red);}
+.hist-nav-btn.active svg{color:var(--gold);}
 .hist-section{animation:fadeIn .2s ease;}
 /* Stadium */
 .stad-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:24px;}
@@ -598,11 +599,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="sec-head"><h1 class="sec-title">&#44221;&#44592; &#51068;&#51221;</h1><span class="sec-badge" id="fixBadge" onclick="toggleMockLive()" style="cursor:pointer;user-select:none;">&#47196;&#46377; &#51473;</span></div>
   <div class="dday-card" id="ddayCard" style="display:none"></div>
   <div id="upcomingWrap" class="fix-section-card">
-    <div class="fix-section-label">&#128197; &#50696;&#51221; &#44221;&#44592;</div>
+    <div class="fix-section-label"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg> &#50696;&#51221; &#44221;&#44592;</div>
     <div class="fix-list" id="upcomingList"><div class="loading-state"><div class="spinner"></div></div></div>
   </div>
   <div id="finishedWrap" class="fix-section-card">
-    <div class="fix-section-label">&#9989; &#52572;&#44540; &#44208;&#44284;</div>
+    <div class="fix-section-label"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg> &#52572;&#44540; &#44208;&#44284;</div>
     <div class="fix-list" id="finishedList"></div>
   </div>
   <div class="card" style="margin-top:8px">
@@ -657,8 +658,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <section id="media" class="section">
   <div class="sec-head"><h1 class="sec-title">미디어</h1><span class="sec-badge" id="mediaBadge">로딩 중</span></div>
   <div class="media-seg">
-    <button class="media-seg-btn active" onclick="switchMedia('news',this)">📰 뉴스</button>
-    <button class="media-seg-btn" onclick="switchMedia('sns',this)">💬 SNS</button>
+    <button class="media-seg-btn active" onclick="switchMedia('news',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg> 뉴스</button>
+    <button class="media-seg-btn" onclick="switchMedia('sns',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1"/></svg> SNS</button>
   </div>
   <div id="mediaNews">
     <div class="news-list" id="newsGrid"><div class="loading-state"><div class="spinner"></div><span>뉴스 로딩 중...</span></div></div>
@@ -1309,13 +1310,23 @@ var _histTab = 'TROPHIES';
 
 var HIST_TABS = ['TROPHIES','MANAGERS','LEGENDS','TIMELINE','MOMENTS','RECORDS','STADIUM'];
 var HIST_TAB_LABELS = {
-  TROPHIES: '🏆 TROPHIES',
-  MANAGERS: '👔 MANAGERS',
-  LEGENDS:  '⭐ LEGENDS',
-  TIMELINE: '📅 TIMELINE',
-  MOMENTS:  '⚽ MOMENTS',
-  RECORDS:  '📈 RECORDS',
-  STADIUM:  '🏟️ STADIUM'
+  TROPHIES: 'TROPHIES',
+  MANAGERS: 'MANAGERS',
+  LEGENDS:  'LEGENDS',
+  TIMELINE: 'TIMELINE',
+  MOMENTS:  'MOMENTS',
+  RECORDS:  'RECORDS',
+  STADIUM:  'STADIUM'
+};
+var HIST_TAB_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;">';
+var HIST_TAB_ICONS = {
+  TROPHIES: HIST_TAB_ICON_SVG+'<path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/></svg>',
+  MANAGERS: HIST_TAB_ICON_SVG+'<path d="M12 22l4 -4l-2.5 -11l.993 -2.649a1 1 0 0 0 -.936 -1.351h-3.114a1 1 0 0 0 -.936 1.351l.993 2.649l-2.5 11l4 4"/><path d="M10.5 7h3l5 5.5"/></svg>',
+  LEGENDS:  HIST_TAB_ICON_SVG+'<path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245"/></svg>',
+  TIMELINE: HIST_TAB_ICON_SVG+'<path d="M4 16l6 -7l5 5l5 -6"/><path d="M14 14a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M9 9a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M3 16a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/><path d="M19 8a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/></svg>',
+  MOMENTS:  HIST_TAB_ICON_SVG+'<circle cx="12" cy="12" r="9"/><path d="M12 7l4.76 3.45l-1.76 5.55h-6l-1.76 -5.55l4.76 -3.45"/><path d="M12 7v-4m3 13l2.5 3m-.74 -8.55l3.74 -1.45m-11.44 7.05l-2.56 2.95m.74 -8.55l-3.74 -1.45"/></svg>',
+  RECORDS:  HIST_TAB_ICON_SVG+'<path d="M4 19l16 0"/><path d="M4 15l4 -6l4 2l4 -5l4 4"/></svg>',
+  STADIUM:  HIST_TAB_ICON_SVG+'<path d="M4 12a8 2 0 1 0 16 0a8 2 0 1 0 -16 0"/><path d="M4 12v7c0 .94 2.51 1.785 6 2v-3h4v3c3.435 -.225 6 -1.07 6 -2v-7"/><path d="M15 6h4v-3h-4v7"/><path d="M7 6h4v-3h-4v7"/></svg>'
 };
 
 function renderHistoryNew(){
@@ -1355,7 +1366,8 @@ function renderHistoryNew(){
   // ── 탭 내비게이션 ──
   html += '<div class="hist-nav">';
   HIST_TABS.forEach(function(tab){
-    html += '<button class="hist-nav-btn'+(_histTab===tab?' active':'')+'" onclick="switchHistTab(\'' + tab + '\')">'; 
+    html += '<button class="hist-nav-btn'+(_histTab===tab?' active':'')+'" data-tab="'+tab+'" onclick="switchHistTab(\'' + tab + '\')">';
+    html += HIST_TAB_ICONS[tab];
     html += HIST_TAB_LABELS[tab];
     html += '</button>';
   });
@@ -1393,7 +1405,7 @@ function initDragScroll(el){
 function switchHistTab(tab){
   _histTab = tab;
   document.querySelectorAll('.hist-nav-btn').forEach(function(b){
-    b.classList.toggle('active', b.textContent.trim() === HIST_TAB_LABELS[tab]);
+    b.classList.toggle('active', b.getAttribute('data-tab') === tab);
   });
   document.getElementById('histSection').innerHTML = renderHistSection(tab);
 }
