@@ -534,7 +534,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-meta-row{font-size:9px;color:var(--text-dim);text-align:center;white-space:nowrap;letter-spacing:.3px;}
 .mm-meta-date{font-size:10px;font-weight:700;color:var(--text-muted);}
 .mm-meta-comp{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.07);color:var(--text-dim);border:1px solid var(--border);margin-top:1px;}
-.mm-section{padding:14px 0 14px;}
+.mm-section{padding:14px 14px 14px;}
 .mm-section-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
 .mm-card{margin:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;}
 .mm-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.5);padding:14px 14px 0;}
@@ -588,8 +588,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-pos-fw{background:#B91C1C;color:#FEE2E2;}
 .mm-pos-sub{background:#374151;color:#D1D5DB;}
 .mm-sub-title{font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;padding:8px 6px 4px;border-top:1px solid var(--border);}
-.mm-lineup-block{background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);border-radius:0;overflow:hidden;}
-.mm-lineup-block-title{font-size:12px;font-weight:700;letter-spacing:.3px;color:#fff;padding:10px 12px;background:rgba(255,255,255,.05);border-left:1px solid rgba(255,255,255,.07);border-right:1px solid rgba(255,255,255,.07);}
+.mm-lineup-block{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;}
+.mm-lineup-block-title{font-size:12px;font-weight:700;letter-spacing:.3px;color:#fff;padding:10px 12px;background:rgba(255,255,255,.05);}
 .mm-player-table{width:100%;border-collapse:collapse;font-size:11px;}
 .mm-player-table th{font-size:9px;letter-spacing:.2px;text-transform:uppercase;color:var(--text-muted);padding:5px 3px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap;}
 .mm-player-table th:first-child{text-align:left;padding-left:12px;}
@@ -2695,7 +2695,7 @@ function renderPlayerTable(side, players, visible){
   html+='</tbody></table></div>';
   // 교체
   if(subs.length){
-    html+='<div class="mm-lineup-block" style="border-top:none;"><div class="mm-lineup-block-title">교체</div>';
+    html+='<div class="mm-lineup-block" style="margin-top:10px;"><div class="mm-lineup-block-title">교체</div>';
     html+='<table class="mm-player-table">'+colgroup+thead+'<tbody>';
     subs.forEach(function(p){ html+=renderPlayerRow(p); });
     html+='</tbody></table></div>';
