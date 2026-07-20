@@ -914,7 +914,7 @@ function buildFixCard(m){
     else if(arsS===oppS){resultCls='result-draw';resultBg='rgba(245,158,11,0.08)';}
     else{resultCls='result-loss';resultBg='rgba(239,68,68,0.08)';}
   }
-  var isNeutral=compObj.short==='CS';
+  var isNeutral=m.neutralSite===true||compObj.short==='CS'||m.round==='final'||(code==='FR'&&isArsHome&&m.venue&&m.venue!=='Emirates Stadium');
   var upcomingCls=isNeutral?'neutral-fixture':(isArsHome?'home-fixture':'away-fixture');
   var card=document.createElement('div');
   card.className='fix-card '+(isLive?'live-match':isDone?'finished '+resultCls:'upcoming '+upcomingCls);
@@ -1175,7 +1175,8 @@ function renderCalendarMonth(){
     if(dayMatches.length){
       var m = dayMatches[0];
       var isArsHome = m.homeTeam && (m.homeTeam.id===57 || m.homeTeam.id===ARSENAL_ESPN || (m.homeTeam.name||'').includes('Arsenal'));
-      var isNeutral = m.competition && m.competition.short === 'CS';
+      var calCode = (m.competition&&m.competition.short)||'PL';
+      var isNeutral = m.neutralSite===true||(m.competition&&m.competition.short==='CS')||m.round==='final'||(calCode==='FR'&&isArsHome&&m.venue&&m.venue!=='Emirates Stadium');
       var opp = isArsHome ? m.awayTeam : m.homeTeam;
       cell.classList.add('has-fixture');
       if(isNeutral) cell.classList.add('neutral-fixture');

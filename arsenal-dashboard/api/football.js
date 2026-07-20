@@ -124,6 +124,8 @@ export default async function handler(req, res) {
           utcDate:     e.date,
           competition: {name, short},
           round:       e.season?.slug||e.seasonType?.name?.toLowerCase()||null,
+          neutralSite: !!comp?.neutralSite,
+          venue:       comp?.venue?.fullName || null,
           status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
           clock:       live ? (() => {
             const raw = comp?.status?.displayClock || '';
