@@ -962,7 +962,7 @@ function buildFixCard(m){
 
   // 중앙 최하단: HOME/AWAY/NEUTRAL 라벨
   var z3label=document.createElement('div');z3label.className='fix-z3label';
-  if(!hasScore&&!isLive){
+  if(!isLive){
     var vlabel=document.createElement('div');vlabel.className='fix-vs-label';
     vlabel.textContent=isNeutral?'NEUTRAL':(isArsHome?'HOME':'AWAY');
     vlabel.style.color=isNeutral?'var(--gold)':(isArsHome?'var(--red)':'#3a5a8c');
