@@ -36,7 +36,6 @@ const FOTMOB_IDS = {
   'jesus':         576165,
   'martinelli':    1021586,
   'gyokeres':      664500,
-  'trossard':      318615,
   'madueke':       1084981,
   'havertz':       749736,
 };
