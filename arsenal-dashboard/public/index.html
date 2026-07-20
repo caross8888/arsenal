@@ -994,7 +994,7 @@ function buildFixCard(m){
     clk.textContent=m.isHT?'HT':(m.clock||'');
     card.appendChild(clk);
   }
-  if(m.venue){
+  if(m.venue&&isLive){
     var venueWrap=document.createElement('div');
     venueWrap.className='fix-venue';
     venueWrap.id='fix-venue-'+m.id;
