@@ -1993,15 +1993,7 @@ function openTrophyDetailModal(enc){
   var modal = document.getElementById('matchModal');
   var content = document.getElementById('matchModalContent');
 
-  var TROPHY_MODAL_IMAGES={
-    'trophy_league':            'https://www.arsenal.com/sites/default/files/styles/large_16x9/public/images/champions_2004.jpg?h=6dff888f&auto=webp&itok=K03lQk1O',
-    'trophy_facup':         'https://www.arsenal.com/sites/default/files/styles/large/public/images/fa-cup-winners-2020.png?auto=webp&itok=jRh1OpH6',
-    'trophy_leaguecup':     'https://www.arsenal.com/sites/default/files/styles/large/public/images/leaguecup_1993_2.jpg?auto=webp&itok=hXH5eDBC',
-    'trophy_fairs':         'https://www.arsenal.com/sites/default/files/styles/large/public/images/fairs_cup_mee_0.jpg?auto=webp&itok=GAnzvk1U',
-    'trophy_cwc':           'https://www.arsenal.com/sites/default/files/styles/large/public/images/cupwinnerscup_1994.jpg?auto=webp&itok=nvMBBf2e',
-    'trophy_communityshield':'https://www.arsenal.com/sites/default/files/styles/large/public/images/community-shield-lift-2023.png?auto=webp&itok=VTGQrvwH'
-  };
-  var modalImg = TROPHY_MODAL_IMAGES[t.id] || t.image;
+  var modalImg = t.moment_image || t.image;
   var html = '<div class="mm-header" style="padding:0;">';
   // 이미지 or 아이콘 헤더
   if(modalImg){
