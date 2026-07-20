@@ -965,7 +965,7 @@ function buildFixCard(m){
   if(!isLive){
     var vlabel=document.createElement('div');vlabel.className='fix-vs-label';
     vlabel.textContent=isNeutral?'NEUTRAL':(isArsHome?'HOME':'AWAY');
-    vlabel.style.color=hasScore?'var(--text-dim)':(isNeutral?'var(--gold)':(isArsHome?'var(--red)':'#3a5a8c'));
+    vlabel.style.color=hasScore?'var(--text-muted)':(isNeutral?'var(--gold)':(isArsHome?'var(--red)':'#3a5a8c'));
     z3label.appendChild(vlabel);
   }
 
