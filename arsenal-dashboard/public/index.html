@@ -413,6 +413,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-view-btn.active{background:var(--red-dark);color:#fff;}
 .cal-nav-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;}
 .cal-nav-btn svg{width:16px;height:16px;}
+.results-nav{display:flex;align-items:center;gap:6px;padding:0 14px 8px;}
+.results-nav .cal-nav-btn{flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px;}
+.results-sel{flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-weight:700;font-family:var(--fb);padding:7px 6px;text-align:center;-webkit-appearance:none;appearance:none;}
+.results-count{padding:0 14px 6px;font-size:12px;color:var(--text-dim);}
 .cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
 .cal-dow-row span{text-align:center;font-size:10px;font-weight:700;color:var(--text);padding:4px 0;display:block;}
 .cal-dow-row span:first-child{color:#F87171;font-weight:900;}
@@ -661,6 +665,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
   <div id="finishedWrap" class="fix-section-card">
     <div class="fix-section-label"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg> &#52572;&#44540; &#44208;&#44284;</div>
+    <div class="results-nav">
+      <button class="cal-nav-btn" onclick="resultsChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+      <select id="resultsYearSel" class="results-sel" onchange="resultsYearMonthChanged()"></select>
+      <select id="resultsMonthSel" class="results-sel" onchange="resultsYearMonthChanged()"></select>
+      <button class="cal-nav-btn" onclick="resultsChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+    </div>
+    <div class="results-count" id="resultsCount"></div>
     <div class="fix-list" id="finishedList"></div>
   </div>
   <div class="card" style="margin-top:8px">
@@ -1061,11 +1072,9 @@ function buildFixCard(m){
 
 function loadFixtures(){
   var upEl=document.getElementById('upcomingList');
-  var fnEl=document.getElementById('finishedList');
   var badge=document.getElementById('fixBadge');
   apiFetch(FN+'/football?type=fixtures').then(function(data){
     badge.textContent='ESPN';
-    var finishedAll=(data.finished||[]).slice().reverse(); // 최신순
     var upcomingAll=data.upcoming||[];
     // PL 경기 날짜순 정렬 후 유효한 경기에만 라운드 번호 부여 (연기/취소 제외)
     var allPL=[...(data.finished||[]),...(data.upcoming||[])]
@@ -1098,12 +1107,103 @@ function loadFixtures(){
         };el.appendChild(btn);}
     }
     renderList(upEl,upcomingAll.slice(0,3),upcomingAll);
-    renderList(fnEl,finishedAll.slice(0,3),finishedAll);
+    initResultsNav(data.finished||[]);
     renderDday(upcomingAll);
     // 라이브 경기 있으면 폴링 시작
     if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})) startLivePolling();
     else stopLivePolling();
   }).catch(function(err){showErr(upEl,err.message);badge.textContent='오류';});
+}
+
+// ── 최근 결과: 연도/월 선택형 조회 ──
+var _resultsYear, _resultsMonth;
+var _resultsCache = {}; // 시즌 시작년도 -> 그 시즌 종료 경기 배열
+var RESULTS_MIN_YEAR = 2020;
+function resultsSeasonForYM(year, month){ return month>=8 ? year : year-1; }
+function initResultsNav(finishedAll){
+  _resultsCache = {};
+  finishedAll.forEach(function(m){
+    if(!m.utcDate) return;
+    var p = kstParts(new Date(m.utcDate).getTime());
+    var sy = resultsSeasonForYM(p.y, p.m+1);
+    (_resultsCache[sy] = _resultsCache[sy] || []).push(m);
+  });
+  if(_resultsYear===undefined){
+    var sorted = finishedAll.filter(function(m){return !!m.utcDate;})
+      .slice().sort(function(a,b){return new Date(b.utcDate)-new Date(a.utcDate);});
+    var now = new Date();
+    if(sorted.length){
+      var p2 = kstParts(new Date(sorted[0].utcDate).getTime());
+      _resultsYear = p2.y; _resultsMonth = p2.m+1;
+    } else {
+      _resultsYear = now.getFullYear(); _resultsMonth = now.getMonth()+1;
+    }
+    populateResultsSelects();
+  }
+  renderResultsMonth();
+}
+function populateResultsSelects(){
+  var ySel = document.getElementById('resultsYearSel');
+  var mSel = document.getElementById('resultsMonthSel');
+  var maxYear = new Date().getFullYear()+1;
+  ySel.innerHTML='';
+  for(var y=maxYear; y>=RESULTS_MIN_YEAR; y--){
+    var opt=document.createElement('option'); opt.value=y; opt.textContent=y+'년';
+    ySel.appendChild(opt);
+  }
+  mSel.innerHTML='';
+  for(var mo=1; mo<=12; mo++){
+    var opt2=document.createElement('option'); opt2.value=mo; opt2.textContent=mo+'월';
+    mSel.appendChild(opt2);
+  }
+  ySel.value=_resultsYear; mSel.value=_resultsMonth;
+}
+function resultsChangeMonth(delta){
+  _resultsMonth += delta;
+  if(_resultsMonth>12){_resultsMonth=1;_resultsYear++;}
+  else if(_resultsMonth<1){_resultsMonth=12;_resultsYear--;}
+  document.getElementById('resultsYearSel').value=_resultsYear;
+  document.getElementById('resultsMonthSel').value=_resultsMonth;
+  renderResultsMonth();
+}
+function resultsYearMonthChanged(){
+  _resultsYear = parseInt(document.getElementById('resultsYearSel').value,10);
+  _resultsMonth = parseInt(document.getElementById('resultsMonthSel').value,10);
+  renderResultsMonth();
+}
+function renderResultsMonth(){
+  var fnEl = document.getElementById('finishedList');
+  var season = resultsSeasonForYM(_resultsYear, _resultsMonth);
+  if(_resultsCache[season]){
+    renderResultsFromCache();
+    return;
+  }
+  fnEl.innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
+  document.getElementById('resultsCount').textContent='';
+  apiFetch(FN+'/football?type=results&season='+season).then(function(data){
+    _resultsCache[season] = data.matches||[];
+    renderResultsFromCache();
+  }).catch(function(){
+    fnEl.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">불러오기 실패</div>';
+  });
+}
+function renderResultsFromCache(){
+  var fnEl = document.getElementById('finishedList');
+  var countEl = document.getElementById('resultsCount');
+  var season = resultsSeasonForYM(_resultsYear, _resultsMonth);
+  var all = _resultsCache[season]||[];
+  var monthMatches = all.filter(function(m){
+    if(!m.utcDate) return false;
+    var p = kstParts(new Date(m.utcDate).getTime());
+    return p.y===_resultsYear && (p.m+1)===_resultsMonth;
+  }).sort(function(a,b){return new Date(b.utcDate)-new Date(a.utcDate);});
+  countEl.textContent = monthMatches.length ? monthMatches.length+'경기' : '';
+  fnEl.innerHTML='';
+  if(!monthMatches.length){
+    fnEl.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">경기 없음</div>';
+    return;
+  }
+  monthMatches.forEach(function(m){ fnEl.appendChild(buildFixCard(m)); });
 }
 
 // ── 예정 경기 달력 보기 ──

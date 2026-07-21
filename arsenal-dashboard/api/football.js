@@ -87,22 +87,76 @@ export default async function handler(req, res) {
   const KEY = process.env.FOOTBALL_DATA_KEY;
   const H = KEY ? {'X-Auth-Token': KEY} : {};
 
+  // fixtures/results 두 엔드포인트가 공유하는 조회 도구 모음
+  const ARSENAL_ESPN_ID = '359';
+  const SLUGS = [
+    {slug:'eng.1',         name:'Premier League',   short:'PL'},
+    {slug:'uefa.champions',name:'Champions League', short:'UCL'},
+    {slug:'eng.league_cup',name:'EFL Cup',          short:'EFL'},
+    {slug:'eng.fa',        name:'FA Cup',           short:'FAC'},
+    {slug:'eng.charity',   name:'Community Shield', short:'CS'},
+    {slug:'club.friendly', name:'Friendly',         short:'FR'},
+  ];
+  const now = new Date();
+  const fmtDate = d => d.toISOString().slice(0,10).replace(/-/g,'');
+  const parseEvent = (e, name, short) => {
+    const comp = e.competitions?.[0];
+    const home = comp?.competitors?.find(c => c.homeAway === 'home');
+    const away = comp?.competitors?.find(c => c.homeAway === 'away');
+    const status = comp?.status?.type;
+    const finished = status?.completed || false;
+    const live = status?.state === 'in';
+    const homeScore = (finished||live) ? (parseInt(home?.score?.displayValue ?? home?.score ?? 0)||0) : null;
+    const awayScore = (finished||live) ? (parseInt(away?.score?.displayValue ?? away?.score ?? 0)||0) : null;
+    const homeId = home?.team?.id;
+    const awayId = away?.team?.id;
+    return {
+      id:          e.id,
+      utcDate:     e.date,
+      competition: {name, short},
+      round:       e.season?.slug||e.seasonType?.name?.toLowerCase()||null,
+      neutralSite: !!comp?.neutralSite,
+      venue:       comp?.venue?.fullName || null,
+      status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
+      clock:       live ? (() => {
+        const raw = comp?.status?.displayClock || '';
+        const period = comp?.status?.period || 1;
+        const mm = raw.match(/^(\d{1,3}(?:\+\d+)?):/);
+        if (mm) {
+          const mins = parseInt(mm[1], 10);
+          const base = period === 2 ? 45 : period === 3 ? 90 : period === 4 ? 105 : 0;
+          return (base + mins) + "'";
+        }
+        return raw;
+      })() : null,
+      period:      live ? (comp?.status?.period||null) : null,
+      isHT:        live && comp?.status?.type?.description === 'Halftime',
+      tbd:         status?.id === '5' || status?.description === 'Postponed' ? 'postponed' : status?.id === '6' || status?.description === 'Canceled' ? 'canceled' : status?.id === '8' ? 'tbd' : null,
+      homeTeam: {
+        id:    homeId,
+        name:  home?.team?.shortDisplayName || home?.team?.displayName || home?.team?.name,
+        crest: home?.team?.logo || (homeId ? `https://a.espncdn.com/i/teamlogos/soccer/500/${homeId}.png` : null),
+      },
+      awayTeam: {
+        id:    awayId,
+        name:  away?.team?.shortDisplayName || away?.team?.displayName || away?.team?.name,
+        crest: away?.team?.logo || (awayId ? `https://a.espncdn.com/i/teamlogos/soccer/500/${awayId}.png` : null),
+      },
+      score: {fullTime: {home: homeScore, away: awayScore}}
+    };
+  };
+  const isArsenal = m =>
+    m.homeTeam?.id === ARSENAL_ESPN_ID || m.awayTeam?.id === ARSENAL_ESPN_ID ||
+    m.homeTeam?.name?.includes('Arsenal') || m.awayTeam?.name?.includes('Arsenal');
+  // soccer/all 검색은 전 세계 모든 "Arsenal" 이름 클럽(아르헨티나 Arsenal de Sarandí 등)까지
+  // 걸러내므로, ID 일치만 인정하는 엄격한 필터를 별도로 사용
+  const isArsenalStrict = m =>
+    m.homeTeam?.id === ARSENAL_ESPN_ID || m.awayTeam?.id === ARSENAL_ESPN_ID;
+
   try {
     let result;
 
     if(type === 'fixtures'){
-      const ARSENAL_ESPN_ID = '359';
-      const SLUGS = [
-        {slug:'eng.1',         name:'Premier League',   short:'PL'},
-        {slug:'uefa.champions',name:'Champions League', short:'UCL'},
-        {slug:'eng.league_cup',name:'EFL Cup',          short:'EFL'},
-        {slug:'eng.fa',        name:'FA Cup',           short:'FAC'},
-        {slug:'eng.charity',   name:'Community Shield', short:'CS'},
-        {slug:'club.friendly', name:'Friendly',         short:'FR'},
-      ];
-
-      const now = new Date();
-      const fmtDate = d => d.toISOString().slice(0,10).replace(/-/g,'');
       // 시즌 종료(5월 31일)까지 조회 — 1~5월(시즌 중)이면 올해 5월,
       // 6~12월(오프시즌 또는 새 시즌 진행 중)이면 다음 해 5월
       const seasonEndYear = now.getMonth() + 1 <= 5 ? now.getFullYear() : now.getFullYear() + 1;
@@ -114,62 +168,6 @@ export default async function handler(req, res) {
       // 새 시즌 시작 직후(8월)엔 아직 경기가 없을 수 있어 직전 시즌도 함께 조회 —
       // 그 외 기간엔 currentSeasonYear 하나로 충분하므로 불필요한 조회를 피함.
       const seasonsToFetch = now.getMonth() === 7 ? [currentSeasonYear, currentSeasonYear - 1] : [currentSeasonYear];
-
-      const parseEvent = (e, name, short) => {
-        const comp = e.competitions?.[0];
-        const home = comp?.competitors?.find(c => c.homeAway === 'home');
-        const away = comp?.competitors?.find(c => c.homeAway === 'away');
-        const status = comp?.status?.type;
-        const finished = status?.completed || false;
-        const live = status?.state === 'in';
-        const homeScore = (finished||live) ? (parseInt(home?.score?.displayValue ?? home?.score ?? 0)||0) : null;
-        const awayScore = (finished||live) ? (parseInt(away?.score?.displayValue ?? away?.score ?? 0)||0) : null;
-        const homeId = home?.team?.id;
-        const awayId = away?.team?.id;
-        return {
-          id:          e.id,
-          utcDate:     e.date,
-          competition: {name, short},
-          round:       e.season?.slug||e.seasonType?.name?.toLowerCase()||null,
-          neutralSite: !!comp?.neutralSite,
-          venue:       comp?.venue?.fullName || null,
-          status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
-          clock:       live ? (() => {
-            const raw = comp?.status?.displayClock || '';
-            const period = comp?.status?.period || 1;
-            // "67:34" → "67'" / "90+2:11" → "90+2'"
-            const mm = raw.match(/^(\d{1,3}(?:\+\d+)?):/);
-            if (mm) {
-              const mins = parseInt(mm[1], 10);
-              const base = period === 2 ? 45 : period === 3 ? 90 : period === 4 ? 105 : 0;
-              return (base + mins) + "'";
-            }
-            return raw; // 이미 "67'" 등 포맷이면 그대로
-          })() : null,
-          period:      live ? (comp?.status?.period||null) : null,
-          isHT:        live && comp?.status?.type?.description === 'Halftime',
-          tbd:         status?.id === '5' || status?.description === 'Postponed' ? 'postponed' : status?.id === '6' || status?.description === 'Canceled' ? 'canceled' : status?.id === '8' ? 'tbd' : null,
-          homeTeam: {
-            id:    homeId,
-            name:  home?.team?.shortDisplayName || home?.team?.displayName || home?.team?.name,
-            crest: home?.team?.logo || (homeId ? `https://a.espncdn.com/i/teamlogos/soccer/500/${homeId}.png` : null),
-          },
-          awayTeam: {
-            id:    awayId,
-            name:  away?.team?.shortDisplayName || away?.team?.displayName || away?.team?.name,
-            crest: away?.team?.logo || (awayId ? `https://a.espncdn.com/i/teamlogos/soccer/500/${awayId}.png` : null),
-          },
-          score: {fullTime: {home: homeScore, away: awayScore}}
-        };
-      };
-
-      const isArsenal = m =>
-        m.homeTeam?.id === ARSENAL_ESPN_ID || m.awayTeam?.id === ARSENAL_ESPN_ID ||
-        m.homeTeam?.name?.includes('Arsenal') || m.awayTeam?.name?.includes('Arsenal');
-      // soccer/all 검색은 전 세계 모든 "Arsenal" 이름 클럽(아르헨티나 Arsenal de Sarandí 등)까지
-      // 걸러내므로, ID 일치만 인정하는 엄격한 필터를 별도로 사용
-      const isArsenalStrict = m =>
-        m.homeTeam?.id === ARSENAL_ESPN_ID || m.awayTeam?.id === ARSENAL_ESPN_ID;
 
       const fetchSlug = async ({slug, name, short}) => {
         try {
@@ -239,6 +237,42 @@ export default async function handler(req, res) {
       const upcoming = allMatches.filter(m => m.status !== 'FINISHED');
 
       return res.json({matches: allMatches, finished, upcoming});
+
+    } else if(type === 'results'){
+      // 연도·월 브라우징용 — 특정 시즌 하나의 종료된 경기만 조회.
+      // 완결된 시즌 데이터는 절대 안 바뀌므로 기본 캐시(1시간)로 충분히 재사용됨.
+      const requestedSeason = parseInt(req.query.season, 10);
+      if(!requestedSeason) return res.status(400).json({error:'season 파라미터가 필요합니다'});
+      const cacheKey = `results_${requestedSeason}`;
+      if(!nocache){
+        const hit = getCache(cacheKey);
+        if(hit) return res.json(hit);
+      }
+
+      const fetchSeasonSlug = async ({slug, name, short}) => {
+        try {
+          const r = await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/teams/${ARSENAL_ESPN_ID}/schedule?season=${requestedSeason}`,
+            {signal: AbortSignal.timeout(8000)}
+          );
+          const j = r.ok ? await r.json() : {events:[]};
+          return (j.events||[]).map(e => parseEvent(e, name, short)).filter(isArsenal);
+        } catch(_){ return []; }
+      };
+
+      const seasonResults = await Promise.all(SLUGS.map(fetchSeasonSlug));
+      const seenSeason = new Set();
+      const seasonMatches = seasonResults.flat().filter(m => {
+        if(m.status !== 'FINISHED') return false;
+        if(seenSeason.has(m.id)) return false;
+        seenSeason.add(m.id);
+        return true;
+      });
+      seasonMatches.sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
+
+      const payload = {season: requestedSeason, matches: seasonMatches};
+      setCache(cacheKey, payload);
+      return res.json(payload);
 
     } else if(type === 'standings'){
       if(!KEY) return res.status(500).json({error:'FOOTBALL_DATA_KEY 없음'});
