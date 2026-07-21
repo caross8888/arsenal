@@ -112,6 +112,17 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── 선수 ID -> 짧은 이름(예: "K. Havertz") 매핑 ──
+    // keyEvents/plays의 athlete 객체엔 shortName이 아예 없고 displayName(풀네임)만
+    // 내려오는데, 같은 응답의 rosters 쪽엔 shortName이 있어서 ID로 가져온다.
+    const athleteShortNameById = {};
+    for (const rosterEntry of (raw.rosters || [])) {
+      for (const p of (rosterEntry.roster || [])) {
+        const ath = p.athlete;
+        if (ath?.id && ath.shortName) athleteShortNameById[ath.id] = ath.shortName;
+      }
+    }
+
     // ── 이벤트 타임라인 ──
     const events = [];
     const keyMoments = raw.keyMoments || raw.keyEvents || [];
@@ -136,7 +147,10 @@ export default async function handler(req, res) {
       } else if (!min) {
         min = ev.period?.number === 2 ? '45+?' : '?';
       }
-      const player = ev.participants?.[0]?.athlete?.shortName || ev.participants?.[0]?.athlete?.displayName || ev.athlete?.shortName || ev.athlete?.displayName || ev.text?.split(' ')?.[0] || '';
+      const evAthleteId = ev.participants?.[0]?.athlete?.id || ev.athlete?.id;
+      const player = (evAthleteId && athleteShortNameById[evAthleteId])
+        || ev.participants?.[0]?.athlete?.shortName || ev.participants?.[0]?.athlete?.displayName
+        || ev.athlete?.shortName || ev.athlete?.displayName || ev.text?.split(' ')?.[0] || '';
       const evTeamId = ev.team?.id || ev.teamId;
       // 타입 불일치 방지: 숫자/문자열 모두 문자열로 변환 후 비교
       const homeAway = String(evTeamId) === String(home.id) ? 'home' : 'away';
