@@ -415,10 +415,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-nav-btn svg{width:16px;height:16px;}
 .cal-nav-btn:disabled{color:var(--text-dim);cursor:default;opacity:.4;}
 .results-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 8px;}
-.results-label-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;}
-.results-label{font-size:13px;font-weight:700;color:var(--text);pointer-events:none;}
-.results-month-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;cursor:pointer;-webkit-appearance:none;appearance:none;}
-.results-count{padding:0 14px 6px;font-size:12px;color:var(--text-dim);}
+.results-label{background:none;border:none;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;padding:2px 8px;font-family:var(--fb);-webkit-tap-highlight-color:transparent;}
+.results-subrow{display:flex;align-items:center;justify-content:space-between;padding:0 14px 6px;}
+.results-count{font-size:12px;color:var(--text-dim);}
+.results-latest-btn{background:none;border:none;color:var(--gold);font-size:12px;font-weight:700;font-family:var(--fb);cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;}
+.results-latest-btn:disabled{color:var(--text-dim);cursor:default;opacity:.5;}
+.results-picker-sheet{background:#1a1c22;border-radius:16px;width:100%;max-width:340px;overflow:hidden;}
+.results-picker-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);}
+.results-picker-head span{font-size:15px;font-weight:700;color:#fff;font-family:var(--fb);}
+.results-picker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:16px;}
+.results-picker-cell{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-weight:700;font-family:var(--fb);padding:10px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.results-picker-cell:disabled{color:var(--text-dim);opacity:.35;cursor:default;}
+.results-picker-cell.current{background:var(--red-dark);color:#fff;border-color:var(--red-dark);}
 .cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
 .cal-dow-row span{text-align:center;font-size:10px;font-weight:700;color:var(--text);padding:4px 0;display:block;}
 .cal-dow-row span:first-child{color:#F87171;font-weight:900;}
@@ -669,14 +677,24 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="fix-section-label"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg> &#52572;&#44540; &#44208;&#44284;</div>
     <div class="results-nav">
       <button class="cal-nav-btn" onclick="resultsChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
-      <div class="results-label-wrap">
-        <span class="results-label" id="resultsLabel"></span>
-        <input type="month" id="resultsMonthInput" class="results-month-input" onchange="resultsMonthInputChanged()">
-      </div>
+      <button class="results-label" id="resultsLabel" onclick="openResultsPicker()"></button>
       <button class="cal-nav-btn" id="resultsNextBtn" onclick="resultsChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
     </div>
-    <div class="results-count" id="resultsCount"></div>
+    <div class="results-subrow">
+      <span class="results-count" id="resultsCount"></span>
+      <button class="results-latest-btn" id="resultsLatestBtn" onclick="goToLatestResults()">&#52572;&#44540; &#44221;&#44592;</button>
+    </div>
     <div class="fix-list" id="finishedList"></div>
+  </div>
+  <div class="modal-overlay" id="resultsPickerOverlay" style="align-items:center;" onclick="if(event.target===this) closeResultsPicker()">
+    <div class="results-picker-sheet">
+      <div class="results-picker-head">
+        <button class="cal-nav-btn" onclick="pickerChangeYear(-1)" aria-label="&#51060;&#51204; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+        <span id="pickerYearLabel"></span>
+        <button class="cal-nav-btn" onclick="pickerChangeYear(1)" aria-label="&#45796;&#51020; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+      </div>
+      <div class="results-picker-grid" id="resultsPickerGrid"></div>
+    </div>
   </div>
   <div class="card" style="margin-top:8px">
     <div class="lb-tabs" id="lbTabs">
@@ -1131,14 +1149,11 @@ function resultsAtOrAfterMax(year, month){
 }
 function updateResultsLabel(){
   document.getElementById('resultsLabel').textContent = _resultsYear+'년 '+_resultsMonth+'월';
-  var ym = _resultsYear+'-'+(_resultsMonth<10?'0':'')+_resultsMonth;
-  var inp = document.getElementById('resultsMonthInput');
-  if(inp){
-    inp.value = ym;
-    if(_resultsMaxYear!==undefined) inp.max = _resultsMaxYear+'-'+(_resultsMaxMonth<10?'0':'')+_resultsMaxMonth;
-  }
+  var atMax = _resultsMaxYear!==undefined && resultsAtOrAfterMax(_resultsYear, _resultsMonth);
   var nextBtn = document.getElementById('resultsNextBtn');
-  if(nextBtn) nextBtn.disabled = _resultsMaxYear!==undefined && resultsAtOrAfterMax(_resultsYear, _resultsMonth);
+  if(nextBtn) nextBtn.disabled = atMax;
+  var latestBtn = document.getElementById('resultsLatestBtn');
+  if(latestBtn) latestBtn.disabled = atMax;
 }
 function getSeasonMatches(season){
   if(_resultsCache[season]) return Promise.resolve(_resultsCache[season]);
@@ -1146,6 +1161,8 @@ function getSeasonMatches(season){
     var m = data.matches||[];
     _resultsCache[season] = m;
     return m;
+  }).catch(function(){
+    return []; // 실패한 시즌은 캐시에 남기지 않음 — 다음에 다시 시도
   });
 }
 function monthMatchesFrom(seasonMatches, year, month){
@@ -1188,18 +1205,66 @@ function initResultsNav(finishedAll){
     renderMatches(monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth));
   });
 }
-function resultsMonthInputChanged(){
-  var v = document.getElementById('resultsMonthInput').value; // "YYYY-MM"
-  if(!v) return;
-  var parts = v.split('-');
-  _resultsYear = parseInt(parts[0],10);
-  _resultsMonth = parseInt(parts[1],10);
+function showResultsMonth(year, month){
+  _resultsYear = year; _resultsMonth = month;
   updateResultsLabel();
   document.getElementById('finishedList').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
   document.getElementById('resultsCount').textContent='';
-  var season = resultsSeasonForYM(_resultsYear, _resultsMonth);
+  var season = resultsSeasonForYM(year, month);
   getSeasonMatches(season).then(function(seasonMatches){
-    renderMatches(monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth));
+    renderMatches(monthMatchesFrom(seasonMatches, year, month));
+  });
+}
+function goToLatestResults(){
+  if(_resultsMaxYear===undefined) return;
+  if(_resultsYear===_resultsMaxYear && _resultsMonth===_resultsMaxMonth) return;
+  showResultsMonth(_resultsMaxYear, _resultsMaxMonth);
+}
+// ── 연도/월 선택 모달: 데이터 없는 달은 개별적으로 비활성화 ──
+// (네이티브 <input type="month">는 min/max 범위 제한만 가능하고 범위
+// 안의 특정 달을 하나씩 막을 수 없어서, 직접 그리드를 그려서 처리한다)
+var _pickerYear;
+function openResultsPicker(){
+  _pickerYear = _resultsYear;
+  document.getElementById('resultsPickerOverlay').classList.add('open');
+  renderPickerGrid();
+}
+function closeResultsPicker(){
+  document.getElementById('resultsPickerOverlay').classList.remove('open');
+}
+function pickerChangeYear(delta){
+  _pickerYear += delta;
+  renderPickerGrid();
+}
+function renderPickerGrid(){
+  document.getElementById('pickerYearLabel').textContent = _pickerYear+'년';
+  var grid = document.getElementById('resultsPickerGrid');
+  grid.innerHTML = '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div>';
+  var seasonJan = resultsSeasonForYM(_pickerYear, 1);
+  var seasonDec = resultsSeasonForYM(_pickerYear, 12);
+  var neededSeasons = seasonJan===seasonDec ? [seasonJan] : [seasonJan, seasonDec];
+  Promise.all(neededSeasons.map(getSeasonMatches)).then(function(results){
+    var bySeason = {};
+    neededSeasons.forEach(function(sy, i){ bySeason[sy] = results[i]; });
+    grid.innerHTML = '';
+    for(var mo=1; mo<=12; mo++){
+      var season = resultsSeasonForYM(_pickerYear, mo);
+      var seasonMatches = bySeason[season]||[];
+      var hasData = monthMatchesFrom(seasonMatches, _pickerYear, mo).length>0;
+      var future = _resultsMaxYear!==undefined &&
+        (_pickerYear>_resultsMaxYear || (_pickerYear===_resultsMaxYear && mo>_resultsMaxMonth));
+      var btn = document.createElement('button');
+      btn.type='button';
+      btn.textContent = mo+'월';
+      btn.className = 'results-picker-cell';
+      if(_pickerYear===_resultsYear && mo===_resultsMonth) btn.classList.add('current');
+      if(!hasData || future){
+        btn.disabled = true;
+      } else {
+        (function(mm){ btn.onclick = function(){ closeResultsPicker(); showResultsMonth(_pickerYear, mm); }; })(mo);
+      }
+      grid.appendChild(btn);
+    }
   });
 }
 // 화살표 이동은 경기 없는 달을 자동으로 건너뛰고, 시즌 자체가 완전히
