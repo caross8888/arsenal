@@ -427,10 +427,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-day-num{font-size:10px;color:rgba(255,255,255,.6);text-align:center;width:100%;flex-shrink:0;}
 .cal-day-sun .cal-day-num{color:#F87171;font-weight:700;}
 .cal-day-sat .cal-day-num{color:#60A5FA;font-weight:700;}
+.cal-day.has-fixture .cal-day-num{font-weight:700;}
 .cal-day-crest-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;}
 .cal-day-crest-wrap .t-crest,.cal-day-crest-wrap .t-crest-ph{width:78%;height:auto;aspect-ratio:1;padding:0;box-sizing:border-box;font-size:.7em;border:none;background:none;filter:drop-shadow(0 0 1px rgba(255,255,255,.35));}
 .cal-day-crest-wrap .t-crest-ph.afc{background:none;}
 .cal-day-time{font-size:9px;color:rgba(255,255,255,.6);flex-shrink:0;}
+.cal-day.has-fixture .cal-day-time{font-weight:700;}
 
 /* PLAYER MODAL - Fotmob style */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
