@@ -413,9 +413,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-view-btn.active{background:var(--red-dark);color:#fff;}
 .cal-nav-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;}
 .cal-nav-btn svg{width:16px;height:16px;}
-.results-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 0 8px;position:relative;}
-.results-label{font-size:13px;font-weight:700;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.results-month-input{position:absolute;left:50%;top:0;width:1px;height:1px;opacity:0;border:0;padding:0;pointer-events:none;}
+.results-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 8px;}
+.results-label-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;}
+.results-label{font-size:13px;font-weight:700;color:var(--text);pointer-events:none;}
+.results-month-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;cursor:pointer;-webkit-appearance:none;appearance:none;}
 .results-count{padding:0 14px 6px;font-size:12px;color:var(--text-dim);}
 .cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
 .cal-dow-row span{text-align:center;font-size:10px;font-weight:700;color:var(--text);padding:4px 0;display:block;}
@@ -667,8 +668,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="fix-section-label"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg> &#52572;&#44540; &#44208;&#44284;</div>
     <div class="results-nav">
       <button class="cal-nav-btn" onclick="resultsChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
-      <div class="results-label" id="resultsLabel" onclick="openResultsPicker()"></div>
-      <input type="month" id="resultsMonthInput" class="results-month-input" onchange="resultsMonthInputChanged()">
+      <div class="results-label-wrap">
+        <span class="results-label" id="resultsLabel"></span>
+        <input type="month" id="resultsMonthInput" class="results-month-input" onchange="resultsMonthInputChanged()">
+      </div>
       <button class="cal-nav-btn" onclick="resultsChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
     </div>
     <div class="results-count" id="resultsCount"></div>
@@ -1172,11 +1175,6 @@ function initResultsNav(finishedAll){
   getSeasonMatches(season).then(function(seasonMatches){
     renderMatches(monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth));
   });
-}
-function openResultsPicker(){
-  var inp = document.getElementById('resultsMonthInput');
-  if(inp.showPicker){ try{ inp.showPicker(); return; }catch(e){} }
-  inp.focus();
 }
 function resultsMonthInputChanged(){
   var v = document.getElementById('resultsMonthInput').value; // "YYYY-MM"
