@@ -1129,7 +1129,7 @@ function loadFixtures(){
         };el.appendChild(btn);}
     }
     renderList(upEl,upcomingAll.slice(0,3),upcomingAll);
-    initResultsNav(data.finished||[]);
+    initResultsNav(data.finished||[], data.seasonsFetched);
     renderDday(upcomingAll);
     // 라이브 경기 있으면 폴링 시작
     if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})) startLivePolling();
@@ -1179,14 +1179,13 @@ function renderMatches(matches){
   fnEl.innerHTML='';
   matches.forEach(function(m){ fnEl.appendChild(buildFixCard(m)); });
 }
-function initResultsNav(finishedAll){
+function initResultsNav(finishedAll, seasonsFetched){
+  // 각 경기의 시즌을 달력 기준(8월 컷오프)으로 재계산해서 캐시에 나눠 담으면,
+  // 프리시즌 친선전처럼 7월에 열리지만 ESPN이 다음 시즌 소속으로 분류하는
+  // 경기 때문에 실제로 조회한 시즌과 어긋나 버린다. 그래서 백엔드가 실제로
+  // 어떤 시즌으로 조회했는지(seasonsFetched)를 그대로 믿고 캐시 키로 쓴다.
   _resultsCache = {};
-  finishedAll.forEach(function(m){
-    if(!m.utcDate) return;
-    var p = kstParts(new Date(m.utcDate).getTime());
-    var sy = resultsSeasonForYM(p.y, p.m+1);
-    (_resultsCache[sy] = _resultsCache[sy] || []).push(m);
-  });
+  (seasonsFetched||[]).forEach(function(sy){ _resultsCache[sy] = finishedAll; });
   var sorted = finishedAll.filter(function(m){return !!m.utcDate;})
     .slice().sort(function(a,b){return new Date(b.utcDate)-new Date(a.utcDate);});
   var now = new Date();

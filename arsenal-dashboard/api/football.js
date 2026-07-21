@@ -236,7 +236,7 @@ export default async function handler(req, res) {
       const finished = allMatches.filter(m => m.status === 'FINISHED');
       const upcoming = allMatches.filter(m => m.status !== 'FINISHED');
 
-      return res.json({matches: allMatches, finished, upcoming});
+      return res.json({matches: allMatches, finished, upcoming, seasonsFetched: seasonsToFetch});
 
     } else if(type === 'results'){
       // 연도·월 브라우징용 — 특정 시즌 하나의 종료된 경기만 조회.
