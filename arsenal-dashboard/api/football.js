@@ -107,6 +107,10 @@ export default async function handler(req, res) {
       // 6~12월(오프시즌 또는 새 시즌 진행 중)이면 다음 해 5월
       const seasonEndYear = now.getMonth() + 1 <= 5 ? now.getFullYear() : now.getFullYear() + 1;
       const futureEnd = fmtDate(new Date(seasonEndYear, 4, 31));
+      // ESPN team/schedule는 season 파라미터 없으면 자체 "현재 시즌" 포인터를 쓰는데,
+      // 다음 시즌 일정이 아직 없는 오프시즌엔 그게 빈 시즌을 가리켜 직전 시즌 결과가 통째로 빠짐.
+      // 8월 이전이면 작년 8월에 시작한 시즌이 아직 "현재/직전" 시즌이므로 명시적으로 지정.
+      const currentSeasonYear = now.getMonth() + 1 >= 8 ? now.getFullYear() : now.getFullYear() - 1;
 
       const parseEvent = (e, name, short) => {
         const comp = e.competitions?.[0];
@@ -167,7 +171,7 @@ export default async function handler(req, res) {
       const fetchSlug = async ({slug, name, short}) => {
         try {
           const sr = await fetch(
-            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/teams/${ARSENAL_ESPN_ID}/schedule`,
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/teams/${ARSENAL_ESPN_ID}/schedule?season=${currentSeasonYear}`,
             {signal: AbortSignal.timeout(8000)}
           );
           const sj = sr.ok ? await sr.json() : {events:[]};
