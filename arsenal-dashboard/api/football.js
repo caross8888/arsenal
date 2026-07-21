@@ -159,6 +159,10 @@ export default async function handler(req, res) {
       const isArsenal = m =>
         m.homeTeam?.id === ARSENAL_ESPN_ID || m.awayTeam?.id === ARSENAL_ESPN_ID ||
         m.homeTeam?.name?.includes('Arsenal') || m.awayTeam?.name?.includes('Arsenal');
+      // soccer/all 검색은 전 세계 모든 "Arsenal" 이름 클럽(아르헨티나 Arsenal de Sarandí 등)까지
+      // 걸러내므로, ID 일치만 인정하는 엄격한 필터를 별도로 사용
+      const isArsenalStrict = m =>
+        m.homeTeam?.id === ARSENAL_ESPN_ID || m.awayTeam?.id === ARSENAL_ESPN_ID;
 
       const fetchSlug = async ({slug, name, short}) => {
         try {
@@ -181,9 +185,37 @@ export default async function handler(req, res) {
         } catch(_){ return []; }
       };
 
-      const results = await Promise.all(SLUGS.map(fetchSlug));
+      // 에미레이츠컵처럼 매년 이름이 바뀌는 단독 브랜드 프리시즌 대회는
+      // club.friendly 슬러그로 조회되지 않음(ESPN이 별도 리그로 분류) —
+      // 근시일 60일을 soccer/all 스코어보드로 7일 단위 보강 조회해서 채움
+      const fetchAllRange = async (startStr, endStr) => {
+        try {
+          const r = await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=${startStr}-${endStr}&limit=1000`,
+            {signal: AbortSignal.timeout(8000)}
+          );
+          const j = r.ok ? await r.json() : {events:[]};
+          return (j.events||[]).map(e => {
+            const note = e.competitions?.[0]?.altGameNote;
+            const name = note ? note.split(',')[0].trim() : 'Friendly';
+            return parseEvent(e, name, 'FR');
+          }).filter(isArsenalStrict);
+        } catch(_){ return []; }
+      };
+
+      const nearWindowChunks = [];
+      for(let off=0; off<60; off+=7){
+        const s = new Date(now); s.setDate(s.getDate()+off);
+        const e = new Date(now); e.setDate(e.getDate()+Math.min(off+6,59));
+        nearWindowChunks.push([fmtDate(s), fmtDate(e)]);
+      }
+
+      const [results, extraResults] = await Promise.all([
+        Promise.all(SLUGS.map(fetchSlug)),
+        Promise.all(nearWindowChunks.map(([s,e]) => fetchAllRange(s,e))),
+      ]);
       const seen = new Set();
-      const allMatches = results.flat().filter(m => {
+      const allMatches = [...results.flat(), ...extraResults.flat()].filter(m => {
         if(seen.has(m.id)) return false;
         seen.add(m.id);
         return true;
