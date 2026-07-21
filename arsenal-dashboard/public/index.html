@@ -415,8 +415,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-nav-btn svg{width:16px;height:16px;}
 .cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
 .cal-dow-row span{text-align:center;font-size:10px;font-weight:700;color:var(--text);padding:4px 0;display:block;}
-.cal-dow-row span:first-child{color:#F87171;}
-.cal-dow-row span:last-child{color:#60A5FA;}
+.cal-dow-row span:first-child{color:#F87171;font-weight:900;}
+.cal-dow-row span:last-child{color:#60A5FA;font-weight:900;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
 .cal-day{aspect-ratio:1/1.75;border-radius:8px;border:2px solid transparent;box-sizing:border-box;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;overflow:hidden;cursor:default;font-size:11px;color:var(--text-muted);-webkit-tap-highlight-color:transparent;padding:4px 2px 5px;}
 .cal-day.has-fixture{border-color:var(--red-dark);cursor:pointer;}
@@ -425,6 +425,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-day.today{background:rgba(200,168,75,.15);color:var(--gold);font-weight:700;}
 .cal-day.selected{outline:2px solid #fff;outline-offset:-2px;}
 .cal-day-num{font-size:10px;color:rgba(255,255,255,.6);text-align:center;width:100%;flex-shrink:0;}
+.cal-day-sun .cal-day-num{color:#F87171;font-weight:700;}
+.cal-day-sat .cal-day-num{color:#60A5FA;font-weight:700;}
 .cal-day-crest-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;}
 .cal-day-crest-wrap .t-crest,.cal-day-crest-wrap .t-crest-ph{width:78%;height:auto;aspect-ratio:1;padding:0;box-sizing:border-box;font-size:.7em;border:none;background:none;filter:drop-shadow(0 0 1px rgba(255,255,255,.35));}
 .cal-day-crest-wrap .t-crest-ph.afc{background:none;}
@@ -1166,6 +1168,9 @@ function renderCalendarMonth(){
     var dayMatches = byDay[d] || [];
     var cell = document.createElement('div');
     cell.className = 'cal-day';
+    var dow = (firstDow + d - 1) % 7;
+    if(dow===0) cell.classList.add('cal-day-sun');
+    else if(dow===6) cell.classList.add('cal-day-sat');
     var isToday = (todayParts.y===year && todayParts.m===month && todayParts.d===d);
     if(isToday) cell.classList.add('today');
 
