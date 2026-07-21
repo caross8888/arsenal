@@ -413,6 +413,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-view-btn.active{background:var(--red-dark);color:#fff;}
 .cal-nav-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;}
 .cal-nav-btn svg{width:16px;height:16px;}
+.cal-nav-btn:disabled{color:var(--text-dim);cursor:default;opacity:.4;}
 .results-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 8px;}
 .results-label-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;}
 .results-label{font-size:13px;font-weight:700;color:var(--text);pointer-events:none;}
@@ -672,7 +673,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <span class="results-label" id="resultsLabel"></span>
         <input type="month" id="resultsMonthInput" class="results-month-input" onchange="resultsMonthInputChanged()">
       </div>
-      <button class="cal-nav-btn" onclick="resultsChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+      <button class="cal-nav-btn" id="resultsNextBtn" onclick="resultsChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
     </div>
     <div class="results-count" id="resultsCount"></div>
     <div class="fix-list" id="finishedList"></div>
@@ -1122,12 +1123,22 @@ function loadFixtures(){
 // 몇 년도까지 데이터가 있는지 하드코딩하지 않음 — 시즌을 조회했는데
 // 통째로 비어있으면 그게 곧 데이터가 없는 경계라고 판단한다.
 var _resultsYear, _resultsMonth;
+var _resultsMaxYear, _resultsMaxMonth; // 데이터가 있는 가장 최근 달(보통 마지막 종료 경기)
 var _resultsCache = {}; // 시즌 시작년도 -> 그 시즌 종료 경기 배열
 function resultsSeasonForYM(year, month){ return month>=8 ? year : year-1; }
+function resultsAtOrAfterMax(year, month){
+  return year>_resultsMaxYear || (year===_resultsMaxYear && month>=_resultsMaxMonth);
+}
 function updateResultsLabel(){
   document.getElementById('resultsLabel').textContent = _resultsYear+'년 '+_resultsMonth+'월';
+  var ym = _resultsYear+'-'+(_resultsMonth<10?'0':'')+_resultsMonth;
   var inp = document.getElementById('resultsMonthInput');
-  if(inp) inp.value = _resultsYear+'-'+(_resultsMonth<10?'0':'')+_resultsMonth;
+  if(inp){
+    inp.value = ym;
+    if(_resultsMaxYear!==undefined) inp.max = _resultsMaxYear+'-'+(_resultsMaxMonth<10?'0':'')+_resultsMaxMonth;
+  }
+  var nextBtn = document.getElementById('resultsNextBtn');
+  if(nextBtn) nextBtn.disabled = _resultsMaxYear!==undefined && resultsAtOrAfterMax(_resultsYear, _resultsMonth);
 }
 function getSeasonMatches(season){
   if(_resultsCache[season]) return Promise.resolve(_resultsCache[season]);
@@ -1159,16 +1170,17 @@ function initResultsNav(finishedAll){
     var sy = resultsSeasonForYM(p.y, p.m+1);
     (_resultsCache[sy] = _resultsCache[sy] || []).push(m);
   });
+  var sorted = finishedAll.filter(function(m){return !!m.utcDate;})
+    .slice().sort(function(a,b){return new Date(b.utcDate)-new Date(a.utcDate);});
+  var now = new Date();
+  if(sorted.length){
+    var pMax = kstParts(new Date(sorted[0].utcDate).getTime());
+    _resultsMaxYear = pMax.y; _resultsMaxMonth = pMax.m+1;
+  } else {
+    _resultsMaxYear = now.getFullYear(); _resultsMaxMonth = now.getMonth()+1;
+  }
   if(_resultsYear===undefined){
-    var sorted = finishedAll.filter(function(m){return !!m.utcDate;})
-      .slice().sort(function(a,b){return new Date(b.utcDate)-new Date(a.utcDate);});
-    var now = new Date();
-    if(sorted.length){
-      var p2 = kstParts(new Date(sorted[0].utcDate).getTime());
-      _resultsYear = p2.y; _resultsMonth = p2.m+1;
-    } else {
-      _resultsYear = now.getFullYear(); _resultsMonth = now.getMonth()+1;
-    }
+    _resultsYear = _resultsMaxYear; _resultsMonth = _resultsMaxMonth;
   }
   updateResultsLabel();
   var season = resultsSeasonForYM(_resultsYear, _resultsMonth);
@@ -1193,6 +1205,7 @@ function resultsMonthInputChanged(){
 // 화살표 이동은 경기 없는 달을 자동으로 건너뛰고, 시즌 자체가 완전히
 // 비어있으면(=더 과거 데이터가 없음) 거기서 멈춘다.
 function resultsChangeMonth(delta){
+  if(delta>0 && _resultsMaxYear!==undefined && resultsAtOrAfterMax(_resultsYear, _resultsMonth)) return;
   document.getElementById('finishedList').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
   document.getElementById('resultsCount').textContent='';
   var attempts = 0;
@@ -1201,6 +1214,13 @@ function resultsChangeMonth(delta){
     if(_resultsMonth>12){_resultsMonth=1;_resultsYear++;}
     else if(_resultsMonth<1){_resultsMonth=12;_resultsYear--;}
     attempts++;
+    if(delta>0 && resultsAtOrAfterMax(_resultsYear, _resultsMonth)){
+      updateResultsLabel();
+      var season2 = resultsSeasonForYM(_resultsYear, _resultsMonth);
+      return getSeasonMatches(season2).then(function(seasonMatches){
+        return monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth);
+      });
+    }
     var season = resultsSeasonForYM(_resultsYear, _resultsMonth);
     return getSeasonMatches(season).then(function(seasonMatches){
       updateResultsLabel();
