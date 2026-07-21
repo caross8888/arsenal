@@ -111,6 +111,9 @@ export default async function handler(req, res) {
       // 다음 시즌 일정이 아직 없는 오프시즌엔 그게 빈 시즌을 가리켜 직전 시즌 결과가 통째로 빠짐.
       // 8월 이전이면 작년 8월에 시작한 시즌이 아직 "현재/직전" 시즌이므로 명시적으로 지정.
       const currentSeasonYear = now.getMonth() + 1 >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+      // 새 시즌 시작 직후(8월)엔 아직 경기가 없을 수 있어 직전 시즌도 함께 조회 —
+      // 그 외 기간엔 currentSeasonYear 하나로 충분하므로 불필요한 조회를 피함.
+      const seasonsToFetch = now.getMonth() === 7 ? [currentSeasonYear, currentSeasonYear - 1] : [currentSeasonYear];
 
       const parseEvent = (e, name, short) => {
         const comp = e.competitions?.[0];
@@ -170,12 +173,18 @@ export default async function handler(req, res) {
 
       const fetchSlug = async ({slug, name, short}) => {
         try {
-          const sr = await fetch(
-            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/teams/${ARSENAL_ESPN_ID}/schedule?season=${currentSeasonYear}`,
-            {signal: AbortSignal.timeout(8000)}
-          );
-          const sj = sr.ok ? await sr.json() : {events:[]};
-          const past = (sj.events||[]).map(e => parseEvent(e, name, short)).filter(isArsenal);
+          // 현재 시즌 + 직전 시즌을 함께 조회 — 시즌 경계(8월 1일) 직후 새 시즌
+          // 경기가 아직 없을 때 "최근 결과"가 텅 비지 않고 직전 시즌 결과가
+          // 자연스럽게 이어지도록 함(프론트는 날짜 역순으로만 표시하므로 안전)
+          const schedResults = await Promise.all(seasonsToFetch.map(sy =>
+            fetch(
+              `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/teams/${ARSENAL_ESPN_ID}/schedule?season=${sy}`,
+              {signal: AbortSignal.timeout(8000)}
+            ).then(r => r.ok ? r.json() : {events:[]}).catch(() => ({events:[]}))
+          ));
+          const past = schedResults
+            .flatMap(sj => (sj.events||[]).map(e => parseEvent(e, name, short)))
+            .filter(isArsenal);
 
           const todayStr = fmtDate(now);
           const br = await fetch(
