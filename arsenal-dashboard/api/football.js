@@ -1,7 +1,5 @@
 // api/football.js — Vercel Serverless Function
-const BASE = 'https://api.football-data.org/v4';
 const FPL_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/';
-const ARSENAL_ID = 57;
 const ARSENAL_FPL_ID = 1;
 const ARSENAL_TEAM_ID = 9825; // Fotmob 팀 ID
 const FPL_POS = {1:'GK',2:'DF',3:'MF',4:'FW'};
@@ -83,9 +81,6 @@ export default async function handler(req, res) {
     const hit = getCache(type);
     if(hit) return res.json(hit);
   }
-
-  const KEY = process.env.FOOTBALL_DATA_KEY;
-  const H = KEY ? {'X-Auth-Token': KEY} : {};
 
   // fixtures/results 두 엔드포인트가 공유하는 조회 도구 모음
   const ARSENAL_ESPN_ID = '359';
@@ -275,19 +270,28 @@ export default async function handler(req, res) {
       return res.json(payload);
 
     } else if(type === 'standings'){
-      if(!KEY) return res.status(500).json({error:'FOOTBALL_DATA_KEY 없음'});
-      const r = await fetch(`${BASE}/competitions/PL/standings`,{headers:H,signal:AbortSignal.timeout(8000)});
-      if(!r.ok) throw new Error(`football-data: ${r.status}`);
+      // football-data.org 대신 ESPN 순위 엔드포인트를 쓴다 — 팀별 note 필드에
+      // 유럽대항전 진출권/강등권 색상·설명이 이미 계산되어 내려오므로(예:
+      // "Champions League" #81D6AC), 우리 쪽에서 시즌마다 순위 구간을
+      // 하드코딩하지 않아도 된다.
+      const r = await fetch('https://site.api.espn.com/apis/v2/sports/soccer/eng.1/standings', {signal:AbortSignal.timeout(8000)});
+      if(!r.ok) throw new Error(`ESPN standings: ${r.status}`);
       const json = await r.json();
+      const entries = json.children?.[0]?.standings?.entries || [];
+      const statVal = (stats, name) => stats?.find(s => s.name === name)?.value ?? 0;
+      const maxGamesPlayed = entries.reduce((max, e) => Math.max(max, statVal(e.stats, 'gamesPlayed')), 0);
       result = {
-        season: json.season?.currentMatchday,
-        standings: (json.standings?.[0]?.table||[]).map(row=>({
-          position:row.position,
-          team:{id:row.team?.id,name:row.team?.name||'',shortName:row.team?.shortName||'',crest:row.team?.crest||''},
-          playedGames:row.playedGames,won:row.won,draw:row.draw,lost:row.lost,
-          points:row.points,goalsFor:row.goalsFor,goalsAgainst:row.goalsAgainst,
-          goalDifference:row.goalDifference,isArsenal:row.team?.id===ARSENAL_ID,
-        }))
+        season: maxGamesPlayed,
+        standings: entries.map(e => ({
+          position: statVal(e.stats, 'rank'),
+          team: {id:e.team?.id, name:e.team?.displayName||'', shortName:e.team?.shortDisplayName||'', crest:e.team?.logos?.[0]?.href||''},
+          playedGames: statVal(e.stats,'gamesPlayed'), won: statVal(e.stats,'wins'), draw: statVal(e.stats,'ties'), lost: statVal(e.stats,'losses'),
+          points: statVal(e.stats,'points'), goalsFor: statVal(e.stats,'pointsFor'), goalsAgainst: statVal(e.stats,'pointsAgainst'),
+          goalDifference: statVal(e.stats,'pointDifferential'), isArsenal: e.team?.id===ARSENAL_ESPN_ID,
+          // ESPN이 가끔 "##RRGGBB"처럼 #을 중복으로 내려주는 경우가 있어 정리한다
+          zoneColor: e.note?.color ? '#'+e.note.color.replace(/^#+/,'') : null,
+          zoneLabel: e.note?.description || null,
+        })).sort((a,b)=>a.position-b.position)
       };
 
     } else if(type === 'leaders'){

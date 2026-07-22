@@ -109,7 +109,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-round-text{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);}
 .fix-round-final{color:#D4AF37;font-weight:700;}
 .fix-venue{font-size:10px;color:var(--text-dim);text-align:center}
-.std-hdr,.std-row{display:grid;grid-template-columns:22px 1fr 24px 24px 24px 24px 36px;gap:4px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px}
+.std-hdr,.std-row{display:grid;grid-template-columns:22px 1fr 24px 24px 24px 24px 36px;gap:4px;align-items:center;padding:9px 14px 9px 11px;border-left:3px solid transparent;border-bottom:1px solid var(--border);font-size:12px}
 .std-row:last-child{border-bottom:none}
 .std-row.afc-row{background:rgba(239,1,7,.05)}
 .std-row.afc-row .std-pos{color:var(--red);font-weight:700}
@@ -1493,6 +1493,8 @@ function renderStandings(){
   el.innerHTML='';
   visible.forEach(function(s){
     var row=document.createElement('div');row.className='std-row'+(s.isArsenal?' afc-row':'');
+    row.style.borderLeftColor=s.zoneColor||'transparent';
+    if(s.zoneLabel) row.title=s.zoneLabel;
     var pos=document.createElement('span');pos.className='std-pos';pos.textContent=s.position;
     var team=document.createElement('div');team.className='std-team';
     if(s.team.crest){var img=document.createElement('img');img.className='std-crest';img.src=s.team.crest;img.alt='';img.onerror=function(){this.style.display='none';};team.appendChild(img);}
