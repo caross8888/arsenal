@@ -676,7 +676,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div id="finishedWrap" class="fix-section-card">
     <div class="fix-section-label"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg> &#52572;&#44540; &#44208;&#44284;</div>
     <div class="results-nav">
-      <button class="cal-nav-btn" onclick="resultsChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+      <button class="cal-nav-btn" id="resultsPrevBtn" onclick="resultsChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
       <button class="results-label" id="resultsLabel" onclick="openResultsPicker()"></button>
       <button class="cal-nav-btn" id="resultsNextBtn" onclick="resultsChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
     </div>
@@ -689,7 +689,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="modal-overlay" id="resultsPickerOverlay" style="align-items:center;" onclick="if(event.target===this) closeResultsPicker()">
     <div class="results-picker-sheet">
       <div class="results-picker-head">
-        <button class="cal-nav-btn" onclick="pickerChangeYear(-1)" aria-label="&#51060;&#51204; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+        <button class="cal-nav-btn" id="pickerPrevYearBtn" onclick="pickerChangeYear(-1)" aria-label="&#51060;&#51204; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
         <span id="pickerYearLabel"></span>
         <button class="cal-nav-btn" onclick="pickerChangeYear(1)" aria-label="&#45796;&#51020; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
       </div>
@@ -1153,10 +1153,29 @@ function loadFixtures(){
 // 통째로 비어있으면 그게 곧 데이터가 없는 경계라고 판단한다.
 var _resultsYear, _resultsMonth;
 var _resultsMaxYear, _resultsMaxMonth; // 데이터가 있는 가장 최근 달(보통 마지막 종료 경기)
+var _resultsMinYear, _resultsMinMonth; // 데이터가 있는 가장 이른 달 — 처음엔 모르고, 시즌 하나가
+                                        // 통째로 비어있는 걸 실제로 확인해야 알게 됨(하드코딩 금지)
 var _resultsCache = {}; // 시즌 시작년도 -> 그 시즌 종료 경기 배열
 function resultsSeasonForYM(year, month){ return month>=8 ? year : year-1; }
 function resultsAtOrAfterMax(year, month){
   return year>_resultsMaxYear || (year===_resultsMaxYear && month>=_resultsMaxMonth);
+}
+function resultsAtOrBeforeMin(year, month){
+  return _resultsMinYear!==undefined &&
+    (year<_resultsMinYear || (year===_resultsMinYear && month<=_resultsMinMonth));
+}
+// season 시즌을 실제로 조회했더니 통째로 비어있으면, 그 바로 다음 시즌(season+1,
+// 캐시에 이미 있어야 함 — 과거로 갈수록 한 시즌씩 순서대로 조회하므로)에서
+// 가장 이른 경기 날짜를 데이터 전체의 하한으로 기록한다.
+function markSeasonEmptyIfBoundary(season, matches){
+  if(matches.length>0 || _resultsMinYear!==undefined) return;
+  var nextMatches = _resultsCache[season+1];
+  if(!nextMatches || !nextMatches.length) return;
+  var earliest = nextMatches.filter(function(m){return !!m.utcDate;})
+    .reduce(function(min,m){ var t=new Date(m.utcDate).getTime(); return (min===null||t<min)?t:min; }, null);
+  if(earliest===null) return;
+  var p = kstParts(earliest);
+  _resultsMinYear = p.y; _resultsMinMonth = p.m+1;
 }
 function updateResultsLabel(){
   document.getElementById('resultsLabel').textContent = _resultsYear+'년 '+_resultsMonth+'월';
@@ -1165,13 +1184,19 @@ function updateResultsLabel(){
   if(nextBtn) nextBtn.disabled = atMax;
   var latestBtn = document.getElementById('resultsLatestBtn');
   if(latestBtn) latestBtn.disabled = atMax;
+  var prevBtn = document.getElementById('resultsPrevBtn');
+  if(prevBtn) prevBtn.disabled = resultsAtOrBeforeMin(_resultsYear, _resultsMonth);
 }
 function getSeasonMatches(season){
-  if(_resultsCache[season]) return Promise.resolve(_resultsCache[season]);
+  if(_resultsCache[season]){
+    markSeasonEmptyIfBoundary(season, _resultsCache[season]);
+    return Promise.resolve(_resultsCache[season]);
+  }
   return apiFetch(FN+'/football?type=results&season='+season).then(function(data){
     var m = data.matches||[];
     assignPlRounds(m);
     _resultsCache[season] = m;
+    markSeasonEmptyIfBoundary(season, m);
     return m;
   }).catch(function(){
     return []; // 실패한 시즌은 캐시에 남기지 않음 — 다음에 다시 시도
@@ -1244,11 +1269,14 @@ function closeResultsPicker(){
   document.getElementById('resultsPickerOverlay').classList.remove('open');
 }
 function pickerChangeYear(delta){
+  if(delta<0 && _resultsMinYear!==undefined && _pickerYear<=_resultsMinYear) return;
   _pickerYear += delta;
   renderPickerGrid();
 }
 function renderPickerGrid(){
   document.getElementById('pickerYearLabel').textContent = _pickerYear+'년';
+  var prevYearBtn = document.getElementById('pickerPrevYearBtn');
+  if(prevYearBtn) prevYearBtn.disabled = _resultsMinYear!==undefined && _pickerYear<=_resultsMinYear;
   var grid = document.getElementById('resultsPickerGrid');
   grid.innerHTML = '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div>';
   var seasonJan = resultsSeasonForYM(_pickerYear, 1);
@@ -1258,6 +1286,8 @@ function renderPickerGrid(){
     var bySeason = {};
     neededSeasons.forEach(function(sy, i){ bySeason[sy] = results[i]; });
     grid.innerHTML = '';
+    var prevYearBtn2 = document.getElementById('pickerPrevYearBtn');
+    if(prevYearBtn2) prevYearBtn2.disabled = _resultsMinYear!==undefined && _pickerYear<=_resultsMinYear;
     for(var mo=1; mo<=12; mo++){
       var season = resultsSeasonForYM(_pickerYear, mo);
       var seasonMatches = bySeason[season]||[];
@@ -1282,6 +1312,7 @@ function renderPickerGrid(){
 // 비어있으면(=더 과거 데이터가 없음) 거기서 멈춘다.
 function resultsChangeMonth(delta){
   if(delta>0 && _resultsMaxYear!==undefined && resultsAtOrAfterMax(_resultsYear, _resultsMonth)) return;
+  if(delta<0 && resultsAtOrBeforeMin(_resultsYear, _resultsMonth)) return;
   document.getElementById('finishedList').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
   document.getElementById('resultsCount').textContent='';
   var attempts = 0;
@@ -1297,10 +1328,32 @@ function resultsChangeMonth(delta){
         return monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth);
       });
     }
+    // 이미 알고 있는 하한에 도달했으면 시즌이 비어있는지 다시 조회할 필요
+    // 없이 바로 그 달의 결과를 보여주고 멈춘다 (하한 너머로 못 가게)
+    if(delta<0 && resultsAtOrBeforeMin(_resultsYear, _resultsMonth)){
+      updateResultsLabel();
+      var seasonMin = resultsSeasonForYM(_resultsYear, _resultsMonth);
+      return getSeasonMatches(seasonMin).then(function(seasonMatches){
+        return monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth);
+      });
+    }
     var season = resultsSeasonForYM(_resultsYear, _resultsMonth);
     return getSeasonMatches(season).then(function(seasonMatches){
+      if(seasonMatches.length===0){
+        // 방금 이 시즌이 비어있다는 걸 확인해서 하한이 막 새로 밝혀진 경우,
+        // 하한 너머(지금 위치)에 머물지 않고 실제 하한 달로 스냅백한다
+        if(delta<0 && _resultsMinYear!==undefined){
+          _resultsYear = _resultsMinYear; _resultsMonth = _resultsMinMonth;
+          updateResultsLabel();
+          return getSeasonMatches(resultsSeasonForYM(_resultsMinYear, _resultsMinMonth)).then(function(sm){
+            return monthMatchesFrom(sm, _resultsMinYear, _resultsMinMonth);
+          });
+        }
+        updateResultsLabel();
+        return null;
+      }
       updateResultsLabel();
-      if(seasonMatches.length===0 || attempts>=60) return null;
+      if(attempts>=60) return null;
       var mm = monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth);
       return mm.length ? mm : step();
     });
