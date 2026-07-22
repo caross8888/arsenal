@@ -538,6 +538,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .match-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
 .match-modal-overlay.open{display:flex;}
 .match-modal-sheet{background:#1a1c22;border-radius:20px 20px 0 0;width:100%;max-width:540px;height:96vh;overflow:hidden;animation:slideUp .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}
+/* 히스토리 계열 모달(매니저/레전드/온디스데이/타임라인)은 경기·선수 상세와
+   달리 로딩 스피너 없이 한 번에 그려지므로 높이가 바뀌며 "튀는" 문제가 없다
+   — 짧은 항목이 많아 고정 96vh를 쓰면 아래쪽이 텅 비어 보이므로 콘텐츠
+   길이에 맞춰 줄어들 수 있게 한다. 타임라인은 선수 상세모달(.modal-sheet)을
+   같이 쓰므로 두 시트 모두에 적용한다 */
+.match-modal-sheet.hist-compact,.modal-sheet.hist-compact{height:auto;min-height:45vh;max-height:96vh;}
 .match-modal-inner{overflow-y:auto;flex:1;padding-bottom:32px;}
 .mm-header{background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);padding:18px 16px 14px;position:relative;}
 .mm-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 14px;}
@@ -2537,6 +2543,7 @@ var COMP_SLUG_MAP={PL:'eng.1',UCL:'uefa.champions',EFL:'eng.league_cup',FAC:'eng
 function openMatchModal(m){
   var overlay=document.getElementById('matchModal');
   var content=document.getElementById('matchModalContent');
+  document.querySelector('.match-modal-sheet').classList.remove('hist-compact');
   var slug=COMP_SLUG_MAP[m.competition&&m.competition.short]||'eng.1';
 
   // 로딩 상태
@@ -3078,6 +3085,13 @@ function showSec(id,btn){
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
+  // History 탭에서 여는 모달(매니저/레전드/트로피/온디스데이/타임라인/스타디움/모먼트)은
+  // 전부 짧은 콘텐츠가 많아 두 공용 시트 모두 콘텐츠 길이에 맞춰 줄어들게 한다.
+  // 경기 상세(openMatchModal)/선수 상세(openPlayerModal)는 각자 열릴 때 이 클래스를 지운다.
+  if(id==='history'){
+    var mms=document.querySelector('.match-modal-sheet'); if(mms) mms.classList.add('hist-compact');
+    var ms=document.querySelector('.modal-sheet'); if(ms) ms.classList.add('hist-compact');
+  }
   if(!loaded[id]){
     loaded[id]=true;
     if(id==='squad') loadSquad();
@@ -3657,6 +3671,7 @@ var TRAIT_LABELS = {
 function openPlayerModal(p) {
   var modal   = document.getElementById('playerModal');
   var content = document.getElementById('modalContent');
+  modal.querySelector('.modal-sheet').classList.remove('hist-compact');
   var pos = p.posGroup; // GK DF MF FW
 
   // players.json 기반 데이터 직접 사용 (football.js에서 모든 데이터 전달)
