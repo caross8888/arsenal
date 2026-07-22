@@ -271,9 +271,19 @@ export default async function handler(req, res) {
 
     } else if(type === 'standings'){
       // football-data.org 대신 ESPN 순위 엔드포인트를 쓴다 — 팀별 note 필드에
-      // 유럽대항전 진출권/강등권 색상·설명이 이미 계산되어 내려오므로(예:
-      // "Champions League" #81D6AC), 우리 쪽에서 시즌마다 순위 구간을
-      // 하드코딩하지 않아도 된다.
+      // 유럽대항전 진출권/강등권 설명이 이미 계산되어 내려오므로(예:
+      // "Champions League"), 우리 쪽에서 시즌마다 순위 구간을 하드코딩하지
+      // 않아도 된다. 다만 ESPN이 주는 색상(챔스 #81D6AC vs 유로파 #B5E7CE)은
+      // 둘 다 같은 계열의 초록이라 구분이 잘 안 되므로, 어떤 진출권인지
+      // 자체는 ESPN 판단을 그대로 믿되 실제 표시 색은 우리 팔레트로 대체한다.
+      const zoneColorFor = (description) => {
+        if(!description) return null;
+        if(/champions/i.test(description)) return '#22C55E'; // 앱 전역 승리색과 동일
+        if(/europa/i.test(description)) return '#3B82F6';
+        if(/conference/i.test(description)) return '#F59E0B';
+        if(/relegation/i.test(description)) return '#EF4444'; // 앱 전역 패배색과 동일
+        return null;
+      };
       const r = await fetch('https://site.api.espn.com/apis/v2/sports/soccer/eng.1/standings', {signal:AbortSignal.timeout(8000)});
       if(!r.ok) throw new Error(`ESPN standings: ${r.status}`);
       const json = await r.json();
@@ -288,8 +298,9 @@ export default async function handler(req, res) {
           playedGames: statVal(e.stats,'gamesPlayed'), won: statVal(e.stats,'wins'), draw: statVal(e.stats,'ties'), lost: statVal(e.stats,'losses'),
           points: statVal(e.stats,'points'), goalsFor: statVal(e.stats,'pointsFor'), goalsAgainst: statVal(e.stats,'pointsAgainst'),
           goalDifference: statVal(e.stats,'pointDifferential'), isArsenal: e.team?.id===ARSENAL_ESPN_ID,
+          // 인식 못한 라벨이 나오면(향후 신설 대회 등) ESPN 원본색으로 폴백 —
           // ESPN이 가끔 "##RRGGBB"처럼 #을 중복으로 내려주는 경우가 있어 정리한다
-          zoneColor: e.note?.color ? '#'+e.note.color.replace(/^#+/,'') : null,
+          zoneColor: zoneColorFor(e.note?.description) || (e.note?.color ? '#'+e.note.color.replace(/^#+/,'') : null),
           zoneLabel: e.note?.description || null,
         })).sort((a,b)=>a.position-b.position)
       };
