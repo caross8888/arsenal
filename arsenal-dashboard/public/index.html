@@ -416,9 +416,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-nav-btn:disabled{color:var(--text-dim);cursor:default;opacity:.4;}
 .results-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 8px;}
 .results-label{background:none;border:none;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;padding:2px 8px;font-family:var(--fb);-webkit-tap-highlight-color:transparent;}
-.results-subrow{display:flex;align-items:center;justify-content:space-between;padding:0 14px 6px;}
-.results-count{font-size:12px;color:var(--text-dim);}
-.results-latest-btn{background:none;border:none;color:var(--gold);font-size:12px;font-weight:700;font-family:var(--fb);cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;}
+.results-count{font-size:11px;font-weight:400;color:var(--text-dim);text-transform:none;letter-spacing:0;margin-left:4px;}
+.results-latest-btn{background:none;border:none;color:var(--gold);font-size:12px;font-weight:700;font-family:var(--fb);cursor:pointer;padding:0;display:flex;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent;}
+.results-latest-btn svg{width:13px;height:13px;flex-shrink:0;}
 .results-latest-btn:disabled{color:var(--text-dim);cursor:default;opacity:.5;}
 .results-picker-sheet{background:#1a1c22;border-radius:16px;width:100%;max-width:340px;overflow:hidden;}
 .results-picker-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);}
@@ -674,15 +674,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
   </div>
   <div id="finishedWrap" class="fix-section-card">
-    <div class="fix-section-label"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg> &#52572;&#44540; &#44208;&#44284;</div>
+    <div class="fix-section-label" style="display:flex;align-items:center;justify-content:space-between;">
+      <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg> &#52572;&#44540; &#44208;&#44284;<span class="results-count" id="resultsCount"></span></span>
+      <button class="results-latest-btn" id="resultsLatestBtn" onclick="goToLatestResults()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg>돌아가기</button>
+    </div>
     <div class="results-nav">
       <button class="cal-nav-btn" id="resultsPrevBtn" onclick="resultsChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
       <button class="results-label" id="resultsLabel" onclick="openResultsPicker()"></button>
       <button class="cal-nav-btn" id="resultsNextBtn" onclick="resultsChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
-    </div>
-    <div class="results-subrow">
-      <span class="results-count" id="resultsCount"></span>
-      <button class="results-latest-btn" id="resultsLatestBtn" onclick="goToLatestResults()">최근 경기 보기</button>
     </div>
     <div class="fix-list" id="finishedList"></div>
   </div>
@@ -1212,7 +1211,7 @@ function monthMatchesFrom(seasonMatches, year, month){
 function renderMatches(matches){
   var fnEl = document.getElementById('finishedList');
   var countEl = document.getElementById('resultsCount');
-  countEl.textContent = matches.length ? matches.length+'경기' : '';
+  countEl.textContent = matches.length ? '· '+matches.length+'경기' : '';
   fnEl.innerHTML='';
   matches.forEach(function(m){ fnEl.appendChild(buildFixCard(m)); });
 }
