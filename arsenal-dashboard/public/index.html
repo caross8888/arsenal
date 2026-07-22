@@ -839,20 +839,40 @@ function apiFetch(url){
 }
 function showErr(el,msg){el.innerHTML='<div class="error-state">&#9888;&#65039; '+msg+'</div>';}
 
-var ROUND_LABEL={
-  'final':'결승','semifinals':'4강','quarterfinals':'8강',
-  'round-of-16':'16강','round-of-32':'32강',
-  'league-phase':'리그페이즈',
-  'fourth-round':'4라운드','third-round':'3라운드',
-  'second-round':'2라운드','first-round':'1라운드',
-  'group-stage':'조별리그','playoff-round':'플레이오프',
-  'league phase':'리그페이즈',
-  'fifth-round':'5라운드','sixth-round':'6라운드',
-  'fifth round':'5라운드','fourth round':'4라운드',
-  'third round':'3라운드','second round':'2라운드',
-  'first round':'1라운드','sixth round':'6라운드',
-  'round of 16':'16강','round of 32':'32강'
+// ESPN의 라운드 표기가 대회/시즌마다 제각각이라(예: "Group Stage" vs
+// "League Phase"(24/25~ UCL 리그페이즈 개편), "Round 3" vs "Third Round" vs
+// "Quarter-finals" vs "Quarterfinals") 하드코딩된 문자열 딕셔너리로는 다 못 잡는다.
+// 공백/하이픈을 제거해 정규화한 키로 매칭한다.
+var ROUND_STAGE_LABEL={
+  final:'결승', semifinals:'4강', quarterfinals:'8강',
+  roundof16:'16강', roundof32:'32강',
+  leaguephase:'리그페이즈', groupstage:'조별리그', playoffround:'플레이오프'
 };
+var ROUND_ORDINAL_WORD={first:1,second:2,third:3,fourth:4,fifth:5,sixth:6,seventh:7};
+function getRoundLabel(round){
+  if(!round) return null;
+  var plNum=/^pl(\d+)$/.exec(round);
+  if(plNum) return plNum[1]+'라운드';
+  var key=round.toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(ROUND_STAGE_LABEL[key]) return ROUND_STAGE_LABEL[key];
+  var numRound=/^round(\d+)$/.exec(key);
+  if(numRound) return numRound[1]+'라운드';
+  var wordRound=/^([a-z]+)round$/.exec(key);
+  if(wordRound && ROUND_ORDINAL_WORD[wordRound[1]]) return ROUND_ORDINAL_WORD[wordRound[1]]+'라운드';
+  return null;
+}
+// PL(프리미어리그) 경기는 ESPN이 라운드 번호를 안 주므로, 아스날의 시즌 내
+// PL 경기를 날짜순 정렬해 순번을 매겨 몇 라운드인지 직접 계산한다.
+function assignPlRounds(matches){
+  var pl=matches.filter(function(m){return m.competition&&m.competition.short==='PL';})
+    .sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);});
+  var round=1;
+  pl.forEach(function(m){
+    if(m.tbd==='postponed'||m.tbd==='canceled'){m.round=null;return;}
+    m.round='pl'+round;
+    round++;
+  });
+}
 var CTAG={PL:'tag-pl',CL:'tag-cl',UCL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec',EFL:'tag-ec',CS:'tag-oth',CWC:'tag-oth',FR:'tag-oth'};
 var CNAME={PL:'PL',CL:'UCL',UCL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup',EFL:'EFL Cup',CS:'Shield',CWC:'CWC',FR:'Friendly'};
 function ctag(c){return CTAG[c]||'tag-oth';}
@@ -976,9 +996,10 @@ function buildFixCard(m){
 
   // 중앙 상단: 라운드
   var z3top=document.createElement('div');z3top.className='fix-z3top';
-  if(m.round&&ROUND_LABEL[m.round]){
+  var roundText=getRoundLabel(m.round);
+  if(roundText){
     var rl=document.createElement('div');rl.className='fix-round-text'+(m.round==='final'?' fix-round-final':'');
-    rl.textContent=ROUND_LABEL[m.round];z3top.appendChild(rl);
+    rl.textContent=roundText;z3top.appendChild(rl);
   }
 
   // 중앙 하단: VS/스코어
@@ -1098,17 +1119,7 @@ function loadFixtures(){
   apiFetch(FN+'/football?type=fixtures').then(function(data){
     badge.textContent='ESPN';
     var upcomingAll=data.upcoming||[];
-    // PL 경기 날짜순 정렬 후 유효한 경기에만 라운드 번호 부여 (연기/취소 제외)
-    var allPL=[...(data.finished||[]),...(data.upcoming||[])]
-      .filter(function(m){return m.competition&&m.competition.short==='PL';})
-      .sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);});
-    var round=1;
-    allPL.forEach(function(m){
-      if(m.tbd==='postponed'||m.tbd==='canceled'){m.round=null;return;}
-      m.round='pl'+round;
-      ROUND_LABEL['pl'+round]=round+'라운드';
-      round++;
-    });
+    assignPlRounds([...(data.finished||[]),...(data.upcoming||[])]);
     window._allMatchesForCal = data.matches||[];
     if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')) renderCalendarMonth();
     function renderList(el,showList,allList){
@@ -1159,6 +1170,7 @@ function getSeasonMatches(season){
   if(_resultsCache[season]) return Promise.resolve(_resultsCache[season]);
   return apiFetch(FN+'/football?type=results&season='+season).then(function(data){
     var m = data.matches||[];
+    assignPlRounds(m);
     _resultsCache[season] = m;
     return m;
   }).catch(function(){
