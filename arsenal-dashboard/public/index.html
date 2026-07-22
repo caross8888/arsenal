@@ -180,6 +180,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .media-seg{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
 .media-seg-btn{background:var(--surface2);border:none;color:var(--text-muted);font-family:var(--fb);font-size:12px;font-weight:700;padding:10px 4px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
 .media-seg-btn.active{background:var(--red-dark);color:#fff;}
+.media-seg-btn.active .media-seg-icon{color:var(--gold);}
 /* ── Timeline Section ───────────────────── */
 .tl-wrap{position:relative;}
 .tl-wrap::before{content:'';position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--red) 0%,#ff6b35 30%,var(--gold) 60%,#4CAF50 100%);opacity:.45;}
@@ -747,8 +748,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <section id="media" class="section">
   <div class="sec-head"><h1 class="sec-title">미디어</h1><span class="sec-badge" id="mediaBadge">로딩 중</span></div>
   <div class="media-seg">
-    <button class="media-seg-btn active" onclick="switchMedia('news',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg> 뉴스</button>
-    <button class="media-seg-btn" onclick="switchMedia('sns',this)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1"/></svg> SNS</button>
+    <button class="media-seg-btn active" onclick="switchMedia('news',this)"><svg class="media-seg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg> 뉴스</button>
+    <button class="media-seg-btn" onclick="switchMedia('sns',this)"><svg class="media-seg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1"/></svg> SNS</button>
   </div>
   <div id="mediaNews">
     <div class="news-list" id="newsGrid"><div class="loading-state"><div class="spinner"></div><span>뉴스 로딩 중...</span></div></div>
