@@ -214,11 +214,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hist-filter-btn{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:6px 13px;border:1px solid var(--border);border-radius:20px;background:none;font-size:11px;font-weight:600;color:var(--text-dim);cursor:pointer;transition:all .18s;white-space:nowrap;}
 .hist-filter-btn.active{background:var(--red);color:#fff;border-color:var(--red);}
 .hist-filter-btn .hf-icon{font-size:13px;}
-.hist-nav{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border);margin-bottom:16px;}
-.hist-nav::-webkit-scrollbar{display:none;}
-.hist-nav-btn{flex-shrink:0;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .18s;}
-.hist-nav-btn.active{color:#fff;border-bottom-color:var(--red);}
+/* 선수단 필터(.f-btns)와 동일한 방식 — 세그먼트끼리 1px 틈으로만 구분되고
+   바깥 양 끝만 둥글게, 활성 탭만 넓어지고 나머지는 아이콘만 남도록 압축 */
+.hist-nav{display:flex;gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.hist-nav-btn{display:flex;align-items:center;justify-content:center;gap:5px;flex:1 1 0;min-width:0;height:38px;padding:0;border:none;background:var(--surface2);color:var(--text-dim);cursor:pointer;transition:flex .25s ease,background .2s,color .2s;-webkit-tap-highlight-color:transparent;}
+.hist-nav-btn svg{width:15px;height:15px;flex-shrink:0;transition:color .2s;}
+.hist-nav-label{font-size:10px;font-weight:700;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;opacity:0;transition:max-width .25s ease,opacity .2s;}
+.hist-nav-btn.active{flex:2.4 1 auto;background:var(--red-dark);color:#fff;padding:0 10px;}
 .hist-nav-btn.active svg{color:var(--gold);}
+.hist-nav-btn.active .hist-nav-label{max-width:100px;opacity:1;}
 .hist-section{animation:fadeIn .2s ease;}
 /* Stadium */
 .stad-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:24px;}
@@ -1822,7 +1826,7 @@ function renderHistoryNew(){
   HIST_TABS.forEach(function(tab){
     html += '<button class="hist-nav-btn'+(_histTab===tab?' active':'')+'" data-tab="'+tab+'" onclick="switchHistTab(\'' + tab + '\')">';
     html += HIST_TAB_ICONS[tab];
-    html += HIST_TAB_LABELS[tab];
+    html += '<span class="hist-nav-label">'+HIST_TAB_LABELS[tab]+'</span>';
     html += '</button>';
   });
   html += '</div>';
@@ -1833,7 +1837,6 @@ function renderHistoryNew(){
   html += '</div>';
 
   el.innerHTML = html;
-  initDragScroll(document.querySelector('.hist-nav'));
 }
 
 function initDragScroll(el){
