@@ -630,7 +630,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-meta-row{font-size:9px;color:var(--text-secondary);text-align:center;white-space:nowrap;letter-spacing:.3px;}
 .mm-meta-date{font-size:10px;font-weight:700;color:var(--text-secondary);}
 .mm-meta-comp{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.07);color:var(--text-secondary);border:1px solid var(--border);margin-top:1px;}
-.mm-section{padding:14px 14px 14px;}
+.mm-section{padding:14px 6px 14px;}
 .mm-section-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
 .mm-card{margin:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;}
 .mm-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.5);padding:14px 14px 0;}
@@ -684,8 +684,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-pos-fw{background:#B91C1C;color:#FEE2E2;}
 .mm-pos-sub{background:#374151;color:#D1D5DB;}
 .mm-sub-title{font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;padding:8px 6px 4px;border-top:1px solid var(--border);}
-.mm-lineup-block{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden;}
-.mm-lineup-block-title{font-size:12px;font-weight:700;letter-spacing:.3px;color:#fff;padding:10px 12px;background:rgba(255,255,255,.05);}
+.mm-lineup-block+.mm-lineup-block{margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.mm-lineup-block-title{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--text-secondary);padding:0 0 8px;}
 .mm-player-table{width:100%;border-collapse:collapse;font-size:11px;}
 .mm-player-table th{font-size:9px;letter-spacing:.2px;text-transform:uppercase;color:var(--text-muted);padding:5px 3px;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap;}
 .mm-player-table th:first-child{text-align:left;padding-left:12px;}
@@ -697,8 +697,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-tab{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:10px;padding:5px 12px;border-radius:20px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
 .mm-tab img{border-radius:50%;object-fit:cover;flex-shrink:0;}
 .mm-tab.active{background:rgba(239,1,7,.15);border-color:rgba(239,1,7,.4);color:var(--red);}
-/* 라이브 상세패널 상단 탭 — 선수단 탭(.f-btns)과 동일한 세그먼트 테마 */
-.live-tabs{display:flex;gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin:10px 0 0;}
+/* 라이브 상세패널 상단 탭 — 선수단 탭(.f-btns)과 동일한 세그먼트 테마.
+   리더보드(.lb-tabs)처럼 탭과 하단 컨텐츠를 하나의 .card로 묶으므로
+   테두리/마진은 부모 .card가 담당하고 탭 자체는 배경만 준다. */
+.live-tabs{display:flex;gap:1px;background:var(--border);}
 .live-tab-btn{flex:1;background:var(--surface2);border:none;color:var(--text-muted);font-family:var(--fb);font-size:11px;font-weight:700;padding:10px 4px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
 .live-tab-btn.active{background:var(--red-dark);color:#fff;}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
@@ -3142,7 +3144,7 @@ function renderPlayerTable(side, players, visible){
   html+='</tbody></table></div>';
   // 교체
   if(subs.length){
-    html+='<div class="mm-lineup-block" style="margin-top:10px;"><div class="mm-lineup-block-title">교체</div>';
+    html+='<div class="mm-lineup-block"><div class="mm-lineup-block-title">교체</div>';
     html+='<table class="mm-player-table">'+colgroup+thead+'<tbody>';
     subs.forEach(function(p){ html+=renderPlayerRow(p); });
     html+='</tbody></table></div>';
@@ -3446,7 +3448,10 @@ function stopLiveExpandPolling(matchId){
 function buildLiveDetail(data){
   if(!data) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">데이터 없음</div>';
 
-  var h = '';
+  // 리더보드(.lb-tabs)처럼 탭 바와 하단 컨텐츠를 별개 카드로 나누지 않고
+  // 하나의 .card 안에 묶는다 — 탭별로 반복되던 .mm-card 제목도 탭 라벨과
+  // 중복이라 제거.
+  var h = '<div class="card" style="margin:10px 0 0;">';
 
   // 라인업/선수 스탯 패널에서 공용으로 쓰는 홈-어웨이 팀 전환 탭 —
   // 경기 상세모달(종료 경기)의 라인업 섹션에서 쓰는 것과 동일한
@@ -3472,11 +3477,10 @@ function buildLiveDetail(data){
   h += '</div>';
 
   // ── 골 & 이벤트 패널 ──
-  // 종료 경기 상세모달(renderMatchModal)의 .mm-card/.mm-events-table을
-  // 그대로 재사용 — 아이콘도 공용 eventIconHtml()로 동일하게 맞춘다.
+  // 종료 경기 상세모달(renderMatchModal)의 .mm-events-table을 그대로 재사용
+  // — 아이콘도 공용 eventIconHtml()로 동일하게 맞춘다.
   h += '<div class="live-tab-panel" id="live-panel-events" style="padding-top:0;">';
   var events = data.events||[];
-  h += '<div class="mm-card" style="margin:10px 0 0;"><div class="mm-card-title">골 &amp; 이벤트</div>';
   if(events.length){
     var homeEvs=events.filter(function(ev){return (ev.homeAway||ev.team)==='home';});
     var awayEvs=events.filter(function(ev){return (ev.homeAway||ev.team)!=='home';});
@@ -3495,12 +3499,10 @@ function buildLiveDetail(data){
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">이벤트 없음</div>';
   }
   h += '</div>';
-  h += '</div>';
 
   // ── 팀 스탯 패널 ──
   h += '<div class="live-tab-panel" id="live-panel-stats" style="display:none;padding-top:0;">';
   var stats = data.teamStats||[];
-  h += '<div class="mm-card" style="margin:10px 0 0;"><div class="mm-card-title">팀 스탯</div>';
   if(stats.length){
     h += '<div class="mm-stats-grid" style="padding:10px 14px 14px;">';
     stats.forEach(function(s){
@@ -3523,13 +3525,12 @@ function buildLiveDetail(data){
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">스탯 없음</div>';
   }
   h += '</div>';
-  h += '</div>';
 
   // ── 라인업 패널(선수 스탯이 이 안에 종속) ──
   // 종료 경기 상세모달과 동일하게: 라인업 카드 하나 안에 팀 전환 탭 →
   // 포메이션 피치 → 선수 스탯 테이블까지 같은 홈/어웨이 토글로 묶는다.
   // (선수 스탯을 별도 탭으로 안 두고 라인업에 종속시킴)
-  h += '<div class="live-tab-panel" id="live-panel-lineup" style="display:none;padding-top:10px;">';
+  h += '<div class="live-tab-panel" id="live-panel-lineup" style="display:none;padding-top:0;">';
   if(data.players){
     var hP=data.players.home||[], aP=data.players.away||[];
     var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
@@ -3540,24 +3541,22 @@ function buildLiveDetail(data){
     function pitchHeader(formation){
       return '<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+formation+'</span><span></span></div>';
     }
-    h += '<div class="mm-card" style="margin:10px 0 0;"><div class="mm-card-title">라인업</div>';
     h += teamSwitchTabs('lineup');
-    // 피치 래퍼에도 .mm-section(선발/교체 테이블)과 동일한 14px 좌우 인셋을
-    // 줘서 폭을 맞춘다 — 바깥 .live-side-panel에 마진을 또 주면 이중으로
-    // 겹쳐 선발/교체 카드가 피치보다 좁아 보였다.
+    // 피치는 14px 인셋 카드로, 선발/교체 표는 .mm-section의 좁은 좌우
+    // 패딩(6px)만 받아 피치보다 좌우로 더 넓게 — 의도적으로 폭을 다르게 둔다.
+    // 바깥 .live-side-panel에 마진을 또 주면 이중으로 겹쳐 좁아지므로 없앰.
     h += '<div class="live-side-panel" data-suffix="lineup-home" style="margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeader(hF)+renderPitch(hS,hF,hColor,hP)+'</div>'+renderPlayerTable('home',hP,true)+'</div>';
     h += '<div class="live-side-panel" data-suffix="lineup-away" style="display:none;margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeader(aF)+renderPitch(aS,aF,aColor,aP)+'</div>'+renderPlayerTable('away',aP,true)+'</div>';
-    h += '</div>';
   } else {
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
   }
   h += '</div>';
 
   // ── 코멘터리 패널 ──
-  h += '<div class="live-tab-panel" id="live-panel-commentary" style="display:none;padding-top:10px;">';
+  h += '<div class="live-tab-panel" id="live-panel-commentary" style="display:none;">';
   var commentary = data.commentary||[];
   if(commentary.length){
-    h += '<div style="max-height:360px;overflow-y:auto;">';
+    h += '<div style="max-height:360px;overflow-y:auto;padding:10px 14px 14px;">';
     commentary.forEach(function(c){
       h += '<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);">';
       h += '<span style="flex-shrink:0;min-width:32px;font-size:10px;color:rgba(255,255,255,0.4);font-family:var(--fm);">'+(c.minute||'')+'</span>';
@@ -3570,6 +3569,7 @@ function buildLiveDetail(data){
   }
   h += '</div>';
 
+  h += '</div>'; // .card 닫기
   return h;
 }
 
