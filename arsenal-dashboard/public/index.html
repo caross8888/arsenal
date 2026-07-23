@@ -44,7 +44,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sec-badge.live{color:var(--green);background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);animation:pulse 2s infinite}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.card-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);font-weight:700}
+.card-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-secondary);font-weight:700}
 .loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;color:var(--text-muted);font-size:12px}
 .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -165,7 +165,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .inj-pos-badge{width:38px;height:38px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;color:var(--text-muted)}
 .inj-info{flex:1;min-width:0}
 .inj-name{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.inj-detail{font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inj-detail{font-size:11px;color:var(--text-secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .inj-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
 .inj-badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:20px;font-weight:700;white-space:nowrap}
 .inj-injury{background:rgba(239,68,68,.15);color:#F87171;border:1px solid rgba(239,68,68,.3)}
@@ -176,7 +176,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sum-stat{background:var(--surface2);border-radius:10px;padding:14px;text-align:center}
 .sum-val{font-family:var(--fd);font-size:36px;line-height:1}
 .sum-val.r{color:var(--red)}.sum-val.a{color:var(--amber)}.sum-val.g{color:var(--green)}
-.sum-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-top:4px}
+.sum-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text-secondary);margin-top:4px}
 .news-list{display:flex;flex-direction:column;gap:10px}
 .media-seg{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
 .media-seg-btn{background:var(--surface2);border:none;color:var(--text-muted);font-family:var(--fb);font-size:12px;font-weight:700;padding:10px 4px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
@@ -406,7 +406,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .news-body{padding:12px 14px}
 .news-hl{font-weight:700;font-size:13px;line-height:1.4;margin-bottom:6px;color:var(--text)}
 .news-ex{font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.news-foot{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim)}
+.news-foot{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text-secondary)}
 .live-setup{background:var(--surface);border:1px solid var(--border-accent);border-radius:12px;padding:16px;margin-bottom:16px}
 .live-setup-title{font-weight:700;font-size:13px;margin-bottom:4px}
 .live-setup-sub{font-size:11px;color:var(--text-muted);margin-bottom:14px}
@@ -669,7 +669,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sns-author{flex:1;min-width:0}
 .sns-author-name{font-weight:700;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sns-author-label{font-size:10px;color:var(--text-muted)}
-.sns-time{font-size:10px;color:var(--text-dim);flex-shrink:0}
+.sns-time{font-size:10px;color:var(--text-secondary);flex-shrink:0}
 .sns-body{padding:0 14px 10px}
 .sns-text{font-size:13px;line-height:1.5;color:var(--text);white-space:pre-wrap;word-break:break-word}
 .sns-image{width:100%;max-height:200px;object-fit:cover;display:block;border-top:1px solid var(--border)}
@@ -778,7 +778,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="sec-head"><h1 class="sec-title">&#48512;&#49345; &#54788;&#54889;</h1><span class="sec-badge" id="injBadge">&#47196;&#46377; &#51473;</span></div>
   <div class="card" style="margin-bottom:16px"><div class="sum-grid" id="injSum"><div class="loading-state" style="grid-column:1/-1;padding:12px"><div class="spinner"></div></div></div></div>
   <div class="card">
-    <div class="card-head"><span class="card-title">&#54788;&#51116; &#48512;&#49345; / &#44208;&#51109; &#49440;&#49688;</span><span id="injCount" style="font-size:9px;color:var(--text-dim)"></span></div>
+    <div class="card-head"><span class="card-title">&#54788;&#51116; &#48512;&#49345; / &#44208;&#51109; &#49440;&#49688;</span><span id="injCount" style="font-size:9px;color:var(--text-secondary)"></span></div>
     <div id="injList"><div class="loading-state" style="padding:28px"><div class="spinner"></div></div></div>
   </div>
 </section>
@@ -1709,7 +1709,7 @@ function loadInjuries(){
       '<div class="sum-stat"><div class="sum-val a">'+dbtCnt+'</div><div class="sum-lbl">출전 의심</div></div>'+
       '<div class="sum-stat"><div class="sum-val" style="color:var(--text-muted)">'+outCnt+'</div><div class="sum-lbl">결장</div></div>'+
       '<div class="sum-stat"><div class="sum-val g">'+(data.availableCount||'-')+'</div><div class="sum-lbl">출전 가능</div></div>';
-    if(!injured.length){listEl.innerHTML='<div class="loading-state" style="padding:28px">🎉 현재 부상/결장 선수 없음</div>';return;}
+    if(!injured.length){listEl.innerHTML='<div class="loading-state" style="padding:28px;color:var(--green);">'+dIcon('check',20)+'<span style="color:var(--text-secondary);">현재 부상/결장 선수 없음</span></div>';return;}
     listEl.innerHTML='';
     injured.forEach(function(p){
       var row=document.createElement('div');row.className='inj-row';
@@ -1819,7 +1819,9 @@ var DETAIL_ICON_PATH = {
   stadium:  '<path d="M4 12a8 2 0 1 0 16 0a8 2 0 1 0 -16 0"/><path d="M4 12v7c0 .94 2.51 1.785 6 2v-3h4v3c3.435 -.225 6 -1.07 6 -2v-7"/><path d="M15 6h4v-3h-4v7"/><path d="M7 6h4v-3h-4v7"/>',
   calendar: '<path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/>',
   lock:     '<path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"/><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"/><path d="M8 11v-4a4 4 0 1 1 8 0v4"/>',
-  link:     '<path d="M9 15l6 -6"/><path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464"/><path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463"/>'
+  link:     '<path d="M9 15l6 -6"/><path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464"/><path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463"/>',
+  clock:    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  check:    '<path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/>'
 };
 function dIcon(name, size){
   var s = size||14;
@@ -2489,7 +2491,7 @@ function loadNews(){
       var hl=document.createElement('div');hl.className='news-hl';hl.textContent=a.title||'';
       var ex=document.createElement('div');ex.className='news-ex';ex.textContent=a.description||'';
       var ft=document.createElement('div');ft.className='news-foot';
-      ft.innerHTML='<span>&#128336; '+(a.timeAgo||'')+'</span><span style="color:var(--red);font-weight:700">\uC77D\uAE30 \u2192</span>';
+      ft.innerHTML='<span style="display:inline-flex;align-items:center;gap:4px;">'+dIcon('clock',11)+(a.timeAgo||'')+'</span><span style="color:var(--red);font-weight:700">\uC77D\uAE30 \u2192</span>';
       body.appendChild(hl);body.appendChild(ex);body.appendChild(ft);
       card.appendChild(imgDiv);card.appendChild(body);el.appendChild(card);
     });
