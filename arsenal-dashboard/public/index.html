@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@400;500;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:dark;--red:#EF0107;--red-dark:#b50004;--gold:#C8A84B;--navy:#0B0D12;--surface:#111318;--surface2:#181B22;--surface3:#1F2330;--border:rgba(255,255,255,0.07);--border-accent:rgba(200,168,75,0.3);--text:#F0F2F7;--text-muted:#7A8099;--text-dim:#4A5070;--header-subtext:rgba(255,255,255,.75);--green:#22C55E;--amber:#F59E0B;--fd:'Bebas Neue',sans-serif;--fb:'Noto Sans KR',sans-serif;--fm:'Fira Mono',monospace;--safe-bottom:env(safe-area-inset-bottom,0px);}
+:root{color-scheme:dark;--red:#EF0107;--red-dark:#b50004;--gold:#C8A84B;--navy:#0B0D12;--surface:#111318;--surface2:#181B22;--surface3:#1F2330;--border:rgba(255,255,255,0.07);--border-accent:rgba(200,168,75,0.3);--text:#F0F2F7;--text-muted:#7A8099;--text-dim:#4A5070;--text-secondary:rgba(255,255,255,.75);--green:#22C55E;--amber:#F59E0B;--fd:'Bebas Neue',sans-serif;--fb:'Noto Sans KR',sans-serif;--fm:'Fira Mono',monospace;--safe-bottom:env(safe-area-inset-bottom,0px);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--navy);color:var(--text);font-family:var(--fb);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;padding-bottom:calc(64px + var(--safe-bottom));}
@@ -196,7 +196,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tl-right:active{opacity:.75;}
 .tl-right-spacer{height:18px;margin-bottom:7px;}
 .tl-title{font-size:13px;font-weight:800;color:var(--text);line-height:1.35;margin-bottom:6px;}
-.tl-summary{font-size:11px;color:var(--text-muted);line-height:1.65;}
+.tl-summary{font-size:11px;color:var(--text-secondary);line-height:1.65;}
 .tl-more{display:inline-block;margin-top:6px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--red);}
 /* ── History Tab ─────────────────────────── */
 .hist-otd-wrap{margin-bottom:16px;}
@@ -232,7 +232,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stad-photo img{width:100%;height:100%;object-fit:cover;display:block;}
 .stad-info{padding:10px 12px 12px;}
 .stad-name{font-size:13px;font-weight:900;color:var(--text);margin-bottom:2px;}
-.stad-sub{font-size:10px;color:var(--text-dim);margin-bottom:6px;}
+.stad-sub{font-size:10px;color:var(--text-secondary);margin-bottom:6px;}
 .stad-years{display:inline-block;font-size:10px;font-weight:700;color:var(--red);background:rgba(239,1,7,.08);border:1px solid rgba(239,1,7,.2);border-radius:4px;padding:2px 7px;}
 .stad-cap{font-size:10px;color:var(--text-muted);margin-top:5px;}
 /* Records */
@@ -241,12 +241,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .rec-subnav-btn{flex-shrink:0;padding:8px 13px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .18s;}
 .rec-subnav-btn.active{color:var(--red);border-bottom-color:var(--red);}
 .rec-group{margin-bottom:20px;}
-.rec-group-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.rec-group-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-secondary);padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:10px;}
 .rec-row{display:flex;align-items:baseline;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px;}
 .rec-row:last-child{border-bottom:none;}
-.rec-label{font-size:12px;color:var(--text-muted);flex:1;line-height:1.4;}
+.rec-label{font-size:12px;color:var(--text-secondary);flex:1;line-height:1.4;}
 .rec-value{font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;font-family:var(--fd);}
-.rec-note{font-size:10px;color:var(--text-dim);margin-top:2px;}
+.rec-note{font-size:10px;color:var(--text-secondary);margin-top:2px;}
 .rec-highlight{background:rgba(212,175,55,.07);border-radius:8px;padding:10px 12px;margin-bottom:12px;border:1px solid rgba(212,175,55,.15);}
 .rec-highlight .rec-label{color:var(--gold);font-weight:700;}
 .rec-highlight .rec-value{color:var(--gold);}
@@ -258,7 +258,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mom-rank-badge{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.7);color:var(--gold);font-size:10px;font-weight:900;min-width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:1px solid rgba(200,168,75,.4);font-family:var(--fd);letter-spacing:.5px;}
 .mom-info{padding:8px 10px 10px;}
 .mom-title{font-size:11px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:3px;}
-.mom-year{font-size:10px;color:var(--text-dim);}
+.mom-year{font-size:10px;color:var(--text-secondary);}
 /* Legends */
 .lgd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-bottom:24px;}
 .lgd-card{background:var(--surface2);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;}
@@ -270,7 +270,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .lgd-card-name{font-size:11px;font-weight:800;color:#fff;line-height:1.2;}
 .lgd-card-sub{font-size:9px;color:rgba(255,255,255,.5);margin-top:2px;letter-spacing:.2px;}
 .lgd-section{margin-top:22px;}
-.lgd-section-body{font-size:13px;color:var(--text-muted);line-height:1.8;margin:0;}
+.lgd-section-body{font-size:13px;color:var(--text-secondary);line-height:1.8;margin:0;}
 /* 상세모달 공용 소제목 — 본문(13px)보다 작고 흐릿하면 안 되니 확실히
    더 굵고 크게, 색도 밝은 레드로 (레전드 모달 소제목 스타일이 원조) */
 .detail-section-label{font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(239,1,7,.2);}
@@ -301,8 +301,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mgr-modal-photo img{width:100%;height:100%;object-fit:cover;object-position:top;}
 .mgr-modal-photo-overlay{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,rgba(10,10,16,.95),transparent);}
 .mgr-modal-name{font-size:20px;font-weight:900;color:var(--text);}
-.mgr-modal-period{font-size:12px;color:var(--header-subtext);margin-top:2px;}
-.mgr-modal-bio{padding:14px 16px;font-size:13px;color:var(--text-muted);line-height:1.7;}
+.mgr-modal-period{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+.mgr-modal-bio{padding:14px 16px;font-size:13px;color:var(--text-secondary);line-height:1.7;}
 .mgr-modal-trophies{padding:0 16px 20px;}
 .mgr-trophy-row{font-size:12px;color:var(--text-muted);padding:6px 0;border-bottom:1px solid var(--border);}
 
@@ -332,7 +332,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .trophy-cabinet{margin-bottom:16px;}
 .trophy-cabinet-header{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
 .trophy-cabinet-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);}
-.trophy-cabinet-total{font-size:10px;color:var(--text-dim);}
+.trophy-cabinet-total{font-size:10px;color:var(--text-secondary);}
 
 /* 2열 그리드 */
 .trophy-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
@@ -347,13 +347,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 /* 하단 정보 */
 .trophy-card-info{padding:7px 8px 9px;text-align:center;}
-.trophy-card-name{font-size:9px;font-weight:700;color:var(--text-muted);line-height:1.3;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.trophy-card-name{font-size:9px;font-weight:700;color:var(--text-secondary);line-height:1.3;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .trophy-card-count-wrap{display:flex;align-items:baseline;justify-content:center;gap:3px;}
 .trophy-card-count{font-size:22px;font-weight:900;line-height:1;font-family:var(--fd);}
 .trophy-card-count.gold{color:var(--gold);}
 .trophy-card-count.silver{color:#aaa;}
 .trophy-card-count.bronze{color:#cd7f32;}
-.trophy-card-wins{font-size:8px;color:var(--text-dim);font-weight:600;}
+.trophy-card-wins{font-size:8px;color:var(--text-secondary);font-weight:600;}
 .trophy-card-record{font-size:8px;color:var(--gold);font-weight:700;margin-top:2px;}
 
 /* Trophy 모달 */
@@ -367,8 +367,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .trophy-modal-count.bronze{color:#cd7f32;}
 .trophy-modal-wins-label{font-size:10px;color:var(--text-dim);font-weight:600;letter-spacing:1px;text-transform:uppercase;}
 .trophy-modal-title{font-size:16px;font-weight:800;color:var(--text);padding:0 16px 6px;}
-.trophy-modal-summary{font-size:12px;color:var(--text-muted);line-height:1.65;padding:0 16px 10px;}
-.trophy-modal-body{font-size:13px;color:var(--text-muted);line-height:1.75;padding:0 16px 12px;}
+.trophy-modal-summary{font-size:12px;color:var(--text-secondary);line-height:1.65;padding:0 16px 10px;}
+.trophy-modal-body{font-size:13px;color:var(--text-secondary);line-height:1.75;padding:0 16px 12px;}
 /* 상세모달 공용 골드 콜아웃 — 트로피 모달의 핵심 기록, 타임라인 모달의
    인물 태그 등 강조 박스를 하나의 스타일로 통일 */
 .detail-callout{display:flex;align-items:flex-start;gap:8px;margin:0 16px 16px;padding:10px 12px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.25);border-radius:10px;font-size:11px;color:var(--gold);font-weight:600;line-height:1.5;}
@@ -466,7 +466,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-photo{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);flex-shrink:0;}
 .pm-photo-ph{width:68px;height:68px;border-radius:50%;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;color:#fff;flex-shrink:0;}
 .pm-name{font-family:var(--fd);font-size:22px;color:#fff;letter-spacing:1px;line-height:1.1;}
-.pm-club{font-size:12px;color:var(--header-subtext);margin-top:3px;display:flex;align-items:center;gap:5px;}
+.pm-club{font-size:12px;color:var(--text-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;}
 .pm-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border-radius:20px;padding:2px 8px;font-size:10px;color:rgba(255,255,255,.85);margin-top:5px;}
 /* 상세모달 공용 기본정보 그리드 — 헤더 바로 아래 표처럼 붙여서 보여주는
    방식(선수 상세모달 원조). 헤더와 분리된 별도 박스가 아니라 헤더에 바로
@@ -569,9 +569,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-center-col{display:flex;flex-direction:column;align-items:center;gap:5px;padding:0 6px;}
 .mm-score{font-family:var(--fd);font-size:30px;font-weight:900;color:#fff;letter-spacing:2px;line-height:1;}
 .mm-center-meta{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;}
-.mm-meta-row{font-size:9px;color:var(--header-subtext);text-align:center;white-space:nowrap;letter-spacing:.3px;}
-.mm-meta-date{font-size:10px;font-weight:700;color:var(--header-subtext);}
-.mm-meta-comp{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.07);color:var(--header-subtext);border:1px solid var(--border);margin-top:1px;}
+.mm-meta-row{font-size:9px;color:var(--text-secondary);text-align:center;white-space:nowrap;letter-spacing:.3px;}
+.mm-meta-date{font-size:10px;font-weight:700;color:var(--text-secondary);}
+.mm-meta-comp{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.07);color:var(--text-secondary);border:1px solid var(--border);margin-top:1px;}
 .mm-section{padding:14px 14px 14px;}
 .mm-section-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
 .mm-card{margin:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;}
@@ -1943,7 +1943,7 @@ function openTimelineModal(enc){
   html += '<div style="padding:16px 18px 0">';
   html += '<div class="detail-callout" style="margin:0 0 14px;"><span class="detail-callout-icon">'+dIcon('user',14)+'</span>'+d.person+'</div>';
   var eventHtml = (d.event||'').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
-  html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:24px">'+eventHtml+'</div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:24px">'+eventHtml+'</div>';
   html += '</div>';
   document.getElementById('modalContent').innerHTML = html;
   document.getElementById('playerModal').classList.add('open');
@@ -1988,7 +1988,7 @@ function openStadiumModal(enc){
   // 헤더
   html += '<div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--red);margin-bottom:4px">'+s.years+'</div>';
   html += '<div style="font-size:22px;font-weight:900;color:var(--text);line-height:1.2;margin-bottom:4px">'+s.name+'</div>';
-  html += '<div style="font-size:12px;color:var(--header-subtext);">'+s.subtitle+'</div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);">'+s.subtitle+'</div>';
   html += '</div>';
   // 기본 정보 — 헤더 바로 아래 표처럼 붙여서(선수 상세모달과 동일한 컴포넌트)
   html += '<div class="detail-info-grid">';
@@ -2002,7 +2002,7 @@ function openStadiumModal(enc){
   (s.sections||[]).forEach(function(sec){
     html += '<div class="detail-section-label">'+sec.title+'</div>';
     var bodyHtml = (sec.body||'').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
-    html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:16px;">'+bodyHtml+'</div>';
+    html += '<div style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:16px;">'+bodyHtml+'</div>';
   });
   html += '</div>';
   content.innerHTML = html;
@@ -2051,7 +2051,7 @@ function openMomentModal(enc){
   html += '</div>';
   html += '<div style="padding:16px 18px 0">';
   var bodyHtml = (m.body||'').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
-  html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:20px">'+bodyHtml+'</div>';
+  html += '<div style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:20px">'+bodyHtml+'</div>';
   if(m.link) html += '<a href="'+m.link+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--gold);text-decoration:none;padding:9px 14px;border:1px solid rgba(200,168,75,.35);border-radius:8px;background:rgba(200,168,75,.07);margin-bottom:24px;transition:background .2s" onmouseover="this.style.background=\'rgba(200,168,75,.15)\'" onmouseout="this.style.background=\'rgba(200,168,75,.07)\'">공식 아스날 페이지에서 더 보기 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 2M10 2H5M10 2V7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
   html += '</div>';
   content.innerHTML = html;
@@ -2239,8 +2239,8 @@ function openLegendModal(enc){
   html += '<div style="font-size:22px;font-weight:900;color:var(--text);line-height:1.15;">'+lgd.name+'</div>';
   html += '<div style="margin-top:5px;display:flex;gap:10px;align-items:center;">';
   html += '<span style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.5px;">'+lgd.position+'</span>';
-  html += '<span style="font-size:10px;color:var(--header-subtext);">'+lgd.nationality+'</span>';
-  html += '<span style="font-size:10px;color:var(--header-subtext);">'+lgd.years+'</span>';
+  html += '<span style="font-size:10px;color:var(--text-secondary);">'+lgd.nationality+'</span>';
+  html += '<span style="font-size:10px;color:var(--text-secondary);">'+lgd.years+'</span>';
   html += '</div>';
   html += '</div>';
   html += '</div>';
@@ -2252,7 +2252,7 @@ function openLegendModal(enc){
   // 바이오
   html += '<div style="padding:16px 16px 28px;">';
   if(lgd.bio){
-    html += '<p style="font-size:13px;color:var(--text-muted);line-height:1.75;margin:0;">'+lgd.bio+'</p>';
+    html += '<p style="font-size:13px;color:var(--text-secondary);line-height:1.75;margin:0;">'+lgd.bio+'</p>';
   }
   if(lgd.sections && lgd.sections.length){
     lgd.sections.forEach(function(s){
@@ -2290,12 +2290,12 @@ function openOtdModal(enc){
   }
   html += '<div style="padding:14px 16px 14px;width:100%;box-sizing:border-box;">';
   html += '<div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:6px;">ON THIS DAY</div>';
-  if(dateStr) html += '<div style="font-size:13px;font-weight:700;color:var(--header-subtext);margin-bottom:4px;">'+dateStr+'</div>';
+  if(dateStr) html += '<div style="font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;">'+dateStr+'</div>';
   html += '<div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.3;">'+item.title+'</div>';
   html += '</div>';
   html += '</div>';
   html += '<div style="padding:0 16px 24px;">';
-  if(item.summary) html += '<p style="font-size:13px;color:var(--text-muted);line-height:1.7;margin:14px 0 0;">'+item.summary+'</p>';
+  if(item.summary) html += '<p style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin:14px 0 0;">'+item.summary+'</p>';
   if(item.headline) html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(239,1,7,.08);border-left:3px solid var(--red);border-radius:4px;font-size:12px;font-weight:700;color:var(--red);">'+item.headline+'</div>';
   html += '</div>';
   content.innerHTML = html;
@@ -2335,7 +2335,7 @@ function openTrophyDetailModal(enc){
   if(t.content){
     var paras = t.content.split(/\n\n+/).filter(function(p){ return p.trim(); });
     html += paras.map(function(p){
-      return '<p style="font-size:13px;color:var(--text-muted);line-height:1.75;margin:14px 0 0;">'+p.trim()+'</p>';
+      return '<p style="font-size:13px;color:var(--text-secondary);line-height:1.75;margin:14px 0 0;">'+p.trim()+'</p>';
     }).join('');
   }
 
@@ -2408,7 +2408,7 @@ function openManagerModal(enc){
   // 헤더
   html += '<div class="mm-header">';
   html += '<div class="mgr-modal-name">'+mgr.name+'</div>';
-  html += '<div style="font-size:11px;color:var(--header-subtext);margin-top:2px;">'+mgr.name_en+'</div>';
+  html += '<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">'+mgr.name_en+'</div>';
   html += '<div class="mgr-modal-period">'+mgr.period+'</div>';
   html += '</div>';
   // 기본 정보 — 헤더 바로 아래 표처럼 붙여서(선수 상세모달과 동일한 컴포넌트)
