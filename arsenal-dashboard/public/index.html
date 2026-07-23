@@ -224,7 +224,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    gap은 비활성 상태(라벨이 안 보임)일 땐 0으로 둔다 — flex gap은 자식의
    실제 폭이 0이어도 예약되기 때문에, 라벨이 안 보이는데 gap만 남아있으면
    아이콘이 진짜 중앙에서 gap의 절반만큼 밀려 보인다(쏠림의 실제 원인). */
-.hist-nav-btn{box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:0;flex:0 0 40px;height:40px;padding:0;border:none;background:var(--surface2);color:var(--text-dim);cursor:pointer;transition:flex-grow .25s ease,flex-basis .25s ease,gap .2s ease,padding .25s ease,background .2s,color .2s;-webkit-tap-highlight-color:transparent;overflow:hidden;}
+.hist-nav-btn{box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:0;flex:0 0 34px;height:40px;padding:0;border:none;background:var(--surface2);color:var(--text-dim);cursor:pointer;transition:flex-grow .25s ease,flex-basis .25s ease,gap .2s ease,padding .25s ease,background .2s,color .2s;-webkit-tap-highlight-color:transparent;overflow:hidden;}
 .hist-nav-btn svg{width:17px;height:17px;flex-shrink:0;transition:color .2s;}
 /* 라벨은 등장할 때(비활성→활성)만 지연시킨다 — 박스가 넓어지는 도중에
    라벨까지 같이 나타나면 겹쳐 보이기 때문. 반대로 사라질 때(활성→비활성)는
