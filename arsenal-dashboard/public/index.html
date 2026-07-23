@@ -235,10 +235,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stad-sub{font-size:10px;color:var(--text-secondary);margin-bottom:6px;}
 .stad-years{display:inline-block;font-size:10px;font-weight:700;color:var(--red);background:rgba(239,1,7,.08);border:1px solid rgba(239,1,7,.2);border-radius:4px;padding:2px 7px;}
 .stad-cap{font-size:10px;color:var(--text-muted);margin-top:5px;}
-/* Records */
-.rec-subnav{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;margin-bottom:16px;border-bottom:1px solid var(--border);}
-.rec-subnav::-webkit-scrollbar{display:none;}
-.rec-subnav-btn{flex-shrink:0;padding:8px 13px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .18s;}
+/* Records — 스크롤 대신 6개가 폭에 맞춰 비율대로 나눠 갖는 방식 */
+.rec-subnav{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border);}
+.rec-subnav-btn{flex:1 1 0;min-width:0;padding:8px 4px;font-size:10px;font-weight:700;letter-spacing:.2px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .18s;}
 .rec-subnav-btn.active{color:var(--red);border-bottom-color:var(--red);}
 .rec-group{margin-bottom:20px;}
 .rec-group-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-secondary);padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:10px;}
@@ -1858,26 +1857,6 @@ function renderHistoryNew(){
   el.innerHTML = html;
 }
 
-function initDragScroll(el){
-  if(!el) return;
-  var isDown = false, startX, scrollLeft;
-  el.addEventListener('mousedown', function(e){
-    isDown = true; el.style.cursor='grabbing';
-    startX = e.pageX - el.offsetLeft;
-    scrollLeft = el.scrollLeft;
-  });
-  el.addEventListener('mouseleave', function(){ isDown=false; el.style.cursor=''; });
-  el.addEventListener('mouseup', function(){ isDown=false; el.style.cursor=''; });
-  el.addEventListener('mousemove', function(e){
-    if(!isDown) return;
-    e.preventDefault();
-    el.scrollLeft = scrollLeft - (e.pageX - el.offsetLeft - startX);
-  });
-  el.addEventListener('wheel', function(e){
-    if(e.deltaY !== 0){ e.preventDefault(); el.scrollLeft += e.deltaY; }
-  }, {passive:false});
-}
-
 function switchHistTab(tab){
   _histTab = tab;
   document.querySelectorAll('.hist-nav-btn').forEach(function(b){
@@ -2062,12 +2041,12 @@ function openMomentModal(enc){
 
 // ── RECORDS 섹션 ──
 var REC_TABS = [
-  {key:'appearances', label:'출전 & 관중'},
-  {key:'goalscorers', label:'득점 기록'},
-  {key:'scorelines',  label:'스코어라인'},
-  {key:'firsts',      label:'최초 기록'},
-  {key:'unbeaten49',  label:'49경기 무패'},
-  {key:'nld',         label:'vs 토트넘'}
+  {key:'appearances', label:'출전'},
+  {key:'goalscorers', label:'득점'},
+  {key:'scorelines',  label:'스코어'},
+  {key:'firsts',      label:'최초'},
+  {key:'unbeaten49',  label:'무패'},
+  {key:'nld',         label:'vs토트넘'}
 ];
 var _recTab = 'appearances';
 
@@ -2081,7 +2060,6 @@ function renderRecordsSection(){
   });
   html += '</div>';
   html += '<div id="recSection">'+renderRecTab(_recTab, DATA)+'</div>';
-  setTimeout(function(){ initDragScroll(document.getElementById('recSubnav')); }, 0);
   return html;
 }
 
@@ -2092,8 +2070,6 @@ function switchRecTab(key){
   });
   var DATA = window._recordsData || {};
   document.getElementById('recSection').innerHTML = renderRecTab(key, DATA);
-  var nav = document.getElementById('recSubnav');
-  if(nav) initDragScroll(nav);
 }
 
 function renderRecTab(key, DATA){
