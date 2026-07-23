@@ -859,6 +859,7 @@ var FN='/api';
 var stdExpanded=false;
 var allStandings=[];
 var allPlayers=[];
+var _sqActiveFilter='all';
 
 // 포지션 색상 설정
 var POS_KO={GK:'GK',DF:'DF',MF:'MF',FW:'FW'};
@@ -904,6 +905,23 @@ function apiFetch(url){
     return r.json();
   });
 }
+// 새로고침/재방문할 때마다 스피너부터 도는 게 불편하다는 피드백으로 도입 —
+// 라이브 폴링처럼 항상 최신이어야 하는 곳 말고, 몇 분~몇 시간 단위로만
+// 바뀌는 데이터(일정/순위/선수단/부상/미디어)는 localStorage에 있던 직전
+// 결과를 즉시 렌더링해서 먼저 보여주고, 그 사이 최신 데이터를 백그라운드로
+// 받아와서 조용히 다시 렌더링(같은 콜백 재호출)한다. 캐시가 없으면(첫 방문)
+// 기존과 동일하게 로딩 상태 → 결과 순서로 동작한다.
+function apiFetchCached(url, cacheKey, onData, onError){
+  var cached = null;
+  try{ var raw = localStorage.getItem('cache_'+cacheKey); if(raw) cached = JSON.parse(raw); }catch(e){}
+  if(cached) onData(cached, true);
+  apiFetch(url).then(function(data){
+    try{ localStorage.setItem('cache_'+cacheKey, JSON.stringify(data)); }catch(e){}
+    onData(data, false);
+  }).catch(function(err){
+    if(!cached && onError) onError(err);
+  });
+}
 function showErr(el,msg){el.innerHTML='<div class="error-state">&#9888;&#65039; '+msg+'</div>';}
 
 // ESPN의 라운드 표기가 대회/시즌마다 제각각이라(예: "Group Stage" vs
@@ -930,14 +948,20 @@ function getRoundLabel(round){
 }
 // PL(프리미어리그) 경기는 ESPN이 라운드 번호를 안 주므로, 아스날의 시즌 내
 // PL 경기를 날짜순 정렬해 순번을 매겨 몇 라운드인지 직접 계산한다.
+// finished/upcoming을 합친 배열에는 시즌 경계(8월)를 걸쳐 두 시즌 경기가
+// 섞여 들어올 수 있다(예: 여름 휴식기엔 직전 시즌 38경기 전부 + 새 시즌
+// 일정이 함께 옴) — 시즌별로 라운드 카운터를 따로 둬야, 새 시즌 첫 경기가
+// 직전 시즌 라운드 뒤(예: 39라운드)로 이어 붙지 않고 1라운드부터 다시 시작한다.
 function assignPlRounds(matches){
   var pl=matches.filter(function(m){return m.competition&&m.competition.short==='PL';})
     .sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);});
-  var round=1;
+  var roundBySeason={};
   pl.forEach(function(m){
     if(m.tbd==='postponed'||m.tbd==='canceled'){m.round=null;return;}
-    m.round='pl'+round;
-    round++;
+    var d=new Date(m.utcDate);
+    var season=(d.getMonth()+1)>=8 ? d.getFullYear() : d.getFullYear()-1;
+    roundBySeason[season]=(roundBySeason[season]||0)+1;
+    m.round='pl'+roundBySeason[season];
   });
 }
 var CTAG={PL:'tag-pl',CL:'tag-cl',UCL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec',EFL:'tag-ec',CS:'tag-oth',CWC:'tag-oth',FR:'tag-oth'};
@@ -1183,7 +1207,7 @@ function buildFixCard(m){
 function loadFixtures(){
   var upEl=document.getElementById('upcomingList');
   var badge=document.getElementById('fixBadge');
-  apiFetch(FN+'/football?type=fixtures').then(function(data){
+  apiFetchCached(FN+'/football?type=fixtures', 'fixtures', function(data){
     badge.textContent='ESPN';
     var upcomingAll=data.upcoming||[];
     assignPlRounds([...(data.finished||[]),...(data.upcoming||[])]);
@@ -1212,7 +1236,7 @@ function loadFixtures(){
     // 라이브 경기 있으면 폴링 시작
     if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})) startLivePolling();
     else stopLivePolling();
-  }).catch(function(err){showErr(upEl,err.message);badge.textContent='오류';});
+  }, function(err){showErr(upEl,err.message);badge.textContent='오류';});
 }
 
 // ── 최근 결과: 연도/월 선택형 조회 ──
@@ -1543,11 +1567,11 @@ function renderCalendarMonth(){
 
 function loadStandings(){
   var el=document.getElementById('stdList');
-  apiFetch(FN+'/football?type=standings').then(function(data){
+  apiFetchCached(FN+'/football?type=standings', 'standings', function(data){
     if(data.season) document.getElementById('stdMatchday').textContent=data.season+'R';
     allStandings=data.standings||[];
     renderStandings();
-  }).catch(function(err){showErr(el,err.message);});
+  }, function(err){showErr(el,err.message);});
 }
 function renderStandings(){
   var el=document.getElementById('stdList');
@@ -1584,12 +1608,12 @@ var _leaders={goals:[],assists:[],cleanSheets:[]};
 var _leadersCat='goals';
 function loadLeaders(){
   var el=document.getElementById('ldrList');
-  apiFetch(FN+'/football?type=leaders').then(function(data){
+  apiFetchCached(FN+'/football?type=leaders', 'leaders', function(data){
     _leaders.goals=data.goals||[];
     _leaders.assists=data.assists||[];
     _leaders.cleanSheets=data.cleanSheets||[];
     renderLeaders();
-  }).catch(function(err){showErr(el,err.message);});
+  }, function(err){showErr(el,err.message);});
 }
 function renderLeaders(){
   var el=document.getElementById('ldrList');
@@ -1632,11 +1656,11 @@ function switchLbTab(tab,btn){
 function loadSquad(){
   var el=document.getElementById('sqGrid');
   var badge=document.getElementById('squadBadge');
-  apiFetch(FN+'/football?type=squad').then(function(data){
+  apiFetchCached(FN+'/football?type=squad', 'squad', function(data){
     allPlayers=data.squad||[];
     badge.textContent='FPL API';
-    renderSq('all');
-  }).catch(function(err){showErr(el,err.message);badge.textContent='\uc624\ub958';});
+    renderSq(_sqActiveFilter);
+  }, function(err){showErr(el,err.message);badge.textContent='\uc624\ub958';});
 }
 
 function renderSq(filter){
@@ -1727,7 +1751,7 @@ function loadInjuries(){
   var listEl=document.getElementById('injList');
   var sumEl=document.getElementById('injSum');
   var badge=document.getElementById('injBadge');
-  apiFetch(FN+'/football?type=injuries').then(function(data){
+  apiFetchCached(FN+'/football?type=injuries', 'injuries', function(data){
     badge.textContent='FPL API';
     var injured=data.injured||[];
     document.getElementById('injCount').textContent='총 '+injured.length+'명';
@@ -1770,7 +1794,7 @@ function loadInjuries(){
       row.appendChild(posBadge);row.appendChild(info);row.appendChild(right);
       listEl.appendChild(row);
     });
-  }).catch(function(err){showErr(listEl,err.message);badge.textContent='오류';});
+  }, function(err){showErr(listEl,err.message);badge.textContent='오류';});
 }
 
 // ── NEWS ──
@@ -2525,7 +2549,7 @@ function loadNews(){
   var el=document.getElementById('newsGrid');
   var badge=document.getElementById('newsBadge')||document.getElementById('mediaBadge');
   var mediaBadgeEl=document.getElementById('mediaBadge');
-  apiFetch(FN+'/news').then(function(data){
+  apiFetchCached(FN+'/news', 'news', function(data){
     badge.textContent=data.source||'RSS';
     if(mediaBadgeEl) mediaBadgeEl.textContent='ESPN+';
     var articles=data.articles||[];
@@ -2552,14 +2576,14 @@ function loadNews(){
       body.appendChild(hl);body.appendChild(ex);body.appendChild(ft);
       card.appendChild(imgDiv);card.appendChild(body);el.appendChild(card);
     });
-  }).catch(function(err){showErr(el,err.message);badge.textContent='\uC624\uB958';});
+  }, function(err){showErr(el,err.message);badge.textContent='\uC624\uB958';});
 }
 
 // ── SNS (Bluesky) ──
 function loadSns(){
   var el=document.getElementById('snsGrid');
   var badge=document.getElementById('snsBadge')||document.getElementById('mediaBadge');
-  apiFetch(FN+'/social').then(function(data){
+  apiFetchCached(FN+'/social', 'social', function(data){
     var posts=data.posts||[];
     if(badge) badge.textContent=posts.length+'개';
     if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
@@ -2611,7 +2635,7 @@ function loadSns(){
       a.appendChild(foot);
       el.appendChild(a);
     });
-  }).catch(function(err){
+  }, function(err){
     el.innerHTML='<div class="loading-state">오류: '+err.message+'</div>';
     if(badge) badge.textContent='오류';
   });
@@ -3694,7 +3718,7 @@ window.toggleMockLive = function(){
 
 function filterSq(f,btn){
   document.querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');renderSq(f);
+  btn.classList.add('active');_sqActiveFilter=f;renderSq(f);
 }
 
 
