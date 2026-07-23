@@ -689,6 +689,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-tab{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:10px;padding:5px 12px;border-radius:20px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
 .mm-tab img{border-radius:50%;object-fit:cover;flex-shrink:0;}
 .mm-tab.active{background:rgba(239,1,7,.15);border-color:rgba(239,1,7,.4);color:var(--red);}
+/* 라이브 상세패널 상단 탭 — 선수단 탭(.f-btns)과 동일한 세그먼트 테마 */
+.live-tabs{display:flex;gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin:10px 0 0;}
+.live-tab-btn{flex:1;background:var(--surface2);border:none;color:var(--text-muted);font-family:var(--fb);font-size:11px;font-weight:700;padding:10px 4px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
+.live-tab-btn.active{background:var(--red-dark);color:#fff;}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
 /* ── SNS ── */
 .sns-list{display:flex;flex-direction:column;gap:10px}
@@ -1204,6 +1208,25 @@ function buildFixCard(m){
   return card;
 }
 
+// 일정 미리보기(업커밍 3개 + 더보기) 렌더링 — loadFixtures와 킥오프 감시
+// 로직(경기 시작/종료 시 미리보기 갱신) 양쪽에서 재사용하려고 최상위로 뺐다.
+function renderUpcomingList(el,showList,allList){
+  el.innerHTML='';
+  if(!showList.length){el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">데이터 없음</div>';return;}
+  var expanded=false;
+  showList.forEach(function(m){el.appendChild(buildFixCard(m));});
+  if(allList.length>showList.length){
+    var btn=document.createElement('button');btn.className='more-fix-btn';
+    btn.textContent='↓ 더보기 ('+(allList.length-showList.length)+'개 더)';
+    btn.onclick=function(){
+      if(!expanded){expanded=true;el.innerHTML='';
+        allList.forEach(function(m){el.appendChild(buildFixCard(m));});
+        var col=document.createElement('button');col.className='more-fix-btn';
+        col.textContent='↑ 접기';
+        col.onclick=function(){expanded=false;renderUpcomingList(el,showList,allList);};
+        el.appendChild(col);}
+    };el.appendChild(btn);}
+}
 function loadFixtures(){
   var upEl=document.getElementById('upcomingList');
   var badge=document.getElementById('fixBadge');
@@ -1213,29 +1236,19 @@ function loadFixtures(){
     assignPlRounds([...(data.finished||[]),...(data.upcoming||[])]);
     window._allMatchesForCal = data.matches||[];
     if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')) renderCalendarMonth();
-    function renderList(el,showList,allList){
-      el.innerHTML='';
-      if(!showList.length){el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">데이터 없음</div>';return;}
-      var expanded=false;
-      showList.forEach(function(m){el.appendChild(buildFixCard(m));});
-      if(allList.length>showList.length){
-        var btn=document.createElement('button');btn.className='more-fix-btn';
-        btn.textContent='↓ 더보기 ('+(allList.length-showList.length)+'개 더)';
-        btn.onclick=function(){
-          if(!expanded){expanded=true;el.innerHTML='';
-            allList.forEach(function(m){el.appendChild(buildFixCard(m));});
-            var col=document.createElement('button');col.className='more-fix-btn';
-            col.textContent='↑ 접기';
-            col.onclick=function(){expanded=false;renderList(el,showList,allList);};
-            el.appendChild(col);}
-        };el.appendChild(btn);}
-    }
-    renderList(upEl,upcomingAll.slice(0,3),upcomingAll);
+    renderUpcomingList(upEl,upcomingAll.slice(0,3),upcomingAll);
     initResultsNav(data.finished||[], data.seasonsFetched);
     renderDday(upcomingAll);
-    // 라이브 경기 있으면 폴링 시작
-    if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})) startLivePolling();
-    else stopLivePolling();
+    // 라이브 경기 있으면 폴링 시작, 없으면 가장 가까운 예정 경기 킥오프에 맞춰
+    // 감시 타이머를 걸어둔다 — 페이지를 계속 열어두고 있어도 킥오프 시점에
+    // 자동으로 라이브 전환을 감지하기 위함(안 그러면 새로고침 전까진 못 알아챔).
+    if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})){
+      stopKickoffWatch();
+      startLivePolling();
+    } else {
+      stopLivePolling();
+      scheduleKickoffWatch(upcomingAll);
+    }
   }, function(err){showErr(upEl,err.message);badge.textContent='오류';});
 }
 
@@ -3247,14 +3260,11 @@ function loadLiveExpand(m, panel){
   var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':'eng.1';
 
   // 현재 활성 탭 기억
-  var activeTab = 'events';
+  var activeTab = 'content';
   var existing = document.getElementById('live-detail-'+m.id);
   if(existing){
-    var activeBtn = existing.querySelector('.mm-tab.active');
-    if(activeBtn){
-      var tabMap={'골&이벤트':'events','팀 스탯':'stats','라인업':'lineup','선수 스탯':'players','코멘터리':'commentary'};
-      activeTab = tabMap[activeBtn.textContent] || 'events';
-    }
+    var activeBtn = existing.querySelector('.live-tab-btn.active');
+    if(activeBtn) activeTab = activeBtn.getAttribute('data-tab') || 'content';
   }
 
   // 기존 콘텐츠 없을 때만 로딩 스피너 표시
@@ -3267,7 +3277,7 @@ function loadLiveExpand(m, panel){
     var el = document.getElementById('live-detail-'+m.id);
     if(!el) return;
     el.innerHTML = buildLiveDetail(data);
-    if(activeTab !== 'events'){
+    if(activeTab !== 'content'){
       var btn = el.querySelector('[data-tab="'+activeTab+'"]');
       if(btn) liveSwitchTab(btn, activeTab);
     }
@@ -3291,6 +3301,18 @@ function startProgressBar(matchId){
   if(!state) return;
   if(state.progressTimer) clearInterval(state.progressTimer);
   state.startTime = Date.now();
+  // 리셋 순간엔 트랜지션을 잠깐 꺼서 즉시 100%로 꽉 채운다 — 트랜지션이
+  // 걸린 채로 리셋하면 1초짜리 width 애니메이션이 다 채워지는 동안에도
+  // 실제 시간은 계속 흘러서, 바가 중간부터 시작하는 것처럼 보였다.
+  var barElReset = document.getElementById('lpb-'+matchId);
+  if(barElReset){
+    barElReset.style.transition = 'none';
+    barElReset.style.width = '100%';
+    void barElReset.offsetWidth; // 강제 리플로우로 transition:none을 확정 반영
+    barElReset.style.transition = 'width 1s linear';
+  }
+  var lblElReset = document.getElementById('lpl-'+matchId);
+  if(lblElReset) lblElReset.textContent = LIVE_REFRESH_SEC + 's';
   state.progressTimer = setInterval(function(){
     var barEl = document.getElementById('lpb-'+matchId);
     var lblEl = document.getElementById('lpl-'+matchId);
@@ -3318,14 +3340,14 @@ function startLiveExpandPolling(m, panel){
     var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':comp==='CS'?'eng.charity':comp==='FR'?'club.friendly':'eng.1';
     // 매치 상세 갱신
     var elPoll = document.getElementById('live-detail-'+m.id);
-    var activeTabPoll = 'events';
+    var activeTabPoll = 'content';
     var activeSidePoll = 'home';
     if(elPoll){
-      var ab = elPoll.querySelector('.mm-tab.active');
-      if(ab){ activeTabPoll = ab.getAttribute('data-tab') || 'events'; }
+      var ab = elPoll.querySelector('.live-tab-btn.active');
+      if(ab){ activeTabPoll = ab.getAttribute('data-tab') || 'content'; }
       var activePanel2 = elPoll.querySelector('.live-tab-panel:not([style*="none"])') || elPoll.querySelector('.live-tab-panel');
       if(activePanel2){
-        var asb = activePanel2.querySelector('.mm-tab.active[data-side]');
+        var asb = activePanel2.querySelector('.mm-team-tab.active[data-side]');
         if(asb) activeSidePoll = asb.getAttribute('data-side') || 'home';
       }
     }
@@ -3333,7 +3355,7 @@ function startLiveExpandPolling(m, panel){
       var el = document.getElementById('live-detail-'+m.id);
       if(!el) return;
       el.innerHTML = buildLiveDetail(data);
-      if(activeTabPoll !== 'events'){
+      if(activeTabPoll !== 'content'){
         var btn = el.querySelector('[data-tab="'+activeTabPoll+'"]');
         if(btn) liveSwitchTab(btn, activeTabPoll);
       }
@@ -3367,18 +3389,31 @@ function buildLiveDetail(data){
 
   var h = '';
 
+  // 라인업/선수 스탯 패널에서 공용으로 쓰는 홈-어웨이 팀 전환 탭 —
+  // 경기 상세모달(종료 경기)의 라인업 섹션에서 쓰는 것과 동일한
+  // .mm-team-tabs/.mm-team-tab 테마(엠블럼+팀명, 세로 스택)로 통일한다.
+  function teamSwitchTabs(panelName){
+    var hCrest=(data.homeTeam&&data.homeTeam.crest)||'';
+    var aCrest=(data.awayTeam&&data.awayTeam.crest)||'';
+    var hName=(data.homeTeam&&data.homeTeam.name)||'홈';
+    var aName=(data.awayTeam&&data.awayTeam.name)||'어웨이';
+    return '<div class="mm-team-tabs" style="margin-top:0;">'+
+      '<button class="mm-team-tab active" data-side="home" onclick="liveSwitchSide(this,\''+panelName+'\',\'home\')">'+(hCrest?'<img src="'+hCrest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+hName+'</span></button>'+
+      '<button class="mm-team-tab" data-side="away" onclick="liveSwitchSide(this,\''+panelName+'\',\'away\')">'+(aCrest?'<img src="'+aCrest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+aName+'</span></button>'+
+    '</div>';
+  }
 
-  // ── 탭: 이벤트 / 스탯 / 라인업 ──
-  h += '<div style="display:flex;gap:6px;margin-bottom:0;padding-top:4px;flex-wrap:wrap;">';
-  h += '<button class="mm-tab active" data-tab="events" onclick="liveSwitchTab(this,&quot;events&quot;)">골&이벤트</button>';
-  h += '<button class="mm-tab" data-tab="stats" onclick="liveSwitchTab(this,&quot;stats&quot;)">팀 스탯</button>';
-  h += '<button class="mm-tab" data-tab="lineup" onclick="liveSwitchTab(this,&quot;lineup&quot;)">라인업</button>';
-  h += '<button class="mm-tab" data-tab="players" onclick="liveSwitchTab(this,&quot;players&quot;)">선수 스탯</button>';
-  h += '<button class="mm-tab" data-tab="commentary" onclick="liveSwitchTab(this,&quot;commentary&quot;)">코멘터리</button>';
+  // ── 탭: 경기내용(이벤트+스탯) / 라인업 / 선수 스탯 / 코멘터리 ──
+  // 선수단 탭(.f-btns/.f-btn)과 동일한 세그먼트 테마로 통일
+  h += '<div class="live-tabs">';
+  h += '<button class="live-tab-btn active" data-tab="content" onclick="liveSwitchTab(this,&quot;content&quot;)">경기내용</button>';
+  h += '<button class="live-tab-btn" data-tab="lineup" onclick="liveSwitchTab(this,&quot;lineup&quot;)">라인업</button>';
+  h += '<button class="live-tab-btn" data-tab="players" onclick="liveSwitchTab(this,&quot;players&quot;)">선수 스탯</button>';
+  h += '<button class="live-tab-btn" data-tab="commentary" onclick="liveSwitchTab(this,&quot;commentary&quot;)">코멘터리</button>';
   h += '</div>';
 
-  // ── 이벤트 패널 ──
-  h += '<div class="live-tab-panel" id="live-panel-events" style="padding-top:10px;">';
+  // ── 경기내용 패널(이벤트 + 팀 스탯 통합) ──
+  h += '<div class="live-tab-panel" id="live-panel-content" style="padding-top:10px;">';
   var events = data.events||[];
   if(events.length){
     h += '<div style="padding:4px 0">';
@@ -3406,13 +3441,9 @@ function buildLiveDetail(data){
   } else {
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">이벤트 없음</div>';
   }
-  h += '</div>';
-
-  // ── 스탯 패널 ──
-  h += '<div class="live-tab-panel" id="live-panel-stats" style="display:none;padding-top:10px;">';
   var stats = data.teamStats||[];
   if(stats.length){
-    h += '<div style="padding:4px 0">';
+    h += '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">';
     stats.forEach(function(s){
       var hv=s.home||0, av=s.away||0;
       var tot=(parseFloat(hv)||0)+(parseFloat(av)||0);
@@ -3428,12 +3459,11 @@ function buildLiveDetail(data){
       h += '</div>';
     });
     h += '</div>';
-  } else {
+  } else if(!events.length){
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">스탯 없음</div>';
   }
   h += '</div>';
 
-  // ── 라인업 패널 ──
   // ── 라인업 패널 ──
   h += '<div class="live-tab-panel" id="live-panel-lineup" style="display:none;padding-top:10px;">';
   if(data.players){
@@ -3443,12 +3473,7 @@ function buildLiveDetail(data){
     var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
     var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
     var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
-    // 홈/어웨이 탭 버튼
-    h += '<div style="display:flex;gap:6px;padding:10px 0 6px;">';
-    h += '<button class="mm-tab active" data-side="home" onclick="liveSwitchSide(this,\'lineup\',\'home\')">'+(data.homeTeam&&data.homeTeam.name||'홈')+'</button>';
-    h += '<button class="mm-tab" data-side="away" onclick="liveSwitchSide(this,\'lineup\',\'away\')">'+(data.awayTeam&&data.awayTeam.name||'어웨이')+'</button>';
-    h += '</div>';
-    // 피치
+    h += teamSwitchTabs('lineup');
     // 교체 목록 렌더 함수
     function renderSubList(players){
       var subs = players.filter(function(p){ return p.starter && p.subbedOut && p.subTime; });
@@ -3467,8 +3492,8 @@ function buildLiveDetail(data){
       s += '</div>';
       return s;
     }
-    h += '<div class="live-side-panel" data-suffix="lineup-home">'+renderPitch(hS,hF,hColor,hP)+renderSubList(hP)+'</div>';
-    h += '<div class="live-side-panel" data-suffix="lineup-away" style="display:none">'+renderPitch(aS,aF,aColor,aP)+renderSubList(aP)+'</div>';
+    h += '<div class="live-side-panel" data-suffix="lineup-home" style="padding-top:10px;">'+renderPitch(hS,hF,hColor,hP)+renderSubList(hP)+'</div>';
+    h += '<div class="live-side-panel" data-suffix="lineup-away" style="display:none;padding-top:10px;">'+renderPitch(aS,aF,aColor,aP)+renderSubList(aP)+'</div>';
   } else {
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
   }
@@ -3478,13 +3503,9 @@ function buildLiveDetail(data){
   h += '<div class="live-tab-panel" id="live-panel-players" style="display:none;padding-top:10px;">';
   if(data.players){
     var hP2=data.players.home||[], aP2=data.players.away||[];
-    // 홈/어웨이 탭 버튼
-    h += '<div style="display:flex;gap:6px;padding:10px 0 6px;">';
-    h += '<button class="mm-tab active" data-side="home" onclick="liveSwitchSide(this,\'players\',\'home\')">'+(data.homeTeam&&data.homeTeam.name||'홈')+'</button>';
-    h += '<button class="mm-tab" data-side="away" onclick="liveSwitchSide(this,\'players\',\'away\')">'+(data.awayTeam&&data.awayTeam.name||'어웨이')+'</button>';
-    h += '</div>';
-    h += '<div class="live-side-panel" data-suffix="players-home">'+renderPlayerTable('home',hP2,true)+'</div>';
-    h += '<div class="live-side-panel" data-suffix="players-away" style="display:none">'+renderPlayerTable('away',aP2,true)+'</div>';
+    h += teamSwitchTabs('players');
+    h += '<div class="live-side-panel" data-suffix="players-home" style="padding-top:10px;">'+renderPlayerTable('home',hP2,true)+'</div>';
+    h += '<div class="live-side-panel" data-suffix="players-away" style="display:none;padding-top:10px;">'+renderPlayerTable('away',aP2,true)+'</div>';
   } else {
     h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">데이터 없음</div>';
   }
@@ -3512,7 +3533,7 @@ function buildLiveDetail(data){
 
 function liveSwitchSide(btn, panelId, side){
   var tabRow = btn.parentElement;
-  tabRow.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
+  tabRow.querySelectorAll('.mm-team-tab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   // 부모 live-tab-panel 찾기
   var panel = tabRow;
@@ -3528,11 +3549,11 @@ function liveSwitchTab(btn, panel){
   var tabRow = btn.parentElement;
   var container = tabRow.parentElement;
   // 탭 버튼 active 토글
-  tabRow.querySelectorAll('.mm-tab').forEach(function(b){b.classList.remove('active');});
+  tabRow.querySelectorAll('.live-tab-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   // 패널 표시 토글 (탭 행 다음 형제들)
   var panels = container.querySelectorAll('.live-tab-panel');
-  var idx = ['events','stats','lineup','players','commentary'].indexOf(panel);
+  var idx = ['content','lineup','players','commentary'].indexOf(panel);
   panels.forEach(function(p,i){p.style.display=(i===idx)?'':'none';});
 }
 
@@ -3558,19 +3579,22 @@ function startLivePolling(){
         var hs = m.score&&m.score.fullTime?m.score.fullTime.home:0;
         var as_ = m.score&&m.score.fullTime?m.score.fullTime.away:0;
         if(scoreEl) scoreEl.textContent = (hs||0)+' : '+(as_||0);
+        // 프로그레스바 리셋 — 상세 패널이 접혀있으면(상세 폴링이 안 도는 중)
+        // 이 리스트 레벨 갱신이 유일한 새로고침이므로 여기서 리셋한다.
+        // 펼쳐져 있으면 상세 폴링 쪽 리셋(startLiveExpandPolling)과 겹쳐서
+        // 서로 다른 위상으로 두 번 리셋되는 걸 피하려고 거기에 맡긴다.
+        var expandState = _liveExpandTimers[m.id];
+        if(!expandState || !expandState.timer) startProgressBar(m.id);
       });
-      // 라이브 → 종료로 바뀐 경기가 있으면 전체 리스트 갱신
+      // 라이브 → 종료로 바뀐 경기가 있으면 미리보기 갱신 후, 다음 예정 경기
+      // 킥오프에 맞춰 감시 타이머를 다시 건다.
       if(!hasLive){
         var upEl = document.getElementById('upcomingList');
-        var fnEl = document.getElementById('finishedList');
-        if(upEl && fnEl){
-          var finishedAll = (data.finished||[]).slice().reverse();
-          var upcomingAll = data.upcoming||[];
-          renderList(upEl, upcomingAll.slice(0,3), upcomingAll);
-          renderList(fnEl, finishedAll.slice(0,3), finishedAll);
-          renderDday(upcomingAll);
-        }
+        var upcomingAll = data.upcoming||[];
+        if(upEl) renderUpcomingList(upEl, upcomingAll.slice(0,3), upcomingAll);
+        renderDday(upcomingAll);
         stopLivePolling();
+        scheduleKickoffWatch(upcomingAll);
       }
     }).catch(function(){});
   }, 30000);
@@ -3578,6 +3602,68 @@ function startLivePolling(){
 function stopLivePolling(){
   if(_liveTimer){clearInterval(_liveTimer);_liveTimer=null;}
 }
+
+// ── 킥오프 감시 ──
+// 라이브 경기가 없을 때, 하루 종일 폴링하는 대신 가장 가까운 예정 경기의
+// 킥오프 시각에 맞춰 setTimeout 하나만 걸어둔다(API 호출 0회). 킥오프
+// 시각(1분 마진 포함) 근처가 되면 그때부터 1분 간격으로 몇 차례만 확인해서
+// 라이브 전환 여부를 잡아낸다 — 정시에 안 시작될 수 있으니 어느 정도
+// 지연까지 커버할 시간 동안만 확인하고, 그래도 못 잡으면 최신 일정으로
+// 다시 스케줄링한다(연기 등으로 시각 자체가 바뀌었을 수 있으므로).
+var _kickoffTimer = null;
+var _kickoffCheckTimer = null;
+var _kickoffCheckCount = 0;
+var KICKOFF_MARGIN_MS = 60*1000;      // 킥오프 1분 전부터 확인 시작
+var KICKOFF_CHECK_INTERVAL_MS = 60*1000; // 확인 간격
+var KICKOFF_CHECK_MAX = 25;           // 최대 확인 횟수(약 25분간 지연 커버)
+function scheduleKickoffWatch(upcomingMatches){
+  stopKickoffWatch();
+  var next = (upcomingMatches||[])
+    .filter(function(m){return m.utcDate && m.tbd!=='postponed' && m.tbd!=='canceled' && m.tbd!=='tbd';})
+    .sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);})[0];
+  if(!next) return;
+  var checkStartAt = new Date(next.utcDate).getTime() - KICKOFF_MARGIN_MS;
+  var delay = Math.max(0, checkStartAt - Date.now());
+  _kickoffTimer = setTimeout(startKickoffBurstCheck, delay);
+}
+function stopKickoffWatch(){
+  if(_kickoffTimer){clearTimeout(_kickoffTimer);_kickoffTimer=null;}
+  if(_kickoffCheckTimer){clearInterval(_kickoffCheckTimer);_kickoffCheckTimer=null;}
+  _kickoffCheckCount=0;
+}
+function startKickoffBurstCheck(){
+  _kickoffTimer=null;
+  _kickoffCheckCount=0;
+  checkKickoffTransition();
+  _kickoffCheckTimer=setInterval(checkKickoffTransition, KICKOFF_CHECK_INTERVAL_MS);
+}
+function checkKickoffTransition(){
+  if(document.hidden) return; // 백그라운드면 스킵 — 포그라운드 복귀 시 visibilitychange가 즉시 재확인
+  _kickoffCheckCount++;
+  apiFetch(FN+'/football?type=fixtures&nocache=1').then(function(data){
+    var hasLive = (data.matches||[]).some(function(m){return m.status==='IN_PLAY';});
+    if(hasLive){
+      stopKickoffWatch();
+      var upEl = document.getElementById('upcomingList');
+      var upcomingAll = data.upcoming||[];
+      if(upEl) renderUpcomingList(upEl, upcomingAll.slice(0,3), upcomingAll);
+      startLivePolling();
+      return;
+    }
+    if(_kickoffCheckCount>=KICKOFF_CHECK_MAX){
+      // 예상보다 많이 늦어지는 중 — 최신 일정 기준으로 다시 스케줄링
+      stopKickoffWatch();
+      scheduleKickoffWatch(data.upcoming||[]);
+    }
+  }).catch(function(){});
+}
+// 백그라운드 탭에서는 타이머가 지연/차단될 수 있으므로, 포그라운드로
+// 돌아오는 순간 확인이 밀려있었는지 바로 점검한다.
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden) return;
+  if(_kickoffCheckTimer){ checkKickoffTransition(); return; } // 이미 확인 구간이면 즉시 한 번 더
+  if(_kickoffTimer===null) return; // 감시 자체가 꺼져있으면(라이브 중 등) 무시
+});
 
 // ── 라이브 Mock 테스트 (콘솔에서 testLiveMatch() 호출) ──
 var _mockMatchDetail = null;
@@ -3608,9 +3694,9 @@ window.testLiveMatch = function(opts){
     referee: 'Michael Oliver',
     attendance: 60308,
     status: 'In Progress',
-    homeTeam: { id: '359', name: 'Arsenal',         color: '#EF0107', alternateColor: 'ffffff',
+    homeTeam: { id: '359', name: 'Arsenal',         crest: 'https://a.espncdn.com/i/teamlogos/soccer/500/359.png', color: '#EF0107', alternateColor: 'ffffff',
                 score: homeScore, stats: { possessionPct:'56%', totalShots:'12', shotsOnTarget:'5', xG:'1.8', cornerKicks:'6', offsides:'2', yellowCards:'0', redCards:'0' } },
-    awayTeam: { id: '382', name: 'Manchester City', color: '#6CABDD', alternateColor: '1c2c5b',
+    awayTeam: { id: '382', name: 'Manchester City', crest: 'https://a.espncdn.com/i/teamlogos/soccer/500/382.png', color: '#6CABDD', alternateColor: '1c2c5b',
                 score: awayScore, stats: { possessionPct:'44%', totalShots:'8',  shotsOnTarget:'3', xG:'1.1', cornerKicks:'3', offsides:'1', yellowCards:'1', redCards:'0' } },
     teamStats: [
       { label: '점유율',    home: '56%', away: '44%' },
@@ -3628,6 +3714,31 @@ window.testLiveMatch = function(opts){
       { minute: "41'", type: 'goal',      player: 'K. Havertz', homeAway: 'home' },
       { minute: "54'", type: 'goal',      player: 'E. Haaland', homeAway: 'away' },
       { minute: "63'", type: 'pen_goal',  player: 'B. Saka',    homeAway: 'home' },
+    ],
+    // 실제 /api/match.js가 ESPN 원본에서 만들어 내려주는 코멘터리 형태
+    // ({minute, text, homeAway}, 최신이 배열 맨 앞)를 그대로 흉내낸 목업.
+    // ESPN 코멘터리 텍스트는 영어 그대로 내려오므로(번역 안 함) 실제 서비스
+    // 화면과 동일하게 영어로 채운다.
+    commentary: [
+      { minute: "67'", text: 'Kevin De Bruyne (Manchester City) wins a free kick in the attacking half.', homeAway: 'away' },
+      { minute: "65'", text: 'Substitution, Manchester City. Kevin De Bruyne replaces Bernardo Silva.', homeAway: 'away' },
+      { minute: "63'", text: 'Goal! Arsenal 2, Manchester City 1. Bukayo Saka converts the penalty with a right footed shot to the bottom left corner.', homeAway: 'home' },
+      { minute: "62'", text: 'Penalty Arsenal. Kai Havertz draws a foul in the penalty area.', homeAway: 'home' },
+      { minute: "62'", text: 'Penalty conceded by Rúben Dias (Manchester City) after a foul in the penalty area.', homeAway: 'away' },
+      { minute: "58'", text: 'Substitution, Arsenal. Jurriën Timber replaces Oleksandr Zinchenko.', homeAway: 'home' },
+      { minute: "56'", text: 'Attempt saved. Bukayo Saka (Arsenal) right footed shot from the centre of the box is saved in the centre of the goal.', homeAway: 'home' },
+      { minute: "54'", text: 'Goal! Arsenal 1, Manchester City 1. Erling Haaland (Manchester City) right footed shot from the centre of the box to the top right corner.', homeAway: 'away' },
+      { minute: "49'", text: 'Corner, Manchester City. Conceded by William Saliba.', homeAway: 'away' },
+      { minute: "46'", text: 'Second half begins.', homeAway: null },
+      { minute: "45'+2'", text: 'First half ends, Arsenal 1, Manchester City 0.', homeAway: null },
+      { minute: "41'", text: 'Goal! Arsenal 1, Manchester City 0. Kai Havertz (Arsenal) header from very close range to the bottom left corner. Assisted by Martin Ødegaard with a cross.', homeAway: 'home' },
+      { minute: "33'", text: 'Attempt blocked. Declan Rice (Arsenal) right footed shot from outside the box is blocked.', homeAway: 'home' },
+      { minute: "28'", text: 'Second yellow card to Bernardo Silva (Manchester City) for a bad foul.', homeAway: 'away' },
+      { minute: "24'", text: 'Attempt missed. Jack Grealish (Manchester City) left footed shot from outside the box is close, but misses to the left.', homeAway: 'away' },
+      { minute: "17'", text: 'Corner, Arsenal. Conceded by Rúben Dias.', homeAway: 'home' },
+      { minute: "12'", text: "Goal! Arsenal 1, Manchester City 0. Bukayo Saka (Arsenal) right footed shot from the centre of the box to the bottom right corner. Assisted by Oleksandr Zinchenko.", homeAway: 'home' },
+      { minute: "3'", text: 'Attempt saved. Erling Haaland (Manchester City) right footed shot from the centre of the box is saved in the bottom right corner.', homeAway: 'away' },
+      { minute: "1'", text: 'Match begins.', homeAway: null },
     ],
     players: {
       homeFormation: '4-3-3',
