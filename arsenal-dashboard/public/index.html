@@ -473,9 +473,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    이어지는 느낌을 위해 배경/모서리/여백 없이 헤어라인만으로 셀을 구분한다.
    기존 pm-info-* 이름을 모든 상세모달에서 쓰도록 일반화 */
 .detail-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid rgba(255,255,255,.06);}
-.detail-info-cell{padding:12px 16px;border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);}
+.detail-info-cell{padding:12px 16px;border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);min-width:0;}
 .detail-info-cell:nth-child(2n){border-right:none;}
-.detail-info-val{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;}
+.detail-info-val{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;overflow-wrap:anywhere;}
 .detail-info-lbl{font-size:10px;color:rgba(255,255,255,.4);}
 /* 선수 특성 (레이더) */
 .pm-traits{padding:16px 16px 8px;}
@@ -1993,7 +1993,7 @@ function openStadiumModal(enc){
   // 기본 정보 — 헤더 바로 아래 표처럼 붙여서(선수 상세모달과 동일한 컴포넌트)
   html += '<div class="detail-info-grid">';
   html += '<div class="detail-info-cell"><div class="detail-info-val">'+s.capacity+'명</div><div class="detail-info-lbl">수용 인원</div></div>';
-  html += '<div class="detail-info-cell"><div class="detail-info-val" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+s.location+'</div><div class="detail-info-lbl">위치</div></div>';
+  html += '<div class="detail-info-cell"><div class="detail-info-val" style="font-size:12px;">'+s.location+'</div><div class="detail-info-lbl">위치</div></div>';
   html += '<div class="detail-info-cell"><div class="detail-info-val">'+s.opened+'</div><div class="detail-info-lbl">개장</div></div>';
   if(s.closed) html += '<div class="detail-info-cell"><div class="detail-info-val">'+s.closed+'</div><div class="detail-info-lbl">폐장</div></div>';
   html += '</div>';
