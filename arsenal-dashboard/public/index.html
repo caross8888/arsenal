@@ -231,12 +231,20 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    지연 없이 박스와 동시에 줄어들어야 한다 — 지연이 걸리면 박스는 이미
    줄어드는데 라벨 글자는 아직 그대로 남아있다가 뒤늦게 눌려 사라지면서
    프레임이 끊기는 것처럼 보인다. transition은 "전환 후" 상태의 값을 쓰므로
-   기본(.hist-nav-label) 쪽은 지연 없이, .active 쪽에만 지연을 준다. */
+   기본(.hist-nav-label) 쪽은 지연 없이, .active 쪽에만 지연을 준다.
+   등장할 때는 max-width를 아예 애니메이션시키지 않고 즉시 최종값으로
+   둔다 — max-width가 서서히 늘어나는 도중엔 text-overflow:ellipsis가
+   "...으로 잘림 → 전체 텍스트"로 갈아타는 임계점을 지나가는데, 이 전환이
+   딱 잘라 발생(중간값이 없음)해서 아직 opacity가 다 안 올라온 상태(반쯤
+   투명한 상태)에서 글자 수가 순간적으로 확 늘어나는 것처럼 보인다 —
+   이게 "글자 들어올 때 1프레임 깜빡이는" 원인이었다. max-width를 즉시
+   최종값으로 고정해두면 이 전환 자체가 opacity:0(안 보이는 상태)일 때
+   이미 끝나 있으므로, 그 다음 opacity만 서서히 올라와도 잘림→전체 전환이
+   보이지 않는다. */
 .hist-nav-label{font-size:11px;font-weight:700;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;opacity:0;transition:max-width .12s ease,opacity .08s ease;}
 .hist-nav-btn.active{flex:1 1 0;gap:5px;background:var(--red-dark);color:#fff;padding:0 10px;}
-.hist-nav-btn.active .hist-nav-label{max-width:110px;opacity:1;transition:max-width .13s ease .12s,opacity .1s ease .12s;}
+.hist-nav-btn.active .hist-nav-label{max-width:120px;opacity:1;transition:opacity .14s ease .18s;}
 .hist-nav-btn.active svg{color:var(--gold);}
-.hist-nav-btn.active .hist-nav-label{max-width:110px;opacity:1;}
 .hist-section{animation:fadeIn .2s ease;}
 /* Stadium */
 .stad-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:24px;}
