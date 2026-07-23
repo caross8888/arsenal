@@ -270,8 +270,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .lgd-card-name{font-size:11px;font-weight:800;color:#fff;line-height:1.2;}
 .lgd-card-sub{font-size:9px;color:rgba(255,255,255,.5);margin-top:2px;letter-spacing:.2px;}
 .lgd-section{margin-top:22px;}
-.lgd-section-title{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(239,1,7,.2);}
 .lgd-section-body{font-size:13px;color:var(--text-muted);line-height:1.8;margin:0;}
+/* 상세모달 공용 소제목 — 본문(13px)보다 작고 흐릿하면 안 되니 확실히
+   더 굵고 크게, 색도 밝은 레드로 (레전드 모달 소제목 스타일이 원조) */
+.detail-section-label{font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(239,1,7,.2);}
 .lgd-section-body strong{color:var(--gold);font-weight:800;}
 /* Managers */
 .mgr-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding-bottom:24px;}
@@ -302,7 +304,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mgr-modal-period{font-size:12px;color:var(--header-subtext);margin-top:2px;}
 .mgr-modal-bio{padding:14px 16px;font-size:13px;color:var(--text-muted);line-height:1.7;}
 .mgr-modal-trophies{padding:0 16px 20px;}
-.mgr-modal-trophies-title{font-size:11px;font-weight:700;color:var(--text-dim);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;}
 .mgr-trophy-row{font-size:12px;color:var(--text-muted);padding:6px 0;border-bottom:1px solid var(--border);}
 
 .hist-section-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;}
@@ -372,7 +373,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    인물 태그 등 강조 박스를 하나의 스타일로 통일 */
 .detail-callout{display:flex;align-items:flex-start;gap:8px;margin:0 16px 16px;padding:10px 12px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.25);border-radius:10px;font-size:11px;color:var(--gold);font-weight:600;line-height:1.5;}
 .detail-callout-icon{flex-shrink:0;font-size:13px;}
-.trophy-modal-years-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);padding:0 16px 8px;}
 .trophy-years-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 24px;}
 .trophy-year-chip{padding:5px 12px;border-radius:6px;background:rgba(239,1,7,.08);border:1px solid rgba(239,1,7,.2);font-size:12px;font-weight:700;color:var(--text);font-family:var(--fd);}
 .trophy-year-chip.latest{background:var(--red);border-color:var(--red);color:#fff;}
@@ -1993,14 +1993,14 @@ function openStadiumModal(enc){
   // 기본 정보 — 헤더 바로 아래 표처럼 붙여서(선수 상세모달과 동일한 컴포넌트)
   html += '<div class="detail-info-grid">';
   html += '<div class="detail-info-cell"><div class="detail-info-val">'+s.capacity+'명</div><div class="detail-info-lbl">수용 인원</div></div>';
-  html += '<div class="detail-info-cell"><div class="detail-info-val">'+s.location+'</div><div class="detail-info-lbl">위치</div></div>';
+  html += '<div class="detail-info-cell"><div class="detail-info-val" style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+s.location+'</div><div class="detail-info-lbl">위치</div></div>';
   html += '<div class="detail-info-cell"><div class="detail-info-val">'+s.opened+'</div><div class="detail-info-lbl">개장</div></div>';
   if(s.closed) html += '<div class="detail-info-cell"><div class="detail-info-val">'+s.closed+'</div><div class="detail-info-lbl">폐장</div></div>';
   html += '</div>';
   html += '<div style="padding:16px 18px 24px">';
   // 섹션 내용
   (s.sections||[]).forEach(function(sec){
-    html += '<div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;">'+sec.title+'</div>';
+    html += '<div class="detail-section-label">'+sec.title+'</div>';
     var bodyHtml = (sec.body||'').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
     html += '<div style="font-size:13px;color:var(--text-muted);line-height:1.8;margin-bottom:16px;">'+bodyHtml+'</div>';
   });
@@ -2257,7 +2257,7 @@ function openLegendModal(enc){
   if(lgd.sections && lgd.sections.length){
     lgd.sections.forEach(function(s){
       html += '<div class="lgd-section">';
-      html += '<div class="lgd-section-title">'+s.title+'</div>';
+      html += '<div class="detail-section-label">'+s.title+'</div>';
       html += '<p class="lgd-section-body">'+s.body+'</p>';
       html += '</div>';
     });
@@ -2345,7 +2345,7 @@ function openTrophyDetailModal(enc){
 
   if(t.year_groups && t.year_groups.length){
     t.year_groups.forEach(function(g){
-      html += '<div class="trophy-modal-years-label" style="padding:14px 0 8px 0;">'+g.label+'</div>';
+      html += '<div class="detail-section-label" style="margin:14px 0 8px;">'+g.label+'</div>';
       html += '<div style="display:flex;flex-direction:column;gap:0;">';
       g.years.forEach(function(y, i){
         var isLast = i === g.years.length - 1;
@@ -2356,7 +2356,7 @@ function openTrophyDetailModal(enc){
       html += '</div>';
     });
   } else if(t.years_detail && t.years_detail.length){
-    html += '<div class="trophy-modal-years-label" style="padding:14px 0 8px 0;">우승 연도</div>';
+    html += '<div class="detail-section-label" style="margin:14px 0 8px;">우승 연도</div>';
     html += '<div style="display:flex;flex-direction:column;gap:0;">';
     t.years_detail.forEach(function(d, i){
       var isLast = i === t.years_detail.length - 1;
@@ -2367,7 +2367,7 @@ function openTrophyDetailModal(enc){
     });
     html += '</div>';
   } else if(t.years && t.years.length){
-    html += '<div class="trophy-modal-years-label" style="padding:14px 0 8px 0;">우승 연도</div>';
+    html += '<div class="detail-section-label" style="margin:14px 0 8px;">우승 연도</div>';
     html += '<div class="trophy-years-chips" style="padding:0;">';
     var lastYear = t.years[t.years.length-1];
     t.years.forEach(function(y){
@@ -2421,7 +2421,7 @@ function openManagerModal(enc){
   // 트로피
   if(mgr.trophies && mgr.trophies.length){
     html += '<div class="mgr-modal-trophies">';
-    html += '<div class="mgr-modal-trophies-title">주요 트로피</div>';
+    html += '<div class="detail-section-label">주요 트로피</div>';
     mgr.trophies.forEach(function(tr){
       html += '<div class="mgr-trophy-row">🏆 '+tr+'</div>';
     });
