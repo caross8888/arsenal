@@ -266,7 +266,12 @@ export default async function handler(req, res) {
       seasonMatches.sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
 
       const payload = {season: requestedSeason, matches: seasonMatches};
-      setCache(cacheKey, payload);
+      // ESPN 쪽 일시적 장애/타임아웃으로 SLUGS 전부(또는 대부분) 실패하면
+      // seasonMatches가 통째로 비어버리는데, 그걸 그대로 캐시해버리면 실제로는
+      // 존재하는 시즌 데이터가 1시간(TTL) 동안 "경기 없음"으로 고정돼버린다.
+      // 이미 끝난 시즌이 진짜로 0경기일 일은 사실상 없으므로, 빈 결과는
+      // 캐시하지 않고 다음 요청 때 다시 시도하게 둔다.
+      if(seasonMatches.length > 0) setCache(cacheKey, payload);
       return res.json(payload);
 
     } else if(type === 'standings'){
