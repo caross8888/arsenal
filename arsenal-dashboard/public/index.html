@@ -491,6 +491,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-day.has-fixture{border-color:var(--red-dark);cursor:pointer;}
 .cal-day.away-fixture{border-color:#3a5a8c;}
 .cal-day.neutral-fixture{border-color:var(--gold);}
+.cal-day.cal-day-win{border-color:var(--green);background:rgba(34,197,94,.14);}
+.cal-day.cal-day-draw{border-color:#F59E0B;background:rgba(245,158,11,.14);}
+.cal-day.cal-day-loss{border-color:#EF4444;background:rgba(239,68,68,.14);}
+.cal-day.cal-day-win .cal-day-time{color:var(--green);}
+.cal-day.cal-day-draw .cal-day-time{color:#F59E0B;}
+.cal-day.cal-day-loss .cal-day-time{color:#EF4444;}
 .cal-day.today{background:rgba(200,168,75,.15);color:var(--gold);font-weight:700;}
 .cal-day.selected{outline:2px solid #fff;outline-offset:-2px;}
 .cal-day-num{font-size:10px;color:rgba(255,255,255,.6);text-align:center;width:100%;flex-shrink:0;}
@@ -1637,9 +1643,11 @@ function switchFixView(view){
 }
 // 인접한 달에 경기가 하나도 없으면(과거/미래 데이터 범위 밖) 이동을 막는다
 // — 리스트 뷰처럼 빈 달을 건너뛰지 않고, 딱 그 경계에서 화살표를 비활성화.
+// CAL_NAV_GUARD_ENABLED: 사용자가 직접 확인하는 동안 임시로 꺼둠 — 확인 끝나면 true로 되돌릴 것.
+var CAL_NAV_GUARD_ENABLED = false;
 function calChangeMonth(delta){
   var next = new Date(_calDate.getFullYear(), _calDate.getMonth()+delta, 1);
-  if(!calMonthHasMatch(next.getFullYear(), next.getMonth())) return;
+  if(CAL_NAV_GUARD_ENABLED && !calMonthHasMatch(next.getFullYear(), next.getMonth())) return;
   _calDate = next;
   renderCalendarMonth();
 }
@@ -1670,9 +1678,9 @@ function renderCalendarMonth(){
   var prevMonth = new Date(year, month-1, 1);
   var nextMonth = new Date(year, month+1, 1);
   var prevBtn = document.getElementById('calPrevBtn');
-  if(prevBtn) prevBtn.disabled = !calMonthHasMatch(prevMonth.getFullYear(), prevMonth.getMonth());
+  if(prevBtn) prevBtn.disabled = CAL_NAV_GUARD_ENABLED && !calMonthHasMatch(prevMonth.getFullYear(), prevMonth.getMonth());
   var nextBtn = document.getElementById('calNextBtn');
-  if(nextBtn) nextBtn.disabled = !calMonthHasMatch(nextMonth.getFullYear(), nextMonth.getMonth());
+  if(nextBtn) nextBtn.disabled = CAL_NAV_GUARD_ENABLED && !calMonthHasMatch(nextMonth.getFullYear(), nextMonth.getMonth());
 
   var byDay = {};
   matches.forEach(function(m){
@@ -1712,15 +1720,31 @@ function renderCalendarMonth(){
       var isNeutral = m.neutralSite===true||(m.competition&&m.competition.short==='CS')||m.round==='final'||(calCode==='FR'&&isArsHome&&m.venue&&m.venue!=='Emirates Stadium');
       var opp = isArsHome ? m.awayTeam : m.homeTeam;
       cell.classList.add('has-fixture');
-      if(isNeutral) cell.classList.add('neutral-fixture');
-      else if(!isArsHome) cell.classList.add('away-fixture');
+      // 종료 경기는 buildFixCard와 동일하게 홈/원정/중립 테두리 대신
+      // 승/무/패 결과 색으로 대체한다 — 지난 경기는 장소보다 결과가 더 유용한 정보.
+      var hs = m.score&&m.score.fullTime?m.score.fullTime.home:null;
+      var as_ = m.score&&m.score.fullTime?m.score.fullTime.away:null;
+      var hasScore = m.status==='FINISHED' && hs!==null && hs!==undefined && as_!==null && as_!==undefined;
+      if(hasScore){
+        var arsS=isArsHome?hs:as_, oppS=isArsHome?as_:hs;
+        if(arsS>oppS) cell.classList.add('cal-day-win');
+        else if(arsS===oppS) cell.classList.add('cal-day-draw');
+        else cell.classList.add('cal-day-loss');
+      } else {
+        if(isNeutral) cell.classList.add('neutral-fixture');
+        else if(!isArsHome) cell.classList.add('away-fixture');
+      }
       var crestWrap = document.createElement('div'); crestWrap.className='cal-day-crest-wrap';
       var crestEl = renderCrest(makeCrest(opp||{}, false));
       crestWrap.appendChild(crestEl);
       cell.appendChild(crestWrap);
       var timeEl = document.createElement('div'); timeEl.className='cal-day-time';
-      var dt = new Date(m.utcDate);
-      timeEl.textContent = dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
+      if(hasScore){
+        timeEl.textContent = hs+' : '+as_;
+      } else {
+        var dt = new Date(m.utcDate);
+        timeEl.textContent = dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
+      }
       cell.appendChild(timeEl);
 
       (function(ms){
