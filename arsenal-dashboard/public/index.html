@@ -470,7 +470,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-nav-btn svg{width:16px;height:16px;}
 .cal-nav-btn:disabled{color:var(--text-dim);cursor:default;opacity:.4;}
 .results-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 8px;}
-.results-label{background:none;border:none;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;padding:2px 8px;font-family:var(--fb);-webkit-tap-highlight-color:transparent;}
+.results-label{background:none;border:none;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;padding:0 8px;height:24px;display:inline-flex;align-items:center;font-family:var(--fb);-webkit-tap-highlight-color:transparent;}
 .results-count{font-size:11px;font-weight:400;color:var(--text-dim);text-transform:none;letter-spacing:0;margin-left:4px;}
 .results-latest-btn{background:none;border:none;color:var(--gold);font-size:12px;font-weight:700;font-family:var(--fb);cursor:pointer;padding:0;display:flex;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent;}
 .results-latest-btn svg{width:13px;height:13px;flex-shrink:0;}
@@ -749,9 +749,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="fix-list" id="upcomingList"><div class="loading-state"><div class="spinner"></div></div></div>
     <div id="upcomingCalView" style="display:none;padding:0 14px 14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 8px;">
-        <button class="cal-nav-btn" onclick="calChangeMonth(-1)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
-        <div id="calMonthLabel" style="font-size:13px;font-weight:700;color:#fff;"></div>
-        <button class="cal-nav-btn" onclick="calChangeMonth(1)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+        <button class="cal-nav-btn" id="calPrevBtn" onclick="calChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+        <button class="results-label" id="calMonthLabel" onclick="openCalPicker()"></button>
+        <button class="cal-nav-btn" id="calNextBtn" onclick="calChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
       </div>
       <div class="cal-dow-row"><span>&#51068;</span><span>&#50900;</span><span>&#54868;</span><span>&#49688;</span><span>&#47785;</span><span>&#44552;</span><span>&#53664;</span></div>
       <div id="calGrid" class="cal-grid"></div>
@@ -788,6 +788,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <button class="cal-nav-btn" id="upPickerNextYearBtn" onclick="upPickerChangeYear(1)" aria-label="&#45796;&#51020; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
       </div>
       <div class="results-picker-grid" id="upcomingPickerGrid"></div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="calPickerOverlay" style="align-items:center;" onclick="if(event.target===this) closeCalPicker()">
+    <div class="results-picker-sheet">
+      <div class="results-picker-head">
+        <button class="cal-nav-btn" id="calPickerPrevYearBtn" onclick="calPickerChangeYear(-1)" aria-label="&#51060;&#51204; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+        <span id="calPickerYearLabel"></span>
+        <button class="cal-nav-btn" id="calPickerNextYearBtn" onclick="calPickerChangeYear(1)" aria-label="&#45796;&#51020; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+      </div>
+      <div class="results-picker-grid" id="calPickerGrid"></div>
     </div>
   </div>
   <div class="card" style="margin-top:8px">
@@ -1625,8 +1635,12 @@ function switchFixView(view){
   document.getElementById('upcomingCalView').style.display = view==='cal' ? '' : 'none';
   if(view==='cal') calGoToNearestMatch();
 }
+// 인접한 달에 경기가 하나도 없으면(과거/미래 데이터 범위 밖) 이동을 막는다
+// — 리스트 뷰처럼 빈 달을 건너뛰지 않고, 딱 그 경계에서 화살표를 비활성화.
 function calChangeMonth(delta){
-  _calDate.setMonth(_calDate.getMonth()+delta);
+  var next = new Date(_calDate.getFullYear(), _calDate.getMonth()+delta, 1);
+  if(!calMonthHasMatch(next.getFullYear(), next.getMonth())) return;
+  _calDate = next;
   renderCalendarMonth();
 }
 function calGoToNearestMatch(){
@@ -1653,6 +1667,12 @@ function renderCalendarMonth(){
   var matches = window._allMatchesForCal || [];
   var year = _calDate.getFullYear(), month = _calDate.getMonth();
   document.getElementById('calMonthLabel').textContent = year+'년 '+(month+1)+'월';
+  var prevMonth = new Date(year, month-1, 1);
+  var nextMonth = new Date(year, month+1, 1);
+  var prevBtn = document.getElementById('calPrevBtn');
+  if(prevBtn) prevBtn.disabled = !calMonthHasMatch(prevMonth.getFullYear(), prevMonth.getMonth());
+  var nextBtn = document.getElementById('calNextBtn');
+  if(nextBtn) nextBtn.disabled = !calMonthHasMatch(nextMonth.getFullYear(), nextMonth.getMonth());
 
   var byDay = {};
   matches.forEach(function(m){
@@ -1715,6 +1735,70 @@ function renderCalendarMonth(){
     }
 
     grid.appendChild(cell);
+  }
+}
+
+// ── 달력 뷰: 연/월 선택 모달 — 경기 없는 달은 비활성화 ──
+// 달력 뷰는 예정 경기뿐 아니라 종료 경기도 함께 표시하므로(_allMatchesForCal =
+// data.matches 전체), 상/하한과 데이터 존재 여부도 그 전체 배열 기준으로 판단한다.
+var _pickerYearCal;
+function calDataBounds(){
+  var matches = (window._allMatchesForCal||[]).filter(function(m){return !!m.utcDate;});
+  if(!matches.length) return null;
+  var sorted = matches.slice().sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);});
+  var pMin = kstParts(new Date(sorted[0].utcDate).getTime());
+  var pMax = kstParts(new Date(sorted[sorted.length-1].utcDate).getTime());
+  return {minYear:pMin.y, minMonth:pMin.m, maxYear:pMax.y, maxMonth:pMax.m}; // month는 0-based(Date 기준)
+}
+function calMonthHasMatch(year, month){
+  return (window._allMatchesForCal||[]).some(function(m){
+    if(!m.utcDate) return false;
+    var p = kstParts(new Date(m.utcDate).getTime());
+    return p.y===year && p.m===month;
+  });
+}
+function openCalPicker(){
+  _pickerYearCal = _calDate.getFullYear();
+  document.getElementById('calPickerOverlay').classList.add('open');
+  renderCalPickerGrid();
+}
+function closeCalPicker(){
+  document.getElementById('calPickerOverlay').classList.remove('open');
+}
+function calPickerChangeYear(delta){
+  var b = calDataBounds();
+  if(b){
+    if(delta>0 && _pickerYearCal>=b.maxYear) return;
+    if(delta<0 && _pickerYearCal<=b.minYear) return;
+  }
+  _pickerYearCal += delta;
+  renderCalPickerGrid();
+}
+function renderCalPickerGrid(){
+  document.getElementById('calPickerYearLabel').textContent = _pickerYearCal+'년';
+  var b = calDataBounds();
+  var prevYearBtn = document.getElementById('calPickerPrevYearBtn');
+  if(prevYearBtn) prevYearBtn.disabled = !!b && _pickerYearCal<=b.minYear;
+  var nextYearBtn = document.getElementById('calPickerNextYearBtn');
+  if(nextYearBtn) nextYearBtn.disabled = !!b && _pickerYearCal>=b.maxYear;
+  var grid = document.getElementById('calPickerGrid');
+  grid.innerHTML = '';
+  for(var mo=1; mo<=12; mo++){
+    var moZero = mo-1;
+    var hasData = calMonthHasMatch(_pickerYearCal, moZero);
+    var before = !!b && (_pickerYearCal<b.minYear || (_pickerYearCal===b.minYear && moZero<b.minMonth));
+    var after = !!b && (_pickerYearCal>b.maxYear || (_pickerYearCal===b.maxYear && moZero>b.maxMonth));
+    var btn = document.createElement('button');
+    btn.type='button';
+    btn.textContent = mo+'월';
+    btn.className = 'results-picker-cell';
+    if(_pickerYearCal===_calDate.getFullYear() && moZero===_calDate.getMonth()) btn.classList.add('current');
+    if(!hasData || before || after){
+      btn.disabled = true;
+    } else {
+      (function(mm){ btn.onclick = function(){ closeCalPicker(); _calDate = new Date(_pickerYearCal, mm, 1); renderCalendarMonth(); }; })(moZero);
+    }
+    grid.appendChild(btn);
   }
 }
 
