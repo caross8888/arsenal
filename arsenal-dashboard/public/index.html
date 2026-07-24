@@ -1355,7 +1355,18 @@ function initMatchNav(data){
   var todayP = kstParts(Date.now());
   _mCurrentSeason = resultsSeasonForYM(todayP.y, todayP.m+1);
   _mCurrentSeasonCache = finishedAll.concat(upcomingAll);
-  (data.seasonsFetched||[]).forEach(function(sy){
+  // seasonsFetched는 과거 시즌 스케줄을 조회한 연도만 반영하고, 예정 경기는
+  // 별도의 미래 스코어보드 조회(최대 다음해 5월까지)로 채워져서 seasonsFetched에
+  // 안 잡힐 수 있다 — 그래서 이 값을 믿지 않고, 실제로 받은 경기들의 날짜를
+  // 직접 훑어서 이 데이터가 실제로 커버하는 시즌들을 계산한다.
+  var coveredSeasons = {};
+  _mCurrentSeasonCache.forEach(function(m){
+    if(!m.utcDate) return;
+    var p = kstParts(new Date(m.utcDate).getTime());
+    coveredSeasons[resultsSeasonForYM(p.y, p.m+1)] = true;
+  });
+  Object.keys(coveredSeasons).forEach(function(syStr){
+    var sy = parseInt(syStr, 10);
     if(sy!==_mCurrentSeason) _resultsCache[sy] = _mCurrentSeasonCache;
   });
 
@@ -1529,13 +1540,20 @@ function switchFixView(view){
   document.getElementById('upcomingCalView').style.display = view==='cal' ? '' : 'none';
   if(view==='cal') calGoToNearestMatch();
 }
-// 인접한 달에 경기가 하나도 없으면(과거/미래 데이터 범위 밖) 이동을 막는다
-// — 리스트 뷰처럼 빈 달을 건너뛰지 않고, 딱 그 경계에서 화살표를 비활성화.
+// 인접한 달에 경기가 하나도 없으면(과거/미래 데이터 범위 밖) 이동을 막는다.
+// 리스트 뷰(경기 일정)와 동일한 시즌 데이터/경계(_mMinYear~_mMaxYear,
+// getSeasonMatches)를 그대로 재사용 — 예전엔 달력 전용으로 window.
+// _allMatchesForCal(현재 시즌 한 창)만 봐서 그 너머 과거 시즌은 화살표가
+// 바로 막혀버렸는데, 리스트 뷰가 이미 시즌별 지연 조회로 과거를 다 커버하니
+// 그걸 그대로 쓴다.
 // CAL_NAV_GUARD_ENABLED: 사용자가 직접 확인하는 동안 임시로 꺼둠 — 확인 끝나면 true로 되돌릴 것.
 var CAL_NAV_GUARD_ENABLED = true;
 function calChangeMonth(delta){
   var next = new Date(_calDate.getFullYear(), _calDate.getMonth()+delta, 1);
-  if(CAL_NAV_GUARD_ENABLED && !calMonthHasMatch(next.getFullYear(), next.getMonth())) return;
+  if(CAL_NAV_GUARD_ENABLED){
+    if(delta>0 && mAtOrAfterMax(next.getFullYear(), next.getMonth()+1)) return;
+    if(delta<0 && mAtOrBeforeMin(next.getFullYear(), next.getMonth()+1)) return;
+  }
   _calDate = next;
   renderCalendarMonth();
 }
@@ -1553,30 +1571,48 @@ function calGoToNearestMatch(){
     _calDate = new Date(p.y, p.m, 1);
     renderCalendarMonth();
     var firstDow = new Date(p.y, p.m, 1).getDay();
-    var cell = document.getElementById('calGrid').children[firstDow+p.d-1];
-    if(cell) cell.click();
+    setTimeout(function(){
+      var cell = document.getElementById('calGrid').children[firstDow+p.d-1];
+      if(cell) cell.click();
+    }, 0);
   } else {
     renderCalendarMonth();
   }
 }
+// 달력 한 달 조회 — 현재 시즌 창 안이면 이미 메모리에 있는 데이터를 바로
+// 쓰고, 그 밖(과거 시즌)이면 리스트 뷰와 동일하게 시즌별로 지연 조회한다.
 function renderCalendarMonth(){
-  var matches = window._allMatchesForCal || [];
-  var year = _calDate.getFullYear(), month = _calDate.getMonth();
+  var year = _calDate.getFullYear(), month = _calDate.getMonth(); // month는 0-based
   document.getElementById('calMonthLabel').textContent = year+'년 '+(month+1)+'월';
   var prevMonth = new Date(year, month-1, 1);
   var nextMonth = new Date(year, month+1, 1);
   var prevBtn = document.getElementById('calPrevBtn');
-  if(prevBtn) prevBtn.disabled = CAL_NAV_GUARD_ENABLED && !calMonthHasMatch(prevMonth.getFullYear(), prevMonth.getMonth());
+  if(prevBtn) prevBtn.disabled = CAL_NAV_GUARD_ENABLED && mAtOrBeforeMin(prevMonth.getFullYear(), prevMonth.getMonth()+1);
   var nextBtn = document.getElementById('calNextBtn');
-  if(nextBtn) nextBtn.disabled = CAL_NAV_GUARD_ENABLED && !calMonthHasMatch(nextMonth.getFullYear(), nextMonth.getMonth());
+  if(nextBtn) nextBtn.disabled = CAL_NAV_GUARD_ENABLED && mAtOrAfterMax(nextMonth.getFullYear(), nextMonth.getMonth()+1);
 
+  var grid = document.getElementById('calGrid');
+  grid.innerHTML = '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div>';
+  var season = resultsSeasonForYM(year, month+1);
+  getSeasonMatches(season).then(function(seasonMatches){
+    if(_calDate.getFullYear()!==year || _calDate.getMonth()!==month) return; // 그 사이 다른 달로 이동했으면 버림
+    // 방금 이 시즌이 비어있다는 걸 확인해서 하한이 막 새로 밝혀진 경우 —
+    // 화살표 클릭 시점엔 하한을 몰라서 이동을 막지 못했을 수 있으니,
+    // 하한 너머(지금 위치)에 머물지 않고 실제 하한 달로 스냅백한다.
+    if(seasonMatches.length===0 && _mMinYear!==undefined && mAtOrBeforeMin(year, month+1) && !(year===_mMinYear && month+1===_mMinMonth)){
+      _calDate = new Date(_mMinYear, _mMinMonth-1, 1);
+      renderCalendarMonth();
+      return;
+    }
+    renderCalendarGrid(year, month, monthMatchesFrom(seasonMatches, year, month+1));
+  });
+}
+function renderCalendarGrid(year, month, monthMatches){
   var byDay = {};
-  matches.forEach(function(m){
+  monthMatches.forEach(function(m){
     if(!m.utcDate) return;
     var p = kstParts(new Date(m.utcDate).getTime());
-    if(p.y===year && p.m===month){
-      (byDay[p.d] = byDay[p.d] || []).push(m);
-    }
+    (byDay[p.d] = byDay[p.d] || []).push(m);
   });
 
   var grid = document.getElementById('calGrid');
@@ -1608,8 +1644,6 @@ function renderCalendarMonth(){
       var isNeutral = m.neutralSite===true||(m.competition&&m.competition.short==='CS')||m.round==='final'||(calCode==='FR'&&isArsHome&&m.venue&&m.venue!=='Emirates Stadium');
       var opp = isArsHome ? m.awayTeam : m.homeTeam;
       cell.classList.add('has-fixture');
-      // 종료 경기는 buildFixCard와 동일하게 홈/원정/중립 테두리 대신
-      // 승/무/패 결과 색으로 대체한다 — 지난 경기는 장소보다 결과가 더 유용한 정보.
       var hs = m.score&&m.score.fullTime?m.score.fullTime.home:null;
       var as_ = m.score&&m.score.fullTime?m.score.fullTime.away:null;
       var hasScore = m.status==='FINISHED' && hs!==null && hs!==undefined && as_!==null && as_!==undefined;
@@ -1651,24 +1685,9 @@ function renderCalendarMonth(){
 }
 
 // ── 달력 뷰: 연/월 선택 모달 — 경기 없는 달은 비활성화 ──
-// 달력 뷰는 예정 경기뿐 아니라 종료 경기도 함께 표시하므로(_allMatchesForCal =
-// data.matches 전체), 상/하한과 데이터 존재 여부도 그 전체 배열 기준으로 판단한다.
+// 리스트 뷰(경기 일정)의 연/월 선택 모달과 동일한 방식 — 상/하한도 같은
+// _mMinYear~_mMaxYear를 쓰고, 달별 데이터 존재 여부도 시즌별로 지연 조회한다.
 var _pickerYearCal;
-function calDataBounds(){
-  var matches = (window._allMatchesForCal||[]).filter(function(m){return !!m.utcDate;});
-  if(!matches.length) return null;
-  var sorted = matches.slice().sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);});
-  var pMin = kstParts(new Date(sorted[0].utcDate).getTime());
-  var pMax = kstParts(new Date(sorted[sorted.length-1].utcDate).getTime());
-  return {minYear:pMin.y, minMonth:pMin.m, maxYear:pMax.y, maxMonth:pMax.m}; // month는 0-based(Date 기준)
-}
-function calMonthHasMatch(year, month){
-  return (window._allMatchesForCal||[]).some(function(m){
-    if(!m.utcDate) return false;
-    var p = kstParts(new Date(m.utcDate).getTime());
-    return p.y===year && p.m===month;
-  });
-}
 function openCalPicker(){
   _pickerYearCal = _calDate.getFullYear();
   document.getElementById('calPickerOverlay').classList.add('open');
@@ -1678,40 +1697,45 @@ function closeCalPicker(){
   document.getElementById('calPickerOverlay').classList.remove('open');
 }
 function calPickerChangeYear(delta){
-  var b = calDataBounds();
-  if(b){
-    if(delta>0 && _pickerYearCal>=b.maxYear) return;
-    if(delta<0 && _pickerYearCal<=b.minYear) return;
-  }
+  if(delta>0 && _mMaxYear!==undefined && _pickerYearCal>=_mMaxYear) return;
+  if(delta<0 && _mMinYear!==undefined && _pickerYearCal<=_mMinYear) return;
   _pickerYearCal += delta;
   renderCalPickerGrid();
 }
 function renderCalPickerGrid(){
   document.getElementById('calPickerYearLabel').textContent = _pickerYearCal+'년';
-  var b = calDataBounds();
   var prevYearBtn = document.getElementById('calPickerPrevYearBtn');
-  if(prevYearBtn) prevYearBtn.disabled = !!b && _pickerYearCal<=b.minYear;
+  if(prevYearBtn) prevYearBtn.disabled = _mMinYear!==undefined && _pickerYearCal<=_mMinYear;
   var nextYearBtn = document.getElementById('calPickerNextYearBtn');
-  if(nextYearBtn) nextYearBtn.disabled = !!b && _pickerYearCal>=b.maxYear;
+  if(nextYearBtn) nextYearBtn.disabled = _mMaxYear!==undefined && _pickerYearCal>=_mMaxYear;
   var grid = document.getElementById('calPickerGrid');
-  grid.innerHTML = '';
-  for(var mo=1; mo<=12; mo++){
-    var moZero = mo-1;
-    var hasData = calMonthHasMatch(_pickerYearCal, moZero);
-    var before = !!b && (_pickerYearCal<b.minYear || (_pickerYearCal===b.minYear && moZero<b.minMonth));
-    var after = !!b && (_pickerYearCal>b.maxYear || (_pickerYearCal===b.maxYear && moZero>b.maxMonth));
-    var btn = document.createElement('button');
-    btn.type='button';
-    btn.textContent = mo+'월';
-    btn.className = 'results-picker-cell';
-    if(_pickerYearCal===_calDate.getFullYear() && moZero===_calDate.getMonth()) btn.classList.add('current');
-    if(!hasData || before || after){
-      btn.disabled = true;
-    } else {
-      (function(mm){ btn.onclick = function(){ closeCalPicker(); _calDate = new Date(_pickerYearCal, mm, 1); renderCalendarMonth(); }; })(moZero);
+  grid.innerHTML = '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div>';
+  var seasonJan = resultsSeasonForYM(_pickerYearCal, 1);
+  var seasonDec = resultsSeasonForYM(_pickerYearCal, 12);
+  var neededSeasons = seasonJan===seasonDec ? [seasonJan] : [seasonJan, seasonDec];
+  Promise.all(neededSeasons.map(getSeasonMatches)).then(function(results){
+    var bySeason = {};
+    neededSeasons.forEach(function(sy, i){ bySeason[sy] = results[i]; });
+    grid.innerHTML = '';
+    for(var mo=1; mo<=12; mo++){
+      var season = resultsSeasonForYM(_pickerYearCal, mo);
+      var seasonMatches = bySeason[season]||[];
+      var hasData = monthMatchesFrom(seasonMatches, _pickerYearCal, mo).length>0;
+      var before = _mMinYear!==undefined && (_pickerYearCal<_mMinYear || (_pickerYearCal===_mMinYear && mo<_mMinMonth));
+      var after = _mMaxYear!==undefined && (_pickerYearCal>_mMaxYear || (_pickerYearCal===_mMaxYear && mo>_mMaxMonth));
+      var btn = document.createElement('button');
+      btn.type='button';
+      btn.textContent = mo+'월';
+      btn.className = 'results-picker-cell';
+      if(_pickerYearCal===_calDate.getFullYear() && mo===_calDate.getMonth()+1) btn.classList.add('current');
+      if(!hasData || before || after){
+        btn.disabled = true;
+      } else {
+        (function(mm){ btn.onclick = function(){ closeCalPicker(); _calDate = new Date(_pickerYearCal, mm-1, 1); renderCalendarMonth(); }; })(mo);
+      }
+      grid.appendChild(btn);
     }
-    grid.appendChild(btn);
-  }
+  });
 }
 
 function loadStandings(){
