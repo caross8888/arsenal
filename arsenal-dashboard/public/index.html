@@ -1280,18 +1280,30 @@ function markSeasonEmptyIfBoundary(season, matches){
 function getSeasonMatches(season){
   if(season===_mCurrentSeason) return Promise.resolve(_mCurrentSeasonCache);
   if(_resultsCache[season]){
-    markSeasonEmptyIfBoundary(season, _resultsCache[season]);
-    return Promise.resolve(_resultsCache[season]);
+    // 배열이면 이미 완료된 결과, Promise면 같은 시즌을 동시에 여러 번 호출한
+    // 것(예: 화살표를 빠르게 여러 번 눌러 matchChangeMonth/calChangeMonth가
+    // 겹쳐 실행되는 경우) — 그럴 땐 새로 fetch하지 않고 진행 중인 요청을
+    // 그대로 재사용한다. 안 그러면 두 요청이 서로 다른 타이밍에 끝나면서
+    // 나중에 끝난 쪽(네트워크 지연으로 실패/빈 배열일 수 있음)이 먼저 캐시된
+    // 정상 데이터를 덮어써버리는 경쟁 상태가 생길 수 있다.
+    if(Array.isArray(_resultsCache[season])){
+      markSeasonEmptyIfBoundary(season, _resultsCache[season]);
+      return Promise.resolve(_resultsCache[season]);
+    }
+    return _resultsCache[season];
   }
-  return apiFetch(FN+'/football?type=results&season='+season).then(function(data){
+  var pending = apiFetch(FN+'/football?type=results&season='+season).then(function(data){
     var m = data.matches||[];
     assignPlRounds(m);
     _resultsCache[season] = m;
     markSeasonEmptyIfBoundary(season, m);
     return m;
   }).catch(function(){
-    return []; // 실패한 시즌은 캐시에 남기지 않음 — 다음에 다시 시도
+    delete _resultsCache[season]; // 실패한 시즌은 캐시에 남기지 않음 — 다음에 다시 시도
+    return [];
   });
+  _resultsCache[season] = pending;
+  return pending;
 }
 function mAtOrAfterMax(year, month){
   return _mMaxYear!==undefined && (year>_mMaxYear || (year===_mMaxYear && month>=_mMaxMonth));
