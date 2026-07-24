@@ -47,6 +47,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .card-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-secondary);font-weight:700}
 .loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;color:var(--text-muted);font-size:12px}
 .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
+.spinner-sm{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:8px}
 .dday-card{background:linear-gradient(135deg,var(--red) 0%,#7a0010 100%);border-radius:14px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;color:#fff;position:relative;overflow:hidden;}
@@ -2091,6 +2092,12 @@ function loadHistory(){
     window._recordsData  = results[5];
     window._stadiumsData = results[6];
     window._momentsData  = results[7];
+    // History 탭을 여는 즉시(어떤 서브탭이든) 재임 중인 감독의 경기수 계산을
+    // 미리 시작해둔다 — 사용자가 감독 탭까지 들어와서 카드를 클릭할 때쯤엔
+    // 이미 끝나 있어서 로딩 표시 없이 하드코딩된 값처럼 바로 보인다.
+    (window._managersData||[]).forEach(function(mgr){
+      if(!mgr.games && mgr.tenureStart && _mgrGamesCache[mgr.id]===undefined) computeManagerGames(mgr);
+    });
     renderHistoryNew();
   });
 }
@@ -2724,6 +2731,11 @@ function openTrophyDetailModal(enc){
 }
 
 // ── 감독 상세 모달 ──
+// 현재 재임 중인 감독의 경기수는 tenureStart 기준으로 실시간 계산하는데,
+// 계산이 끝날 때마다 여기 캐시해둬서 모달을 다시 열 때 "계산 중..." 없이
+// 바로 보이게 한다. 감독 그리드가 뜰 때 미리 한 번 계산해두므로(아래
+// renderManagersSection) 실제로는 거의 항상 캐시가 이미 채워져 있다.
+var _mgrGamesCache = {};
 function openManagerModal(enc){
   var mgr;
   try{ mgr = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
@@ -2733,7 +2745,15 @@ function openManagerModal(enc){
   // (managers.json이 손으로 채운 정적 파일이라) 계속 경기가 늘어나서
   // 값을 못 박아둘 수 없다 — tenureStart(부임 첫 경기 날짜)가 있으면
   // 그 날짜 이후 종료 경기를 모두 세어서 실시간으로 계산한다.
-  var games = mgr.games ? mgr.games+'경기' : (mgr.tenureStart ? '계산 중...' : '기록 없음');
+  // computeManagerGames는 History 탭이 열리는 시점(loadHistory)에 이미
+  // 미리 실행돼 있으므로 여기 도달할 때쯤엔 거의 항상 캐시가 차 있다.
+  // 혹시 아직이면(네트워크가 느린 경우) 로딩 표시 없이 빈 칸으로 뒀다가
+  // computeManagerGames가 끝나는 대로 조용히 채워 넣는다.
+  var cached = _mgrGamesCache[mgr.id];
+  var games = mgr.games ? mgr.games+'경기'
+    : cached !== undefined ? cached+'경기'
+    : mgr.tenureStart ? ''
+    : '기록 없음';
   var html = '';
   // 사진 영역
   html += '<div class="mgr-modal-photo hist-modal-photo">';
@@ -2772,13 +2792,16 @@ function openManagerModal(enc){
   document.body.style.overflow = 'hidden';
   window.history.pushState({modal:'hist'},'','#hist-modal');
   requestAnimationFrame(function(){ content.scrollTop = 0; });
-  if(!mgr.games && mgr.tenureStart) computeManagerGames(mgr.tenureStart);
+  if(!mgr.games && cached===undefined && mgr.tenureStart) computeManagerGames(mgr);
 }
 
 // 부임 첫 경기 날짜(tenureStart) 이후 종료된 경기를 시즌별로 모두 불러와
 // 합산 — 결과 브라우저(getSeasonMatches/resultsSeasonForYM)를 그대로 재사용.
 // 부임 시즌은 부임 전(전임 감독 재임 중) 경기가 섞여 있을 수 있어 날짜로 거른다.
-function computeManagerGames(tenureStart){
+// 결과는 _mgrGamesCache에 저장해서, 그리드 단계에서 미리 계산해두면 모달을
+// 열 때는 스피너 없이 바로 숫자가 보인다.
+function computeManagerGames(mgr){
+  var tenureStart = mgr.tenureStart;
   var valEl = document.getElementById('mgrGamesVal');
   var startDate = new Date(tenureStart+'T00:00:00Z');
   var startSeason = resultsSeasonForYM(startDate.getUTCFullYear(), startDate.getUTCMonth()+1);
@@ -2795,6 +2818,7 @@ function computeManagerGames(tenureStart){
         total++;
       });
     });
+    _mgrGamesCache[mgr.id] = total;
     if(valEl) valEl.textContent = total+'경기';
   }).catch(function(){
     if(valEl) valEl.textContent = '기록 없음';
