@@ -472,9 +472,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-nav-btn:disabled{color:var(--text-dim);cursor:default;opacity:.4;}
 .results-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 8px;}
 .results-label{background:none;border:none;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;padding:0 8px;height:24px;display:inline-flex;align-items:center;font-family:var(--fb);-webkit-tap-highlight-color:transparent;}
-.results-latest-btn{background:none;border:none;color:var(--gold);font-size:12px;font-weight:700;font-family:var(--fb);cursor:pointer;padding:0;display:flex;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent;}
-.results-latest-btn svg{width:13px;height:13px;flex-shrink:0;}
-.results-latest-btn:disabled{color:var(--text-dim);cursor:default;opacity:.5;}
 .results-picker-sheet{background:#1a1c22;border-radius:16px;width:100%;max-width:340px;overflow:hidden;}
 .results-picker-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);}
 .results-picker-head span{font-size:15px;font-weight:700;color:#fff;font-family:var(--fb);}
@@ -739,20 +736,23 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <section id="fixtures" class="section active">
   <div class="sec-head"><h1 class="sec-title">&#44221;&#44592; &#51068;&#51221;</h1><span class="sec-badge" id="fixBadge" onclick="toggleMockLive()" style="cursor:pointer;user-select:none;">&#47196;&#46377; &#51473;</span></div>
   <div class="dday-card" id="ddayCard" style="display:none"></div>
-  <div id="upcomingWrap" class="fix-section-card">
+  <div id="fixWrap" class="fix-section-card">
     <div class="fix-section-label" style="display:flex;align-items:center;justify-content:space-between;">
-      <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg> &#50696;&#51221; &#44221;&#44592;</span>
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg> &#44221;&#44592; &#51068;&#51221;</span>
+        <button class="cal-nav-btn" id="matchTodayBtn" onclick="goToToday()" aria-label="&#50724;&#45236;&#47196; &#46036;&#50500;&#44032;&#44592;" style="padding:2px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg></button>
+      </span>
       <div class="fix-view-toggle" id="fixViewToggle">
         <button class="fix-view-btn active" data-view="list" onclick="switchFixView('list')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l11 0"/><path d="M9 12l11 0"/><path d="M9 18l11 0"/><path d="M5 6l0 .01"/><path d="M5 12l0 .01"/><path d="M5 18l0 .01"/></svg></button>
         <button class="fix-view-btn" data-view="cal" onclick="switchFixView('cal')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg></button>
       </div>
     </div>
-    <div class="results-nav" id="upcomingNav">
-      <button class="cal-nav-btn" id="upcomingPrevBtn" onclick="upcomingChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
-      <button class="results-label" id="upcomingLabel" onclick="openUpcomingPicker()"></button>
-      <button class="cal-nav-btn" id="upcomingNextBtn" onclick="upcomingChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+    <div class="results-nav" id="matchNav">
+      <button class="cal-nav-btn" id="matchPrevBtn" onclick="matchChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+      <button class="results-label" id="matchLabel" onclick="openMatchPicker()"></button>
+      <button class="cal-nav-btn" id="matchNextBtn" onclick="matchChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
     </div>
-    <div class="fix-list" id="upcomingList"><div class="loading-state"><div class="spinner"></div></div></div>
+    <div class="fix-list" id="matchList"><div class="loading-state"><div class="spinner"></div></div></div>
     <div id="upcomingCalView" style="display:none;padding:0 14px 14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 8px;">
         <button class="cal-nav-btn" id="calPrevBtn" onclick="calChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
@@ -764,36 +764,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div id="calDetail" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div id="finishedWrap" class="fix-section-card">
-    <div class="fix-section-label" style="display:flex;align-items:center;justify-content:space-between;">
-      <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg> &#52572;&#44540; &#44208;&#44284;</span>
-      <button class="results-latest-btn" id="resultsLatestBtn" onclick="goToLatestResults()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg>돌아가기</button>
-    </div>
-    <div class="results-nav">
-      <button class="cal-nav-btn" id="resultsPrevBtn" onclick="resultsChangeMonth(-1)" aria-label="&#51060;&#51204; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
-      <button class="results-label" id="resultsLabel" onclick="openResultsPicker()"></button>
-      <button class="cal-nav-btn" id="resultsNextBtn" onclick="resultsChangeMonth(1)" aria-label="&#45796;&#51020; &#45804;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
-    </div>
-    <div class="fix-list" id="finishedList"></div>
-  </div>
-  <div class="modal-overlay" id="resultsPickerOverlay" style="align-items:center;" onclick="if(event.target===this) closeResultsPicker()">
+  <div class="modal-overlay" id="matchPickerOverlay" style="align-items:center;" onclick="if(event.target===this) closeMatchPicker()">
     <div class="results-picker-sheet">
       <div class="results-picker-head">
-        <button class="cal-nav-btn" id="pickerPrevYearBtn" onclick="pickerChangeYear(-1)" aria-label="&#51060;&#51204; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
-        <span id="pickerYearLabel"></span>
-        <button class="cal-nav-btn" onclick="pickerChangeYear(1)" aria-label="&#45796;&#51020; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+        <button class="cal-nav-btn" id="matchPickerPrevYearBtn" onclick="matchPickerChangeYear(-1)" aria-label="&#51060;&#51204; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+        <span id="matchPickerYearLabel"></span>
+        <button class="cal-nav-btn" id="matchPickerNextYearBtn" onclick="matchPickerChangeYear(1)" aria-label="&#45796;&#51020; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
       </div>
-      <div class="results-picker-grid" id="resultsPickerGrid"></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="upcomingPickerOverlay" style="align-items:center;" onclick="if(event.target===this) closeUpcomingPicker()">
-    <div class="results-picker-sheet">
-      <div class="results-picker-head">
-        <button class="cal-nav-btn" id="upPickerPrevYearBtn" onclick="upPickerChangeYear(-1)" aria-label="&#51060;&#51204; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
-        <span id="upPickerYearLabel"></span>
-        <button class="cal-nav-btn" id="upPickerNextYearBtn" onclick="upPickerChangeYear(1)" aria-label="&#45796;&#51020; &#45604;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
-      </div>
-      <div class="results-picker-grid" id="upcomingPickerGrid"></div>
+      <div class="results-picker-grid" id="matchPickerGrid"></div>
     </div>
   </div>
   <div class="modal-overlay" id="calPickerOverlay" style="align-items:center;" onclick="if(event.target===this) closeCalPicker()">
@@ -1263,190 +1241,44 @@ function buildFixCard(m){
   return card;
 }
 
-// ── 예정 경기: 최근 결과와 동일한 연도/월 선택형 조회 ──
-// 예정 경기는 data.upcoming 한 번에 다 내려오므로(과거처럼 시즌별로
-// 나눠 다시 불러올 필요 없음) 최근 결과의 _resultsCache/getSeasonMatches
-// 같은 지연 조회 캐시는 필요 없고, 그냥 메모리에 들고 월별로 필터링만 한다.
-var _upYear, _upMonth;
-var _upMinYear, _upMinMonth; // 가장 가까운(=가장 이른) 예정 경기가 있는 달 — 하한이자 기본 시작점
-var _upMaxYear, _upMaxMonth; // 가장 먼 미래의 예정 경기가 있는 달 — 상한
-var _upcomingAllCache = [];
-function upMonthMatches(list, year, month){
+// ── 경기 일정: 예정+결과 통합 연도/월 선택형 조회 ──
+// 예정 경기(data.upcoming)와 종료 경기(data.finished)를 한 리스트로 합쳐서
+// 보여준다. 현재 시즌은 이미 메모리에 다 있으니(fixtures 응답 한 번으로
+// finished+upcoming 전부 옴) 추가 fetch 없이 바로 쓰고, 과거 시즌만 필요할
+// 때 시즌별로 지연 조회(getSeasonMatches)한다 — 최근 결과가 쓰던 방식 그대로.
+var _mYear, _mMonth;
+var _mMinYear, _mMinMonth; // 데이터가 있는 가장 이른 달 — 시즌이 통째로 비어있는 걸
+                           // 실제로 확인해야 알게 됨(하드코딩 금지)
+var _mMaxYear, _mMaxMonth; // 가장 먼 미래의 예정 경기가 있는 달 — 상한
+var _mCurrentSeason;       // 오늘 날짜 기준 시즌(달력 기준 8월 컷오프) — 이 시즌만 메모리로 처리
+var _mCurrentSeasonCache = [];
+var _resultsCache = {}; // 과거 시즌 시작년도 -> 그 시즌 종료 경기 배열
+
+function resultsSeasonForYM(year, month){ return month>=8 ? year : year-1; }
+
+function monthMatchesFrom(list, year, month){
   return list.filter(function(m){
     if(!m.utcDate) return false;
     var p = kstParts(new Date(m.utcDate).getTime());
     return p.y===year && (p.m+1)===month;
   }).sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);});
 }
-function upcomingAtOrAfterMax(year, month){
-  return _upMaxYear!==undefined && (year>_upMaxYear || (year===_upMaxYear && month>=_upMaxMonth));
-}
-function upcomingAtOrBeforeMin(year, month){
-  return _upMinYear!==undefined && (year<_upMinYear || (year===_upMinYear && month<=_upMinMonth));
-}
-function updateUpcomingLabel(){
-  document.getElementById('upcomingLabel').textContent = _upYear+'년 '+_upMonth+'월';
-  var nextBtn = document.getElementById('upcomingNextBtn');
-  if(nextBtn) nextBtn.disabled = upcomingAtOrAfterMax(_upYear, _upMonth);
-  var prevBtn = document.getElementById('upcomingPrevBtn');
-  if(prevBtn) prevBtn.disabled = upcomingAtOrBeforeMin(_upYear, _upMonth);
-}
-function renderUpcomingMonth(){
-  var upEl = document.getElementById('upcomingList');
-  if(!upEl) return;
-  var matches = upMonthMatches(_upcomingAllCache, _upYear, _upMonth);
-  upEl.innerHTML='';
-  if(!matches.length){ upEl.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">데이터 없음</div>'; return; }
-  matches.forEach(function(m){ upEl.appendChild(buildFixCard(m)); });
-}
-// loadFixtures와 킥오프 감시 로직(경기 시작/종료 시 미리보기 갱신) 양쪽에서
-// 재사용 — 매번 최신 upcomingAll로 상/하한을 다시 계산하되, 이미 다른 달을
-// 보고 있었다면(사용자가 탐색 중) 현재 위치는 유지한다.
-function initUpcomingNav(upcomingAll){
-  _upcomingAllCache = upcomingAll||[];
-  var withDate = _upcomingAllCache.filter(function(m){return !!m.utcDate;});
-  if(withDate.length){
-    var sortedAsc = withDate.slice().sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);});
-    var pMin = kstParts(new Date(sortedAsc[0].utcDate).getTime());
-    _upMinYear = pMin.y; _upMinMonth = pMin.m+1;
-    var pMax = kstParts(new Date(sortedAsc[sortedAsc.length-1].utcDate).getTime());
-    _upMaxYear = pMax.y; _upMaxMonth = pMax.m+1;
-  } else {
-    var now = new Date();
-    _upMinYear = _upMaxYear = now.getFullYear();
-    _upMinMonth = _upMaxMonth = now.getMonth()+1;
-  }
-  if(_upYear===undefined){
-    _upYear = _upMinYear; _upMonth = _upMinMonth;
-  }
-  updateUpcomingLabel();
-  renderUpcomingMonth();
-}
-function showUpcomingMonth(year, month){
-  _upYear = year; _upMonth = month;
-  updateUpcomingLabel();
-  renderUpcomingMonth();
-}
-// 화살표 이동은 최근 결과와 동일하게 경기 없는 달을 자동으로 건너뛴다.
-function upcomingChangeMonth(delta){
-  if(delta>0 && upcomingAtOrAfterMax(_upYear,_upMonth)) return;
-  if(delta<0 && upcomingAtOrBeforeMin(_upYear,_upMonth)) return;
-  var attempts=0;
-  do{
-    _upMonth += delta;
-    if(_upMonth>12){_upMonth=1;_upYear++;}
-    else if(_upMonth<1){_upMonth=12;_upYear--;}
-    attempts++;
-  } while(upMonthMatches(_upcomingAllCache,_upYear,_upMonth).length===0 && attempts<60);
-  updateUpcomingLabel();
-  renderUpcomingMonth();
-}
-// ── 예정 경기: 연도/월 선택 모달 — 경기 없는 달은 개별적으로 비활성화 ──
-var _pickerYearUp;
-function openUpcomingPicker(){
-  _pickerYearUp = _upYear;
-  document.getElementById('upcomingPickerOverlay').classList.add('open');
-  renderUpcomingPickerGrid();
-}
-function closeUpcomingPicker(){
-  document.getElementById('upcomingPickerOverlay').classList.remove('open');
-}
-function upPickerChangeYear(delta){
-  if(delta>0 && _upMaxYear!==undefined && _pickerYearUp>=_upMaxYear) return;
-  if(delta<0 && _upMinYear!==undefined && _pickerYearUp<=_upMinYear) return;
-  _pickerYearUp += delta;
-  renderUpcomingPickerGrid();
-}
-function renderUpcomingPickerGrid(){
-  document.getElementById('upPickerYearLabel').textContent = _pickerYearUp+'년';
-  var prevYearBtn = document.getElementById('upPickerPrevYearBtn');
-  if(prevYearBtn) prevYearBtn.disabled = _upMinYear!==undefined && _pickerYearUp<=_upMinYear;
-  var nextYearBtn = document.getElementById('upPickerNextYearBtn');
-  if(nextYearBtn) nextYearBtn.disabled = _upMaxYear!==undefined && _pickerYearUp>=_upMaxYear;
-  var grid = document.getElementById('upcomingPickerGrid');
-  grid.innerHTML = '';
-  for(var mo=1; mo<=12; mo++){
-    var hasData = upMonthMatches(_upcomingAllCache, _pickerYearUp, mo).length>0;
-    var before = _upMinYear!==undefined && (_pickerYearUp<_upMinYear || (_pickerYearUp===_upMinYear && mo<_upMinMonth));
-    var after = _upMaxYear!==undefined && (_pickerYearUp>_upMaxYear || (_pickerYearUp===_upMaxYear && mo>_upMaxMonth));
-    var btn = document.createElement('button');
-    btn.type='button';
-    btn.textContent = mo+'월';
-    btn.className = 'results-picker-cell';
-    if(_pickerYearUp===_upYear && mo===_upMonth) btn.classList.add('current');
-    if(!hasData || before || after){
-      btn.disabled = true;
-    } else {
-      (function(mm){ btn.onclick = function(){ closeUpcomingPicker(); showUpcomingMonth(_pickerYearUp, mm); }; })(mo);
-    }
-    grid.appendChild(btn);
-  }
-}
-function loadFixtures(){
-  var upEl=document.getElementById('upcomingList');
-  var badge=document.getElementById('fixBadge');
-  apiFetchCached(FN+'/football?type=fixtures', 'fixtures', function(data){
-    badge.textContent='ESPN';
-    var upcomingAll=data.upcoming||[];
-    assignPlRounds([...(data.finished||[]),...(data.upcoming||[])]);
-    window._allMatchesForCal = data.matches||[];
-    if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')) renderCalendarMonth();
-    initUpcomingNav(upcomingAll);
-    initResultsNav(data.finished||[], data.seasonsFetched);
-    renderDday(upcomingAll);
-    // 라이브 경기 있으면 폴링 시작, 없으면 가장 가까운 예정 경기 킥오프에 맞춰
-    // 감시 타이머를 걸어둔다 — 페이지를 계속 열어두고 있어도 킥오프 시점에
-    // 자동으로 라이브 전환을 감지하기 위함(안 그러면 새로고침 전까진 못 알아챔).
-    if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})){
-      stopKickoffWatch();
-      startLivePolling();
-    } else {
-      stopLivePolling();
-      scheduleKickoffWatch(upcomingAll);
-    }
-  }, function(err){showErr(upEl,err.message);badge.textContent='오류';});
-}
 
-// ── 최근 결과: 연도/월 선택형 조회 ──
-// 몇 년도까지 데이터가 있는지 하드코딩하지 않음 — 시즌을 조회했는데
-// 통째로 비어있으면 그게 곧 데이터가 없는 경계라고 판단한다.
-var _resultsYear, _resultsMonth;
-var _resultsMaxYear, _resultsMaxMonth; // 데이터가 있는 가장 최근 달(보통 마지막 종료 경기)
-var _resultsMinYear, _resultsMinMonth; // 데이터가 있는 가장 이른 달 — 처음엔 모르고, 시즌 하나가
-                                        // 통째로 비어있는 걸 실제로 확인해야 알게 됨(하드코딩 금지)
-var _resultsCache = {}; // 시즌 시작년도 -> 그 시즌 종료 경기 배열
-function resultsSeasonForYM(year, month){ return month>=8 ? year : year-1; }
-function resultsAtOrAfterMax(year, month){
-  return year>_resultsMaxYear || (year===_resultsMaxYear && month>=_resultsMaxMonth);
-}
-function resultsAtOrBeforeMin(year, month){
-  return _resultsMinYear!==undefined &&
-    (year<_resultsMinYear || (year===_resultsMinYear && month<=_resultsMinMonth));
-}
-// season 시즌을 실제로 조회했더니 통째로 비어있으면, 그 바로 다음 시즌(season+1,
-// 캐시에 이미 있어야 함 — 과거로 갈수록 한 시즌씩 순서대로 조회하므로)에서
-// 가장 이른 경기 날짜를 데이터 전체의 하한으로 기록한다.
+// season 시즌을 실제로 조회했더니 통째로 비어있으면, 그 바로 다음 시즌(캐시에
+// 이미 있어야 함 — 과거로 갈수록 한 시즌씩 순서대로 조회하므로)에서 가장
+// 이른 경기 날짜를 데이터 전체의 하한으로 기록한다.
 function markSeasonEmptyIfBoundary(season, matches){
-  if(matches.length>0 || _resultsMinYear!==undefined) return;
-  var nextMatches = _resultsCache[season+1];
+  if(matches.length>0 || _mMinYear!==undefined) return;
+  var nextMatches = (season+1===_mCurrentSeason) ? _mCurrentSeasonCache : _resultsCache[season+1];
   if(!nextMatches || !nextMatches.length) return;
   var earliest = nextMatches.filter(function(m){return !!m.utcDate;})
     .reduce(function(min,m){ var t=new Date(m.utcDate).getTime(); return (min===null||t<min)?t:min; }, null);
   if(earliest===null) return;
   var p = kstParts(earliest);
-  _resultsMinYear = p.y; _resultsMinMonth = p.m+1;
-}
-function updateResultsLabel(){
-  document.getElementById('resultsLabel').textContent = _resultsYear+'년 '+_resultsMonth+'월';
-  var atMax = _resultsMaxYear!==undefined && resultsAtOrAfterMax(_resultsYear, _resultsMonth);
-  var nextBtn = document.getElementById('resultsNextBtn');
-  if(nextBtn) nextBtn.disabled = atMax;
-  var latestBtn = document.getElementById('resultsLatestBtn');
-  if(latestBtn) latestBtn.disabled = atMax;
-  var prevBtn = document.getElementById('resultsPrevBtn');
-  if(prevBtn) prevBtn.disabled = resultsAtOrBeforeMin(_resultsYear, _resultsMonth);
+  _mMinYear = p.y; _mMinMonth = p.m+1;
 }
 function getSeasonMatches(season){
+  if(season===_mCurrentSeason) return Promise.resolve(_mCurrentSeasonCache);
   if(_resultsCache[season]){
     markSeasonEmptyIfBoundary(season, _resultsCache[season]);
     return Promise.resolve(_resultsCache[season]);
@@ -1461,79 +1293,176 @@ function getSeasonMatches(season){
     return []; // 실패한 시즌은 캐시에 남기지 않음 — 다음에 다시 시도
   });
 }
-function monthMatchesFrom(seasonMatches, year, month){
-  return seasonMatches.filter(function(m){
-    if(!m.utcDate) return false;
-    var p = kstParts(new Date(m.utcDate).getTime());
-    return p.y===year && (p.m+1)===month;
-  }).sort(function(a,b){return new Date(b.utcDate)-new Date(a.utcDate);});
+function mAtOrAfterMax(year, month){
+  return _mMaxYear!==undefined && (year>_mMaxYear || (year===_mMaxYear && month>=_mMaxMonth));
+}
+function mAtOrBeforeMin(year, month){
+  return _mMinYear!==undefined && (year<_mMinYear || (year===_mMinYear && month<=_mMinMonth));
+}
+function updateMatchLabel(){
+  document.getElementById('matchLabel').textContent = _mYear+'년 '+_mMonth+'월';
+  var nextBtn = document.getElementById('matchNextBtn');
+  if(nextBtn) nextBtn.disabled = mAtOrAfterMax(_mYear, _mMonth);
+  var prevBtn = document.getElementById('matchPrevBtn');
+  if(prevBtn) prevBtn.disabled = mAtOrBeforeMin(_mYear, _mMonth);
+  var todayBtn = document.getElementById('matchTodayBtn');
+  if(todayBtn){
+    var t = todayTargetMonth();
+    todayBtn.disabled = (_mYear===t.y && _mMonth===t.m);
+  }
 }
 function renderMatches(matches){
-  var fnEl = document.getElementById('finishedList');
-  fnEl.innerHTML='';
-  matches.forEach(function(m){ fnEl.appendChild(buildFixCard(m)); });
+  var el = document.getElementById('matchList');
+  if(!el) return;
+  el.innerHTML='';
+  if(!matches.length){ el.innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px">데이터 없음</div>'; return; }
+  matches.forEach(function(m){ el.appendChild(buildFixCard(m)); });
 }
-function initResultsNav(finishedAll, seasonsFetched){
-  // 각 경기의 시즌을 달력 기준(8월 컷오프)으로 재계산해서 캐시에 나눠 담으면,
-  // 프리시즌 친선전처럼 7월에 열리지만 ESPN이 다음 시즌 소속으로 분류하는
-  // 경기 때문에 실제로 조회한 시즌과 어긋나 버린다. 그래서 백엔드가 실제로
-  // 어떤 시즌으로 조회했는지(seasonsFetched)를 그대로 믿고 캐시 키로 쓴다.
-  _resultsCache = {};
-  (seasonsFetched||[]).forEach(function(sy){ _resultsCache[sy] = finishedAll; });
-  var sorted = finishedAll.filter(function(m){return !!m.utcDate;})
-    .slice().sort(function(a,b){return new Date(b.utcDate)-new Date(a.utcDate);});
-  var now = new Date();
-  if(sorted.length){
-    var pMax = kstParts(new Date(sorted[0].utcDate).getTime());
-    _resultsMaxYear = pMax.y; _resultsMaxMonth = pMax.m+1;
-  } else {
-    _resultsMaxYear = now.getFullYear(); _resultsMaxMonth = now.getMonth()+1;
-  }
-  if(_resultsYear===undefined){
-    _resultsYear = _resultsMaxYear; _resultsMonth = _resultsMaxMonth;
-  }
-  updateResultsLabel();
-  var season = resultsSeasonForYM(_resultsYear, _resultsMonth);
-  getSeasonMatches(season).then(function(seasonMatches){
-    renderMatches(monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth));
-  });
-}
-function showResultsMonth(year, month){
-  _resultsYear = year; _resultsMonth = month;
-  updateResultsLabel();
-  document.getElementById('finishedList').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
+function showMatchMonth(year, month){
+  _mYear = year; _mMonth = month;
+  updateMatchLabel();
+  document.getElementById('matchList').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
   var season = resultsSeasonForYM(year, month);
   getSeasonMatches(season).then(function(seasonMatches){
     renderMatches(monthMatchesFrom(seasonMatches, year, month));
   });
 }
-function goToLatestResults(){
-  if(_resultsMaxYear===undefined) return;
-  if(_resultsYear===_resultsMaxYear && _resultsMonth===_resultsMaxMonth) return;
-  showResultsMonth(_resultsMaxYear, _resultsMaxMonth);
+// "경기 일정" 제목 옆 새로고침 아이콘 — 과거/미래로 탐색하다가 오늘 달로
+// 바로 돌아가는 용도. initMatchNav의 최초 진입 로직과 동일하게, 이번 달에
+// 경기가 하나도 없으면 가장 가까운 예정 경기가 있는 달로 건너뛴다.
+// 이미 그 달을 보고 있으면(초기값) updateMatchLabel에서 버튼을 비활성화한다.
+function todayTargetMonth(){
+  var todayP = kstParts(Date.now());
+  var y = todayP.y, m = todayP.m+1;
+  var guard = 0;
+  while(monthMatchesFrom(_mCurrentSeasonCache, y, m).length===0 && !mAtOrAfterMax(y,m) && guard<24){
+    m++;
+    if(m>12){m=1;y++;}
+    guard++;
+  }
+  return {y:y, m:m};
 }
-// ── 연도/월 선택 모달: 데이터 없는 달은 개별적으로 비활성화 ──
+function goToToday(){
+  var t = todayTargetMonth();
+  showMatchMonth(t.y, t.m);
+}
+// loadFixtures와 킥오프 감시 로직(경기 시작/종료 시 미리보기 갱신) 양쪽에서
+// 재사용 — 매번 최신 데이터로 상/하한을 다시 계산하되, 이미 다른 달을 보고
+// 있었다면(사용자가 탐색 중) 현재 위치는 유지한다.
+function initMatchNav(data){
+  var upcomingAll = data.upcoming||[];
+  var finishedAll = data.finished||[];
+  var todayP = kstParts(Date.now());
+  _mCurrentSeason = resultsSeasonForYM(todayP.y, todayP.m+1);
+  _mCurrentSeasonCache = finishedAll.concat(upcomingAll);
+  (data.seasonsFetched||[]).forEach(function(sy){
+    if(sy!==_mCurrentSeason) _resultsCache[sy] = _mCurrentSeasonCache;
+  });
+
+  var withDateUp = upcomingAll.filter(function(m){return !!m.utcDate;});
+  if(withDateUp.length){
+    var sortedUp = withDateUp.slice().sort(function(a,b){return new Date(b.utcDate)-new Date(a.utcDate);});
+    var pMax = kstParts(new Date(sortedUp[0].utcDate).getTime());
+    _mMaxYear = pMax.y; _mMaxMonth = pMax.m+1;
+  } else {
+    _mMaxYear = todayP.y; _mMaxMonth = todayP.m+1;
+  }
+  if(_mYear===undefined){
+    _mYear = todayP.y; _mMonth = todayP.m+1;
+    // 이번 달에 경기가 하나도 없으면(휴식기 등) 가장 가까운 예정 경기가
+    // 있는 달로 건너뛴다 — 현재 시즌 캐시는 이미 메모리에 있으니 동기적으로
+    // 확인 가능(추가 fetch 불필요).
+    var guard = 0;
+    while(monthMatchesFrom(_mCurrentSeasonCache, _mYear, _mMonth).length===0 && !mAtOrAfterMax(_mYear,_mMonth) && guard<24){
+      _mMonth++;
+      if(_mMonth>12){_mMonth=1;_mYear++;}
+      guard++;
+    }
+  }
+  updateMatchLabel();
+  var season = resultsSeasonForYM(_mYear, _mMonth);
+  getSeasonMatches(season).then(function(seasonMatches){
+    renderMatches(monthMatchesFrom(seasonMatches, _mYear, _mMonth));
+  });
+}
+// 화살표 이동은 경기 없는 달을 자동으로 건너뛰고, 데이터 상/하한(가장 이른
+// 기록 / 가장 먼 예정 경기)에 닿으면 멈춘다.
+function matchChangeMonth(delta){
+  if(delta>0 && mAtOrAfterMax(_mYear,_mMonth)) return;
+  if(delta<0 && mAtOrBeforeMin(_mYear,_mMonth)) return;
+  document.getElementById('matchList').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
+  var attempts = 0;
+  function step(){
+    _mMonth += delta;
+    if(_mMonth>12){_mMonth=1;_mYear++;}
+    else if(_mMonth<1){_mMonth=12;_mYear--;}
+    attempts++;
+    if(delta>0 && mAtOrAfterMax(_mYear, _mMonth)){
+      updateMatchLabel();
+      var season2 = resultsSeasonForYM(_mYear, _mMonth);
+      return getSeasonMatches(season2).then(function(sm){ return monthMatchesFrom(sm, _mYear, _mMonth); });
+    }
+    // 이미 알고 있는 하한에 도달했으면 시즌이 비어있는지 다시 조회할 필요
+    // 없이 바로 그 달의 결과를 보여주고 멈춘다 (하한 너머로 못 가게)
+    if(delta<0 && mAtOrBeforeMin(_mYear, _mMonth)){
+      updateMatchLabel();
+      var seasonMin = resultsSeasonForYM(_mYear, _mMonth);
+      return getSeasonMatches(seasonMin).then(function(sm){ return monthMatchesFrom(sm, _mYear, _mMonth); });
+    }
+    var season = resultsSeasonForYM(_mYear, _mMonth);
+    return getSeasonMatches(season).then(function(seasonMatches){
+      if(seasonMatches.length===0){
+        // 방금 이 시즌이 비어있다는 걸 확인해서 하한이 막 새로 밝혀진 경우,
+        // 하한 너머(지금 위치)에 머물지 않고 실제 하한 달로 스냅백한다
+        if(delta<0 && _mMinYear!==undefined){
+          _mYear = _mMinYear; _mMonth = _mMinMonth;
+          updateMatchLabel();
+          return getSeasonMatches(resultsSeasonForYM(_mMinYear, _mMinMonth)).then(function(sm){
+            return monthMatchesFrom(sm, _mMinYear, _mMinMonth);
+          });
+        }
+        updateMatchLabel();
+        return null;
+      }
+      updateMatchLabel();
+      if(attempts>=60) return null;
+      var mm = monthMatchesFrom(seasonMatches, _mYear, _mMonth);
+      return mm.length ? mm : step();
+    });
+  }
+  step().then(function(matches){
+    if(!matches){
+      document.getElementById('matchList').innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px;text-align:center;">더 이상 기록 없음</div>';
+      return;
+    }
+    renderMatches(matches);
+  });
+}
+// ── 경기 일정: 연도/월 선택 모달 — 데이터 없는 달은 개별적으로 비활성화 ──
 // (네이티브 <input type="month">는 min/max 범위 제한만 가능하고 범위
 // 안의 특정 달을 하나씩 막을 수 없어서, 직접 그리드를 그려서 처리한다)
 var _pickerYear;
-function openResultsPicker(){
-  _pickerYear = _resultsYear;
-  document.getElementById('resultsPickerOverlay').classList.add('open');
-  renderPickerGrid();
+function openMatchPicker(){
+  _pickerYear = _mYear;
+  document.getElementById('matchPickerOverlay').classList.add('open');
+  renderMatchPickerGrid();
 }
-function closeResultsPicker(){
-  document.getElementById('resultsPickerOverlay').classList.remove('open');
+function closeMatchPicker(){
+  document.getElementById('matchPickerOverlay').classList.remove('open');
 }
-function pickerChangeYear(delta){
-  if(delta<0 && _resultsMinYear!==undefined && _pickerYear<=_resultsMinYear) return;
+function matchPickerChangeYear(delta){
+  if(delta>0 && _mMaxYear!==undefined && _pickerYear>=_mMaxYear) return;
+  if(delta<0 && _mMinYear!==undefined && _pickerYear<=_mMinYear) return;
   _pickerYear += delta;
-  renderPickerGrid();
+  renderMatchPickerGrid();
 }
-function renderPickerGrid(){
-  document.getElementById('pickerYearLabel').textContent = _pickerYear+'년';
-  var prevYearBtn = document.getElementById('pickerPrevYearBtn');
-  if(prevYearBtn) prevYearBtn.disabled = _resultsMinYear!==undefined && _pickerYear<=_resultsMinYear;
-  var grid = document.getElementById('resultsPickerGrid');
+function renderMatchPickerGrid(){
+  document.getElementById('matchPickerYearLabel').textContent = _pickerYear+'년';
+  var prevYearBtn = document.getElementById('matchPickerPrevYearBtn');
+  if(prevYearBtn) prevYearBtn.disabled = _mMinYear!==undefined && _pickerYear<=_mMinYear;
+  var nextYearBtn = document.getElementById('matchPickerNextYearBtn');
+  if(nextYearBtn) nextYearBtn.disabled = _mMaxYear!==undefined && _pickerYear>=_mMaxYear;
+  var grid = document.getElementById('matchPickerGrid');
   grid.innerHTML = '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div>';
   var seasonJan = resultsSeasonForYM(_pickerYear, 1);
   var seasonDec = resultsSeasonForYM(_pickerYear, 12);
@@ -1542,84 +1471,48 @@ function renderPickerGrid(){
     var bySeason = {};
     neededSeasons.forEach(function(sy, i){ bySeason[sy] = results[i]; });
     grid.innerHTML = '';
-    var prevYearBtn2 = document.getElementById('pickerPrevYearBtn');
-    if(prevYearBtn2) prevYearBtn2.disabled = _resultsMinYear!==undefined && _pickerYear<=_resultsMinYear;
     for(var mo=1; mo<=12; mo++){
       var season = resultsSeasonForYM(_pickerYear, mo);
       var seasonMatches = bySeason[season]||[];
       var hasData = monthMatchesFrom(seasonMatches, _pickerYear, mo).length>0;
-      var future = _resultsMaxYear!==undefined &&
-        (_pickerYear>_resultsMaxYear || (_pickerYear===_resultsMaxYear && mo>_resultsMaxMonth));
+      var before = _mMinYear!==undefined && (_pickerYear<_mMinYear || (_pickerYear===_mMinYear && mo<_mMinMonth));
+      var after = _mMaxYear!==undefined && (_pickerYear>_mMaxYear || (_pickerYear===_mMaxYear && mo>_mMaxMonth));
       var btn = document.createElement('button');
       btn.type='button';
       btn.textContent = mo+'월';
       btn.className = 'results-picker-cell';
-      if(_pickerYear===_resultsYear && mo===_resultsMonth) btn.classList.add('current');
-      if(!hasData || future){
+      if(_pickerYear===_mYear && mo===_mMonth) btn.classList.add('current');
+      if(!hasData || before || after){
         btn.disabled = true;
       } else {
-        (function(mm){ btn.onclick = function(){ closeResultsPicker(); showResultsMonth(_pickerYear, mm); }; })(mo);
+        (function(mm){ btn.onclick = function(){ closeMatchPicker(); showMatchMonth(_pickerYear, mm); }; })(mo);
       }
       grid.appendChild(btn);
     }
   });
 }
-// 화살표 이동은 경기 없는 달을 자동으로 건너뛰고, 시즌 자체가 완전히
-// 비어있으면(=더 과거 데이터가 없음) 거기서 멈춘다.
-function resultsChangeMonth(delta){
-  if(delta>0 && _resultsMaxYear!==undefined && resultsAtOrAfterMax(_resultsYear, _resultsMonth)) return;
-  if(delta<0 && resultsAtOrBeforeMin(_resultsYear, _resultsMonth)) return;
-  document.getElementById('finishedList').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
-  var attempts = 0;
-  function step(){
-    _resultsMonth += delta;
-    if(_resultsMonth>12){_resultsMonth=1;_resultsYear++;}
-    else if(_resultsMonth<1){_resultsMonth=12;_resultsYear--;}
-    attempts++;
-    if(delta>0 && resultsAtOrAfterMax(_resultsYear, _resultsMonth)){
-      updateResultsLabel();
-      var season2 = resultsSeasonForYM(_resultsYear, _resultsMonth);
-      return getSeasonMatches(season2).then(function(seasonMatches){
-        return monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth);
-      });
+function loadFixtures(){
+  var upEl=document.getElementById('matchList');
+  var badge=document.getElementById('fixBadge');
+  apiFetchCached(FN+'/football?type=fixtures', 'fixtures', function(data){
+    badge.textContent='ESPN';
+    var upcomingAll=data.upcoming||[];
+    assignPlRounds([...(data.finished||[]),...(data.upcoming||[])]);
+    window._allMatchesForCal = data.matches||[];
+    if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')) renderCalendarMonth();
+    initMatchNav(data);
+    renderDday(upcomingAll);
+    // 라이브 경기 있으면 폴링 시작, 없으면 가장 가까운 예정 경기 킥오프에 맞춰
+    // 감시 타이머를 걸어둔다 — 페이지를 계속 열어두고 있어도 킥오프 시점에
+    // 자동으로 라이브 전환을 감지하기 위함(안 그러면 새로고침 전까진 못 알아챔).
+    if((data.matches||[]).some(function(m){return m.status==='IN_PLAY';})){
+      stopKickoffWatch();
+      startLivePolling();
+    } else {
+      stopLivePolling();
+      scheduleKickoffWatch(upcomingAll);
     }
-    // 이미 알고 있는 하한에 도달했으면 시즌이 비어있는지 다시 조회할 필요
-    // 없이 바로 그 달의 결과를 보여주고 멈춘다 (하한 너머로 못 가게)
-    if(delta<0 && resultsAtOrBeforeMin(_resultsYear, _resultsMonth)){
-      updateResultsLabel();
-      var seasonMin = resultsSeasonForYM(_resultsYear, _resultsMonth);
-      return getSeasonMatches(seasonMin).then(function(seasonMatches){
-        return monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth);
-      });
-    }
-    var season = resultsSeasonForYM(_resultsYear, _resultsMonth);
-    return getSeasonMatches(season).then(function(seasonMatches){
-      if(seasonMatches.length===0){
-        // 방금 이 시즌이 비어있다는 걸 확인해서 하한이 막 새로 밝혀진 경우,
-        // 하한 너머(지금 위치)에 머물지 않고 실제 하한 달로 스냅백한다
-        if(delta<0 && _resultsMinYear!==undefined){
-          _resultsYear = _resultsMinYear; _resultsMonth = _resultsMinMonth;
-          updateResultsLabel();
-          return getSeasonMatches(resultsSeasonForYM(_resultsMinYear, _resultsMinMonth)).then(function(sm){
-            return monthMatchesFrom(sm, _resultsMinYear, _resultsMinMonth);
-          });
-        }
-        updateResultsLabel();
-        return null;
-      }
-      updateResultsLabel();
-      if(attempts>=60) return null;
-      var mm = monthMatchesFrom(seasonMatches, _resultsYear, _resultsMonth);
-      return mm.length ? mm : step();
-    });
-  }
-  step().then(function(matches){
-    if(!matches){
-      document.getElementById('finishedList').innerHTML='<div style="color:var(--text-dim);font-size:12px;padding:12px 4px;text-align:center;">더 이상 기록 없음</div>';
-      return;
-    }
-    renderMatches(matches);
-  });
+  }, function(err){showErr(upEl,err.message);badge.textContent='오류';});
 }
 
 // ── 예정 경기 달력 보기 ──
@@ -1631,8 +1524,8 @@ function kstParts(ts){
 }
 function switchFixView(view){
   document.querySelectorAll('.fix-view-btn').forEach(function(b){b.classList.toggle('active', b.getAttribute('data-view')===view);});
-  document.getElementById('upcomingList').style.display = view==='list' ? '' : 'none';
-  document.getElementById('upcomingNav').style.display = view==='list' ? '' : 'none';
+  document.getElementById('matchList').style.display = view==='list' ? '' : 'none';
+  document.getElementById('matchNav').style.display = view==='list' ? '' : 'none';
   document.getElementById('upcomingCalView').style.display = view==='cal' ? '' : 'none';
   if(view==='cal') calGoToNearestMatch();
 }
@@ -3051,7 +2944,7 @@ function renderMatchModal(content, m, data){
           '<div class="mm-meta-date">'+dateStr+'</div>'+
           '<div class="mm-score" style="color:'+scoreColor+'">'+h.score+' : '+a.score+'</div>'+
           '<div class="mm-center-meta">'+
-            (venueStr?'<div class="mm-meta-row">&#128205; '+venueStr+'</div>':'')+
+            (venueStr?'<div class="mm-meta-row">'+dIcon('stadium',11)+' '+venueStr+'</div>':'')+
             (compName?'<span class="mm-meta-comp">'+compName+'</span>':'')+
           '</div>'+
         '</div>'+
@@ -3905,7 +3798,7 @@ function startLivePolling(){
       // 킥오프에 맞춰 감시 타이머를 다시 건다.
       if(!hasLive){
         var upcomingAll = data.upcoming||[];
-        initUpcomingNav(upcomingAll);
+        initMatchNav(data);
         renderDday(upcomingAll);
         stopLivePolling();
         scheduleKickoffWatch(upcomingAll);
@@ -3958,7 +3851,7 @@ function checkKickoffTransition(){
     var hasLive = (data.matches||[]).some(function(m){return m.status==='IN_PLAY';});
     if(hasLive){
       stopKickoffWatch();
-      initUpcomingNav(data.upcoming||[]);
+      initMatchNav(data);
       startLivePolling();
       return;
     }
@@ -4101,8 +3994,8 @@ window.testLiveMatch = function(opts){
     return window._origApiFetch(url);
   };
 
-  var upEl = document.getElementById('upcomingList');
-  if(!upEl) return console.warn('upcomingList 요소를 찾을 수 없습니다.');
+  var upEl = document.getElementById('matchList');
+  if(!upEl) return console.warn('matchList 요소를 찾을 수 없습니다.');
   upEl.innerHTML = '';
   upEl.appendChild(buildFixCard(mockFixture));
   console.log('[Mock Live] 완료. ▼ 상세 보기 버튼을 클릭해 모든 탭을 확인하세요.');
