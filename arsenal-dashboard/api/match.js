@@ -2,7 +2,6 @@
 const SLUG_MAP = {
   PL:  'eng.1',
   UCL: 'uefa.champions',
-  EL:  'uefa.europa',
   EFL: 'eng.league_cup',
   FAC: 'eng.fa',
 };

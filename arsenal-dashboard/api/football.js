@@ -87,7 +87,6 @@ export default async function handler(req, res) {
   const SLUGS = [
     {slug:'eng.1',         name:'Premier League',   short:'PL'},
     {slug:'uefa.champions',name:'Champions League', short:'UCL'},
-    {slug:'uefa.europa',   name:'Europa League',    short:'EL'},
     {slug:'eng.league_cup',name:'EFL Cup',          short:'EFL'},
     {slug:'eng.fa',        name:'FA Cup',           short:'FAC'},
     {slug:'eng.charity',   name:'Community Shield', short:'CS'},
