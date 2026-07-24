@@ -2929,7 +2929,7 @@ function loadSns(){
 }
 
 // ── MATCH DETAIL MODAL ──
-var COMP_SLUG_MAP={PL:'eng.1',UCL:'uefa.champions',EFL:'eng.league_cup',FAC:'eng.fa',CS:'eng.charity',FR:'club.friendly'};
+var COMP_SLUG_MAP={PL:'eng.1',UCL:'uefa.champions',EL:'uefa.europa',EFL:'eng.league_cup',FAC:'eng.fa',CS:'eng.charity',FR:'club.friendly'};
 
 function openMatchModal(m){
   var overlay=document.getElementById('matchModal');
@@ -3546,7 +3546,7 @@ function openLiveExpand(m, panel){
 function loadLiveExpand(m, panel){
   // 프로그레스바 + 매치 상세 로드
   var comp = m.competition&&m.competition.short || 'PL';
-  var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':'eng.1';
+  var slug = comp==='UCL'?'uefa.champions':comp==='EL'?'uefa.europa':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':'eng.1';
 
   // 현재 활성 탭 기억
   var activeTab = 'events';
@@ -3588,7 +3588,7 @@ function updateCardCommentary(m){
   // 여기서 요소 존재 여부를 미리 걸러버리면 fetch 자체가 시작도 못 한다.
   // 실제 존재 확인은 fetch가 끝난 뒤 el2에서 한다.
   var comp = m.competition&&m.competition.short || 'PL';
-  var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':comp==='CS'?'eng.charity':comp==='FR'?'club.friendly':'eng.1';
+  var slug = comp==='UCL'?'uefa.champions':comp==='EL'?'uefa.europa':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':comp==='CS'?'eng.charity':comp==='FR'?'club.friendly':'eng.1';
   (window.apiFetch||apiFetch)(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
     var el2 = document.getElementById('fix-comment-'+m.id);
     var latest = (data.commentary||[])[0];
@@ -3645,7 +3645,7 @@ function startLiveExpandPolling(m, panel){
     }
     if(document.hidden) return;
     var comp = m.competition&&m.competition.short || 'PL';
-    var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':comp==='CS'?'eng.charity':comp==='FR'?'club.friendly':'eng.1';
+    var slug = comp==='UCL'?'uefa.champions':comp==='EL'?'uefa.europa':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':comp==='CS'?'eng.charity':comp==='FR'?'club.friendly':'eng.1';
     // 매치 상세 갱신
     var elPoll = document.getElementById('live-detail-'+m.id);
     var activeTabPoll = 'events';
