@@ -1367,18 +1367,15 @@ function initMatchNav(data){
   var todayP = kstParts(Date.now());
   _mCurrentSeason = resultsSeasonForYM(todayP.y, todayP.m+1);
   _mCurrentSeasonCache = finishedAll.concat(upcomingAll);
-  // seasonsFetched는 과거 시즌 스케줄을 조회한 연도만 반영하고, 예정 경기는
-  // 별도의 미래 스코어보드 조회(최대 다음해 5월까지)로 채워져서 seasonsFetched에
-  // 안 잡힐 수 있다 — 그래서 이 값을 믿지 않고, 실제로 받은 경기들의 날짜를
-  // 직접 훑어서 이 데이터가 실제로 커버하는 시즌들을 계산한다.
-  var coveredSeasons = {};
-  _mCurrentSeasonCache.forEach(function(m){
-    if(!m.utcDate) return;
-    var p = kstParts(new Date(m.utcDate).getTime());
-    coveredSeasons[resultsSeasonForYM(p.y, p.m+1)] = true;
-  });
-  Object.keys(coveredSeasons).forEach(function(syStr){
-    var sy = parseInt(syStr, 10);
+  // 주의: "이 데이터가 커버하는 시즌"을 날짜로 재계산하면 안 된다 — 프리시즌
+  // 친선전처럼 8월 이전 날짜의 경기를 ESPN이 실제로는 다음(=현재) 시즌
+  // 소속으로 내려주는 경우가 있어서, 날짜 기준(resultsSeasonForYM) 재추정은
+  // 그런 경기를 엉뚱하게 "전 시즌"으로 잘못 분류해버린다 — 실제로 이 버그
+  // 때문에 24/25 시즌 조회가 전 시즌(2024) 캐시에 현재 시즌 데이터가 잘못
+  // 덮여써져서 항상 비어있는 것처럼 보였다. 그래서 과거 방향은 백엔드가
+  // 실제로 조회한 시즌만 믿고(seasonsFetched), 미래 방향만 이미 확정된
+  // _mCurrentSeason에서 순방향으로만 걸어가며 넓힌다(역방향 오분류 불가능).
+  (data.seasonsFetched||[]).forEach(function(sy){
     if(sy!==_mCurrentSeason) _resultsCache[sy] = _mCurrentSeasonCache;
   });
 
@@ -1387,6 +1384,8 @@ function initMatchNav(data){
     var sortedUp = withDateUp.slice().sort(function(a,b){return new Date(b.utcDate)-new Date(a.utcDate);});
     var pMax = kstParts(new Date(sortedUp[0].utcDate).getTime());
     _mMaxYear = pMax.y; _mMaxMonth = pMax.m+1;
+    var maxSeason = resultsSeasonForYM(_mMaxYear, _mMaxMonth);
+    for(var sy2=_mCurrentSeason+1; sy2<=maxSeason; sy2++){ _resultsCache[sy2] = _mCurrentSeasonCache; }
   } else {
     _mMaxYear = todayP.y; _mMaxMonth = todayP.m+1;
   }
