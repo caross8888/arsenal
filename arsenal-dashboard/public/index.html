@@ -1549,12 +1549,14 @@ function switchFixView(view){
 // CAL_NAV_GUARD_ENABLED: 사용자가 직접 확인하는 동안 임시로 꺼둠 — 확인 끝나면 true로 되돌릴 것.
 var CAL_NAV_GUARD_ENABLED = true;
 function calChangeMonth(delta){
-  var next = new Date(_calDate.getFullYear(), _calDate.getMonth()+delta, 1);
+  // 리스트 뷰(matchChangeMonth)와 동일하게 "지금 위치"가 이미 상/하한이면
+  // 막는다 — 다음/이전 달(한 칸 앞)을 기준으로 검사하면 상한 달 바로 전
+  // 달에서 "다음 달이 상한과 같다"는 이유로 상한 달 자체로 못 가는 버그가 생김.
   if(CAL_NAV_GUARD_ENABLED){
-    if(delta>0 && mAtOrAfterMax(next.getFullYear(), next.getMonth()+1)) return;
-    if(delta<0 && mAtOrBeforeMin(next.getFullYear(), next.getMonth()+1)) return;
+    if(delta>0 && mAtOrAfterMax(_calDate.getFullYear(), _calDate.getMonth()+1)) return;
+    if(delta<0 && mAtOrBeforeMin(_calDate.getFullYear(), _calDate.getMonth()+1)) return;
   }
-  _calDate = next;
+  _calDate = new Date(_calDate.getFullYear(), _calDate.getMonth()+delta, 1);
   renderCalendarMonth();
 }
 function calGoToNearestMatch(){
@@ -1584,12 +1586,13 @@ function calGoToNearestMatch(){
 function renderCalendarMonth(){
   var year = _calDate.getFullYear(), month = _calDate.getMonth(); // month는 0-based
   document.getElementById('calMonthLabel').textContent = year+'년 '+(month+1)+'월';
-  var prevMonth = new Date(year, month-1, 1);
-  var nextMonth = new Date(year, month+1, 1);
+  // 리스트 뷰와 동일하게 "지금 보고 있는 달"이 상/하한인지로 판단한다
+  // (다음/이전 달 기준으로 검사하면 상한 달 바로 전 달에서 상한 달 자체로
+  // 못 가는 버그가 생김 — calChangeMonth와 동일한 이유).
   var prevBtn = document.getElementById('calPrevBtn');
-  if(prevBtn) prevBtn.disabled = CAL_NAV_GUARD_ENABLED && mAtOrBeforeMin(prevMonth.getFullYear(), prevMonth.getMonth()+1);
+  if(prevBtn) prevBtn.disabled = CAL_NAV_GUARD_ENABLED && mAtOrBeforeMin(year, month+1);
   var nextBtn = document.getElementById('calNextBtn');
-  if(nextBtn) nextBtn.disabled = CAL_NAV_GUARD_ENABLED && mAtOrAfterMax(nextMonth.getFullYear(), nextMonth.getMonth()+1);
+  if(nextBtn) nextBtn.disabled = CAL_NAV_GUARD_ENABLED && mAtOrAfterMax(year, month+1);
 
   var grid = document.getElementById('calGrid');
   grid.innerHTML = '<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div>';
