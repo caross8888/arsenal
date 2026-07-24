@@ -2495,7 +2495,7 @@ function renderTrophiesSection(){
 
 // ── MANAGERS 섹션 ──
 function renderManagersSection(){
-  var managers = window._managersData || [];
+  var managers = (window._managersData || []).slice().reverse();
   if(!managers.length){
     return '<div style="padding:40px;text-align:center;color:var(--text-dim)">로딩 중...</div>';
   }
@@ -2729,7 +2729,11 @@ function openManagerModal(enc){
   try{ mgr = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
   var modal = document.getElementById('matchModal');
   var content = document.getElementById('matchModalContent');
-  var games = mgr.games ? mgr.games+'경기' : '기록 없음';
+  // 은퇴한 감독은 games가 정적으로 고정돼 있지만, 현재 재임 중인 감독은
+  // (managers.json이 손으로 채운 정적 파일이라) 계속 경기가 늘어나서
+  // 값을 못 박아둘 수 없다 — tenureStart(부임 첫 경기 날짜)가 있으면
+  // 그 날짜 이후 종료 경기를 모두 세어서 실시간으로 계산한다.
+  var games = mgr.games ? mgr.games+'경기' : (mgr.tenureStart ? '계산 중...' : '기록 없음');
   var html = '';
   // 사진 영역
   html += '<div class="mgr-modal-photo hist-modal-photo">';
@@ -2749,7 +2753,7 @@ function openManagerModal(enc){
   html += '</div>';
   // 기본 정보 — 헤더 바로 아래 표처럼 붙여서(선수 상세모달과 동일한 컴포넌트)
   html += '<div class="detail-info-grid">';
-  html += '<div class="detail-info-cell"><div class="detail-info-val">'+games+'</div><div class="detail-info-lbl">경기</div></div>';
+  html += '<div class="detail-info-cell"><div class="detail-info-val" id="mgrGamesVal">'+games+'</div><div class="detail-info-lbl">경기</div></div>';
   html += '<div class="detail-info-cell"><div class="detail-info-val">'+(mgr.trophies?mgr.trophies.length:0)+'회</div><div class="detail-info-lbl">우승</div></div>';
   html += '</div>';
   // 바이오
@@ -2768,6 +2772,33 @@ function openManagerModal(enc){
   document.body.style.overflow = 'hidden';
   window.history.pushState({modal:'hist'},'','#hist-modal');
   requestAnimationFrame(function(){ content.scrollTop = 0; });
+  if(!mgr.games && mgr.tenureStart) computeManagerGames(mgr.tenureStart);
+}
+
+// 부임 첫 경기 날짜(tenureStart) 이후 종료된 경기를 시즌별로 모두 불러와
+// 합산 — 결과 브라우저(getSeasonMatches/resultsSeasonForYM)를 그대로 재사용.
+// 부임 시즌은 부임 전(전임 감독 재임 중) 경기가 섞여 있을 수 있어 날짜로 거른다.
+function computeManagerGames(tenureStart){
+  var valEl = document.getElementById('mgrGamesVal');
+  var startDate = new Date(tenureStart+'T00:00:00Z');
+  var startSeason = resultsSeasonForYM(startDate.getUTCFullYear(), startDate.getUTCMonth()+1);
+  var now = new Date();
+  var endSeason = resultsSeasonForYM(now.getFullYear(), now.getMonth()+1);
+  var seasons = [];
+  for(var s=startSeason; s<=endSeason; s++) seasons.push(s);
+  Promise.all(seasons.map(getSeasonMatches)).then(function(results){
+    var total = 0;
+    results.forEach(function(seasonMatches, i){
+      seasonMatches.forEach(function(m){
+        if(!m.utcDate) return;
+        if(seasons[i]===startSeason && new Date(m.utcDate).getTime() < startDate.getTime()) return;
+        total++;
+      });
+    });
+    if(valEl) valEl.textContent = total+'경기';
+  }).catch(function(){
+    if(valEl) valEl.textContent = '기록 없음';
+  });
 }
 
 function openHistModal(enc){
