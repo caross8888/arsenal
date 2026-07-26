@@ -29,6 +29,7 @@ const FOTMOB_IDS = {
   'zubimendi':     1031325,
   'rice':          654096,
   'dowman':        1635773,
+  'tzolis':        1157237,
   'nelson':        748382,
   'saka':          961995,
   'jesus':         576165,

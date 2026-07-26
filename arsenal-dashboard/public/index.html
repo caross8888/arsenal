@@ -1311,17 +1311,21 @@ function mAtOrAfterMax(year, month){
 function mAtOrBeforeMin(year, month){
   return _mMinYear!==undefined && (year<_mMinYear || (year===_mMinYear && month<=_mMinMonth));
 }
+// "경기 일정" 옆 새로고침("오늘로") 버튼은 리스트/달력 두 뷰가 공유하는
+// 단일 버튼이라, 지금 보이는 쪽 위치를 기준으로 활성/비활성을 맞춘다.
+function updateTodayBtn(year, month /* 1-based */){
+  var todayBtn = document.getElementById('matchTodayBtn');
+  if(!todayBtn) return;
+  var t = todayTargetMonth();
+  todayBtn.disabled = (year===t.y && month===t.m);
+}
 function updateMatchLabel(){
   document.getElementById('matchLabel').textContent = _mYear+'년 '+_mMonth+'월';
   var nextBtn = document.getElementById('matchNextBtn');
   if(nextBtn) nextBtn.disabled = mAtOrAfterMax(_mYear, _mMonth);
   var prevBtn = document.getElementById('matchPrevBtn');
   if(prevBtn) prevBtn.disabled = mAtOrBeforeMin(_mYear, _mMonth);
-  var todayBtn = document.getElementById('matchTodayBtn');
-  if(todayBtn){
-    var t = todayTargetMonth();
-    todayBtn.disabled = (_mYear===t.y && _mMonth===t.m);
-  }
+  updateTodayBtn(_mYear, _mMonth);
 }
 function renderMatches(matches){
   var el = document.getElementById('matchList');
@@ -1356,7 +1360,13 @@ function todayTargetMonth(){
 }
 function goToToday(){
   var t = todayTargetMonth();
-  showMatchMonth(t.y, t.m);
+  var activeView = document.querySelector('.fix-view-btn.active');
+  if(activeView && activeView.getAttribute('data-view')==='cal'){
+    _calDate = new Date(t.y, t.m-1, 1);
+    renderCalendarMonth();
+  } else {
+    showMatchMonth(t.y, t.m);
+  }
 }
 // loadFixtures와 킥오프 감시 로직(경기 시작/종료 시 미리보기 갱신) 양쪽에서
 // 재사용 — 매번 최신 데이터로 상/하한을 다시 계산하되, 이미 다른 달을 보고
@@ -1550,6 +1560,7 @@ function switchFixView(view){
   document.getElementById('matchNav').style.display = view==='list' ? '' : 'none';
   document.getElementById('upcomingCalView').style.display = view==='cal' ? '' : 'none';
   if(view==='cal') calGoToNearestMatch();
+  else if(_mYear!==undefined) updateTodayBtn(_mYear, _mMonth); // 달력에서 돌아오면 리스트 위치 기준으로 재동기화
 }
 // 달력 화살표는 리스트 뷰(경기 일정)와 완전히 동일한 규칙을 따른다:
 // 경기 없는 달은 자동으로 건너뛰고, 데이터 상/하한(가장 이른 기록 달 /
@@ -1564,6 +1575,7 @@ function updateCalNavButtons(year, month /* 0-based */){
   if(prevBtn) prevBtn.disabled = CAL_NAV_GUARD_ENABLED && mAtOrBeforeMin(year, month+1);
   var nextBtn = document.getElementById('calNextBtn');
   if(nextBtn) nextBtn.disabled = CAL_NAV_GUARD_ENABLED && mAtOrAfterMax(year, month+1);
+  updateTodayBtn(year, month+1);
 }
 function calChangeMonth(delta){
   if(CAL_NAV_GUARD_ENABLED){
