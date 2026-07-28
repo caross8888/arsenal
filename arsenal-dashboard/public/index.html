@@ -950,7 +950,7 @@ function showErr(el,msg){el.innerHTML='<div class="error-state">&#9888;&#65039; 
 // 아이콘이 스치듯 지나가지 않게. containerEl에 스피너가 이미 없다면(캐시로
 // 즉시 렌더링된 뒤의 백그라운드 갱신, 혹은 이미 한 번 렌더링된 상태)
 // 지연 없이 바로 실행한다.
-var MIN_LOADING_MS = 2000;
+var MIN_LOADING_MS = 1500;
 function withMinLoading(containerEl, startTime, renderFn){
   if(!containerEl || !containerEl.querySelector('.spinner')){
     renderFn();
