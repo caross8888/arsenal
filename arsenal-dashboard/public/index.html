@@ -449,20 +449,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .key-input:focus{border-color:var(--red)}
 .key-input::placeholder{color:var(--text-dim)}
 .key-btn{background:var(--red);border:none;border-radius:8px;padding:10px 16px;color:#fff;font-family:var(--fb);font-weight:700;font-size:11px;cursor:pointer;white-space:nowrap}
-.key-status{margin-top:8px;font-size:11px;padding:7px 12px;border-radius:6px;display:none}
-.key-status.ok{display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
-.key-status.err{display:flex;align-items:center;gap:6px;background:rgba(239,68,68,.1);color:#F87171;border:1px solid rgba(239,68,68,.2)}
-.wgt-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
-.wgt-tabs::-webkit-scrollbar{display:none}
-.wgt-tab{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-family:var(--fb);font-size:10px;padding:6px 12px;border-radius:20px;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
-.wgt-tab.active{background:rgba(239,1,7,.15);border-color:rgba(239,1,7,.4);color:var(--red)}
-.widget-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;min-height:240px}
-.widget-ph{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;text-align:center;gap:12px}
-.wp-icon{font-size:36px;opacity:.25}
-.wp-title{font-family:var(--fd);font-size:18px;letter-spacing:2px;color:var(--text-muted)}
-.wp-desc{font-size:11px;color:var(--text-dim);max-width:240px;line-height:1.6}
-.widget-iframe-wrap{display:none;width:100%}
-.widget-iframe-wrap iframe{width:100%;min-height:420px;border:none;display:block}
 .fix-view-toggle{display:flex;gap:1px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden;flex-shrink:0;}
 .fix-view-btn{padding:5px 9px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;}
 .fix-view-btn svg{width:14px;height:14px;}
@@ -3525,13 +3511,6 @@ enableSheetSwipeClose(document.querySelector('.match-modal-sheet'), '.mm-header-
 // ── TICKER ──
 
 
-// ── CONFIG ──
-function loadConfig(){
-  fetch(FN+'/config').then(function(r){return r.json();}).then(function(cfg){
-    // widgetKey는 더 이상 사용하지 않음
-  }).catch(function(){});
-}
-
 // ── NAV ──
 var VALID_SECS = ['fixtures','squad','injuries','media','history'];
 var loaded={fixtures:true};
@@ -4945,7 +4924,6 @@ function loadESPNStats(){
 
 
 loadESPNStats();
-loadConfig();
 loadFixtures();
 loadStandings();
 loadLeaders();
