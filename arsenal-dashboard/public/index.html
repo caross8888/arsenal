@@ -51,14 +51,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .spinner .spinner-icon path{stroke-dasharray:1;stroke-width:1.2px;vector-effect:non-scaling-stroke;animation:cannonDraw 3s ease-in-out infinite;}
 @keyframes cannonDraw{0%{stroke-dashoffset:1;}55%{stroke-dashoffset:0;}70%{stroke-dashoffset:0;}100%{stroke-dashoffset:1;}}
 .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:8px}
-.dday-card{background:linear-gradient(135deg,var(--red) 0%,#7a0010 100%);border-radius:14px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;color:#fff;position:relative;overflow:hidden;}
-.dday-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 90% -20%,rgba(255,255,255,.15),transparent 60%);pointer-events:none;}
-.dday-num{font-family:var(--fd);font-size:32px;letter-spacing:1px;line-height:1;flex-shrink:0;position:relative;z-index:1;min-width:64px;}
+.dday-card{background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);border:1px solid rgba(212,175,55,.18);border-radius:14px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;color:#fff;position:relative;overflow:hidden;}
+.dday-num{font-family:var(--fd);font-size:32px;letter-spacing:1px;line-height:1;flex-shrink:0;position:relative;z-index:1;min-width:64px;color:#fff;}
 .dday-info{flex:1;min-width:0;position:relative;z-index:1;}
-.dday-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:.75;margin-bottom:4px;}
+.dday-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:800;margin-bottom:4px;}
 .dday-match{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:14px;font-weight:700;margin-bottom:4px;}
-.dday-comp{font-size:8px;letter-spacing:1px;text-transform:uppercase;background:rgba(255,255,255,.18);padding:2px 7px;border-radius:20px;}
-.dday-time{font-size:11px;opacity:.85;position:relative;z-index:1;}
+.dday-comp{font-size:8px;letter-spacing:1px;text-transform:uppercase;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);padding:2px 7px;border-radius:20px;}
+.dday-time{font-size:11px;color:var(--text-muted);position:relative;z-index:1;}
 .fix-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:6px;padding-left:2px}
 .fix-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
 .fix-section-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;}
@@ -394,10 +393,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .trophy-card:active{opacity:.82;}
 
 /* 이미지 영역 */
-.trophy-card-img-wrap{width:100%;aspect-ratio:1/1;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
-.trophy-card-img{width:100%;height:100%;object-fit:cover;display:block;}
+.trophy-card-img-wrap{width:100%;aspect-ratio:4/3;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;padding:18px;box-sizing:border-box;}
+.trophy-card-img{width:100%;height:100%;object-fit:contain;display:block;}
 .trophy-card-img-ph{font-size:36px;}
 .trophy-card-cat{position:absolute;top:5px;left:5px;font-size:8px;font-weight:700;letter-spacing:.5px;padding:2px 5px;border-radius:4px;background:rgba(0,0,0,.55);color:rgba(255,255,255,.8);}
+.trophy-card-record{position:absolute;top:5px;right:5px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.55);color:var(--gold);white-space:nowrap;}
 
 /* 하단 정보 */
 .trophy-card-info{padding:7px 8px 9px;text-align:center;}
@@ -408,7 +408,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .trophy-card-count.silver{color:#aaa;}
 .trophy-card-count.bronze{color:#cd7f32;}
 .trophy-card-wins{font-size:8px;color:var(--text-secondary);font-weight:600;}
-.trophy-card-record{font-size:8px;color:var(--gold);font-weight:700;margin-top:2px;}
 
 /* Trophy 모달 */
 .trophy-modal-top{display:flex;gap:12px;padding:16px 16px 12px;align-items:center;}
@@ -950,7 +949,7 @@ function showErr(el,msg){el.innerHTML='<div class="error-state">&#9888;&#65039; 
 // 아이콘이 스치듯 지나가지 않게. containerEl에 스피너가 이미 없다면(캐시로
 // 즉시 렌더링된 뒤의 백그라운드 갱신, 혹은 이미 한 번 렌더링된 상태)
 // 지연 없이 바로 실행한다.
-var MIN_LOADING_MS = 1500;
+var MIN_LOADING_MS = 1200;
 function withMinLoading(containerEl, startTime, renderFn){
   if(!containerEl || !containerEl.querySelector('.spinner')){
     renderFn();
@@ -2482,6 +2481,7 @@ function renderTrophiesSection(){
     } else {
       html += '<div class="trophy-card-img-ph">'+t.icon+'</div>';
     }
+    if(t.record) html += '<div class="trophy-card-record">★ '+t.record+'</div>';
     html += '</div>';
     html += '<div class="trophy-card-info">';
     html += '<div class="trophy-card-name">'+(t.title||t.name)+'</div>';
@@ -2489,7 +2489,6 @@ function renderTrophiesSection(){
     html += '<div class="trophy-card-count'+(countColor?' '+countColor:'')+'">'+t.count+'</div>';
     html += '<div class="trophy-card-wins">회 우승</div>';
     html += '</div>';
-    if(t.record) html += '<div class="trophy-card-record">★ '+t.record+'</div>';
     html += '</div>';
     html += '</div>';
   });
