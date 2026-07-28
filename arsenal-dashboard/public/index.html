@@ -3002,6 +3002,7 @@ function openMatchModal(m){
   requestAnimationFrame(function(){ var _mi=document.getElementById('matchModalContent'); if(_mi) _mi.scrollTop=0; });
   history.pushState({modal:'match'},'',' #match');
 
+  var _t0=Date.now();
   var timer=setTimeout(function(){
     var sp=content.querySelector('.spinner');
     if(sp) sp.parentElement.innerHTML='<div class="error-state">&#9888;&#65039; 응답 없음 — 잠시 후 다시 시도해주세요</div>';
@@ -3012,13 +3013,15 @@ function openMatchModal(m){
     .then(function(data){
       clearTimeout(timer);
       if(data.error) throw new Error(data.error);
-      renderMatchModal(content, m, data);
+      withMinLoading(content, _t0, function(){ renderMatchModal(content, m, data); });
     })
     .catch(function(err){
       clearTimeout(timer);
-      var sp=content.querySelector('.spinner');
-      var wrap=sp?sp.parentElement:content;
-      wrap.innerHTML='<div class="error-state" style="margin:16px">&#9888;&#65039; '+( err&&err.message?err.message:'데이터를 불러올 수 없어요')+'</div>';
+      withMinLoading(content, _t0, function(){
+        var sp=content.querySelector('.spinner');
+        var wrap=sp?sp.parentElement:content;
+        wrap.innerHTML='<div class="error-state" style="margin:16px">&#9888;&#65039; '+( err&&err.message?err.message:'데이터를 불러올 수 없어요')+'</div>';
+      });
     });
 }
 
