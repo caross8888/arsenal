@@ -2968,6 +2968,11 @@ function openMatchModal(m){
   var content=document.getElementById('matchModalContent');
   document.querySelector('.match-modal-sheet').classList.remove('hist-compact');
   var slug=COMP_SLUG_MAP[m.competition&&m.competition.short]||'eng.1';
+  var ARSENAL_ESPN='359';
+  var isArsHomeSkel=m.homeTeam&&(m.homeTeam.id===57||m.homeTeam.id===ARSENAL_ESPN||(m.homeTeam.name||'').includes('Arsenal'));
+  var hs0=m.score&&m.score.fullTime?(m.score.fullTime.home||0):0;
+  var as0=m.score&&m.score.fullTime?(m.score.fullTime.away||0):0;
+  var scoreColorSkel=m.status==='FINISHED'?(isArsHomeSkel?(hs0>as0?'#22C55E':hs0===as0?'#F59E0B':'#EF4444'):(as0>hs0?'#22C55E':as0===hs0?'#F59E0B':'#EF4444')):'';
 
   // 로딩 상태
   content.innerHTML=
@@ -2980,8 +2985,9 @@ function openMatchModal(m){
         '</div>'+
         '<div class="mm-center-col">'+
           '<div class="mm-meta-date">'+formatDate(m.utcDate||m.date,m.tbd)+'</div>'+
-          '<div class="mm-score">'+(m.score.fullTime.home||0)+' : '+(m.score.fullTime.away||0)+'</div>'+
+          '<div class="mm-score" style="'+(scoreColorSkel?'color:'+scoreColorSkel+';':'')+'">'+hs0+' : '+as0+'</div>'+
           '<div class="mm-center-meta">'+
+            (m.venue?'<div class="mm-meta-row">'+dIcon('stadium',11)+' '+m.venue+'</div>':'')+
             (m.competition&&m.competition.name?'<span class="mm-meta-comp">'+(m.competition.name)+'</span>':'')+
           '</div>'+
         '</div>'+
