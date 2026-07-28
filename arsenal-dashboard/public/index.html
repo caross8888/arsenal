@@ -46,10 +46,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .card-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-secondary);font-weight:700}
 .loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:10px;color:var(--text-muted);font-size:12px}
-.spinner{display:inline-block;width:38px;height:auto;color:var(--red);vertical-align:middle;overflow:visible;}
+.spinner{display:inline-block;width:90px;height:auto;color:var(--red);vertical-align:middle;overflow:visible;}
 .spinner .spinner-icon{width:100%;height:auto;display:block;overflow:visible;}
-.spinner .spinner-icon path{stroke-dasharray:1;stroke-width:2.5px;vector-effect:non-scaling-stroke;animation:cannonDraw 2s ease-in-out infinite;}
-@keyframes cannonDraw{0%{stroke-dashoffset:1;}35%{stroke-dashoffset:0;}65%{stroke-dashoffset:0;}100%{stroke-dashoffset:-1;}}
+.spinner .spinner-icon path{stroke-dasharray:1;stroke-width:1.2px;vector-effect:non-scaling-stroke;animation:cannonDraw 3s ease-in-out infinite;}
+@keyframes cannonDraw{0%{stroke-dashoffset:1;}35%{stroke-dashoffset:0;}65%{stroke-dashoffset:0;}100%{stroke-dashoffset:1;}}
 .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:8px}
 .dday-card{background:linear-gradient(135deg,var(--red) 0%,#7a0010 100%);border-radius:14px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;color:#fff;position:relative;overflow:hidden;}
 .dday-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 90% -20%,rgba(255,255,255,.15),transparent 60%);pointer-events:none;}
