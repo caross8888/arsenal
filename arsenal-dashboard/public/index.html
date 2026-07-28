@@ -2070,7 +2070,6 @@ function loadMedia(){
 function loadHistory(){
   if(window._historyLoaded){ return; }
   window._historyLoaded = true;
-  var _t0=Date.now();
   // 두 파일 병렬 로드
   Promise.all([
     fetch('/data/otd_matches.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
@@ -2082,23 +2081,21 @@ function loadHistory(){
     fetch('/data/stadiums.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
     fetch('/data/moments.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
   ]).then(function(results){
-    withMinLoading(document.getElementById('historyContent'), _t0, function(){
-      window._otdData      = results[0];
-      window._archiveData  = results[1];
-      window._managersData = results[2];
-      window._legendsData  = results[3];
-      window._timelineData = results[4];
-      window._recordsData  = results[5];
-      window._stadiumsData = results[6];
-      window._momentsData  = results[7];
-      // History 탭을 여는 즉시(어떤 서브탭이든) 재임 중인 감독의 경기수 계산을
-      // 미리 시작해둔다 — 사용자가 감독 탭까지 들어와서 카드를 클릭할 때쯤엔
-      // 이미 끝나 있어서 로딩 표시 없이 하드코딩된 값처럼 바로 보인다.
-      (window._managersData||[]).forEach(function(mgr){
-        if(!mgr.games && mgr.tenureStart && _mgrGamesCache[mgr.id]===undefined) computeManagerGames(mgr);
-      });
-      renderHistoryNew();
+    window._otdData      = results[0];
+    window._archiveData  = results[1];
+    window._managersData = results[2];
+    window._legendsData  = results[3];
+    window._timelineData = results[4];
+    window._recordsData  = results[5];
+    window._stadiumsData = results[6];
+    window._momentsData  = results[7];
+    // History 탭을 여는 즉시(어떤 서브탭이든) 재임 중인 감독의 경기수 계산을
+    // 미리 시작해둔다 — 사용자가 감독 탭까지 들어와서 카드를 클릭할 때쯤엔
+    // 이미 끝나 있어서 로딩 표시 없이 하드코딩된 값처럼 바로 보인다.
+    (window._managersData||[]).forEach(function(mgr){
+      if(!mgr.games && mgr.tenureStart && _mgrGamesCache[mgr.id]===undefined) computeManagerGames(mgr);
     });
+    renderHistoryNew();
   });
 }
 

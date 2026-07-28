@@ -4,7 +4,7 @@
     {
       "name": "Vercel Dev (API + Frontend)",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["vercel", "dev", "--cwd", "arsenal-dashboard"],
+      "runtimeArgs": ["vercel", "dev", "--cwd", "arsenal-dashboard", "--yes"],
       "port": 3000
     },
     {
