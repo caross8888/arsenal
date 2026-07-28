@@ -49,7 +49,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .spinner{display:inline-block;width:90px;height:auto;color:var(--red);vertical-align:middle;overflow:visible;}
 .spinner .spinner-icon{width:100%;height:auto;display:block;overflow:visible;}
 .spinner .spinner-icon path{stroke-dasharray:1;stroke-width:1.2px;vector-effect:non-scaling-stroke;animation:cannonDraw 3s ease-in-out infinite;}
-@keyframes cannonDraw{0%{stroke-dashoffset:1;}35%{stroke-dashoffset:0;}65%{stroke-dashoffset:0;}100%{stroke-dashoffset:1;}}
+@keyframes cannonDraw{0%{stroke-dashoffset:1;}55%{stroke-dashoffset:0;}70%{stroke-dashoffset:0;}100%{stroke-dashoffset:1;}}
 .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:8px}
 .dday-card{background:linear-gradient(135deg,var(--red) 0%,#7a0010 100%);border-radius:14px;padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;color:#fff;position:relative;overflow:hidden;}
 .dday-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 90% -20%,rgba(255,255,255,.15),transparent 60%);pointer-events:none;}
@@ -950,7 +950,7 @@ function showErr(el,msg){el.innerHTML='<div class="error-state">&#9888;&#65039; 
 // 아이콘이 스치듯 지나가지 않게. containerEl에 스피너가 이미 없다면(캐시로
 // 즉시 렌더링된 뒤의 백그라운드 갱신, 혹은 이미 한 번 렌더링된 상태)
 // 지연 없이 바로 실행한다.
-var MIN_LOADING_MS = 3000;
+var MIN_LOADING_MS = 2000;
 function withMinLoading(containerEl, startTime, renderFn){
   if(!containerEl || !containerEl.querySelector('.spinner')){
     renderFn();
