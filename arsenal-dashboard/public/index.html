@@ -2055,6 +2055,11 @@ function switchMedia(tab, btn){
   btn.classList.add('active');
   document.getElementById('mediaNews').style.display = tab==='news' ? '' : 'none';
   document.getElementById('mediaSns').style.display = tab==='sns' ? '' : 'none';
+  var mediaBadgeEl = document.getElementById('mediaBadge');
+  if(mediaBadgeEl){
+    if(tab==='news' && window._newsBadgeText) mediaBadgeEl.textContent = window._newsBadgeText;
+    if(tab==='sns' && window._snsBadgeText) mediaBadgeEl.textContent = window._snsBadgeText;
+  }
   if(tab==='sns' && !window._snsLoaded){ loadSns(); window._snsLoaded=true; }
 }
 
@@ -2859,13 +2864,14 @@ function openHistModal(enc){
 function loadNews(){
   var el=document.getElementById('newsGrid');
   var badge=document.getElementById('newsBadge')||document.getElementById('mediaBadge');
-  var mediaBadgeEl=document.getElementById('mediaBadge');
   var _t0=Date.now();
   apiFetchCached(FN+'/news', 'news', function(data){
     withMinLoading(document.getElementById('newsGrid'), _t0, function(){
-      badge.textContent=data.source||'RSS';
-      if(mediaBadgeEl) mediaBadgeEl.textContent='ESPN+';
       var articles=data.articles||[];
+      var srcList=[];
+      articles.forEach(function(a){ if(a.source && srcList.indexOf(a.source)===-1) srcList.push(a.source); });
+      window._newsBadgeText = srcList.length ? srcList.join(' \u00B7 ') : '\uB274\uC2A4 \uC5C6\uC74C';
+      if(badge) badge.textContent=window._newsBadgeText;
       if(!articles.length){el.innerHTML='<div class="loading-state">\uB274\uC2A4 \uC5C6\uC74C</div>';return;}
       el.innerHTML='';
       articles.forEach(function(a){
@@ -2890,7 +2896,7 @@ function loadNews(){
         card.appendChild(imgDiv);card.appendChild(body);el.appendChild(card);
       });
     });
-  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message);badge.textContent='\uC624\uB958'; }); });
+  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); window._newsBadgeText='\uC624\uB958'; if(badge) badge.textContent=window._newsBadgeText; }); });
 }
 
 // ── SNS (Bluesky) ──
@@ -2901,7 +2907,8 @@ function loadSns(){
   apiFetchCached(FN+'/social', 'social', function(data){
     withMinLoading(document.getElementById('snsGrid'), _t0, function(){
       var posts=data.posts||[];
-      if(badge) badge.textContent=posts.length+'개';
+      window._snsBadgeText='BLUESKY';
+      if(badge) badge.textContent=window._snsBadgeText;
       if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
       el.innerHTML='';
       posts.forEach(function(p){
@@ -2955,7 +2962,8 @@ function loadSns(){
   }, function(err){
     withMinLoading(el, _t0, function(){
       el.innerHTML='<div class="loading-state">오류: '+err.message+'</div>';
-      if(badge) badge.textContent='오류';
+      window._snsBadgeText='오류';
+      if(badge) badge.textContent=window._snsBadgeText;
     });
   });
 }
