@@ -401,7 +401,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 /* 하단 정보 */
 .trophy-card-info{padding:7px 8px 9px;text-align:center;}
-.trophy-card-name{font-size:10px;font-weight:700;color:var(--text-secondary);line-height:1.3;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.trophy-card-name{font-size:11px;font-weight:700;color:var(--text-secondary);line-height:1.3;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .trophy-card-count-wrap{display:flex;align-items:baseline;justify-content:center;gap:3px;}
 .trophy-card-count{font-size:22px;font-weight:900;line-height:1;font-family:var(--fd);}
 .trophy-card-count.gold{color:var(--gold);}
@@ -2475,7 +2475,7 @@ function renderTrophiesSection(){
     if(t.record) html += '<div class="trophy-card-record">★ '+t.record+'</div>';
     html += '</div>';
     html += '<div class="trophy-card-info">';
-    html += '<div class="trophy-card-name">'+(t.title||t.name)+'</div>';
+    html += '<div class="trophy-card-name">'+(t.shortTitle||t.title||t.name)+'</div>';
     html += '<div class="trophy-card-count-wrap">';
     html += '<div class="trophy-card-count'+(countColor?' '+countColor:'')+'">'+t.count+'</div>';
     html += '<div class="trophy-card-wins">회 우승</div>';
