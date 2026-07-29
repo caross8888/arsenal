@@ -601,6 +601,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    사진 영역은 스와이프-닫기 트리거(핸들 바 포함), 그 아래 이름/제목 헤더는
    사진이 스크롤되어 올라가다 상단에 닿는 순간 고정(sticky)된다. */
 .hist-modal-photo{position:relative;touch-action:none;}
+/* 사진(img)이 기본적으로 드래그 가능한 요소라, PC 마우스로 스와이프-닫기를
+   시도하면 브라우저 네이티브 이미지 드래그(고스트 이미지)가 먼저 발동해서
+   pointermove 시퀀스를 가로채 버린다 — 그래서 마우스 드래그로는 안 닫히고
+   터치/자동화 테스트에서는 재현이 안 됐다. 네이티브 이미지 드래그 자체를 꺼서
+   pointermove가 온전히 스와이프-닫기 로직으로 넘어가게 한다. */
+.hist-modal-photo img{-webkit-user-drag:none;user-drag:none;-webkit-user-select:none;user-select:none;}
 .hist-modal-handle{width:36px;height:4px;background:rgba(255,255,255,.55);border-radius:2px;position:absolute;top:10px;left:50%;transform:translateX(-50%);box-shadow:0 1px 4px rgba(0,0,0,.5);z-index:2;}
 .hist-modal-header{position:sticky;top:0;z-index:10;}
 .mm-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:20;}
