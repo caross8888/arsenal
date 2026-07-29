@@ -2498,7 +2498,7 @@ function renderManagersSection(){
     html += '<div class="mgr-card'+(mgr.highlight?' highlight':'')+'" onclick="openManagerModal(\'' + enc + '\')">'; 
     html += '<div class="mgr-card-img-wrap">';
     if(mgr.photo){
-      html += '<img src="'+mgr.photo+'" style="width:100%;height:100%;object-fit:cover;object-position:top;display:block;position:absolute;inset:0;" onerror="this.style.display=\'none\'">';
+      html += '<img src="'+mgr.photo+'" style="width:100%;height:100%;object-fit:cover;object-position:'+(mgr.photoPosition||'top')+';display:block;position:absolute;inset:0;" onerror="this.style.display=\'none\'">';
     }
     html += '<img src="/data/history_images/manager_default.jpg" style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;'+(mgr.photo?'display:none':'')+'" class="mgr-card-img-ph">';
     html += '<div class="mgr-card-gradient"></div>';
