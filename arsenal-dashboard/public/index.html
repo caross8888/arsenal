@@ -716,6 +716,31 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </head>
 <body>
 
+<div id="introOverlay" style="position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+  <video id="introVideo" src="/video/intro.mp4" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;display:block;"></video>
+</div>
+<script>
+(function(){
+  var overlay = document.getElementById('introOverlay');
+  var video = document.getElementById('introVideo');
+  var dismissed = false;
+  function dismissIntro(){
+    if(dismissed || !overlay) return;
+    dismissed = true;
+    overlay.style.transition = 'opacity .4s ease';
+    overlay.style.opacity = '0';
+    setTimeout(function(){ overlay.remove(); }, 400);
+  }
+  if(video){
+    video.addEventListener('ended', dismissIntro);
+    video.addEventListener('error', dismissIntro);
+  }
+  if(overlay) overlay.addEventListener('click', dismissIntro);
+  // 자동재생이 막히는 브라우저 대비 — 영상 길이(5.2초)보다 넉넉하게 기다렸다가 강제로 넘어감
+  setTimeout(dismissIntro, 8000);
+})();
+</script>
+
 <div class="top-header">
   <div class="brand">
     <img class="logo-svg" src="https://crests.football-data.org/57.png" alt="Arsenal FC" style="border-radius:50%;background:rgba(239,1,7,.1);padding:2px;">
