@@ -716,8 +716,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </head>
 <body>
 
-<div id="introOverlay" style="position:fixed;inset:0;z-index:9999;background:var(--navy);display:flex;align-items:center;justify-content:center;overflow:hidden;">
-  <video id="introVideo" src="/video/intro.mp4" autoplay muted playsinline style="width:100%;height:100%;object-fit:contain;display:block;"></video>
+<div id="introOverlay" style="position:fixed;inset:0;z-index:9999;background:#111318;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+  <video id="introVideo" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;display:block;"></video>
 </div>
 <script>
 (function(){
@@ -732,6 +732,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   }
   sessionStorage.setItem('introShown', '1');
   var video = document.getElementById('introVideo');
+  // <source media="..."> 는 <video>에서 브라우저마다 재평가가 불안정해서
+  // (특히 뷰포트 폭 기준 선택이 안 먹는 경우가 있음) JS로 직접 폭을 보고
+  // 골라서 src를 지정한다 — 768px 이하는 세로로 찍은 모바일 전용 영상.
+  if(video){
+    video.src = window.innerWidth <= 768 ? '/video/intro_mobile.mp4' : '/video/intro.mp4';
+    video.play().catch(function(){});
+  }
   var dismissed = false;
   function dismissIntro(){
     if(dismissed) return;
