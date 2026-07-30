@@ -720,25 +720,32 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <video id="introVideo" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;display:block;"></video>
 </div>
 <script>
-(function(){
+// 헤더의 "Arsenal FC" 로고를 눌러서도 다시 재생할 수 있게 재사용 가능한
+// 함수로 뺐다 — 오버레이가 이미 제거된 상태(최초 실행 후)면 새로 만든다.
+// 정적 파일이라 두 번째부터는 브라우저 캐시(304)로 재생되니 대역폭 부담 없다.
+function playIntro(){
   var overlay = document.getElementById('introOverlay');
-  if(!overlay) return;
-  // 앱을 완전히 껐다가 다시 켰을 때(새 세션)만 보여주고, 같은 세션 안에서
-  // 새로고침할 땐 건너뛴다 — sessionStorage는 탭/앱이 완전히 종료되기 전까진
-  // 유지되고, 껐다가 다시 켜면(새 세션) 초기화된다.
-  if(sessionStorage.getItem('introShown')){
-    overlay.remove();
-    return;
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'introOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#111318;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+    var v = document.createElement('video');
+    v.id = 'introVideo';
+    v.autoplay = true; v.muted = true; v.playsInline = true;
+    v.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+    overlay.appendChild(v);
+    document.body.insertBefore(overlay, document.body.firstChild);
+  } else {
+    overlay.style.transition = '';
+    overlay.style.opacity = '1';
   }
-  sessionStorage.setItem('introShown', '1');
   var video = document.getElementById('introVideo');
   // <source media="..."> 는 <video>에서 브라우저마다 재평가가 불안정해서
   // (특히 뷰포트 폭 기준 선택이 안 먹는 경우가 있음) JS로 직접 폭을 보고
   // 골라서 src를 지정한다 — 768px 이하는 세로로 찍은 모바일 전용 영상.
-  if(video){
-    video.src = window.innerWidth <= 768 ? '/video/intro_mobile.mp4' : '/video/intro.mp4';
-    video.play().catch(function(){});
-  }
+  video.src = window.innerWidth <= 768 ? '/video/intro_mobile.mp4' : '/video/intro.mp4';
+  video.currentTime = 0;
+  video.play().catch(function(){});
   var dismissed = false;
   function dismissIntro(){
     if(dismissed) return;
@@ -746,19 +753,32 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     overlay.style.transition = 'opacity .4s ease';
     overlay.style.opacity = '0';
     setTimeout(function(){ overlay.remove(); }, 400);
+    video.removeEventListener('ended', dismissIntro);
+    video.removeEventListener('error', dismissIntro);
+    overlay.removeEventListener('click', dismissIntro);
   }
-  if(video){
-    video.addEventListener('ended', dismissIntro);
-    video.addEventListener('error', dismissIntro);
-  }
+  video.addEventListener('ended', dismissIntro);
+  video.addEventListener('error', dismissIntro);
   overlay.addEventListener('click', dismissIntro);
   // 자동재생이 막히는 브라우저 대비 — 영상 길이(5.2초)보다 넉넉하게 기다렸다가 강제로 넘어감
   setTimeout(dismissIntro, 8000);
+}
+(function(){
+  // 앱을 완전히 껐다가 다시 켰을 때(새 세션)만 자동으로 보여주고, 같은 세션
+  // 안에서 새로고침할 땐 건너뛴다 — sessionStorage는 탭/앱이 완전히
+  // 종료되기 전까진 유지되고, 껐다가 다시 켜면(새 세션) 초기화된다.
+  if(sessionStorage.getItem('introShown')){
+    var overlay = document.getElementById('introOverlay');
+    if(overlay) overlay.remove();
+    return;
+  }
+  sessionStorage.setItem('introShown', '1');
+  playIntro();
 })();
 </script>
 
 <div class="top-header">
-  <div class="brand">
+  <div class="brand" onclick="playIntro()" style="cursor:pointer;">
     <img class="logo-svg" src="https://crests.football-data.org/57.png" alt="Arsenal FC" style="border-radius:50%;background:rgba(239,1,7,.1);padding:2px;">
     <div class="brand-text"><div class="name">Arsenal FC</div><div class="sub">The Gunners Hub</div></div>
   </div>
