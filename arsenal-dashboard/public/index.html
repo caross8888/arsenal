@@ -763,10 +763,8 @@ function playIntro(){
   // 자동재생이 막히는 브라우저 대비 — 영상 길이(5.2초)보다 넉넉하게 기다렸다가 강제로 넘어감
   setTimeout(dismissIntro, 8000);
 }
-// 헤더 로고 클릭 — 보통 웹사이트처럼 홈(경기 일정) 탭으로 이동 + 데이터 새로고침,
-// 거기에 인트로 영상도 다시 재생한다.
+// 헤더 로고 클릭 — 보통 웹사이트처럼 홈(경기 일정) 탭으로 이동 + 데이터 새로고침
 function onHeaderLogoClick(){
-  playIntro();
   var homeBtn = document.querySelector('.nav-btn[onclick*="\'fixtures\'"]');
   if(homeBtn) showSec('fixtures', homeBtn);
   loadFixtures();
