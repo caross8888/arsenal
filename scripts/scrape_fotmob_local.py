@@ -35,12 +35,12 @@ HEADERS = {
 }
 
 ARSENAL_TEAM_ID = 9825
-# U21/U18은 Fotmob에서 1군과 별개의 팀으로 관리된다 (스쿼드가 훨씬 작고
+# U21은 Fotmob에서 1군과 별개의 팀으로 관리된다 (스쿼드가 훨씬 작고
 # 자주 바뀜 — 크롤 실패해도 하드코딴 폴백을 안 두고 그냥 건너뛴다)
+# U18은 Fotmob에 스쿼드 데이터가 없어서 제외.
 SQUADS = [
     {'level': 'first', 'teamId': 9825,    'slug': 'arsenal'},
     {'level': 'u21',   'teamId': 950214,  'slug': 'arsenal-u21'},
-    {'level': 'u18',   'teamId': 1113566, 'slug': 'arsenal-u18'},
 ]
 
 # Fotmob playerInformation에 등번호가 누락되는 선수용 수동 보정
@@ -53,7 +53,7 @@ JERSEY_OVERRIDES = {
     952029:  '30',  # Illan Meslier
 }
 
-# ── Fotmob 스쿼드 자동 크롤 (1군/U21/U18 공용) ──────
+# ── Fotmob 스쿼드 자동 크롤 (1군/U21 공용) ──────
 def to_slug(name: str) -> str:
     """'Viktor Gyökeres' → 'viktor-gyokeres'"""
     import unicodedata
@@ -65,7 +65,7 @@ def to_slug(name: str) -> str:
 def fetch_squad_for_team(team_id, team_slug):
     """
     Fotmob 스쿼드 페이지에서 현재 선수 목록(ID + slug)을 자동으로 가져온다.
-    1군은 실패 시 하드코딩 폴백을 쓰고, U21/U18은 폴백 없이 빈 리스트를 반환한다
+    1군은 실패 시 하드코딩 폴백을 쓰고, U21은 폴백 없이 빈 리스트를 반환한다
     (유스팀 스쿼드는 시즌마다 크게 바뀌어서 하드코딩 폴백을 유지하는 의미가 적음).
     """
     url = f'https://www.fotmob.com/ko/teams/{team_id}/{team_slug}/squad'
@@ -366,7 +366,7 @@ def parse_stats(data, squad_level='first'):
 
     result = {
         'id':           player_id,
-        'squadLevel':   squad_level,  # 'first' | 'u21' | 'u18'
+        'squadLevel':   squad_level,  # 'first' | 'u21'
         'name':         data.get('name', ''),
         'fotmobPhoto':  f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png' if player_id else None,
         'localPhoto':   f'/data/player_images/{player_id}.png' if player_id else None,
@@ -706,7 +706,7 @@ def main():
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     IMAGES_PATH.mkdir(parents=True, exist_ok=True)
 
-    # 1군/U21/U18 스쿼드 자동 크롤 (SQUADS 순서 = first > u21 > u18 우선순위 —
+    # 1군/U21 스쿼드 자동 크롤 (SQUADS 순서 = first > u21 우선순위 —
     # 같은 선수가 여러 스쿼드에 겹쳐 나오면 먼저 나온 상위 레벨로 태그한다)
     seen_ids = set()
     tagged_squad = []
@@ -726,7 +726,7 @@ def main():
     print(f'🔍 Fotmob 선수 스탯 스크래핑 시작 (총 {len(tagged_squad)}명)')
 
     # football.js FOTMOB_IDS는 1군 선수 이름 매칭(라이브 경기용)에만 쓰이므로
-    # U21/U18은 제외하고 기존처럼 1군 스쿼드로만 갱신한다.
+    # U21은 제외하고 기존처럼 1군 스쿼드로만 갱신한다.
     update_fotmob_ids(first_team_squad)
 
     players = []
