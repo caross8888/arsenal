@@ -353,7 +353,8 @@ def _collect_comp_stats(recent_matches, season_start):
 
 # ── 메인 파싱 ──────────────────────────────────────
 
-def parse_stats(data, squad_level='first'):
+def parse_stats(data, squad_levels=None):
+    squad_levels = squad_levels or ['first']
     if not data:
         return None
 
@@ -373,7 +374,7 @@ def parse_stats(data, squad_level='first'):
 
     result = {
         'id':           player_id,
-        'squadLevel':   squad_level,  # 'first' | 'u21'
+        'squadLevels':  squad_levels,  # ['first'] | ['u21'] | ['first','u21'] 등
         'name':         data.get('name', ''),
         'fotmobPhoto':  f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png' if player_id else None,
         'localPhoto':   f'/data/player_images/{player_id}.png' if player_id else None,
@@ -713,10 +714,11 @@ def main():
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     IMAGES_PATH.mkdir(parents=True, exist_ok=True)
 
-    # 1군/U21 스쿼드 자동 크롤 (SQUADS 순서 = first > u21 우선순위 —
-    # 같은 선수가 여러 스쿼드에 겹쳐 나오면 먼저 나온 상위 레벨로 태그한다)
-    seen_ids = set()
-    tagged_squad = []
+    # 1군/U21 스쿼드 자동 크롤. 두 스쿼드에 동시에 이름이 올라오는 선수(예:
+    # 막스 다우먼처럼 1군과 U21을 오가는 선수)는 squadLevels에 두 레벨을
+    # 모두 태그해서 프론트엔드 1군/U-21 탭 양쪽에 다 노출되게 한다.
+    by_id = {}
+    order = []
     first_team_squad = []
     for sq in SQUADS:
         print(f'🔍 Fotmob {sq["level"]} 스쿼드 크롤 중... (team {sq["teamId"]})')
@@ -724,11 +726,14 @@ def main():
         if sq['level'] == 'first':
             first_team_squad = members
         for m in members:
-            if m['id'] in seen_ids:
-                continue
-            seen_ids.add(m['id'])
-            tagged_squad.append({**m, 'squadLevel': sq['level']})
+            if m['id'] not in by_id:
+                by_id[m['id']] = {**m, 'squadLevels': []}
+                order.append(m['id'])
+            if sq['level'] not in by_id[m['id']]['squadLevels']:
+                by_id[m['id']]['squadLevels'].append(sq['level'])
         print(f'  → {sq["level"]}: {len(members)}명')
+
+    tagged_squad = [by_id[pid] for pid in order]
 
     print(f'🔍 Fotmob 선수 스탯 스크래핑 시작 (총 {len(tagged_squad)}명)')
 
@@ -740,11 +745,11 @@ def main():
     detected_season = None
 
     for i, p in enumerate(tagged_squad):
-        print(f'  [{i+1}/{len(tagged_squad)}] ({p["squadLevel"]}) {p["slug"]}...', end=' ', flush=True)
+        print(f'  [{i+1}/{len(tagged_squad)}] ({"/".join(p["squadLevels"])}) {p["slug"]}...', end=' ', flush=True)
         data = fetch_player(p['id'], p['slug'])
         if data:
             try:
-                parsed = parse_stats(data, squad_level=p['squadLevel'])
+                parsed = parse_stats(data, squad_levels=p['squadLevels'])
             except Exception as e:
                 # 선수 한 명의 데이터 구조가 예상과 달라도(특히 U21처럼
                 # 필드가 비어있는 경우가 많은 스쿼드) 전체 스크래핑이 죽지

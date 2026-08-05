@@ -1984,7 +1984,7 @@ function loadSquad(){
 function renderSq(filter){
   var el=document.getElementById('sqGrid');
   var SQ_GROUP_ORDER={GK:0,DF:1,MF:2,FW:3};
-  var levelPlayers=allPlayers.filter(function(p){return (p.squadLevel||'first')===_sqActiveLevel;});
+  var levelPlayers=allPlayers.filter(function(p){return (p.squadLevels||[p.squadLevel||'first']).indexOf(_sqActiveLevel)!==-1;});
   var list=filter==='all'?levelPlayers.slice().sort(function(a,b){return (SQ_GROUP_ORDER[a.posGroup]??9)-(SQ_GROUP_ORDER[b.posGroup]??9);}):levelPlayers.filter(function(p){return p.posGroup===filter;});
   if(!list.length){el.innerHTML='<div class="loading-state" style="grid-column:1/-1">선수 데이터 없음</div>';return;}
   el.innerHTML='';
@@ -2014,7 +2014,7 @@ function renderSq(filter){
     card.className='pl-card';
     card.style.outline='2px solid '+(POS_BORDER[p.posGroup]||'rgba(255,255,255,0.1)');
     card.style.outlineOffset='-1px';
-    card.onclick=function(){openPlayerModal(p);};
+    card.onclick=function(){openPlayerModal(p,_sqActiveLevel);};
 
     // 상단
     var top=document.createElement('div');top.className='pl-top';
@@ -4288,7 +4288,7 @@ var TRAIT_LABELS = {
 
 // ── PLAYER MODAL (Fotmob Style) ──
 
-function openPlayerModal(p) {
+function openPlayerModal(p, level) {
   var modal   = document.getElementById('playerModal');
   var content = document.getElementById('modalContent');
   modal.querySelector('.modal-sheet').classList.remove('hist-compact');
@@ -4336,10 +4336,16 @@ function openPlayerModal(p) {
     || pos;
   var contractEnd = p.contractEnd ? p.contractEnd.slice(0,7) : '';
   var competitions= p.competitions||{};
-  var COMP_ORDER=['PL','UCL','FAC','EFL'];
-  compKeys=COMP_ORDER.filter(function(k){return competitions[k];});
-  var extra=Object.keys(competitions).filter(function(k){return COMP_ORDER.indexOf(k)===-1;});
-  compKeys=compKeys.concat(extra);
+  // 1군에서 열었으면 1군 대회만, U-21에서 열었으면 U-21 대회만 노출한다 —
+  // 두 스쿼드를 겸하는 선수(예: 막스 다우먼)라도 상세 탭은 어느 리스트에서
+  // 열었는지에 따라 갈라져야 "짬뽕"되지 않는다. 0경기인 대회는 스쿼드 등록만
+  // 되어있고 실제로 안 뛴 경우라 탭에서 제외.
+  var SENIOR_COMPS=['PL','UCL','FAC','EFL'];
+  var YOUTH_COMPS=['PL2','EFLT','UYL'];
+  var levelCompOrder = level==='u21' ? YOUTH_COMPS : SENIOR_COMPS;
+  compKeys=levelCompOrder.filter(function(k){var c=competitions[k];return c && (c.appearances||0)>0;});
+  var scopedCompetitions={};
+  compKeys.forEach(function(k){scopedCompetitions[k]=competitions[k];});
   var compLabels={PL:'EPL',UCL:'UCL',FAC:'FA컵',EFL:'카라바오',PL2:'PL2',EFLT:'EFL트로피',UYL:'유스리그'};
   var traits      = p.traits||null;
   var career      = p.career||[];
@@ -4373,9 +4379,9 @@ function openPlayerModal(p) {
   }
   // 평점 계산 (competitions 집계)
   var hdrRating = '-'; var hdrRatingColor = 'rgba(255,255,255,0.5)';
-  if(Object.keys(competitions).length > 0){
+  if(Object.keys(scopedCompetitions).length > 0){
     var rSum=0,rCnt=0;
-    Object.values(competitions).forEach(function(c){if(c.avgRating){rSum+=c.avgRating;rCnt++;}});
+    Object.values(scopedCompetitions).forEach(function(c){if(c.avgRating){rSum+=c.avgRating;rCnt++;}});
     if(rCnt>0){
       hdrRating=(rSum/rCnt).toFixed(1);
       hdrRatingColor=parseFloat(hdrRating)>=8?'#22C55E':parseFloat(hdrRating)>=7?'#84CC16':parseFloat(hdrRating)>=6?'#F59E0B':'rgba(255,255,255,0.7)';
@@ -4398,9 +4404,9 @@ function openPlayerModal(p) {
 
 
   // ── 종합 스탯 집계 (기본정보 그리드에 삽입) ──
-  if(Object.keys(competitions).length > 0){
+  if(Object.keys(scopedCompetitions).length > 0){
     var tot = {goals:0,assists:0,appearances:0,minutes:0,cleanSheets:0,goalsConceded:0,ratingSum:0,ratingCnt:0};
-    Object.values(competitions).forEach(function(c){
+    Object.values(scopedCompetitions).forEach(function(c){
       tot.goals        += c.goals||0;
       tot.assists      += c.assists||0;
       tot.appearances  += c.appearances||0;

@@ -445,6 +445,7 @@ export default async function handler(req, res) {
           id:          p.id,
           fotmobId:    p.id,
           squadLevel:  p.squadLevel || 'first',
+          squadLevels: p.squadLevels || [p.squadLevel || 'first'],
           name:        p.name,
           fullName:    p.name,
           nationality: p.nationality || '',
