@@ -4340,7 +4340,7 @@ function openPlayerModal(p) {
   compKeys=COMP_ORDER.filter(function(k){return competitions[k];});
   var extra=Object.keys(competitions).filter(function(k){return COMP_ORDER.indexOf(k)===-1;});
   compKeys=compKeys.concat(extra);
-  var compLabels={PL:'EPL',UCL:'UCL',FAC:'FA컵',EFL:'카라바오'};
+  var compLabels={PL:'EPL',UCL:'UCL',FAC:'FA컵',EFL:'카라바오',PL2:'PL2',EFLT:'EFL트로피',UYL:'유스리그'};
   var traits      = p.traits||null;
   var career      = p.career||[];
   var shotmap     = p.shotmap||[];

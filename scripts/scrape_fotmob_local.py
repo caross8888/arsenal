@@ -153,8 +153,15 @@ ARSENAL_PLAYERS_FALLBACK = [
     {'id': 664500,  'slug': 'viktor-gyokeres'},
 ]
 
-COMP_MAP   = {47: 'PL', 42: 'UCL', 132: 'FAC', 133: 'EFL'}
-COMP_NAMES = {'PL': '프리미어리그', 'UCL': '챔피언스리그', 'FAC': 'FA컵', 'EFL': '카라바오컵'}
+COMP_MAP   = {
+    47: 'PL', 42: 'UCL', 132: 'FAC', 133: 'EFL',
+    # U21 스쿼드 선수들의 실제 출전 대회 (Arsenal U21 fotmob 페이지에서 확인)
+    9084: 'PL2', 142: 'EFLT', 9741: 'UYL',
+}
+COMP_NAMES = {
+    'PL': '프리미어리그', 'UCL': '챔피언스리그', 'FAC': 'FA컵', 'EFL': '카라바오컵',
+    'PL2': '프리미어리그 2', 'EFLT': 'EFL 트로피', 'UYL': '유스리그',
+}
 
 
 # ── 유틸 ──────────────────────────────────────────
@@ -429,9 +436,9 @@ def parse_stats(data, squad_level='first'):
         }
 
     # ── 포지션 레이블 ──
-    pos_desc = data.get('positionDescription', {})
+    pos_desc = data.get('positionDescription') or {}
     pos_list = pos_desc.get('positions', [])
-    primary_label = pos_desc.get('primaryPosition', {}).get('label', '')
+    primary_label = (pos_desc.get('primaryPosition') or {}).get('label', '')
     if not primary_label:
         main = next((p for p in pos_list if p.get('isMainPosition')), None)
         if main:
@@ -736,7 +743,14 @@ def main():
         print(f'  [{i+1}/{len(tagged_squad)}] ({p["squadLevel"]}) {p["slug"]}...', end=' ', flush=True)
         data = fetch_player(p['id'], p['slug'])
         if data:
-            parsed = parse_stats(data, squad_level=p['squadLevel'])
+            try:
+                parsed = parse_stats(data, squad_level=p['squadLevel'])
+            except Exception as e:
+                # 선수 한 명의 데이터 구조가 예상과 달라도(특히 U21처럼
+                # 필드가 비어있는 경우가 많은 스쿼드) 전체 스크래핑이 죽지
+                # 않도록 여기서 잡고 다음 선수로 넘어간다.
+                print(f'파싱 에러: {e}')
+                parsed = None
             if parsed:
                 players.append(parsed)
                 if not detected_season:
