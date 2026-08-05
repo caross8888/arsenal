@@ -168,7 +168,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pl-num-txt{font-family:var(--fd);font-size:32px;font-weight:900;line-height:1;color:#fff;opacity:.95}
 .pl-photo-box{width:100%;height:90px;overflow:hidden;background:var(--surface3)}
 .pl-photo-box img{width:100%;height:100%;object-fit:contain;object-position:top center;display:block}
-.pl-photo-box.no-img{display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:18px}
+.pl-photo-box.no-img{display:flex}
+.pl-photo-box.no-img svg{width:100%;height:100%;display:block}
 .pl-card-divider{height:1px;background:var(--border)}
 .pl-card-name{padding:7px 8px;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
 .inj-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
@@ -948,6 +949,7 @@ var FN='/api';
 var stdExpanded=false;
 var allStandings=[];
 var allPlayers=[];
+var PLAYER_SILHOUETTE_SVG='<svg viewBox="0 0 100 90" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><circle cx="50" cy="30" r="17" fill="#565b68"/><path d="M14 90 C14 60 30 48 50 48 C70 48 86 60 86 90 Z" fill="#565b68"/></svg>';
 var _sqActiveFilter='all';
 var _sqActiveLevel='first';
 
@@ -2032,13 +2034,13 @@ function renderSq(filter){
       var img=document.createElement('img');img.src=p.photo;img.alt=p.name;
       img.onerror=function(){
         photoBox.className='pl-photo-box no-img';
-        photoBox.innerHTML='⚽';
+        photoBox.innerHTML=PLAYER_SILHOUETTE_SVG;
         photoBox.removeChild(img);
       };
       photoBox.appendChild(img);
     } else {
       photoBox.className='pl-photo-box no-img';
-      photoBox.textContent='⚽';
+      photoBox.innerHTML=PLAYER_SILHOUETTE_SVG;
     }
 
     top.appendChild(left);top.appendChild(photoBox);
