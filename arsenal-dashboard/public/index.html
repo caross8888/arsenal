@@ -4360,9 +4360,9 @@ function openPlayerModal(p, level) {
   h += '<div class="pm-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
   h += '<div class="pm-header-inner">';
   if(p.photo){
-    h += '<img class="pm-photo" src="'+p.photo+'" onerror="this.style.display=\'none\'">';
+    h += '<img class="pm-photo" src="'+p.photo+'" onerror="this.onerror=null;this.src=\'/data/player_placeholder.png\';this.style.objectFit=\'contain\';this.style.background=\'rgba(0,0,0,.3)\';this.style.padding=\'8px\'">';
   } else {
-    h += '<div class="pm-photo-ph">'+pos+'</div>';
+    h += '<div class="pm-photo-ph"><img src="/data/player_placeholder.png" style="width:70%;height:70%;object-fit:contain"></div>';
   }
   h += '<div>';
   h += '<div class="pm-name">'+p.name+'</div>';
