@@ -162,6 +162,7 @@ COMP_NAMES = {
     'PL': '프리미어리그', 'UCL': '챔피언스리그', 'FAC': 'FA컵', 'EFL': '카라바오컵',
     'PL2': '프리미어리그 2', 'EFLT': 'EFL 트로피', 'UYL': '유스리그',
 }
+YOUTH_COMP_KEYS = {'PL2', 'EFLT', 'UYL'}
 
 
 # ── 유틸 ──────────────────────────────────────────
@@ -645,6 +646,24 @@ def parse_stats(data, squad_levels=None):
         }
         for e in career_entries[:8]
     ]
+
+    # ── squadLevels 보정 ──
+    # Fotmob 스쿼드 "명단" 페이지엔 1군으로만 등록돼 있어도(예: 막스 다우먼)
+    # 실제로 U21 대회에서 뛴 기록(PL2/EFL트로피/유스리그 출전>0)이 있으면
+    # U-21 탭에도 노출되도록 squadLevels에 'u21'을 추가한다. 반대로 U21
+    # 스쿼드 소속인데 1군 경기 출전 기록이 있는 경우도 동일하게 보정한다.
+    played_youth = any(
+        result['competitions'].get(k, {}).get('appearances', 0) > 0
+        for k in YOUTH_COMP_KEYS
+    )
+    played_senior = any(
+        result['competitions'].get(k, {}).get('appearances', 0) > 0
+        for k in (set(COMP_NAMES) - YOUTH_COMP_KEYS)
+    )
+    if played_youth and 'u21' not in result['squadLevels']:
+        result['squadLevels'] = result['squadLevels'] + ['u21']
+    if played_senior and 'first' not in result['squadLevels']:
+        result['squadLevels'] = result['squadLevels'] + ['first']
 
     return result
 
