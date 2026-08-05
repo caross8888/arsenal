@@ -168,8 +168,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pl-num-txt{font-family:var(--fd);font-size:32px;font-weight:900;line-height:1;color:#fff;opacity:.95}
 .pl-photo-box{width:100%;height:90px;overflow:hidden;background:var(--surface3)}
 .pl-photo-box img{width:100%;height:100%;object-fit:contain;object-position:top center;display:block}
-.pl-photo-box.no-img{display:flex}
-.pl-photo-box.no-img svg{width:100%;height:100%;display:block}
+.pl-photo-box.no-img{display:flex;align-items:center;justify-content:center}
+.pl-photo-box.no-img img{width:70%;height:70%;object-fit:contain;display:block}
 .pl-card-divider{height:1px;background:var(--border)}
 .pl-card-name{padding:7px 8px;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
 .inj-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
@@ -949,7 +949,6 @@ var FN='/api';
 var stdExpanded=false;
 var allStandings=[];
 var allPlayers=[];
-var PLAYER_SILHOUETTE_SVG='<svg viewBox="0 0 150 90" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="M25 90 C25 63 48 51 75 51 C102 51 125 63 125 90 Z" fill="#565b68"/><circle cx="75" cy="32" r="18" fill="#565b68"/></svg>';
 var _sqActiveFilter='all';
 var _sqActiveLevel='first';
 
@@ -2034,13 +2033,13 @@ function renderSq(filter){
       var img=document.createElement('img');img.src=p.photo;img.alt=p.name;
       img.onerror=function(){
         photoBox.className='pl-photo-box no-img';
-        photoBox.innerHTML=PLAYER_SILHOUETTE_SVG;
+        photoBox.innerHTML='<img src="/data/player_placeholder.png" alt="'+p.name+'">';
         photoBox.removeChild(img);
       };
       photoBox.appendChild(img);
     } else {
       photoBox.className='pl-photo-box no-img';
-      photoBox.innerHTML=PLAYER_SILHOUETTE_SVG;
+      photoBox.innerHTML='<img src="/data/player_placeholder.png" alt="'+p.name+'">';
     }
 
     top.appendChild(left);top.appendChild(photoBox);
