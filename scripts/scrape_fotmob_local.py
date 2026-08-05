@@ -35,6 +35,13 @@ HEADERS = {
 }
 
 ARSENAL_TEAM_ID = 9825
+# U21/U18은 Fotmob에서 1군과 별개의 팀으로 관리된다 (스쿼드가 훨씬 작고
+# 자주 바뀜 — 크롤 실패해도 하드코딴 폴백을 안 두고 그냥 건너뛴다)
+SQUADS = [
+    {'level': 'first', 'teamId': 9825,    'slug': 'arsenal'},
+    {'level': 'u21',   'teamId': 950214,  'slug': 'arsenal-u21'},
+    {'level': 'u18',   'teamId': 1113566, 'slug': 'arsenal-u18'},
+]
 
 # Fotmob playerInformation에 등번호가 누락되는 선수용 수동 보정
 # (Fotmob 페이지 자체에 구조화 데이터가 없는 경우 확인 후 갱신 필요)
@@ -46,21 +53,22 @@ JERSEY_OVERRIDES = {
     952029:  '30',  # Illan Meslier
 }
 
-# ── Fotmob 아스날 스쿼드 자동 크롤 ──────────────────
-def fetch_arsenal_squad():
-    """
-    Fotmob 아스날 스쿼드 페이지에서 현재 선수 목록(ID + slug)을 자동으로 가져온다.
-    실패 시 하드코딩 폴백 리스트를 반환한다.
-    """
+# ── Fotmob 스쿼드 자동 크롤 (1군/U21/U18 공용) ──────
+def to_slug(name: str) -> str:
+    """'Viktor Gyökeres' → 'viktor-gyokeres'"""
     import unicodedata
+    nfkd = unicodedata.normalize('NFKD', name)
+    ascii_name = nfkd.encode('ascii', 'ignore').decode('ascii')
+    return re.sub(r'[^a-z0-9]+', '-', ascii_name.lower()).strip('-')
 
-    def to_slug(name: str) -> str:
-        """'Viktor Gyökeres' → 'viktor-gyokeres'"""
-        nfkd = unicodedata.normalize('NFKD', name)
-        ascii_name = nfkd.encode('ascii', 'ignore').decode('ascii')
-        return re.sub(r'[^a-z0-9]+', '-', ascii_name.lower()).strip('-')
 
-    url = f'https://www.fotmob.com/ko/teams/{ARSENAL_TEAM_ID}/arsenal/squad'
+def fetch_squad_for_team(team_id, team_slug):
+    """
+    Fotmob 스쿼드 페이지에서 현재 선수 목록(ID + slug)을 자동으로 가져온다.
+    1군은 실패 시 하드코딩 폴백을 쓰고, U21/U18은 폴백 없이 빈 리스트를 반환한다
+    (유스팀 스쿼드는 시즌마다 크게 바뀌어서 하드코딩 폴백을 유지하는 의미가 적음).
+    """
+    url = f'https://www.fotmob.com/ko/teams/{team_id}/{team_slug}/squad'
     try:
         r = requests.get(url, headers=HEADERS, timeout=15)
         r.raise_for_status()
@@ -72,12 +80,12 @@ def fetch_arsenal_squad():
             raise ValueError('__NEXT_DATA__ 없음')
 
         page_data = json.loads(m.group(1))
-        # 실제 경로: fallback → team-9825 → squad → squad
+        # 실제 경로: fallback → team-{id} → squad → squad
         squad_groups = (
             page_data.get('props', {})
                      .get('pageProps', {})
                      .get('fallback', {})
-                     .get(f'team-{ARSENAL_TEAM_ID}', {})
+                     .get(f'team-{team_id}', {})
                      .get('squad', {})
                      .get('squad', [])
         )
@@ -97,14 +105,22 @@ def fetch_arsenal_squad():
                     players.append({'id': int(pid), 'slug': slug})
 
         if not players:
-            raise ValueError('선수 목록 파싱 실패 — 폴백 사용')
+            raise ValueError('선수 목록 파싱 실패')
 
         print(f'✅ 스쿼드 자동 크롤 완료: {len(players)}명')
         return players
 
     except Exception as e:
-        print(f'⚠️  스쿼드 크롤 실패 ({e}) → 하드코딩 폴백 사용')
-        return ARSENAL_PLAYERS_FALLBACK
+        if team_id == ARSENAL_TEAM_ID:
+            print(f'⚠️  스쿼드 크롤 실패 ({e}) → 하드코딩 폴백 사용')
+            return ARSENAL_PLAYERS_FALLBACK
+        print(f'⚠️  스쿼드 크롤 실패 ({e}) → 건너뜀 (폴백 없음)')
+        return []
+
+
+def fetch_arsenal_squad():
+    """하위 호환용 — 1군 스쿼드만 가져온다."""
+    return fetch_squad_for_team(ARSENAL_TEAM_ID, 'arsenal')
 
 
 # 폴백: 크롤 실패 시 사용하는 마지막 알려진 스쿼드
@@ -330,7 +346,7 @@ def _collect_comp_stats(recent_matches, season_start):
 
 # ── 메인 파싱 ──────────────────────────────────────
 
-def parse_stats(data):
+def parse_stats(data, squad_level='first'):
     if not data:
         return None
 
@@ -350,6 +366,7 @@ def parse_stats(data):
 
     result = {
         'id':           player_id,
+        'squadLevel':   squad_level,  # 'first' | 'u21' | 'u18'
         'name':         data.get('name', ''),
         'fotmobPhoto':  f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png' if player_id else None,
         'localPhoto':   f'/data/player_images/{player_id}.png' if player_id else None,
@@ -689,22 +706,37 @@ def main():
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     IMAGES_PATH.mkdir(parents=True, exist_ok=True)
 
-    # 스쿼드 자동 크롤 (실패 시 폴백)
-    print('🔍 Fotmob 아스날 스쿼드 크롤 중...')
-    squad = fetch_arsenal_squad()
-    print(f'🔍 Fotmob 선수 스탯 스크래핑 시작 ({len(squad)}명)')
+    # 1군/U21/U18 스쿼드 자동 크롤 (SQUADS 순서 = first > u21 > u18 우선순위 —
+    # 같은 선수가 여러 스쿼드에 겹쳐 나오면 먼저 나온 상위 레벨로 태그한다)
+    seen_ids = set()
+    tagged_squad = []
+    first_team_squad = []
+    for sq in SQUADS:
+        print(f'🔍 Fotmob {sq["level"]} 스쿼드 크롤 중... (team {sq["teamId"]})')
+        members = fetch_squad_for_team(sq['teamId'], sq['slug'])
+        if sq['level'] == 'first':
+            first_team_squad = members
+        for m in members:
+            if m['id'] in seen_ids:
+                continue
+            seen_ids.add(m['id'])
+            tagged_squad.append({**m, 'squadLevel': sq['level']})
+        print(f'  → {sq["level"]}: {len(members)}명')
 
-    # football.js FOTMOB_IDS 즉시 업데이트
-    update_fotmob_ids(squad)
+    print(f'🔍 Fotmob 선수 스탯 스크래핑 시작 (총 {len(tagged_squad)}명)')
+
+    # football.js FOTMOB_IDS는 1군 선수 이름 매칭(라이브 경기용)에만 쓰이므로
+    # U21/U18은 제외하고 기존처럼 1군 스쿼드로만 갱신한다.
+    update_fotmob_ids(first_team_squad)
 
     players = []
     detected_season = None
 
-    for i, p in enumerate(squad):
-        print(f'  [{i+1}/{len(squad)}] {p["slug"]}...', end=' ', flush=True)
+    for i, p in enumerate(tagged_squad):
+        print(f'  [{i+1}/{len(tagged_squad)}] ({p["squadLevel"]}) {p["slug"]}...', end=' ', flush=True)
         data = fetch_player(p['id'], p['slug'])
         if data:
-            parsed = parse_stats(data)
+            parsed = parse_stats(data, squad_level=p['squadLevel'])
             if parsed:
                 players.append(parsed)
                 if not detected_season:
