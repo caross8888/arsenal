@@ -1295,7 +1295,16 @@ function buildFixCard(m){
     expandBtn.textContent = '▼ 상세 보기';
     card.appendChild(expandBtn);
 
-    // 카드 생성 시 바로 프로그레스바 시작
+    // 카드 생성 시 바로 프로그레스바 시작 — apiFetchCached가 캐시 응답 후
+    // 네트워크 응답으로 한 번 더 리스트를 다시 그리는 것처럼, 같은 라이브
+    // 경기 카드가 재생성될 수 있다. 기존 상태를 정리 안 하고 덮어쓰면 이전
+    // setInterval이 고아로 남아 같은 id의 엘리먼트를 두 인터벌이 동시에
+    // 갱신해서 카운트다운이 겹쳐 보이는 버그가 생긴다 — 덮어쓰기 전에 반드시 정리.
+    var _prevTimerState = _liveExpandTimers[m.id];
+    if(_prevTimerState){
+      if(_prevTimerState.progressTimer) clearInterval(_prevTimerState.progressTimer);
+      if(_prevTimerState.timer) clearInterval(_prevTimerState.timer);
+    }
     _liveExpandTimers[m.id] = {};
     startProgressBar(m.id);
 
