@@ -3974,9 +3974,7 @@ function liveSwitchTab(btn, panel){
 
 // ── 라이브 폴링 ──
 var _liveTimer = null;
-function startLivePolling(){
-  if(_liveTimer) return;
-  _liveTimer = setInterval(function(){
+function pollLiveOnce(){
     if(document.hidden) return; // 백그라운드면 스킵
     apiFetch(FN+'/football?type=fixtures&nocache=1').then(function(data){
       var hasLive = (data.matches||[]).some(function(m){return m.status==='IN_PLAY';});
@@ -4009,7 +4007,10 @@ function startLivePolling(){
         scheduleKickoffWatch(upcomingAll);
       }
     }).catch(function(){});
-  }, 30000);
+}
+function startLivePolling(){
+  if(_liveTimer) return;
+  _liveTimer = setInterval(pollLiveOnce, 30000);
 }
 function stopLivePolling(){
   if(_liveTimer){clearInterval(_liveTimer);_liveTimer=null;}
@@ -4071,6 +4072,14 @@ function checkKickoffTransition(){
 // 돌아오는 순간 확인이 밀려있었는지 바로 점검한다.
 document.addEventListener('visibilitychange', function(){
   if(document.hidden) return;
+  // 라이브 중엔 리스트 폴링/상세 폴링 인터벌도 document.hidden 동안은
+  // 스킵되기만 할 뿐 멈추진 않아서, 프로그레스바 카운트다운만 0에서
+  // 멈춘 채로 있다가 다음 예약된 tick(최대 30초)까지 안 풀리는 문제가
+  // 있었다 — 포그라운드 복귀 즉시 리셋/재폴링해서 이 공백을 없앤다.
+  if(_liveTimer) pollLiveOnce();
+  Object.keys(_liveExpandTimers).forEach(function(matchId){
+    if(_liveExpandTimers[matchId].timer) startProgressBar(matchId);
+  });
   if(_kickoffCheckTimer){ checkKickoffTransition(); return; } // 이미 확인 구간이면 즉시 한 번 더
   if(_kickoffTimer===null) return; // 감시 자체가 꺼져있으면(라이브 중 등) 무시
 });
