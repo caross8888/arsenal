@@ -212,8 +212,11 @@ export default async function handler(req, res) {
         } catch(_){ return []; }
       };
 
+      // 과거 30일(off=-30)부터 미래 59일까지 — 에미레이츠컵처럼 이미 끝난
+      // 브랜드 프리시즌 친선전도 결과로 잡히도록 과거 방향도 함께 훑는다.
+      // (예전엔 off=0부터라 어제 끝난 경기조차 누락되는 문제가 있었음)
       const nearWindowChunks = [];
-      for(let off=0; off<60; off+=7){
+      for(let off=-30; off<60; off+=7){
         const s = new Date(now); s.setDate(s.getDate()+off);
         const e = new Date(now); e.setDate(e.getDate()+Math.min(off+6,59));
         nearWindowChunks.push([fmtDate(s), fmtDate(e)]);
