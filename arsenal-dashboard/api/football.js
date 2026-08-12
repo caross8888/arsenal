@@ -20,9 +20,9 @@ const FOTMOB_IDS = {
   'calafiori':     1105912,
   'skelly':        1406436,
   'salmon':        1787525,
+  'guimaraes':     850354,
   'degaard':       534670,
   'eze':           818975,
-  'nrgaard':       266520,
   'vieira':        1025462,
   'nwaneri':       1254234,
   'merino':        574645,
@@ -261,9 +261,38 @@ export default async function handler(req, res) {
         } catch(_){ return []; }
       };
 
-      const seasonResults = await Promise.all(SLUGS.map(fetchSeasonSlug));
+      // 에미레이츠컵처럼 매년 이름이 바뀌는 브랜드 프리시즌 대회는 SLUGS로 안
+      // 잡히므로(위 type==='fixtures'의 근시일 보강 조회와 동일한 이유), 여기서도
+      // 놓치지 않도록 해당 시즌 프리시즌 기간(7~8월)만 soccer/all로 보강 조회한다.
+      // 시즌 전체(365일)를 훑기엔 비용이 크고, 브랜드 친선전은 실제로 이 기간에만 열림.
+      const fetchSeasonAllRange = async (startStr, endStr) => {
+        try {
+          const r = await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=${startStr}-${endStr}&limit=1000`,
+            {signal: AbortSignal.timeout(8000)}
+          );
+          const j = r.ok ? await r.json() : {events:[]};
+          return (j.events||[]).map(e => {
+            const note = e.competitions?.[0]?.altGameNote;
+            const name = note ? note.split(',')[0].trim() : 'Friendly';
+            return parseEvent(e, name, 'FR');
+          }).filter(isArsenalStrict);
+        } catch(_){ return []; }
+      };
+      const preseasonChunks = [];
+      const preseasonStart = new Date(Date.UTC(requestedSeason, 6, 1)); // 7월 1일
+      const preseasonEnd = new Date(Date.UTC(requestedSeason, 7, 31));  // 8월 31일
+      for(let d = new Date(preseasonStart); d <= preseasonEnd; d.setUTCDate(d.getUTCDate()+7)){
+        const chunkEnd = new Date(Math.min(new Date(d).setUTCDate(d.getUTCDate()+6), preseasonEnd.getTime()));
+        preseasonChunks.push([fmtDate(d), fmtDate(chunkEnd)]);
+      }
+
+      const [seasonResults, preseasonResults] = await Promise.all([
+        Promise.all(SLUGS.map(fetchSeasonSlug)),
+        Promise.all(preseasonChunks.map(([s,e]) => fetchSeasonAllRange(s,e))),
+      ]);
       const seenSeason = new Set();
-      const seasonMatches = seasonResults.flat().filter(m => {
+      const seasonMatches = [...seasonResults.flat(), ...preseasonResults.flat()].filter(m => {
         if(m.status !== 'FINISHED') return false;
         if(seenSeason.has(m.id)) return false;
         seenSeason.add(m.id);
