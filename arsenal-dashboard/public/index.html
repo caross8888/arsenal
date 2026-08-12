@@ -98,10 +98,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-expand-btn{width:100%;background:none;border:none;border-top:1px solid rgba(255,255,255,0.06);color:var(--text-secondary);font-size:10px;padding:6px;cursor:pointer;letter-spacing:1px;margin-top:6px;}
 .fix-expand-btn:hover{color:var(--text);}
 .comp-tag{display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:4px;flex-shrink:0}
-.tag-pl{background:rgba(55,0,255,.15);color:#A78BFA;border:1px solid rgba(167,139,250,.2)}
+.tag-pl{background:rgba(250,204,21,.15);color:#FACC15;border:1px solid rgba(250,204,21,.25)}
 .tag-cl{background:rgba(0,80,200,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.2)}
-.tag-fa{background:rgba(200,168,75,.15);color:var(--gold);border:1px solid var(--border-accent)}
-.tag-ec{background:rgba(239,100,7,.15);color:#FB923C;border:1px solid rgba(251,146,60,.2)}
+.tag-fa{background:rgba(248,113,113,.15);color:#F87171;border:1px solid rgba(248,113,113,.25)}
+.tag-ec{background:rgba(74,222,128,.15);color:#4ADE80;border:1px solid rgba(74,222,128,.25)}
+.tag-cs{background:rgba(203,213,225,.15);color:#CBD5E1;border:1px solid rgba(203,213,225,.25)}
 .tag-oth{background:rgba(100,100,100,.15);color:var(--text-muted);border:1px solid var(--border)}
 .fix-date{font-size:10px;color:var(--text-muted);font-family:var(--fm);flex-shrink:0}
 .fix-date.live-tag{color:var(--green);font-weight:700}
@@ -1070,8 +1071,8 @@ function assignPlRounds(matches){
     m.round='pl'+roundBySeason[season];
   });
 }
-var CTAG={PL:'tag-pl',CL:'tag-cl',UCL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec',EFL:'tag-ec',CS:'tag-oth',CWC:'tag-oth',FR:'tag-oth'};
-var CNAME={PL:'PL',CL:'UCL',UCL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup',EFL:'EFL Cup',CS:'Shield',CWC:'CWC',FR:'Friendly'};
+var CTAG={PL:'tag-pl',CL:'tag-cl',UCL:'tag-cl',EL:'tag-cl',FAC:'tag-fa',ELC:'tag-ec',EFL:'tag-ec',CS:'tag-cs',CWC:'tag-oth',FR:'tag-oth'};
+var CNAME={PL:'EPL',CL:'UCL',UCL:'UCL',EL:'UEL',FAC:'FA Cup',ELC:'EFL Cup',EFL:'EFL Cup',CS:'Shield',CWC:'CWC',FR:'Friendly'};
 function ctag(c){return CTAG[c]||'tag-oth';}
 function cname(c,fb){return CNAME[c]||fb||c;}
 
