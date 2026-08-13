@@ -476,9 +476,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-dow-row span:last-child{color:#60A5FA;font-weight:900;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
 .cal-day{aspect-ratio:1/1.75;border-radius:8px;border:2px solid transparent;box-sizing:border-box;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;overflow:hidden;cursor:default;font-size:11px;color:var(--text-muted);-webkit-tap-highlight-color:transparent;padding:4px 2px 5px;}
-.cal-day.has-fixture{border-color:var(--red-dark);cursor:pointer;}
-.cal-day.away-fixture{border-color:#3a5a8c;}
-.cal-day.neutral-fixture{border-color:var(--gold);}
+/* 예정 경기는 홈/원정/중립 상관없이 무채색 — cal-day-win/draw/loss(종료 경기)
+   색과 겹쳐서 "종료됐나 예정이나" 구분이 안 되는 걸 막는다(카드 뷰와 동일 이유). */
+.cal-day.has-fixture{border-color:rgba(255,255,255,0.18);cursor:pointer;}
+.cal-day.away-fixture{border-color:rgba(255,255,255,0.18);}
+.cal-day.neutral-fixture{border-color:rgba(255,255,255,0.18);}
 .cal-day.cal-day-win{border-color:var(--green);background:rgba(34,197,94,.14);}
 .cal-day.cal-day-draw{border-color:#F59E0B;background:rgba(245,158,11,.14);}
 .cal-day.cal-day-loss{border-color:#EF4444;background:rgba(239,68,68,.14);}
