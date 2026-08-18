@@ -6,7 +6,8 @@ Fotmob 아스날 선수 스탯 스크래퍼 (로컬 실행용)
 
 실행 방법:
   cd arsenal
-  pip install requests
+  pip install requests playwright
+  playwright install chromium   # 최초 1회만 — 공홈 아카데미 명단 크롤용
   python scripts/scrape_fotmob_local.py
 
 GitHub Personal Access Token 필요:
@@ -35,13 +36,10 @@ HEADERS = {
 }
 
 ARSENAL_TEAM_ID = 9825
-# U21은 Fotmob에서 1군과 별개의 팀으로 관리된다 (스쿼드가 훨씬 작고
-# 자주 바뀜 — 크롤 실패해도 하드코딴 폴백을 안 두고 그냥 건너뛴다)
-# U18은 Fotmob에 스쿼드 데이터가 없어서 제외.
-SQUADS = [
-    {'level': 'first', 'teamId': 9825,    'slug': 'arsenal'},
-    {'level': 'u21',   'teamId': 950214,  'slug': 'arsenal-u21'},
-]
+# 1군은 Fotmob 자체 스쿼드 "목록" 페이지가 안정적으로 유지되니 그대로 쓴다.
+# U21/U18 자체를 따로 안 나누고 "아카데미" 하나로 묶는다 — 공홈도 U21/U18을
+# 구분 안 하고 하나의 아카데미 명단으로 관리하고, 선수들도 두 팀을 자주
+# 오가서 정확한 경계를 매기기 어렵다.
 
 # Fotmob playerInformation에 등번호가 누락되는 선수용 수동 보정
 # (Fotmob 페이지 자체에 구조화 데이터가 없는 경우 확인 후 갱신 필요)
@@ -53,7 +51,7 @@ JERSEY_OVERRIDES = {
     952029:  '30',  # Illan Meslier
 }
 
-# ── Fotmob 스쿼드 자동 크롤 (1군/U21 공용) ──────
+# ── Fotmob 스쿼드 자동 크롤 (1군) / 공홈+검색 조합 (아카데미) ──────
 def to_slug(name: str) -> str:
     """'Viktor Gyökeres' → 'viktor-gyokeres'"""
     import unicodedata
@@ -62,11 +60,99 @@ def to_slug(name: str) -> str:
     return re.sub(r'[^a-z0-9]+', '-', ascii_name.lower()).strip('-')
 
 
+def fetch_arsenal_com_names(team_path):
+    """
+    arsenal.com 선수단 페이지(예: 'academy', 'men')에서 이름만 가져온다.
+    선수 카드가 클라이언트 JS로 렌더링돼서 requests로는 빈 셸만 나와
+    Playwright로 실제 렌더링한 뒤 긁는다. 카드 이미지의 alt 속성이
+    "이름 성" 형태로 가장 깔끔하게 나와서 그걸 쓴다.
+    아카데미는 Fotmob 자체 스쿼드 목록 페이지가 자주 갱신이 안 돼서 선수가
+    누락되는 일이 잦은데, 공홈 명단은 실제 등록 선수 기준으로 항상 최신이라
+    이걸 "누구를 스크래핑할지"의 기준으로 삼고 Fotmob은 검색으로만 쓴다.
+    """
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        print('⚠️  playwright 미설치 → 공홈 명단 크롤 스킵 (pip install playwright && playwright install chromium)')
+        return []
+
+    url = f'https://www.arsenal.com/fixtures/{team_path}/players'
+    names = []
+    try:
+        with sync_playwright() as p:
+            # headless=True는 Akamai 봇 차단(403)에 걸려서 반드시 실제 창을
+            # 띄우는 headless=False로 실행해야 한다(직접 확인함) — 그래서
+            # 이 스크립트를 돌리는 동안 브라우저 창이 화면에 실제로 나타난다.
+            # wait_until='networkidle'도 이 페이지에선 계속 타임아웃 나서
+            # 'domcontentloaded' 후 필요한 선택자만 명시적으로 기다린다.
+            browser = p.chromium.launch(headless=False)
+            page = browser.new_page(user_agent=HEADERS['User-Agent'])
+            page.goto(url, timeout=20000, wait_until='domcontentloaded')
+            page.wait_for_selector('[data-testid="player-card-image"] img[alt]', timeout=15000)
+            imgs = page.query_selector_all('[data-testid="player-card-image"] img[alt]')
+            for img in imgs:
+                alt = (img.get_attribute('alt') or '').strip()
+                if alt and alt not in names:
+                    names.append(alt)
+            browser.close()
+    except Exception as e:
+        print(f'⚠️  공홈 {team_path} 명단 크롤 실패 ({e})')
+    return names
+
+
+def _fotmob_search_players(term):
+    """Fotmob 검색 API를 호출해서 type='player'인 제안만 리스트로 반환."""
+    url = 'https://www.fotmob.com/api/data/search/suggest'
+    try:
+        r = requests.get(
+            url, params={'hits': 10, 'lang': 'en', 'term': term},
+            headers={**HEADERS, 'Accept': 'application/json'}, timeout=10,
+        )
+        if r.status_code != 200:
+            return []
+        groups = r.json()
+        all_group = next((g for g in groups if (g.get('title') or {}).get('key') == 'all'), None)
+        if not all_group:
+            return []
+        return [s for s in all_group.get('suggestions', []) if s.get('type') == 'player']
+    except Exception:
+        return []
+
+
+def resolve_fotmob_id_by_name(name):
+    """
+    Fotmob 검색 API(팀 스쿼드 '목록' 페이지가 아니라 검색)로 이름 → 선수 ID를
+    찾는다. 공홈 아카데미 명단에 있는 이름으로 검색해서 나온 결과이므로,
+    "이 사람이 맞다"는 확인은 이미 된 셈이라 팀ID로 다시 거르지 않고 검색
+    1순위(Fotmob 자체 관련도 score 기준) 결과를 그대로 채택한다.
+
+    갓 영입된 선수는 Fotmob이 이적을 아직 반영 못 해서 예전 소속 클럽으로
+    나오는 경우가 흔한데(예: 아스날로 온 지 얼마 안 된 선수가 여전히 이전
+    소속 팀으로 표시됨), teamId로 거르면 이런 진짜 신입생들이 전부 빠지게
+    된다 — 공홈 명단에 있는 선수는 예외 없이 다 스크래핑하는 게 맞다.
+
+    None을 반환하는 건 Fotmob에 그 선수 자체가 아예 없는 경우뿐이다.
+    """
+    candidates = _fotmob_search_players(name)
+    if not candidates:
+        # 미들네임이 껴 있으면 Fotmob 검색이 풀네임을 못 찾는 경우가 있다
+        # (예: "Lucas Martin Nygaard"는 실패해도 "Lucas Nygaard"는 찾아짐) —
+        # 이름/성만 남긴 축약형으로 한 번 더 시도한다.
+        parts = name.split()
+        if len(parts) > 2:
+            candidates = _fotmob_search_players(parts[0] + ' ' + parts[-1])
+    if not candidates:
+        return None
+    top = candidates[0]
+    return {'id': int(top['id']), 'slug': to_slug(top['name'])}
+
+
 def fetch_squad_for_team(team_id, team_slug):
     """
     Fotmob 스쿼드 페이지에서 현재 선수 목록(ID + slug)을 자동으로 가져온다.
-    1군은 실패 시 하드코딩 폴백을 쓰고, U21은 폴백 없이 빈 리스트를 반환한다
-    (유스팀 스쿼드는 시즌마다 크게 바뀌어서 하드코딩 폴백을 유지하는 의미가 적음).
+    1군(team 9825)의 기본 소스이자, U21(team 950214)의 안전망으로도 쓰인다
+    (공홈 크롤이 Akamai 봇 차단으로 실패할 때를 대비 — main() 참고).
+    1군은 실패 시 하드코딩 폴백을 쓰고, 그 외는 폴백 없이 빈 리스트를 반환한다.
     """
     url = f'https://www.fotmob.com/ko/teams/{team_id}/{team_slug}/squad'
     try:
@@ -375,7 +461,7 @@ def parse_stats(data, squad_levels=None):
 
     result = {
         'id':           player_id,
-        'squadLevels':  squad_levels,  # ['first'] | ['u21'] | ['first','u21'] 등
+        'squadLevels':  squad_levels,  # ['first'] | ['academy'] | ['first','academy'] 등
         'name':         data.get('name', ''),
         'fotmobPhoto':  f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png' if player_id else None,
         'localPhoto':   f'/data/player_images/{player_id}.png' if player_id else None,
@@ -649,9 +735,9 @@ def parse_stats(data, squad_levels=None):
 
     # ── squadLevels 보정 ──
     # Fotmob 스쿼드 "명단" 페이지엔 1군으로만 등록돼 있어도(예: 막스 다우먼)
-    # 실제로 U21 대회에서 뛴 기록(PL2/EFL트로피/유스리그 출전>0)이 있으면
-    # U-21 탭에도 노출되도록 squadLevels에 'u21'을 추가한다. 반대로 U21
-    # 스쿼드 소속인데 1군 경기 출전 기록이 있는 경우도 동일하게 보정한다.
+    # 실제로 아카데미 대회에서 뛴 기록(PL2/EFL트로피/유스리그 출전>0)이 있으면
+    # 아카데미 탭에도 노출되도록 squadLevels에 'academy'를 추가한다. 반대로
+    # 아카데미 소속인데 1군 경기 출전 기록이 있는 경우도 동일하게 보정한다.
     played_youth = any(
         result['competitions'].get(k, {}).get('appearances', 0) > 0
         for k in YOUTH_COMP_KEYS
@@ -660,8 +746,8 @@ def parse_stats(data, squad_levels=None):
         result['competitions'].get(k, {}).get('appearances', 0) > 0
         for k in (set(COMP_NAMES) - YOUTH_COMP_KEYS)
     )
-    if played_youth and 'u21' not in result['squadLevels']:
-        result['squadLevels'] = result['squadLevels'] + ['u21']
+    if played_youth and 'academy' not in result['squadLevels']:
+        result['squadLevels'] = result['squadLevels'] + ['academy']
     if played_senior and 'first' not in result['squadLevels']:
         result['squadLevels'] = result['squadLevels'] + ['first']
 
@@ -733,24 +819,54 @@ def main():
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     IMAGES_PATH.mkdir(parents=True, exist_ok=True)
 
-    # 1군/U21 스쿼드 자동 크롤. 두 스쿼드에 동시에 이름이 올라오는 선수(예:
-    # 막스 다우먼처럼 1군과 U21을 오가는 선수)는 squadLevels에 두 레벨을
-    # 모두 태그해서 프론트엔드 1군/U-21 탭 양쪽에 다 노출되게 한다.
+    # 1군은 Fotmob 스쿼드 목록 페이지 그대로. 아카데미는 U21/U18을 따로
+    # 안 나누고 "academy" 하나로 묶어서, 공홈 명단을 기준으로 이름마다
+    # Fotmob 검색으로 ID를 찾는다(팀 스쿼드 목록보다 누락이 적음).
+    # 두 소스에 동시에 이름이 올라오는 선수(예: 막스 다우먼처럼 1군과
+    # 아카데미를 오가는 선수)는 squadLevels에 두 레벨을 모두 태그해서
+    # 프론트엔드 1군/아카데미 탭 양쪽에 다 노출되게 한다.
     by_id = {}
     order = []
-    first_team_squad = []
-    for sq in SQUADS:
-        print(f'🔍 Fotmob {sq["level"]} 스쿼드 크롤 중... (team {sq["teamId"]})')
-        members = fetch_squad_for_team(sq['teamId'], sq['slug'])
-        if sq['level'] == 'first':
-            first_team_squad = members
-        for m in members:
-            if m['id'] not in by_id:
-                by_id[m['id']] = {**m, 'squadLevels': []}
-                order.append(m['id'])
-            if sq['level'] not in by_id[m['id']]['squadLevels']:
-                by_id[m['id']]['squadLevels'].append(sq['level'])
-        print(f'  → {sq["level"]}: {len(members)}명')
+
+    def add_member(member, level):
+        if member['id'] not in by_id:
+            by_id[member['id']] = {**member, 'squadLevels': []}
+            order.append(member['id'])
+        if level not in by_id[member['id']]['squadLevels']:
+            by_id[member['id']]['squadLevels'].append(level)
+
+    print(f'🔍 Fotmob first 스쿼드 크롤 중... (team {ARSENAL_TEAM_ID})')
+    first_team_squad = fetch_squad_for_team(ARSENAL_TEAM_ID, 'arsenal')
+    for m in first_team_squad:
+        add_member(m, 'first')
+    print(f'  → first: {len(first_team_squad)}명')
+
+    # 아카데미 1차: Fotmob 자체 U21 스쿼드 목록 페이지(기존 방식) — 안전망으로
+    # 계속 유지한다. 공홈 크롤이 막히더라도(아래) 최소한 이 정도는 잡힌다.
+    print('🔍 Fotmob u21 스쿼드 크롤 중... (team 950214, 안전망)')
+    u21_fallback_squad = fetch_squad_for_team(950214, 'arsenal-u21')
+    for m in u21_fallback_squad:
+        add_member(m, 'academy')
+    print(f'  → academy (Fotmob u21 목록): {len(u21_fallback_squad)}명')
+
+    # 아카데미 2차: 공홈 명단 → Fotmob 검색으로 보강. headless=False로 실제
+    # 브라우저 창을 띄워야 Akamai 봇 차단(403)을 피할 수 있다(직접 확인함) —
+    # 그래도 막히면 fetch_arsenal_com_names가 빈 리스트를 반환하고 위
+    # 안전망만 남는다.
+    print('🔍 arsenal.com 아카데미 명단 크롤 중... (공홈, 위 목록의 누락분 보강용)')
+    academy_names = fetch_arsenal_com_names('academy')
+    print(f'  → 공홈 아카데미 명단: {len(academy_names)}명')
+    academy_found = 0
+    for name in academy_names:
+        resolved = resolve_fotmob_id_by_name(name)
+        time.sleep(0.5)  # 검색 API 예의상 텀
+        if resolved is None:
+            print(f'  경고: Fotmob에 아예 없음: {name}')
+            continue
+        add_member({'id': resolved['id'], 'slug': resolved['slug']}, 'academy')
+        academy_found += 1
+    if academy_names:
+        print(f'  → 아카데미(공홈): {academy_found}/{len(academy_names)}명 매칭')
 
     tagged_squad = [by_id[pid] for pid in order]
 
