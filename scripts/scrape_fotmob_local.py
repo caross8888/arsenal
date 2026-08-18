@@ -327,10 +327,10 @@ def fetch_player_stats_for_season(player_id, entry_id):
 def _get_primary_pos_key(pos_desc):
     if not pos_desc:
         return ''
-    primary = pos_desc.get('primaryPosition', {})
+    primary = pos_desc.get('primaryPosition') or {}
     if primary and primary.get('key'):
         return primary['key']
-    positions = pos_desc.get('positions', [])
+    positions = pos_desc.get('positions') or []
     main = next((p for p in positions if p.get('isMainPosition')), None)
     if main:
         return (main.get('strPos') or {}).get('key', '')
@@ -449,7 +449,7 @@ def parse_stats(data, squad_levels=None):
     # ── 현재 시즌 자동 감지 ──
     # statSeasons[0]는 월드컵/유로 등 국가대표 소집 시즌("2026")이 클럽 시즌보다
     # 앞에 올 수 있어, "YYYY/YYYY" 형식의 클럽 시즌 항목을 우선으로 찾는다.
-    stat_seasons = data.get('statSeasons', [])
+    stat_seasons = data.get('statSeasons') or []
     club_season = next((s for s in stat_seasons if re.match(r'^\d{4}/\d{4}$', s.get('seasonName', ''))), None)
     current_season_name = (club_season or stat_seasons[0])['seasonName'] if stat_seasons else str(datetime.utcnow().year - 1) + '/' + str(datetime.utcnow().year)
     season_start = season_start_date(current_season_name)
@@ -484,7 +484,7 @@ def parse_stats(data, squad_levels=None):
     }
 
     # ── 기본 정보 ──
-    for info in data.get('playerInformation', []):
+    for info in data.get('playerInformation') or []:
         title   = (info.get('title') or '').lower()
         val     = info.get('value', {}) or {}
         fallback = val.get('fallback', '') if isinstance(val, dict) else str(val)
@@ -524,7 +524,7 @@ def parse_stats(data, squad_levels=None):
 
     # ── 포지션 레이블 ──
     pos_desc = data.get('positionDescription') or {}
-    pos_list = pos_desc.get('positions', [])
+    pos_list = pos_desc.get('positions') or []
     primary_label = (pos_desc.get('primaryPosition') or {}).get('label', '')
     if not primary_label:
         main = next((p for p in pos_list if p.get('isMainPosition')), None)
@@ -553,7 +553,7 @@ def parse_stats(data, squad_levels=None):
     all_stats = {}
     pl_stats_used = False
     if club_season:
-        for t in club_season.get('tournaments', []):
+        for t in club_season.get('tournaments') or []:
             comp = COMP_MAP.get(t.get('tournamentId'))
             if not comp or not t.get('entryId'):
                 continue
@@ -597,15 +597,15 @@ def parse_stats(data, squad_levels=None):
             # PL을 대표 대회 스탯(고급 지표)으로 사용 — 나머지 선수들과 동일 기준
             if comp == 'PL' and not pl_stats_used:
                 pl_stats_used = True
-                for group in (season_stats.get('statsSection') or {}).get('items', []):
-                    for stat in group.get('items', []):
+                for group in (season_stats.get('statsSection') or {}).get('items') or []:
+                    for stat in group.get('items') or []:
                         key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
                         all_stats[key] = {
                             'value':      stat.get('statValue'),
                             'per90':      round(stat.get('per90', 0), 2),
                             'percentile': round(stat.get('percentileRank', 0)),
                         }
-                for stat in (season_stats.get('topStatCard') or {}).get('items', []):
+                for stat in (season_stats.get('topStatCard') or {}).get('items') or []:
                     key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
                     if key not in all_stats:
                         all_stats[key] = {
@@ -618,15 +618,15 @@ def parse_stats(data, squad_levels=None):
     if not pl_stats_used:
         first_stats = data.get('firstSeasonStats') or {}
         stats_section = first_stats.get('statsSection') or {}
-        for group in stats_section.get('items', []):
-            for stat in group.get('items', []):
+        for group in stats_section.get('items') or []:
+            for stat in group.get('items') or []:
                 key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
                 all_stats[key] = {
                     'value':      stat.get('statValue'),
                     'per90':      round(stat.get('per90', 0), 2),
                     'percentile': round(stat.get('percentileRank', 0)),
                 }
-        for stat in (first_stats.get('topStatCard') or {}).get('items', []):
+        for stat in (first_stats.get('topStatCard') or {}).get('items') or []:
             key = stat.get('localizedTitleId') or stat.get('title', '').lower().replace(' ', '_')
             if key not in all_stats:
                 all_stats[key] = {
@@ -708,17 +708,16 @@ def parse_stats(data, squad_levels=None):
                     'title': item.get('title'),
                     'value': round((item.get('value') or 0) * 100),
                 }
-                for item in traits_raw.get('items', [])
+                for item in traits_raw.get('items') or []
             ],
         }
 
     # ── 경력 ──
     career_entries = (
-        data.get('careerHistory', {})
-            .get('careerItems', {})
-            .get('senior', {})
-            .get('teamEntries', [])
-    )
+        ((data.get('careerHistory') or {})
+            .get('careerItems') or {})
+            .get('senior') or {}
+    ).get('teamEntries') or []
     result['career'] = [
         {
             'team':        e.get('team'),
