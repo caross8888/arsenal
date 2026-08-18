@@ -4367,16 +4367,17 @@ function openPlayerModal(p, level) {
     || pos;
   var contractEnd = p.contractEnd ? p.contractEnd.slice(0,7) : '';
   var competitions= p.competitions||{};
-  // 1군에서 열었으면 1군 대회만 노출한다(로테이션으로 아카데미 선수가 어쩌다
-  // 1군 대회에 한 번 뛰었다고 그 선수가 1군 탭에 나오는 건 아니므로, 반대로
-  // 진짜 1군 선수가 아카데미 대회 기록을 갖고 있는 일도 거의 없어 이 방향은
-  // 좁혀도 문제 없음). 아카데미에서 열었을 때는 1군 대회 출전 기록까지 다
-  // 보여준다 — 아카데미 선수가 1군 대회에 나간 기록도 엄연히 그 선수의
-  // 커리어이므로 숨길 이유가 없다. 0경기인 대회는 스쿼드 등록만 되어있고
-  // 실제로 안 뛴 경우라 탭에서 제외.
+  // 1군에서 열었으면 항상 1군 대회만 노출한다. 아카데미에서 열었을 땐 그
+  // 선수가 1군에도 "등록"돼 있는지로 갈린다 — 다우먼처럼 1군/아카데미 둘 다
+  // 소속인 선수는 1군 탭에서 이미 1군 기록을 볼 수 있으니 아카데미 탭은
+  // 아카데미 대회만 보여주고, 말리 새먼처럼 아카데미에만 등록돼 있는데
+  // 1군 대회 출전 기록이 있는 선수는 그걸 보여줄 다른 탭이 없으므로 아카데미
+  // 탭에서 1군+아카데미 대회를 다 보여준다. 0경기인 대회는 스쿼드 등록만
+  // 되어있고 실제로 안 뛴 경우라 탭에서 제외.
   var SENIOR_COMPS=['PL','UCL','FAC','EFL'];
   var YOUTH_COMPS=['PL2','EFLT','UYL'];
-  var levelCompOrder = level==='academy' ? SENIOR_COMPS.concat(YOUTH_COMPS) : SENIOR_COMPS;
+  var isDualRegistered = (p.squadLevels||[]).indexOf('first')!==-1 && (p.squadLevels||[]).indexOf('academy')!==-1;
+  var levelCompOrder = level!=='academy' ? SENIOR_COMPS : (isDualRegistered ? YOUTH_COMPS : SENIOR_COMPS.concat(YOUTH_COMPS));
   compKeys=levelCompOrder.filter(function(k){var c=competitions[k];return c && (c.appearances||0)>0;});
   var scopedCompetitions={};
   compKeys.forEach(function(k){scopedCompetitions[k]=competitions[k];});
