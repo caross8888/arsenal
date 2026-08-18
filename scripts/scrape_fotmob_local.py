@@ -20,7 +20,7 @@ import re
 import time
 import subprocess
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 # ── 설정 ──────────────────────────────────────────
 GITHUB_TOKEN = ''  # GitHub Personal Access Token 입력
@@ -262,7 +262,7 @@ def season_start_date(season_name: str) -> str:
         return f'{start_year}-07-01'
     except Exception:
         # fallback: 4년 전 날짜 (거의 모든 경기 포함)
-        return f'{datetime.utcnow().year - 1}-07-01'
+        return f'{datetime.now(timezone.utc).year - 1}-07-01'
 
 
 def download_photo(player_id):
@@ -451,7 +451,7 @@ def parse_stats(data, squad_levels=None):
     # 앞에 올 수 있어, "YYYY/YYYY" 형식의 클럽 시즌 항목을 우선으로 찾는다.
     stat_seasons = data.get('statSeasons') or []
     club_season = next((s for s in stat_seasons if re.match(r'^\d{4}/\d{4}$', s.get('seasonName', ''))), None)
-    current_season_name = (club_season or stat_seasons[0])['seasonName'] if stat_seasons else str(datetime.utcnow().year - 1) + '/' + str(datetime.utcnow().year)
+    current_season_name = (club_season or stat_seasons[0])['seasonName'] if stat_seasons else str(datetime.now(timezone.utc).year - 1) + '/' + str(datetime.now(timezone.utc).year)
     season_start = season_start_date(current_season_name)
     # firstSeasonStats(슛맵/히트맵/topStatCard 원본)는 Fotmob이 statSeasons[0]로
     # 잡은 시즌 기준으로 내려온다. 그게 클럽 시즌이 아니면(월드컵 등 국가대표
@@ -890,7 +890,7 @@ def main():
         time.sleep(2)
 
     output = {
-        'updated_at': datetime.utcnow().isoformat(),
+        'updated_at': datetime.now(timezone.utc).isoformat(),
         'season':     detected_season or 'unknown',
         'source':     'Fotmob',
         'players':    players,
