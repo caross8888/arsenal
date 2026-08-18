@@ -2886,11 +2886,14 @@ function openManagerModal(enc){
   if(!mgr.games && cached===undefined && mgr.tenureStart) computeManagerGames(mgr);
 }
 
-// 부임 첫 경기 날짜(tenureStart) 이후 종료된 경기를 시즌별로 모두 불러와
-// 합산 — 결과 브라우저(getSeasonMatches/resultsSeasonForYM)를 그대로 재사용.
-// 부임 시즌은 부임 전(전임 감독 재임 중) 경기가 섞여 있을 수 있어 날짜로 거른다.
+// 부임 첫 경기 날짜(tenureStart) 이후 "공식 경기"(친선전 제외)만 시즌별로
+// 세서 합산한다. 예전엔 리스트/달력 뷰가 쓰는 getSeasonMatches를 재사용했는데,
+// 그건 8월(시즌 전환기)에 진행 중인 시즌 캐시를 직전 시즌 슬롯에도 그대로
+// 별칭(alias)해두는 표시용 최적화가 들어있어서, 감독 경기수처럼 여러 시즌을
+// 그냥 더하는 계산에는 안 맞았다(겹치는 시즌이 통째로 두 번 카운트됨). 그래서
+// 여기서는 그 캐시를 안 거치고 시즌마다 결과 API를 직접(nocache) 불러온다.
 // 결과는 _mgrGamesCache에 저장해서, 그리드 단계에서 미리 계산해두면 모달을
-// 열 때는 스피너 없이 바로 숫자가 보인다.
+// 열 때는 스피너 없이 바로 보이게 한다.
 function computeManagerGames(mgr){
   var tenureStart = mgr.tenureStart;
   var valEl = document.getElementById('mgrGamesVal');
@@ -2900,15 +2903,14 @@ function computeManagerGames(mgr){
   var endSeason = resultsSeasonForYM(now.getFullYear(), now.getMonth()+1);
   var seasons = [];
   for(var s=startSeason; s<=endSeason; s++) seasons.push(s);
-  Promise.all(seasons.map(getSeasonMatches)).then(function(results){
+  Promise.all(seasons.map(function(s){
+    return apiFetch(FN+'/football?type=results&season='+s+'&nocache=1').then(function(data){ return data.matches||[]; });
+  })).then(function(results){
     var total = 0;
     results.forEach(function(seasonMatches, i){
       seasonMatches.forEach(function(m){
-        // getSeasonMatches(현재 시즌)는 리스트/달력 뷰가 미래 달까지 바로
-        // 보여주기 위해 다음 시즌 예정 경기까지 같은 배열에 들고 있을 수
-        // 있다 — 아직 안 치른 경기까지 "경기수"에 세면 안 되므로 종료된
-        // 경기만 센다(과거 시즌은 애초에 결과 API가 종료 경기만 주니 영향 없음).
         if(!m.utcDate || m.status!=='FINISHED') return;
+        if(m.competition && m.competition.short==='FR') return; // 친선전은 공식 경기가 아니므로 제외
         if(seasons[i]===startSeason && new Date(m.utcDate).getTime() < startDate.getTime()) return;
         total++;
       });
@@ -4365,13 +4367,16 @@ function openPlayerModal(p, level) {
     || pos;
   var contractEnd = p.contractEnd ? p.contractEnd.slice(0,7) : '';
   var competitions= p.competitions||{};
-  // 1군에서 열었으면 1군 대회만, 아카데미에서 열었으면 아카데미 대회만
-  // 노출한다 — 두 스쿼드를 겸하는 선수(예: 막스 다우먼)라도 상세 탭은 어느
-  // 리스트에서 열었는지에 따라 갈라져야 "짬뽕"되지 않는다. 0경기인 대회는
-  // 스쿼드 등록만 되어있고 실제로 안 뛴 경우라 탭에서 제외.
+  // 1군에서 열었으면 1군 대회만 노출한다(로테이션으로 아카데미 선수가 어쩌다
+  // 1군 대회에 한 번 뛰었다고 그 선수가 1군 탭에 나오는 건 아니므로, 반대로
+  // 진짜 1군 선수가 아카데미 대회 기록을 갖고 있는 일도 거의 없어 이 방향은
+  // 좁혀도 문제 없음). 아카데미에서 열었을 때는 1군 대회 출전 기록까지 다
+  // 보여준다 — 아카데미 선수가 1군 대회에 나간 기록도 엄연히 그 선수의
+  // 커리어이므로 숨길 이유가 없다. 0경기인 대회는 스쿼드 등록만 되어있고
+  // 실제로 안 뛴 경우라 탭에서 제외.
   var SENIOR_COMPS=['PL','UCL','FAC','EFL'];
   var YOUTH_COMPS=['PL2','EFLT','UYL'];
-  var levelCompOrder = level==='academy' ? YOUTH_COMPS : SENIOR_COMPS;
+  var levelCompOrder = level==='academy' ? SENIOR_COMPS.concat(YOUTH_COMPS) : SENIOR_COMPS;
   compKeys=levelCompOrder.filter(function(k){var c=competitions[k];return c && (c.appearances||0)>0;});
   var scopedCompetitions={};
   compKeys.forEach(function(k){scopedCompetitions[k]=competitions[k];});

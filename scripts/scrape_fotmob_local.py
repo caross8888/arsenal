@@ -248,7 +248,6 @@ COMP_NAMES = {
     'PL': '프리미어리그', 'UCL': '챔피언스리그', 'FAC': 'FA컵', 'EFL': '카라바오컵',
     'PL2': '프리미어리그 2', 'EFLT': 'EFL 트로피', 'UYL': '유스리그',
 }
-YOUTH_COMP_KEYS = {'PL2', 'EFLT', 'UYL'}
 
 
 # ── 유틸 ──────────────────────────────────────────
@@ -733,23 +732,11 @@ def parse_stats(data, squad_levels=None):
         for e in career_entries[:8]
     ]
 
-    # ── squadLevels 보정 ──
-    # Fotmob 스쿼드 "명단" 페이지엔 1군으로만 등록돼 있어도(예: 막스 다우먼)
-    # 실제로 아카데미 대회에서 뛴 기록(PL2/EFL트로피/유스리그 출전>0)이 있으면
-    # 아카데미 탭에도 노출되도록 squadLevels에 'academy'를 추가한다. 반대로
-    # 아카데미 소속인데 1군 경기 출전 기록이 있는 경우도 동일하게 보정한다.
-    played_youth = any(
-        result['competitions'].get(k, {}).get('appearances', 0) > 0
-        for k in YOUTH_COMP_KEYS
-    )
-    played_senior = any(
-        result['competitions'].get(k, {}).get('appearances', 0) > 0
-        for k in (set(COMP_NAMES) - YOUTH_COMP_KEYS)
-    )
-    if played_youth and 'academy' not in result['squadLevels']:
-        result['squadLevels'] = result['squadLevels'] + ['academy']
-    if played_senior and 'first' not in result['squadLevels']:
-        result['squadLevels'] = result['squadLevels'] + ['first']
+    # squadLevels는 출전 기록이 아니라 순수 스쿼드 "등록" 여부로만 정해진다
+    # (main()에서 1군/아카데미 명단 소스별로 태깅) — 아카데미 선수가 로테이션
+    # 경기에 한 번 올라갔다고 1군으로 뜨는 걸 막기 위해, 출전 기록 기반으로
+    # squadLevels를 자동으로 올려주던 보정 로직은 없앴다. 대신 아카데미 탭에서
+    # 열었을 때는 1군 대회 출전 기록도 같이 보여준다(openPlayerModal 참고).
 
     return result
 
