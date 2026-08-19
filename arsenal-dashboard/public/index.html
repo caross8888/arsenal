@@ -1726,9 +1726,15 @@ function calChangeMonth(delta){
 }
 function calGoToNearestMatch(){
   var matches = (window._allMatchesForCal||[]).filter(function(m){return !!m.utcDate;});
-  var nearest = null, nearestDiff = Infinity;
   var now = Date.now();
-  matches.forEach(function(m){
+  // 절대값으로 가장 가까운 경기를 고르면 "며칠 전 종료된 경기"가 "며칠 뒤
+  // 예정 경기"보다 더 가까워서 최근 결과가 뽑히는 경우가 있었다 — 예정
+  // 경기가 하나라도 있으면 그중 가장 빠른 걸 우선하고, 예정 경기가 아예
+  // 없을 때만(시즌 사이 공백 등) 과거 경기로 폴백한다.
+  var upcoming = matches.filter(function(m){return new Date(m.utcDate).getTime() >= now;});
+  var pool = upcoming.length ? upcoming : matches;
+  var nearest = null, nearestDiff = Infinity;
+  pool.forEach(function(m){
     var diff = Math.abs(new Date(m.utcDate).getTime()-now);
     if(diff<nearestDiff){ nearestDiff=diff; nearest=m; }
   });
