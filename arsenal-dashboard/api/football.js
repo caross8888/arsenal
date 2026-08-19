@@ -372,7 +372,7 @@ export default async function handler(req, res) {
           } catch(_){ return null; }
         };
 
-        const mapRow = (row) => ({
+        const mapRow = (row, decimals, useSubStat) => ({
           id:        row.ParticiantId,
           name:      row.ParticipantName,
           fullName:  row.ParticipantName,
@@ -384,26 +384,42 @@ export default async function handler(req, res) {
           photo:     `https://images.fotmob.com/image_resources/playerimages/${row.ParticiantId}.png`,
           position:  (row.Positions||[]).includes(11) ? 'GK' : '',
           isArsenal: row.TeamId === ARSENAL_TEAM_ID,
-          value:     row.StatValue,
+          value:     useSubStat
+                       ? (decimals ? Number(row.SubStatValue).toFixed(decimals) : Math.round(row.SubStatValue))
+                       : (decimals ? Number(row.StatValue).toFixed(decimals) : row.StatValue),
         });
 
         // 새 시즌이 아직 시작 전이면 해당 시즌 통계 파일이 비어있으므로,
         // 데이터가 있는 첫 시즌(보통 직전 시즌)까지 순서대로 내려간다.
-        const getTopN = async (statName, n) => {
+        // useSubStat: Fotmob이 기본 제공하는 정렬은 "90분당 평균"(StatValue) 기준인데,
+        // 선방처럼 SubStatValue가 실제 누적 총계인 스탯은 화면에도 누적 총계를
+        // 보여줘야 하므로 정렬 자체를 SubStatValue 기준으로 다시 한다 — 안 그러면
+        // "평균은 높지만 총량은 적은 선수"가 누적 순위 1위처럼 보이는 모순이 생긴다.
+        const getTopN = async (statName, n, decimals, useSubStat) => {
           for(const link of seasonLinks){
             const list = await fetchStatList(link.TournamentId, statName);
-            if(list && list.length) return list.slice(0, n).map(mapRow);
+            if(list && list.length){
+              const sorted = useSubStat ? [...list].sort((a,b) => (b.SubStatValue||0) - (a.SubStatValue||0)) : list;
+              return sorted.slice(0, n).map(row => mapRow(row, decimals, useSubStat));
+            }
           }
           return [];
         };
 
-        const [goals, assists, cleanSheets] = await Promise.all([
+        const [goals, assists, cleanSheets, rating, xg, shots, shotConv, saves, saveRate, cards] = await Promise.all([
           getTopN('goals', 10),
           getTopN('goal_assist', 10),
           getTopN('clean_sheet', 10),
+          getTopN('rating', 10, 2),
+          getTopN('expected_goals', 10, 1),
+          getTopN('total_scoring_att', 10, 1),
+          getTopN('total_scoring_att', 10, 1, true),
+          getTopN('saves', 10, 0, true),
+          getTopN('_save_percentage', 10, 1),
+          getTopN('yellow_card', 10),
         ]);
 
-        result = { goals, assists, cleanSheets };
+        result = { goals, assists, cleanSheets, rating, xg, shots, shotConv, saves, saveRate, cards };
       } catch(err) {
         const stale = getStale('leaders');
         if(stale) return res.json(stale);

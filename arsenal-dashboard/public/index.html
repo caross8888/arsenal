@@ -139,7 +139,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .std-pts{font-family:var(--fm);font-weight:700;color:var(--text);text-align:right;font-size:11px}
 .more-btn{width:100%;padding:12px;border:none;background:var(--surface2);color:var(--text);font-weight:700;font-family:var(--fb);font-size:12px;letter-spacing:1px;cursor:pointer;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:6px;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent;}
 .more-btn:hover{background:var(--surface3);color:var(--text)}
-.lb-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);}
+.lb-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);}
 .lb-tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px 4px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;font-family:var(--fb);font-size:11px;font-weight:700;-webkit-tap-highlight-color:transparent;}
 .lb-tab-badge{position:absolute;top:6px;right:8px;font-size:11px;font-weight:700;color:inherit;}
 .lb-tab svg{stroke:var(--text-muted);transition:stroke .15s;}
@@ -179,23 +179,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pl-photo-box.no-img img{width:100%;height:100%;object-fit:contain;object-position:bottom;display:block}
 .pl-card-divider{height:1px;background:var(--border)}
 .pl-card-name{padding:7px 8px;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
-.inj-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
-.inj-row:last-child{border-bottom:none}
-.inj-pos-badge{width:38px;height:38px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:11px;color:var(--text-muted)}
-.inj-info{flex:1;min-width:0}
-.inj-name{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.inj-detail{font-size:11px;color:var(--text-secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.inj-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
-.inj-badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:20px;font-weight:700;white-space:nowrap}
-.inj-injury{background:rgba(239,68,68,.15);color:#F87171;border:1px solid rgba(239,68,68,.3)}
-.inj-doubt{background:rgba(245,158,11,.15);color:#FCD34D;border:1px solid rgba(245,158,11,.3)}
-.inj-miss{background:rgba(120,120,120,.15);color:var(--text-muted);border:1px solid var(--border)}
-.inj-chance{font-size:10px;color:var(--text-dim)}
-.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
-.sum-stat{background:var(--surface2);border-radius:10px;padding:14px;text-align:center}
-.sum-val{font-family:var(--fd);font-size:36px;line-height:1}
-.sum-val.r{color:var(--red)}.sum-val.a{color:var(--amber)}.sum-val.g{color:var(--green)}
-.sum-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-secondary);margin-top:4px}
 .news-list{display:flex;flex-direction:column;gap:10px}
 .media-seg{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
 .media-seg-btn{background:var(--surface2);border:none;color:var(--text-muted);font-family:var(--fb);font-size:12px;font-weight:700;padding:10px 4px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;}
@@ -280,6 +263,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .rec-subnav{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border);}
 .rec-subnav-btn{flex:1 1 0;min-width:0;padding:8px 4px;font-size:10px;font-weight:700;letter-spacing:.2px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .18s;}
 .rec-subnav-btn.active{color:var(--red);border-bottom-color:var(--red);}
+#lbStatSubnav{display:grid;grid-template-columns:repeat(5,1fr);}
 .rec-group{margin-bottom:20px;}
 .rec-row{display:flex;align-items:baseline;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);gap:10px;}
 .rec-row:last-child{border-bottom:none;}
@@ -780,8 +764,6 @@ function onHeaderLogoClick(){
   var homeBtn = document.querySelector('.nav-btn[onclick*="\'fixtures\'"]');
   if(homeBtn) showSec('fixtures', homeBtn);
   loadFixtures();
-  loadStandings();
-  loadLeaders();
 }
 (function(){
   // 앱을 완전히 껐다가 다시 켰을 때(새 세션)만 자동으로 보여주고, 같은 세션
@@ -856,24 +838,19 @@ function onHeaderLogoClick(){
       <div class="results-picker-grid" id="calPickerGrid"></div>
     </div>
   </div>
-  <div class="card" style="margin-top:8px">
+</section>
+<section id="leaderboard" class="section">
+  <div class="sec-head"><h1 class="sec-title">&#47532;&#45908;&#48372;&#46300;</h1><span class="sec-badge" id="lbBadge">&#47196;&#46377; &#51473;</span></div>
+  <div class="card">
     <div class="lb-tabs" id="lbTabs">
       <button class="lb-tab active" data-tab="team" onclick="switchLbTab('team',this)">
         <span class="lb-tab-badge" id="stdMatchday"></span>
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/></svg>
         &#54016; &#49692;&#50948;
       </button>
-      <button class="lb-tab" data-tab="goals" onclick="switchLbTab('goals',this)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 7l4.76 3.45l-1.76 5.55h-6l-1.76 -5.55l4.76 -3.45"/><path d="M12 7v-4m3 13l2.5 3m-.74 -8.55l3.74 -1.45m-11.44 7.05l-2.56 2.95m.74 -8.55l-3.74 -1.45"/></svg>
-        &#46301;&#51216;
-      </button>
-      <button class="lb-tab" data-tab="assists" onclick="switchLbTab('assists',this)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h5.426a1 1 0 0 1 .863 .496l1.064 1.823a3 3 0 0 0 1.896 1.407l4.677 1.114a4 4 0 0 1 3.074 3.89v2.27a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1"/><path d="M14 13l1 -2"/><path d="M8 18v-1a4 4 0 0 0 -4 -4h-1"/><path d="M10 12l1.5 -3"/></svg>
-        &#50612;&#49884;&#49828;&#53944;
-      </button>
-      <button class="lb-tab" data-tab="cleanSheets" onclick="switchLbTab('cleanSheets',this)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13v-7.5a1.5 1.5 0 0 1 3 0v6.5"/><path d="M11 5.5v-2a1.5 1.5 0 1 1 3 0v8.5"/><path d="M14 5.5a1.5 1.5 0 0 1 3 0v6.5"/><path d="M17 7.5a1.5 1.5 0 0 1 3 0v8.5a6 6 0 0 1 -6 6h-2h.208a6 6 0 0 1 -5.012 -2.7a69.74 69.74 0 0 1 -.196 -.3c-.312 -.479 -1.407 -2.388 -3.286 -5.728a1.5 1.5 0 0 1 .536 -2.022a1.867 1.867 0 0 1 2.28 .28l1.47 1.47"/></svg>
-        &#53364;&#47536;&#49884;&#53944;
+      <button class="lb-tab" data-tab="player" onclick="switchLbTab('player',this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
+        &#49440;&#49688; &#49692;&#50948;
       </button>
     </div>
     <div id="lbPanel-team">
@@ -881,7 +858,19 @@ function onHeaderLogoClick(){
       <div id="stdList"><div class="loading-state" style="padding:20px"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>순위 로딩 중...</span></div></div>
       <button class="more-btn" id="moreStdBtn" onclick="toggleStandings()" style="display:none"><span id="moreStdText">&#51204;&#52404; &#49692;&#50948; &#48372;&#44592; &#8595;</span></button>
     </div>
-    <div id="lbPanel-stats" style="display:none">
+    <div id="lbPanel-player" style="display:none">
+      <div class="rec-subnav" id="lbStatSubnav">
+        <button class="rec-subnav-btn active" data-stat="goals" onclick="switchLbStat('goals',this)">&#46301;&#51216;</button>
+        <button class="rec-subnav-btn" data-stat="assists" onclick="switchLbStat('assists',this)">&#50612;&#49884;&#49828;&#53944;</button>
+        <button class="rec-subnav-btn" data-stat="rating" onclick="switchLbStat('rating',this)">&#54217;&#51216;</button>
+        <button class="rec-subnav-btn" data-stat="xg" onclick="switchLbStat('xg',this)">xG</button>
+        <button class="rec-subnav-btn" data-stat="shots" onclick="switchLbStat('shots',this)">&#54217;&#44512; &#49800;&#54021;</button>
+        <button class="rec-subnav-btn" data-stat="shotConv" onclick="switchLbStat('shotConv',this)">&#49800;&#54021;&#51204;&#54872;&#50984;</button>
+        <button class="rec-subnav-btn" data-stat="cleanSheets" onclick="switchLbStat('cleanSheets',this)">&#53364;&#47536;&#49884;&#53944;</button>
+        <button class="rec-subnav-btn" data-stat="saves" onclick="switchLbStat('saves',this)">&#49440;&#48169;</button>
+        <button class="rec-subnav-btn" data-stat="saveRate" onclick="switchLbStat('saveRate',this)">&#49440;&#48169;&#47456;</button>
+        <button class="rec-subnav-btn" data-stat="cards" onclick="switchLbStat('cards',this)">&#52852;&#46300;</button>
+      </div>
       <div id="ldrList"><div class="loading-state" style="padding:20px"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>기록 로딩 중...</span></div></div>
     </div>
   </div>
@@ -902,14 +891,6 @@ function onHeaderLogoClick(){
     </div>
   </div>
   <div class="sq-grid" id="sqGrid"><div class="loading-state" style="grid-column:1/-1"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>&#49440;&#49688; &#45936;&#51060;&#53552; &#47196;&#46377; &#51473;...</span></div></div>
-</section>
-<section id="injuries" class="section">
-  <div class="sec-head"><h1 class="sec-title">&#48512;&#49345; &#54788;&#54889;</h1><span class="sec-badge" id="injBadge">&#47196;&#46377; &#51473;</span></div>
-  <div class="card" style="margin-bottom:16px"><div class="sum-grid" id="injSum"><div class="loading-state" style="grid-column:1/-1;padding:12px"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>부상 현황 로딩 중...</span></div></div></div>
-  <div class="card">
-    <div class="card-head"><span class="card-title">&#54788;&#51116; &#48512;&#49345; / &#44208;&#51109; &#49440;&#49688;</span><span id="injCount" style="font-size:11px;color:var(--text-secondary)"></span></div>
-    <div id="injList"><div class="loading-state" style="padding:28px"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>부상 선수 로딩 중...</span></div></div>
-  </div>
 </section>
 <section id="media" class="section">
   <div class="sec-head"><h1 class="sec-title">미디어</h1><span class="sec-badge" id="mediaBadge">로딩 중</span></div>
@@ -948,8 +929,8 @@ function onHeaderLogoClick(){
 
 <nav class="bottom-nav">
   <button class="nav-btn active" onclick="showSec('fixtures',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg><span>&#51068;&#51221;</span></button>
+  <button class="nav-btn" onclick="showSec('leaderboard',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/></svg><span>&#47532;&#45908;&#48372;&#46300;</span></button>
   <button class="nav-btn" onclick="showSec('squad',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l6 2v5h-3v8a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-8h-3v-5l6 -2a3 3 0 0 0 6 0"/><path d="M10.5 11h2.5l-1.5 5"/></svg><span>&#49440;&#49688;&#45800;</span></button>
-  <button class="nav-btn" onclick="showSec('injuries',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12l0 .01"/><path d="M10 12l0 .01"/><path d="M12 10l0 .01"/><path d="M12 14l0 .01"/><path d="M4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8a4.94 4.94 0 0 1 -7 -7"/></svg><span>&#48512;&#49345;</span></button>
   <button class="nav-btn" onclick="showSec('media',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg><span>미디어</span></button>
   <button class="nav-btn" onclick="showSec('history',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8l0 4l2 2"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg><span>History</span></button>
 </nav>
@@ -958,6 +939,25 @@ var FN='/api';
 var stdExpanded=false;
 var allStandings=[];
 var allPlayers=[];
+var allInjuries=[];
+// 부상 데이터(FPL 소스)랑 스쿼드 데이터(Fotmob 소스)는 서로 다른 ID 체계라
+// 이름으로만 매칭 가능하다 — 성(마지막 단어) 일치를 기본으로 하고, 전체
+// 이름이 완전히 같으면 그것도 인정한다(같은 성을 쓰는 선수가 둘 이상이면
+// 성 매칭만으론 오매칭 위험이 있어 그 경우엔 전체 이름 일치까지 확인).
+function findInjuryFor(player){
+  if(!allInjuries.length) return null;
+  var pLast=(player.name||'').trim().split(' ').pop().toLowerCase();
+  var pFull=(player.fullName||player.name||'').trim().toLowerCase();
+  var lastMatches=allInjuries.filter(function(inj){
+    var iLast=(inj.fullName||inj.name||'').trim().split(' ').pop().toLowerCase();
+    return iLast && iLast===pLast;
+  });
+  if(lastMatches.length===1) return lastMatches[0];
+  var fullMatch=allInjuries.find(function(inj){
+    return (inj.fullName||inj.name||'').trim().toLowerCase()===pFull;
+  });
+  return fullMatch || (lastMatches.length?lastMatches[0]:null);
+}
 var _sqActiveFilter='all';
 var _sqActiveLevel='first';
 
@@ -1906,14 +1906,16 @@ function renderCalPickerGrid(){
 
 function loadStandings(){
   var el=document.getElementById('stdList');
+  var badge=document.getElementById('lbBadge');
   var _t0=Date.now();
   apiFetchCached(FN+'/football?type=standings', 'standings', function(data){
     withMinLoading(document.getElementById('stdList'), _t0, function(){
       if(data.season) document.getElementById('stdMatchday').textContent=data.season+'R';
       allStandings=data.standings||[];
       renderStandings();
+      if(badge) badge.textContent='ESPN';
     });
-  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); }); });
+  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); if(badge) badge.textContent='오류'; }); });
 }
 function renderStandings(){
   var el=document.getElementById('stdList');
@@ -1945,8 +1947,8 @@ function renderStandings(){
 }
 function toggleStandings(){stdExpanded=!stdExpanded;renderStandings();}
 
-// ── 선수 순위 (EPL 전체, FPL 기반) ──
-var _leaders={goals:[],assists:[],cleanSheets:[]};
+// ── 선수 순위 (EPL 전체, Fotmob 기반) ──
+var _leaders={goals:[],assists:[],cleanSheets:[],rating:[],xg:[],shots:[],shotConv:[],saves:[],saveRate:[],cards:[]};
 var _leadersCat='goals';
 function loadLeaders(){
   var el=document.getElementById('ldrList');
@@ -1956,10 +1958,18 @@ function loadLeaders(){
       _leaders.goals=data.goals||[];
       _leaders.assists=data.assists||[];
       _leaders.cleanSheets=data.cleanSheets||[];
+      _leaders.rating=data.rating||[];
+      _leaders.xg=data.xg||[];
+      _leaders.shots=data.shots||[];
+      _leaders.shotConv=data.shotConv||[];
+      _leaders.saves=data.saves||[];
+      _leaders.saveRate=data.saveRate||[];
+      _leaders.cards=data.cards||[];
       renderLeaders();
     });
   }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); }); });
 }
+var LDR_VAL_SUFFIX={shotConv:'%', saveRate:'%'};
 function renderLeaders(){
   var el=document.getElementById('ldrList');
   var list=_leaders[_leadersCat]||[];
@@ -1975,7 +1985,7 @@ function renderLeaders(){
     if(p.team&&p.team.crest){var tImg=document.createElement('img');tImg.src=p.team.crest;tImg.alt='';tImg.onerror=function(){this.style.display='none';};team.appendChild(tImg);}
     var tNm=document.createElement('span');tNm.textContent=p.team?(p.team.shortName||p.team.name):'';team.appendChild(tNm);
     info.appendChild(nm);info.appendChild(team);
-    var val=document.createElement('span');val.className='ldr-val';val.textContent=p.value;
+    var val=document.createElement('span');val.className='ldr-val';val.textContent=p.value+(LDR_VAL_SUFFIX[_leadersCat]||'');
     row.appendChild(rank);row.appendChild(photo);row.appendChild(info);row.appendChild(val);
     el.appendChild(row);
   });
@@ -1985,16 +1995,21 @@ function switchLbTab(tab,btn){
   document.getElementById('lbTabs').querySelectorAll('.lb-tab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   var teamPanel=document.getElementById('lbPanel-team');
-  var statsPanel=document.getElementById('lbPanel-stats');
+  var playerPanel=document.getElementById('lbPanel-player');
   if(tab==='team'){
     teamPanel.style.display='';
-    statsPanel.style.display='none';
+    playerPanel.style.display='none';
   } else {
     teamPanel.style.display='none';
-    statsPanel.style.display='';
-    _leadersCat=tab;
+    playerPanel.style.display='';
     renderLeaders();
   }
+}
+function switchLbStat(stat,btn){
+  document.getElementById('lbStatSubnav').querySelectorAll('.rec-subnav-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  _leadersCat=stat;
+  renderLeaders();
 }
 
 // ── SQUAD (FPL 기반) ──
@@ -2009,6 +2024,13 @@ function loadSquad(){
       renderSq(_sqActiveFilter);
     });
   }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message);badge.textContent='\uc624\ub958'; }); });
+  // \ubd80\uc0c1 \ubc43\uc9c0\ub97c \uc120\uc218\ub2e8 \uce74\ub4dc\uc5d0 \ubc14\ub85c \ubcf4\uc5ec\uc8fc\ub824\uba74 \ubd80\uc0c1 \ub370\uc774\ud130\ub3c4 \uac19\uc774 \ud544\uc694\ud558\ub2e4 \u2014
+  // "\ubd80\uc0c1" \ud0ed\uc744 \uc544\uc9c1 \uc548 \ub4e4\uc5b4\uac00\ubd24\uc5b4\ub3c4 \ubc43\uc9c0\uac00 \ub728\ub3c4\ub85d \uc5ec\uae30\uc11c\ub3c4 \ub530\ub85c \ubd88\ub7ec\uc628\ub2e4.
+  // apiFetchCached\uac00 'injuries' \uce90\uc2dc \ud0a4\ub97c \uacf5\uc720\ud574\uc11c \ub450 \ubc88 \ubd88\ub7ec\ub3c4 \uc911\ubcf5 \ud638\ucd9c\uc740 \uc544\ub2c8\ub2e4.
+  apiFetchCached(FN+'/football?type=injuries', 'injuries', function(data){
+    allInjuries=data.injured||[];
+    if(allPlayers.length) renderSq(_sqActiveFilter);
+  }, function(){});
 }
 
 function renderSq(filter){
@@ -2081,9 +2103,24 @@ function renderSq(filter){
 
     card.appendChild(top);card.appendChild(div);card.appendChild(nm);
 
-    if(isContractSoon(p.contractEnd)){
+    // 우상단 뱃지는 한 자리뿐이라 부상이 계약만료보다 우선한다 — 부상이면
+    // 부상 뱃지, 아니면(부상 아니고 계약만료 임박이면) 기존 계약만료 뱃지.
+    // 부상 기간/사유는 FPL 데이터에 없는 경우가 많아 괜히 지어내지 않고
+    // 상태만 짧게 표시한다. 색은 부상 탭 목록(.inj-injury/.inj-doubt/.inj-miss)과
+    // 같은 팔레트를 재사용 — 출전 가능성이 낮을수록(0%=확실히 결장) 빨강,
+    // 출전할지도 모르면(출전 의심) 노랑으로 구분한다.
+    var injury=findInjuryFor(p);
+    var INJ_BADGE_COLOR={i:'#EF4444', d:'#F59E0B', s:'#6b7280', u:'#6b7280'};
+    var INJ_BADGE_TEXT={i:'#fff', d:'#1a1400', s:'#fff', u:'#fff'};
+    if(injury){
+      var iBadge=document.createElement('div');iBadge.className='pl-contract-badge pl-injury-badge';
+      iBadge.style.background=INJ_BADGE_COLOR[injury.status]||INJ_BADGE_COLOR.i;
+      iBadge.style.color=INJ_BADGE_TEXT[injury.status]||INJ_BADGE_TEXT.i;
+      iBadge.innerHTML=dIcon('injury',9)+(STATUS_LABEL[injury.status]||'부상');
+      card.appendChild(iBadge);
+    } else if(isContractSoon(p.contractEnd)){
       var cBadge=document.createElement('div');cBadge.className='pl-contract-badge';
-      cBadge.textContent='⏳ '+p.contractEnd.slice(2,4)+'년 만료';
+      cBadge.innerHTML=dIcon('clock',9)+p.contractEnd.slice(2,4)+'년 만료';
       card.appendChild(cBadge);
     }
 
@@ -2091,64 +2128,7 @@ function renderSq(filter){
   });
 }
 
-// ── INJURIES ──
 var STATUS_LABEL={'i':'\uBD80\uC0C1','d':'\uCD9C\uC804 \uC758\uC2EC','s':'\uCD9C\uC7A5 \uC815\uC9C0','u':'\uACB0\uC7A5'};
-var STATUS_CLS={'i':'inj-injury','d':'inj-doubt','s':'inj-miss','u':'inj-miss'};
-var FPL_POS={1:'GK',2:'DF',3:'MF',4:'FW'};
-
-function loadInjuries(){
-  var listEl=document.getElementById('injList');
-  var sumEl=document.getElementById('injSum');
-  var badge=document.getElementById('injBadge');
-  var _t0=Date.now();
-  apiFetchCached(FN+'/football?type=injuries', 'injuries', function(data){
-    withMinLoading(document.getElementById('injList'), _t0, function(){
-      badge.textContent='FPL API';
-      var injured=data.injured||[];
-      document.getElementById('injCount').textContent='총 '+injured.length+'명';
-      var injCnt=injured.filter(function(p){return p.status==='i';}).length;
-      var dbtCnt=injured.filter(function(p){return p.status==='d';}).length;
-      var outCnt=injured.filter(function(p){return p.status==='s'||p.status==='u';}).length;
-      sumEl.innerHTML=
-        '<div class="sum-stat"><div class="sum-val r">'+injCnt+'</div><div class="sum-lbl">부상</div></div>'+
-        '<div class="sum-stat"><div class="sum-val a">'+dbtCnt+'</div><div class="sum-lbl">출전 의심</div></div>'+
-        '<div class="sum-stat"><div class="sum-val" style="color:var(--text-muted)">'+outCnt+'</div><div class="sum-lbl">결장</div></div>'+
-        '<div class="sum-stat"><div class="sum-val g">'+(data.availableCount||'-')+'</div><div class="sum-lbl">출전 가능</div></div>';
-      if(!injured.length){listEl.innerHTML='<div class="loading-state" style="padding:28px;color:var(--green);">'+dIcon('check',20)+'<span style="color:var(--text-secondary);">현재 부상/결장 선수 없음</span></div>';return;}
-      listEl.innerHTML='';
-      injured.forEach(function(p){
-        var row=document.createElement('div');row.className='inj-row';
-        var posBadge=document.createElement('div');posBadge.className='inj-pos-badge';
-        posBadge.style.cssText='overflow:hidden;background:var(--surface2);';
-        if(p.photo){
-          var pImg=document.createElement('img');
-          pImg.src=p.photo;pImg.alt=p.name;
-          pImg.style.cssText='width:100%;height:100%;object-fit:cover;object-position:top;';
-          pImg.onerror=function(){
-            posBadge.removeChild(pImg);
-            posBadge.textContent=p.position||'?';
-            posBadge.style.background='';
-          };
-          posBadge.appendChild(pImg);
-        } else {
-          posBadge.textContent=p.position||'?';
-        }
-        var info=document.createElement('div');info.className='inj-info';
-        var nm=document.createElement('div');nm.className='inj-name';nm.textContent=p.fullName||p.name;
-        var detail=document.createElement('div');detail.className='inj-detail';detail.textContent=p.news||'정보 없음';
-        info.appendChild(nm);info.appendChild(detail);
-        var right=document.createElement('div');right.className='inj-right';
-        var bdg=document.createElement('span');bdg.className='inj-badge '+(STATUS_CLS[p.status]||'inj-miss');bdg.textContent=STATUS_LABEL[p.status]||p.status;
-        var chance=document.createElement('span');chance.className='inj-chance';
-        chance.textContent=p.chance!==null&&p.chance!==undefined?'출전 '+p.chance+'%':(p.status==='u'?'출전 불가':'');
-        right.appendChild(bdg);right.appendChild(chance);
-        row.appendChild(posBadge);row.appendChild(info);row.appendChild(right);
-        listEl.appendChild(row);
-      });
-    });
-  }, function(err){ withMinLoading(listEl, _t0, function(){ showErr(listEl,err.message);badge.textContent='오류'; }); });
-}
-
 // ── NEWS ──
 function switchMedia(tab, btn){
   document.querySelectorAll('.media-seg-btn').forEach(function(b){b.classList.remove('active');});
@@ -2239,7 +2219,8 @@ var DETAIL_ICON_PATH = {
   link:     '<path d="M9 15l6 -6"/><path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464"/><path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463"/>',
   clock:    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
   check:    '<path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/>',
-  card:     '<path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/>'
+  card:     '<path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/>',
+  injury:   '<path d="M14 12l0 .01"/><path d="M10 12l0 .01"/><path d="M12 10l0 .01"/><path d="M12 14l0 .01"/><path d="M4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8a4.94 4.94 0 0 1 -7 -7"/>'
 };
 function dIcon(name, size){
   var s = size||14;
@@ -3628,7 +3609,7 @@ enableSheetSwipeClose(document.querySelector('.match-modal-sheet'), '.mm-header-
 
 
 // ── NAV ──
-var VALID_SECS = ['fixtures','squad','injuries','media','history'];
+var VALID_SECS = ['fixtures','leaderboard','squad','media','history'];
 var loaded={fixtures:true};
 function showSec(id,btn){
   document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
@@ -3644,8 +3625,8 @@ function showSec(id,btn){
   }
   if(!loaded[id]){
     loaded[id]=true;
+    if(id==='leaderboard'){ loadStandings(); loadLeaders(); }
     if(id==='squad') loadSquad();
-    if(id==='injuries') loadInjuries();
     if(id==='media') loadMedia();
     if(id==='history') loadHistory();
   }
@@ -5065,8 +5046,6 @@ function loadESPNStats(){
 
 loadESPNStats();
 loadFixtures();
-loadStandings();
-loadLeaders();
 
 </script>
 </body>
