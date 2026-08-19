@@ -444,6 +444,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-view-btn{padding:5px 9px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;}
 .fix-view-btn svg{width:14px;height:14px;}
 .fix-view-btn.active{background:var(--red-dark);color:#fff;}
+.today-btn{display:flex;align-items:center;gap:5px;padding:6px 12px 6px 10px;background:var(--red-dark);color:#fff;border:none;border-radius:8px;font-family:var(--fb);font-size:11px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.today-btn svg{width:12px;height:12px;color:var(--gold);flex-shrink:0;}
+.today-btn:disabled{background:var(--surface2);color:var(--text-muted);cursor:default;}
+.today-btn:disabled svg{color:var(--text-muted);}
 .cal-nav-btn{background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;}
 .cal-nav-btn svg{width:16px;height:16px;}
 .cal-nav-btn:disabled{color:var(--text-dim);cursor:default;opacity:.4;}
@@ -790,10 +794,7 @@ function onHeaderLogoClick(){
   <div class="dday-card" id="ddayCard" style="display:none"></div>
   <div id="fixWrap" class="fix-section-card">
     <div class="fix-section-label" style="display:flex;align-items:center;justify-content:space-between;">
-      <span style="display:flex;align-items:center;gap:6px;">
-        <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg> &#44221;&#44592; &#51068;&#51221;</span>
-        <button class="cal-nav-btn" id="matchTodayBtn" onclick="goToToday()" aria-label="&#50724;&#45236;&#47196; &#46036;&#50500;&#44032;&#44592;" style="padding:2px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg></button>
-      </span>
+      <button class="today-btn" id="matchTodayBtn" onclick="goToToday()" aria-label="&#50724;&#45720;&#47196; &#46028;&#50500;&#44032;&#44592;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>&#50724;&#45720;</button>
       <div class="fix-view-toggle" id="fixViewToggle">
         <button class="fix-view-btn active" data-view="list" onclick="switchFixView('list')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l11 0"/><path d="M9 12l11 0"/><path d="M9 18l11 0"/><path d="M5 6l0 .01"/><path d="M5 12l0 .01"/><path d="M5 18l0 .01"/></svg></button>
         <button class="fix-view-btn" data-view="cal" onclick="switchFixView('cal')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg></button>
