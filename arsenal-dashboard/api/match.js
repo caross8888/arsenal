@@ -185,6 +185,36 @@ export default async function handler(req, res) {
 
     const venue = raw.header?.competitions?.[0]?.venue?.fullName || raw.gameInfo?.venue?.fullName || raw.venue?.fullName || null;
 
+    // ── 상대전적(H2H) ──
+    const seasonSeriesRaw = (raw.seasonseries || [])[0] || null;
+    const h2h = seasonSeriesRaw ? {
+      summary: seasonSeriesRaw.summary || '',
+      seriesScore: seasonSeriesRaw.seriesScore || '',
+      events: (seasonSeriesRaw.events || []).slice(0, 5).map(e => {
+        const hc = (e.competitors || []).find(c => c.homeAway === 'home') || {};
+        const ac = (e.competitors || []).find(c => c.homeAway === 'away') || {};
+        return {
+          date: e.date || null,
+          homeTeam: hc.team ? { id: hc.team.id, name: hc.team.abbreviation || hc.team.displayName, crest: hc.team.logo } : null,
+          awayTeam: ac.team ? { id: ac.team.id, name: ac.team.abbreviation || ac.team.displayName, crest: ac.team.logo } : null,
+          homeScore: hc.score, awayScore: ac.score,
+        };
+      }),
+    } : null;
+
+    // ── 양팀 최근 5경기 폼 ──
+    const recentForm = (raw.lastFiveGames || []).map(t => ({
+      teamId: t.team?.id,
+      teamName: t.team?.abbreviation || t.team?.displayName || '',
+      events: (t.events || []).slice(-5).map(ev => ({
+        date: ev.gameDate || null,
+        opponent: ev.opponent ? { name: ev.opponent.abbreviation || ev.opponent.displayName, crest: ev.opponent.logo } : null,
+        score: ev.score || '',
+        result: ev.gameResult || '',
+        competition: ev.leagueAbbreviation || ev.competitionName || '',
+      })),
+    }));
+
     // ── 주심 & 관중 ──
     const officials = raw.gameInfo?.officials || comp?.officials || [];
     const referee = officials.find(o => (o.position?.displayName || o.role || '').toLowerCase().includes('referee'))?.fullName
@@ -278,6 +308,8 @@ export default async function handler(req, res) {
       events,
       commentary,
       players,
+      h2h,
+      recentForm,
       status: comp?.status?.type?.description || '',
     };
 
