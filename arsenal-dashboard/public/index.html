@@ -4064,30 +4064,56 @@ function renderStatsPanelInner(data){
 // 라인업/선수 스탯 패널에서 공용으로 쓰는 홈-어웨이 팀 전환 탭 — 경기
 // 상세모달(종료 경기)의 라인업 섹션에서 쓰는 것과 동일한 .mm-team-tabs/
 // .mm-team-tab 테마(엠블럼+팀명, 세로 스택)로 통일한다.
-function renderLineupPanelInner(data, panelName){
-  if(!data.players) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
+function teamTabsHtml(data, panelName){
   var hCrest=(data.homeTeam&&data.homeTeam.crest)||'';
   var aCrest=(data.awayTeam&&data.awayTeam.crest)||'';
   var hName=(data.homeTeam&&data.homeTeam.name)||'홈';
   var aName=(data.awayTeam&&data.awayTeam.name)||'어웨이';
-  var h='<div class="mm-team-tabs" style="margin-top:0;">'+
+  return '<div class="mm-team-tabs" style="margin-top:0;">'+
     '<button class="mm-team-tab active" data-side="home" onclick="liveSwitchSide(this,\''+panelName+'\',\'home\')">'+(hCrest?'<img src="'+hCrest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+hName+'</span></button>'+
     '<button class="mm-team-tab" data-side="away" onclick="liveSwitchSide(this,\''+panelName+'\',\'away\')">'+(aCrest?'<img src="'+aCrest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+aName+'</span></button>'+
   '</div>';
+}
+function pitchHeaderHtml(formation){
+  return '<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+formation+'</span><span></span></div>';
+}
+function renderLineupPanelInner(data, panelName){
+  if(!data.players) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
+  var h=teamTabsHtml(data, panelName);
   var hP=data.players.home||[], aP=data.players.away||[];
   var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
   var aS=aP.filter(function(p){return p.starter&&p.formationPlace;});
   var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
   var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
   var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
-  function pitchHeader(formation){
-    return '<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+formation+'</span><span></span></div>';
-  }
   // 피치는 14px 인셋 카드로, 선발/교체 표는 .mm-section의 좁은 좌우 패딩(6px)만
   // 받아 피치보다 좌우로 더 넓게 — 의도적으로 폭을 다르게 둔다. 바깥
   // .live-side-panel에 마진을 또 주면 이중으로 겹쳐 좁아지므로 없앰.
-  h += '<div class="live-side-panel" data-suffix="'+panelName+'-home" style="margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeader(hF)+renderPitch(hS,hF,hColor,hP)+'</div>'+renderPlayerTable('home',hP,true)+'</div>';
-  h += '<div class="live-side-panel" data-suffix="'+panelName+'-away" style="display:none;margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeader(aF)+renderPitch(aS,aF,aColor,aP)+'</div>'+renderPlayerTable('away',aP,true)+'</div>';
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-home" style="margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(hF)+renderPitch(hS,hF,hColor,hP)+'</div>'+renderPlayerTable('home',hP,true)+'</div>';
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-away" style="display:none;margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(aF)+renderPitch(aS,aF,aColor,aP)+'</div>'+renderPlayerTable('away',aP,true)+'</div>';
+  return h;
+}
+// 선발(피치만) 패널 — 종료 경기 PC 패널의 "선발" 탭 전용
+function renderStartingPanelInner(data, panelName){
+  if(!data.players) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
+  var h=teamTabsHtml(data, panelName);
+  var hP=data.players.home||[], aP=data.players.away||[];
+  var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
+  var aS=aP.filter(function(p){return p.starter&&p.formationPlace;});
+  var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
+  var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
+  var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-home" style="margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(hF)+renderPitch(hS,hF,hColor,hP)+'</div></div>';
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-away" style="display:none;margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(aF)+renderPitch(aS,aF,aColor,aP)+'</div></div>';
+  return h;
+}
+// 선수 스탯(테이블만) 패널 — 종료 경기 PC 패널의 "선수 스탯" 탭 전용
+function renderPlayerStatsPanelInner(data, panelName){
+  if(!data.players) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">선수 스탯 없음</div>';
+  var h=teamTabsHtml(data, panelName);
+  var hP=data.players.home||[], aP=data.players.away||[];
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-home" style="margin-top:8px;">'+renderPlayerTable('home',hP,true)+'</div>';
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-away" style="display:none;margin-top:8px;">'+renderPlayerTable('away',aP,true)+'</div>';
   return h;
 }
 function buildLiveDetail(data){
@@ -4137,11 +4163,16 @@ function buildFinishedDesktopDetail(data){
   if(!data) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">데이터 없음</div>';
   var h = '<div class="card" style="margin:10px 0 0;">';
   h += '<div class="live-tabs">';
-  h += '<button class="live-tab-btn active" data-tab="summary" onclick="liveSwitchTab(this,&quot;summary&quot;)">이벤트 · 스탯</button>';
-  h += '<button class="live-tab-btn" data-tab="lineup" onclick="liveSwitchTab(this,&quot;lineup&quot;)">라인업</button>';
+  h += '<button class="live-tab-btn active" data-tab="info" onclick="liveSwitchTab(this,&quot;info&quot;)">경기 정보</button>';
+  h += '<button class="live-tab-btn" data-tab="starting" onclick="liveSwitchTab(this,&quot;starting&quot;)">선발</button>';
+  h += '<button class="live-tab-btn" data-tab="playerstats" onclick="liveSwitchTab(this,&quot;playerstats&quot;)">선수 스탯</button>';
   h += '</div>';
-  h += '<div class="live-tab-panel" id="live-panel-summary" style="padding-top:0;">'+renderEventsPanelInner(data)+renderStatsPanelInner(data)+'</div>';
-  h += '<div class="live-tab-panel" id="live-panel-lineup" style="display:none;padding-top:0;">'+renderLineupPanelInner(data,'lineup')+'</div>';
+  h += '<div class="live-tab-panel" id="live-panel-info" style="padding-top:0;">'+
+    '<div class="mm-card-title" style="padding:14px 14px 4px;">골 &amp; 이벤트</div>'+renderEventsPanelInner(data)+
+    '<div class="mm-card-title" style="padding:14px 14px 4px;border-top:1px solid var(--border);">팀 스탯</div>'+renderStatsPanelInner(data)+
+  '</div>';
+  h += '<div class="live-tab-panel" id="live-panel-starting" style="display:none;padding-top:0;">'+renderStartingPanelInner(data,'starting')+'</div>';
+  h += '<div class="live-tab-panel" id="live-panel-playerstats" style="display:none;padding-top:0;">'+renderPlayerStatsPanelInner(data,'playerstats')+'</div>';
   h += '</div>';
   return h;
 }
