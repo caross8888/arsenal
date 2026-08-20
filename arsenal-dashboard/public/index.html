@@ -469,8 +469,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-dow-row span{text-align:center;font-size:10px;font-weight:700;color:var(--text);padding:4px 0;display:block;}
 .cal-dow-row span:first-child{color:#F87171;font-weight:900;}
 .cal-dow-row span:last-child{color:#60A5FA;font-weight:900;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.cal-day{aspect-ratio:1/1.75;border-radius:8px;border:2px solid transparent;box-sizing:border-box;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;overflow:hidden;cursor:default;font-size:11px;color:var(--text-muted);-webkit-tap-highlight-color:transparent;padding:4px 2px 5px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;container-type:inline-size;}
+.cal-day{aspect-ratio:1/1.75;border-radius:8px;border:2px solid transparent;box-sizing:border-box;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;overflow:hidden;cursor:default;font-size:clamp(11px,2.4cqw,16px);color:var(--text-muted);-webkit-tap-highlight-color:transparent;padding:4px 2px 5px;}
 /* 예정 경기는 홈/원정/중립 상관없이 무채색 — cal-day-win/draw/loss(종료 경기)
    색과 겹쳐서 "종료됐나 예정이나" 구분이 안 되는 걸 막는다(카드 뷰와 동일 이유). */
 .cal-day.has-fixture{border-color:rgba(255,255,255,0.18);cursor:pointer;}
@@ -484,14 +484,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-day.cal-day-loss .cal-day-time{color:#EF4444;}
 .cal-day.today{background:rgba(200,168,75,.15);color:var(--gold);font-weight:700;}
 .cal-day.selected{outline:2px solid #fff;outline-offset:-2px;}
-.cal-day-num{font-size:10px;color:rgba(255,255,255,.6);text-align:center;width:100%;flex-shrink:0;}
+.cal-day-num{font-size:clamp(10px,2.2cqw,15px);color:rgba(255,255,255,.6);text-align:center;width:100%;flex-shrink:0;}
 .cal-day-sun .cal-day-num{color:#F87171;font-weight:700;}
 .cal-day-sat .cal-day-num{color:#60A5FA;font-weight:700;}
 .cal-day.has-fixture .cal-day-num{font-weight:700;}
 .cal-day-crest-wrap{flex:1;display:flex;align-items:center;justify-content:center;width:100%;}
 .cal-day-crest-wrap .t-crest,.cal-day-crest-wrap .t-crest-ph{width:78%;height:auto;aspect-ratio:1;padding:0;box-sizing:border-box;font-size:.7em;border:none;background:none;filter:drop-shadow(0 0 1px rgba(255,255,255,.35));}
 .cal-day-crest-wrap .t-crest-ph.afc{background:none;}
-.cal-day-time{font-size:9px;color:rgba(255,255,255,.6);flex-shrink:0;}
+.cal-day-time{font-size:clamp(9px,2.2cqw,15px);color:rgba(255,255,255,.6);flex-shrink:0;}
 .cal-day.has-fixture .cal-day-time{font-weight:700;}
 
 /* PLAYER MODAL - Fotmob style */
@@ -750,6 +750,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   #fixWrap .comp-tag{font-size:10px;padding:3px 10px;}
   #fixWrap .fix-date{font-size:11px;}
   #fixWrap .fix-vs-label{font-size:9px;}
+  #fixWrap .cal-day{padding:6px 3px 8px;}
   #media.section{max-width:1100px;}
   #mediaSeg{display:none;}
   .media-col-title{display:block;}
@@ -1187,6 +1188,7 @@ function renderDday(list){
   if(!el) return;
   var next=(list||[]).find(function(m){return m.tbd!=='postponed'&&m.tbd!=='canceled';});
   if(!next){el.style.display='none';return;}
+  window._nextMatchId=next.id;
 
   var isLive=next.status==='IN_PLAY'||next.status==='PAUSED';
   var ARSENAL_ESPN='359';
@@ -3153,9 +3155,12 @@ function openMatchModal(m, isAuto){
   if(!allInjuries.length){
     apiFetchCached(FN+'/football?type=injuries', 'injuries', function(data){ allInjuries=data.injured||[]; }, function(){});
   }
-  // 예정 경기일 때만 상대팀 이름을 구해 부상자 데이터도 같이 조회한다.
+  // 부상자 데이터는 "다음 경기"(D-day에 뜨는 그 경기)일 때만 의미가 있다 —
+  // FPL의 부상 데이터 자체가 "다음 라운드 출전 가능성" 기준이라, 몇 주 뒤
+  // 예정경기엔 지금 시점 부상자를 보여줘봐야 그때는 다 나았을 수도 있어서
+  // 무관한 정보가 된다. 먼 예정경기는 상대팀 부상자 조회 자체를 생략한다.
   var oppNameSkel='';
-  if(!isPlayedSkel){
+  if(!isPlayedSkel && m.id===window._nextMatchId){
     var oppTeamSkel=isArsHomeSkel?m.awayTeam:m.homeTeam;
     oppNameSkel=(oppTeamSkel&&(oppTeamSkel.shortName||oppTeamSkel.name))||'';
   }
@@ -3250,7 +3255,7 @@ function eventIconHtml(type){
 function renderH2HCard(data){
   if(!data.h2h||!data.h2h.events||!data.h2h.events.length) return '';
   var ARSENAL_ID_H2H='359';
-  var html='<div class="mm-card"><div class="mm-card-title">상대전적</div><div style="padding:10px 14px 14px;">';
+  var html='<div class="mm-card"><div class="mm-card-title">최근 상대전적</div><div style="padding:10px 14px 14px;">';
   var arsWins=0, oppWins=0, draws=0;
   data.h2h.events.forEach(function(e){
     var dateStr=e.date?e.date.slice(0,10).replace(/-/g,'.'):'';
@@ -3365,7 +3370,8 @@ function renderMatchModal(content, m, data, desktop){
 
   // 예정 경기: 상세 이벤트/스탯/라인업 대신 상대전적·최근폼·부상자 미리보기
   if(isUpcomingR){
-    html+=renderH2HCard(data)+renderFormCard(data)+renderInjuryCards(data);
+    html+=renderH2HCard(data)+renderFormCard(data);
+    if(m.id===window._nextMatchId) html+=renderInjuryCards(data);
   }
 
   // 종료 경기 데스크톱 패널: live 모달과 동일한 탭 UI(이벤트/스탯/라인업/
