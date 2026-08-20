@@ -206,13 +206,25 @@ export default async function handler(req, res) {
     const recentForm = (raw.lastFiveGames || []).map(t => ({
       teamId: t.team?.id,
       teamName: t.team?.abbreviation || t.team?.displayName || '',
-      events: (t.events || []).slice(-5).map(ev => ({
-        date: ev.gameDate || null,
-        opponent: ev.opponent ? { name: ev.opponent.abbreviation || ev.opponent.displayName, crest: ev.opponent.logo } : null,
-        score: ev.score || '',
-        result: ev.gameResult || '',
-        competition: ev.leagueAbbreviation || ev.competitionName || '',
-      })),
+      events: (t.events || []).slice(-5).map(ev => {
+        // ESPN의 gameResult 필드를 그대로 믿지 않는다 — 프리시즌 친선경기
+        // 몇 건에서 실제 스코어(홈/원정 점수)와 gameResult가 서로 어긋나는
+        // 걸 확인했다(예: 2-3 패배인데 gameResult만 "W"). 같은 응답 안의
+        // 스코어 필드는 정확하므로 거기서 직접 계산한다.
+        const isHome = String(ev.homeTeamId) === String(t.team?.id);
+        const ownScore = parseInt(isHome ? ev.homeTeamScore : ev.awayTeamScore, 10);
+        const oppScore = parseInt(isHome ? ev.awayTeamScore : ev.homeTeamScore, 10);
+        const result = (Number.isNaN(ownScore) || Number.isNaN(oppScore))
+          ? (ev.gameResult || '')
+          : (ownScore > oppScore ? 'W' : ownScore < oppScore ? 'L' : 'D');
+        return {
+          date: ev.gameDate || null,
+          opponent: ev.opponent ? { name: ev.opponent.abbreviation || ev.opponent.displayName, crest: ev.opponent.logo } : null,
+          score: ev.score || '',
+          result,
+          competition: ev.leagueAbbreviation || ev.competitionName || '',
+        };
+      }),
     }));
 
     // ── 주심 & 관중 ──

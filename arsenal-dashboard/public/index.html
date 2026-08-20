@@ -3277,7 +3277,9 @@ function renderH2HCard(data){
 }
 function renderFormCard(data){
   if(!data.recentForm||!data.recentForm.length) return '';
-  var html='<div class="mm-card"><div class="mm-card-title">최근 5경기</div><div style="padding:10px 14px 14px;display:flex;flex-direction:column;gap:12px;">';
+  var maxLen=0;
+  data.recentForm.forEach(function(t){ maxLen=Math.max(maxLen,(t.events||[]).length); });
+  var html='<div class="mm-card"><div class="mm-card-title">최근 '+maxLen+'경기</div><div style="padding:10px 14px 14px;display:flex;flex-direction:column;gap:12px;">';
   data.recentForm.forEach(function(t){
     html+='<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">'+(t.teamName||'')+'</div><div style="display:flex;gap:5px;">';
     (t.events||[]).forEach(function(ev){
