@@ -63,6 +63,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-section-card .fix-list{padding:0;margin-bottom:0;}
 .fix-layout{display:block;}
 .fix-detail-panel{display:none;}
+.fix-detail-panel .mm-handle{display:none;}
 .fix-detail-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px 20px;color:var(--text-secondary);font-size:12px;text-align:center;}
 .fix-detail-empty svg{opacity:.4;}
 .fix-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;}
@@ -664,6 +665,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-stat-bar-home{background:var(--red);transition:width .4s;}
 .mm-stat-bar-away{background:rgba(96,165,250,.5);transition:width .4s;}
 .mm-pitch-wrap{overflow:hidden;border-radius:10px;}
+.mm-grid-row{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin:14px 16px;align-items:start;}
+.mm-grid-row .mm-card{margin:0;}
+.mm-lineup-split{display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:start;margin:8px 14px 14px;}
+.mm-lineup-split .mm-pitch-wrap{width:200px;}
+.mm-lineup-split .mm-section{padding:0;}
 .mm-pitch-svg{width:100%;display:block;}
 .mm-pitch-player{cursor:default;}
 .mm-pitch-player circle{fill:#C8102E;}
@@ -730,8 +736,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .inj-strip{width:calc(100vw - 200px);margin:-16px 0 12px calc(564px - 50vw);}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
-  #fixWrap{flex:2 1 0%;min-width:0;}
-  .fix-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;max-height:calc(100vh - 32px);overflow-y:auto;}
+  #fixWrap{flex:1 1 0%;min-width:0;}
+  .fix-detail-panel{display:block;flex:1 1 0%;min-width:380px;max-width:640px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;}
+  .fix-detail-panel .mm-header-top{position:static;}
   #fixWrap .fix-card{padding:18px 20px;gap:12px;}
   #fixWrap .fix-grid{grid-template-columns:1fr minmax(max-content,auto) 1fr;gap:3px 6px;}
   #fixWrap .fix-score,#fixWrap .fix-vs{white-space:nowrap;}
@@ -850,7 +857,6 @@ function playIntro(){
     </div>
   </div>
   <div class="fix-detail-panel" id="fixDetailPanel">
-    <button class="mm-close" id="fixDetailClose" onclick="closeFixDetailPanel(true)" style="display:none">&#10005;</button>
     <div id="fixDetailContent" class="fix-detail-empty"></div>
   </div>
   </div>
@@ -3116,15 +3122,12 @@ var COMP_SLUG_MAP={PL:'eng.1',UCL:'uefa.champions',EFL:'eng.league_cup',FAC:'eng
 
 function isDesktopLayout(){ return window.innerWidth>=900; }
 var _matchModalReqSeq=0;
-function closeFixDetailPanel(isUserAction){
-  if(isUserAction) window._fixPanelUserSelected=true;
+function closeFixDetailPanel(){
   var inner=document.getElementById('fixDetailContent');
-  var closeBtn=document.getElementById('fixDetailClose');
   if(inner){
     inner.className='fix-detail-empty';
     inner.innerHTML=dIcon('calendar',28)+'<span>경기를 선택하면 상세 정보가 여기에 표시됩니다</span>';
   }
-  if(closeBtn) closeBtn.style.display='none';
 }
 function openMatchModal(m, isAuto){
   if(!isAuto) window._fixPanelUserSelected=true;
@@ -3134,8 +3137,6 @@ function openMatchModal(m, isAuto){
     content=document.getElementById('fixDetailContent');
     if(!content) return;
     content.className='';
-    var closeBtn=document.getElementById('fixDetailClose');
-    if(closeBtn) closeBtn.style.display='flex';
   } else {
     overlay=document.getElementById('matchModal');
     content=document.getElementById('matchModalContent');
@@ -3202,7 +3203,7 @@ function openMatchModal(m, isAuto){
       clearTimeout(timer);
       if(reqId!==_matchModalReqSeq) return;
       if(data.error) throw new Error(data.error);
-      withMinLoading(content, _t0, function(){ if(reqId===_matchModalReqSeq) renderMatchModal(content, m, data); });
+      withMinLoading(content, _t0, function(){ if(reqId===_matchModalReqSeq) renderMatchModal(content, m, data, desktop); });
     })
     .catch(function(err){
       clearTimeout(timer);
@@ -3231,37 +3232,37 @@ function eventIconHtml(type){
   if(type==='substitution') return '🔄';
   return '<img src="data:image/svg+xml;base64,'+EVENT_ICON_SVG_B64.goal+'" style="width:12px;height:12px;vertical-align:middle;display:inline-block">';
 }
-function renderMatchPreviewSections(data){
-  var html='';
-  if(data.h2h&&data.h2h.events&&data.h2h.events.length){
-    html+='<div class="mm-card"><div class="mm-card-title">상대전적</div><div style="padding:10px 14px 14px;">';
-    if(data.h2h.summary) html+='<div style="text-align:center;font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">'+data.h2h.summary+'</div>';
-    data.h2h.events.forEach(function(e){
-      var dateStr=e.date?e.date.slice(0,10).replace(/-/g,'.'):'';
-      var hName=(e.homeTeam&&e.homeTeam.name)||'';
-      var aName=(e.awayTeam&&e.awayTeam.name)||'';
-      html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.06);font-size:12px;">'+
-        '<span style="color:var(--text-secondary);width:62px;flex-shrink:0;">'+dateStr+'</span>'+
-        '<span style="flex:1;text-align:right;color:var(--text);">'+hName+'</span>'+
-        '<span style="font-weight:700;color:var(--text);padding:0 6px;">'+(e.homeScore||'0')+' - '+(e.awayScore||'0')+'</span>'+
-        '<span style="flex:1;color:var(--text);">'+aName+'</span>'+
-      '</div>';
+function renderH2HCard(data){
+  if(!data.h2h||!data.h2h.events||!data.h2h.events.length) return '';
+  var html='<div class="mm-card"><div class="mm-card-title">상대전적</div><div style="padding:10px 14px 14px;">';
+  if(data.h2h.summary) html+='<div style="text-align:center;font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">'+data.h2h.summary+'</div>';
+  data.h2h.events.forEach(function(e){
+    var dateStr=e.date?e.date.slice(0,10).replace(/-/g,'.'):'';
+    var hName=(e.homeTeam&&e.homeTeam.name)||'';
+    var aName=(e.awayTeam&&e.awayTeam.name)||'';
+    html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.06);font-size:12px;">'+
+      '<span style="color:var(--text-secondary);width:62px;flex-shrink:0;">'+dateStr+'</span>'+
+      '<span style="flex:1;text-align:right;color:var(--text);">'+hName+'</span>'+
+      '<span style="font-weight:700;color:var(--text);padding:0 6px;">'+(e.homeScore||'0')+' - '+(e.awayScore||'0')+'</span>'+
+      '<span style="flex:1;color:var(--text);">'+aName+'</span>'+
+    '</div>';
+  });
+  html+='</div></div>';
+  return html;
+}
+function renderFormCard(data){
+  if(!data.recentForm||!data.recentForm.length) return '';
+  var html='<div class="mm-card"><div class="mm-card-title">최근 5경기</div><div style="padding:10px 14px 14px;display:flex;flex-direction:column;gap:12px;">';
+  data.recentForm.forEach(function(t){
+    html+='<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">'+(t.teamName||'')+'</div><div style="display:flex;gap:5px;">';
+    (t.events||[]).forEach(function(ev){
+      var col=ev.result==='W'?'#22C55E':ev.result==='D'?'#F59E0B':'#EF4444';
+      var title=(ev.opponent?ev.opponent.name:'')+' '+(ev.score||'');
+      html+='<div title="'+title+'" style="width:22px;height:22px;border-radius:50%;background:'+col+';color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+(ev.result||'-')+'</div>';
     });
     html+='</div></div>';
-  }
-  if(data.recentForm&&data.recentForm.length){
-    html+='<div class="mm-card"><div class="mm-card-title">최근 5경기</div><div style="padding:10px 14px 14px;display:flex;flex-direction:column;gap:12px;">';
-    data.recentForm.forEach(function(t){
-      html+='<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">'+(t.teamName||'')+'</div><div style="display:flex;gap:5px;">';
-      (t.events||[]).forEach(function(ev){
-        var col=ev.result==='W'?'#22C55E':ev.result==='D'?'#F59E0B':'#EF4444';
-        var title=(ev.opponent?ev.opponent.name:'')+' '+(ev.score||'');
-        html+='<div title="'+title+'" style="width:22px;height:22px;border-radius:50%;background:'+col+';color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+(ev.result||'-')+'</div>';
-      });
-      html+='</div></div>';
-    });
-    html+='</div></div>';
-  }
+  });
+  html+='</div></div>';
   return html;
 }
 function renderInjuryCard(){
@@ -3279,7 +3280,7 @@ function renderInjuryCard(){
   html+='</div></div>';
   return html;
 }
-function renderMatchModal(content, m, data){
+function renderMatchModal(content, m, data, desktop){
   var h=data.homeTeam, a=data.awayTeam;
   var ARSENAL_ID='359';
   var isArsHome=(h.id===ARSENAL_ID||(h.name||'').includes('Arsenal'));
@@ -3323,51 +3324,60 @@ function renderMatchModal(content, m, data){
 
   // 예정 경기: 상세 이벤트/스탯/라인업 대신 상대전적·최근폼·부상자 미리보기
   if(isUpcomingR){
-    html+=renderMatchPreviewSections(data)+renderInjuryCard();
+    var h2hHtml=renderH2HCard(data);
+    var formHtml=renderFormCard(data);
+    var injHtml=renderInjuryCard();
+    if(desktop && h2hHtml && formHtml){
+      html+='<div class="mm-grid-row">'+h2hHtml+formHtml+'</div>'+injHtml;
+    } else {
+      html+=h2hHtml+formHtml+injHtml;
+    }
   }
 
   // 이벤트 (좌우 2컬럼)
+  var eventsHtml='';
   if(data.events&&data.events.length){
     var homeEvs=data.events.filter(function(e){return e.homeAway==='home';});
     var awayEvs=data.events.filter(function(e){return e.homeAway==='away';});
     var maxLen=Math.max(homeEvs.length,awayEvs.length);
-    html+='<div class="mm-card"><div class="mm-card-title">골 &amp; 이벤트</div>';
-    html+='<div style="padding:10px 14px 14px;"><table class="mm-events-table"><tbody>';
+    eventsHtml+='<div class="mm-card"><div class="mm-card-title">골 &amp; 이벤트</div>';
+    eventsHtml+='<div style="padding:10px 14px 14px;"><table class="mm-events-table"><tbody>';
     for(var i=0;i<maxLen;i++){
       var ev=homeEvs[i];
       var ev2=awayEvs[i];
-      html+='<tr>';
+      eventsHtml+='<tr>';
       // 홈셀: 이름→시간→아이콘 순, 오른쪽 정렬
       if(ev){
-        html+='<td class="mm-evt-home"><span class="mm-evt-cell">'
+        eventsHtml+='<td class="mm-evt-home"><span class="mm-evt-cell">'
           +'<span class="mm-event-player">'+ev.player+'</span>'
           +'<span class="mm-event-min">'+ev.minute+'</span>'
           +'<span class="mm-event-icon">'+eventIconHtml(ev.type)+'</span>'
           +'</span></td>';
       } else {
-        html+='<td class="mm-evt-home"></td>';
+        eventsHtml+='<td class="mm-evt-home"></td>';
       }
-      html+='<td class="mm-evt-div"></td>';
+      eventsHtml+='<td class="mm-evt-div"></td>';
       // 어웨이셀: 아이콘→시간→이름 순, 왼쪽 정렬
       if(ev2){
-        html+='<td class="mm-evt-away"><span class="mm-evt-cell">'
+        eventsHtml+='<td class="mm-evt-away"><span class="mm-evt-cell">'
           +'<span class="mm-event-icon">'+eventIconHtml(ev2.type)+'</span>'
           +'<span class="mm-event-min">'+ev2.minute+'</span>'
           +'<span class="mm-event-player">'+ev2.player+'</span>'
           +'</span></td>';
       } else {
-        html+='<td class="mm-evt-away"></td>';
+        eventsHtml+='<td class="mm-evt-away"></td>';
       }
-      html+='</tr>';
+      eventsHtml+='</tr>';
     }
-    html+='</tbody></table></div></div>';
+    eventsHtml+='</tbody></table></div></div>';
   }
 
   // 팀 스탯
+  var statsHtml='';
   var statKeys=['possessionPct','totalShots','shotsOnTarget','passingAccuracy','cornerKicks','offsides','yellowCards','redCards'];
   var hasStats=statKeys.some(function(k){return h.stats[k]||a.stats[k];});
   if(hasStats){
-    html+='<div class="mm-card"><div class="mm-card-title">팀 스탯</div><div class="mm-stats-grid" style="padding:10px 14px 14px;">';
+    statsHtml+='<div class="mm-card"><div class="mm-card-title">팀 스탯</div><div class="mm-stats-grid" style="padding:10px 14px 14px;">';
     statKeys.forEach(function(k){
       if(!h.stats[k]&&!a.stats[k]) return;
       var hvStr=h.stats[k]||'0'; var avStr=a.stats[k]||'0';
@@ -3377,7 +3387,7 @@ function renderMatchModal(content, m, data){
       var isPct=k==='possessionPct'||(hvStr+'').includes('%');
       var total=isPct?100:(rawH+rawA||1);
       var homePct=Math.round(rawH/total*100); var awayPct=100-homePct;
-      html+=
+      statsHtml+=
         '<div class="mm-stat-val home">'+hvStr+'</div>'+
         '<div class="mm-stat-label">'+(STAT_LABELS[k]||k)+'</div>'+
         '<div class="mm-stat-val away">'+avStr+'</div>'+
@@ -3386,7 +3396,12 @@ function renderMatchModal(content, m, data){
           '<div class="mm-stat-bar-away" style="width:'+awayPct+'%"></div>'+
         '</div>';
     });
-    html+='</div></div>';
+    statsHtml+='</div></div>';
+  }
+  if(desktop && eventsHtml && statsHtml){
+    html+='<div class="mm-grid-row">'+eventsHtml+statsHtml+'</div>';
+  } else {
+    html+=eventsHtml+statsHtml;
   }
 
   // 선수 스탯 탭
@@ -3405,13 +3420,24 @@ function renderMatchModal(content, m, data){
     var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
     var hStarters=hP.filter(function(p){return p.starter&&p.formationPlace;});
     var aStarters=aP.filter(function(p){return p.starter&&p.formationPlace;});
+    var hPitchHtml='', aPitchHtml='';
     if(hStarters.length||aStarters.length){
       var hHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+hFormation+'</span><span></span></div>';
       var aHeader='<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+aFormation+'</span><span></span></div>';
-      html+='<div style="margin:8px 14px 8px"><div class="mm-pitch-wrap" id="mm-pitch-home">'+hHeader+renderPitch(hStarters,hFormation,hColor,hP)+'</div></div>';
-      html+='<div style="margin:0 14px 8px"><div class="mm-pitch-wrap" id="mm-pitch-away" style="display:none">'+aHeader+renderPitch(aStarters,aFormation,aColor,aP)+'</div></div>';
+      hPitchHtml='<div class="mm-pitch-wrap">'+hHeader+renderPitch(hStarters,hFormation,hColor,hP)+'</div>';
+      aPitchHtml='<div class="mm-pitch-wrap">'+aHeader+renderPitch(aStarters,aFormation,aColor,aP)+'</div>';
     }
-    html+=renderPlayerTable('home',hP,true)+renderPlayerTable('away',aP,false);
+    if(desktop){
+      // 데스크톱: 팀별로 피치+선수 테이블을 좌우로 나란히 묶고, 팀 탭은 이
+      // 묶음 전체(#mm-lineup-home/away)를 통째로 토글한다 — 모바일처럼
+      // 피치/테이블을 각각 따로 토글하면 좌우 배치가 깨진다.
+      html+='<div id="mm-lineup-home" class="mm-lineup-split">'+hPitchHtml+renderPlayerTable('home',hP,true)+'</div>';
+      html+='<div id="mm-lineup-away" class="mm-lineup-split" style="display:none">'+aPitchHtml+renderPlayerTable('away',aP,true)+'</div>';
+    } else {
+      if(hPitchHtml) html+='<div style="margin:8px 14px 8px"><div id="mm-pitch-home">'+hPitchHtml+'</div></div>';
+      if(aPitchHtml) html+='<div style="margin:0 14px 8px"><div id="mm-pitch-away" style="display:none">'+aPitchHtml+'</div></div>';
+      html+=renderPlayerTable('home',hP,true)+renderPlayerTable('away',aP,false);
+    }
     html+='</div>';
   }
 
@@ -3691,7 +3717,15 @@ function mmSwitchTab(side){
   document.querySelectorAll('.mm-team-tab').forEach(function(b){b.classList.remove('active');});
   var tb=document.getElementById('mm-tab-'+side);
   if(tb) tb.classList.add('active');
-  // 피치 토글
+  // 데스크톱: 피치+선수 테이블이 한 묶음(#mm-lineup-home/away)이라 통째로 토글
+  var lh=document.getElementById('mm-lineup-home');
+  var la=document.getElementById('mm-lineup-away');
+  if(lh||la){
+    if(lh) lh.style.display=side==='home'?'':'none';
+    if(la) la.style.display=side==='away'?'':'none';
+    return;
+  }
+  // 모바일: 피치와 선수 테이블을 각각 토글
   var ph=document.getElementById('mm-pitch-home');
   var pa=document.getElementById('mm-pitch-away');
   if(ph) ph.style.display=side==='home'?'':'none';
