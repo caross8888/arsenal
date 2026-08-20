@@ -4130,7 +4130,7 @@ function teamTabsHtml(data, panelName){
 function teamTabsUnderlineHtml(data, panelName){
   var hName=(data.homeTeam&&data.homeTeam.name)||'홈';
   var aName=(data.awayTeam&&data.awayTeam.name)||'어웨이';
-  return '<div class="rec-subnav" style="margin:0 14px 14px;">'+
+  return '<div class="rec-subnav" style="margin:0 0 14px;">'+
     '<button class="rec-subnav-btn active" data-side="home" onclick="liveSwitchSide(this,\''+panelName+'\',\'home\')">'+hName+'</button>'+
     '<button class="rec-subnav-btn" data-side="away" onclick="liveSwitchSide(this,\''+panelName+'\',\'away\')">'+aName+'</button>'+
   '</div>';
