@@ -701,7 +701,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sns-foot{display:flex;gap:14px;padding:8px 14px 12px;border-top:1px solid var(--border)}
 .sns-stat{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted)}
 .sns-bsky-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:rgba(0,133,255,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.25);margin-left:auto;flex-shrink:0}
-/* ── 삼성 인터넷 강제 다크모드 차단 — 이미 다크 테마이므로 고정 ── */</style>
+/* ── 삼성 인터넷 강제 다크모드 차단 — 이미 다크 테마이므로 고정 ── */
+/* ── PC 반응형: 하단 탭바 → 좌측 사이드바 (모바일 레이아웃은 그대로, 이 폭 이상에서만 전환) ── */
+@media (min-width: 900px) {
+  body{padding-bottom:0;}
+  .top-header{margin-left:200px;}
+  .page{margin-left:200px;}
+  .bottom-nav{top:0;bottom:0;left:0;right:auto;width:200px;flex-direction:column;border-top:none;border-right:1px solid var(--border);padding-bottom:0;padding-top:16px;align-items:stretch;}
+  .nav-btn{flex:0 0 auto;flex-direction:row;justify-content:flex-start;align-items:center;gap:12px;padding:12px 20px;border-right:none;font-size:13px;letter-spacing:normal;text-transform:none;}
+  .nav-icon{width:18px;height:18px;}
+  .nav-live-dot{top:10px;right:auto;left:34px;}
+}</style>
 </head>
 <body>
 
