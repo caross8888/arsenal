@@ -3334,6 +3334,16 @@ function renderMatchModal(content, m, data, desktop){
     }
   }
 
+  // 종료 경기 데스크톱 패널: live 모달과 동일한 탭 UI(이벤트/스탯/라인업/
+  // 코멘터리)를 그대로 재사용한다 — buildLiveDetail은 이미 이 데이터
+  // 형태(events/teamStats/players/commentary)를 받아 탭 카드를 만드는
+  // 함수라, 종료 경기용으로 새로 짤 필요 없이 그대로 호출하면 된다.
+  if(desktop && isDoneR){
+    html += buildLiveDetail(data);
+    content.innerHTML=html;
+    return;
+  }
+
   // 이벤트 (좌우 2컬럼)
   var eventsHtml='';
   if(data.events&&data.events.length){
