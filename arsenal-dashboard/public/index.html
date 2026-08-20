@@ -728,11 +728,20 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .sq-grid{grid-template-columns:repeat(4,1fr);}
   .hist-otd-wrap{width:calc(100vw - 200px);margin:-16px 0 12px calc(384px - 50vw);}
   .inj-strip{width:calc(100vw - 200px);margin:-16px 0 12px calc(564px - 50vw);}
-  #fixtures.section{max-width:1000px;}
-  .dday-card{width:calc(100vw - 200px);margin:-16px 0 12px calc(584px - 50vw);}
+  #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
   #fixWrap{flex:2 1 0%;min-width:0;}
   .fix-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;max-height:calc(100vh - 32px);overflow-y:auto;}
+  #fixWrap .fix-card{padding:18px 20px;gap:12px;}
+  #fixWrap .fix-grid{grid-template-columns:1fr 60px 1fr;gap:3px 6px;}
+  #fixWrap .t-crest,#fixWrap .t-crest-ph{width:38px;height:38px;}
+  #fixWrap .t-crest-ph{font-size:11px;}
+  #fixWrap .t-name-home,#fixWrap .t-name-away{font-size:14px;}
+  #fixWrap .fix-score{font-size:30px;}
+  #fixWrap .fix-vs{font-size:20px;}
+  #fixWrap .comp-tag{font-size:10px;padding:3px 10px;}
+  #fixWrap .fix-date{font-size:11px;}
+  #fixWrap .fix-vs-label{font-size:9px;}
   #media.section{max-width:1100px;}
   #mediaSeg{display:none;}
   .media-col-title{display:block;}
@@ -840,7 +849,7 @@ function playIntro(){
     </div>
   </div>
   <div class="fix-detail-panel" id="fixDetailPanel">
-    <button class="mm-close" id="fixDetailClose" onclick="closeFixDetailPanel()" style="display:none">&#10005;</button>
+    <button class="mm-close" id="fixDetailClose" onclick="closeFixDetailPanel(true)" style="display:none">&#10005;</button>
     <div id="fixDetailContent" class="fix-detail-empty"></div>
   </div>
   </div>
@@ -1198,9 +1207,13 @@ function renderDday(list){
     '<span class="comp-tag '+ctag(code)+'">'+cname(code,compObj.name)+'</span>'+
     '<div class="dday-time">'+(isLive?'● 진행 중':formatDate(next.utcDate,next.tbd))+'</div>';
 
-  if(isDesktopLayout() && !window._fixPanelInit){
-    window._fixPanelInit = true;
-    openMatchModal(next);
+  // apiFetchCached가 캐시(오래된 데이터일 수 있음) → 네트워크(최신) 순으로 두 번
+  // 호출되므로, 사용자가 아직 직접 카드를 클릭하지 않은 상태에서 "다음 경기"가
+  // 이전 호출과 달라졌으면(= 최신 데이터로 갱신됐으면) 다시 열어준다. 단순
+  // 1회성 플래그였다면 캐시의 오래된 next로 열린 뒤 최신 next로 안 바뀌는 버그가 있었다.
+  if(isDesktopLayout() && !window._fixPanelUserSelected && window._fixPanelAutoId!==next.id){
+    window._fixPanelAutoId = next.id;
+    openMatchModal(next, true);
   }
 }
 
@@ -3102,7 +3115,8 @@ var COMP_SLUG_MAP={PL:'eng.1',UCL:'uefa.champions',EFL:'eng.league_cup',FAC:'eng
 
 function isDesktopLayout(){ return window.innerWidth>=900; }
 var _matchModalReqSeq=0;
-function closeFixDetailPanel(){
+function closeFixDetailPanel(isUserAction){
+  if(isUserAction) window._fixPanelUserSelected=true;
   var inner=document.getElementById('fixDetailContent');
   var closeBtn=document.getElementById('fixDetailClose');
   if(inner){
@@ -3111,7 +3125,8 @@ function closeFixDetailPanel(){
   }
   if(closeBtn) closeBtn.style.display='none';
 }
-function openMatchModal(m){
+function openMatchModal(m, isAuto){
+  if(!isAuto) window._fixPanelUserSelected=true;
   var desktop=isDesktopLayout();
   var overlay, content;
   if(desktop){
