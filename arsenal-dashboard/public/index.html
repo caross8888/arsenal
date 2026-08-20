@@ -736,8 +736,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .inj-strip{width:calc(100vw - 200px);margin:-16px 0 12px calc(564px - 50vw);}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
-  #fixWrap{flex:1 1 0%;min-width:0;}
-  .fix-detail-panel{display:block;flex:1 1 0%;min-width:380px;max-width:640px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;}
+  #fixWrap{flex:2 1 0%;min-width:0;}
+  .fix-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;}
   .fix-detail-panel .mm-header-top{position:static;}
   #fixWrap .fix-card{padding:18px 20px;gap:12px;}
   #fixWrap .fix-grid{grid-template-columns:1fr minmax(max-content,auto) 1fr;gap:3px 6px;}
@@ -3339,7 +3339,7 @@ function renderMatchModal(content, m, data, desktop){
   // 형태(events/teamStats/players/commentary)를 받아 탭 카드를 만드는
   // 함수라, 종료 경기용으로 새로 짤 필요 없이 그대로 호출하면 된다.
   if(desktop && isDoneR){
-    html += buildLiveDetail(data);
+    html += buildFinishedDesktopDetail(data);
     content.innerHTML=html;
     return;
   }
@@ -4018,6 +4018,78 @@ function stopLiveExpandPolling(matchId){
   }
 }
 
+// 골&이벤트/팀스탯/라인업 탭 패널 내용 — buildLiveDetail(라이브 경기, 4탭:
+// 이벤트/스탯/라인업/코멘터리)과 buildFinishedDesktopDetail(종료 경기 PC
+// 패널, 2탭: 이벤트·스탯 통합/라인업)이 같은 렌더러를 공유한다.
+function renderEventsPanelInner(data){
+  var events = data.events||[];
+  if(!events.length) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">이벤트 없음</div>';
+  var homeEvs=events.filter(function(ev){return (ev.homeAway||ev.team)==='home';});
+  var awayEvs=events.filter(function(ev){return (ev.homeAway||ev.team)!=='home';});
+  var maxLen=Math.max(homeEvs.length,awayEvs.length);
+  var h='<div style="padding:10px 14px 14px;"><table class="mm-events-table"><tbody>';
+  for(var ei=0; ei<maxLen; ei++){
+    var evH=homeEvs[ei], evA=awayEvs[ei];
+    h += '<tr>';
+    h += evH ? '<td class="mm-evt-home"><span class="mm-evt-cell"><span class="mm-event-player">'+evH.player+'</span><span class="mm-event-min">'+(evH.minute||'')+'</span><span class="mm-event-icon">'+eventIconHtml(evH.type)+'</span></span></td>' : '<td class="mm-evt-home"></td>';
+    h += '<td class="mm-evt-div"></td>';
+    h += evA ? '<td class="mm-evt-away"><span class="mm-evt-cell"><span class="mm-event-icon">'+eventIconHtml(evA.type)+'</span><span class="mm-event-min">'+(evA.minute||'')+'</span><span class="mm-event-player">'+evA.player+'</span></span></td>' : '<td class="mm-evt-away"></td>';
+    h += '</tr>';
+  }
+  h += '</tbody></table></div>';
+  return h;
+}
+function renderStatsPanelInner(data){
+  var stats = data.teamStats||[];
+  if(!stats.length) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">스탯 없음</div>';
+  var h='<div class="mm-stats-grid" style="padding:10px 14px 14px;">';
+  stats.forEach(function(s){
+    var hv=s.home||0, av=s.away||0;
+    var rawH=parseFloat((hv+'').replace('%',''))||0;
+    var rawA=parseFloat((av+'').replace('%',''))||0;
+    var isPct=(hv+'').includes('%');
+    var total=isPct?100:(rawH+rawA||1);
+    var homePct=Math.round(rawH/total*100); var awayPct=100-homePct;
+    h += '<div class="mm-stat-val home">'+hv+'</div>';
+    h += '<div class="mm-stat-label">'+s.label+'</div>';
+    h += '<div class="mm-stat-val away">'+av+'</div>';
+    h += '<div class="mm-stat-bar-wrap">';
+    h += '<div class="mm-stat-bar-home" style="width:'+homePct+'%"></div>';
+    h += '<div class="mm-stat-bar-away" style="width:'+awayPct+'%"></div>';
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+// 라인업/선수 스탯 패널에서 공용으로 쓰는 홈-어웨이 팀 전환 탭 — 경기
+// 상세모달(종료 경기)의 라인업 섹션에서 쓰는 것과 동일한 .mm-team-tabs/
+// .mm-team-tab 테마(엠블럼+팀명, 세로 스택)로 통일한다.
+function renderLineupPanelInner(data, panelName){
+  if(!data.players) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
+  var hCrest=(data.homeTeam&&data.homeTeam.crest)||'';
+  var aCrest=(data.awayTeam&&data.awayTeam.crest)||'';
+  var hName=(data.homeTeam&&data.homeTeam.name)||'홈';
+  var aName=(data.awayTeam&&data.awayTeam.name)||'어웨이';
+  var h='<div class="mm-team-tabs" style="margin-top:0;">'+
+    '<button class="mm-team-tab active" data-side="home" onclick="liveSwitchSide(this,\''+panelName+'\',\'home\')">'+(hCrest?'<img src="'+hCrest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+hName+'</span></button>'+
+    '<button class="mm-team-tab" data-side="away" onclick="liveSwitchSide(this,\''+panelName+'\',\'away\')">'+(aCrest?'<img src="'+aCrest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+aName+'</span></button>'+
+  '</div>';
+  var hP=data.players.home||[], aP=data.players.away||[];
+  var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
+  var aS=aP.filter(function(p){return p.starter&&p.formationPlace;});
+  var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
+  var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
+  var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
+  function pitchHeader(formation){
+    return '<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+formation+'</span><span></span></div>';
+  }
+  // 피치는 14px 인셋 카드로, 선발/교체 표는 .mm-section의 좁은 좌우 패딩(6px)만
+  // 받아 피치보다 좌우로 더 넓게 — 의도적으로 폭을 다르게 둔다. 바깥
+  // .live-side-panel에 마진을 또 주면 이중으로 겹쳐 좁아지므로 없앰.
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-home" style="margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeader(hF)+renderPitch(hS,hF,hColor,hP)+'</div>'+renderPlayerTable('home',hP,true)+'</div>';
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-away" style="display:none;margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeader(aF)+renderPitch(aS,aF,aColor,aP)+'</div>'+renderPlayerTable('away',aP,true)+'</div>';
+  return h;
+}
 function buildLiveDetail(data){
   if(!data) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">데이터 없음</div>';
 
@@ -4025,20 +4097,6 @@ function buildLiveDetail(data){
   // 하나의 .card 안에 묶는다 — 탭별로 반복되던 .mm-card 제목도 탭 라벨과
   // 중복이라 제거.
   var h = '<div class="card" style="margin:10px 0 0;">';
-
-  // 라인업/선수 스탯 패널에서 공용으로 쓰는 홈-어웨이 팀 전환 탭 —
-  // 경기 상세모달(종료 경기)의 라인업 섹션에서 쓰는 것과 동일한
-  // .mm-team-tabs/.mm-team-tab 테마(엠블럼+팀명, 세로 스택)로 통일한다.
-  function teamSwitchTabs(panelName){
-    var hCrest=(data.homeTeam&&data.homeTeam.crest)||'';
-    var aCrest=(data.awayTeam&&data.awayTeam.crest)||'';
-    var hName=(data.homeTeam&&data.homeTeam.name)||'홈';
-    var aName=(data.awayTeam&&data.awayTeam.name)||'어웨이';
-    return '<div class="mm-team-tabs" style="margin-top:0;">'+
-      '<button class="mm-team-tab active" data-side="home" onclick="liveSwitchSide(this,\''+panelName+'\',\'home\')">'+(hCrest?'<img src="'+hCrest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+hName+'</span></button>'+
-      '<button class="mm-team-tab" data-side="away" onclick="liveSwitchSide(this,\''+panelName+'\',\'away\')">'+(aCrest?'<img src="'+aCrest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+aName+'</span></button>'+
-    '</div>';
-  }
 
   // ── 탭: 골 & 이벤트 / 팀 스탯 / 라인업(+선수 스탯 종속) / 코멘터리 ──
   // 선수단 탭(.f-btns/.f-btn)과 동일한 세그먼트 테마로 통일
@@ -4049,81 +4107,9 @@ function buildLiveDetail(data){
   h += '<button class="live-tab-btn" data-tab="commentary" onclick="liveSwitchTab(this,&quot;commentary&quot;)">코멘터리</button>';
   h += '</div>';
 
-  // ── 골 & 이벤트 패널 ──
-  // 종료 경기 상세모달(renderMatchModal)의 .mm-events-table을 그대로 재사용
-  // — 아이콘도 공용 eventIconHtml()로 동일하게 맞춘다.
-  h += '<div class="live-tab-panel" id="live-panel-events" style="padding-top:0;">';
-  var events = data.events||[];
-  if(events.length){
-    var homeEvs=events.filter(function(ev){return (ev.homeAway||ev.team)==='home';});
-    var awayEvs=events.filter(function(ev){return (ev.homeAway||ev.team)!=='home';});
-    var maxLen=Math.max(homeEvs.length,awayEvs.length);
-    h += '<div style="padding:10px 14px 14px;"><table class="mm-events-table"><tbody>';
-    for(var ei=0; ei<maxLen; ei++){
-      var evH=homeEvs[ei], evA=awayEvs[ei];
-      h += '<tr>';
-      h += evH ? '<td class="mm-evt-home"><span class="mm-evt-cell"><span class="mm-event-player">'+evH.player+'</span><span class="mm-event-min">'+(evH.minute||'')+'</span><span class="mm-event-icon">'+eventIconHtml(evH.type)+'</span></span></td>' : '<td class="mm-evt-home"></td>';
-      h += '<td class="mm-evt-div"></td>';
-      h += evA ? '<td class="mm-evt-away"><span class="mm-evt-cell"><span class="mm-event-icon">'+eventIconHtml(evA.type)+'</span><span class="mm-event-min">'+(evA.minute||'')+'</span><span class="mm-event-player">'+evA.player+'</span></span></td>' : '<td class="mm-evt-away"></td>';
-      h += '</tr>';
-    }
-    h += '</tbody></table></div>';
-  } else {
-    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">이벤트 없음</div>';
-  }
-  h += '</div>';
-
-  // ── 팀 스탯 패널 ──
-  h += '<div class="live-tab-panel" id="live-panel-stats" style="display:none;padding-top:0;">';
-  var stats = data.teamStats||[];
-  if(stats.length){
-    h += '<div class="mm-stats-grid" style="padding:10px 14px 14px;">';
-    stats.forEach(function(s){
-      var hv=s.home||0, av=s.away||0;
-      var rawH=parseFloat((hv+'').replace('%',''))||0;
-      var rawA=parseFloat((av+'').replace('%',''))||0;
-      var isPct=(hv+'').includes('%');
-      var total=isPct?100:(rawH+rawA||1);
-      var homePct=Math.round(rawH/total*100); var awayPct=100-homePct;
-      h += '<div class="mm-stat-val home">'+hv+'</div>';
-      h += '<div class="mm-stat-label">'+s.label+'</div>';
-      h += '<div class="mm-stat-val away">'+av+'</div>';
-      h += '<div class="mm-stat-bar-wrap">';
-      h += '<div class="mm-stat-bar-home" style="width:'+homePct+'%"></div>';
-      h += '<div class="mm-stat-bar-away" style="width:'+awayPct+'%"></div>';
-      h += '</div>';
-    });
-    h += '</div>';
-  } else {
-    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">스탯 없음</div>';
-  }
-  h += '</div>';
-
-  // ── 라인업 패널(선수 스탯이 이 안에 종속) ──
-  // 종료 경기 상세모달과 동일하게: 라인업 카드 하나 안에 팀 전환 탭 →
-  // 포메이션 피치 → 선수 스탯 테이블까지 같은 홈/어웨이 토글로 묶는다.
-  // (선수 스탯을 별도 탭으로 안 두고 라인업에 종속시킴)
-  h += '<div class="live-tab-panel" id="live-panel-lineup" style="display:none;padding-top:0;">';
-  if(data.players){
-    var hP=data.players.home||[], aP=data.players.away||[];
-    var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
-    var aS=aP.filter(function(p){return p.starter&&p.formationPlace;});
-    var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
-    var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
-    var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
-    function pitchHeader(formation){
-      return '<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+formation+'</span><span></span></div>';
-    }
-    h += teamSwitchTabs('lineup');
-    // 피치는 14px 인셋 카드로, 선발/교체 표는 .mm-section의 좁은 좌우
-    // 패딩(6px)만 받아 피치보다 좌우로 더 넓게 — 의도적으로 폭을 다르게 둔다.
-    // 바깥 .live-side-panel에 마진을 또 주면 이중으로 겹쳐 좁아지므로 없앰.
-    h += '<div class="live-side-panel" data-suffix="lineup-home" style="margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeader(hF)+renderPitch(hS,hF,hColor,hP)+'</div>'+renderPlayerTable('home',hP,true)+'</div>';
-    h += '<div class="live-side-panel" data-suffix="lineup-away" style="display:none;margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeader(aF)+renderPitch(aS,aF,aColor,aP)+'</div>'+renderPlayerTable('away',aP,true)+'</div>';
-  } else {
-    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
-  }
-  h += '</div>';
+  h += '<div class="live-tab-panel" id="live-panel-events" style="padding-top:0;">'+renderEventsPanelInner(data)+'</div>';
+  h += '<div class="live-tab-panel" id="live-panel-stats" style="display:none;padding-top:0;">'+renderStatsPanelInner(data)+'</div>';
+  h += '<div class="live-tab-panel" id="live-panel-lineup" style="display:none;padding-top:0;">'+renderLineupPanelInner(data,'lineup')+'</div>';
 
   // ── 코멘터리 패널 ──
   h += '<div class="live-tab-panel" id="live-panel-commentary" style="display:none;">';
@@ -4143,6 +4129,20 @@ function buildLiveDetail(data){
   h += '</div>';
 
   h += '</div>'; // .card 닫기
+  return h;
+}
+// 종료 경기 PC 상세패널: live 모달과 같은 탭 UI를 쓰되, 코멘터리는 빼고
+// 이벤트·스탯은 한 탭에 같이 노출한다(라이브와 요구사항이 달라 별도 함수).
+function buildFinishedDesktopDetail(data){
+  if(!data) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">데이터 없음</div>';
+  var h = '<div class="card" style="margin:10px 0 0;">';
+  h += '<div class="live-tabs">';
+  h += '<button class="live-tab-btn active" data-tab="summary" onclick="liveSwitchTab(this,&quot;summary&quot;)">이벤트 · 스탯</button>';
+  h += '<button class="live-tab-btn" data-tab="lineup" onclick="liveSwitchTab(this,&quot;lineup&quot;)">라인업</button>';
+  h += '</div>';
+  h += '<div class="live-tab-panel" id="live-panel-summary" style="padding-top:0;">'+renderEventsPanelInner(data)+renderStatsPanelInner(data)+'</div>';
+  h += '<div class="live-tab-panel" id="live-panel-lineup" style="display:none;padding-top:0;">'+renderLineupPanelInner(data,'lineup')+'</div>';
+  h += '</div>';
   return h;
 }
 
@@ -4166,10 +4166,10 @@ function liveSwitchTab(btn, panel){
   // 탭 버튼 active 토글
   tabRow.querySelectorAll('.live-tab-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
-  // 패널 표시 토글 (탭 행 다음 형제들)
-  var panels = container.querySelectorAll('.live-tab-panel');
-  var idx = ['events','stats','lineup','commentary'].indexOf(panel);
-  panels.forEach(function(p,i){p.style.display=(i===idx)?'':'none';});
+  // 패널 표시 토글 — id로 직접 매칭(탭 개수/순서가 화면마다 달라도(예:
+  // 종료 경기 PC 패널은 2탭) 안전하게 동작해야 해서 배열 인덱스 매칭을 버렸다)
+  var container2 = container.querySelectorAll('.live-tab-panel');
+  container2.forEach(function(p){ p.style.display = (p.id==='live-panel-'+panel) ? '' : 'none'; });
 }
 
 
