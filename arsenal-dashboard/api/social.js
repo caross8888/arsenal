@@ -86,7 +86,7 @@ export default async function handler(req, res) {
 
     all.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
 
-    const payload = { posts: all.slice(0, 20), count: all.length };
+    const payload = { posts: all.slice(0, 12), count: all.length };
     _cache   = payload;
     _cacheTs = Date.now();
 

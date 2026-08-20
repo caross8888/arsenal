@@ -74,7 +74,7 @@ export default async function handler(req, res) {
     if (text === undefined) throw lastErr;
     const videos = parseFeed(text).sort((a, b) => b.pubDate - a.pubDate);
     const result = {
-      videos: videos.slice(0, 6).map(({ pubDate: _, ...v }) => v),
+      videos: videos.slice(0, 12).map(({ pubDate: _, ...v }) => v),
       source: 'YouTube',
     };
     cache.data = result;
