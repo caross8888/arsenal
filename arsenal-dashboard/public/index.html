@@ -4124,6 +4124,17 @@ function teamTabsHtml(data, panelName){
     '<button class="mm-team-tab" data-side="away" onclick="liveSwitchSide(this,\''+panelName+'\',\'away\')">'+(aCrest?'<img src="'+aCrest+'" onerror="this.style.display=\'none\'">':'')+'<span>'+aName+'</span></button>'+
   '</div>';
 }
+// 선발/선수 스탯 탭 전용 홈-어웨이 전환 — 앰블럼 없이 텍스트만, 리더보드
+// 선수순위 하위탭(.rec-subnav/.rec-subnav-btn)과 동일한 밑줄 강조 스타일로
+// 통일하고 좌우 폭도 flex:1로 꽉 채운다.
+function teamTabsUnderlineHtml(data, panelName){
+  var hName=(data.homeTeam&&data.homeTeam.name)||'홈';
+  var aName=(data.awayTeam&&data.awayTeam.name)||'어웨이';
+  return '<div class="rec-subnav" style="margin:0 14px 14px;">'+
+    '<button class="rec-subnav-btn active" data-side="home" onclick="liveSwitchSide(this,\''+panelName+'\',\'home\')">'+hName+'</button>'+
+    '<button class="rec-subnav-btn" data-side="away" onclick="liveSwitchSide(this,\''+panelName+'\',\'away\')">'+aName+'</button>'+
+  '</div>';
+}
 function pitchHeaderHtml(formation){
   return '<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 14px;background:#1b4020;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">라인업</span><span style="font-size:13px;font-weight:700;color:#fff;">'+formation+'</span><span></span></div>';
 }
@@ -4146,7 +4157,7 @@ function renderLineupPanelInner(data, panelName){
 // 선발(피치만) 패널 — 종료 경기 PC 패널의 "선발" 탭 전용
 function renderStartingPanelInner(data, panelName){
   if(!data.players) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
-  var h=teamTabsHtml(data, panelName);
+  var h=teamTabsUnderlineHtml(data, panelName);
   var hP=data.players.home||[], aP=data.players.away||[];
   var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
   var aS=aP.filter(function(p){return p.starter&&p.formationPlace;});
@@ -4160,7 +4171,7 @@ function renderStartingPanelInner(data, panelName){
 // 선수 스탯(테이블만) 패널 — 종료 경기 PC 패널의 "선수 스탯" 탭 전용
 function renderPlayerStatsPanelInner(data, panelName){
   if(!data.players) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">선수 스탯 없음</div>';
-  var h=teamTabsHtml(data, panelName);
+  var h=teamTabsUnderlineHtml(data, panelName);
   var hP=data.players.home||[], aP=data.players.away||[];
   h += '<div class="live-side-panel" data-suffix="'+panelName+'-home" style="margin-top:8px;">'+renderPlayerTable('home',hP,true)+'</div>';
   h += '<div class="live-side-panel" data-suffix="'+panelName+'-away" style="display:none;margin-top:8px;">'+renderPlayerTable('away',aP,true)+'</div>';
@@ -4211,7 +4222,9 @@ function buildLiveDetail(data){
 // 이벤트·스탯은 한 탭에 같이 노출한다(라이브와 요구사항이 달라 별도 함수).
 function buildFinishedDesktopDetail(data){
   if(!data) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:16px">데이터 없음</div>';
-  var h = '<div class="card" style="margin:10px 0 0;">';
+  // 헤더와 별개의 떠 있는 카드처럼 보이지 않게 — 자체 배경/테두리/둥근모서리/
+  // 여백 없이 패널 표면에 바로 이어지도록 하고, 헤더와의 경계만 얇은 선으로.
+  var h = '<div style="border-top:1px solid var(--border);">';
   h += '<div class="live-tabs">';
   h += '<button class="live-tab-btn active" data-tab="info" onclick="liveSwitchTab(this,&quot;info&quot;)">경기 정보</button>';
   h += '<button class="live-tab-btn" data-tab="starting" onclick="liveSwitchTab(this,&quot;starting&quot;)">선발</button>';
@@ -4229,7 +4242,9 @@ function buildFinishedDesktopDetail(data){
 
 function liveSwitchSide(btn, panelId, side){
   var tabRow = btn.parentElement;
-  tabRow.querySelectorAll('.mm-team-tab').forEach(function(b){b.classList.remove('active');});
+  // .mm-team-tab(모바일/라이브)와 .rec-subnav-btn(데스크톱 선발·선수 스탯)
+  // 둘 다 여기서 쓰이므로 클래스 상관없이 형제 버튼 전부에서 active를 지운다.
+  Array.prototype.forEach.call(tabRow.children, function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
   // 부모 live-tab-panel 찾기
   var panel = tabRow;
