@@ -196,7 +196,7 @@ export default async function handler(req, res) {
   await Promise.all(RSS_SOURCES.map(async (src) => {
     try {
       const r = await fetch(src.url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 Arsenal-Dashboard/1.0' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36' },
         signal: AbortSignal.timeout(6000),
       });
       if (!r.ok) { sourceErrors[src.name] = `HTTP ${r.status}`; return; }

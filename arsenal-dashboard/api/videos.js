@@ -50,13 +50,28 @@ export default async function handler(req, res) {
 
   if (cache.data && Date.now() - cache.ts < TTL) return res.json(cache.data);
 
-  try {
-    const r = await fetch(FEED_URL, {
-      headers: { 'User-Agent': 'Mozilla/5.0 Arsenal-Dashboard/1.0' },
-      signal: AbortSignal.timeout(8000),
-    });
+  const FEED_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+    'Accept': 'application/rss+xml, application/atom+xml, text/xml, */*',
+    'Accept-Language': 'en-US,en;q=0.9',
+  };
+
+  const fetchFeed = async () => {
+    const r = await fetch(FEED_URL, { headers: FEED_HEADERS, signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error(`YouTube RSS: HTTP ${r.status}`);
-    const text = await r.text();
+    return r.text();
+  };
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  try {
+    // 유튜브가 가끔 일시적으로 404/5xx를 돌려주는 경우가 있어(특히 짧은 시간
+    // 안에 요청이 몰릴 때) 최대 3회까지 짧은 간격을 두고 재시도한다.
+    let text, lastErr;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try { text = await fetchFeed(); break; }
+      catch (e) { lastErr = e; if (attempt < 2) await sleep(400); }
+    }
+    if (text === undefined) throw lastErr;
     const videos = parseFeed(text).sort((a, b) => b.pubDate - a.pubDate);
     const result = {
       videos: videos.slice(0, 6).map(({ pubDate: _, ...v }) => v),

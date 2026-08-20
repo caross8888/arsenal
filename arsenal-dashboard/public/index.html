@@ -179,11 +179,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .media-main-col{min-width:0;}
 .media-side-panel{display:none;}
 .side-panel-title{font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
-.video-card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent;transition:border-color .18s;}
-.video-card:hover{border-color:var(--border-accent);}
-.video-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--surface2);}
-.video-title{font-size:12px;font-weight:700;padding:8px 10px 4px;line-height:1.35;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.video-time{font-size:10px;color:var(--text-muted);padding:0 10px 10px;}
+.video-card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent;}
+.video-thumb-wrap{height:120px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface2),var(--surface3));}
+.video-thumb{width:100%;height:100%;object-fit:cover;display:block;}
+.video-src-badge{position:absolute;top:10px;left:10px;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--red);color:#fff;font-weight:700;}
+.video-body{padding:12px 14px;}
+.video-title{font-weight:700;font-size:13px;line-height:1.4;margin-bottom:6px;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.video-time{font-size:11px;color:var(--text-muted);}
 /* ── Timeline Section ───────────────────── */
 .tl-wrap{position:relative;}
 .tl-wrap::before{content:'';position:absolute;left:50%;transform:translateX(-50%);top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--red) 0%,#ff6b35 30%,var(--gold) 60%,#4CAF50 100%);opacity:.45;}
@@ -2157,20 +2159,29 @@ function loadMedia(){
 }
 function loadVideos(){
   var el=document.getElementById('videoList');
+  var panel=document.getElementById('mediaSidePanel');
   if(!el) return;
   apiFetchCached(FN+'/videos', 'videos', function(data){
     var videos=data.videos||[];
-    if(!videos.length){ el.innerHTML='<div class="loading-state" style="padding:20px 0;"><span>영상 없음</span></div>'; return; }
+    // 일시적으로 못 가져온 것과 "진짜 영상이 없는" 경우를 구분할 방법이 없으니,
+    // 둘 다 빈 상태면 어중간한 안내 문구 대신 패널 자체를 숨긴다.
+    if(!videos.length){ if(panel) panel.style.display='none'; return; }
+    if(panel) panel.style.display='';
     el.innerHTML='';
     videos.forEach(function(v){
       var a=document.createElement('a');a.className='video-card';a.href=v.url;a.target='_blank';a.rel='noopener';
+      var thumbWrap=document.createElement('div');thumbWrap.className='video-thumb-wrap';
       var img=document.createElement('img');img.className='video-thumb';img.src=v.thumbnail;img.alt='';img.loading='lazy';
+      var badge=document.createElement('div');badge.className='video-src-badge';badge.textContent='YOUTUBE';
+      thumbWrap.appendChild(img);thumbWrap.appendChild(badge);
+      var body=document.createElement('div');body.className='video-body';
       var title=document.createElement('div');title.className='video-title';title.textContent=v.title;
       var time=document.createElement('div');time.className='video-time';time.textContent=v.timeAgo;
-      a.appendChild(img);a.appendChild(title);a.appendChild(time);
+      body.appendChild(title);body.appendChild(time);
+      a.appendChild(thumbWrap);a.appendChild(body);
       el.appendChild(a);
     });
-  }, function(){ el.innerHTML=''; });
+  }, function(){ if(panel) panel.style.display='none'; });
 }
 
 function loadHistory(){
