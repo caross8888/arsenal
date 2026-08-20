@@ -2164,29 +2164,32 @@ function loadMedia(){
 function loadVideos(){
   var el=document.getElementById('videoList');
   if(!el) return;
+  var _t0=Date.now();
   apiFetchCached(FN+'/videos', 'videos', function(data){
-    var videos=data.videos||[];
-    // 캐시로 이미 잘 보여주고 있는데 뒤이은 실시간 재요청이 실패/빈 응답으로
-    // 오면, 그걸로 기존 정상 화면을 덮어써서 지우면 안 된다 — 그대로 둔다.
-    if(!videos.length){
-      if(!el.querySelector('.video-card')) el.innerHTML='<div class="loading-state" style="padding:28px 0;"><span>영상을 불러오지 못했습니다</span></div>';
-      return;
-    }
-    el.innerHTML='';
-    videos.forEach(function(v){
-      var a=document.createElement('a');a.className='video-card';a.href=v.url;a.target='_blank';a.rel='noopener';
-      var thumbWrap=document.createElement('div');thumbWrap.className='video-thumb-wrap';
-      var img=document.createElement('img');img.className='video-thumb';img.src=v.thumbnail;img.alt='';img.loading='lazy';
-      var badge=document.createElement('div');badge.className='video-src-badge';badge.textContent='YOUTUBE';
-      thumbWrap.appendChild(img);thumbWrap.appendChild(badge);
-      var body=document.createElement('div');body.className='video-body';
-      var title=document.createElement('div');title.className='video-title';title.textContent=v.title;
-      var time=document.createElement('div');time.className='video-time';time.textContent=v.timeAgo;
-      body.appendChild(title);body.appendChild(time);
-      a.appendChild(thumbWrap);a.appendChild(body);
-      el.appendChild(a);
+    withMinLoading(el, _t0, function(){
+      var videos=data.videos||[];
+      // 캐시로 이미 잘 보여주고 있는데 뒤이은 실시간 재요청이 실패/빈 응답으로
+      // 오면, 그걸로 기존 정상 화면을 덮어써서 지우면 안 된다 — 그대로 둔다.
+      if(!videos.length){
+        if(!el.querySelector('.video-card')) el.innerHTML='<div class="loading-state" style="padding:28px 0;"><span>영상을 불러오지 못했습니다</span></div>';
+        return;
+      }
+      el.innerHTML='';
+      videos.forEach(function(v){
+        var a=document.createElement('a');a.className='video-card';a.href=v.url;a.target='_blank';a.rel='noopener';
+        var thumbWrap=document.createElement('div');thumbWrap.className='video-thumb-wrap';
+        var img=document.createElement('img');img.className='video-thumb';img.src=v.thumbnail;img.alt='';img.loading='lazy';
+        var badge=document.createElement('div');badge.className='video-src-badge';badge.textContent='YOUTUBE';
+        thumbWrap.appendChild(img);thumbWrap.appendChild(badge);
+        var body=document.createElement('div');body.className='video-body';
+        var title=document.createElement('div');title.className='video-title';title.textContent=v.title;
+        var time=document.createElement('div');time.className='video-time';time.textContent=v.timeAgo;
+        body.appendChild(title);body.appendChild(time);
+        a.appendChild(thumbWrap);a.appendChild(body);
+        el.appendChild(a);
+      });
     });
-  }, function(){ el.innerHTML='<div class="loading-state" style="padding:28px 0;"><span>영상을 불러오지 못했습니다</span></div>'; });
+  }, function(){ withMinLoading(el, _t0, function(){ el.innerHTML='<div class="loading-state" style="padding:28px 0;"><span>영상을 불러오지 못했습니다</span></div>'; }); });
 }
 
 function loadHistory(){
