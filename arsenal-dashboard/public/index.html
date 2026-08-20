@@ -3153,6 +3153,12 @@ function openMatchModal(m, isAuto){
   if(!allInjuries.length){
     apiFetchCached(FN+'/football?type=injuries', 'injuries', function(data){ allInjuries=data.injured||[]; }, function(){});
   }
+  // 예정 경기일 때만 상대팀 이름을 구해 부상자 데이터도 같이 조회한다.
+  var oppNameSkel='';
+  if(!isPlayedSkel){
+    var oppTeamSkel=isArsHomeSkel?m.awayTeam:m.homeTeam;
+    oppNameSkel=(oppTeamSkel&&(oppTeamSkel.shortName||oppTeamSkel.name))||'';
+  }
 
   // 로딩 상태
   content.innerHTML=
@@ -3197,12 +3203,21 @@ function openMatchModal(m, isAuto){
     if(sp) sp.parentElement.innerHTML='<div class="error-state">&#9888;&#65039; 응답 없음 — 잠시 후 다시 시도해주세요</div>';
   }, 10000);
 
-  fetch(FN+'/match?id='+m.id+'&slug='+slug+'&_='+Date.now())
-    .then(function(r){ return r.json(); })
-    .then(function(data){
+  var oppInjPromise = oppNameSkel
+    ? fetch(FN+'/football?type=injuries&team='+encodeURIComponent(oppNameSkel)+'&_='+Date.now()).then(function(r){ return r.json(); }).catch(function(){ return null; })
+    : Promise.resolve(null);
+
+  Promise.all([
+    fetch(FN+'/match?id='+m.id+'&slug='+slug+'&_='+Date.now()).then(function(r){ return r.json(); }),
+    oppInjPromise
+  ])
+    .then(function(results){
+      var data=results[0];
       clearTimeout(timer);
       if(reqId!==_matchModalReqSeq) return;
       if(data.error) throw new Error(data.error);
+      data.oppName=oppNameSkel;
+      data.oppInjuries=results[1];
       withMinLoading(content, _t0, function(){ if(reqId===_matchModalReqSeq) renderMatchModal(content, m, data, desktop); });
     })
     .catch(function(err){
@@ -3234,8 +3249,9 @@ function eventIconHtml(type){
 }
 function renderH2HCard(data){
   if(!data.h2h||!data.h2h.events||!data.h2h.events.length) return '';
+  var ARSENAL_ID_H2H='359';
   var html='<div class="mm-card"><div class="mm-card-title">상대전적</div><div style="padding:10px 14px 14px;">';
-  if(data.h2h.summary) html+='<div style="text-align:center;font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">'+data.h2h.summary+'</div>';
+  var arsWins=0, oppWins=0, draws=0;
   data.h2h.events.forEach(function(e){
     var dateStr=e.date?e.date.slice(0,10).replace(/-/g,'.'):'';
     var hName=(e.homeTeam&&e.homeTeam.name)||'';
@@ -3246,7 +3262,16 @@ function renderH2HCard(data){
       '<span style="font-weight:700;color:var(--text);padding:0 6px;">'+(e.homeScore||'0')+' - '+(e.awayScore||'0')+'</span>'+
       '<span style="flex:1;color:var(--text);">'+aName+'</span>'+
     '</div>';
+    var arsIsHome=e.homeTeam&&String(e.homeTeam.id)===ARSENAL_ID_H2H;
+    var arsScore=parseInt(arsIsHome?e.homeScore:e.awayScore,10)||0;
+    var oppScore=parseInt(arsIsHome?e.awayScore:e.homeScore,10)||0;
+    if(arsScore>oppScore) arsWins++;
+    else if(arsScore<oppScore) oppWins++;
+    else draws++;
   });
+  var recordColor = arsWins>oppWins ? '#22C55E' : arsWins===oppWins ? '#F59E0B' : '#EF4444';
+  var recordLabel = arsWins>oppWins ? '아스날 우세' : arsWins===oppWins ? '동률' : '아스날 열세';
+  html+='<div style="text-align:center;font-size:13px;font-weight:700;color:'+recordColor+';margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);">'+arsWins+'승 '+draws+'무 '+oppWins+'패 · '+recordLabel+'</div>';
   html+='</div></div>';
   return html;
 }
@@ -3265,19 +3290,33 @@ function renderFormCard(data){
   html+='</div></div>';
   return html;
 }
-function renderInjuryCard(){
-  if(!allInjuries.length){
-    return '<div class="mm-card"><div class="mm-card-title">아스날 부상자 명단</div><div style="padding:10px 14px 14px;font-size:12px;color:var(--text-secondary);">부상자가 없습니다</div></div>';
+function renderInjuryListCard(title, injuries){
+  if(!injuries||!injuries.length){
+    return '<div class="mm-card"><div class="mm-card-title">'+title+'</div><div style="padding:10px 14px 14px;font-size:12px;color:var(--text-secondary);">부상자가 없습니다</div></div>';
   }
   var STATUS_COLOR={'i':'#EF4444','d':'#F59E0B','s':'#EF4444','u':'#7A8099'};
-  var html='<div class="mm-card"><div class="mm-card-title">아스날 부상자 명단</div><div style="padding:6px 14px 14px;">';
-  allInjuries.forEach(function(p){
+  var html='<div class="mm-card"><div class="mm-card-title">'+title+'</div><div style="padding:6px 14px 14px;">';
+  injuries.forEach(function(p){
     html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06);">'+
       '<span style="flex:1;font-size:12px;color:var(--text);">'+(p.name||'')+'</span>'+
       '<span style="font-size:11px;font-weight:700;color:'+(STATUS_COLOR[p.status]||'#7A8099')+';">'+(STATUS_LABEL[p.status]||'')+'</span>'+
     '</div>';
   });
   html+='</div></div>';
+  return html;
+}
+// 아스날 부상자 카드 + (예정 경기일 때) 상대팀 부상자 카드. 상대가
+// 프리미어리그 소속이 아니면 FPL에 데이터가 없어 그 사실을 안내한다.
+function renderInjuryCards(data){
+  var html=renderInjuryListCard('아스날 부상자 명단', allInjuries);
+  if(data&&data.oppName){
+    if(data.oppInjuries&&data.oppInjuries.teamFound===false){
+      html+='<div class="mm-card"><div class="mm-card-title">'+data.oppName+' 부상자 명단</div><div style="padding:10px 14px 14px;font-size:12px;color:var(--text-secondary);">프리미어리그 소속이 아니라 부상 정보를 확인할 수 없습니다</div></div>';
+    } else {
+      var oppList=(data.oppInjuries&&data.oppInjuries.injured)||[];
+      html+=renderInjuryListCard(data.oppName+' 부상자 명단', oppList);
+    }
+  }
   return html;
 }
 function renderMatchModal(content, m, data, desktop){
@@ -3324,14 +3363,7 @@ function renderMatchModal(content, m, data, desktop){
 
   // 예정 경기: 상세 이벤트/스탯/라인업 대신 상대전적·최근폼·부상자 미리보기
   if(isUpcomingR){
-    var h2hHtml=renderH2HCard(data);
-    var formHtml=renderFormCard(data);
-    var injHtml=renderInjuryCard();
-    if(desktop && h2hHtml && formHtml){
-      html+='<div class="mm-grid-row">'+h2hHtml+formHtml+'</div>'+injHtml;
-    } else {
-      html+=h2hHtml+formHtml+injHtml;
-    }
+    html+=renderH2HCard(data)+renderFormCard(data)+renderInjuryCards(data);
   }
 
   // 종료 경기 데스크톱 패널: live 모달과 동일한 탭 UI(이벤트/스탯/라인업/

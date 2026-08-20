@@ -75,10 +75,15 @@ export default async function handler(req, res) {
 
   const type = req.query.type || 'fixtures';
   const nocache = req.query.nocache;
+  // injuries는 team 파라미터로 아스날 외 다른 팀도 조회할 수 있어 캐시 키에
+  // team을 같이 섞는다 — 안 그러면 아스날 조회 캐시를 상대팀 조회가 그대로
+  // 돌려받거나 덮어써버린다.
+  const teamParam = req.query.team || '';
+  const cacheKey = type + (teamParam ? ('_'+teamParam) : '');
   res.setHeader('Cache-Control', `public, max-age=${Math.floor(getTTL(type)/1000)}`);
 
   if(!nocache){
-    const hit = getCache(type);
+    const hit = getCache(cacheKey);
     if(hit) return res.json(hit);
   }
 
@@ -427,19 +432,33 @@ export default async function handler(req, res) {
       }
 
     } else if(type === 'injuries'){
-      // players.json로 현재 스쿼드 이름 목록 확보
+      // team 파라미터(ESPN 팀명, 예: "Coventry")가 오면 아스날 대신 그 팀의
+      // FPL 부상 데이터를 찾는다 — 상대가 프리미어리그 소속이 아니면(챔피언십
+      // 이하, 유럽 클럽 등) FPL에 해당 팀이 없어서 빈 목록을 돌려준다.
+      let targetFplId = ARSENAL_FPL_ID;
+      let isOpponentTeam = false;
+      if(teamParam){
+        isOpponentTeam = true;
+        targetFplId = null; // 아래서 fplData.teams 조회 후 채움
+      }
+
+      // players.json로 현재 스쿼드 이름 목록 확보 — 아스날 조회일 때만 의미
+      // 있다(스쿼드에 있는 선수인지 교차검증하는 용도). 상대팀은 이 스쿼드
+      // 데이터가 없으니 필터를 건너뛴다.
       let squadNames = new Set();
-      try {
-        const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
-        if(pjRes.ok) {
-          const pjData = await pjRes.json();
-          (pjData.players || []).forEach(p => {
-            squadNames.add(p.name.toLowerCase());
-            const parts = p.name.split(' ');
-            if(parts.length > 1) squadNames.add(parts[parts.length-1].toLowerCase());
-          });
-        }
-      } catch(_){}
+      if(!isOpponentTeam){
+        try {
+          const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
+          if(pjRes.ok) {
+            const pjData = await pjRes.json();
+            (pjData.players || []).forEach(p => {
+              squadNames.add(p.name.toLowerCase());
+              const parts = p.name.split(' ');
+              if(parts.length > 1) squadNames.add(parts[parts.length-1].toLowerCase());
+            });
+          }
+        } catch(_){}
+      }
 
       // FPL API에서 부상 선수 데이터
       let fplData;
@@ -451,34 +470,49 @@ export default async function handler(req, res) {
         fplData = JSON.parse(fplText);
       } catch(fplErr) {
         // stale 캐시 fallback
-        const stale = getStale('injuries');
+        const stale = getStale(cacheKey);
         if(stale) return res.json(stale);
         throw fplErr;
       }
-      const arsenalPlayers = (fplData.elements || []).filter(p => p.team === ARSENAL_FPL_ID);
-      const squadFilter = (p) => {
-          if(squadNames.size === 0) return true;
-          const webName = p.web_name.toLowerCase();
-          const lastName = p.second_name.split(' ').pop().toLowerCase();
-          const fullName = `${p.first_name} ${p.second_name}`.toLowerCase();
-          return squadNames.has(webName) || squadNames.has(lastName) || squadNames.has(fullName);
-      };
-      const squadPlayers = arsenalPlayers.filter(squadFilter);
-      const availableCount = squadPlayers.filter(p => p.chance_of_playing_next_round === null || p.chance_of_playing_next_round === 100).length;
-      const injured = squadPlayers
-        .filter(p => p.chance_of_playing_next_round !== null && p.chance_of_playing_next_round < 100)
-        .filter(p => !LOAN_KEYWORDS.test(p.news || ''))
-        .map(p => ({
-          id:       p.id,
-          name:     p.web_name,
-          fullName: `${p.first_name} ${p.second_name}`,
-          position: FPL_POS[p.element_type] || '',
-          photo:    `https://resources.premierleague.com/premierleague/photos/players/250x250/p${p.code}.png`,
-          status:   p.status === 'i' ? 'i' : p.status === 'd' ? 'd' : p.status === 's' ? 's' : 'u',
-          news:     p.news || '',
-          chance:   p.chance_of_playing_next_round,
-        }));
-      result = { injured, availableCount };
+
+      if(isOpponentTeam){
+        const needle = teamParam.toLowerCase();
+        const match = (fplData.teams || []).find(t =>
+          t.name.toLowerCase().includes(needle) || needle.includes(t.name.toLowerCase()) ||
+          t.short_name.toLowerCase() === needle
+        );
+        targetFplId = match ? match.id : null;
+      }
+
+      if(targetFplId === null){
+        // 프리미어리그 소속이 아닌 상대 — FPL에 데이터 자체가 없다
+        result = { injured: [], availableCount: 0, teamFound: false };
+      } else {
+        const teamPlayers = (fplData.elements || []).filter(p => p.team === targetFplId);
+        const squadFilter = (p) => {
+            if(squadNames.size === 0) return true;
+            const webName = p.web_name.toLowerCase();
+            const lastName = p.second_name.split(' ').pop().toLowerCase();
+            const fullName = `${p.first_name} ${p.second_name}`.toLowerCase();
+            return squadNames.has(webName) || squadNames.has(lastName) || squadNames.has(fullName);
+        };
+        const squadPlayers = isOpponentTeam ? teamPlayers : teamPlayers.filter(squadFilter);
+        const availableCount = squadPlayers.filter(p => p.chance_of_playing_next_round === null || p.chance_of_playing_next_round === 100).length;
+        const injured = squadPlayers
+          .filter(p => p.chance_of_playing_next_round !== null && p.chance_of_playing_next_round < 100)
+          .filter(p => !LOAN_KEYWORDS.test(p.news || ''))
+          .map(p => ({
+            id:       p.id,
+            name:     p.web_name,
+            fullName: `${p.first_name} ${p.second_name}`,
+            position: FPL_POS[p.element_type] || '',
+            photo:    `https://resources.premierleague.com/premierleague/photos/players/250x250/p${p.code}.png`,
+            status:   p.status === 'i' ? 'i' : p.status === 'd' ? 'd' : p.status === 's' ? 's' : 'u',
+            news:     p.news || '',
+            chance:   p.chance_of_playing_next_round,
+          }));
+        result = { injured, availableCount, teamFound: true };
+      }
 
     } else if(type === 'squad'){
       // players.json (Fotmob 기반) 직접 사용
@@ -524,7 +558,7 @@ export default async function handler(req, res) {
       };
     }
 
-    if(!nocache) setCache(type, result);
+    if(!nocache) setCache(cacheKey, result);
     return res.json(result);
 
   } catch(err){
