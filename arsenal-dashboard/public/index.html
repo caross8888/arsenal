@@ -23,8 +23,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .top-header{background:rgba(11,13,18,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
 .brand{display:flex;align-items:center;gap:10px}
 .logo-svg{width:34px;height:34px;flex-shrink:0}
-.brand-text .name{font-family:var(--fd);font-size:20px;letter-spacing:3px;color:var(--red);line-height:1}
-.brand-text .sub{font-size:8px;letter-spacing:3px;color:var(--gold);text-transform:uppercase}
+.header-tab-title{font-family:var(--fd);font-size:19px;letter-spacing:1px;color:var(--text);}
 .header-right{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
@@ -38,10 +37,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .section{display:none;padding:16px;max-width:600px;margin:0 auto}
 .section.active{display:block;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-.sec-title{font-family:var(--fd);font-size:30px;letter-spacing:3px}
-.sec-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);background:rgba(200,168,75,.12);border:1px solid var(--border-accent);padding:3px 9px;border-radius:20px}
-.sec-badge.live{color:var(--green);background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);animation:pulse 2s infinite}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .card-title{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-secondary);font-weight:700}
@@ -784,13 +779,12 @@ function onHeaderLogoClick(){
 <div class="top-header">
   <div class="brand" onclick="onHeaderLogoClick()" style="cursor:pointer;">
     <img class="logo-svg" src="https://crests.football-data.org/57.png" alt="Arsenal FC" style="border-radius:50%;background:rgba(239,1,7,.1);padding:2px;">
-    <div class="brand-text"><div class="name">Arsenal FC</div><div class="sub">The Gunners Hub</div></div>
+    <span class="header-tab-title" id="headerTabTitle">&#44221;&#44592; &#51068;&#51221;</span>
   </div>
   <div class="header-right"><div class="live-dot"></div><span id="seasonLabel">24-25</span></div>
 </div>
 <div class="page">
 <section id="fixtures" class="section active">
-  <div class="sec-head"><h1 class="sec-title">&#44221;&#44592; &#51068;&#51221;</h1><span class="sec-badge" id="fixBadge" onclick="toggleMockLive()">&#47196;&#46377; &#51473;</span></div>
   <div class="dday-card" id="ddayCard" style="display:none"></div>
   <div id="fixWrap" class="fix-section-card">
     <div class="fix-section-label" style="display:flex;align-items:center;justify-content:space-between;">
@@ -839,7 +833,6 @@ function onHeaderLogoClick(){
   </div>
 </section>
 <section id="leaderboard" class="section">
-  <div class="sec-head"><h1 class="sec-title">&#47532;&#45908;&#48372;&#46300;</h1><span class="sec-badge" id="lbBadge">&#47196;&#46377; &#51473;</span></div>
   <div class="card">
     <div class="lb-tabs" id="lbTabs">
       <button class="lb-tab active" data-tab="team" onclick="switchLbTab('team',this)">
@@ -874,7 +867,6 @@ function onHeaderLogoClick(){
   </div>
 </section>
 <section id="squad" class="section">
-  <div class="sec-head"><h1 class="sec-title">&#49440;&#49688;&#45800;</h1><span class="sec-badge" id="squadBadge">&#47196;&#46377; &#51473;</span></div>
   <div class="sq-tabs-group">
     <div class="f-btns" style="grid-template-columns:repeat(2,1fr);">
       <button class="f-btn active" onclick="filterSqLevel('first',this)">1&#44400;</button>
@@ -891,7 +883,6 @@ function onHeaderLogoClick(){
   <div class="sq-grid" id="sqGrid"><div class="loading-state" style="grid-column:1/-1"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>&#49440;&#49688; &#45936;&#51060;&#53552; &#47196;&#46377; &#51473;...</span></div></div>
 </section>
 <section id="media" class="section">
-  <div class="sec-head"><h1 class="sec-title">미디어</h1><span class="sec-badge" id="mediaBadge">로딩 중</span></div>
   <div class="media-seg">
     <button class="media-seg-btn active" onclick="switchMedia('news',this)"><svg class="media-seg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg> 뉴스</button>
     <button class="media-seg-btn" onclick="switchMedia('sns',this)"><svg class="media-seg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1"/></svg> SNS</button>
@@ -904,7 +895,6 @@ function onHeaderLogoClick(){
   </div>
 </section>
 <section id="history" class="section">
-  <div class="sec-head"><h1 class="sec-title">History</h1><span class="sec-badge" id="histBadge">로컬</span></div>
   <div id="historyContent"><div class="loading-state"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>로딩 중...</span></div></div>
 </section>
 </div>
@@ -1630,11 +1620,9 @@ function renderMatchPickerGrid(){
 }
 function loadFixtures(){
   var upEl=document.getElementById('matchList');
-  var badge=document.getElementById('fixBadge');
   var _t0=Date.now();
   apiFetchCached(FN+'/football?type=fixtures', 'fixtures', function(data){
     withMinLoading(document.getElementById('matchList'), _t0, function(){
-      badge.textContent='ESPN';
       var upcomingAll=data.upcoming||[];
       assignPlRounds([...(data.finished||[]),...(data.upcoming||[])]);
       window._allMatchesForCal = data.matches||[];
@@ -1652,7 +1640,7 @@ function loadFixtures(){
         scheduleKickoffWatch(upcomingAll);
       }
     });
-  }, function(err){ withMinLoading(upEl, _t0, function(){ showErr(upEl,err.message);badge.textContent='오류'; }); });
+  }, function(err){ withMinLoading(upEl, _t0, function(){ showErr(upEl,err.message); }); });
 }
 
 // ── 예정 경기 달력 보기 ──
@@ -1903,16 +1891,14 @@ function renderCalPickerGrid(){
 
 function loadStandings(){
   var el=document.getElementById('stdList');
-  var badge=document.getElementById('lbBadge');
   var _t0=Date.now();
   apiFetchCached(FN+'/football?type=standings', 'standings', function(data){
     withMinLoading(document.getElementById('stdList'), _t0, function(){
       if(data.season) document.getElementById('stdMatchday').textContent=data.season+'R';
       allStandings=data.standings||[];
       renderStandings();
-      if(badge) badge.textContent='ESPN';
     });
-  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); if(badge) badge.textContent='오류'; }); });
+  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); }); });
 }
 function renderStandings(){
   var el=document.getElementById('stdList');
@@ -2005,15 +1991,13 @@ function switchLbStat(stat,btn){
 // ── SQUAD (FPL 기반) ──
 function loadSquad(){
   var el=document.getElementById('sqGrid');
-  var badge=document.getElementById('squadBadge');
   var _t0=Date.now();
   apiFetchCached(FN+'/football?type=squad', 'squad', function(data){
     withMinLoading(document.getElementById('sqGrid'), _t0, function(){
       allPlayers=data.squad||[];
-      badge.textContent='FPL API';
       renderSq(_sqActiveFilter);
     });
-  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message);badge.textContent='\uc624\ub958'; }); });
+  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); }); });
   // \ubd80\uc0c1 \ubc43\uc9c0\ub97c \uc120\uc218\ub2e8 \uce74\ub4dc\uc5d0 \ubc14\ub85c \ubcf4\uc5ec\uc8fc\ub824\uba74 \ubd80\uc0c1 \ub370\uc774\ud130\ub3c4 \uac19\uc774 \ud544\uc694\ud558\ub2e4 \u2014
   // "\ubd80\uc0c1" \ud0ed\uc744 \uc544\uc9c1 \uc548 \ub4e4\uc5b4\uac00\ubd24\uc5b4\ub3c4 \ubc43\uc9c0\uac00 \ub728\ub3c4\ub85d \uc5ec\uae30\uc11c\ub3c4 \ub530\ub85c \ubd88\ub7ec\uc628\ub2e4.
   // apiFetchCached\uac00 'injuries' \uce90\uc2dc \ud0a4\ub97c \uacf5\uc720\ud574\uc11c \ub450 \ubc88 \ubd88\ub7ec\ub3c4 \uc911\ubcf5 \ud638\ucd9c\uc740 \uc544\ub2c8\ub2e4.
@@ -2125,11 +2109,6 @@ function switchMedia(tab, btn){
   btn.classList.add('active');
   document.getElementById('mediaNews').style.display = tab==='news' ? '' : 'none';
   document.getElementById('mediaSns').style.display = tab==='sns' ? '' : 'none';
-  var mediaBadgeEl = document.getElementById('mediaBadge');
-  if(mediaBadgeEl){
-    if(tab==='news' && window._newsBadgeText) mediaBadgeEl.textContent = window._newsBadgeText;
-    if(tab==='sns' && window._snsBadgeText) mediaBadgeEl.textContent = window._snsBadgeText;
-  }
   if(tab==='sns' && !window._snsLoaded){ loadSns(); window._snsLoaded=true; }
 }
 
@@ -2936,15 +2915,10 @@ function openHistModal(enc){
 
 function loadNews(){
   var el=document.getElementById('newsGrid');
-  var badge=document.getElementById('newsBadge')||document.getElementById('mediaBadge');
   var _t0=Date.now();
   apiFetchCached(FN+'/news', 'news', function(data){
     withMinLoading(document.getElementById('newsGrid'), _t0, function(){
       var articles=data.articles||[];
-      var srcList=[];
-      articles.forEach(function(a){ if(a.source && srcList.indexOf(a.source)===-1) srcList.push(a.source); });
-      window._newsBadgeText = srcList.length ? srcList.join(' \u00B7 ') : '\uB274\uC2A4 \uC5C6\uC74C';
-      if(badge) badge.textContent=window._newsBadgeText;
       if(!articles.length){el.innerHTML='<div class="loading-state">\uB274\uC2A4 \uC5C6\uC74C</div>';return;}
       el.innerHTML='';
       articles.forEach(function(a){
@@ -2969,19 +2943,16 @@ function loadNews(){
         card.appendChild(imgDiv);card.appendChild(body);el.appendChild(card);
       });
     });
-  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); window._newsBadgeText='\uC624\uB958'; if(badge) badge.textContent=window._newsBadgeText; }); });
+  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); }); });
 }
 
 // ── SNS (Bluesky) ──
 function loadSns(){
   var el=document.getElementById('snsGrid');
-  var badge=document.getElementById('snsBadge')||document.getElementById('mediaBadge');
   var _t0=Date.now();
   apiFetchCached(FN+'/social', 'social', function(data){
     withMinLoading(document.getElementById('snsGrid'), _t0, function(){
       var posts=data.posts||[];
-      window._snsBadgeText='BLUESKY';
-      if(badge) badge.textContent=window._snsBadgeText;
       if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
       el.innerHTML='';
       posts.forEach(function(p){
@@ -3035,8 +3006,6 @@ function loadSns(){
   }, function(err){
     withMinLoading(el, _t0, function(){
       el.innerHTML='<div class="loading-state">오류: '+err.message+'</div>';
-      window._snsBadgeText='오류';
-      if(badge) badge.textContent=window._snsBadgeText;
     });
   });
 }
@@ -3600,12 +3569,14 @@ enableSheetSwipeClose(document.querySelector('.match-modal-sheet'), '.mm-header-
 
 // ── NAV ──
 var VALID_SECS = ['fixtures','leaderboard','squad','media','history'];
+var SEC_TITLES = {fixtures:'경기 일정', leaderboard:'리더보드', squad:'선수단', media:'미디어', history:'History'};
 var loaded={fixtures:true};
 function showSec(id,btn){
   document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
+  document.getElementById('headerTabTitle').textContent = SEC_TITLES[id] || '';
   // History 탭에서 여는 모달(매니저/레전드/트로피/온디스데이/타임라인/스타디움/모먼트)은
   // 전부 짧은 콘텐츠가 많아 두 공용 시트 모두 콘텐츠 길이에 맞춰 줄어들게 한다.
   // 경기 상세(openMatchModal)/선수 상세(openPlayerModal)는 각자 열릴 때 이 클래스를 지운다.
