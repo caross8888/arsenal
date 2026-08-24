@@ -3484,13 +3484,23 @@ function renderFormCard(data){
   if(!data.recentForm||!data.recentForm.length) return '';
   var maxLen=0;
   data.recentForm.forEach(function(t){ maxLen=Math.max(maxLen,(t.events||[]).length); });
-  var html='<div class="mm-card"><div class="mm-card-title">최근 '+maxLen+'경기</div><div style="padding:10px 14px 14px;display:flex;flex-direction:column;gap:12px;">';
+  var html='<div class="mm-card"><div class="mm-card-title">최근 '+maxLen+'경기</div><div style="padding:10px 14px 14px;display:flex;flex-direction:column;gap:16px;">';
   data.recentForm.forEach(function(t){
-    html+='<div><div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;">'+(t.teamName||'')+'</div><div style="display:flex;gap:5px;">';
+    html+='<div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">'+(t.teamName||'')+'</div><div style="display:flex;flex-direction:column;">';
     (t.events||[]).forEach(function(ev){
       var col=ev.result==='W'?'#22C55E':ev.result==='D'?'#F59E0B':'#EF4444';
-      var title=(ev.opponent?ev.opponent.name:'')+' '+(ev.score||'');
-      html+='<div title="'+title+'" style="width:22px;height:22px;border-radius:50%;background:'+col+';color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+(ev.result||'-')+'</div>';
+      var dateStr='';
+      if(ev.date){
+        var d=new Date(ev.date);
+        if(!isNaN(d)) dateStr=(d.getMonth()+1)+'.'+d.getDate();
+      }
+      var oppName=ev.opponent?ev.opponent.name:'';
+      html+='<div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid var(--border);font-size:12px;">'+
+        '<span style="width:36px;color:var(--text-secondary);font-size:11px;">'+dateStr+'</span>'+
+        '<span style="flex:1;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">vs '+oppName+'</span>'+
+        '<span style="width:20px;text-align:center;font-weight:700;color:'+col+';">'+(ev.result||'-')+'</span>'+
+        '<span style="width:44px;text-align:right;font-family:var(--fm);color:var(--text);">'+(ev.score||'')+'</span>'+
+      '</div>';
     });
     html+='</div></div>';
   });
@@ -3515,7 +3525,7 @@ function renderInjuryListCard(title, injuries){
 // 아스날 부상자 카드 + (예정 경기일 때) 상대팀 부상자 카드. 상대가
 // 프리미어리그 소속이 아니면 FPL에 데이터가 없어 그 사실을 안내한다.
 function renderInjuryCards(data){
-  var html=renderInjuryListCard('아스날 부상자 명단', allInjuries);
+  var html=renderInjuryListCard('Arsenal 부상자 명단', allInjuries);
   if(data&&data.oppName){
     if(data.oppInjuries&&data.oppInjuries.teamFound===false){
       html+='<div class="mm-card"><div class="mm-card-title">'+data.oppName+' 부상자 명단</div><div style="padding:10px 14px 14px;font-size:12px;color:var(--text-secondary);">프리미어리그 소속이 아니라 부상 정보를 확인할 수 없습니다</div></div>';
