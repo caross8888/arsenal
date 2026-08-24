@@ -17,6 +17,7 @@ const FOTMOB_IDS = {
   'hincapie':      1137667,
   'gabriel':       795179,
   'timber':        942381,
+  'konsa':         710159,
   'calafiori':     1105912,
   'skelly':        1406436,
   'degaard':       534670,
@@ -27,6 +28,7 @@ const FOTMOB_IDS = {
   'zubimendi':     1031325,
   'guimaraes':     850354,
   'rice':          654096,
+  'dowman':        1635773,
   'saka':          961995,
   'jesus':         576165,
   'martinelli':    1021586,
@@ -35,7 +37,6 @@ const FOTMOB_IDS = {
   'madueke':       1084981,
   'nelson':        748382,
   'havertz':       749736,
-  'dowman':        1635773,
 };
 
 function getFotmobId(p) {
