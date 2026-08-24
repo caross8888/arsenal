@@ -60,13 +60,34 @@ export default async function handler(req, res) {
     const away = getTeam('away');
 
     // ── 스탯 파싱 ──
+    // ESPN boxscore.teams[].statistics의 실제 raw 필드명 기준(실측 확인) +
+    // 혹시 다른 대회/시기에 다르게 내려올 수 있는 변형 이름들을 같이 매핑.
     const STAT_KEY_MAP = {
       'possessionPct':'possessionPct','possession':'possessionPct','Possession':'possessionPct',
       'totalShots':'totalShots','shots':'totalShots','Shots':'totalShots',
       'shotsOnTarget':'shotsOnTarget','shotsonTarget':'shotsOnTarget','onTargetShotCount':'shotsOnTarget','Shots on Target':'shotsOnTarget',
-      'passingAccuracy':'passingAccuracy','passAccuracy':'passingAccuracy','PassAccuracy':'passingAccuracy',
-      'cornerKicks':'cornerKicks','corners':'cornerKicks','Corners':'cornerKicks',
+      'shotPct':'shotAccuracy','shotAccuracy':'shotAccuracy',
+      'blockedShots':'blockedShots',
+      'penaltyKickGoals':'penaltyGoals',
+      'penaltyKickShots':'penaltyShots',
+      'passingAccuracy':'passingAccuracy','passAccuracy':'passingAccuracy','PassAccuracy':'passingAccuracy','passPct':'passingAccuracy',
+      'accuratePasses':'passesCompleted',
+      'totalPasses':'passesAttempted',
+      'accurateCrosses':'crossesCompleted',
+      'totalCrosses':'crossesAttempted',
+      'crossPct':'crossAccuracy',
+      'accurateLongBalls':'longBallsCompleted',
+      'totalLongBalls':'longBallsAttempted',
+      'longballPct':'longBallAccuracy',
+      'saves':'saves',
+      'effectiveTackles':'tacklesWon',
+      'totalTackles':'tacklesAttempted',
+      'tacklePct':'tackleAccuracy',
+      'interceptions':'interceptions',
+      'effectiveClearance':'clearances','totalClearance':'clearances',
+      'cornerKicks':'cornerKicks','corners':'cornerKicks','Corners':'cornerKicks','wonCorners':'cornerKicks',
       'offsides':'offsides','Offsides':'offsides',
+      'foulsCommitted':'foulsCommitted','fouls':'foulsCommitted',
       'yellowCards':'yellowCards','yellowCard':'yellowCards','YellowCards':'yellowCards',
       'redCards':'redCards','redCard':'redCards','RedCards':'redCards',
       'expectedGoals':'xG','xG':'xG','XG':'xG','Expected Goals':'xG','expectedgoals':'xG',
@@ -76,7 +97,13 @@ export default async function handler(req, res) {
       for (const stat of (statistics || [])) {
         const name = stat.name || stat.abbreviation || stat.label || '';
         const mapped = STAT_KEY_MAP[name];
-        if (mapped && !result[mapped]) result[mapped] = stat.displayValue ?? stat.value ?? '0';
+        if (mapped) {
+          if (!result[mapped]) result[mapped] = stat.displayValue ?? stat.value ?? '0';
+          continue; // 이름으로 이미 정확히 매칭됐으면 아래 느슨한 라벨 추측은 건너뛴다 —
+          // 안 그러면 예를 들어 "Accurate Passes"(성공 패스 개수) 항목이
+          // label.includes('acc')에 걸려서 패스 성공률(passingAccuracy) 자리에
+          // 잘못 들어가는 식의 오매칭이 생긴다(실제로 겪은 버그).
+        }
         const label = (stat.label || stat.text || '').toLowerCase();
         if (!result.possessionPct && label.includes('possess')) result.possessionPct = stat.displayValue ?? stat.value ?? '0';
         if (!result.totalShots && /^shots?$/.test(label)) result.totalShots = stat.displayValue ?? stat.value ?? '0';
@@ -295,19 +322,42 @@ export default async function handler(req, res) {
 
     // teamStats 배열 변환 (buildLiveDetail용)
     const STAT_DISPLAY = [
-      { key:'possessionPct',  label:'점유율' },
-      { key:'totalShots',     label:'슈팅' },
-      { key:'shotsOnTarget',  label:'유효슈팅' },
-      { key:'xG',             label:'xG' },
-      { key:'passingAccuracy',label:'패스 성공' },
-      { key:'cornerKicks',    label:'코너킥' },
-      { key:'offsides',       label:'오프사이드' },
-      { key:'yellowCards',    label:'경고' },
-      { key:'redCards',       label:'퇴장' },
+      // 슈팅/공격
+      { key:'totalShots',      label:'슈팅',        cat:'슈팅/공격' },
+      { key:'shotsOnTarget',   label:'유효슈팅',      cat:'슈팅/공격' },
+      { key:'shotAccuracy',    label:'슈팅 정확도',    cat:'슈팅/공격' },
+      { key:'blockedShots',    label:'블락된 슈팅',    cat:'슈팅/공격' },
+      { key:'xG',              label:'xG',          cat:'슈팅/공격' },
+      { key:'penaltyShots',    label:'PK 시도',      cat:'슈팅/공격' },
+      { key:'penaltyGoals',    label:'PK 골',        cat:'슈팅/공격' },
+      // 패스
+      { key:'passingAccuracy', label:'패스 성공률',    cat:'패스' },
+      { key:'passesCompleted', label:'성공 패스',      cat:'패스' },
+      { key:'passesAttempted', label:'시도 패스',      cat:'패스' },
+      { key:'crossAccuracy',   label:'크로스 성공률',   cat:'패스' },
+      { key:'crossesCompleted',label:'성공 크로스',    cat:'패스' },
+      { key:'crossesAttempted',label:'시도 크로스',    cat:'패스' },
+      { key:'longBallAccuracy',label:'롱볼 성공률',    cat:'패스' },
+      { key:'longBallsCompleted',label:'성공 롱볼',   cat:'패스' },
+      { key:'longBallsAttempted',label:'시도 롱볼',   cat:'패스' },
+      // 수비
+      { key:'saves',           label:'선방',         cat:'수비' },
+      { key:'tackleAccuracy',  label:'태클 성공률',    cat:'수비' },
+      { key:'tacklesWon',      label:'성공 태클',      cat:'수비' },
+      { key:'tacklesAttempted',label:'시도 태클',      cat:'수비' },
+      { key:'interceptions',   label:'인터셉트',      cat:'수비' },
+      { key:'clearances',      label:'클리어런스',    cat:'수비' },
+      // 기타
+      { key:'possessionPct',   label:'점유율',        cat:'기타' },
+      { key:'cornerKicks',     label:'코너킥',        cat:'기타' },
+      { key:'offsides',        label:'오프사이드',    cat:'기타' },
+      { key:'foulsCommitted',  label:'파울',          cat:'기타' },
+      { key:'yellowCards',     label:'경고',          cat:'기타' },
+      { key:'redCards',        label:'퇴장',          cat:'기타' },
     ];
     const teamStats = STAT_DISPLAY
       .filter(s => home.stats[s.key] != null || away.stats[s.key] != null)
-      .map(s => ({ label: s.label, home: home.stats[s.key] ?? '0', away: away.stats[s.key] ?? '0' }));
+      .map(s => ({ label: s.label, cat: s.cat, home: home.stats[s.key] ?? '0', away: away.stats[s.key] ?? '0' }));
 
     const result = {
       eventId,

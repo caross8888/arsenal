@@ -265,6 +265,21 @@ def season_start_date(season_name: str) -> str:
         return f'{datetime.now(timezone.utc).year - 1}-07-01'
 
 
+def current_season_name_now() -> str:
+    """
+    오늘 날짜 기준 "진짜" 현재 시즌('2025/2026' 형식)을 계산한다 — 선수
+    개인의 Fotmob statSeasons에서 뽑는 게 아니다. 이번 시즌에 한 경기도
+    안 뛴 선수는 Fotmob이 그 선수의 statSeasons에 이번 시즌 항목 자체를
+    안 만들어서, "선수 데이터에서 현재 시즌을 추정"하면 그런 선수는
+    저번 시즌으로 잘못 판정된다(→ 저번 시즌 스탯이 섞여 나오는 버그의 원인).
+    시즌 시작을 7월로 잡는다(북반구 축구 시즌 관례).
+    """
+    now = datetime.now(timezone.utc)
+    if now.month >= 7:
+        return f'{now.year}/{now.year + 1}'
+    return f'{now.year - 1}/{now.year}'
+
+
 def download_photo(player_id):
     """풋몹 선수 사진 다운로드 → 로컬 저장"""
     dest = IMAGES_PATH / f'{player_id}.png'
@@ -447,16 +462,23 @@ def parse_stats(data, squad_levels=None):
     player_id = data.get('id')
 
     # ── 현재 시즌 자동 감지 ──
-    # statSeasons[0]는 월드컵/유로 등 국가대표 소집 시즌("2026")이 클럽 시즌보다
-    # 앞에 올 수 있어, "YYYY/YYYY" 형식의 클럽 시즌 항목을 우선으로 찾는다.
+    # 예전엔 이 선수의 statSeasons에서 현재 시즌을 "추정"했는데, 이번 시즌
+    # 한 경기도 안 뛴 선수는 Fotmob이 statSeasons에 이번 시즌 항목 자체를
+    # 안 만들어줘서 추정이 저번 시즌으로 잘못 떨어지고, 그 결과 이번 시즌
+    # 스탯 자리에 저번 시즌 스탯이 섞여 나왔다. 현재 시즌은 오늘 날짜로
+    # 계산한 진짜 값(current_season_name_now)을 그대로 쓰고, 선수의
+    # statSeasons는 "그 시즌에 해당하는 entryId를 찾는 용도"로만 쓴다 —
+    # 못 찾으면(=이번 시즌 미출전) club_season이 None이 되고, 아래에서
+    # 스탯/슛맵/히트맵을 전부 비워둔 채로 둔다(저번 시즌 값으로 채우지 않음).
     stat_seasons = data.get('statSeasons') or []
-    club_season = next((s for s in stat_seasons if re.match(r'^\d{4}/\d{4}$', s.get('seasonName', ''))), None)
-    current_season_name = (club_season or stat_seasons[0])['seasonName'] if stat_seasons else str(datetime.now(timezone.utc).year - 1) + '/' + str(datetime.now(timezone.utc).year)
+    current_season_name = current_season_name_now()
+    club_season = next((s for s in stat_seasons if s.get('seasonName') == current_season_name), None)
     season_start = season_start_date(current_season_name)
     # firstSeasonStats(슛맵/히트맵/topStatCard 원본)는 Fotmob이 statSeasons[0]로
-    # 잡은 시즌 기준으로 내려온다. 그게 클럽 시즌이 아니면(월드컵 등 국가대표
-    # 소집) 히트맵도 그 대회 기준이라 신뢰할 수 없다.
-    first_season_reliable = (not stat_seasons) or (stat_seasons[0].get('seasonName') == current_season_name)
+    # 잡은 시즌 기준으로 내려오는데, 그게 진짜 현재 시즌이 아니면(이번 시즌
+    # 미출전이라 그 자리에 저번 시즌이나 국가대표 소집 시즌이 들어온 경우)
+    # 신뢰할 수 없다 — 진짜 현재 시즌과 정확히 일치할 때만 폴백으로 쓴다.
+    first_season_reliable = bool(stat_seasons) and stat_seasons[0].get('seasonName') == current_season_name
 
     result = {
         'id':           player_id,
@@ -614,8 +636,11 @@ def parse_stats(data, squad_levels=None):
                             'percentile': round(stat.get('percentileRank', 0)),
                         }
 
-    # 위 API 호출이 전부 실패한 경우(네트워크 등)에는 기존 firstSeasonStats로 폴백
-    if not pl_stats_used:
+    # 위 API 호출이 전부 실패한 경우(네트워크 등)에는 기존 firstSeasonStats로
+    # 폴백하되, first_season_reliable(=firstSeasonStats가 진짜 현재 시즌
+    # 기준일 때)일 때만 쓴다 — 이번 시즌 미출전 선수는 여기서 걸러져서
+    # all_stats/shotmap이 빈 채로 남는다(저번 시즌 값으로 안 채워짐).
+    if not pl_stats_used and first_season_reliable:
         first_stats = data.get('firstSeasonStats') or {}
         stats_section = first_stats.get('statsSection') or {}
         for group in stats_section.get('items') or []:
@@ -698,7 +723,9 @@ def parse_stats(data, squad_levels=None):
             _override('rating', pl['avgRating'])
 
     # ── traits (레이더 차트) ──
-    traits_raw = data.get('traits') or {}
+    # Fotmob 페이지 기본 노출 시즌 기준이라 이번 시즌 미출전 선수는 저번
+    # 시즌 레이더가 나올 수 있다 — club_season(이번 시즌 항목)이 있을 때만 쓴다.
+    traits_raw = data.get('traits') or {} if club_season else {}
     if traits_raw and traits_raw.get('items'):
         result['traits'] = {
             'title': traits_raw.get('title', ''),
