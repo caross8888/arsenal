@@ -736,12 +736,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .nav-live-dot{top:10px;right:auto;left:34px;}
   #squad.section{max-width:none;}
   .sq-grid{grid-template-columns:repeat(3,1fr);}
-  /* 카드 폭이 컬럼 수/화면 폭에 따라 계속 바뀌는데 사진 박스 높이가 90px로
-     고정돼 있으면, object-fit:contain이 좁은 폭에 맞춰 사진을 과하게
-     줄여버려서(top 정렬이라 위로 붕 떠 보이거나 아예 안 보일 정도로 작아짐)
-     — 컨테이너 폭에 비례해서 높이도 같이 늘어나게 한다. */
-  #sqListCol{container-type:inline-size;}
-  .sq-grid .pl-top,.sq-grid .pl-photo-box{height:clamp(80px,13cqw,120px);}
+  /* 사진 박스 높이를 컨테이너 폭 기준 cqw로 주면, 카드 자체 폭(3열이라 계속
+     좁아짐)과 무관하게 높이엔 하한(clamp min)이 걸려서 화면이 좁아질수록
+     박스가 점점 더 세로로 길쭉해진다 — object-fit:contain이 가로폭 기준으로
+     축소되면서 top 정렬 탓에 사진이 위로 붕 뜨고 아래가 비어 보이는 원인.
+     박스 자신의 폭을 기준으로 한 aspect-ratio를 쓰면 카드 폭이 얼마든
+     박스 비율(원래 4열일 때와 동일한 가로가 긴 비율)이 항상 유지된다. */
+  .sq-grid .pl-top{height:auto;}
+  .sq-grid .pl-photo-box{height:auto;aspect-ratio:17/9;}
   .hist-otd-wrap{width:calc(100vw - 200px);margin:-16px 0 12px calc(384px - 50vw);}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
