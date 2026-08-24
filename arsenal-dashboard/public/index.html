@@ -70,7 +70,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sq-detail-panel{display:none;}
 .sq-detail-panel .modal-handle{display:none;}
 .lb-layout{display:block;}
-.lb-round-panel{display:none;}
+.lb-round-panel{display:block;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
 .lb-round-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 8px;border-bottom:1px solid var(--border);}
 .lb-round-label{font-size:13px;font-weight:700;color:var(--text);}
 .lb-round-date{padding:8px 12px 4px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text-secondary);text-transform:uppercase;}
@@ -776,7 +776,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   #leaderboard.section{max-width:none;}
   .lb-layout{display:flex;gap:20px;align-items:flex-start;}
   #lbListCol{flex:2 1 0%;min-width:0;}
-  .lb-round-panel{display:block;flex:1 1 0%;min-width:300px;max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+  .lb-round-panel{flex:1 1 0%;min-width:300px;max-width:360px;margin-top:0;}
   .fix-detail-panel .mm-header-top{position:static;}
   #fixWrap .fix-card{padding:18px 20px;gap:12px;}
   #fixWrap .fix-grid{grid-template-columns:1fr minmax(max-content,auto) 1fr;gap:3px 6px;}
@@ -2138,8 +2138,7 @@ function switchLbTab(tab,btn){
     teamPanel.style.display='';
     playerPanel.style.display='none';
     // 팀 순위일 때만 노출 — 선수 순위엔 라운드 결과 패널이 의미가 없다.
-    // style.display를 비워서(''), 모바일=숨김/PC=표시인 스타일시트의
-    // 반응형 규칙이 다시 적용되게 한다(인라인 스타일이 우선하므로).
+    // (모바일에서도 하단에 노출되고, PC에서만 우측 패널로 레이아웃만 바뀐다)
     roundPanel.style.display='';
   } else {
     teamPanel.style.display='none';
@@ -2176,7 +2175,6 @@ function roundDateLabel(utcDate){
   return date;
 }
 function loadRoundResults(roundNum){
-  if(!isDesktopLayout()) return;
   var panel=document.getElementById('lbRoundContent');
   if(!panel) return;
   panel.innerHTML='<div class="loading-state" style="padding:24px 12px"><span>불러오는 중...</span></div>';
