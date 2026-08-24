@@ -66,6 +66,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-detail-panel .mm-handle{display:none;}
 .fix-detail-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px 20px;color:var(--text-secondary);font-size:12px;text-align:center;}
 .fix-detail-empty svg{opacity:.4;}
+.sq-layout{display:block;}
+.sq-detail-panel{display:none;}
+.sq-detail-panel .modal-handle{display:none;}
 .fix-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;}
 .fix-card.live-match{border-color:var(--green);}
 /* 예정 경기(home/away/neutral-fixture)는 홈/원정/중립을 색으로 구분하지
@@ -731,14 +734,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .nav-btn{flex:0 0 auto;flex-direction:row;justify-content:flex-start;align-items:center;gap:12px;padding:12px 20px;border-right:none;font-size:13px;letter-spacing:normal;text-transform:none;}
   .nav-icon{width:18px;height:18px;}
   .nav-live-dot{top:10px;right:auto;left:34px;}
-  #squad.section{max-width:960px;}
+  #squad.section{max-width:none;}
   .sq-grid{grid-template-columns:repeat(4,1fr);}
   .hist-otd-wrap{width:calc(100vw - 200px);margin:-16px 0 12px calc(384px - 50vw);}
-  .inj-strip{width:calc(100vw - 200px);margin:-16px 0 12px calc(564px - 50vw);}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
   #fixWrap{flex:2 1 0%;min-width:0;container-type:inline-size;}
   .fix-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;}
+  .sq-layout{display:flex;gap:20px;align-items:flex-start;}
+  #sqListCol{flex:2 1 0%;min-width:0;}
+  .sq-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
   .fix-detail-panel .mm-header-top{position:static;}
   #fixWrap .fix-card{padding:18px 20px;gap:12px;}
   #fixWrap .fix-grid{grid-template-columns:1fr minmax(max-content,auto) 1fr;gap:3px 6px;}
@@ -929,6 +934,8 @@ function playIntro(){
 </section>
 <section id="squad" class="section">
   <div class="inj-strip" id="injStrip" style="display:none"></div>
+  <div class="sq-layout" id="sqLayout">
+  <div id="sqListCol">
   <div class="sq-tabs-group">
     <div class="f-btns" style="grid-template-columns:repeat(2,1fr);">
       <button class="f-btn active" onclick="filterSqLevel('first',this)">1&#44400;</button>
@@ -943,6 +950,11 @@ function playIntro(){
     </div>
   </div>
   <div class="sq-grid" id="sqGrid"><div class="loading-state" style="grid-column:1/-1"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>&#49440;&#49688; &#45936;&#51060;&#53552; &#47196;&#46377; &#51473;...</span></div></div>
+  </div>
+  <div class="sq-detail-panel" id="sqDetailPanel">
+    <div id="sqDetailContent" class="fix-detail-empty"></div>
+  </div>
+  </div>
 </section>
 <section id="media" class="section">
  <div class="media-seg" id="mediaSeg">
@@ -2200,6 +2212,13 @@ function renderSq(filter){
 
     el.appendChild(card);
   });
+  // PC 화면(리스트+상세패널 구조)에서 패널이 계속 비어 보이지 않도록, 처음
+  // 한 번만 목록의 첫 선수를 자동으로 열어준다(경기 일정 패널과 동일한 패턴).
+  // 이후 필터를 바꿔도 사용자가 보고 있던 선수는 그대로 유지한다.
+  if(isDesktopLayout() && !window._sqPanelAutoOpened){
+    window._sqPanelAutoOpened = true;
+    openPlayerModal(list[0], _sqActiveLevel);
+  }
 }
 
 var STATUS_LABEL={'i':'\uBD80\uC0C1','d':'\uCD9C\uC804 \uC758\uC2EC','s':'\uCD9C\uC7A5 \uC815\uC9C0','u':'\uACB0\uC7A5'};
@@ -3158,6 +3177,13 @@ function closeFixDetailPanel(){
   if(inner){
     inner.className='fix-detail-empty';
     inner.innerHTML=dIcon('calendar',28)+'<span>경기를 선택하면 상세 정보가 여기에 표시됩니다</span>';
+  }
+}
+function closeSqDetailPanel(){
+  var inner=document.getElementById('sqDetailContent');
+  if(inner){
+    inner.className='fix-detail-empty';
+    inner.innerHTML=dIcon('user',28)+'<span>선수를 선택하면 상세 정보가 여기에 표시됩니다</span>';
   }
 }
 function openMatchModal(m, isAuto){
@@ -4525,9 +4551,17 @@ var TRAIT_LABELS = {
 // ── PLAYER MODAL (Fotmob Style) ──
 
 function openPlayerModal(p, level) {
-  var modal   = document.getElementById('playerModal');
-  var content = document.getElementById('modalContent');
-  modal.querySelector('.modal-sheet').classList.remove('hist-compact');
+  var desktop = isDesktopLayout();
+  var modal, content;
+  if(desktop){
+    content = document.getElementById('sqDetailContent');
+    if(!content) return;
+    content.className='';
+  } else {
+    modal = document.getElementById('playerModal');
+    content = document.getElementById('modalContent');
+    modal.querySelector('.modal-sheet').classList.remove('hist-compact');
+  }
   var pos = p.posGroup; // GK DF MF FW
 
   // players.json 기반 데이터 직접 사용 (football.js에서 모든 데이터 전달)
@@ -4778,9 +4812,11 @@ function openPlayerModal(p, level) {
   }
 
   content.innerHTML = h;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  history.pushState({modal:'player'},'',' #player');
+  if(!desktop){
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    history.pushState({modal:'player'},'',' #player');
+  }
   requestAnimationFrame(function(){ content.scrollTop = 0; });
 
   // 레이더 차트
@@ -5261,6 +5297,7 @@ function loadESPNStats(){
 loadESPNStats();
 loadFixtures();
 closeFixDetailPanel();
+closeSqDetailPanel();
 
 </script>
 </body>
