@@ -69,6 +69,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sq-layout{display:block;}
 .sq-detail-panel{display:none;}
 .sq-detail-panel .modal-handle{display:none;}
+.lb-layout{display:block;}
+.lb-round-panel{display:none;}
+.lb-round-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 8px;border-bottom:1px solid var(--border);}
+.lb-round-label{font-size:13px;font-weight:700;color:var(--text);}
+.lb-round-date{padding:8px 12px 4px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text-secondary);text-transform:uppercase;}
+.lb-round-row{display:grid;grid-template-columns:22px 1fr 18px 40px 18px 1fr;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;}
+.lb-round-row:last-child{border-bottom:none;}
+.lb-round-status{color:var(--text-muted);font-size:10px;}
+.lb-round-status.live{color:var(--green);font-weight:700;}
+.lb-round-team{color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-round-team.home{text-align:right;}
+.lb-round-crest{width:18px;height:18px;object-fit:contain;justify-self:center;}
+.lb-round-score{color:var(--text);font-weight:700;text-align:center;font-family:var(--fm);}
 .fix-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;}
 .fix-card.live-match{border-color:var(--green);}
 /* 예정 경기(home/away/neutral-fixture)는 홈/원정/중립을 색으로 구분하지
@@ -760,6 +773,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .sq-layout{display:flex;gap:20px;align-items:flex-start;}
   #sqListCol{flex:2 1 0%;min-width:0;}
   .sq-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+  #leaderboard.section{max-width:none;}
+  .lb-layout{display:flex;gap:20px;align-items:flex-start;}
+  #lbListCol{flex:2 1 0%;min-width:0;}
+  .lb-round-panel{display:block;flex:1 1 0%;min-width:300px;max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
   .fix-detail-panel .mm-header-top{position:static;}
   #fixWrap .fix-card{padding:18px 20px;gap:12px;}
   #fixWrap .fix-grid{grid-template-columns:1fr minmax(max-content,auto) 1fr;gap:3px 6px;}
@@ -915,6 +932,8 @@ function playIntro(){
   </div>
 </section>
 <section id="leaderboard" class="section">
+  <div class="lb-layout" id="lbLayout">
+  <div id="lbListCol">
   <div class="card">
     <div class="lb-tabs" id="lbTabs">
       <button class="lb-tab active" data-tab="team" onclick="switchLbTab('team',this)">
@@ -946,6 +965,16 @@ function playIntro(){
       </div>
       <div id="ldrList"><div class="loading-state" style="padding:20px"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>기록 로딩 중...</span></div></div>
     </div>
+  </div>
+  </div>
+  <div class="lb-round-panel" id="lbRoundPanel">
+    <div class="lb-round-nav">
+      <button class="cal-nav-btn" onclick="changeLbRound(-1)" id="lbRoundPrevBtn" aria-label="이전 라운드"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
+      <div class="lb-round-label" id="lbRoundLabel">라운드</div>
+      <button class="cal-nav-btn" onclick="changeLbRound(1)" id="lbRoundNextBtn" aria-label="다음 라운드"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
+    </div>
+    <div id="lbRoundContent"></div>
+  </div>
   </div>
 </section>
 <section id="squad" class="section">
@@ -1753,6 +1782,11 @@ function loadFixtures(){
       var upcomingAll=data.upcoming||[];
       assignPlRounds([...(data.finished||[]),...(data.upcoming||[])]);
       window._allMatchesForCal = data.matches||[];
+      // data.finished/upcoming은 서버가 data.matches와 같은 배열을 필터링해
+      // 만들었지만, JSON으로 한 번 직렬화/역직렬화되면서 서로 다른 객체
+      // 인스턴스가 된다 — 위에서 finished/upcoming에 매긴 round가
+      // _allMatchesForCal 쪽 객체엔 반영되지 않으므로 별도로 한 번 더 매긴다.
+      assignPlRounds(window._allMatchesForCal);
       if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')) renderCalendarMonth();
       initMatchNav(data);
       renderDday(upcomingAll);
@@ -2099,12 +2133,18 @@ function switchLbTab(tab,btn){
   btn.classList.add('active');
   var teamPanel=document.getElementById('lbPanel-team');
   var playerPanel=document.getElementById('lbPanel-player');
+  var roundPanel=document.getElementById('lbRoundPanel');
   if(tab==='team'){
     teamPanel.style.display='';
     playerPanel.style.display='none';
+    // 팀 순위일 때만 노출 — 선수 순위엔 라운드 결과 패널이 의미가 없다.
+    // style.display를 비워서(''), 모바일=숨김/PC=표시인 스타일시트의
+    // 반응형 규칙이 다시 적용되게 한다(인라인 스타일이 우선하므로).
+    roundPanel.style.display='';
   } else {
     teamPanel.style.display='none';
     playerPanel.style.display='';
+    roundPanel.style.display='none';
     renderLeaders();
   }
 }
@@ -2113,6 +2153,90 @@ function switchLbStat(stat,btn){
   btn.classList.add('active');
   _leadersCat=stat;
   renderLeaders();
+}
+
+// ── 순위표 옆 라운드별 EPL 전체 결과 (PC, 팀 순위 탭에서만) ──
+// 라운드 번호는 백엔드(api/football.js type=roundResults)가 시즌 전체
+// 380경기를 한 번에 받아 각 팀의 몇 번째 경기인지 세어서 매긴다 — 날짜
+// 창으로 훑던 이전 방식은 박싱데이처럼 라운드 간격이 좁아지거나 UEFA
+// 대항전 때문에 팀마다 다음 리그 경기 날짜가 갈릴 때 다른 라운드 경기를
+// 같이 집어오거나 놓치는 문제가 있어서 폐기했다.
+var LB_MAX_ROUND=38;
+var _lbRound=null;
+var _lbRoundReqSeq=0;
+function roundDateLabel(utcDate){
+  var d=new Date(utcDate);
+  var date=d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'});
+  var KST=9*60*60*1000;
+  function kstDay(ts){ return Math.floor((ts+KST)/86400000); }
+  var diff=kstDay(d.getTime())-kstDay(Date.now());
+  if(diff===0) return '오늘';
+  if(diff===1) return '내일';
+  if(diff===-1) return '어제';
+  return date;
+}
+function loadRoundResults(roundNum){
+  if(!isDesktopLayout()) return;
+  var panel=document.getElementById('lbRoundContent');
+  if(!panel) return;
+  panel.innerHTML='<div class="loading-state" style="padding:24px 12px"><span>불러오는 중...</span></div>';
+  var reqId=(_lbRoundReqSeq=(_lbRoundReqSeq||0)+1);
+  apiFetch(FN+'/football?type=roundResults'+(roundNum?('&round='+roundNum):'')).then(function(data){
+    if(reqId!==_lbRoundReqSeq) return; // 응답 오는 사이 다른 라운드로 넘어갔으면 무시
+    LB_MAX_ROUND=data.maxRound||38;
+    _lbRound=data.round;
+    document.getElementById('lbRoundLabel').textContent='라운드 '+_lbRound;
+    document.getElementById('lbRoundPrevBtn').disabled=_lbRound<=1;
+    document.getElementById('lbRoundNextBtn').disabled=_lbRound>=LB_MAX_ROUND;
+    renderRoundResults(data.matches||[]);
+  }).catch(function(){
+    if(reqId!==_lbRoundReqSeq) return;
+    panel.innerHTML='<div class="loading-state" style="padding:24px 12px"><span>불러오지 못했습니다</span></div>';
+  });
+}
+function changeLbRound(delta){
+  var next=(_lbRound||1)+delta;
+  if(next<1||next>LB_MAX_ROUND) return;
+  loadRoundResults(next);
+}
+function renderRoundResults(matches){
+  var panel=document.getElementById('lbRoundContent');
+  if(!panel) return;
+  if(!matches.length){
+    panel.innerHTML='<div class="loading-state" style="padding:24px 12px"><span>경기 정보가 없습니다</span></div>';
+    return;
+  }
+  var groups={}, order=[];
+  matches.forEach(function(m){
+    // UTC 날짜 문자열을 그대로 잘라 그룹 키로 쓰면, 로컬 시간대에서는
+    // 같은 날인 경기(예: 21:00 UTC=한국 다음날 새벽)가 다른 그룹으로
+    // 쪼개진다 — 로컬 기준 연-월-일로 키를 만든다.
+    var dt=new Date(m.utcDate);
+    var key=dt.getFullYear()+'-'+dt.getMonth()+'-'+dt.getDate();
+    if(!groups[key]){groups[key]=[];order.push(key);}
+    groups[key].push(m);
+  });
+  var h='';
+  order.forEach(function(key){
+    h+='<div class="lb-round-date">'+roundDateLabel(groups[key][0].utcDate)+'</div>';
+    groups[key].forEach(function(m){
+      var isDone=m.status==='FINISHED';
+      var isLive=m.status==='IN_PLAY';
+      var statusTxt=isDone?'FT':isLive?'LIVE':new Date(m.utcDate).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
+      var hs=m.score&&m.score.fullTime?m.score.fullTime.home:null;
+      var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
+      var scoreTxt=(hs!=null&&as_!=null)?(hs+'-'+as_):'vs';
+      h+='<div class="lb-round-row">';
+      h+='<span class="lb-round-status'+(isLive?' live':'')+'">'+statusTxt+'</span>';
+      h+='<span class="lb-round-team home">'+(m.homeTeam.name||'')+'</span>';
+      h+=(m.homeTeam.crest?'<img class="lb-round-crest" src="'+m.homeTeam.crest+'" alt="" onerror="this.style.visibility=\'hidden\'">':'<span class="lb-round-crest"></span>');
+      h+='<span class="lb-round-score">'+scoreTxt+'</span>';
+      h+=(m.awayTeam.crest?'<img class="lb-round-crest" src="'+m.awayTeam.crest+'" alt="" onerror="this.style.visibility=\'hidden\'">':'<span class="lb-round-crest"></span>');
+      h+='<span class="lb-round-team">'+(m.awayTeam.name||'')+'</span>';
+      h+='</div>';
+    });
+  });
+  panel.innerHTML=h;
 }
 
 // ── SQUAD (FPL 기반) ──
@@ -3827,7 +3951,7 @@ function showSec(id,btn){
   }
   if(!loaded[id]){
     loaded[id]=true;
-    if(id==='leaderboard'){ loadStandings(); loadLeaders(); }
+    if(id==='leaderboard'){ loadStandings(); loadLeaders(); loadRoundResults(); }
     if(id==='squad') loadSquad();
     if(id==='media') loadMedia();
     if(id==='history') loadHistory();
