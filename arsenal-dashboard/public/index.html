@@ -969,12 +969,15 @@ function playIntro(){
   </div>
   </div>
   <div class="lb-round-panel" id="lbRoundPanel">
+    <div id="lbRoundBody">
     <div class="lb-round-nav">
       <button class="cal-nav-btn" onclick="changeLbRound(-1)" id="lbRoundPrevBtn" aria-label="이전 라운드"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6"/></svg></button>
       <div class="lb-round-label" id="lbRoundLabel">라운드</div>
       <button class="cal-nav-btn" onclick="changeLbRound(1)" id="lbRoundNextBtn" aria-label="다음 라운드"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6"/></svg></button>
     </div>
     <div id="lbRoundContent"></div>
+    </div>
+    <div id="lbPlayerPanelPlaceholder" class="fix-detail-empty" style="display:none;padding:40px 20px;"></div>
   </div>
   </div>
 </section>
@@ -2134,17 +2137,20 @@ function switchLbTab(tab,btn){
   btn.classList.add('active');
   var teamPanel=document.getElementById('lbPanel-team');
   var playerPanel=document.getElementById('lbPanel-player');
-  var roundPanel=document.getElementById('lbRoundPanel');
+  var roundBody=document.getElementById('lbRoundBody');
+  var playerPlaceholder=document.getElementById('lbPlayerPanelPlaceholder');
   if(tab==='team'){
     teamPanel.style.display='';
     playerPanel.style.display='none';
-    // 팀 순위일 때만 노출 — 선수 순위엔 라운드 결과 패널이 의미가 없다.
-    // (모바일에서도 하단에 노출되고, PC에서만 우측 패널로 레이아웃만 바뀐다)
-    roundPanel.style.display='';
+    // 우측(모바일은 하단) 패널은 항상 떠 있고, 안의 내용만 탭에 맞춰 바뀐다 —
+    // 선수 순위 쪽은 아직 뭘 넣을지 정해지지 않아 빈 자리만 유지한다.
+    roundBody.style.display='';
+    playerPlaceholder.style.display='none';
   } else {
     teamPanel.style.display='none';
     playerPanel.style.display='';
-    roundPanel.style.display='none';
+    roundBody.style.display='none';
+    playerPlaceholder.style.display='';
     renderLeaders();
   }
 }
@@ -5437,6 +5443,8 @@ loadESPNStats();
 loadFixtures();
 closeFixDetailPanel();
 closeSqDetailPanel();
+// 선수 순위 우측 패널은 아직 뭘 넣을지 정해지지 않아 자리만 비워둔다.
+document.getElementById('lbPlayerPanelPlaceholder').innerHTML=dIcon('star',28)+'<span>준비 중입니다</span>';
 
 </script>
 </body>
