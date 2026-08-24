@@ -655,14 +655,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-event-icon{font-size:10px;flex-shrink:0;}
 .mm-event-min{font-family:var(--fm);font-size:9px;color:var(--gold);font-weight:700;flex-shrink:0;width:28px;text-align:center;}
 .mm-event-player{font-size:10px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;}
-.mm-stats-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:3px 8px;align-items:center;}
-.mm-stat-val{font-size:12px;font-weight:700;color:var(--text);}
+.mm-stats-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:8px 8px;align-items:center;}
+.mm-stat-val{font-size:13px;font-weight:800;color:var(--text);}
 .mm-stat-val.home{text-align:right;}
 .mm-stat-val.away{text-align:left;}
-.mm-stat-label{font-size:10px;color:var(--text-muted);text-align:center;letter-spacing:.3px;}
-.mm-stat-bar-wrap{grid-column:1/-1;display:flex;height:3px;border-radius:2px;overflow:hidden;margin-bottom:2px;}
-.mm-stat-bar-home{background:var(--red);transition:width .4s;}
-.mm-stat-bar-away{background:rgba(96,165,250,.5);transition:width .4s;}
+.mm-stat-val.lead{color:var(--green);}
+.mm-stat-label{font-size:10px;color:var(--text-secondary);text-align:center;letter-spacing:.3px;}
+.mm-poss-label{font-size:10px;color:var(--text-secondary);text-align:center;letter-spacing:.3px;margin-bottom:4px;}
+.mm-poss-bar-wrap{grid-column:1/-1;display:flex;height:32px;border-radius:6px;overflow:hidden;margin:0 0 4px;}
+.mm-poss-bar-home{background:var(--red);display:flex;align-items:center;padding-left:10px;color:#fff;font-size:13px;font-weight:800;white-space:nowrap;transition:width .4s;}
+.mm-poss-bar-away{background:rgba(96,165,250,.75);display:flex;align-items:center;justify-content:flex-end;padding-right:10px;color:#fff;font-size:13px;font-weight:800;white-space:nowrap;transition:width .4s;}
 .mm-pitch-wrap{overflow:hidden;border-radius:10px;}
 .mm-grid-row{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;margin:14px 16px;align-items:start;}
 .mm-grid-row .mm-card{margin:0;}
@@ -4009,18 +4011,18 @@ function renderStatsPanelInner(data){
       h += '<div class="mm-stats-grid" style="padding:10px 14px 14px;">';
     }
     var hv=s.home||0, av=s.away||0;
-    var rawH=parseFloat((hv+'').replace('%',''))||0;
-    var rawA=parseFloat((av+'').replace('%',''))||0;
-    var isPct=(hv+'').includes('%');
-    var total=isPct?100:(rawH+rawA||1);
-    var homePct=Math.round(rawH/total*100); var awayPct=100-homePct;
-    h += '<div class="mm-stat-val home">'+hv+'</div>';
+    if(s.label==='점유율'){
+      // 점유율만 PL처럼 좌우 색이 꽉 채워진 큰 바로 보여준다.
+      var rawH=parseFloat((hv+'').replace('%',''))||0;
+      var homePct=Math.round(rawH); var awayPct=100-homePct;
+      h += '<div class="mm-poss-label" style="grid-column:1/-1;">'+s.label+'</div>';
+      h += '<div class="mm-poss-bar-wrap"><div class="mm-poss-bar-home" style="width:'+homePct+'%">'+hv+'%</div><div class="mm-poss-bar-away" style="width:'+awayPct+'%">'+av+'%</div></div>';
+      return;
+    }
+    // 나머지 스탯은 바 없이 숫자만 — 더 우세한 쪽만 색으로 강조.
+    h += '<div class="mm-stat-val home'+(s.better==='home'?' lead':'')+'">'+hv+'</div>';
     h += '<div class="mm-stat-label">'+s.label+'</div>';
-    h += '<div class="mm-stat-val away">'+av+'</div>';
-    h += '<div class="mm-stat-bar-wrap">';
-    h += '<div class="mm-stat-bar-home" style="width:'+homePct+'%"></div>';
-    h += '<div class="mm-stat-bar-away" style="width:'+awayPct+'%"></div>';
-    h += '</div>';
+    h += '<div class="mm-stat-val away'+(s.better==='away'?' lead':'')+'">'+av+'</div>';
   });
   h += '</div>';
   return h;

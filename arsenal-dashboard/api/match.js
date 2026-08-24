@@ -328,40 +328,72 @@ export default async function handler(req, res) {
       // Balls/Touches/Dribbles/Duels도 보여주는데 ESPN 원본엔 이 지표들이
       // 아예 없어서(실측 확인) 못 넣는다. PK 스탯은 반대로 ESPN엔 있지만
       // PL 스탯 페이지엔 안 나와서 PL 기준에 맞춰 뺐다.
+      // dir: 'high'=값이 클수록 우세, 'low'=값이 작을수록 우세, 없으면 우열 비교 안 함
+      // (예: 블락된 슈팅/시도성 스탯처럼 크다고 반드시 좋은 게 아닌 경우).
+      // premierleague.com 실측 기준(오프사이드 5:0에서 0쪽에 강조 표시) — 파울류는
+      // 전부 low.
       // 공격 (Attack)
-      { key:'totalShots',      label:'슈팅',        cat:'공격' },
-      { key:'shotsOnTarget',   label:'유효슈팅',      cat:'공격' },
-      { key:'shotAccuracy',    label:'슈팅 정확도',    cat:'공격' },
+      { key:'totalShots',      label:'슈팅',        cat:'공격', dir:'high' },
+      { key:'shotsOnTarget',   label:'유효슈팅',      cat:'공격', dir:'high' },
+      { key:'shotAccuracy',    label:'슈팅 정확도',    cat:'공격', dir:'high' },
       { key:'blockedShots',    label:'블락된 슈팅',    cat:'공격' },
-      { key:'xG',              label:'xG',          cat:'공격' },
-      { key:'cornerKicks',     label:'코너킥',        cat:'공격' },
-      { key:'crossAccuracy',   label:'크로스 성공률',   cat:'공격' },
-      { key:'crossesCompleted',label:'성공 크로스',    cat:'공격' },
+      { key:'xG',              label:'xG',          cat:'공격', dir:'high' },
+      { key:'cornerKicks',     label:'코너킥',        cat:'공격', dir:'high' },
+      { key:'crossAccuracy',   label:'크로스 성공률',   cat:'공격', dir:'high' },
+      { key:'crossesCompleted',label:'성공 크로스',    cat:'공격', dir:'high' },
       { key:'crossesAttempted',label:'시도 크로스',    cat:'공격' },
       // 점유 (Possession)
-      { key:'possessionPct',   label:'점유율',        cat:'점유' },
-      { key:'passingAccuracy', label:'패스 성공률',    cat:'점유' },
-      { key:'passesCompleted', label:'성공 패스',      cat:'점유' },
+      { key:'possessionPct',   label:'점유율',        cat:'점유', dir:'high' },
+      { key:'passingAccuracy', label:'패스 성공률',    cat:'점유', dir:'high' },
+      { key:'passesCompleted', label:'성공 패스',      cat:'점유', dir:'high' },
       { key:'passesAttempted', label:'시도 패스',      cat:'점유' },
-      { key:'longBallAccuracy',label:'롱패스 성공률',   cat:'점유' },
-      { key:'longBallsCompleted',label:'성공 롱패스',  cat:'점유' },
+      { key:'longBallAccuracy',label:'롱패스 성공률',   cat:'점유', dir:'high' },
+      { key:'longBallsCompleted',label:'성공 롱패스',  cat:'점유', dir:'high' },
       { key:'longBallsAttempted',label:'시도 롱패스',  cat:'점유' },
       // 수비 (Defence)
-      { key:'saves',           label:'선방',         cat:'수비' },
-      { key:'tackleAccuracy',  label:'태클 성공률',    cat:'수비' },
-      { key:'tacklesWon',      label:'성공 태클',      cat:'수비' },
+      { key:'saves',           label:'선방',         cat:'수비', dir:'high' },
+      { key:'tackleAccuracy',  label:'태클 성공률',    cat:'수비', dir:'high' },
+      { key:'tacklesWon',      label:'성공 태클',      cat:'수비', dir:'high' },
       { key:'tacklesAttempted',label:'시도 태클',      cat:'수비' },
-      { key:'interceptions',   label:'인터셉트',      cat:'수비' },
-      { key:'clearances',      label:'클리어런스',    cat:'수비' },
-      // 징계 (Discipline)
-      { key:'offsides',        label:'오프사이드',    cat:'징계' },
-      { key:'foulsCommitted',  label:'파울',          cat:'징계' },
-      { key:'yellowCards',     label:'경고',          cat:'징계' },
-      { key:'redCards',        label:'퇴장',          cat:'징계' },
+      { key:'interceptions',   label:'인터셉트',      cat:'수비', dir:'high' },
+      { key:'clearances',      label:'클리어런스',    cat:'수비', dir:'high' },
+      // 징계 (Discipline) — 전부 적을수록 우세
+      { key:'offsides',        label:'오프사이드',    cat:'징계', dir:'low' },
+      { key:'foulsCommitted',  label:'파울',          cat:'징계', dir:'low' },
+      { key:'yellowCards',     label:'경고',          cat:'징계', dir:'low' },
+      { key:'redCards',        label:'퇴장',          cat:'징계', dir:'low' },
     ];
-    const teamStats = STAT_DISPLAY
-      .filter(s => home.stats[s.key] != null || away.stats[s.key] != null)
-      .map(s => ({ label: s.label, cat: s.cat, home: home.stats[s.key] ?? '0', away: away.stats[s.key] ?? '0' }));
+    // dir에 따라 어느 쪽이 우세한지 판정 — '%'/소수 문자열 다 파싱, 동률/dir
+    // 없음/파싱 불가 시엔 강조 없음(null).
+    function statWinner(dir, hv, av) {
+      if (!dir) return null;
+      const h = parseFloat(String(hv).replace('%', ''));
+      const a = parseFloat(String(av).replace('%', ''));
+      if (isNaN(h) || isNaN(a) || h === a) return null;
+      return dir === 'low' ? (h < a ? 'home' : 'away') : (h > a ? 'home' : 'away');
+    }
+    // premierleague.com은 카테고리 분류 위에 "Top Stats"로 점유율/xG/슈팅/유효슈팅/
+    // 코너킥/선방을 한 번 더 요약해서 보여준다(같은 스탯이 아래 카테고리에도
+    // 중복 노출되는 것까지 동일). Big Chances는 PL에만 있고 ESPN 원본엔 없어서 제외.
+    const TOP_STAT_ORDER = ['possessionPct','xG','totalShots','shotsOnTarget','cornerKicks','saves'];
+    const topStats = TOP_STAT_ORDER
+      .map(key => STAT_DISPLAY.find(s => s.key === key))
+      .filter(s => s && (home.stats[s.key] != null || away.stats[s.key] != null))
+      .map(s => {
+        const hv = home.stats[s.key] ?? '0', av = away.stats[s.key] ?? '0';
+        return { label: s.label, cat: '주요 스탯', home: hv, away: av, better: statWinner(s.dir, hv, av) };
+      });
+    const teamStats = [
+      ...topStats,
+      // 점유율은 위 주요 스탯에서 이미 큰 바로 보여주므로(PL도 동일) 카테고리
+      // 목록에서는 중복 노출하지 않는다.
+      ...STAT_DISPLAY
+        .filter(s => s.key !== 'possessionPct' && (home.stats[s.key] != null || away.stats[s.key] != null))
+        .map(s => {
+          const hv = home.stats[s.key] ?? '0', av = away.stats[s.key] ?? '0';
+          return { label: s.label, cat: s.cat, home: hv, away: av, better: statWinner(s.dir, hv, av) };
+        })
+    ];
 
     const result = {
       eventId,
