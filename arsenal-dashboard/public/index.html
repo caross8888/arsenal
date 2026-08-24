@@ -3485,8 +3485,13 @@ function renderFormCard(data){
   var maxLen=0;
   data.recentForm.forEach(function(t){ maxLen=Math.max(maxLen,(t.events||[]).length); });
   var html='<div class="mm-card"><div class="mm-card-title">최근 '+maxLen+'경기</div><div style="padding:10px 14px 14px;display:flex;flex-direction:column;gap:16px;">';
+  var RESULT_KO={W:'승',D:'무',L:'패'};
   data.recentForm.forEach(function(t){
-    html+='<div><div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;">'+(t.teamName||'')+'</div><div style="display:flex;flex-direction:column;">';
+    var seq=(t.events||[]).map(function(ev){
+      var col=ev.result==='W'?'#22C55E':ev.result==='D'?'#F59E0B':'#EF4444';
+      return '<span style="color:'+col+';">'+(RESULT_KO[ev.result]||'-')+'</span>';
+    }).join('<span style="color:var(--text-secondary);">-</span>');
+    html+='<div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><span style="font-size:13px;font-weight:600;color:var(--text);">'+(t.teamName||'')+'</span><span style="font-size:11px;font-weight:700;">'+seq+'</span></div><div style="display:flex;flex-direction:column;">';
     (t.events||[]).forEach(function(ev){
       var col=ev.result==='W'?'#22C55E':ev.result==='D'?'#F59E0B':'#EF4444';
       var dateStr='';
