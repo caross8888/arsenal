@@ -184,11 +184,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .media-col{min-width:0;}
 .media-col-title{display:none;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
 .video-card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent;}
-.video-thumb-wrap{height:120px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface2),var(--surface3));cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.video-play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;pointer-events:none;}
-.video-play-btn svg{width:18px;height:18px;margin-left:2px;}
-.video-thumb{width:100%;height:100%;object-fit:cover;display:block;}
-.video-src-badge{position:absolute;top:10px;left:10px;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--red);color:#fff;font-weight:700;}
+.video-embed-wrap{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,var(--surface2),var(--surface3));}
+.video-embed-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
 .video-body{padding:12px 14px;}
 .video-title{font-weight:700;font-size:13px;line-height:1.4;margin-bottom:6px;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .video-time{font-size:11px;color:var(--text-muted);}
@@ -758,8 +755,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .media-col-title{display:block;}
   .media-cols{display:flex;gap:20px;align-items:flex-start;}
   .media-cols .media-col{display:block!important;flex:1;min-width:0;container-type:inline-size;}
-  .media-cols .news-img,.media-cols .video-thumb-wrap{height:clamp(160px,52cqw,220px);}
-  .media-cols .news-src-badge,.media-cols .video-src-badge{font-size:clamp(8px,2.7cqw,11px);padding:3px 9px;}
+  .media-cols .news-img{height:clamp(160px,52cqw,220px);}
+  .media-cols .news-src-badge{font-size:clamp(8px,2.7cqw,11px);padding:3px 9px;}
   .media-cols .news-hl,.media-cols .video-title{font-size:clamp(13px,4.5cqw,18px);}
   .media-cols .news-ex{font-size:clamp(12px,4cqw,16px);}
   .media-cols .news-foot,.media-cols .video-time{font-size:clamp(10px,3.6cqw,14px);}
@@ -2223,21 +2220,6 @@ function loadMedia(){
   loadSns();
   loadVideos();
 }
-// 팝업 대신 카드 안(썸네일 자리)에서 바로 재생 — 클릭한 그 자리에서 썸네일이
-// 임베드 플레이어로 바뀐다. 쇼츠 등 16:9가 아닌 영상은 고정 높이 박스에
-// 억지로 채우면 잘리니, oEmbed로 실제 비율을 가져와 박스 자체를 맞춘다.
-function playVideoInline(wrap, videoId){
-  if(wrap.querySelector('iframe')) return;
-  wrap.style.height='auto';
-  wrap.style.aspectRatio='16/9';
-  wrap.innerHTML='<iframe src="https://www.youtube.com/embed/'+videoId+'?autoplay=1" title="YouTube video player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:none;"></iframe>';
-  fetch('https://www.youtube.com/oembed?url='+encodeURIComponent('https://www.youtube.com/watch?v='+videoId)+'&format=json', {signal:AbortSignal.timeout(4000)})
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if(d.width && d.height) wrap.style.aspectRatio=d.width+'/'+d.height;
-    })
-    .catch(function(){});
-}
 function loadVideos(){
   var el=document.getElementById('videoList');
   if(!el) return;
@@ -2251,26 +2233,28 @@ function loadVideos(){
         if(!el.querySelector('.video-card')) el.innerHTML='<div class="loading-state" style="padding:28px 0;"><span>영상을 불러오지 못했습니다</span></div>';
         return;
       }
+      // 캐시 렌더 직후 곧바로 실시간 응답이 도착해 목록을 통째로 다시 그리면,
+      // 그 사이 사용자가 탭한 카드(썸네일 DOM)가 손 밑에서 통째로 교체돼
+      // 첫 탭이 씹히고 한 번 더 눌러야 재생되는 현상이 생긴다 — 목록 내용이
+      // 실제로 바뀌지 않았으면 다시 그리지 않는다.
+      var ids = videos.map(function(v){ return v.videoId; }).join(',');
+      if(el.dataset.videoIds === ids) return;
+      el.dataset.videoIds = ids;
       el.innerHTML='';
       videos.forEach(function(v){
         var a=document.createElement('div');a.className='video-card';
-        var thumbWrap=document.createElement('div');thumbWrap.className='video-thumb-wrap';thumbWrap.setAttribute('role','button');thumbWrap.tabIndex=0;
-        thumbWrap.onclick=function(){ playVideoInline(thumbWrap, v.videoId); };
-        var img=document.createElement('img');img.className='video-thumb';img.src=v.thumbnail;img.alt='';img.loading='lazy';
-        var badge=document.createElement('div');badge.className='video-src-badge';badge.textContent='YOUTUBE';
-        var playBtn=document.createElement('div');playBtn.className='video-play-btn';
-        playBtn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11 -7z"/></svg>';
-        thumbWrap.appendChild(img);thumbWrap.appendChild(badge);thumbWrap.appendChild(playBtn);
+        var embedWrap=document.createElement('div');embedWrap.className='video-embed-wrap';
+        var iframe=document.createElement('iframe');iframe.src='https://www.youtube.com/embed/'+v.videoId;iframe.title=v.title;iframe.loading='lazy';iframe.allow='accelerate; encrypted-media; picture-in-picture; web-share';iframe.allowFullscreen=true;
+        embedWrap.appendChild(iframe);
         var body=document.createElement('div');body.className='video-body';
         var title=document.createElement('div');title.className='video-title';title.textContent=v.title;
         var foot=document.createElement('div');foot.style.cssText='display:flex;align-items:center;justify-content:space-between;';
         var time=document.createElement('div');time.className='video-time';time.textContent=v.timeAgo;
         var ytLink=document.createElement('a');ytLink.href=v.url;ytLink.target='_blank';ytLink.rel='noopener';ytLink.textContent='YouTube에서 보기 →';
         ytLink.style.cssText='font-size:11px;color:var(--text-secondary);text-decoration:none;';
-        ytLink.onclick=function(e){ e.stopPropagation(); };
         foot.appendChild(time);foot.appendChild(ytLink);
         body.appendChild(title);body.appendChild(foot);
-        a.appendChild(thumbWrap);a.appendChild(body);
+        a.appendChild(embedWrap);a.appendChild(body);
         el.appendChild(a);
       });
     });
