@@ -744,6 +744,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      박스 비율(원래 4열일 때와 동일한 가로가 긴 비율)이 항상 유지된다. */
   .sq-grid .pl-top{height:auto;}
   .sq-grid .pl-photo-box{height:auto;aspect-ratio:17/9;}
+  /* 등번호 칸(GK/CB 뱃지 쪽)이 70px 고정폭이라, 카드가 좁아질수록 사진
+     쪽만 줄고 등번호 칸은 그대로라 카드에서 차지하는 비중이 계속 커지는
+     문제 — 등번호 칸도 카드 폭 비례(%)로 같이 줄어들게 하고, 그 안의
+     숫자/포지션 글씨도 카드 폭(cqw) 기준으로 같이 줄인다. */
+  .sq-grid .pl-card{container-type:inline-size;}
+  .sq-grid .pl-top{grid-template-columns:minmax(42px,34%) 1fr;}
+  .sq-grid .pl-num-txt{font-size:clamp(16px,13cqw,32px);}
+  .sq-grid .pl-pos-txt{font-size:clamp(7px,4.2cqw,10px);}
   .hist-otd-wrap{width:calc(100vw - 200px);margin:-16px 0 12px calc(384px - 50vw);}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
