@@ -183,8 +183,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .media-seg-btn.active .media-seg-icon{color:var(--gold);}
 .media-col{min-width:0;}
 .media-col-title{display:none;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
-.video-card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;text-decoration:none;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.video-thumb-wrap{height:120px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface2),var(--surface3));}
+.video-card{display:block;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:12px;text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent;}
+.video-thumb-wrap{height:120px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface2),var(--surface3));cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .video-play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;pointer-events:none;}
 .video-play-btn svg{width:18px;height:18px;margin-left:2px;}
 .video-thumb{width:100%;height:100%;object-fit:cover;display:block;}
@@ -503,10 +503,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:10px auto 0;}
 .modal-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:20;}
-.video-modal-sheet{position:relative;background:#1a1c22;border-radius:16px;width:100%;max-width:720px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;}
-.video-modal-player{position:relative;width:100%;aspect-ratio:16/9;background:#000;}
-.video-modal-player iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
-.video-modal-yt-link{display:block;text-align:center;padding:12px;font-size:12px;color:var(--text-secondary);text-decoration:none;border-top:1px solid var(--border);-webkit-tap-highlight-color:transparent;}
 /* 헤더 */
 .pm-header{background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);padding:20px 16px 18px;position:sticky;top:0;z-index:10;touch-action:none;}
 .pm-header-inner{display:flex;gap:14px;align-items:center;}
@@ -973,15 +969,6 @@ function playIntro(){
 <section id="history" class="section">
   <div id="historyContent"><div class="loading-state"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>로딩 중...</span></div></div>
 </section>
-</div>
-
-<!-- VIDEO PLAYER MODAL -->
-<div class="modal-overlay" id="videoModal" style="align-items:center;" onclick="if(event.target===this) closeVideoModal()">
-  <div class="video-modal-sheet">
-    <button class="modal-close" onclick="closeVideoModal()">&#10005;</button>
-    <div class="video-modal-player" id="videoModalPlayer"></div>
-    <a class="video-modal-yt-link" id="videoModalYtLink" href="#" target="_blank" rel="noopener">YouTube 앱/사이트에서 보기 →</a>
-  </div>
 </div>
 
 <!-- PLAYER DETAIL MODAL -->
@@ -2228,30 +2215,20 @@ function loadMedia(){
   loadSns();
   loadVideos();
 }
-function openVideoModal(videoId, url){
-  var overlay=document.getElementById('videoModal');
-  var player=document.getElementById('videoModalPlayer');
-  var ytLink=document.getElementById('videoModalYtLink');
-  // 쇼츠(세로형) 등 16:9가 아닌 영상은 고정 16:9 박스에 억지로 채우면
-  // 위아래(또는 좌우)가 잘린다 — oEmbed로 실제 가로세로 비율을 가져와서
-  // 박스 자체를 그 비율로 맞춘다. 실패하면 16:9로 둔다.
-  player.style.aspectRatio='16/9';
-  player.innerHTML='<iframe src="https://www.youtube.com/embed/'+videoId+'?autoplay=1" title="YouTube video player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
-  ytLink.href=url;
-  overlay.classList.add('open');
-  document.body.style.overflow='hidden';
+// 팝업 대신 카드 안(썸네일 자리)에서 바로 재생 — 클릭한 그 자리에서 썸네일이
+// 임베드 플레이어로 바뀐다. 쇼츠 등 16:9가 아닌 영상은 고정 높이 박스에
+// 억지로 채우면 잘리니, oEmbed로 실제 비율을 가져와 박스 자체를 맞춘다.
+function playVideoInline(wrap, videoId){
+  if(wrap.querySelector('iframe')) return;
+  wrap.style.height='auto';
+  wrap.style.aspectRatio='16/9';
+  wrap.innerHTML='<iframe src="https://www.youtube.com/embed/'+videoId+'?autoplay=1" title="YouTube video player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:none;"></iframe>';
   fetch('https://www.youtube.com/oembed?url='+encodeURIComponent('https://www.youtube.com/watch?v='+videoId)+'&format=json', {signal:AbortSignal.timeout(4000)})
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d.width && d.height) player.style.aspectRatio=d.width+'/'+d.height;
+      if(d.width && d.height) wrap.style.aspectRatio=d.width+'/'+d.height;
     })
     .catch(function(){});
-}
-function closeVideoModal(){
-  var overlay=document.getElementById('videoModal');
-  overlay.classList.remove('open');
-  document.body.style.overflow='';
-  document.getElementById('videoModalPlayer').innerHTML='';
 }
 function loadVideos(){
   var el=document.getElementById('videoList');
@@ -2268,9 +2245,9 @@ function loadVideos(){
       }
       el.innerHTML='';
       videos.forEach(function(v){
-        var a=document.createElement('div');a.className='video-card';a.setAttribute('role','button');a.tabIndex=0;
-        a.onclick=function(){ openVideoModal(v.videoId, v.url); };
-        var thumbWrap=document.createElement('div');thumbWrap.className='video-thumb-wrap';
+        var a=document.createElement('div');a.className='video-card';
+        var thumbWrap=document.createElement('div');thumbWrap.className='video-thumb-wrap';thumbWrap.setAttribute('role','button');thumbWrap.tabIndex=0;
+        thumbWrap.onclick=function(){ playVideoInline(thumbWrap, v.videoId); };
         var img=document.createElement('img');img.className='video-thumb';img.src=v.thumbnail;img.alt='';img.loading='lazy';
         var badge=document.createElement('div');badge.className='video-src-badge';badge.textContent='YOUTUBE';
         var playBtn=document.createElement('div');playBtn.className='video-play-btn';
@@ -2278,8 +2255,13 @@ function loadVideos(){
         thumbWrap.appendChild(img);thumbWrap.appendChild(badge);thumbWrap.appendChild(playBtn);
         var body=document.createElement('div');body.className='video-body';
         var title=document.createElement('div');title.className='video-title';title.textContent=v.title;
+        var foot=document.createElement('div');foot.style.cssText='display:flex;align-items:center;justify-content:space-between;';
         var time=document.createElement('div');time.className='video-time';time.textContent=v.timeAgo;
-        body.appendChild(title);body.appendChild(time);
+        var ytLink=document.createElement('a');ytLink.href=v.url;ytLink.target='_blank';ytLink.rel='noopener';ytLink.textContent='YouTube에서 보기 →';
+        ytLink.style.cssText='font-size:11px;color:var(--text-secondary);text-decoration:none;';
+        ytLink.onclick=function(e){ e.stopPropagation(); };
+        foot.appendChild(time);foot.appendChild(ytLink);
+        body.appendChild(title);body.appendChild(foot);
         a.appendChild(thumbWrap);a.appendChild(body);
         el.appendChild(a);
       });
