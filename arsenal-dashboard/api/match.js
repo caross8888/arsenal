@@ -322,38 +322,42 @@ export default async function handler(req, res) {
 
     // teamStats 배열 변환 (buildLiveDetail용)
     const STAT_DISPLAY = [
-      // 슈팅/공격
-      { key:'totalShots',      label:'슈팅',        cat:'슈팅/공격' },
-      { key:'shotsOnTarget',   label:'유효슈팅',      cat:'슈팅/공격' },
-      { key:'shotAccuracy',    label:'슈팅 정확도',    cat:'슈팅/공격' },
-      { key:'blockedShots',    label:'블락된 슈팅',    cat:'슈팅/공격' },
-      { key:'xG',              label:'xG',          cat:'슈팅/공격' },
-      { key:'penaltyShots',    label:'PK 시도',      cat:'슈팅/공격' },
-      { key:'penaltyGoals',    label:'PK 골',        cat:'슈팅/공격' },
-      // 패스
-      { key:'passingAccuracy', label:'패스 성공률',    cat:'패스' },
-      { key:'passesCompleted', label:'성공 패스',      cat:'패스' },
-      { key:'passesAttempted', label:'시도 패스',      cat:'패스' },
-      { key:'crossAccuracy',   label:'크로스 성공률',   cat:'패스' },
-      { key:'crossesCompleted',label:'성공 크로스',    cat:'패스' },
-      { key:'crossesAttempted',label:'시도 크로스',    cat:'패스' },
-      { key:'longBallAccuracy',label:'롱볼 성공률',    cat:'패스' },
-      { key:'longBallsCompleted',label:'성공 롱볼',   cat:'패스' },
-      { key:'longBallsAttempted',label:'시도 롱볼',   cat:'패스' },
-      // 수비
+      // premierleague.com 공식 경기 스탯 페이지의 카테고리(Attack/Possession/
+      // Defence/Discipline) 구성과 최대한 동일하게 맞춘 것 — 다만 PL은 Big
+      // Chances/Shots Off Target/Shots In-Out the Box/Hit Woodwork/Through
+      // Balls/Touches/Dribbles/Duels도 보여주는데 ESPN 원본엔 이 지표들이
+      // 아예 없어서(실측 확인) 못 넣는다. PK 스탯은 반대로 ESPN엔 있지만
+      // PL 스탯 페이지엔 안 나와서 PL 기준에 맞춰 뺐다.
+      // 공격 (Attack)
+      { key:'totalShots',      label:'슈팅',        cat:'공격' },
+      { key:'shotsOnTarget',   label:'유효슈팅',      cat:'공격' },
+      { key:'shotAccuracy',    label:'슈팅 정확도',    cat:'공격' },
+      { key:'blockedShots',    label:'블락된 슈팅',    cat:'공격' },
+      { key:'xG',              label:'xG',          cat:'공격' },
+      { key:'cornerKicks',     label:'코너킥',        cat:'공격' },
+      { key:'crossAccuracy',   label:'크로스 성공률',   cat:'공격' },
+      { key:'crossesCompleted',label:'성공 크로스',    cat:'공격' },
+      { key:'crossesAttempted',label:'시도 크로스',    cat:'공격' },
+      // 점유 (Possession)
+      { key:'possessionPct',   label:'점유율',        cat:'점유' },
+      { key:'passingAccuracy', label:'패스 성공률',    cat:'점유' },
+      { key:'passesCompleted', label:'성공 패스',      cat:'점유' },
+      { key:'passesAttempted', label:'시도 패스',      cat:'점유' },
+      { key:'longBallAccuracy',label:'롱패스 성공률',   cat:'점유' },
+      { key:'longBallsCompleted',label:'성공 롱패스',  cat:'점유' },
+      { key:'longBallsAttempted',label:'시도 롱패스',  cat:'점유' },
+      // 수비 (Defence)
       { key:'saves',           label:'선방',         cat:'수비' },
       { key:'tackleAccuracy',  label:'태클 성공률',    cat:'수비' },
       { key:'tacklesWon',      label:'성공 태클',      cat:'수비' },
       { key:'tacklesAttempted',label:'시도 태클',      cat:'수비' },
       { key:'interceptions',   label:'인터셉트',      cat:'수비' },
       { key:'clearances',      label:'클리어런스',    cat:'수비' },
-      // 기타
-      { key:'possessionPct',   label:'점유율',        cat:'기타' },
-      { key:'cornerKicks',     label:'코너킥',        cat:'기타' },
-      { key:'offsides',        label:'오프사이드',    cat:'기타' },
-      { key:'foulsCommitted',  label:'파울',          cat:'기타' },
-      { key:'yellowCards',     label:'경고',          cat:'기타' },
-      { key:'redCards',        label:'퇴장',          cat:'기타' },
+      // 징계 (Discipline)
+      { key:'offsides',        label:'오프사이드',    cat:'징계' },
+      { key:'foulsCommitted',  label:'파울',          cat:'징계' },
+      { key:'yellowCards',     label:'경고',          cat:'징계' },
+      { key:'redCards',        label:'퇴장',          cat:'징계' },
     ];
     const teamStats = STAT_DISPLAY
       .filter(s => home.stats[s.key] != null || away.stats[s.key] != null)
