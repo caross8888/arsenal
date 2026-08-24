@@ -735,7 +735,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .nav-icon{width:18px;height:18px;}
   .nav-live-dot{top:10px;right:auto;left:34px;}
   #squad.section{max-width:none;}
-  .sq-grid{grid-template-columns:repeat(4,1fr);}
+  .sq-grid{grid-template-columns:repeat(3,1fr);}
+  /* 카드 폭이 컬럼 수/화면 폭에 따라 계속 바뀌는데 사진 박스 높이가 90px로
+     고정돼 있으면, object-fit:contain이 좁은 폭에 맞춰 사진을 과하게
+     줄여버려서(top 정렬이라 위로 붕 떠 보이거나 아예 안 보일 정도로 작아짐)
+     — 컨테이너 폭에 비례해서 높이도 같이 늘어나게 한다. */
+  #sqListCol{container-type:inline-size;}
+  .sq-grid .pl-top,.sq-grid .pl-photo-box{height:clamp(80px,13cqw,120px);}
   .hist-otd-wrap{width:calc(100vw - 200px);margin:-16px 0 12px calc(384px - 50vw);}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
