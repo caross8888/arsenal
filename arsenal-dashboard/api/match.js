@@ -213,6 +213,12 @@ export default async function handler(req, res) {
     const venue = raw.header?.competitions?.[0]?.venue?.fullName || raw.gameInfo?.venue?.fullName || raw.venue?.fullName || null;
 
     // ── 상대전적(H2H) ──
+    // H2H는 항상 이 경기의 두 팀(home/away)끼리의 과거 맞대결이라, 이름은
+    // seasonseries 쪽 team 객체(shortDisplayName 없음) 대신 위에서 이미 계산한
+    // home/away의 이름(fixtures/results와 동일하게 shortDisplayName 우선)을
+    // id로 매칭해 재사용한다 — 칸이 좁은 카드라 "Nottingham Forest" 같은
+    // 풀네임 대신 "Nottm Forest" 식 축약명으로 통일하기 위함.
+    const shortNameById = { [home.id]: home.name, [away.id]: away.name };
     const seasonSeriesRaw = (raw.seasonseries || [])[0] || null;
     const h2h = seasonSeriesRaw ? {
       summary: seasonSeriesRaw.summary || '',
@@ -222,8 +228,8 @@ export default async function handler(req, res) {
         const ac = (e.competitors || []).find(c => c.homeAway === 'away') || {};
         return {
           date: e.date || null,
-          homeTeam: hc.team ? { id: hc.team.id, name: hc.team.displayName || hc.team.abbreviation, crest: hc.team.logo } : null,
-          awayTeam: ac.team ? { id: ac.team.id, name: ac.team.displayName || ac.team.abbreviation, crest: ac.team.logo } : null,
+          homeTeam: hc.team ? { id: hc.team.id, name: shortNameById[hc.team.id] || hc.team.displayName || hc.team.abbreviation, crest: hc.team.logo } : null,
+          awayTeam: ac.team ? { id: ac.team.id, name: shortNameById[ac.team.id] || ac.team.displayName || ac.team.abbreviation, crest: ac.team.logo } : null,
           homeScore: hc.score, awayScore: ac.score,
         };
       }),
