@@ -787,13 +787,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .sq-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
   #leaderboard.section{max-width:none;}
   .lb-layout{display:flex;gap:20px;align-items:flex-start;}
-  #lbListCol{flex:2 1 0%;min-width:0;}
-  /* 순위표/선수 순위 리스트가 flex:2 칸(가로로 아주 넓어질 수 있음) 폭을
-     그대로 다 채우면, 팀명/선수명 칸(1fr)이 텍스트 이후로 계속 늘어나기만
-     해서 "리스트 자체가 커지는 게 아니라 가운데 빈 공간만 늘어나는" 것처럼
-     보인다 — 카드 자체 폭을 적당한 선에서 캡 걸어서, 그 이상은 카드 오른쪽
-     여백으로 빠지게 한다(카드가 무한정 늘어나지 않는 게 목적).
-     cqw 기준 컨테이너도 이 카드로 옮겨야 실제 렌더 폭과 맞게 계산된다. */
+  /* #lbListCol을 flex:2(비율 성장)로 두면 카드(max-width로 캡 걸림)보다
+     칸 자체가 더 넓어져서, 카드와 우측 패널 사이에 빈 칸이 생긴다 — 칸을
+     카드 캡과 같은 640px을 기준값(flex-basis)으로 주고 성장은 안 하게
+     하면(flex:0 1 640px) 카드가 패널에 바로 붙고, 남는 공간은 레이아웃
+     오른쪽 끝 하나로만 몰린다. flex-basis를 auto로 두면(내용물 크기 기준)
+     안의 grid가 1fr 트랙이라 내용 기준 크기가 사실상 0으로 잡혀서 칸
+     자체가 찌그러지는 문제가 있었다 — 그래서 명시적 px 기준값을 쓴다. */
+  #lbListCol{flex:0 1 640px;min-width:0;}
   #lbListCol .card{max-width:640px;container-type:inline-size;}
   .lb-round-panel{flex:1 1 0%;min-width:300px;max-width:360px;margin-top:0;}
   /* cqw 배율은 카드 캡(640px)을 기준으로 다시 계산한 값 — "640px일 때
