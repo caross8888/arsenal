@@ -554,15 +554,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-section-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
 .pm-section-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:14px;}
 .pm-radar-wrap{display:flex;justify-content:center;position:relative;}
-/* 대회 탭 */
-.pm-comp-tabs{display:grid;gap:1px;background:rgba(255,255,255,.08);}
-.pm-comp-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:16px 6px;border:none;background:#23252b;color:rgba(255,255,255,.55);cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:700;transition:background .15s,color .15s;}
-.pm-comp-tab svg{width:24px;height:24px;fill:rgba(255,255,255,.32);transition:fill .15s;}
-.pm-comp-tab.active{background:var(--red-dark);color:#fff;}
-.pm-comp-tab.active svg{fill:var(--gold);}
-/* 대회별 기록 카드 — 탭/스탯/슈팅맵/히트맵을 하나의 카드로 묶음 */
-.pm-comp-card{margin:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;}
-.pm-comp-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.5);padding:14px 14px 0;}
+/* 대회 탭 — "기록" 탭 하위에 중첩되는 하위탭이라 리더보드 선수순위
+   하위탭(.rec-subnav/.rec-subnav-btn)과 동일한 밑줄 스타일을 그대로
+   재사용한다(전용 .pm-comp-tab 아이콘형 스타일은 폐기). 대회별 기록도
+   더 이상 별도 카드(.pm-comp-card)로 안 감싼다 — 이미 "기록" 탭
+   패널(.live-tab-panel) 자체가 하나의 구획인데, 그 안에 배경/테두리
+   있는 카드를 또 두면 섹션 안에 섹션이 있는 것처럼 이중으로 보였다. */
 .pm-comp-subsection{padding:16px 14px 14px;border-top:1px solid rgba(255,255,255,.07);}
 .pm-comp-subtitle{font-size:12px;font-weight:700;color:#fff;margin-bottom:10px;}
 /* 스탯 섹션 */
@@ -868,6 +865,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .fix-detail-panel .mm-stat-val{font-size:clamp(12px,2.92cqw,14px);}
   .fix-detail-panel .mm-event-player{font-size:clamp(9px,2.29cqw,11px);}
   .fix-detail-panel .mm-team-tab img{width:clamp(24px,5.83cqw,28px);height:clamp(24px,5.83cqw,28px);}
+  /* .live-tab-btn(경기정보/선발/선수 스탯 · 기본정보/기록/경력)와
+     .rec-subnav-btn(대회 하위탭, 라인업 홈/원정 전환)는 두 패널 모두에서
+     쓰는 공용 탭 컴포넌트인데 정작 스케일링 대상에서 빠져 있었다 —
+     같은 k=최댓값/480 기준으로 마저 맞춘다. */
+  .fix-detail-panel .live-tab-btn,.sq-detail-panel .live-tab-btn{font-size:clamp(11px,2.71cqw,13px);}
+  .fix-detail-panel .rec-subnav-btn,.sq-detail-panel .rec-subnav-btn{font-size:clamp(10px,2.5cqw,12px);}
   #media.section{max-width:none;}
   #mediaSeg{display:none;}
   .media-col-title{display:block;}
@@ -4977,6 +4980,17 @@ function openPlayerModal(p, level) {
   h += '</div>';
   h += '</div></div></div>';
 
+  // ── 탭(기본정보/기록/경력) — 경기상세모달(buildFinishedDetail)의
+  // .live-tabs/.live-tab-btn/liveSwitchTab을 그대로 재사용한다. id는
+  // 경기상세모달과 겹치지 않게 pm- 접두를 붙인다. ──
+  h += '<div style="border-top:1px solid var(--border);">';
+  h += '<div class="live-tabs">';
+  h += '<button class="live-tab-btn active" data-tab="pmbasic" onclick="liveSwitchTab(this,&quot;pmbasic&quot;)">기본정보</button>';
+  h += '<button class="live-tab-btn" data-tab="pmrecord" onclick="liveSwitchTab(this,&quot;pmrecord&quot;)">기록</button>';
+  h += '<button class="live-tab-btn" data-tab="pmcareer" onclick="liveSwitchTab(this,&quot;pmcareer&quot;)">경력</button>';
+  h += '</div>';
+  h += '<div class="live-tab-panel" id="live-panel-pmbasic" style="padding-top:0;">';
+
   // ── 기본 정보 그리드 ──
   var infoItems = [];
   if(height) infoItems.push({val:height, lbl:'\ud0a4'});
@@ -5034,6 +5048,9 @@ function openPlayerModal(p, level) {
     h += '</div>';
   }
 
+  h += '</div>'; // live-panel-pmbasic 끝
+  h += '<div class="live-tab-panel" id="live-panel-pmrecord" style="display:none;padding-top:0;">';
+
   // ── 대회별 기록 카드: 탭 + 스탯 + 슈팅맵 + 터치 히트맵을 하나로 묶음 ──
   if(compKeys.length > 0){
     window._pmShotmapAll = shotmap;
@@ -5043,17 +5060,24 @@ function openPlayerModal(p, level) {
     var initHeats = initComp ? heatmap.filter(function(hp){return hp.comp===initComp;}) : heatmap;
     window._pmCurrentShots = initShots;
 
-    h += '<div class="pm-comp-card">';
-    h += '<div class="pm-comp-tabs" id="statCompTabs" style="grid-template-columns:repeat('+compKeys.length+',1fr)">';
-    compKeys.forEach(function(k,i){
-      h += '<button class="pm-comp-tab'+(i===0?' active':'')+'" data-comp="'+k+'" onclick="switchPMComp(this)">'+(COMP_ICON[k]||COMP_ICON_DEFAULT)+'<span>'+(compLabels[k]||k)+'</span></button>';
+    // 1군은 칸 수가 선수마다 달라지지 않게 SENIOR_COMPS(4개) 자리를 항상
+    // 고정으로 만들고, 실제로 뛴 대회만 채우고 나머진 빈칸으로 둔다 —
+    // 아카데미는 기존처럼 뛴 대회 수만큼만 동적으로 나눈다.
+    var compSlots = level!=='academy' ? SENIOR_COMPS : compKeys;
+    h += '<div class="rec-subnav" id="statCompTabs" style="padding:14px 14px 0;">';
+    compSlots.forEach(function(k){
+      if(compKeys.indexOf(k)===-1){
+        h += '<span class="rec-subnav-btn"></span>';
+        return;
+      }
+      h += '<button class="rec-subnav-btn'+(k===compKeys[0]?' active':'')+'" data-comp="'+k+'" onclick="switchPMComp(this)">'+(compLabels[k]||k)+'</button>';
     });
     h += '</div>';
 
     compKeys.forEach(function(k, i){
       var c = competitions[k];
-      var hidden = i===0 ? '' : 'display:none';
-      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+hidden+'">';
+      var hidden = i===0 ? '' : 'display:none;';
+      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="padding:0 14px 14px;'+hidden+'">';
       var mins=c.minutesPlayed||0;
       var minsStr=mins>0?mins:'-';
       var rating=c.avgRating?c.avgRating.toFixed(1):'-';
@@ -5100,8 +5124,10 @@ function openPlayerModal(p, level) {
       h += '<canvas id="heatmap_canvas" width="320" height="207" style="width:100%;height:auto;display:block;border-radius:8px;"></canvas>';
       h += '</div>';
     }
-    h += '</div>'; // pm-comp-card
   }
+
+  h += '</div>'; // live-panel-pmrecord 끝
+  h += '<div class="live-tab-panel" id="live-panel-pmcareer" style="display:none;padding-top:0;">';
 
   // ── 경력 ──
   if(career && career.length){
@@ -5121,6 +5147,8 @@ function openPlayerModal(p, level) {
     });
     h += '</div>';
   }
+  h += '</div>'; // live-panel-pmcareer 끝
+  h += '</div>'; // 탭 wrapper 끝
 
   content.innerHTML = h;
   if(!desktop){
@@ -5455,9 +5483,14 @@ function getPctStats(fotStats, pos){
 }
 
 function switchPMComp(btn){
-  var content=document.getElementById('modalContent');
+  // 모바일(#modalContent)/데스크톱(#sqDetailContent) 둘 중 실제로 이 버튼이
+  // 들어있는 탭 패널을 기준으로 찾아야 한다 — #modalContent로 고정해두면
+  // 데스크톱 패널에서는 엉뚱한(존재하지 않는) 컨테이너를 가리켜 대회 전환이
+  // 먹통이 된다. 대회탭을 감싸던 카드(.pm-comp-card)를 없앤 뒤로는 그
+  // 대신 탭 패널(.live-tab-panel) 자체를 스코프로 쓴다.
+  var content=btn.closest('.live-tab-panel');
   var comp=btn.getAttribute('data-comp');
-  document.getElementById('statCompTabs').querySelectorAll('.pm-comp-tab').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('statCompTabs').querySelectorAll('.rec-subnav-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   content.querySelectorAll('.comp-stat-panel').forEach(function(panel){
     panel.style.display=panel.getAttribute('data-comp')===comp?'':'none';
