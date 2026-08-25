@@ -2415,7 +2415,7 @@ function renderTeamOfWeek(players){
     h+='<div class="totw-photo-wrap">';
     h+='<img class="totw-photo" src="'+p.photo+'" alt="" onerror="this.style.visibility=\'hidden\'">';
     if(p.teamCrest) h+='<img class="totw-team-crest" src="'+p.teamCrest+'" alt="" onerror="this.style.display=\'none\'">';
-    if(p.rating) h+='<span class="totw-rating">'+p.rating+'</span>';
+    if(p.rating) h+='<span class="totw-rating">'+(p.isTop?'★ ':'')+p.rating+'</span>';
     h+='</div>';
     h+='<div class="totw-name">'+(p.name||'').split(' ').pop()+'</div>';
     h+='</div>';
