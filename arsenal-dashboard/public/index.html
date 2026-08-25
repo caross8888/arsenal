@@ -136,7 +136,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tag-ec{background:rgba(74,222,128,.15);color:#4ADE80;border:1px solid rgba(74,222,128,.25)}
 .tag-cs{background:rgba(203,213,225,.15);color:#CBD5E1;border:1px solid rgba(203,213,225,.25)}
 .tag-oth{background:rgba(100,100,100,.15);color:var(--text-muted);border:1px solid var(--border)}
-.fix-date{font-size:10px;color:var(--text-muted);font-family:var(--fm);flex-shrink:0}
+.fix-date{font-size:10px;color:var(--text-secondary);font-family:var(--fm);flex-shrink:0}
 .fix-date.live-tag{color:var(--green);font-weight:700}
 .fix-team-home{display:flex;align-items:center;gap:8px}
 .fix-team-away{display:flex;align-items:center;gap:8px;justify-content:flex-end}
@@ -149,19 +149,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-score{font-family:var(--fd);font-size:24px;letter-spacing:3px;line-height:1;color:var(--text)}
 .fix-vs{font-family:var(--fd);font-size:16px;letter-spacing:2px;color:var(--text-dim);line-height:1;display:block;}
 .fix-vs-label{font-size:8px;font-weight:700;letter-spacing:1px;line-height:1;}
-.fix-round-text{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);}
+.fix-round-text{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);}
 .fix-round-final{color:#D4AF37;font-weight:700;}
 .std-hdr,.std-row{display:grid;grid-template-columns:16px 1fr 18px 18px 18px 18px 30px 22px 28px;gap:3px;align-items:center;padding:8px 10px 8px 8px;border-left:3px solid transparent;border-bottom:1px solid var(--border);font-size:12px}
-.std-fa{font-family:var(--fm);color:var(--text-muted);text-align:center;font-size:9px;white-space:nowrap;}
+.std-fa{font-family:var(--fm);color:var(--text);text-align:center;font-size:9px;white-space:nowrap;}
 .std-row:last-child{border-bottom:none}
 .std-row.afc-row{background:rgba(239,1,7,.05)}
 .std-row.afc-row .std-pos{color:var(--red);font-weight:700}
-.std-hdr{font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--text-muted);background:rgba(255,255,255,.03);padding-top:10px;padding-bottom:10px}
-.std-pos{font-family:var(--fm);font-size:10px;color:var(--text-muted)}
-.std-team{font-weight:500;display:flex;align-items:center;gap:5px;font-size:11px;min-width:0}
+.std-hdr{font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--text);background:rgba(255,255,255,.03);padding-top:10px;padding-bottom:10px}
+.std-pos{font-family:var(--fm);font-size:10px;color:var(--text)}
+.std-team{font-weight:500;display:flex;align-items:center;gap:5px;font-size:11px;min-width:0;color:var(--text)}
 .std-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .std-crest{width:15px;height:15px;border-radius:50%;object-fit:contain;border:none;flex-shrink:0;filter:drop-shadow(0 0 1px rgba(255,255,255,.35))}
-.std-s{font-family:var(--fm);color:var(--text-muted);text-align:center;font-size:10px}
+.std-s{font-family:var(--fm);color:var(--text);text-align:center;font-size:10px}
 .std-pts{font-family:var(--fm);font-weight:700;color:var(--text);text-align:right;font-size:11px}
 .lb-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);}
 .lb-tab{position:relative;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:700;-webkit-tap-highlight-color:transparent;}
@@ -796,14 +796,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      cqw 기준 컨테이너도 이 카드로 옮겨야 실제 렌더 폭과 맞게 계산된다. */
   #lbListCol .card{max-width:640px;container-type:inline-size;}
   .lb-round-panel{flex:1 1 0%;min-width:300px;max-width:360px;margin-top:0;}
-  #lbListCol .std-hdr,#lbListCol .std-row{grid-template-columns:clamp(16px,2.4cqw,22px) 1fr clamp(18px,2.6cqw,24px) clamp(18px,2.6cqw,24px) clamp(18px,2.6cqw,24px) clamp(18px,2.6cqw,24px) clamp(30px,4cqw,40px) clamp(22px,3cqw,30px) clamp(28px,3.8cqw,38px);padding:clamp(8px,1.2cqw,12px) clamp(10px,1.4cqw,14px) clamp(8px,1.2cqw,12px) clamp(8px,1.2cqw,12px);}
-  #lbListCol .std-hdr{font-size:clamp(9px,1.4cqw,11px);}
-  #lbListCol .std-pos{font-size:clamp(10px,1.6cqw,13px);}
-  #lbListCol .std-team{font-size:clamp(11px,1.8cqw,14px);gap:clamp(5px,1cqw,9px);}
-  #lbListCol .std-crest{width:clamp(15px,2.4cqw,22px);height:clamp(15px,2.4cqw,22px);}
-  #lbListCol .std-s{font-size:clamp(10px,1.6cqw,13px);}
-  #lbListCol .std-fa{font-size:clamp(9px,1.4cqw,12px);}
-  #lbListCol .std-pts{font-size:clamp(11px,1.8cqw,14px);}
+  /* cqw 배율은 카드 캡(640px)을 기준으로 다시 계산한 값 — "640px일 때
+     딱 최댓값에 닿는다"는 조건으로 역산했다(배율 = 최댓값/640). 캡을 걸기
+     전(폭 1184px 기준) 배율을 그대로 뒀더니 640px에선 죄다 하한선에
+     묶여서 사실상 안 커지는 문제가 있었다. */
+  #lbListCol .std-hdr,#lbListCol .std-row{grid-template-columns:clamp(16px,3.44cqw,22px) 1fr clamp(18px,3.75cqw,24px) clamp(18px,3.75cqw,24px) clamp(18px,3.75cqw,24px) clamp(18px,3.75cqw,24px) clamp(30px,6.25cqw,40px) clamp(22px,4.69cqw,30px) clamp(28px,5.94cqw,38px);padding:clamp(8px,1.88cqw,12px) clamp(10px,2.19cqw,14px) clamp(8px,1.88cqw,12px) clamp(8px,1.88cqw,12px);}
+  #lbListCol .std-hdr{font-size:clamp(9px,1.72cqw,11px);}
+  #lbListCol .std-pos{font-size:clamp(10px,2.03cqw,13px);}
+  #lbListCol .std-team{font-size:clamp(11px,2.19cqw,14px);gap:clamp(5px,1.41cqw,9px);}
+  #lbListCol .std-crest{width:clamp(15px,3.44cqw,22px);height:clamp(15px,3.44cqw,22px);}
+  #lbListCol .std-s{font-size:clamp(10px,2.03cqw,13px);}
+  #lbListCol .std-fa{font-size:clamp(9px,1.88cqw,12px);}
+  #lbListCol .std-pts{font-size:clamp(11px,2.19cqw,14px);}
   .fix-detail-panel .mm-header-top{position:static;}
   #fixWrap .fix-card{padding:18px 20px;gap:12px;}
   #fixWrap .fix-grid{grid-template-columns:1fr minmax(max-content,auto) 1fr;gap:3px 6px;}
@@ -1406,7 +1410,7 @@ function buildFixCard(m){
   if(!isLive){
     var vlabel=document.createElement('div');vlabel.className='fix-vs-label';
     vlabel.textContent=isNeutral?'NEUTRAL':(isArsHome?'HOME':'AWAY');
-    vlabel.style.color=hasScore?'var(--text-muted)':(isNeutral?'var(--gold)':(isArsHome?'var(--red)':'#3a5a8c'));
+    vlabel.style.color=hasScore?'var(--text-secondary)':(isNeutral?'var(--gold)':(isArsHome?'var(--red)':'#60A5FA'));
     z3label.appendChild(vlabel);
   }
 
