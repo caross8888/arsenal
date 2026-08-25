@@ -538,11 +538,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border-radius:20px;padding:2px 8px;font-size:10px;color:rgba(255,255,255,.85);margin-top:5px;}
 /* 상세모달 공용 기본정보 그리드 — 헤더 바로 아래 표처럼 붙여서 보여주는
    방식(선수 상세모달 원조). 헤더와 분리된 별도 박스가 아니라 헤더에 바로
-   이어지는 느낌을 위해 모서리/여백 없이 헤어라인 + 옅은 셀 음영으로
-   구분한다(기록 탭 .fotmob-stat-grid/.fm-stat-cell과 동일한 라인색·
-   음영색으로 통일). 기존 pm-info-* 이름을 모든 상세모달에서 쓰도록 일반화 */
-.detail-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid rgba(255,255,255,.3);border-bottom:1px solid rgba(255,255,255,.3);}
-.detail-info-cell{padding:12px 16px;border-right:1px solid rgba(255,255,255,.3);border-bottom:1px solid rgba(255,255,255,.3);min-width:0;}
+   이어지는 느낌을 위해 모서리/여백/음영 없이 헤어라인만으로 구분한다 —
+   예정경기 상세모달의 .mm-card 표와 동일한 .06 알파 톤. 기존 pm-info-*
+   이름을 모든 상세모달에서 쓰도록 일반화 */
+.detail-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);}
+.detail-info-cell{padding:12px 16px;border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);min-width:0;}
 .detail-info-cell:nth-child(2n){border-right:none;}
 .detail-info-val{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;overflow-wrap:anywhere;}
 .detail-info-lbl{font-size:10px;color:var(--text-secondary);}
@@ -588,28 +588,23 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    소제목 라벨(팀 / 기간 · 기록)을 얹었다. */
 .pm-career-hdr{display:grid;grid-template-columns:1fr auto;padding:8px 14px 4px;}
 .pm-career-hdr span{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);}
-.pm-career-row{display:grid;grid-template-columns:1fr auto;align-items:center;padding:9px 14px;border-top:1px solid rgba(255,255,255,.3);background:var(--surface2);}
-.pm-career-row:last-child{border-bottom:1px solid rgba(255,255,255,.3);}
+.pm-career-row{display:grid;grid-template-columns:1fr auto;align-items:center;padding:9px 14px;border-top:1px solid rgba(255,255,255,.06);}
+.pm-career-row:last-child{border-bottom:1px solid rgba(255,255,255,.06);}
 .pm-career-team{font-size:13px;color:#fff;font-weight:600;}
 .pm-career-period{font-size:10px;color:var(--text-secondary);margin-left:8px;}
 .pm-career-stat{font-size:11px;font-weight:700;color:#fff;text-align:right;}
 .pm-career-stat.empty{color:rgba(255,255,255,.3);font-weight:400;}
-/* Fotmob 대회별 스탯 그리드 */
-/* 선은 grid gap이 배경색을 비쳐 보이게 하는 방식(gap+background) 대신
-   셀 하나하나에 테두리를 직접 그리는 방식으로 바꿨다 — gap 방식은 셀
-   자체에 그 틈보다 진한 배경을 안 깔면(즉 셀이 완전 불투명하지 않으면)
-   그리드 컨테이너의 배경색이 셀 영역까지 통째로 비쳐 보이는 부작용이
-   있었다(셀을 옅게 칠했더니 표 전체가 회색으로 뜬 원인). 선(테두리)과
-   셀 음영(배경)을 완전히 분리된 속성으로 만들어 서로 안 건드리게 한다. */
-.fotmob-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);margin:0;border-top:1px solid rgba(255,255,255,.3);}
+/* Fotmob 대회별 스탯 그리드 — 예정경기 상세모달의 .mm-card 표(최근
+   상대전적/최근 5경기: 카드 없이 var(--text)/--text-secondary 텍스트,
+   .06 알파의 옅은 헤어라인)와 톤을 맞춘다. 선은 셀 하나하나에 직접
+   그린다(grid gap+background 방식은 셀이 불투명하지 않으면 그리드
+   배경이 셀 영역까지 비쳐 보이는 부작용이 있어서 안 씀). */
+.fotmob-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);margin:0;border-top:1px solid rgba(255,255,255,.06);}
 .overall-stat-grid{grid-template-columns:repeat(5,1fr);}
 .shot-stat-grid{grid-template-columns:repeat(4,1fr);}
-.fm-stat-cell{padding:12px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.3);border-bottom:1px solid rgba(255,255,255,.3);}
+.fm-stat-cell{padding:12px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);}
 .fotmob-stat-grid:not(.overall-stat-grid) .fm-stat-cell:nth-child(4n){border-right:none;}
 .overall-stat-grid .fm-stat-cell:nth-child(5n){border-right:none;}
-/* 반투명 오버레이 대신 비활성 탭(.live-tab-btn)과 동일한 --surface2로 —
-   임의로 알파를 맞추지 않고 이미 쓰는 색을 그대로 재사용한다. */
-.fm-stat-cell{background:var(--surface2);}
 .fm-stat-val{font-family:var(--fd);font-size:20px;font-weight:700;color:#fff;line-height:1;}
 .fm-stat-lbl{font-size:9px;color:var(--text-secondary);margin-top:4px;letter-spacing:.5px;}
 .overall-stat-grid .fm-stat-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;min-height:50px;}
@@ -673,7 +668,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-section{padding:14px 6px 14px;}
 .mm-section-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
 .mm-card{margin:14px 16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;}
-.mm-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;color:rgba(255,255,255,.5);padding:14px 14px 0;}
+.mm-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text);padding:14px 14px 0;}
+/* 팀 스탯 카드 안의 공격/수비/반칙 같은 하위 카테고리 제목 — 카드
+   타이틀(.mm-card-title)과 같은 스타일을 쓰면 "팀 스탯"이라는 카드
+   제목과 그 하위 그룹 제목이 구분이 안 갔다. 더 작고 옅게 눌러서
+   하위 항목임을 시각적으로 드러낸다. */
+.mm-stat-cat-title{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);padding:14px 14px 4px;}
 .mm-team-tabs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.08);margin-top:10px;}
 .mm-team-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px 6px;border:none;background:#23252b;color:rgba(255,255,255,.55);cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:700;}
 .mm-team-tab img{width:24px;height:24px;object-fit:contain;}
@@ -4373,7 +4373,7 @@ function renderStatsPanelInner(data){
     if(s.cat!==curCat){
       if(curCat!==null) h+='</div>';
       curCat=s.cat;
-      h += '<div class="mm-card-title" style="padding:'+(i===0?'0':'14px')+' 14px 4px;'+(i===0?'':'border-top:1px solid var(--border);')+'">'+(curCat||'')+'</div>';
+      h += '<div class="mm-stat-cat-title" style="padding:'+(i===0?'14px':'14px')+' 14px 4px;'+(i===0?'':'border-top:1px solid var(--border);')+'">'+(curCat||'')+'</div>';
       h += '<div class="mm-stats-grid" style="padding:10px 14px 14px;">';
     }
     var hv=s.home||0, av=s.away||0;
@@ -4513,9 +4513,13 @@ function buildFinishedDetail(data){
   h += '<button class="live-tab-btn" data-tab="starting" onclick="liveSwitchTab(this,&quot;starting&quot;)">선발</button>';
   h += '<button class="live-tab-btn" data-tab="playerstats" onclick="liveSwitchTab(this,&quot;playerstats&quot;)">선수 스탯</button>';
   h += '</div>';
+  // 예정경기 상세모달의 .mm-card(최근 상대전적/최근 5경기)와 같은 원칙 —
+  // "경기 정보" 탭은 데이터가 이벤트/스탯 두 덩어리뿐이라 카드로 나누면
+  // 선수 상세모달(데이터가 훨씬 많아 카드로 나누면 오히려 산만해짐)과
+  // 달리 그룹감이 잘 산다.
   h += '<div class="live-tab-panel" id="live-panel-info" style="padding-top:0;">'+
-    '<div class="mm-card-title" style="padding:14px 14px 4px;">골 &amp; 이벤트</div>'+renderEventsPanelInner(data)+
-    '<div class="mm-card-title" style="padding:14px 14px 4px;border-top:1px solid var(--border);">팀 스탯</div>'+renderStatsPanelInner(data)+
+    '<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">골 &amp; 이벤트</div>'+renderEventsPanelInner(data)+'</div>'+
+    '<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">팀 스탯</div>'+renderStatsPanelInner(data)+'</div>'+
   '</div>';
   h += '<div class="live-tab-panel" id="live-panel-starting" style="display:none;padding-top:0;">'+renderStartingPanelInner(data,'starting')+'</div>';
   h += '<div class="live-tab-panel" id="live-panel-playerstats" style="display:none;padding-top:0;">'+renderPlayerStatsPanelInner(data,'playerstats')+'</div>';
