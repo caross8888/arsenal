@@ -542,7 +542,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    구분한다(기록 탭 .fotmob-stat-grid/.fm-stat-cell과 동일한 라인색·
    음영색으로 통일). 기존 pm-info-* 이름을 모든 상세모달에서 쓰도록 일반화 */
 .detail-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid rgba(255,255,255,.3);}
-.detail-info-cell{padding:12px 16px;border-right:1px solid rgba(255,255,255,.3);border-bottom:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);min-width:0;}
+.detail-info-cell{padding:12px 16px;border-right:1px solid rgba(255,255,255,.3);border-bottom:1px solid rgba(255,255,255,.3);background:var(--surface2);min-width:0;}
 .detail-info-cell:nth-child(2n){border-right:none;}
 .detail-info-val{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px;overflow-wrap:anywhere;}
 .detail-info-lbl{font-size:10px;color:var(--text-secondary);}
@@ -588,7 +588,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    소제목 라벨(팀 / 기간 · 기록)을 얹었다. */
 .pm-career-hdr{display:grid;grid-template-columns:1fr auto;padding:8px 14px 4px;}
 .pm-career-hdr span{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);}
-.pm-career-row{display:grid;grid-template-columns:1fr auto;align-items:center;padding:9px 14px;border-top:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);}
+.pm-career-row{display:grid;grid-template-columns:1fr auto;align-items:center;padding:9px 14px;border-top:1px solid rgba(255,255,255,.3);background:var(--surface2);}
 .pm-career-row:last-child{border-bottom:1px solid rgba(255,255,255,.3);}
 .pm-career-team{font-size:13px;color:#fff;font-weight:600;}
 .pm-career-period{font-size:10px;color:var(--text-secondary);margin-left:8px;}
@@ -607,8 +607,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fm-stat-cell{padding:12px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.3);border-bottom:1px solid rgba(255,255,255,.3);}
 .fotmob-stat-grid:not(.overall-stat-grid) .fm-stat-cell:nth-child(4n){border-right:none;}
 .overall-stat-grid .fm-stat-cell:nth-child(5n){border-right:none;}
-/* 모달/패널 배경 대비 살짝만 밝게 — 흰색 오버레이를 낮은 알파로. */
-.fm-stat-cell{background:rgba(255,255,255,.1);}
+/* 반투명 오버레이 대신 비활성 탭(.live-tab-btn)과 동일한 --surface2로 —
+   임의로 알파를 맞추지 않고 이미 쓰는 색을 그대로 재사용한다. */
+.fm-stat-cell{background:var(--surface2);}
 .fm-stat-val{font-family:var(--fd);font-size:20px;font-weight:700;color:#fff;line-height:1;}
 .fm-stat-lbl{font-size:9px;color:var(--text-secondary);margin-top:4px;letter-spacing:.5px;}
 .overall-stat-grid .fm-stat-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;min-height:50px;}
