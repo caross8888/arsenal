@@ -787,6 +787,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .sq-detail-panel .detail-info-val{font-size:clamp(14px,3.33cqw,16px);}
   .sq-detail-panel .stat-box-val{font-size:clamp(18px,4.58cqw,22px);}
   .sq-detail-panel .fm-stat-val{font-size:clamp(18px,4.58cqw,22px);}
+  /* 슈팅 상세(왼발/코너킥/블록 등 5칸 .overall-stat-grid)는 칸이 좁아서
+     위 4칸 기준 스케일(18~22px)을 그대로 받으면 PC에서 글자가 칸보다
+     커진다 — 원래 12px 캡(.overall-stat-grid .fm-stat-val, base CSS)에
+     맞춰 훨씬 작은 별도 배율로 다시 캡을 건다. */
+  .sq-detail-panel .overall-stat-grid .fm-stat-val{font-size:clamp(10px,2.5cqw,12px);}
   .hist-otd-wrap{width:calc(100vw - 200px);margin:-16px 0 12px calc(384px - 50vw);}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
@@ -4920,17 +4925,14 @@ function openPlayerModal(p, level) {
     || pos;
   var contractEnd = p.contractEnd ? p.contractEnd.slice(0,7) : '';
   var competitions= p.competitions||{};
-  // 1군에서 열었으면 항상 1군 대회만 노출한다. 아카데미에서 열었을 땐 그
-  // 선수가 1군에도 "등록"돼 있는지로 갈린다 — 다우먼처럼 1군/아카데미 둘 다
-  // 소속인 선수는 1군 탭에서 이미 1군 기록을 볼 수 있으니 아카데미 탭은
-  // 아카데미 대회만 보여주고, 말리 새먼처럼 아카데미에만 등록돼 있는데
-  // 1군 대회 출전 기록이 있는 선수는 그걸 보여줄 다른 탭이 없으므로 아카데미
-  // 탭에서 1군+아카데미 대회를 다 보여준다. 0경기인 대회는 스쿼드 등록만
-  // 되어있고 실제로 안 뛴 경우라 탭에서 제외.
+  // 1군에서 열었으면 1군 대회만, 아카데미에서 열었으면 아카데미 대회만
+  // 노출한다(1군에도 등록된 이중등록 여부는 더 이상 따지지 않음 — 아카데미
+  // 전용 선수가 1군 출전 기록이 있어도 아카데미 탭엔 안 보임, 의도된
+  // 단순화). 0경기인 대회는 스쿼드 등록만 되어있고 실제로 안 뛴 경우라
+  // 탭에서 제외.
   var SENIOR_COMPS=['PL','UCL','FAC','EFL'];
   var YOUTH_COMPS=['PL2','EFLT','UYL'];
-  var isDualRegistered = (p.squadLevels||[]).indexOf('first')!==-1 && (p.squadLevels||[]).indexOf('academy')!==-1;
-  var levelCompOrder = level!=='academy' ? SENIOR_COMPS : (isDualRegistered ? YOUTH_COMPS : SENIOR_COMPS.concat(YOUTH_COMPS));
+  var levelCompOrder = level!=='academy' ? SENIOR_COMPS : YOUTH_COMPS;
   compKeys=levelCompOrder.filter(function(k){var c=competitions[k];return c && (c.appearances||0)>0;});
   var scopedCompetitions={};
   compKeys.forEach(function(k){scopedCompetitions[k]=competitions[k];});
@@ -5060,24 +5062,36 @@ function openPlayerModal(p, level) {
     var initHeats = initComp ? heatmap.filter(function(hp){return hp.comp===initComp;}) : heatmap;
     window._pmCurrentShots = initShots;
 
-    // 1군은 칸 수가 선수마다 달라지지 않게 SENIOR_COMPS(4개) 자리를 항상
-    // 고정으로 만들고, 실제로 뛴 대회만 채우고 나머진 빈칸으로 둔다 —
-    // 아카데미는 기존처럼 뛴 대회 수만큼만 동적으로 나눈다.
-    var compSlots = level!=='academy' ? SENIOR_COMPS : compKeys;
-    h += '<div class="rec-subnav" id="statCompTabs" style="padding:14px 14px 0;">';
-    compSlots.forEach(function(k){
-      if(compKeys.indexOf(k)===-1){
+    // 칸 수는 무조건 4칸 고정 — 뛴 대회(compKeys)를 앞칸부터 순서대로
+    // 채우고 남는 칸은 뒤에 빈칸으로 둔다(예: EPL/EFL만 뛰었으면
+    // "EPL EFL 공란 공란", 대회별 고정 위치가 아니라 앞으로 당겨 채움).
+    // 상위 탭(.live-tabs) 바로 밑에 하위탭처럼 딱 붙어야 하고, 스탯 표도
+    // 기본정보 탭의 .detail-info-grid처럼 좌우가 패널 끝까지 닿아야 하니
+    // 여백을 따로 주지 않는다(위/좌우 모두 0) — 버튼 자체 내부 패딩과
+    // .rec-subnav의 margin-bottom만으로 아래쪽 간격을 만든다.
+    var COMP_TAB_SLOTS = 4;
+    h += '<div class="rec-subnav" id="statCompTabs">';
+    for(var si=0; si<COMP_TAB_SLOTS; si++){
+      if(si>=compKeys.length){
         h += '<span class="rec-subnav-btn"></span>';
-        return;
+        continue;
       }
-      h += '<button class="rec-subnav-btn'+(k===compKeys[0]?' active':'')+'" data-comp="'+k+'" onclick="switchPMComp(this)">'+(compLabels[k]||k)+'</button>';
-    });
+      var k=compKeys[si];
+      h += '<button class="rec-subnav-btn'+(si===0?' active':'')+'" data-comp="'+k+'" onclick="switchPMComp(this)">'+(compLabels[k]||k)+'</button>';
+    }
     h += '</div>';
+    // .mm-card-title 기본 색(rgba(255,255,255,.5))은 경기상세모달과
+    // 공유하는 값이라 그대로 두고, 이 타이틀만 "슈팅맵"/"터치 히트맵"
+    // 타이틀(.pm-comp-subtitle: 흰색 12px)과 톤을 맞춰 인라인으로 덮어쓴다.
+    h += '<div class="mm-card-title" style="padding:14px 14px 4px;color:#fff;font-size:12px;">선수 스탯</div>';
 
     compKeys.forEach(function(k, i){
       var c = competitions[k];
-      var hidden = i===0 ? '' : 'display:none;';
-      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="padding:0 14px 14px;'+hidden+'">';
+      var hidden = i===0 ? '' : 'display:none';
+      // .fotmob-stat-grid도 .detail-info-grid처럼 좌우 여백 없이 패널
+      // 끝까지 라인이 닿아야 해서 좌우 패딩을 안 준다(셀 자체 패딩으로만
+      // 여백 확보 — .detail-info-cell과 동일한 방식).
+      h += '<div class="comp-stat-panel" data-comp="'+k+'" style="'+hidden+'">';
       var mins=c.minutesPlayed||0;
       var minsStr=mins>0?mins:'-';
       var rating=c.avgRating?c.avgRating.toFixed(1):'-';
@@ -5534,7 +5548,10 @@ function shotStatsRowHTML(list){
   var xgSum=list.reduce(function(a,s){return a+(s.xg||0);},0);
   var onTarget=list.filter(function(s){return s.event==='goal'||s.event==='onTarget';}).length;
   var pct=list.length?Math.round(onTarget/list.length*100):0;
-  return '<div class="fotmob-stat-grid shot-stat-grid" style="margin-top:12px;">'+
+  // 부모(.pm-comp-subsection)가 좌우 14px 패딩을 갖고 있어서 표만 따로
+  // 떨어져 보였다 — 다른 표(.detail-info-grid, 선수 스탯 표)처럼 패널
+  // 끝까지 닿게, 딱 그 패딩만큼 음수 마진으로 밀어내(bleed) 좌우로 채운다.
+  return '<div class="fotmob-stat-grid shot-stat-grid" style="margin:12px -14px 0;">'+
          makeFMStat(list.length,'슛','')+makeFMStat(goals,'득점','#22C55E')+makeFMStat(xgSum.toFixed(2),'xG','')+makeFMStat(pct+'%','유효','')+
          '</div>';
 }
@@ -5578,8 +5595,10 @@ function shotDetailHTML(s){
   h+='<div style="flex:1;min-width:0;font-size:11px;font-weight:600;color:#fff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(m.away||'')+'</div>';
   h+='</div>';
   h+='<div style="text-align:center;font-size:10px;color:var(--text-dim);padding-bottom:10px;">'+dateStr+(s.min!=null?' · '+s.min+"'":'')+'</div>';
-  // 슛 유형 / 상황 / 결과 / xG / xGOT — 위 "대회별 스탯"과 동일한 그리드 스타일
-  h+='<div class="fotmob-stat-grid overall-stat-grid">';
+  // 슛 유형 / 상황 / 결과 / xG / xGOT — 위 "대회별 스탯"과 동일한 그리드 스타일.
+  // 부모(.pm-comp-subsection)의 좌우 14px 패딩만큼 음수 마진으로 밀어내
+  // 다른 표들처럼 패널 끝까지 닿게 한다.
+  h+='<div class="fotmob-stat-grid overall-stat-grid" style="margin:0 -14px;">';
   h+=makeFMStat(SHOT_TYPE_LABEL[s.shotType]||s.shotType||'-','슛 유형','');
   h+=makeFMStat(SITUATION_LABEL[s.situation]||s.situation||'-','상황','');
   h+=makeFMStat(SHOT_EVENT_LABEL[s.event]||s.event,'결과',SHOT_EVENT_COLOR[s.event]);
