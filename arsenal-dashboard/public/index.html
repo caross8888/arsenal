@@ -585,6 +585,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-career-period{font-size:10px;color:rgba(255,255,255,.4);}
 .pm-career-stat{font-size:11px;color:rgba(255,255,255,.5);min-width:60px;text-align:right;}
 /* Fotmob 대회별 스탯 그리드 */
+/* border-bottom은 클래스에 일괄로 안 주고(그러면 뒤에 슈팅맵/히트맵
+   섹션이 이어질 때 그 섹션 자신의 border-top과 겹쳐 선이 두 개로 보임)
+   호출부에서 "이게 정말 탭의 마지막 콘텐츠일 때만" 인라인으로 붙인다 —
+   아래 comp-stat-panel/shotDetailHTML 쪽 참고. */
 .fotmob-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.06);margin:0;border-top:1px solid rgba(255,255,255,.06);}
 .overall-stat-grid{grid-template-columns:repeat(5,1fr);}
 .shot-stat-grid{grid-template-columns:repeat(4,1fr);}
@@ -5057,6 +5061,10 @@ function openPlayerModal(p, level) {
   if(compKeys.length > 0){
     window._pmShotmapAll = shotmap;
     window._pmHeatmapAll = heatmap;
+    // 두 섹션이 실제로 렌더링되는지 미리 계산 — 뒤에 "이게 정말 탭의
+    // 마지막 콘텐츠인지"(닫는 선을 그려야 하는지) 판단하는 데 쓴다.
+    var hasShotmapSection = pos!=='GK' && shotmap && shotmap.length;
+    var hasHeatmapSection = pos!=='GK' && heatmap && heatmap.length;
     var initComp = compKeys.length ? compKeys[0] : null;
     var initShots = initComp ? shotmap.filter(function(s){return s.comp===initComp;}) : shotmap;
     var initHeats = initComp ? heatmap.filter(function(hp){return hp.comp===initComp;}) : heatmap;
@@ -5096,7 +5104,12 @@ function openPlayerModal(p, level) {
       var minsStr=mins>0?mins:'-';
       var rating=c.avgRating?c.avgRating.toFixed(1):'-';
       var ratingColor=c.avgRating>=8?'#22C55E':c.avgRating>=7?'#84CC16':c.avgRating>=6?'#F59E0B':'rgba(255,255,255,0.7)';
-      h += '<div class="fotmob-stat-grid">';
+      // 뒤에 슈팅맵/히트맵 섹션이 하나도 없으면(예: GK, 슛 기록 없는
+      // 선수) 이 표가 탭의 마지막 콘텐츠라 스스로 닫는 선이 필요하다 —
+      // 반대로 뒤에 섹션이 있으면 그 섹션 자신의 border-top이 이미 선을
+      // 그어주므로 여기서 또 그으면 14px 간격 안에 선이 두 개가 된다.
+      var isLastRecordContent = !hasShotmapSection && !hasHeatmapSection;
+      h += '<div class="fotmob-stat-grid"'+(isLastRecordContent?' style="border-bottom:1px solid rgba(255,255,255,.06);"':'')+'>';
       if(pos==='GK'){
         var csVal=c.cleanSheets!=null?c.cleanSheets:'-';
         var gcVal=c.goalsConceded!=null?c.goalsConceded:'-';
@@ -5122,17 +5135,19 @@ function openPlayerModal(p, level) {
       h += '</div>';
     });
 
-    if(pos!=='GK' && shotmap && shotmap.length){
+    if(hasShotmapSection){
       h += '<div class="pm-comp-subsection" id="shotmapSection" style="'+(initShots.length?'':'display:none;')+'">';
       h += '<div class="pm-comp-subtitle">슈팅맵</div>';
       h += '<div id="shotStatsRow">'+shotStatsRowHTML(initShots)+'</div>';
       h += '<div id="shotmapChart">'+(initShots.length ? renderShotmapSVG(initShots) : '')+'</div>';
       var initDefaultIdx = mostRecentShotIndex(initShots);
-      h += '<div id="shotDetailPanel">'+shotDetailHTML(initShots[initDefaultIdx]||null)+'</div>';
+      // 뒤에 히트맵 섹션이 없으면 이 슈팅 상세 표가 탭의 마지막 콘텐츠라
+      // 스스로 닫는 선이 필요하다(shotDetailHTML 두 번째 인자).
+      h += '<div id="shotDetailPanel">'+shotDetailHTML(initShots[initDefaultIdx]||null, !hasHeatmapSection)+'</div>';
       h += '</div>';
     }
 
-    if(pos!=='GK' && heatmap && heatmap.length){
+    if(hasHeatmapSection){
       h += '<div class="pm-comp-subsection" id="heatmapSection" style="'+(initHeats.length?'':'display:none;')+'">';
       h += '<div class="pm-comp-subtitle">터치 히트맵</div>';
       h += '<canvas id="heatmap_canvas" width="320" height="207" style="width:100%;height:auto;display:block;border-radius:8px;"></canvas>';
@@ -5528,7 +5543,11 @@ function switchPMComp(btn){
     if(dHl) dHl.classList.add('active');
   }
   var detailPanel=document.getElementById('shotDetailPanel');
-  if(detailPanel) detailPanel.innerHTML=shotDetailHTML(shots[defaultIdx]||null);
+  // heatmapSection이 아예 렌더 안 된 선수(하트맵 데이터 없음)면 이 표가
+  // 탭의 마지막 콘텐츠이므로 스스로 닫는 선을 준다 — 초기 렌더 때와 동일한
+  // 조건(hasHeatmapSection)을, 지금은 DOM에 이미 붙어있는 heatmapSection의
+  // 존재 여부로 판단한다.
+  if(detailPanel) detailPanel.innerHTML=shotDetailHTML(shots[defaultIdx]||null, !document.getElementById('heatmapSection'));
   var heatmapSection=document.getElementById('heatmapSection');
   if(heatmapSection) heatmapSection.style.display = heats.length ? '' : 'none';
   var canvas=document.getElementById('heatmap_canvas');
@@ -5573,7 +5592,7 @@ function fotmobCrest(teamId){
   return teamId ? 'https://images.fotmob.com/image_resources/logo/teamlogo/'+teamId+'.png' : '';
 }
 
-function shotDetailHTML(s){
+function shotDetailHTML(s, closeBottom){
   if(!s){
     return '<div style="font-size:11px;color:var(--text-dim);text-align:center;padding:14px 0;">슛을 선택하면 상세 정보가 여기에 표시됩니다</div>';
   }
@@ -5594,11 +5613,14 @@ function shotDetailHTML(s){
   if(m.awayId) h+='<img src="'+fotmobCrest(m.awayId)+'" style="width:18px;height:18px;object-fit:contain;flex-shrink:0;" onerror="this.style.display=\'none\'">';
   h+='<div style="flex:1;min-width:0;font-size:11px;font-weight:600;color:#fff;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+(m.away||'')+'</div>';
   h+='</div>';
-  h+='<div style="text-align:center;font-size:10px;color:var(--text-dim);padding-bottom:10px;">'+dateStr+(s.min!=null?' · '+s.min+"'":'')+'</div>';
+  // var(--text-dim)은 이 앱 배경에서 실측상 거의 안 보이는 색이라
+  // (CLAUDE.md 색상 기준) 다른 날짜 캡션들과 동일하게 --text-secondary로.
+  h+='<div style="text-align:center;font-size:10px;color:var(--text-secondary);padding-bottom:10px;">'+dateStr+(s.min!=null?' · '+s.min+"'":'')+'</div>';
   // 슛 유형 / 상황 / 결과 / xG / xGOT — 위 "대회별 스탯"과 동일한 그리드 스타일.
   // 부모(.pm-comp-subsection)의 좌우 14px 패딩만큼 음수 마진으로 밀어내
-  // 다른 표들처럼 패널 끝까지 닿게 한다.
-  h+='<div class="fotmob-stat-grid overall-stat-grid" style="margin:0 -14px;">';
+  // 다른 표들처럼 패널 끝까지 닿게 한다. 뒤에 히트맵 섹션이 없으면(전달된
+  // closeBottom) 이 표가 탭의 마지막 콘텐츠이므로 스스로 닫는 선을 준다.
+  h+='<div class="fotmob-stat-grid overall-stat-grid" style="margin:0 -14px;'+(closeBottom?'border-bottom:1px solid rgba(255,255,255,.06);':'')+'">';
   h+=makeFMStat(SHOT_TYPE_LABEL[s.shotType]||s.shotType||'-','슛 유형','');
   h+=makeFMStat(SITUATION_LABEL[s.situation]||s.situation||'-','상황','');
   h+=makeFMStat(SHOT_EVENT_LABEL[s.event]||s.event,'결과',SHOT_EVENT_COLOR[s.event]);
