@@ -775,8 +775,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      숫자/포지션 글씨도 카드 폭(cqw) 기준으로 같이 줄인다. */
   .sq-grid .pl-card{container-type:inline-size;}
   .sq-grid .pl-top{grid-template-columns:minmax(42px,34%) 1fr;}
-  .sq-grid .pl-num-txt{font-size:clamp(16px,13cqw,32px);}
-  .sq-grid .pl-pos-txt{font-size:clamp(7px,4.2cqw,10px);}
+  /* 640px 캡(#sqListCol) 기준 3열이면 카드 폭이 (640-20)/3≈206.7px로
+     고정 상한을 가지므로, 배율도 그 상한에서 딱 최댓값에 닿게
+     k=최댓값/206.7로 재계산했다(이전엔 리스트 칸이 무제한이라 실측
+     ~247px 기준으로 잡혀 있었음). */
+  .sq-grid .pl-num-txt{font-size:clamp(16px,15.48cqw,32px);}
+  .sq-grid .pl-pos-txt{font-size:clamp(7px,4.84cqw,10px);}
+  /* 우측 선수 상세패널(.pm-*)도 fix-detail-panel과 동일한 이유로 지금까지
+     패널 폭이 340~480px 사이에서 바뀌어도 사진/이름/스탯 글자가 고정
+     px였다 — .pm-*는 모바일 바텀시트(#modalSheet)와도 공유하는 클래스라
+     .sq-detail-panel로 스코프를 좁혀 k=최댓값/480 기준으로 스케일링한다. */
+  .sq-detail-panel .pm-photo,.sq-detail-panel .pm-photo-ph{width:clamp(60px,15cqw,72px);height:clamp(60px,15cqw,72px);}
+  .sq-detail-panel .pm-name{font-size:clamp(20px,5cqw,24px);}
+  .sq-detail-panel .detail-info-val{font-size:clamp(14px,3.33cqw,16px);}
+  .sq-detail-panel .stat-box-val{font-size:clamp(18px,4.58cqw,22px);}
+  .sq-detail-panel .fm-stat-val{font-size:clamp(18px,4.58cqw,22px);}
   .hist-otd-wrap{width:calc(100vw - 200px);margin:-16px 0 12px calc(384px - 50vw);}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
@@ -785,8 +798,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   #fixWrap{flex:0 1 640px;min-width:0;container-type:inline-size;}
   .fix-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;container-type:inline-size;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;}
   .sq-layout{display:flex;gap:20px;align-items:flex-start;}
-  #sqListCol{flex:2 1 0%;min-width:0;}
-  .sq-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+  /* fixWrap/lbListCol과 동일한 640px 캡 패턴 — 안 걸면 리스트 칸이 flex:2로
+     계속 자라서 우측 패널(최대 480px)이 오히려 눌리는 문제가 있었다. */
+  #sqListCol{flex:0 1 640px;min-width:0;}
+  .sq-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;container-type:inline-size;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
   #leaderboard.section{max-width:none;}
   .lb-layout{display:flex;gap:20px;align-items:flex-start;}
   /* #lbListCol을 flex:2(비율 성장)로 두면 카드(max-width로 캡 걸림)보다
@@ -856,18 +871,25 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   #media.section{max-width:none;}
   #mediaSeg{display:none;}
   .media-col-title{display:block;}
-  .media-cols{display:flex;gap:20px;align-items:flex-start;}
+  /* 다른 탭들(경기일정 640+상세패널 480, 리더보드 640+480, 선수단
+     640+480)과 총 폭을 맞춰 탭을 오가도 콘텐츠 영역 폭이 들쭉날쭉하지
+     않게 1140px(640+20+480)로 캡을 걸었다 — 안 걸면 3열이 뉴스/SNS/영상
+     칸 폭 그대로 화면 끝까지 계속 자라서 카드 내부 이미지/글자가
+     clamp 상한에 묶인 채 칸만 헐렁하게 넓어지는 문제가 있었다. */
+  .media-cols{display:flex;gap:20px;align-items:flex-start;max-width:1140px;}
   .media-cols .media-col{display:block!important;flex:1;min-width:0;container-type:inline-size;}
-  .media-cols .news-img{height:clamp(160px,52cqw,220px);}
-  .media-cols .news-src-badge{font-size:clamp(8px,2.7cqw,11px);padding:3px 9px;}
-  .media-cols .news-hl,.media-cols .video-title{font-size:clamp(13px,4.5cqw,18px);}
-  .media-cols .news-ex{font-size:clamp(12px,4cqw,16px);}
-  .media-cols .news-foot,.media-cols .video-time{font-size:clamp(10px,3.6cqw,14px);}
-  .media-cols .sns-avatar{width:clamp(36px,11cqw,48px);height:clamp(36px,11cqw,48px);font-size:clamp(14px,4.2cqw,18px);}
-  .media-cols .sns-author-name{font-size:clamp(12px,4.2cqw,16px);}
-  .media-cols .sns-author-label,.media-cols .sns-time{font-size:clamp(10px,3.2cqw,13px);}
-  .media-cols .sns-text{font-size:clamp(13px,4.5cqw,18px);}
-  .media-cols .sns-stat{font-size:clamp(11px,3.4cqw,14px);}
+  /* 캡(1140px, 20px 갭 2개) 기준 칸 폭 상한은 (1140-40)/3≈366.7px —
+     배율을 k=최댓값/366.7로 재계산해 그 폭에서 딱 최댓값에 닿게 했다. */
+  .media-cols .news-img{height:clamp(160px,60cqw,220px);}
+  .media-cols .news-src-badge{font-size:clamp(8px,3cqw,11px);padding:3px 9px;}
+  .media-cols .news-hl,.media-cols .video-title{font-size:clamp(13px,4.91cqw,18px);}
+  .media-cols .news-ex{font-size:clamp(12px,4.36cqw,16px);}
+  .media-cols .news-foot,.media-cols .video-time{font-size:clamp(10px,3.82cqw,14px);}
+  .media-cols .sns-avatar{width:clamp(36px,13.09cqw,48px);height:clamp(36px,13.09cqw,48px);font-size:clamp(14px,4.91cqw,18px);}
+  .media-cols .sns-author-name{font-size:clamp(12px,4.36cqw,16px);}
+  .media-cols .sns-author-label,.media-cols .sns-time{font-size:clamp(10px,3.55cqw,13px);}
+  .media-cols .sns-text{font-size:clamp(13px,4.91cqw,18px);}
+  .media-cols .sns-stat{font-size:clamp(11px,3.82cqw,14px);}
 }</style>
 </head>
 <body>
