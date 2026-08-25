@@ -313,6 +313,57 @@ export default async function handler(req, res) {
       if(seasonMatches.length > 0) setCache(cacheKey, payload);
       return res.json(payload);
 
+    } else if(type === 'teamOfTheWeek'){
+      // 선수 순위 우측 패널용 "이주의 팀" — Fotmob이 자체 계산해서 라운드별로
+      // 발행하는 전용 API를 그대로 쓴다(에디토리얼 이미지가 아니라 선수
+      // ID/평점/포메이션 좌표까지 다 나오는 진짜 구조화 데이터, 실측 확인함).
+      const seasonEndYear = now.getMonth() + 1 <= 5 ? now.getFullYear() : now.getFullYear() + 1;
+      const currentSeasonYear = now.getMonth() + 1 >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+      const seasonStr = `${currentSeasonYear}/${seasonEndYear}`;
+
+      const roundsCacheKey = `totwRounds_${seasonStr}`;
+      let roundsData = nocache ? null : getCache(roundsCacheKey);
+      if(!roundsData){
+        const rr = await fetch(
+          `https://www.fotmob.com/api/data/team-of-the-week/rounds?leagueId=47&season=${encodeURIComponent(seasonStr)}`,
+          {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)}
+        );
+        if(!rr.ok) throw new Error(`Fotmob totw rounds: ${rr.status}`);
+        roundsData = await rr.json();
+        if((roundsData.rounds||[]).length) setCache(roundsCacheKey, roundsData);
+      }
+      const roundNums = (roundsData.rounds || []).map(r => parseInt(r.roundId, 10)).filter(n => !isNaN(n));
+      const maxRound = roundNums.length ? Math.max(...roundNums) : 1;
+      const minRound = roundNums.length ? Math.min(...roundNums) : 1;
+      const defaultRound = parseInt(roundsData.last?.roundId, 10) || maxRound;
+      const requestedRound = parseInt(req.query.round, 10) || defaultRound;
+
+      const teamCacheKey = `totwTeam_${seasonStr}_${requestedRound}`;
+      let players = nocache ? null : getCache(teamCacheKey);
+      if(!players){
+        const tr = await fetch(
+          `https://www.fotmob.com/api/data/team-of-the-week/team?leagueId=47&roundId=${requestedRound}&season=${encodeURIComponent(seasonStr)}`,
+          {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)}
+        );
+        if(!tr.ok) throw new Error(`Fotmob totw team: ${tr.status}`);
+        const rawPlayers = await tr.json();
+        players = (rawPlayers || []).map(p => ({
+          id: p.id,
+          name: p.name?.fullName || '',
+          rating: p.rating?.num || null,
+          isTop: !!(p.rating?.isTop?.isTopRating),
+          teamId: p.teamId,
+          photo: `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+          teamCrest: p.teamId ? `https://images.fotmob.com/image_resources/logo/teamlogo/${p.teamId}.png` : null,
+          // Fotmob 좌표계는 y가 클수록 위(공격 방향) — 골키퍼(y 최소)가
+          // 화면 아래쪽에 오도록 프론트에서 bottom:y*100%로 그대로 쓴다.
+          x: p.verticalLayout?.x ?? 0.5,
+          y: p.verticalLayout?.y ?? 0.5,
+        }));
+        if(players.length) setCache(teamCacheKey, players);
+      }
+      return res.json({ round: requestedRound, maxRound, minRound, players });
+
     } else if(type === 'roundResults'){
       // 순위표 옆 "라운드별 EPL 전체 결과" 패널용 — ESPN 원본엔 라운드(매치위크)
       // 번호가 아예 없다. 처음엔 "아스날이 그 라운드에 뛴 날짜" 앞뒤 며칠을
