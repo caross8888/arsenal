@@ -824,7 +824,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      커진다 — 원래 12px 캡(.overall-stat-grid .fm-stat-val, base CSS)에
      맞춰 훨씬 작은 별도 배율로 다시 캡을 건다. */
   .sq-detail-panel .overall-stat-grid .fm-stat-val{font-size:clamp(10px,2.5cqw,12px);}
-  .hist-otd-wrap{width:calc(100vw - 200px);margin:-16px 0 12px calc(384px - 50vw);}
+  /* History도 다른 탭들과 같은 기준(섹션 자체는 max-width:none으로 꽉
+     채우고, 안의 콘텐츠가 알아서 자리잡음)으로 맞춘다 — 그래서
+     .hist-otd-wrap도 D-day 카드와 동일한 "고정폭 M 중앙정렬" 전용
+     calc() 공식이 더 이상 필요 없다(섹션 자신의 padding만 취소하면 되는
+     기본 규칙은 이미 모바일 CSS에 있음, 위 CLAUDE.md 문서화된 두 패턴
+     중 max-width:none 쪽).
+     카드형 그리드(트로피/감독/레전드/모먼트/스타디움)는 스쿼드 그리드와
+     동일하게 2열→3열로 넓히고, 리스트형(타임라인/기록)은 리스트+상세패널
+     칸과 동일한 640px로 캡+중앙정렬해서 화면 끝까지 늘어지지 않게 한다. */
+  #history.section{max-width:none;}
+  .trophy-grid,.mgr-grid,.lgd-grid,.mom-grid,.stad-grid{grid-template-columns:repeat(3,1fr);}
+  .tl-wrap,.rec-wrap{max-width:640px;margin:0 auto;}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
   /* 리더보드 카드와 동일한 640px 캡 + flex:0 1 640px 패턴(이유는 #lbListCol
@@ -2938,7 +2949,7 @@ var _recTab = 'appearances';
 
 function renderRecordsSection(){
   var DATA = window._recordsData || {};
-  var html = '';
+  var html = '<div class="rec-wrap">';
   // 서브 탭
   html += '<div class="rec-subnav" id="recSubnav">';
   REC_TABS.forEach(function(t){
@@ -2946,6 +2957,7 @@ function renderRecordsSection(){
   });
   html += '</div>';
   html += '<div id="recSection">'+renderRecTab(_recTab, DATA)+'</div>';
+  html += '</div>';
   return html;
 }
 
