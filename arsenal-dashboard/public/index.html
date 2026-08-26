@@ -154,7 +154,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .t-name-away{font-weight:700;font-size:12px;line-height:1.3;min-width:0;overflow:hidden;text-align:right;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .fix-score-box{text-align:center;flex-shrink:0;width:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .fix-score{font-family:var(--fd);font-size:24px;letter-spacing:3px;line-height:1;color:var(--text)}
-.fix-vs{font-family:var(--fd);font-size:16px;letter-spacing:2px;color:var(--text-dim);line-height:1;display:block;}
+.fix-vs{font-family:var(--fd);font-size:16px;letter-spacing:2px;color:var(--text-secondary);line-height:1;display:block;}
 .fix-vs-label{font-size:8px;font-weight:700;letter-spacing:1px;line-height:1;}
 .fix-round-text{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);}
 .fix-round-final{color:#D4AF37;font-weight:700;}
@@ -388,7 +388,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mgr-modal-period{font-size:12px;color:var(--text-secondary);margin-top:2px;}
 .mgr-modal-bio{padding:14px 16px;font-size:13px;color:var(--text-secondary);line-height:1.7;}
 .mgr-modal-trophies{padding:0 16px 20px;}
-.mgr-trophy-row{font-size:12px;color:var(--text-muted);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.15);}
+.mgr-trophy-row{font-size:12px;color:var(--text-secondary);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.15);}
 
 .hist-section-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;}
 .history-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -560,7 +560,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .shot-highlight{opacity:0;transition:opacity .15s;pointer-events:none;}
 .shot-highlight.active{opacity:1;}
 .pm-section-title{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;}
-.pm-section-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:14px;}
+.pm-section-sub{font-size:11px;color:var(--text-secondary);margin-bottom:14px;}
 .pm-radar-wrap{display:flex;justify-content:center;position:relative;}
 /* 대회 탭 — "기록" 탭 하위에 중첩되는 하위탭이라 리더보드 선수순위
    하위탭(.rec-subnav/.rec-subnav-btn)과 동일한 밑줄 스타일을 그대로
@@ -3421,7 +3421,7 @@ function openTrophyDetailModal(enc){
       var isLast = i === t.years_detail.length - 1;
       html += '<div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.15)'+(isLast?';border-bottom:none':'')+'">';
       html += '<span style="font-family:var(--fd);font-size:15px;font-weight:800;color:var(--red);min-width:36px;">'+d.year+'</span>';
-      html += '<span style="font-size:12px;color:var(--text-muted);">'+d.final+'</span>';
+      html += '<span style="font-size:12px;color:var(--text-secondary);">'+d.final+'</span>';
       html += '</div>';
     });
     html += '</div>';
@@ -5820,7 +5820,7 @@ function drawFotmobRadar(canvasId, items){
   var n=items.length;
   ctx.clearRect(0,0,W,H);
 
-  var gridC='rgba(255,255,255,0.1)';
+  var gridC='rgba(255,255,255,0.15)';
 
   // 배경 동심 다각형 (4단계)
   [0.25,0.5,0.75,1].forEach(function(s){
@@ -5883,7 +5883,7 @@ function drawFotmobRadar(canvasId, items){
 
     // 라벨 (작게)
     ctx.font='10px sans-serif';
-    ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.fillStyle='rgba(255,255,255,0.75)';
     // 긴 라벨 줄바꿈 처리
     var title=items[i].title||'';
     if(title.length>12){
