@@ -762,16 +762,37 @@ export default async function handler(req, res) {
       ));
 
       const numOf = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+      // Fotmob의 traits.value는 0~1 비율로 내려오는데(실측 확인), 프론트
+      // 레이더 차트(drawFotmobRadar)와 players.json 스냅샷은 둘 다 0~100
+      // 퍼센트 정수를 기대한다 — 여기서 안 맞춰주면 레이더가 거의 0으로
+      // 찌그러져 보인다.
+      const normalizeTraits = traits => {
+        if(!traits || !traits.items) return traits;
+        return Object.assign({}, traits, {
+          items: traits.items.map(it => Object.assign({}, it, {value: Math.round((it.value||0) * 100)})),
+        });
+      };
       const findStat = (items, id) => { const f = (items||[]).find(i => i.localizedTitleId === id); return f ? f.statValue : undefined; };
       // Fotmob shotmap의 eventType/isBlocked/isOnTarget/isOwnGoal 조합을 우리
       // 프론트(SHOT_EVENT_LABEL 등)가 쓰는 event 문자열로 단순화한다.
       const toShotEvent = s => {
         if(s.isOwnGoal) return 'ownGoal';
         if(s.eventType === 'Goal') return 'goal';
-        if(s.isOnTarget) return 'onTarget';
+        // isBlocked가 isOnTarget보다 먼저다 — 골대 방향이었지만 막힌 슛(예:
+        // AttemptSaved + isBlocked=true + isOnTarget=true 조합)도 실측 결과
+        // "블록"으로 분류돼야 한다(온타깃으로 잘못 분류되면 아래 endX/endY
+        // 계산도 골라인이 아니라 블록 지점 기준이어야 하는데 어긋난다).
         if(s.isBlocked) return 'blocked';
+        if(s.isOnTarget) return 'onTarget';
         return 'miss';
       };
+      // 슈팅맵의 방향선(슛 지점 → 도착 지점)이 쓰는 좌표 — 막힌 슛은 실제로
+      // 막힌 지점(blockedX/Y)에서, 나머지는 골라인(x=PITCH_LEN) 위 실제
+      // 골대를 통과한 지점(goalCrossedY)에서 멈춘다(정적 스냅샷과 실측
+      // 대조로 확인한 규칙).
+      const shotEnd = s => s.isBlocked
+        ? {endX: s.blockedX, endY: s.blockedY}
+        : {endX: 105, endY: s.goalCrossedY};
 
       const competitions = {};
       const shotmap = [];
@@ -801,6 +822,7 @@ export default async function handler(req, res) {
           x: sh.x, y: sh.y, min: sh.min,
           shotType: sh.shotType, situation: sh.situation,
           event: toShotEvent(sh),
+          ...shotEnd(sh),
           xg: sh.expectedGoals, xgot: sh.expectedGoalsOnTarget,
           match: {
             home: sh.homeTeamName, away: sh.awayTeamName,
@@ -831,7 +853,7 @@ export default async function handler(req, res) {
         competitions,
         shotmap,
         heatmap,
-        traits: pd.traits || null,
+        traits: normalizeTraits(pd.traits) || null,
         career: career.map(t => ({
           team: t.team,
           startDate: t.startDate,
