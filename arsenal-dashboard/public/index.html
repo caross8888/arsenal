@@ -594,6 +594,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-career-period{font-size:10px;color:var(--text-secondary);margin-left:8px;}
 .pm-career-stat{font-size:11px;font-weight:700;color:#fff;text-align:right;}
 .pm-career-stat.empty{color:rgba(255,255,255,.3);font-weight:400;}
+/* 시즌 성적 프로그레스바 (Fotmob "Season performance" 재현) */
+/* 경기일정 리스트/달력 전환 토글(.fix-view-toggle/.fix-view-btn)과 동일한
+   세그먼트 필 스타일 — 텍스트 라벨만 다를 뿐 컨테이너/활성색은 그대로. */
+.perf-mode-toggle{display:flex;gap:1px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden;flex-shrink:0;}
+.perf-mode-btn{width:48px;padding:5px 0;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;font-size:10px;text-align:center;-webkit-tap-highlight-color:transparent;}
+.perf-mode-btn.active{background:var(--red-dark);color:#fff;}
+.perf-stat-row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid rgba(255,255,255,.06);}
+.perf-stat-label{flex:1;font-size:12px;color:var(--text-secondary);}
+.perf-stat-val{font-size:12px;font-weight:700;color:#fff;min-width:52px;text-align:right;}
+.perf-stat-bar{width:70px;height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;flex-shrink:0;}
+.perf-stat-bar-fill{height:100%;border-radius:3px;}
 /* Fotmob 대회별 스탯 그리드 — 예정경기 상세모달의 .mm-card 표(최근
    상대전적/최근 5경기: 카드 없이 var(--text)/--text-secondary 텍스트,
    .06 알파의 옅은 헤어라인)와 톤을 맞춘다. 선은 셀 하나하나에 직접
@@ -4897,6 +4908,48 @@ var TRAIT_LABELS = {
   'duels_won':                     '듀얼 승률',
   'possession_won':                '볼 소유권 확보',
 };
+// Fotmob 선수 페이지 "Season performance" 프로그레스바 섹션 — 카테고리
+// 타이틀과 개별 스탯 타이틀(영문 원문 그대로가 key)을 한글로 매핑한다.
+// 여기 없는 타이틀은 원문 영어를 그대로 보여준다(신규 스탯 대응용 폴백).
+var PERF_GROUP_KO = {
+  'Shooting':'슈팅', 'Physical':'피지컬', 'Passing':'패스',
+  'Possession':'볼 소유', 'Defending':'수비', 'Discipline':'규율',
+  'Goalkeeping':'골키핑', 'Distribution':'배급',
+};
+var PERF_STAT_KO = {
+  'Goals':'득점', 'xG':'기대득점(xG)', 'xGOT':'유효슈팅 기대득점(xGOT)',
+  'xG excl. penalty':'PK 제외 xG', 'Shots':'슈팅', 'Shots on target':'유효슈팅',
+  'Top Speed':'최고 속도', 'Total Distance Covered':'총 이동거리',
+  'Running':'러닝', 'Sprinting':'스프린트', 'Number of Sprints':'스프린트 횟수',
+  'Assists':'어시스트', 'xA':'기대 어시스트(xA)', 'Accurate passes':'성공 패스',
+  'Pass accuracy':'패스 성공률', 'Line-breaking passes':'라인 브레이킹 패스',
+  'Chances created':'찬스 생성',
+  'Dribbles':'드리블 시도', 'Dribbles success rate':'드리블 성공률',
+  'Duels won':'듀얼 승리', 'Duels won %':'듀얼 승률', 'Touches':'터치',
+  'Touches in opposition box':'상대 박스 터치', 'Dispossessed':'볼 뺏김',
+  'Fouls won':'파울 유도',
+  'Defensive actions':'수비 행동', 'Tackles':'태클', 'Recoveries':'볼 회수',
+  'Possession won final 3rd':'파이널서드 탈취', 'Dribbled past':'드리블 허용',
+  'Clearances':'클리어런스', 'Clean sheets':'클린시트',
+  'Goals conceded while on pitch':'출전 중 실점', 'xG against while on pitch':'출전 중 실점 xG',
+  'Yellow cards':'경고', 'Red cards':'퇴장',
+  'Saves':'선방', 'Save percentage':'선방률', 'Goals conceded':'실점',
+  'Goals prevented':'실점 방지(PSxG)', 'Error led to goal':'실점 유발 실수',
+  'Acted as sweeper':'스위퍼 역할',
+  'Accurate long balls':'성공 롱볼', 'Long ball accuracy':'롱볼 성공률',
+};
+function perfBarColor(rank){
+  return rank>=70 ? '#22C55E' : rank>=25 ? '#F59E0B' : '#EF4444';
+}
+function formatPerfValue(n, format){
+  if(n==null || isNaN(n)) return '-';
+  if(format==='meter') return n>=1000 ? (n/1000).toFixed(1)+'km' : Math.round(n)+'m';
+  if(format==='kph') return n.toFixed(1)+'km/h';
+  if(format==='percent') return n.toFixed(1)+'%';
+  if(format==='fraction') return n.toFixed(2);
+  var r = Math.round(n*100)/100;
+  return r.toString();
+}
 
 // ── PLAYER MODAL (Fotmob Style) ──
 
@@ -5031,6 +5084,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   h += '<div class="live-tabs">';
   h += '<button class="live-tab-btn active" data-tab="pmbasic" onclick="liveSwitchTab(this,&quot;pmbasic&quot;)">기본정보</button>';
   h += '<button class="live-tab-btn" data-tab="pmrecord" onclick="liveSwitchTab(this,&quot;pmrecord&quot;)">기록</button>';
+  h += '<button class="live-tab-btn" data-tab="pmperf" onclick="liveSwitchTab(this,&quot;pmperf&quot;)">시즌 성적</button>';
   h += '<button class="live-tab-btn" data-tab="pmcareer" onclick="liveSwitchTab(this,&quot;pmcareer&quot;)">경력</button>';
   h += '</div>';
   h += '<div class="live-tab-panel" id="live-panel-pmbasic" style="padding-top:0;">';
@@ -5195,6 +5249,60 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   }
 
   h += '</div>'; // live-panel-pmrecord 끝
+
+  // ── 시즌 성적 (Fotmob "Season performance" 프로그레스바 재현) ──
+  // perfGroups는 정적 스냅샷(players.json)엔 없고 라이브 fetch가 끝난
+  // 뒤에만 채워진다 — 그 전까지는 "불러오는 중" 안내만 보여준다.
+  h += '<div class="live-tab-panel" id="live-panel-pmperf" style="display:none;padding-top:0;">';
+  if(compKeys.length > 0){
+    var perfCompKeys = compKeys.filter(function(k){ return competitions[k] && competitions[k].perfGroups && competitions[k].perfGroups.length; });
+    if(perfCompKeys.length > 0){
+      h += '<div class="rec-subnav" id="perfCompTabs" style="border-top:1px solid rgba(255,255,255,.06);">';
+      for(var pi=0; pi<COMP_TAB_SLOTS; pi++){
+        if(pi>=perfCompKeys.length){ h += '<span class="rec-subnav-btn"></span>'; continue; }
+        var pk=perfCompKeys[pi];
+        h += '<button class="rec-subnav-btn'+(pi===0?' active':'')+'" data-comp="'+pk+'" onclick="switchPMPerfComp(this)">'+(compLabels[pk]||pk)+'</button>';
+      }
+      h += '</div>';
+      h += '<div class="mm-card-title" style="padding:14px 14px 4px;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:space-between;">';
+      h += '<span>시즌 성적</span>';
+      h += '<span class="perf-mode-toggle">';
+      h += '<button class="perf-mode-btn active" data-mode="total" onclick="switchPMPerfMode(this)">전체</button>';
+      h += '<button class="perf-mode-btn" data-mode="per90" onclick="switchPMPerfMode(this)">90분당</button>';
+      h += '</span>';
+      h += '</div>';
+      perfCompKeys.forEach(function(k, i){
+        var groups = competitions[k].perfGroups || [];
+        var hidden = i===0 ? '' : 'display:none';
+        h += '<div class="perf-comp-panel" data-comp="'+k+'" style="'+hidden+'">';
+        groups.forEach(function(g){
+          h += '<div class="mm-stat-cat-title">'+(PERF_GROUP_KO[g.title]||g.title)+'</div>';
+          (g.items||[]).forEach(function(it){
+            var totalN = parseFloat(it.statValue);
+            var per90N = it.per90;
+            var rankTotal = it.percentileRank||0;
+            var rankPer90 = it.percentileRankPer90||0;
+            var dispVal = formatPerfValue(totalN, it.statFormat);
+            var barColor = perfBarColor(rankTotal);
+            h += '<div class="perf-stat-row" data-total="'+totalN+'" data-per90="'+per90N+'" data-rank-total="'+rankTotal+'" data-rank-per90="'+rankPer90+'" data-format="'+it.statFormat+'">';
+            h += '<div class="perf-stat-label">'+(PERF_STAT_KO[it.title]||it.title)+'</div>';
+            h += '<div class="perf-stat-val">'+dispVal+'</div>';
+            h += '<div class="perf-stat-bar"><div class="perf-stat-bar-fill" style="width:'+rankTotal+'%;background:'+barColor+'"></div></div>';
+            h += '</div>';
+          });
+        });
+        h += '</div>';
+      });
+    } else {
+      h += '<div class="mm-card-title" style="padding:14px 14px 4px;color:#fff;font-size:12px;">시즌 성적</div>';
+      h += '<div style="padding:10px 14px 14px;font-size:12px;color:var(--text-secondary);">최신 시즌 성적을 불러오는 중입니다</div>';
+    }
+  } else {
+    h += '<div class="mm-card-title" style="padding:14px 14px 4px;color:#fff;font-size:12px;">시즌 성적</div>';
+    h += '<div style="padding:10px 14px 14px;font-size:12px;color:var(--text-secondary);">아직 기록할 경기가 없습니다</div>';
+  }
+  h += '</div>'; // live-panel-pmperf 끝
+
   h += '<div class="live-tab-panel" id="live-panel-pmcareer" style="display:none;padding-top:0;">';
 
   // ── 경력 ──
@@ -5658,6 +5766,34 @@ function switchPMComp(btn){
       canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
     }
   }
+}
+function switchPMPerfComp(btn){
+  var content=btn.closest('.live-tab-panel');
+  var comp=btn.getAttribute('data-comp');
+  document.getElementById('perfCompTabs').querySelectorAll('.rec-subnav-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  content.querySelectorAll('.perf-comp-panel').forEach(function(panel){
+    panel.style.display=panel.getAttribute('data-comp')===comp?'':'none';
+  });
+}
+// 전체/90분당 토글 — 다시 그리지 않고 이미 렌더링된 행들의 data-* 값만
+// 읽어서 값/막대 길이·색을 갈아끼운다(대회 전환과 독립적으로 모든
+// .perf-comp-panel에 적용 — 숨겨진 대회 패널도 미리 갱신해둬야 나중에
+// 대회를 바꿔도 토글 상태가 어긋나지 않는다).
+function switchPMPerfMode(btn){
+  var wrap=btn.closest('.live-tab-panel');
+  var mode=btn.getAttribute('data-mode');
+  btn.parentElement.querySelectorAll('.perf-mode-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  wrap.querySelectorAll('.perf-stat-row').forEach(function(row){
+    var n = parseFloat(mode==='per90' ? row.getAttribute('data-per90') : row.getAttribute('data-total'));
+    var rank = parseFloat(mode==='per90' ? row.getAttribute('data-rank-per90') : row.getAttribute('data-rank-total'))||0;
+    var format = row.getAttribute('data-format');
+    var valEl = row.querySelector('.perf-stat-val');
+    var fillEl = row.querySelector('.perf-stat-bar-fill');
+    if(valEl) valEl.textContent = formatPerfValue(n, format);
+    if(fillEl){ fillEl.style.width = rank+'%'; fillEl.style.background = perfBarColor(rank); }
+  });
 }
 
 // Fotmob과 동일하게: 슛/득점/xG/유효% 4분할 요약

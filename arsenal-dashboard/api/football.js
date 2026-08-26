@@ -816,6 +816,22 @@ export default async function handler(req, res) {
           cleanSheets:  numOf(findStat(combined, 'clean_sheet_title')),
           goalsConceded:numOf(findStat(combined, 'goals_conceded')),
           avgRating:    numOf(findStat(combined, 'rating')) || undefined,
+          // Fotmob 선수 페이지의 "Season performance" 프로그레스바 섹션과
+          // 동일한 데이터 — 카테고리(Shooting/Passing/...)별로 스탯마다
+          // 원값(statValue)/90분당(per90)과 그 각각의 동료 대비 백분위
+          // (percentileRank/percentileRankPer90)를 그대로 들고 온다. 실측
+          // 결과 statsSection.items가 이미 이 그룹 구조 그대로다.
+          perfGroups: ((s.statsSection && s.statsSection.items) || []).map(g => ({
+            title: g.title,
+            items: (g.items || []).map(it => ({
+              title: it.title,
+              statValue: it.statValue,
+              per90: it.per90,
+              percentileRank: it.percentileRank,
+              percentileRankPer90: it.percentileRankPer90,
+              statFormat: it.statFormat,
+            })),
+          })),
         };
         (s.shotmap || []).forEach(sh => shotmap.push({
           comp: code,
