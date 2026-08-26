@@ -883,6 +883,31 @@ export default async function handler(req, res) {
       // KV에 저장 — 실패해도 이번 응답엔 영향 없게 await는 하되 에러는
       // kvSetPlayer 내부에서 이미 삼킨다.
       await kvSetPlayer(playerId, result);
+    } else if(type === 'managerStats'){
+      // History 탭의 감독 경기수(현재 감독 한정 — 과거 감독들은
+      // managers.json에 손으로 채운 최종 games 값이 이미 있음)를 시즌별
+      // 전체 경기 목록을 다 받아와서 클라이언트가 직접 세는 대신, Fotmob
+      // 감독 페이지가 이미 집계해둔 coachStats를 그대로 가져다 쓴다 —
+      // 시즌 수만큼 반복 호출하던 것이 API 호출 1번으로 줄어든다.
+      const coachId = req.query.id;
+      if(!coachId) throw new Error('id 파라미터 필요');
+      const cRes = await fetch(`https://www.fotmob.com/api/data/playerData?id=${coachId}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+      if(!cRes.ok) throw new Error('Fotmob playerData 로드 실패');
+      const cData = await cRes.json();
+      // 현재 재임 중인 팀 항목이 activeCareerEntry — 아스날 감독이 맡고
+      // 있는 동안엔 이게 아스날 항목이다(재임 종료 시 null이 되고
+      // historicalCareerEntries로 옮겨감 — 그 경우도 대비해 팀명으로 찾는다).
+      const active = (cData.coachStats || {}).activeCareerEntry;
+      const historical = ((cData.coachStats || {}).historicalCareerEntries || []);
+      const entry = (active && active.teamName === 'Arsenal') ? active
+        : historical.find(e => e.teamName === 'Arsenal') || active || null;
+      if(!entry) throw new Error('아스날 감독 기록을 찾을 수 없음');
+      result = {
+        matches: entry.matches || 0,
+        wins: entry.wins || 0,
+        draws: entry.draws || 0,
+        losses: entry.losses || 0,
+      };
     }
 
     if(!nocache) setCache(cacheKey, result);
