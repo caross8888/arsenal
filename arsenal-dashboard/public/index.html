@@ -846,7 +846,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      제약(340~480px)은 이 둘을 감싸는 칸 자체에 건다. */
   .hist-right-col{display:flex;flex-direction:column;gap:20px;flex:1 1 0%;min-width:340px;max-width:480px;}
   .hist-detail-panel{display:block;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;container-type:inline-size;overflow:hidden;}
-  #histFactsCard{display:block;}
+  /* #histFactsCard는 .mm-card를 재사용하지만, .mm-card 본래 용도(모달 안
+     내부 여백을 위한 margin:14px 16px)는 여기서 필요 없다 — 상세패널과
+     가로폭을 나란히 맞춰야 하는 최상위 카드라서 margin을 지우고 상세패널과
+     동일한 배경/테두리를 직접 준다. */
+  #histFactsCard{display:block;margin:0;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
   .hist-detail-panel .hist-modal-handle{display:none;}
   /* OTD(기본 상태)에는 "닫기" 버튼이 필요 없다 — 애초에 아무것도 안
      열려있는 홈 화면이라 닫을 대상이 없다. 트로피/감독 등 실제 상세를
@@ -2786,12 +2790,19 @@ function renderHistoryNew(){
   html += '<button class="modal-close" onclick="resetHistDetailPanel()">&#10005;</button>';
   html += '<div id="histDetailContent"></div>';
   html += '</div>';
-  html += '<div class="mm-card" id="histFactsCard">';
+  html += '<div id="histFactsCard">';
   var _facts = window._factsData || [];
   if(_facts.length){
     var _fact = _facts[Math.floor(Math.random()*_facts.length)];
-    html += '<div style="padding:14px 14px 0;font-size:9px;font-weight:800;letter-spacing:2px;color:var(--gold);text-transform:uppercase;">아스날 흥미로운 사실</div>';
-    html += '<div style="padding:10px 14px 14px;font-size:13px;color:var(--text-secondary);line-height:1.65;">'+_fact+'</div>';
+    // OTD 헤더(.hist-modal-header, 이미지 없을 때 케이스)와 동일한 배경/
+    // 패딩/라벨 스타일로 맞춘다 — 상세패널과 사실 카드가 나란히 붙어있으니
+    // 헤더 톤도 통일해야 한 세트처럼 보인다.
+    html += '<div style="padding:14px 16px 14px;width:100%;box-sizing:border-box;background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);border-radius:16px 16px 0 0;">';
+    html += '<div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--gold);text-transform:uppercase;">DID YOU KNOW</div>';
+    html += '</div>';
+    html += '<div style="padding:14px 16px 16px;">';
+    html += '<p style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin:0;">'+_fact+'</p>';
+    html += '</div>';
   }
   html += '</div>';
   html += '</div>'; // .hist-right-col 끝
