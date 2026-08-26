@@ -2646,7 +2646,8 @@ function loadHistory(){
     fetch('/data/timeline.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
     fetch('/data/records.json').then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; }),
     fetch('/data/stadiums.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
-    fetch('/data/moments.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
+    fetch('/data/moments.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+    fetch('/data/arsenal_facts.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; })
   ]).then(function(results){
     window._otdData      = results[0];
     window._archiveData  = results[1];
@@ -2656,6 +2657,7 @@ function loadHistory(){
     window._recordsData  = results[5];
     window._stadiumsData = results[6];
     window._momentsData  = results[7];
+    window._factsData    = results[8];
     // History 탭을 여는 즉시(어떤 서브탭이든) 재임 중인 감독의 경기수 계산을
     // 미리 시작해둔다 — 사용자가 감독 탭까지 들어와서 카드를 클릭할 때쯤엔
     // 이미 끝나 있어서 로딩 표시 없이 하드코딩된 값처럼 바로 보인다.
@@ -3297,6 +3299,19 @@ function openOtdModal(enc){
   if(item.summary) html += '<p style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin:14px 0 0;">'+item.summary+'</p>';
   if(item.headline) html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(239,1,7,.08);border-left:3px solid var(--red);border-radius:4px;font-size:12px;font-weight:700;color:var(--red);">'+item.headline+'</div>';
   html += '</div>';
+  // PC 우측 패널에서 OTD 카드 바로 아래에만 노출되는 "아스날 흥미로운
+  // 사실" — 모바일 바텀시트에서는 안 보이므로(공간도 부족하고 굳이 필요
+  // 없음) desktop일 때만 덧붙인다. 클릭 인터랙션 없이 텍스트만 보여준다.
+  if(desktop){
+    var facts = window._factsData || [];
+    if(facts.length){
+      var fact = facts[Math.floor(Math.random()*facts.length)];
+      html += '<div style="padding:0 16px 20px;">';
+      html += '<div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">아스날 흥미로운 사실</div>';
+      html += '<div class="detail-callout" style="margin:0;"><span class="detail-callout-icon">'+dIcon('star',13)+'</span>'+fact+'</div>';
+      html += '</div>';
+    }
+  }
   content.innerHTML = html;
   if(!desktop){
     modal.classList.add('open');
