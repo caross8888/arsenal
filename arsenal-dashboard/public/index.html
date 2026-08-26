@@ -63,6 +63,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-section-card .fix-list{padding:0;margin-bottom:0;}
 .fix-layout{display:block;}
 .fix-detail-panel{display:none;}
+.hist-layout{display:block;}
+.hist-detail-panel{display:none;}
 .fix-detail-panel .mm-handle{display:none;}
 .fix-detail-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px 20px;color:var(--text-secondary);font-size:12px;text-align:center;}
 .fix-detail-empty svg{opacity:.4;}
@@ -824,18 +826,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      커진다 — 원래 12px 캡(.overall-stat-grid .fm-stat-val, base CSS)에
      맞춰 훨씬 작은 별도 배율로 다시 캡을 건다. */
   .sq-detail-panel .overall-stat-grid .fm-stat-val{font-size:clamp(10px,2.5cqw,12px);}
-  /* History도 다른 탭들과 같은 기준(섹션 자체는 max-width:none으로 꽉
-     채우고, 안의 콘텐츠가 알아서 자리잡음)으로 맞춘다 — 그래서
-     .hist-otd-wrap도 D-day 카드와 동일한 "고정폭 M 중앙정렬" 전용
-     calc() 공식이 더 이상 필요 없다(섹션 자신의 padding만 취소하면 되는
-     기본 규칙은 이미 모바일 CSS에 있음, 위 CLAUDE.md 문서화된 두 패턴
-     중 max-width:none 쪽).
-     카드형 그리드(트로피/감독/레전드/모먼트/스타디움)는 스쿼드 그리드와
-     동일하게 2열→3열로 넓히고, 리스트형(타임라인/기록)은 리스트+상세패널
-     칸과 동일한 640px로 캡+중앙정렬해서 화면 끝까지 늘어지지 않게 한다. */
+  /* History도 선수단/경기일정/리더보드와 동일한 "리스트+우측 상세패널"
+     구조로 맞춘다 — 섹션 자체는 max-width:none으로 채우고, 안에서
+     리스트 칸(#histListCol)은 640px로 캡, 우측엔 상세 패널(.hist-detail-panel,
+     fix-detail-panel과 동일한 340~480px)을 둔다. OTD는 모바일 전용 상단
+     스트립 대신 PC에서는 우측 패널 기본 카드로 자동 노출된다(경기일정의
+     "다음 경기 자동 노출"과 동일한 패턴, renderHistoryNew 참고). 카드형
+     그리드(트로피/감독/레전드/모먼트/스타디움)는 스쿼드 그리드와 동일하게
+     640px 캡 안에서 2열→3열로 넓힌다. */
   #history.section{max-width:none;}
+  .hist-otd-wrap{display:none;}
+  .hist-layout{display:flex;gap:20px;align-items:flex-start;}
+  #histListCol{flex:0 1 640px;min-width:0;}
+  .hist-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;container-type:inline-size;overflow:hidden;}
+  .hist-detail-panel .hist-modal-handle{display:none;}
   .trophy-grid,.mgr-grid,.lgd-grid,.mom-grid,.stad-grid{grid-template-columns:repeat(3,1fr);}
-  .tl-wrap,.rec-wrap{max-width:640px;margin:0 auto;}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
   /* 리더보드 카드와 동일한 640px 캡 + flex:0 1 640px 패턴(이유는 #lbListCol
@@ -2707,7 +2712,12 @@ function dIcon(name, size){
 
 function renderHistoryNew(){
   var el = document.getElementById('historyContent');
-  var html = '';
+  // 선수단/경기일정/리더보드와 동일한 "리스트+우측 상세패널" 구조 —
+  // 왼쪽 칸(#histListCol)엔 OTD 스트립(모바일 전용)+탭+그리드가, 우측
+  // 패널(.hist-detail-panel)엔 선택된 항목의 상세가 들어간다. 패널 자체는
+  // .fix-detail-panel과 동일하게 기본 CSS에서 숨겨져 있다가 PC 전용
+  // 미디어쿼리에서만 보인다 — 모바일은 지금처럼 바텀시트 모달 그대로.
+  var html = '<div class="hist-layout"><div id="histListCol">';
 
   // ── On This Day 카드 (항상 상단) ──
   var otdData = window._otdData || [];
@@ -2749,7 +2759,20 @@ function renderHistoryNew(){
   html += renderHistSection(_histTab);
   html += '</div>';
 
+  html += '</div>'; // #histListCol 끝
+  html += '<div class="hist-detail-panel" id="histDetailPanel"><div id="histDetailContent"></div></div>';
+  html += '</div>'; // .hist-layout 끝
+
   el.innerHTML = html;
+
+  // PC에서는 OTD를 상단 스트립 대신 우측 패널 기본 카드로 보여준다 —
+  // 경기일정의 "다음 경기 자동 노출"과 동일한 패턴. History 탭은 한 번
+  // 열리면 이 함수가 다시 호출되지 않으므로(탭 전환은 #histSection만
+  // 다시 그림) 플래그 하나로 충분하다(스쿼드의 _sqPanelAutoOpened와 동일).
+  if(isDesktopLayout() && !window._histPanelAutoOpened && otdItem){
+    window._histPanelAutoOpened = true;
+    openOtdModal(enc);
+  }
 }
 
 function switchHistTab(tab){
@@ -2803,6 +2826,15 @@ function renderTimelineSection(){
 }
 function openTimelineModal(enc){
   var d = JSON.parse(decodeURIComponent(enc));
+  var desktop = isDesktopLayout();
+  var modal, content;
+  if(desktop){
+    content = document.getElementById('histDetailContent');
+    if(!content) return;
+  } else {
+    modal = document.getElementById('playerModal');
+    content = document.getElementById('modalContent');
+  }
   var tlData = window._timelineData || [];
   var color = TIMELINE_COLORS[tlData.findIndex(function(x){return x.year===d.year;}) % TIMELINE_COLORS.length];
   var html = '';
@@ -2820,10 +2852,15 @@ function openTimelineModal(enc){
   var eventHtml = (d.event||'').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
   html += '<div style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:24px">'+eventHtml+'</div>';
   html += '</div>';
-  document.getElementById('modalContent').innerHTML = html;
-  document.getElementById('playerModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  requestAnimationFrame(function(){ document.getElementById('modalContent').scrollTop = 0; });
+  content.innerHTML = html;
+  if(!desktop){
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(function(){ content.scrollTop = 0; });
+  } else {
+    var panelEl = document.getElementById('histDetailPanel');
+    if(panelEl) panelEl.scrollTop = 0;
+  }
 }
 
 // ── STADIUM 섹션 ──
@@ -2851,8 +2888,15 @@ function renderStadiumSection(){
 
 function openStadiumModal(enc){
   var s = JSON.parse(decodeURIComponent(enc));
-  var content = document.getElementById('modalContent');
-  var modal = document.getElementById('playerModal');
+  var desktop = isDesktopLayout();
+  var modal, content;
+  if(desktop){
+    content = document.getElementById('histDetailContent');
+    if(!content) return;
+  } else {
+    content = document.getElementById('modalContent');
+    modal = document.getElementById('playerModal');
+  }
   var html = '';
   // 사진
   html += '<div class="hist-modal-photo" style="width:100%;aspect-ratio:16/9;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:56px;color:rgba(255,255,255,.15);">';
@@ -2882,9 +2926,14 @@ function openStadiumModal(enc){
   });
   html += '</div>';
   content.innerHTML = html;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  requestAnimationFrame(function(){ content.scrollTop = 0; });
+  if(!desktop){
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(function(){ content.scrollTop = 0; });
+  } else {
+    var panelEl = document.getElementById('histDetailPanel');
+    if(panelEl) panelEl.scrollTop = 0;
+  }
 }
 
 // ── MOMENTS 섹션 ──
@@ -2914,8 +2963,15 @@ function renderMomentsSection(){
 
 function openMomentModal(enc){
   var m = JSON.parse(decodeURIComponent(enc));
-  var content = document.getElementById('modalContent');
-  var modal = document.getElementById('playerModal');
+  var desktop = isDesktopLayout();
+  var modal, content;
+  if(desktop){
+    content = document.getElementById('histDetailContent');
+    if(!content) return;
+  } else {
+    content = document.getElementById('modalContent');
+    modal = document.getElementById('playerModal');
+  }
   var html = '';
   html += '<div class="hist-modal-photo" style="width:100%;aspect-ratio:16/9;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:56px;color:rgba(255,255,255,.15);">';
   html += '<div class="hist-modal-handle"></div>';
@@ -2931,9 +2987,14 @@ function openMomentModal(enc){
   html += '<div style="font-size:13px;color:var(--text-secondary);line-height:1.8;">'+bodyHtml+'</div>';
   html += '</div>';
   content.innerHTML = html;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  requestAnimationFrame(function(){ content.scrollTop = 0; });
+  if(!desktop){
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(function(){ content.scrollTop = 0; });
+  } else {
+    var panelEl = document.getElementById('histDetailPanel');
+    if(panelEl) panelEl.scrollTop = 0;
+  }
 }
 
 // ── RECORDS 섹션 ──
@@ -3119,8 +3180,15 @@ function renderLegendsSection(){
 function openLegendModal(enc){
   var lgd;
   try{ lgd = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
-  var modal   = document.getElementById('matchModal');
-  var content = document.getElementById('matchModalContent');
+  var desktop = isDesktopLayout();
+  var modal, content;
+  if(desktop){
+    content = document.getElementById('histDetailContent');
+    if(!content) return;
+  } else {
+    modal = document.getElementById('matchModal');
+    content = document.getElementById('matchModalContent');
+  }
 
   var html = '';
   // 사진 헤더
@@ -3166,18 +3234,30 @@ function openLegendModal(enc){
   html += '</div>';
 
   content.innerHTML = html;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  window.history.pushState({modal:'hist'},'','#hist-modal');
-  requestAnimationFrame(function(){ content.scrollTop = 0; });
+  if(!desktop){
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    window.history.pushState({modal:'hist'},'','#hist-modal');
+    requestAnimationFrame(function(){ content.scrollTop = 0; });
+  } else {
+    var panelEl = document.getElementById('histDetailPanel');
+    if(panelEl) panelEl.scrollTop = 0;
+  }
 }
 
 // ── OTD 모달 ──
 function openOtdModal(enc){
   var item;
   try{ item = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
-  var modal = document.getElementById('matchModal');
-  var content = document.getElementById('matchModalContent');
+  var desktop = isDesktopLayout();
+  var modal, content;
+  if(desktop){
+    content = document.getElementById('histDetailContent');
+    if(!content) return;
+  } else {
+    modal = document.getElementById('matchModal');
+    content = document.getElementById('matchModalContent');
+  }
   var catPH = {'legend':'👤','moment':'⚽','club':'🏟️','record':'📈'}[item.category]||'⚽';
   var MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   var mArr = (item.month_day||'').split('-');
@@ -3201,18 +3281,30 @@ function openOtdModal(enc){
   if(item.headline) html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(239,1,7,.08);border-left:3px solid var(--red);border-radius:4px;font-size:12px;font-weight:700;color:var(--red);">'+item.headline+'</div>';
   html += '</div>';
   content.innerHTML = html;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  window.history.pushState({modal:'hist'},'','#hist-modal');
-  requestAnimationFrame(function(){ content.scrollTop = 0; });
+  if(!desktop){
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    window.history.pushState({modal:'hist'},'','#hist-modal');
+    requestAnimationFrame(function(){ content.scrollTop = 0; });
+  } else {
+    var panelEl = document.getElementById('histDetailPanel');
+    if(panelEl) panelEl.scrollTop = 0;
+  }
 }
 
 // ── 트로피 상세 모달 ──
 function openTrophyDetailModal(enc){
   var t;
   try{ t = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
-  var modal = document.getElementById('matchModal');
-  var content = document.getElementById('matchModalContent');
+  var desktop = isDesktopLayout();
+  var modal, content;
+  if(desktop){
+    content = document.getElementById('histDetailContent');
+    if(!content) return;
+  } else {
+    modal = document.getElementById('matchModal');
+    content = document.getElementById('matchModalContent');
+  }
 
   var modalImg = t.moment_image || t.image;
   var html = '';
@@ -3280,10 +3372,15 @@ function openTrophyDetailModal(enc){
 
   html += '</div>';
   content.innerHTML = html;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  window.history.pushState({modal:'hist'},'','#hist-modal');
-  requestAnimationFrame(function(){ content.scrollTop = 0; });
+  if(!desktop){
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    window.history.pushState({modal:'hist'},'','#hist-modal');
+    requestAnimationFrame(function(){ content.scrollTop = 0; });
+  } else {
+    var panelEl = document.getElementById('histDetailPanel');
+    if(panelEl) panelEl.scrollTop = 0;
+  }
 }
 
 // ── 감독 상세 모달 ──
@@ -3295,8 +3392,15 @@ var _mgrGamesCache = {};
 function openManagerModal(enc){
   var mgr;
   try{ mgr = JSON.parse(decodeURIComponent(enc)); }catch(e){ return; }
-  var modal = document.getElementById('matchModal');
-  var content = document.getElementById('matchModalContent');
+  var desktop = isDesktopLayout();
+  var modal, content;
+  if(desktop){
+    content = document.getElementById('histDetailContent');
+    if(!content) return;
+  } else {
+    modal = document.getElementById('matchModal');
+    content = document.getElementById('matchModalContent');
+  }
   // 은퇴한 감독은 games가 정적으로 고정돼 있지만, 현재 재임 중인 감독은
   // (managers.json이 손으로 채운 정적 파일이라) 계속 경기가 늘어나서
   // 값을 못 박아둘 수 없다 — tenureStart(부임 첫 경기 날짜)가 있으면
@@ -3344,10 +3448,15 @@ function openManagerModal(enc){
     html += '</div>';
   }
   content.innerHTML = html;
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  window.history.pushState({modal:'hist'},'','#hist-modal');
-  requestAnimationFrame(function(){ content.scrollTop = 0; });
+  if(!desktop){
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    window.history.pushState({modal:'hist'},'','#hist-modal');
+    requestAnimationFrame(function(){ content.scrollTop = 0; });
+  } else {
+    var panelEl = document.getElementById('histDetailPanel');
+    if(panelEl) panelEl.scrollTop = 0;
+  }
   if(!mgr.games && cached===undefined && mgr.tenureStart) computeManagerGames(mgr);
 }
 
