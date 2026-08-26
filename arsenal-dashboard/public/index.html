@@ -170,7 +170,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .std-crest{width:15px;height:15px;border-radius:50%;object-fit:contain;border:none;flex-shrink:0;filter:drop-shadow(0 0 1px rgba(255,255,255,.35))}
 .std-s{font-family:var(--fm);color:var(--text);text-align:center;font-size:10px}
 .std-pts{font-family:var(--fm);font-weight:700;color:var(--text);text-align:right;font-size:11px}
-.lb-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(255,255,255,.15);}
+.lb-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(255,255,255,.15);border-bottom:1px solid rgba(255,255,255,.15);}
 .lb-tab{position:relative;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:700;-webkit-tap-highlight-color:transparent;}
 .lb-tab-badge{position:absolute;top:6px;right:8px;font-size:11px;font-weight:700;color:inherit;}
 .lb-tab svg{width:14px;height:14px;stroke:var(--text-muted);transition:stroke .15s;flex-shrink:0;}
@@ -192,7 +192,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .f-btn{background:var(--surface2);border:none;color:var(--text-muted);font-family:var(--fb);font-size:12px;font-weight:700;padding:10px 4px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .f-btn.active{background:var(--red-dark);color:#fff}
 .sq-tabs-group{border-radius:12px;overflow:hidden;margin-bottom:16px;background:rgba(255,255,255,.15);display:flex;flex-direction:column;gap:1px;border:1px solid rgba(255,255,255,.15);}
-.sq-tabs-group .f-btns{border-radius:0;margin-bottom:0}
+.sq-tabs-group .f-btns{border-radius:0;margin-bottom:0;background:transparent}
 .sq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 .pl-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s;position:relative;-webkit-tap-highlight-color:transparent;}
 .pl-contract-badge{position:absolute;top:6px;right:6px;z-index:2;background:rgba(239,68,68,.92);color:#fff;font-size:8px;font-weight:800;letter-spacing:.3px;padding:2px 6px;border-radius:10px;display:flex;align-items:center;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.4)}
