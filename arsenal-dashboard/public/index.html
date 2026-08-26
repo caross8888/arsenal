@@ -5256,17 +5256,33 @@ function openPlayerModal(p, level, isLiveRefresh) {
         heatmap: live.heatmap && live.heatmap.length ? live.heatmap : p.heatmap,
         career: (live.career && live.career.length) ? live.career : p.career,
       });
+      // 시즌 초반엔 정적 스냅샷과 라이브 값이 완전히 같은 경우가 대부분이다
+      // — 그럴 땐 다시 그릴 이유가 없다(전체 다시 그리기라 깜빡임만 생김).
+      // 실제로 달라진 필드가 하나라도 있을 때만 다시 그린다.
+      var FIELDS_TO_COMPARE = ['competitions','traits','shotmap','heatmap','career'];
+      var changed = FIELDS_TO_COMPARE.some(function(k){
+        return JSON.stringify(p[k]) !== JSON.stringify(merged[k]);
+      });
+      if(!changed) return;
       // fetch가 도는 동안 사용자가 이미 다른 탭(기록/경력)으로 넘어가 있을
       // 수 있다 — 다시 그리면 항상 기본정보 탭이 기본값이라, 그 전에 어느
       // 탭이 활성 상태였는지 기억해뒀다가 다시 그린 뒤 그 탭을 그대로
       // 재선택한다.
       var activeBtn = content.querySelector('.live-tab-btn.active');
       var activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : null;
-      openPlayerModal(merged, level, true);
-      if(activeTab && activeTab!=='pmbasic'){
-        var newBtn = content.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');
-        if(newBtn) newBtn.click();
-      }
+      // 값이 실제로 달라져 다시 그릴 때만 도달하는 경로 — 통째로 순간
+      // 교체하면 눈에 띄므로, opacity를 살짝 낮췄다 다시 올리는 페이드로
+      // 감싼다.
+      content.style.transition = 'opacity .16s ease';
+      content.style.opacity = '0.15';
+      setTimeout(function(){
+        openPlayerModal(merged, level, true);
+        if(activeTab && activeTab!=='pmbasic'){
+          var newBtn = content.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');
+          if(newBtn) newBtn.click();
+        }
+        content.style.opacity = '1';
+      }, 160);
     }).catch(function(){});
   }
 }
