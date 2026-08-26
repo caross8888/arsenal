@@ -5185,6 +5185,9 @@ function openPlayerModal(p, level, isLiveRefresh) {
       h += '<canvas id="heatmap_canvas" width="320" height="207" style="width:100%;height:auto;display:block;border-radius:8px;"></canvas>';
       h += '</div>';
     }
+  } else {
+    h += '<div class="mm-card-title" style="padding:14px 14px 4px;color:#fff;font-size:12px;">선수 스탯</div>';
+    h += '<div style="padding:10px 14px 14px;font-size:12px;color:var(--text-secondary);">아직 기록할 경기가 없습니다</div>';
   }
 
   h += '</div>'; // live-panel-pmrecord 끝
