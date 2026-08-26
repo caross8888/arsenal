@@ -4901,7 +4901,7 @@ var TRAIT_LABELS = {
 // ── PLAYER MODAL (Fotmob Style) ──
 
 var _openPlayerId = null; // 지금 열려있는(또는 마지막으로 연) 선수 fotmobId — 라이브 fetch 경쟁 상태 방지용
-function openPlayerModal(p, level, isLiveRefresh) {
+function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   var desktop = isDesktopLayout();
   var modal, content;
   if(desktop){
@@ -5016,14 +5016,18 @@ function openPlayerModal(p, level, isLiveRefresh) {
     }
   }
   h += '<div style="position:absolute;right:16px;bottom:18px;text-align:center;line-height:1">';
-  h += '<div style="font-size:36px;font-weight:900;font-family:var(--fd);color:'+hdrRatingColor+'">'+hdrRating+'</div>';
+  h += '<div id="pmHdrRatingVal" style="font-size:36px;font-weight:900;font-family:var(--fd);color:'+hdrRatingColor+'">'+hdrRating+'</div>';
   h += '</div>';
   h += '</div></div></div>';
 
   // ── 탭(기본정보/기록/경력) — 경기상세모달(buildFinishedDetail)의
   // .live-tabs/.live-tab-btn/liveSwitchTab을 그대로 재사용한다. id는
   // 경기상세모달과 겹치지 않게 pm- 접두를 붙인다. ──
-  h += '<div style="border-top:1px solid var(--border);">';
+  h += '<div id="pmTabsWrap" style="border-top:1px solid var(--border);">';
+  // 라이브 새로고침 때 헤더(사진/이름)는 놔두고 이 구간(탭+탭패널)만
+  // 페이드하며 갱신하기 위해, #pmTabsWrap의 내용물(자기 자신 태그는
+  // 제외)만 따로 잘라낼 수 있게 시작 위치를 기록해둔다.
+  var _tabsHtmlStart = h.length;
   h += '<div class="live-tabs">';
   h += '<button class="live-tab-btn active" data-tab="pmbasic" onclick="liveSwitchTab(this,&quot;pmbasic&quot;)">기본정보</button>';
   h += '<button class="live-tab-btn" data-tab="pmrecord" onclick="liveSwitchTab(this,&quot;pmrecord&quot;)">기록</button>';
@@ -5213,9 +5217,20 @@ function openPlayerModal(p, level, isLiveRefresh) {
     });
   }
   h += '</div>'; // live-panel-pmcareer 끝
+  var tabsHtml = h.slice(_tabsHtmlStart); // pmTabsWrap 자기 태그는 제외한 내용물만
   h += '</div>'; // 탭 wrapper 끝
 
-  content.innerHTML = h;
+  // scopedFade: 라이브 새로고침으로 값이 실제로 바뀌어 다시 그릴 때
+  // 쓰인다 — 헤더(사진/이름/배지)는 어차피 안 바뀌니 그대로 두고,
+  // 탭+탭패널(#pmTabsWrap)만 갈아끼워서 그 부분만 페이드되게 한다.
+  var existingWrap = scopedFade && content.querySelector('#pmTabsWrap');
+  if(existingWrap){
+    existingWrap.innerHTML = tabsHtml;
+    var hdrValEl = content.querySelector('#pmHdrRatingVal');
+    if(hdrValEl){ hdrValEl.textContent = hdrRating; hdrValEl.style.color = hdrRatingColor; }
+  } else {
+    content.innerHTML = h;
+  }
   // 라이브 새로고침으로 다시 그릴 땐 이미 열려있는 모달이라 열기
   // 애니메이션/히스토리 push를 또 하면 안 된다.
   if(!desktop && !modal.classList.contains('open')){
@@ -5273,18 +5288,21 @@ function openPlayerModal(p, level, isLiveRefresh) {
       // 재선택한다.
       var activeBtn = content.querySelector('.live-tab-btn.active');
       var activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : null;
-      // 값이 실제로 달라져 다시 그릴 때만 도달하는 경로 — 통째로 순간
-      // 교체하면 눈에 띄므로, opacity를 살짝 낮췄다 다시 올리는 페이드로
-      // 감싼다.
-      content.style.transition = 'opacity .16s ease';
-      content.style.opacity = '0.15';
+      // 값이 실제로 달라져 다시 그릴 때만 도달하는 경로 — 사진/이름 등
+      // 헤더는 그대로 두고, 실제로 갱신되는 탭+탭패널(#pmTabsWrap)만
+      // opacity를 살짝 낮췄다 다시 올리는 페이드로 감싼다.
+      var tabsWrap = content.querySelector('#pmTabsWrap');
+      if(tabsWrap){
+        tabsWrap.style.transition = 'opacity .16s ease';
+        tabsWrap.style.opacity = '0.15';
+      }
       setTimeout(function(){
-        openPlayerModal(merged, level, true);
+        openPlayerModal(merged, level, true, true);
         if(activeTab && activeTab!=='pmbasic'){
           var newBtn = content.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');
           if(newBtn) newBtn.click();
         }
-        content.style.opacity = '1';
+        if(tabsWrap) tabsWrap.style.opacity = '1';
       }, 160);
     }).catch(function(){});
   }
