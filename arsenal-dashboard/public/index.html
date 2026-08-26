@@ -4894,7 +4894,8 @@ var TRAIT_LABELS = {
 
 // ── PLAYER MODAL (Fotmob Style) ──
 
-function openPlayerModal(p, level) {
+var _openPlayerId = null; // 지금 열려있는(또는 마지막으로 연) 선수 fotmobId — 라이브 fetch 경쟁 상태 방지용
+function openPlayerModal(p, level, isLiveRefresh) {
   var desktop = isDesktopLayout();
   var modal, content;
   if(desktop){
@@ -4906,6 +4907,12 @@ function openPlayerModal(p, level) {
     content = document.getElementById('modalContent');
     modal.querySelector('.modal-sheet').classList.remove('hist-compact');
   }
+  // 대회별 기록/경력/특성은 정적 스냅샷(players.json) 대신 그때그때
+  // Fotmob에서 라이브로 받아온다 — 아래에서 fetch가 끝나면 이 함수를
+  // 한 번 더 호출(isLiveRefresh=true)해서 조용히 다시 그린다. 그 사이
+  // 사용자가 다른 선수를 열었으면 무시해야 하므로 어떤 선수를 열었는지
+  // 전역에 기록해둔다.
+  _openPlayerId = p.fotmobId||p.id;
   var pos = p.posGroup; // GK DF MF FW
 
   // players.json 기반 데이터 직접 사용 (football.js에서 모든 데이터 전달)
@@ -5195,12 +5202,14 @@ function openPlayerModal(p, level) {
   h += '</div>'; // 탭 wrapper 끝
 
   content.innerHTML = h;
-  if(!desktop){
+  // 라이브 새로고침으로 다시 그릴 땐 이미 열려있는 모달이라 열기
+  // 애니메이션/히스토리 push를 또 하면 안 된다.
+  if(!desktop && !modal.classList.contains('open')){
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
     history.pushState({modal:'player'},'',' #player');
   }
-  requestAnimationFrame(function(){ content.scrollTop = 0; });
+  if(!isLiveRefresh) requestAnimationFrame(function(){ content.scrollTop = 0; });
 
   // 레이더 차트
   setTimeout(function(){
@@ -5217,6 +5226,38 @@ function openPlayerModal(p, level) {
       toggleShotLine(initDefaultIdx);
     }
   }, 60);
+
+  // 정적 스냅샷으로 일단 즉시 그려놓고(위), 그 사이 Fotmob 라이브 데이터를
+  // 받아와서 도착하면 조용히 다시 그린다(스켈레톤/로딩 스피너 없이) —
+  // players.json이 며칠 전 스냅샷이어도 화면은 바로 뜨고, 몇백 ms 후
+  // 최신 값으로 자연스럽게 갱신된다. 실패하면(레이트리밋 등) 그냥 정적
+  // 스냅샷 그대로 남아서 롤백 걱정 없이 안전하다.
+  var fotmobId = p.fotmobId||p.id;
+  if(!isLiveRefresh && fotmobId){
+    apiFetch(FN+'/football?type=playerDetail&id='+fotmobId).then(function(live){
+      if(!live || live.error) return;
+      // 그 사이 사용자가 다른 선수를 열었으면 이 응답은 버린다.
+      if(_openPlayerId !== fotmobId) return;
+      var merged = Object.assign({}, p, {
+        competitions: (live.competitions && Object.keys(live.competitions).length) ? live.competitions : p.competitions,
+        traits: live.traits || p.traits,
+        shotmap: live.shotmap && live.shotmap.length ? live.shotmap : p.shotmap,
+        heatmap: live.heatmap && live.heatmap.length ? live.heatmap : p.heatmap,
+        career: (live.career && live.career.length) ? live.career : p.career,
+      });
+      // fetch가 도는 동안 사용자가 이미 다른 탭(기록/경력)으로 넘어가 있을
+      // 수 있다 — 다시 그리면 항상 기본정보 탭이 기본값이라, 그 전에 어느
+      // 탭이 활성 상태였는지 기억해뒀다가 다시 그린 뒤 그 탭을 그대로
+      // 재선택한다.
+      var activeBtn = content.querySelector('.live-tab-btn.active');
+      var activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : null;
+      openPlayerModal(merged, level, true);
+      if(activeTab && activeTab!=='pmbasic'){
+        var newBtn = content.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');
+        if(newBtn) newBtn.click();
+      }
+    }).catch(function(){});
+  }
 }
 
 // Fotmob 좌표는 0~100 정규화가 아니라 실제 피치 크기(미터) 기준으로 내려온다

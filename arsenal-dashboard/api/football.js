@@ -71,6 +71,52 @@ const FOTMOB_HEADERS = {
   'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
 };
 
+// ── 선수 상세(라이브 fetch 결과) 영구 캐시 — Upstash Redis REST API ──
+// players.json(스크래퍼 스냅샷)은 안 건드리고, 선수를 열어볼 때마다 받아온
+// 라이브 데이터를 여기 같이 저장해둔다 — 다음에 누가 스쿼드탭을 열면(아래
+// squad 분기) 이 캐시에 있는 값으로 정적 스냅샷을 덮어써서 "처음 뜨는
+// 화면"도 점점 최신에 가까워진다. 환경변수가 없으면(로컬에서 KV 연결 전
+// 등) 전부 조용히 건너뛰어 기존 동작 그대로 유지한다.
+const KV_URL = process.env.KV_REST_API_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+const KV_TTL_SEC = 7 * 24 * 60 * 60; // 일주일 지나면 자동 만료 — 안 쓰는 선수 데이터가 무한정 안 쌓이게
+
+async function kvSetPlayer(id, data){
+  if(!KV_URL || !KV_TOKEN) return;
+  try {
+    // 경로에 key/value/옵션을 다 늘어놓는 방식은 EX 같은 옵션과 궁합이
+    // 안 좋아서(실측으로 확인), 커맨드 전체를 JSON 배열로 보내는 표준
+    // 파이프라인 방식을 쓴다: ["SET", key, value, "EX", seconds]
+    await fetch(KV_URL, {
+      method: 'POST',
+      headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
+      body: JSON.stringify(['SET', `player:${id}`, JSON.stringify(data), 'EX', String(KV_TTL_SEC)]),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch(e){ /* 캐시 저장 실패는 무시 — 응답 자체엔 영향 없어야 함 */ }
+}
+
+// squad 목록 전체(최대 수십 명)를 한 번에 조회 — 명령 수를 아끼려고 개별
+// GET 대신 MGET 하나로 묶는다.
+async function kvMGetPlayers(ids){
+  if(!KV_URL || !KV_TOKEN || !ids.length) return {};
+  try {
+    const path = ids.map(id => `player:${id}`).join('/');
+    const r = await fetch(`${KV_URL}/mget/${path}`, {
+      headers: {Authorization: `Bearer ${KV_TOKEN}`},
+      signal: AbortSignal.timeout(5000),
+    });
+    if(!r.ok) return {};
+    const { result } = await r.json();
+    const out = {};
+    (result||[]).forEach((raw, i) => {
+      if(!raw) return;
+      try { out[ids[i]] = JSON.parse(raw); } catch(e){ /* 손상된 값은 무시 */ }
+    });
+    return out;
+  } catch(e){ return {}; }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin','*');
 
@@ -80,7 +126,10 @@ export default async function handler(req, res) {
   // team을 같이 섞는다 — 안 그러면 아스날 조회 캐시를 상대팀 조회가 그대로
   // 돌려받거나 덮어써버린다.
   const teamParam = req.query.team || '';
-  const cacheKey = type + (teamParam ? ('_'+teamParam) : '');
+  // playerDetail은 선수마다 응답이 다르므로 id도 캐시 키에 섞는다 — 안 그러면
+  // 첫 번째로 조회된 선수의 데이터를 다른 선수 조회가 그대로 돌려받는다.
+  const idParam = req.query.id || '';
+  const cacheKey = type + (teamParam ? ('_'+teamParam) : '') + (idParam ? ('_'+idParam) : '');
   res.setHeader('Cache-Control', `public, max-age=${Math.floor(getTTL(type)/1000)}`);
 
   if(!nocache){
@@ -619,9 +668,26 @@ export default async function handler(req, res) {
       const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
       if(!pjRes.ok) throw new Error('players.json 로드 실패');
       const pjData = await pjRes.json();
+      // 예전에 누군가 선수 상세를 열어봐서 KV에 라이브 데이터가 남아있으면,
+      // players.json 스냅샷(며칠 전 것일 수 있음) 위에 그걸 덮어써서
+      // "처음 뜨는 화면"도 점점 최신에 가깝게 만든다. MGET 하나로 몰아서
+      // 선수 수만큼 명령을 안 쓰게 한다.
+      const liveById = await kvMGetPlayers((pjData.players || []).map(p => p.id));
 
       result = {
-        squad: (pjData.players || []).map(p => ({
+        squad: (pjData.players || []).map(p => {
+          const live = liveById[p.id];
+          if(live){
+            p = Object.assign({}, p, {
+              competitions: (live.competitions && Object.keys(live.competitions).length) ? live.competitions : p.competitions,
+              traits: live.traits || p.traits,
+              shotmap: (live.shotmap && live.shotmap.length) ? live.shotmap : p.shotmap,
+              heatmap: (live.heatmap && live.heatmap.length) ? live.heatmap : p.heatmap,
+              career: (live.career && live.career.length) ? live.career : p.career,
+            });
+          }
+          return p;
+        }).map(p => ({
           id:          p.id,
           fotmobId:    p.id,
           squadLevel:  p.squadLevel || 'first',
@@ -656,6 +722,129 @@ export default async function handler(req, res) {
           season:      p.season || '',
         }))
       };
+    } else if(type === 'playerDetail'){
+      // 선수 상세모달(기록/경력 탭)을 위한 대회별 스탯·shotmap·heatmap·
+      // traits·career를 Fotmob에서 그때그때 라이브로 가져온다 —
+      // scripts/scrape_fotmob_local.py가 만드는 players.json의 competitions/
+      // shotmap/heatmap/traits/career와 동일한 모양으로 맞춰서, 프론트
+      // 렌더링 코드(기록/경력 탭)는 손 안 대고 데이터 출처만 바꾼다.
+      const playerId = req.query.id;
+      if(!playerId) throw new Error('id 파라미터 필요');
+
+      const pdRes = await fetch(`https://www.fotmob.com/api/data/playerData?id=${playerId}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+      if(!pdRes.ok) throw new Error('Fotmob playerData 로드 실패');
+      const pd = await pdRes.json();
+
+      // Fotmob 대회명 → 우리 코드(SENIOR_COMPS/YOUTH_COMPS) 매핑. 여기 없는
+      // 대회(월드컵, 네이션스리그 등 국가대표 경기 등)는 그냥 무시한다.
+      const COMP_NAME_TO_CODE = {
+        'Premier League': 'PL',
+        'Champions League': 'UCL',
+        'FA Cup': 'FAC',
+        'EFL Cup': 'EFL',
+        'Premier League 2': 'PL2',
+        'EFL Trophy': 'EFLT',
+        'UEFA Youth League': 'UYL',
+      };
+      // statSeasons[0]이 항상 "이번 시즌" — 그 안의 대회 목록에서 entryId를 뽑는다.
+      const currentSeason = (pd.statSeasons || [])[0];
+      const compEntries = {}; // code -> {entryId, name}
+      (currentSeason?.tournaments || []).forEach(t => {
+        const code = COMP_NAME_TO_CODE[t.name];
+        if(code) compEntries[code] = {entryId: t.entryId, name: t.name};
+      });
+
+      const codes = Object.keys(compEntries);
+      const statsResults = await Promise.all(codes.map(code =>
+        fetch(`https://www.fotmob.com/api/data/playerStats?playerId=${playerId}&seasonId=${compEntries[code].entryId}&isFirstSeason=false`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)})
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null)
+      ));
+
+      const numOf = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+      const findStat = (items, id) => { const f = (items||[]).find(i => i.localizedTitleId === id); return f ? f.statValue : undefined; };
+      // Fotmob shotmap의 eventType/isBlocked/isOnTarget/isOwnGoal 조합을 우리
+      // 프론트(SHOT_EVENT_LABEL 등)가 쓰는 event 문자열로 단순화한다.
+      const toShotEvent = s => {
+        if(s.isOwnGoal) return 'ownGoal';
+        if(s.eventType === 'Goal') return 'goal';
+        if(s.isOnTarget) return 'onTarget';
+        if(s.isBlocked) return 'blocked';
+        return 'miss';
+      };
+
+      const competitions = {};
+      const shotmap = [];
+      const heatmap = [];
+
+      codes.forEach((code, i) => {
+        const s = statsResults[i];
+        if(!s) return;
+        const top = (s.topStatCard && s.topStatCard.items) || [];
+        const rest = ((s.statsSection && s.statsSection.items) || []).flatMap(g => g.items || []);
+        const combined = top.concat(rest);
+        competitions[code] = {
+          name: compEntries[code].name,
+          appearances:  numOf(findStat(combined, 'matches_uppercase')),
+          starts:       numOf(findStat(combined, 'player_started_matches')),
+          goals:        numOf(findStat(combined, 'goals')),
+          assists:      numOf(findStat(combined, 'assists')),
+          yellowCards:  numOf(findStat(combined, 'yellow_cards')),
+          redCards:     numOf(findStat(combined, 'red_cards')),
+          minutesPlayed:numOf(findStat(combined, 'minutes_played')),
+          cleanSheets:  numOf(findStat(combined, 'clean_sheet_title')),
+          goalsConceded:numOf(findStat(combined, 'goals_conceded')),
+          avgRating:    numOf(findStat(combined, 'rating')) || undefined,
+        };
+        (s.shotmap || []).forEach(sh => shotmap.push({
+          comp: code,
+          x: sh.x, y: sh.y, min: sh.min,
+          shotType: sh.shotType, situation: sh.situation,
+          event: toShotEvent(sh),
+          xg: sh.expectedGoals, xgot: sh.expectedGoalsOnTarget,
+          match: {
+            home: sh.homeTeamName, away: sh.awayTeamName,
+            homeId: sh.homeTeamId, awayId: sh.awayTeamId,
+            homeScore: sh.homeScore, awayScore: sh.awayScore,
+            date: sh.matchDate,
+          },
+        }));
+        ((s.heatmap && s.heatmap.coordinates) || []).forEach(pt => heatmap.push({comp: code, x: pt.x, y: pt.y}));
+      });
+
+      // GK는 topStatCard/statsSection에 minutes_played가 아예 없어서(실측 확인)
+      // 0으로 잡힌다 — mainLeague.stats(현재 메인 리그 한정)엔 있으니 그걸로
+      // 메인 리그 항목만 보정한다. 다른 대회는 이 API 응답 자체에 값이 없어
+      // 그대로 '-' 로 보인다(프론트가 0/undefined를 '-'로 렌더링, 기존 동작).
+      const mainLeagueCode = codes.find(c => compEntries[c].entryId.endsWith('-0'));
+      if(mainLeagueCode && competitions[mainLeagueCode] && !competitions[mainLeagueCode].minutesPlayed){
+        // mainLeague.stats는 topStatCard/statsSection과 다르게 값이
+        // statValue가 아니라 value 필드에 들어있다.
+        const mlStat = (pd.mainLeague?.stats || []).find(i => i.localizedTitleId === 'minutes_played');
+        if(mlStat && mlStat.value) competitions[mainLeagueCode].minutesPlayed = numOf(mlStat.value);
+      }
+
+      const career = (((pd.careerHistory || {}).careerItems || {}).senior || {}).teamEntries || [];
+
+      result = {
+        id: Number(playerId),
+        competitions,
+        shotmap,
+        heatmap,
+        traits: pd.traits || null,
+        career: career.map(t => ({
+          team: t.team,
+          startDate: t.startDate,
+          endDate: t.endDate,
+          active: !!t.active,
+          appearances: t.appearances,
+          goals: t.goals,
+          assists: t.assists,
+        })),
+      };
+      // KV에 저장 — 실패해도 이번 응답엔 영향 없게 await는 하되 에러는
+      // kvSetPlayer 내부에서 이미 삼킨다.
+      await kvSetPlayer(playerId, result);
     }
 
     if(!nocache) setCache(cacheKey, result);
