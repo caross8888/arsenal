@@ -840,6 +840,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   #histListCol{flex:0 1 640px;min-width:0;}
   .hist-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;container-type:inline-size;overflow:hidden;}
   .hist-detail-panel .hist-modal-handle{display:none;}
+  /* OTD(기본 상태)에는 "닫기" 버튼이 필요 없다 — 애초에 아무것도 안
+     열려있는 홈 화면이라 닫을 대상이 없다. 트로피/감독 등 실제 상세를
+     열었을 때만(.showing-detail) X를 보여줘서 OTD로 되돌아가게 한다. */
+  #histDetailPanel .modal-close{display:none;}
+  #histDetailPanel.showing-detail .modal-close{display:flex;}
   .trophy-grid,.mgr-grid,.lgd-grid,.mom-grid,.stad-grid{grid-template-columns:repeat(3,1fr);}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
@@ -2878,7 +2883,7 @@ function openTimelineModal(enc){
     requestAnimationFrame(function(){ content.scrollTop = 0; });
   } else {
     var panelEl = document.getElementById('histDetailPanel');
-    if(panelEl) panelEl.scrollTop = 0;
+    if(panelEl){ panelEl.classList.add('showing-detail'); panelEl.scrollTop = 0; }
   }
 }
 
@@ -2951,7 +2956,7 @@ function openStadiumModal(enc){
     requestAnimationFrame(function(){ content.scrollTop = 0; });
   } else {
     var panelEl = document.getElementById('histDetailPanel');
-    if(panelEl) panelEl.scrollTop = 0;
+    if(panelEl){ panelEl.classList.add('showing-detail'); panelEl.scrollTop = 0; }
   }
 }
 
@@ -3012,7 +3017,7 @@ function openMomentModal(enc){
     requestAnimationFrame(function(){ content.scrollTop = 0; });
   } else {
     var panelEl = document.getElementById('histDetailPanel');
-    if(panelEl) panelEl.scrollTop = 0;
+    if(panelEl){ panelEl.classList.add('showing-detail'); panelEl.scrollTop = 0; }
   }
 }
 
@@ -3260,7 +3265,7 @@ function openLegendModal(enc){
     requestAnimationFrame(function(){ content.scrollTop = 0; });
   } else {
     var panelEl = document.getElementById('histDetailPanel');
-    if(panelEl) panelEl.scrollTop = 0;
+    if(panelEl){ panelEl.classList.add('showing-detail'); panelEl.scrollTop = 0; }
   }
 }
 
@@ -3299,16 +3304,18 @@ function openOtdModal(enc){
   if(item.summary) html += '<p style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin:14px 0 0;">'+item.summary+'</p>';
   if(item.headline) html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(239,1,7,.08);border-left:3px solid var(--red);border-radius:4px;font-size:12px;font-weight:700;color:var(--red);">'+item.headline+'</div>';
   html += '</div>';
-  // PC 우측 패널에서 OTD 카드 바로 아래에만 노출되는 "아스날 흥미로운
-  // 사실" — 모바일 바텀시트에서는 안 보이므로(공간도 부족하고 굳이 필요
-  // 없음) desktop일 때만 덧붙인다. 클릭 인터랙션 없이 텍스트만 보여준다.
+  // "아스날 흥미로운 사실"은 OTD와 한데 묶인 문단이 아니라 완전히 별개
+  // 섹션이다 — 경기상세모달의 골&이벤트/팀 스탯처럼 각자 독립된 .mm-card
+  // 박스로 나눠서, OTD 카드가 바뀌어도 그 아래 별도 카드로 늘 붙어있는
+  // 모양새로 보이게 한다. PC 전용(모바일 바텀시트에는 공간도 없고 필요도
+  // 없음), 클릭 인터랙션은 없이 텍스트만 보여준다.
   if(desktop){
     var facts = window._factsData || [];
     if(facts.length){
       var fact = facts[Math.floor(Math.random()*facts.length)];
-      html += '<div style="padding:0 16px 20px;">';
-      html += '<div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">아스날 흥미로운 사실</div>';
-      html += '<div class="detail-callout" style="margin:0;"><span class="detail-callout-icon">'+dIcon('star',13)+'</span>'+fact+'</div>';
+      html += '<div class="mm-card">';
+      html += '<div style="padding:14px 14px 0;font-size:9px;font-weight:800;letter-spacing:2px;color:var(--gold);text-transform:uppercase;">아스날 흥미로운 사실</div>';
+      html += '<div style="padding:10px 14px 14px;font-size:13px;color:var(--text-secondary);line-height:1.65;">'+fact+'</div>';
       html += '</div>';
     }
   }
@@ -3319,8 +3326,11 @@ function openOtdModal(enc){
     window.history.pushState({modal:'hist'},'','#hist-modal');
     requestAnimationFrame(function(){ content.scrollTop = 0; });
   } else {
+    // OTD는 "아무것도 안 열려있는" 기본 상태라 닫기 버튼이 필요 없다 —
+    // 다른 상세(트로피/감독 등)를 열 때만 붙는 showing-detail 클래스를
+    // 여기서는 지운다.
     var panelEl = document.getElementById('histDetailPanel');
-    if(panelEl) panelEl.scrollTop = 0;
+    if(panelEl){ panelEl.classList.remove('showing-detail'); panelEl.scrollTop = 0; }
   }
 }
 
@@ -3411,7 +3421,7 @@ function openTrophyDetailModal(enc){
     requestAnimationFrame(function(){ content.scrollTop = 0; });
   } else {
     var panelEl = document.getElementById('histDetailPanel');
-    if(panelEl) panelEl.scrollTop = 0;
+    if(panelEl){ panelEl.classList.add('showing-detail'); panelEl.scrollTop = 0; }
   }
 }
 
@@ -3487,7 +3497,7 @@ function openManagerModal(enc){
     requestAnimationFrame(function(){ content.scrollTop = 0; });
   } else {
     var panelEl = document.getElementById('histDetailPanel');
-    if(panelEl) panelEl.scrollTop = 0;
+    if(panelEl){ panelEl.classList.add('showing-detail'); panelEl.scrollTop = 0; }
   }
   if(!mgr.games && cached===undefined && mgr.tenureStart) computeManagerGames(mgr);
 }
