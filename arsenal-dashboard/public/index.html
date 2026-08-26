@@ -2737,6 +2737,8 @@ function renderHistoryNew(){
     var dayStr = parseInt(otdMD[1]) || parseInt(dd);
     var yr = otdItem.year || 0;
     var enc = encodeURIComponent(JSON.stringify(otdItem)).replace(/'/g, '%27');
+    // PC 우측 패널의 X(닫기) 버튼이 "OTD로 되돌아가기"용으로 이 값을 쓴다.
+    window._histOtdEnc = enc;
     html += '<div class="hist-otd-wrap"><div class="hist-otd-card" onclick="openOtdModal(\'' + enc + '\')">';
     html += '<div class="hist-otd-date">'+dayStr+' '+monthStr+(yr?' '+yr:'')+'</div>';
     html += '<div class="hist-otd-title">'+otdItem.title+'</div>';
@@ -2760,7 +2762,10 @@ function renderHistoryNew(){
   html += '</div>';
 
   html += '</div>'; // #histListCol 끝
-  html += '<div class="hist-detail-panel" id="histDetailPanel"><div id="histDetailContent"></div></div>';
+  html += '<div class="hist-detail-panel" id="histDetailPanel">';
+  html += '<button class="modal-close" onclick="resetHistDetailPanel()">&#10005;</button>';
+  html += '<div id="histDetailContent"></div>';
+  html += '</div>';
   html += '</div>'; // .hist-layout 끝
 
   el.innerHTML = html;
@@ -2781,6 +2786,18 @@ function switchHistTab(tab){
     b.classList.toggle('active', b.getAttribute('data-tab') === tab);
   });
   document.getElementById('histSection').innerHTML = renderHistSection(tab);
+}
+
+// PC 우측 상세패널의 X 버튼 — 트로피/감독/레전드 등 상세를 닫으면 그
+// 자리에 다시 OTD 기본 카드를 보여준다(패널을 완전히 비우면 안내도 없이
+// 텅 비어 보여서 오히려 어색하다).
+function resetHistDetailPanel(){
+  if(window._histOtdEnc){
+    openOtdModal(window._histOtdEnc);
+  } else {
+    var content = document.getElementById('histDetailContent');
+    if(content) content.innerHTML = '';
+  }
 }
 
 function renderHistSection(tab){
