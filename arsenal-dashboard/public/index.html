@@ -65,6 +65,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-detail-panel{display:none;}
 .hist-layout{display:block;}
 .hist-detail-panel{display:none;}
+#histFactsCard{display:none;}
 .fix-detail-panel .mm-handle{display:none;}
 .fix-detail-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px 20px;color:var(--text-secondary);font-size:12px;text-align:center;}
 .fix-detail-empty svg{opacity:.4;}
@@ -838,7 +839,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .hist-otd-wrap{display:none;}
   .hist-layout{display:flex;gap:20px;align-items:flex-start;}
   #histListCol{flex:0 1 640px;min-width:0;}
-  .hist-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;container-type:inline-size;overflow:hidden;}
+  /* 우측 칸엔 상세패널(.hist-detail-panel)과 "아스날 흥미로운 사실"
+     (#histFactsCard)이 세로로 쌓인다 — 둘은 서로 완전히 독립된 별개
+     섹션이라, 트로피/감독 등 상세를 열어도 사실 카드는 그대로 남아있고
+     반대로 사실 카드가 상세패널의 내용 일부로 지워지지도 않는다. 폭
+     제약(340~480px)은 이 둘을 감싸는 칸 자체에 건다. */
+  .hist-right-col{display:flex;flex-direction:column;gap:20px;flex:1 1 0%;min-width:340px;max-width:480px;}
+  .hist-detail-panel{display:block;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;container-type:inline-size;overflow:hidden;}
+  #histFactsCard{display:block;}
   .hist-detail-panel .hist-modal-handle{display:none;}
   /* OTD(기본 상태)에는 "닫기" 버튼이 필요 없다 — 애초에 아무것도 안
      열려있는 홈 화면이라 닫을 대상이 없다. 트로피/감독 등 실제 상세를
@@ -2769,10 +2777,24 @@ function renderHistoryNew(){
   html += '</div>';
 
   html += '</div>'; // #histListCol 끝
+
+  // 우측 칸 — 상세패널(트로피/감독 등 클릭 시 채워짐)과 "아스날 흥미로운
+  // 사실"은 서로 독립된 별개 섹션이다. 사실 카드는 OTD/상세 전환과
+  // 무관하게 페이지가 그려질 때 한 번만 채워지고 계속 그 자리에 남는다.
+  html += '<div class="hist-right-col">';
   html += '<div class="hist-detail-panel" id="histDetailPanel">';
   html += '<button class="modal-close" onclick="resetHistDetailPanel()">&#10005;</button>';
   html += '<div id="histDetailContent"></div>';
   html += '</div>';
+  html += '<div class="mm-card" id="histFactsCard">';
+  var _facts = window._factsData || [];
+  if(_facts.length){
+    var _fact = _facts[Math.floor(Math.random()*_facts.length)];
+    html += '<div style="padding:14px 14px 0;font-size:9px;font-weight:800;letter-spacing:2px;color:var(--gold);text-transform:uppercase;">아스날 흥미로운 사실</div>';
+    html += '<div style="padding:10px 14px 14px;font-size:13px;color:var(--text-secondary);line-height:1.65;">'+_fact+'</div>';
+  }
+  html += '</div>';
+  html += '</div>'; // .hist-right-col 끝
   html += '</div>'; // .hist-layout 끝
 
   el.innerHTML = html;
@@ -3304,21 +3326,6 @@ function openOtdModal(enc){
   if(item.summary) html += '<p style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin:14px 0 0;">'+item.summary+'</p>';
   if(item.headline) html += '<div style="margin-top:12px;padding:10px 12px;background:rgba(239,1,7,.08);border-left:3px solid var(--red);border-radius:4px;font-size:12px;font-weight:700;color:var(--red);">'+item.headline+'</div>';
   html += '</div>';
-  // "아스날 흥미로운 사실"은 OTD와 한데 묶인 문단이 아니라 완전히 별개
-  // 섹션이다 — 경기상세모달의 골&이벤트/팀 스탯처럼 각자 독립된 .mm-card
-  // 박스로 나눠서, OTD 카드가 바뀌어도 그 아래 별도 카드로 늘 붙어있는
-  // 모양새로 보이게 한다. PC 전용(모바일 바텀시트에는 공간도 없고 필요도
-  // 없음), 클릭 인터랙션은 없이 텍스트만 보여준다.
-  if(desktop){
-    var facts = window._factsData || [];
-    if(facts.length){
-      var fact = facts[Math.floor(Math.random()*facts.length)];
-      html += '<div class="mm-card">';
-      html += '<div style="padding:14px 14px 0;font-size:9px;font-weight:800;letter-spacing:2px;color:var(--gold);text-transform:uppercase;">아스날 흥미로운 사실</div>';
-      html += '<div style="padding:10px 14px 14px;font-size:13px;color:var(--text-secondary);line-height:1.65;">'+fact+'</div>';
-      html += '</div>';
-    }
-  }
   content.innerHTML = html;
   if(!desktop){
     modal.classList.add('open');
