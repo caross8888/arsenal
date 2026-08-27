@@ -44,6 +44,26 @@ function parseFeed(text) {
 const cache = { data: null, ts: 0 };
 const TTL = 30 * 60 * 1000;
 
+// 임베드 차단된 영상(업로더가 외부 재생 막아둔 경우) 필터링용 — RSS 피드엔
+// 이 정보가 없어서 Data API v3로 한 번 더 조회한다. 키가 없거나 호출이
+// 실패해도 전체 목록 자체가 죽으면 안 되니, 이 경우엔 전부 임베드 가능한
+//것으로 간주(기존 동작 그대로)하고 조용히 넘어간다.
+async function fetchEmbeddableMap(videoIds) {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey || !videoIds.length) return {};
+  try {
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=status&id=${videoIds.join(',')}&key=${apiKey}`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (!r.ok) return {};
+    const data = await r.json();
+    const map = {};
+    (data.items || []).forEach((item) => { map[item.id] = item.status?.embeddable !== false; });
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'public, max-age=1800');
@@ -72,9 +92,13 @@ export default async function handler(req, res) {
       catch (e) { lastErr = e; if (attempt < 2) await sleep(400); }
     }
     if (text === undefined) throw lastErr;
-    const videos = parseFeed(text).sort((a, b) => b.pubDate - a.pubDate);
+    const videos = parseFeed(text).sort((a, b) => b.pubDate - a.pubDate).slice(0, 12);
+    const embedMap = await fetchEmbeddableMap(videos.map((v) => v.videoId));
     const result = {
-      videos: videos.slice(0, 12).map(({ pubDate: _, ...v }) => v),
+      videos: videos.map(({ pubDate: _, ...v }) => ({
+        ...v,
+        embeddable: embedMap[v.videoId] !== undefined ? embedMap[v.videoId] : true,
+      })),
       source: 'YouTube',
     };
     cache.data = result;
