@@ -123,8 +123,14 @@ async function kvMGetPlayers(ids){
 async function kvGetPlayerSeason(id, seasonName){
   if(!KV_URL || !KV_TOKEN) return null;
   try {
-    const r = await fetch(`${KV_URL}/get/playerSeason:${id}:${seasonName}`, {
-      headers: {Authorization: `Bearer ${KV_TOKEN}`},
+    // 시즌명("2025/2026")에 '/'가 들어있어서 REST 경로 방식(/get/{key})으로
+    // 쓰면 그 슬래시가 경로 구분자로 잘못 해석돼 키를 못 찾는다(실측
+    // 확인 — kvSetPlayerSeason처럼 파이프라인(POST + 커맨드 배열)으로
+    // 보내야 키 안의 슬래시가 안전하게 처리된다.
+    const r = await fetch(KV_URL, {
+      method: 'POST',
+      headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
+      body: JSON.stringify(['GET', `playerSeason:${id}:${seasonName}`]),
       signal: AbortSignal.timeout(5000),
     });
     if(!r.ok) return null;
