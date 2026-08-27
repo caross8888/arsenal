@@ -34,7 +34,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .nav-icon{width:20px;height:20px;color:var(--text-dim);}
 .nav-live-dot{position:absolute;top:8px;right:calc(50% - 16px);width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 2s infinite}
 .page{position:relative;z-index:1}
-.section{display:none;padding:16px;max-width:600px;margin:0 auto}
+.section{display:none;padding:16px;max-width:none;margin:0 auto}
 .section.active{display:block;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .card{background:var(--surface);border:1px solid rgba(255,255,255,.15);border-radius:12px;overflow:hidden}
@@ -50,11 +50,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .spinner .spinner-icon path{stroke-dasharray:1;stroke-width:1.2px;vector-effect:non-scaling-stroke;animation:cannonDraw 3s ease-in-out infinite;}
 @keyframes cannonDraw{0%{stroke-dashoffset:1;}55%{stroke-dashoffset:0;}70%{stroke-dashoffset:0;}100%{stroke-dashoffset:1;}}
 .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:8px}
-.dday-card{align-items:center;gap:7px;padding:6px 16px;margin:-16px -16px 12px -16px;background:#1a0c0f;border-bottom:1px solid rgba(239,1,7,.25);color:var(--text);position:sticky;top:49px;z-index:90;line-height:1.3;}
+.dday-card{align-items:center;gap:7px;padding:6px 16px;margin-top:-16px;margin-bottom:12px;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);background:#1a0c0f;border-bottom:1px solid rgba(239,1,7,.25);color:var(--text);position:sticky;top:49px;z-index:90;line-height:1.3;}
 .dday-num{font-family:var(--fb);font-size:12px;font-weight:800;letter-spacing:.2px;color:var(--red);flex-shrink:0;}
 .dday-match{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .dday-time{font-size:12px;color:var(--text-secondary);margin-left:auto;flex-shrink:0;white-space:nowrap;}
-.inj-strip{display:flex;align-items:center;gap:7px;padding:6px 16px;margin:-16px -16px 12px -16px;background:#1a0c0f;border-bottom:1px solid rgba(239,1,7,.25);color:var(--text);position:sticky;top:49px;z-index:90;line-height:1.3;font-size:12px;font-weight:700;}
+/* .section이 max-width:600px로 중앙정렬되니, 좌우 -16px만으론 화면이
+   600px보다 넓은 기기(태블릿 등)에서 섹션 가장자리까지만 닿고 실제
+   화면 끝까지는 못 닿는다 — 뷰포트 폭 기준 계산(100vw 풀블리드 공식)으로
+   기기 폭과 무관하게 항상 화면 양끝까지 닿게 한다. */
+.inj-strip{display:flex;align-items:center;gap:7px;padding:6px 16px;margin-top:-16px;margin-bottom:12px;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);background:#1a0c0f;border-bottom:1px solid rgba(239,1,7,.25);color:var(--text);position:sticky;top:49px;z-index:90;line-height:1.3;font-size:12px;font-weight:700;}
 .inj-strip svg{flex-shrink:0;}
 .fix-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:6px;padding-left:2px}
 .fix-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
@@ -265,7 +269,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tl-summary{font-size:11px;color:var(--text-secondary);line-height:1.65;}
 .tl-more{display:inline-block;margin-top:6px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--red);}
 /* ── History Tab ─────────────────────────── */
-.hist-otd-wrap{margin:-16px -16px 12px -16px;position:sticky;top:49px;z-index:90;}
+.hist-otd-wrap{margin-top:-16px;margin-bottom:12px;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);position:sticky;top:49px;z-index:90;}
 .hist-otd-card{display:flex;align-items:center;gap:7px;padding:6px 16px;background:#1a1917;border-bottom:1px solid rgba(212,175,55,.25);cursor:pointer;-webkit-tap-highlight-color:transparent;line-height:1.3;}
 .hist-otd-card:active{opacity:.88;}
 .hist-otd-date{font-size:12px;font-weight:800;letter-spacing:.2px;color:var(--gold);flex-shrink:0;white-space:nowrap;}
@@ -810,6 +814,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sns-stat{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted)}
 .sns-bsky-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:rgba(0,133,255,.15);color:#60A5FA;border:1px solid rgba(96,165,250,.25);margin-left:auto;flex-shrink:0}
 /* ── 삼성 인터넷 강제 다크모드 차단 — 이미 다크 테마이므로 고정 ── */
+/* ── 태블릿/폴더블 등 중간 폭(600~899px, 아직 PC 사이드바 전환 전) ──
+   .section의 max-width 캡을 없애 화면을 꽉 채우기로 하면서, 열 수는
+   그대로 2열 유지하되(3열로 늘리면 사진이 작아져 정보 밀도가 떨어짐)
+   카드 자체는 넓어지니 사진/숫자도 비례해서 커져야 한다 — 안 그러면
+   카드만 옆으로 늘어나고 내용물은 작은 채로 남아 휑해 보인다. 데스크톱
+   3열 스케일링(아래 900px 블록)과 동일한 aspect-ratio 방식을 재사용하되,
+   그쪽은 카드가 좁아질수록 글자가 작아지는 하한 캡이라 여기(카드가
+   넓어질수록 커지는 상한 캡)와는 clamp 값이 다르다. */
+@media (min-width: 600px) {
+  .sq-grid .pl-card{container-type:inline-size;}
+  .sq-grid .pl-top{height:auto;grid-template-columns:minmax(60px,20%) 1fr;}
+  .sq-grid .pl-photo-box{height:auto;aspect-ratio:17/9;}
+  .sq-grid .pl-num-txt{font-size:clamp(32px,9cqw,44px);}
+  .sq-grid .pl-pos-txt{font-size:clamp(10px,3cqw,13px);}
+  .sq-grid .pl-card-name{font-size:clamp(11px,3cqw,14px);}
+}
 /* ── PC 반응형: 하단 탭바 → 좌측 사이드바 (모바일 레이아웃은 그대로, 이 폭 이상에서만 전환) ── */
 @media (min-width: 900px) {
   body{padding-bottom:0;}
@@ -892,6 +912,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   #sqDetailPanel.showing-detail .modal-close{display:flex;}
   .trophy-grid,.mgr-grid,.lgd-grid,.mom-grid,.stad-grid{grid-template-columns:repeat(3,1fr);}
   #fixtures.section{max-width:none;}
+  /* 모바일(.section max-width:600px 중앙정렬)에서만 vw 풀블리드 계산이
+     필요하다 — PC는 섹션 자체가 max-width:none이라 가장자리가 곧 콘텐츠
+     영역 끝이니, 사이드바(200px)를 침범하지 않게 원래의 단순 -16px로
+     되돌린다. */
+  .dday-card{width:auto;margin-left:-16px;margin-right:-16px;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
   /* 리더보드 카드와 동일한 640px 캡 + flex:0 1 640px 패턴(이유는 #lbListCol
      주석 참고) — 우측 상세패널과 동일한 640px 기준으로 리스트 폭을 통일한다. */
@@ -3953,6 +3978,20 @@ function loadSns(){
 var COMP_SLUG_MAP={PL:'eng.1',UCL:'uefa.champions',EFL:'eng.league_cup',FAC:'eng.fa',CS:'eng.charity',FR:'club.friendly'};
 
 function isDesktopLayout(){ return window.innerWidth>=900; }
+// 선수단 우측 패널(감독+부상자 현황)과 모바일 그리드의 감독 카드는 처음
+// 그려질 때의 폭을 기준으로 한 번만 결정된다 — 새로고침 없이 창 폭을
+// 데스크톱↔모바일 경계(900px) 너머로 드래그해도 반영되게, 경계를 실제로
+// 넘었을 때만 다시 그려준다(매 리사이즈마다 다시 그리는 건 낭비).
+var _sqLastIsDesktop=isDesktopLayout();
+window.addEventListener('resize', function(){
+  var nowDesktop=isDesktopLayout();
+  if(nowDesktop===_sqLastIsDesktop) return;
+  _sqLastIsDesktop=nowDesktop;
+  if(allPlayers.length) renderSq(_sqActiveFilter);
+  updateInjStrip();
+  var panel=document.getElementById('sqDetailPanel');
+  if(panel && !panel.classList.contains('showing-detail')) renderSqInjuryPanel();
+});
 var _matchModalReqSeq=0;
 function closeFixDetailPanel(){
   var inner=document.getElementById('fixDetailContent');
