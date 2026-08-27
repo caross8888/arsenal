@@ -2687,11 +2687,14 @@ function changeTotwRound(delta){
 }
 var TOTW_PITCH_SVG='<svg class="totw-pitch-svg" viewBox="0 0 220 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">'+
   '<rect width="220" height="300" fill="#2d5a27"/>'+
-  '<line x1="0" y1="150" x2="220" y2="150" stroke="var(--border-bright)" stroke-width="1"/>'+
-  '<circle cx="110" cy="150" r="28" fill="none" stroke="var(--border-bright)" stroke-width="1"/>'+
+  '<rect x="0" y="42.86" width="220" height="42.86" fill="rgba(255,255,255,0.025)"/>'+
+  '<rect x="0" y="128.57" width="220" height="42.86" fill="rgba(255,255,255,0.025)"/>'+
+  '<rect x="0" y="214.29" width="220" height="42.86" fill="rgba(255,255,255,0.025)"/>'+
+  '<line x1="0" y1="150" x2="220" y2="150" stroke="rgba(255,255,255,.4)" stroke-width="1"/>'+
+  '<circle cx="110" cy="150" r="28" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>'+
   '<circle cx="110" cy="150" r="2" fill="rgba(255,255,255,0.4)"/>'+
-  '<rect x="61" y="268" width="121" height="32" fill="none" stroke="var(--border-bright)" stroke-width="1"/>'+
-  '<rect x="61" y="0" width="121" height="32" fill="none" stroke="var(--border-bright)" stroke-width="1"/>'+
+  '<rect x="49.5" y="268" width="121" height="32" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>'+
+  '<rect x="49.5" y="0" width="121" height="32" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>'+
   '</svg>';
 function renderTeamOfWeek(players){
   var panel=document.getElementById('lbTotwContent');
@@ -4487,19 +4490,25 @@ function renderPitch(starters, formation, teamColor, allPlayers){
 
   var svg='<svg class="mm-pitch-svg" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
   svg+='<rect width="'+W+'" height="'+H+'" fill="#2d5a27"/>';
-  svg+='<line x1="0" y1="'+H/2+'" x2="'+W+'" y2="'+H/2+'" stroke="var(--border-bright)" stroke-width="1"/>';
-  svg+='<circle cx="'+W/2+'" cy="'+H/2+'" r="28" fill="none" stroke="var(--border-bright)" stroke-width="1"/>';
+  var pitchStripes=7;
+  for(var psi=0;psi<pitchStripes;psi++){
+    if(psi%2===0) continue;
+    var psy=H/pitchStripes*psi;
+    svg+='<rect x="0" y="'+psy.toFixed(2)+'" width="'+W+'" height="'+(H/pitchStripes).toFixed(2)+'" fill="rgba(255,255,255,0.025)"/>';
+  }
+  svg+='<line x1="0" y1="'+H/2+'" x2="'+W+'" y2="'+H/2+'" stroke="rgba(255,255,255,.4)" stroke-width="1"/>';
+  svg+='<circle cx="'+W/2+'" cy="'+H/2+'" r="28" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>';
   svg+='<circle cx="'+W/2+'" cy="'+H/2+'" r="2" fill="rgba(255,255,255,0.4)"/>';
   var bw=W*0.55,bh=32,bx=(W-bw)/2;
-  svg+='<rect x="'+bx+'" y="'+(H-bh)+'" width="'+bw+'" height="'+bh+'" fill="none" stroke="var(--border-bright)" stroke-width="1"/>';
-  svg+='<rect x="'+bx+'" y="0" width="'+bw+'" height="'+bh+'" fill="none" stroke="var(--border-bright)" stroke-width="1"/>';
+  svg+='<rect x="'+bx+'" y="'+(H-bh)+'" width="'+bw+'" height="'+bh+'" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>';
+  svg+='<rect x="'+bx+'" y="0" width="'+bw+'" height="'+bh+'" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>';
   var pr=18,pcx=W/2;
   // 페널티 반원: 박스 바깥으로, 약 1/3호 (시작/끝 x를 좁혀서 호 범위 제한)
   var arcR=18, arcW=arcR*0.85;
   // 하단 박스 바깥(아래)으로 호: sweep=1
-  svg+='<path d="M '+(pcx-arcW)+' '+(H-bh)+' A '+arcR+' '+arcR+' 0 0 1 '+(pcx+arcW)+' '+(H-bh)+'" fill="none" stroke="var(--border-bright)" stroke-width="1"/>';
+  svg+='<path d="M '+(pcx-arcW)+' '+(H-bh)+' A '+arcR+' '+arcR+' 0 0 1 '+(pcx+arcW)+' '+(H-bh)+'" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>';
   // 상단 박스 바깥(위)으로 호: sweep=0
-  svg+='<path d="M '+(pcx-arcW)+' '+bh+' A '+arcR+' '+arcR+' 0 0 0 '+(pcx+arcW)+' '+bh+'" fill="none" stroke="var(--border-bright)" stroke-width="1"/>';
+  svg+='<path d="M '+(pcx-arcW)+' '+bh+' A '+arcR+' '+arcR+' 0 0 0 '+(pcx+arcW)+' '+bh+'" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1"/>';
 
 
   starters.forEach(function(p){
@@ -5945,11 +5954,11 @@ var PITCH_LEN=105, PITCH_WID=68;
 
 // 페널티박스 중심으로 확대한 세로형(골대가 위) 슈팅맵 배경
 function boxSVGBackground(VW, VH, xMin, xMax, yMin, yMax){
-  var lc='var(--overlay-50)';
+  var lc='rgba(255,255,255,.5)';
   var toSX=function(y){ return (y-yMin)/(yMax-yMin)*VW; };
   var toSY=function(x){ return (xMax-x)/(xMax-xMin)*VH; };
   var goalDepth=2.6;
-  var s='<rect x="0" y="'+(-goalDepth)+'" width="'+VW+'" height="'+(VH+goalDepth)+'" fill="#0d2818" rx="3"/>';
+  var s='<rect x="0" y="'+(-goalDepth)+'" width="'+VW+'" height="'+(VH+goalDepth)+'" fill="#1d5c33" rx="3"/>';
   // 잔디결 줄무늬 (은은하게)
   var stripes=7;
   for(var i=0;i<stripes;i++){
@@ -5999,7 +6008,7 @@ function renderShotmapSVG(shots){
     if(isGoal){                     strokeColor='var(--gold)'; }
     else if(s.event==='ownGoal'){   strokeColor='var(--loss)'; fillStyle='fill="var(--loss)" fill-opacity="0.85" stroke="var(--white)" stroke-width="0.25"'; }
     else if(s.event==='onTarget'){  strokeColor='var(--blue)'; fillStyle='fill="var(--blue)" fill-opacity="0.85" stroke="var(--white)" stroke-width="0.2"'; }
-    else if(s.event==='blocked'){   strokeColor='rgba(255,255,255,0.55)'; fillStyle='fill="var(--overlay-35)" stroke="none"'; }
+    else if(s.event==='blocked'){   strokeColor='rgba(255,255,255,0.55)'; fillStyle='fill="rgba(255,255,255,.35)" stroke="none"'; }
     else{                           strokeColor='rgba(255,255,255,0.55)'; fillStyle='fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.4"'; }
 
     // 점(아이콘/하이라이트 링) 반지름을 먼저 정해서, 방향선이 중심이 아니라
@@ -6064,8 +6073,14 @@ function toggleShotLine(idx){
 
 // ── 터치 히트맵 (캔버스 기반 부드러운 열분포) ──
 function drawPitchLinesOnCanvas(ctx, W, H){
-  ctx.fillStyle='#0d2818';
+  ctx.fillStyle='#1d5c33';
   ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,255,255,0.025)';
+  var pitchStripes=7;
+  for(var psi=0;psi<pitchStripes;psi++){
+    if(psi%2===0) continue;
+    ctx.fillRect(W/pitchStripes*psi,0,W/pitchStripes,H);
+  }
   var lc='rgba(255,255,255,0.35)';
   ctx.strokeStyle=lc; ctx.lineWidth=1;
   ctx.strokeRect(1,1,W-2,H-2);
@@ -6348,9 +6363,9 @@ var COMP_ICON={
 };
 var COMP_ICON_DEFAULT='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>';
 var SHOT_TYPE_LABEL={LeftFoot:'왼발',RightFoot:'오른발',Header:'헤더',OtherBodyPart:'기타'};
-var SITUATION_LABEL={RegularPlay:'일반 플레이',FromCorner:'코너킥',SetPiece:'세트피스',DirectFreekick:'프리킥',Penalty:'페널티',FastBreak:'속공',ThrowinSetPiece:'스로인',IndividualPlay:'개인 돌파'};
-var SHOT_EVENT_LABEL={goal:'골',onTarget:'유효슈팅',off:'빗나감',blocked:'블록',ownGoal:'자책골'};
-var SHOT_EVENT_COLOR={goal:'var(--gold)',onTarget:'var(--blue)',off:'var(--white)',blocked:'var(--white)',ownGoal:'var(--loss)'};
+var SITUATION_LABEL={RegularPlay:'일반',FromCorner:'코너킥',SetPiece:'세트피스',DirectFreekick:'프리킥',FreeKick:'프리킥',Penalty:'페널티',FastBreak:'속공',ThrowinSetPiece:'스로인',IndividualPlay:'개인 돌파'};
+var SHOT_EVENT_LABEL={goal:'골',onTarget:'유효슈팅',miss:'빗나감',blocked:'블록',ownGoal:'자책골'};
+var SHOT_EVENT_COLOR={goal:'var(--gold)',onTarget:'var(--blue)',miss:'var(--text)',blocked:'var(--text)',ownGoal:'var(--loss)'};
 
 // 선택한 슛 1개의 상세 정보 (경기/슛 유형/상황/결과/xG)
 function fotmobCrest(teamId){
