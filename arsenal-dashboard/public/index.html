@@ -2694,24 +2694,33 @@ function loadSquad(){
 
 function buildSqManagerBanner(){
   var mgr=_sqManagerData;
+  // 와이드 배너 대신 다른 선수 카드와 동일한 크기/구조(.pl-card)로 만든다 —
+  // 그리드 한 칸을 그대로 차지해서 자연스럽게 섞여 보인다.
   var card=document.createElement('div');
-  card.className='sq-panel-card';
-  card.style.cssText='grid-column:1/-1;cursor:pointer;';
+  card.className='pl-card';
+  card.style.cursor='pointer';
   card.onclick=function(){ openSqManagerModal(); };
-  var html='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);">';
-  html+='<img src="'+(mgr.sqPhoto||'')+'" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;" onerror="this.style.visibility=\'hidden\'">';
-  html+='<div style="flex:1;min-width:0;">';
-  html+='<div style="font-size:8px;letter-spacing:1px;color:var(--gold);font-weight:700;text-transform:uppercase;">감독</div>';
-  html+='<div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(mgr.name_en||mgr.name||'')+'</div>';
-  html+='</div>';
-  if(mgr.matches!==undefined){
-    html+='<div style="text-align:right;flex-shrink:0;">';
-    html+='<div style="font-size:13px;font-weight:700;color:var(--text);">'+mgr.matches+'경기</div>';
-    html+='<div style="font-size:10px;"><span style="color:#22C55E">'+mgr.wins+'승</span> <span style="color:#F59E0B">'+mgr.draws+'무</span> <span style="color:#EF4444">'+mgr.losses+'패</span></div>';
-    html+='</div>';
-  }
-  html+='</div>';
-  card.innerHTML=html;
+
+  var top=document.createElement('div'); top.className='pl-top';
+  var left=document.createElement('div');
+  left.style.cssText='background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);display:flex;align-items:center;justify-content:center;';
+  left.innerHTML='<span style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:#fff;text-transform:uppercase;">MGR</span>';
+  top.appendChild(left);
+
+  var photoBox=document.createElement('div'); photoBox.className='pl-photo-box';
+  var img=document.createElement('img'); img.src=mgr.sqPhoto||''; img.alt='';
+  img.onerror=function(){
+    photoBox.className='pl-photo-box no-img';
+    photoBox.innerHTML='<img src="/data/player_placeholder.png" alt="">';
+  };
+  photoBox.appendChild(img);
+  top.appendChild(photoBox);
+  card.appendChild(top);
+
+  var divider=document.createElement('div'); divider.className='pl-card-divider';
+  card.appendChild(divider);
+  var name=document.createElement('div'); name.className='pl-card-name'; name.textContent=mgr.name_en||mgr.name||'';
+  card.appendChild(name);
   return card;
 }
 function openSqManagerModal(){
@@ -2733,7 +2742,7 @@ function renderSq(filter){
   el.innerHTML='';
   // 모바일 전용 — PC는 우측 패널에 이미 감독 카드가 있어서 중복 노출하지
   // 않는다. "전체" 필터일 때만 그리드 맨 위에 풀와이드 배너로 붙인다.
-  if(filter==='all' && !isDesktopLayout() && _sqManagerData){
+  if(filter==='all' && _sqActiveLevel==='first' && !isDesktopLayout() && _sqManagerData){
     el.appendChild(buildSqManagerBanner());
   }
 
