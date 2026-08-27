@@ -162,7 +162,13 @@ export default async function handler(req, res) {
   // playerDetail은 선수마다 응답이 다르므로 id도 캐시 키에 섞는다 — 안 그러면
   // 첫 번째로 조회된 선수의 데이터를 다른 선수 조회가 그대로 돌려받는다.
   const idParam = req.query.id || '';
-  const cacheKey = type + (teamParam ? ('_'+teamParam) : '') + (idParam ? ('_'+idParam) : '');
+  // season=prev(지난 시즌)와 기본(이번 시즌) 요청이 id가 같다는 이유로 같은
+  // cacheKey를 쓰면, 둘 중 먼저 도착한 쪽 응답을 서버 메모리 캐시가 그대로
+  // 돌려버려서 시즌 토글이 실제로는 캐시된 "이번 시즌" 값만 반복해서 받는
+  // 버그가 있었다(로컬에서는 파일 저장마다 함수가 다시 로드돼 안 드러났지만,
+  // 실제 배포에서는 같은 인스턴스가 두 요청을 다 받아서 재현됐다).
+  const seasonParam = req.query.season || '';
+  const cacheKey = type + (teamParam ? ('_'+teamParam) : '') + (idParam ? ('_'+idParam) : '') + (seasonParam ? ('_'+seasonParam) : '');
   res.setHeader('Cache-Control', `public, max-age=${Math.floor(getTTL(type)/1000)}`);
 
   if(!nocache){
