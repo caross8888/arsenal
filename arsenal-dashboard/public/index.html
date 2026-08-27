@@ -1301,6 +1301,10 @@ function loadSquadManager(){
   fetch('/data/managers.json').then(function(r){return r.ok?r.json():[];}).then(function(list){
     var mgr=(list||[]).find(function(m){return m.to_year===null;});
     if(!mgr) return;
+    // 히스토리 탭은 managers.json의 정적 사진을 그대로 쓰지만, 선수단
+    // 쪽은 선수 카드와 톤을 맞추려고 Fotmob 사진(다른 선수들과 동일한
+    // playerimages 엔드포인트 — 코치도 같은 API를 쓴다)으로 바꿔 보여준다.
+    mgr.sqPhoto=mgr.fotmobId?('https://images.fotmob.com/image_resources/playerimages/'+mgr.fotmobId+'.png'):mgr.photo;
     _sqManagerData=mgr;
     var panel=document.getElementById('sqDetailPanel');
     if(panel && !panel.classList.contains('showing-detail')) renderSqInjuryPanel();
@@ -1329,7 +1333,7 @@ function renderSqManagerSection(){
   var tenure=mgr.tenureStart?mgr.tenureStart.slice(0,7):'';
   var html='<div class="sq-panel-card">';
   html+='<div style="display:flex;align-items:center;gap:12px;padding:16px 14px;background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);">';
-  html+='<img src="'+(mgr.photo||'')+'" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;" onerror="this.style.visibility=\'hidden\'">';
+  html+='<img src="'+(mgr.sqPhoto||'')+'" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;" onerror="this.style.visibility=\'hidden\'">';
   html+='<div><div style="font-size:9px;letter-spacing:1px;color:var(--gold);font-weight:700;text-transform:uppercase;">감독</div>';
   html+='<div style="font-size:15px;font-weight:700;color:var(--text);margin-top:1px;">'+(mgr.name_en||mgr.name||'')+'</div>';
   html+='<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">'+(mgr.nationality||'')+(age?' · '+age+'세':'')+'</div></div>';
@@ -1368,8 +1372,8 @@ function renderSqManagerModalContent(){
   var tenure=mgr.tenureStart?mgr.tenureStart.slice(0,7):'';
   var h='<div class="pm-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
   h+='<div class="pm-header-inner">';
-  if(mgr.photo){
-    h+='<img class="pm-photo" src="'+mgr.photo+'" onerror="this.onerror=null;this.style.visibility=\'hidden\'">';
+  if(mgr.sqPhoto){
+    h+='<img class="pm-photo" src="'+mgr.sqPhoto+'" onerror="this.onerror=null;this.style.visibility=\'hidden\'">';
   } else {
     h+='<div class="pm-photo-ph"></div>';
   }
@@ -1385,7 +1389,7 @@ function renderSqManagerModalContent(){
   if(mgr.matches!==undefined){
     h+='<div class="detail-info-grid">';
     h+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.matches+'</div><div class="detail-info-lbl">경기</div></div>';
-    h+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.wins+'-'+mgr.draws+'-'+mgr.losses+'</div><div class="detail-info-lbl">승-무-패</div></div>';
+    h+='<div class="detail-info-cell"><div class="detail-info-val"><span style="color:#22C55E">'+mgr.wins+'</span>-<span style="color:#F59E0B">'+mgr.draws+'</span>-<span style="color:#EF4444">'+mgr.losses+'</span></div><div class="detail-info-lbl">승-무-패</div></div>';
     h+='<div class="detail-info-cell"><div class="detail-info-val" style="color:#22C55E">'+(mgr.pointsPerGame!=null?mgr.pointsPerGame.toFixed(2):'-')+'</div><div class="detail-info-lbl">평균 승점</div></div>';
     h+='<div class="detail-info-cell"><div class="detail-info-val">'+(tenure||'-')+'</div><div class="detail-info-lbl">부임</div></div>';
     h+='</div>';
@@ -2695,7 +2699,7 @@ function buildSqManagerBanner(){
   card.style.cssText='grid-column:1/-1;cursor:pointer;';
   card.onclick=function(){ openSqManagerModal(); };
   var html='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);">';
-  html+='<img src="'+(mgr.photo||'')+'" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;" onerror="this.style.visibility=\'hidden\'">';
+  html+='<img src="'+(mgr.sqPhoto||'')+'" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;" onerror="this.style.visibility=\'hidden\'">';
   html+='<div style="flex:1;min-width:0;">';
   html+='<div style="font-size:8px;letter-spacing:1px;color:var(--gold);font-weight:700;text-transform:uppercase;">감독</div>';
   html+='<div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(mgr.name_en||mgr.name||'')+'</div>';
