@@ -584,6 +584,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-name{font-family:var(--fd);font-size:22px;color:var(--white);letter-spacing:1px;line-height:1.1;}
 .pm-club{font-size:12px;color:var(--on-dark-header-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;}
 .pm-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border-radius:20px;padding:2px 8px;font-size:10px;color:rgba(255,255,255,.85);margin-top:5px;}
+.pm-season-chip{background:#C8A84B;color:#3a2e0f;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.pm-season-chip-arrow{font-style:normal;font-size:8px;}
 /* 상세모달 공용 기본정보 그리드 — 헤더 바로 아래 표처럼 붙여서 보여주는
    방식(선수 상세모달 원조). 헤더와 분리된 별도 박스가 아니라 헤더에 바로
    이어지는 느낌을 위해 모서리/여백/음영 없이 헤어라인만으로 구분한다 —
@@ -5485,6 +5487,34 @@ function formatPerfValue(n, format){
 // ── PLAYER MODAL (Fotmob Style) ──
 
 var _openPlayerId = null; // 지금 열려있는(또는 마지막으로 연) 선수 fotmobId — 라이브 fetch 경쟁 상태 방지용
+var _pmSeasonMode = 'current'; // 'current' | 'prev' — 상세모달 시즌 토글 상태(선수 바뀌면 초기화)
+var _pmPrevSeasonCache = {}; // fotmobId -> 직전 시즌 응답(같은 선수 재토글 시 재요청 방지)
+var _pmLastP = null; // 시즌 토글 시 재사용할, 마지막으로 그린 선수 객체(이름/사진 등 시즌 무관 필드용)
+var _pmCurrentSeasonSnapshot = null; // {competitions,shotmap,heatmap} — "이번 시즌"으로 되돌아갈 때 쓸 최신 스냅샷
+function togglePmSeason(){
+  if(!_pmLastP) return;
+  var fotmobId = _pmLastP.fotmobId||_pmLastP.id;
+  var targetMode = _pmSeasonMode==='current' ? 'prev' : 'current';
+  var levelSnapshot = _sqActiveLevel;
+  function applyMode(seasonData){
+    _pmSeasonMode = targetMode;
+    var merged = Object.assign({}, _pmLastP, {
+      competitions: seasonData.competitions||{},
+      shotmap: seasonData.shotmap||[],
+      heatmap: seasonData.heatmap||[],
+    });
+    openPlayerModal(merged, levelSnapshot, true);
+  }
+  if(targetMode==='current'){
+    applyMode(_pmCurrentSeasonSnapshot||{competitions:{},shotmap:[],heatmap:[]});
+    return;
+  }
+  if(_pmPrevSeasonCache[fotmobId]){ applyMode(_pmPrevSeasonCache[fotmobId]); return; }
+  apiFetch(FN+'/football?type=playerDetail&id='+fotmobId+'&season=prev').then(function(data){
+    _pmPrevSeasonCache[fotmobId] = data||{competitions:{},shotmap:[],heatmap:[]};
+    applyMode(_pmPrevSeasonCache[fotmobId]);
+  });
+}
 function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   var desktop = isDesktopLayout();
   var modal, content;
@@ -5504,7 +5534,11 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   // 한 번 더 호출(isLiveRefresh=true)해서 조용히 다시 그린다. 그 사이
   // 사용자가 다른 선수를 열었으면 무시해야 하므로 어떤 선수를 열었는지
   // 전역에 기록해둔다.
-  _openPlayerId = p.fotmobId||p.id;
+  var _newPlayerId = p.fotmobId||p.id;
+  if(_openPlayerId !== _newPlayerId) _pmSeasonMode = 'current';
+  _openPlayerId = _newPlayerId;
+  _pmLastP = p;
+  if(_pmSeasonMode==='current') _pmCurrentSeasonSnapshot = {competitions:p.competitions, shotmap:p.shotmap, heatmap:p.heatmap};
   var pos = p.posGroup; // GK DF MF FW
 
   // players.json 기반 데이터 직접 사용 (football.js에서 모든 데이터 전달)
@@ -5586,9 +5620,15 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   if(jersey) badges.push('#'+jersey);
   if(posLabel) badges.push(posLabel);
   if(age) badges.push(age+'\uc138');
-  if(badges.length){
+  var _pmNow=new Date(); var _pmCurYr=_pmNow.getMonth()+1>=8?_pmNow.getFullYear():_pmNow.getFullYear()-1;
+  var _pmCurLabel=(_pmCurYr%100)+'-'+((_pmCurYr+1)%100), _pmPrevLabel=((_pmCurYr-1)%100)+'-'+(_pmCurYr%100);
+  var _pmFotmobId = p.fotmobId||p.id;
+  if(badges.length || _pmFotmobId){
     h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
     badges.forEach(function(b){ h += '<span class="pm-badge">'+b+'</span>'; });
+    if(_pmFotmobId){
+      h += '<span class="pm-badge pm-season-chip" onclick="togglePmSeason()">'+(_pmSeasonMode==='current'?_pmCurLabel:_pmPrevLabel)+' <i class="pm-season-chip-arrow">\u25be</i></span>';
+    }
     h += '</div>';
   }
   // 평점 계산 (competitions 집계)
@@ -5908,6 +5948,16 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
       if(!live || live.error) return;
       // 그 사이 사용자가 다른 선수를 열었으면 이 응답은 버린다.
       if(_openPlayerId !== fotmobId) return;
+      // 사용자가 그 사이 "지난 시즌"으로 토글해뒀으면 이번 시즌 라이브
+      // 데이터로 덮어쓰면 안 된다 — 스냅샷만 갱신해두고 화면은 그대로 둔다.
+      if(_pmSeasonMode==='prev'){
+        _pmCurrentSeasonSnapshot = {
+          competitions: (live.competitions && Object.keys(live.competitions).length) ? live.competitions : p.competitions,
+          shotmap: live.shotmap && live.shotmap.length ? live.shotmap : p.shotmap,
+          heatmap: live.heatmap && live.heatmap.length ? live.heatmap : p.heatmap,
+        };
+        return;
+      }
       var merged = Object.assign({}, p, {
         competitions: (live.competitions && Object.keys(live.competitions).length) ? live.competitions : p.competitions,
         traits: live.traits || p.traits,

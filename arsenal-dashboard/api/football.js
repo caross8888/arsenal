@@ -117,6 +117,33 @@ async function kvMGetPlayers(ids){
   } catch(e){ return {}; }
 }
 
+// 완료된 과거 시즌(예: 25-26) 스탯은 다시 안 바뀌는 고정값이라, player:{id}와
+// 달리 TTL 없이 영구 저장한다 — 한 번 긁어오면 그 다음부턴 Fotmob을 다시
+// 안 부르고 KV에서 그대로 돌려준다.
+async function kvGetPlayerSeason(id, seasonName){
+  if(!KV_URL || !KV_TOKEN) return null;
+  try {
+    const r = await fetch(`${KV_URL}/get/playerSeason:${id}:${seasonName}`, {
+      headers: {Authorization: `Bearer ${KV_TOKEN}`},
+      signal: AbortSignal.timeout(5000),
+    });
+    if(!r.ok) return null;
+    const { result } = await r.json();
+    return result ? JSON.parse(result) : null;
+  } catch(e){ return null; }
+}
+async function kvSetPlayerSeason(id, seasonName, data){
+  if(!KV_URL || !KV_TOKEN) return;
+  try {
+    await fetch(KV_URL, {
+      method: 'POST',
+      headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
+      body: JSON.stringify(['SET', `playerSeason:${id}:${seasonName}`, JSON.stringify(data)]),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch(e){ /* 캐시 저장 실패는 무시 */ }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin','*');
 
@@ -730,6 +757,16 @@ export default async function handler(req, res) {
       // 렌더링 코드(기록/경력 탭)는 손 안 대고 데이터 출처만 바꾼다.
       const playerId = req.query.id;
       if(!playerId) throw new Error('id 파라미터 필요');
+      // season=prev — 직전 시즌(항상 완결된, 다시 안 바뀌는 데이터) 조회.
+      // 값이 안 변하니 KV에 한 번 저장해두면 이후엔 Fotmob을 다시 안 부른다.
+      const wantPrevSeason = req.query.season === 'prev';
+      const nowForSeason = new Date();
+      const curSeasonStartYear = nowForSeason.getMonth() + 1 >= 8 ? nowForSeason.getFullYear() : nowForSeason.getFullYear() - 1;
+      const prevSeasonName = `${curSeasonStartYear - 1}/${curSeasonStartYear}`;
+      if(wantPrevSeason){
+        const cached = await kvGetPlayerSeason(playerId, prevSeasonName);
+        if(cached) return res.json(cached);
+      }
 
       const pdRes = await fetch(`https://www.fotmob.com/api/data/playerData?id=${playerId}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
       if(!pdRes.ok) throw new Error('Fotmob playerData 로드 실패');
@@ -756,9 +793,7 @@ export default async function handler(req, res) {
       // 시즌 기록이 아예 없는 선수) currentSeason을 비워서 이번 시즌
       // 데이터가 없는 상태 그대로(경기/평점 등 미노출) 내려보낸다 — 작년
       // 시즌으로 조용히 폴백하지 않는다.
-      const now = new Date();
-      const seasonStartYear = now.getMonth() + 1 >= 8 ? now.getFullYear() : now.getFullYear() - 1;
-      const expectedSeasonName = `${seasonStartYear}/${seasonStartYear + 1}`;
+      const expectedSeasonName = wantPrevSeason ? prevSeasonName : `${curSeasonStartYear}/${curSeasonStartYear + 1}`;
       const currentSeason = (pd.statSeasons || []).find(s => s.seasonName === expectedSeasonName);
       const compEntries = {}; // code -> {entryId, name}
       (currentSeason?.tournaments || []).forEach(t => {
@@ -893,8 +928,10 @@ export default async function handler(req, res) {
         })),
       };
       // KV에 저장 — 실패해도 이번 응답엔 영향 없게 await는 하되 에러는
-      // kvSetPlayer 내부에서 이미 삼킨다.
-      await kvSetPlayer(playerId, result);
+      // kvSetPlayer(Player)Season 내부에서 이미 삼킨다. 직전 시즌(완결,
+      // 안 바뀜)은 영구 저장, 이번 시즌(계속 바뀜)은 기존처럼 7일 TTL.
+      if(wantPrevSeason) await kvSetPlayerSeason(playerId, prevSeasonName, result);
+      else await kvSetPlayer(playerId, result);
     } else if(type === 'managerStats'){
       // History 탭의 감독 경기수(현재 감독 한정 — 과거 감독들은
       // managers.json에 손으로 채운 최종 games 값이 이미 있음)를 시즌별
