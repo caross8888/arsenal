@@ -78,7 +78,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sq-detail-panel .modal-handle{display:none;}
 .lb-layout{display:block;}
 .lb-round-panel{display:block;margin-top:16px;background:var(--surface);border:1px solid rgba(255,255,255,.15);border-radius:16px;overflow:hidden;}
-.lb-round-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 8px;background:var(--surface2);border-bottom:1px solid var(--border);}
+.lb-round-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 8px;background:var(--surface2);border-bottom:1px solid rgba(255,255,255,.15);}
 .lb-round-nav .cal-nav-btn{padding:2px;}
 .lb-round-label{font-size:12px;font-weight:700;color:var(--text);}
 .lb-round-date{padding:8px 12px 4px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text);text-transform:uppercase;}
@@ -194,7 +194,29 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sq-tabs-group{border-radius:12px;overflow:hidden;margin-bottom:16px;background:rgba(255,255,255,.15);display:flex;flex-direction:column;gap:1px;border:1px solid rgba(255,255,255,.15);}
 .sq-tabs-group .f-btns{border-radius:0;margin-bottom:0;background:transparent}
 .sq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.pl-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s;position:relative;-webkit-tap-highlight-color:transparent;}
+/* PC 선수단 우측 패널 기본 콘텐츠 — 감독/부상자 현황, 완전히 독립된 두 개의
+   카드로 쌓는다(히스토리 우측 칸의 .hist-detail-panel+#histFactsCard와 동일한
+   원칙) — .sq-detail-panel 자신은 테두리 없는 플렉스 래퍼일 뿐이고, 각
+   카드가 자기 테두리/배경을 갖는다. 선수 상세를 열었을 때만
+   #sqDetailContent 자체가 하나의 카드가 된다(.showing-detail 참고). */
+#sqDetailContent{display:flex;flex-direction:column;gap:16px;}
+.sq-detail-panel.showing-detail #sqDetailContent{display:block;background:var(--surface);border:1px solid rgba(255,255,255,.15);border-radius:16px;overflow:hidden;}
+.sq-panel-card{background:var(--surface);border:1px solid rgba(255,255,255,.15);border-radius:16px;overflow:hidden;}
+.sq-inj-title{display:flex;align-items:center;padding:8px 12px;background:var(--surface2);border-bottom:1px solid rgba(255,255,255,.15);font-size:12px;font-weight:700;color:var(--text);}
+.sq-inj-list{padding:0 12px;}
+.sq-inj-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.15);font-size:12px;}
+.sq-inj-row:last-child{border-bottom:none;}
+.sq-inj-photo{width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--surface2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text-secondary);}
+.sq-inj-photo img{width:100%;height:100%;object-fit:cover;object-position:top;}
+.sq-inj-info{flex:1;min-width:0;}
+.sq-inj-name{font-size:12px;font-weight:700;color:var(--text);}
+.sq-inj-detail{font-size:11px;color:var(--text-secondary);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sq-inj-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+.sq-inj-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.sq-inj-chance{font-size:10px;color:var(--text-secondary);}
+.sq-inj-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px 20px;color:var(--green);font-size:12px;text-align:center;}
+.sq-inj-empty span{color:var(--text-secondary);}
+.pl-card{background:var(--surface);border:1px solid rgba(255,255,255,.15);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s;position:relative;-webkit-tap-highlight-color:transparent;}
 .pl-contract-badge{position:absolute;top:6px;right:6px;z-index:2;background:rgba(239,68,68,.92);color:#fff;font-size:8px;font-weight:800;letter-spacing:.3px;padding:2px 6px;border-radius:10px;display:flex;align-items:center;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .pl-card:active{transform:scale(.98)}
 .pl-top{display:grid;grid-template-columns:70px 1fr;height:90px}
@@ -209,7 +231,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pl-photo-box img{width:100%;height:100%;object-fit:contain;object-position:bottom center;display:block}
 .pl-photo-box.no-img{display:flex;align-items:flex-end;justify-content:center}
 .pl-photo-box.no-img img{width:100%;height:100%;object-fit:contain;object-position:bottom;display:block}
-.pl-card-divider{height:1px;background:var(--border)}
+.pl-card-divider{height:1px;background:rgba(255,255,255,.15)}
 .pl-card-name{padding:7px 8px;font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
 .news-list{display:flex;flex-direction:column;gap:10px}
 .media-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.15);border-radius:12px;overflow:hidden;margin-bottom:14px;}
@@ -289,7 +311,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hist-section{animation:fadeIn .2s ease;}
 /* Stadium */
 .stad-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-bottom:24px;}
-.stad-card{border-radius:14px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);cursor:pointer;transition:transform .18s,box-shadow .18s;-webkit-tap-highlight-color:transparent;}
+.stad-card{border-radius:14px;overflow:hidden;background:var(--surface2);border:1px solid rgba(255,255,255,.15);cursor:pointer;transition:transform .18s,box-shadow .18s;-webkit-tap-highlight-color:transparent;}
 .stad-card:active{transform:scale(.97);}
 .stad-photo{width:100%;aspect-ratio:16/9;background:var(--surface3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px;color:rgba(255,255,255,.15);}
 .stad-photo img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -338,7 +360,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .rec-name-sub{font-size:11px;font-weight:400;color:var(--text-secondary);}
 /* Moments */
 .mom-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-bottom:24px;}
-.mom-card{position:relative;border-radius:14px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);cursor:default;-webkit-tap-highlight-color:transparent;}
+.mom-card{position:relative;border-radius:14px;overflow:hidden;background:var(--surface2);border:1px solid rgba(255,255,255,.15);cursor:default;-webkit-tap-highlight-color:transparent;}
 .mom-photo{width:100%;aspect-ratio:4/3;background:var(--surface3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px;color:rgba(255,255,255,.15);}
 .mom-photo img{width:100%;height:100%;object-fit:cover;display:block;}
 .mom-rank-badge{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.7);color:var(--gold);font-size:10px;font-weight:900;min-width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:1px solid rgba(200,168,75,.4);font-family:var(--fd);letter-spacing:.5px;}
@@ -347,7 +369,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mom-year{font-size:10px;color:var(--text-secondary);}
 /* Legends */
 .lgd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding-bottom:24px;}
-.lgd-card{background:var(--surface2);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;-webkit-tap-highlight-color:transparent;}
+.lgd-card{background:var(--surface2);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.15);transition:transform .15s,box-shadow .15s;position:relative;-webkit-tap-highlight-color:transparent;}
 .lgd-card:active{transform:scale(.97);}
 .lgd-card-img-wrap{position:relative;width:100%;aspect-ratio:2/3;overflow:hidden;}
 .lgd-card-gradient{position:absolute;bottom:0;left:0;right:0;height:65%;background:linear-gradient(to top,rgba(0,0,0,.9) 0%,transparent 100%);}
@@ -363,7 +385,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .lgd-section-body strong{color:var(--gold);font-weight:800;}
 /* Managers */
 .mgr-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding-bottom:24px;}
-.mgr-card{background:var(--surface2);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid var(--border);transition:transform .15s,box-shadow .15s;position:relative;-webkit-tap-highlight-color:transparent;}
+.mgr-card{background:var(--surface2);border-radius:14px;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.15);transition:transform .15s,box-shadow .15s;position:relative;-webkit-tap-highlight-color:transparent;}
 .mgr-card:active{transform:scale(.97);}
 .mgr-card.highlight{border-color:rgba(239,1,7,.35);box-shadow:0 0 0 1px rgba(239,1,7,.15);}
 .mgr-card-img-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;}
@@ -864,18 +886,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      열었을 때만(.showing-detail) X를 보여줘서 OTD로 되돌아가게 한다. */
   #histDetailPanel .modal-close{display:none;}
   #histDetailPanel.showing-detail .modal-close{display:flex;}
+  /* 선수단 우측 패널도 히스토리와 동일한 원칙 — 기본 상태(부상자 현황)엔
+     닫을 대상이 없어 X 버튼이 필요 없고, 선수 상세를 열었을 때만 보여준다. */
+  #sqDetailPanel .modal-close{display:none;}
+  #sqDetailPanel.showing-detail .modal-close{display:flex;}
   .trophy-grid,.mgr-grid,.lgd-grid,.mom-grid,.stad-grid{grid-template-columns:repeat(3,1fr);}
   #fixtures.section{max-width:none;}
   .fix-layout{display:flex;gap:20px;align-items:flex-start;}
   /* 리더보드 카드와 동일한 640px 캡 + flex:0 1 640px 패턴(이유는 #lbListCol
      주석 참고) — 우측 상세패널과 동일한 640px 기준으로 리스트 폭을 통일한다. */
   #fixWrap{flex:0 1 640px;min-width:0;container-type:inline-size;}
-  .fix-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;container-type:inline-size;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;}
+  .fix-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;container-type:inline-size;position:relative;background:var(--surface);border:1px solid rgba(255,255,255,.15);border-radius:16px;}
   .sq-layout{display:flex;gap:20px;align-items:flex-start;}
   /* fixWrap/lbListCol과 동일한 640px 캡 패턴 — 안 걸면 리스트 칸이 flex:2로
      계속 자라서 우측 패널(최대 480px)이 오히려 눌리는 문제가 있었다. */
   #sqListCol{flex:0 1 640px;min-width:0;}
-  .sq-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;container-type:inline-size;position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+  .sq-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;container-type:inline-size;position:relative;}
   #leaderboard.section{max-width:none;}
   .lb-layout{display:flex;gap:20px;align-items:flex-start;}
   /* #lbListCol을 flex:2(비율 성장)로 두면 카드(max-width로 캡 걸림)보다
@@ -1172,6 +1198,7 @@ function playIntro(){
   <div class="sq-grid" id="sqGrid"><div class="loading-state" style="grid-column:1/-1"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>&#49440;&#49688; &#45936;&#51060;&#53552; &#47196;&#46377; &#51473;...</span></div></div>
   </div>
   <div class="sq-detail-panel" id="sqDetailPanel">
+    <button class="modal-close" onclick="resetSqDetailPanel()">&#10005;</button>
     <div id="sqDetailContent" class="fix-detail-empty"></div>
   </div>
   </div>
@@ -1230,6 +1257,7 @@ var FN='/api';
 var allStandings=[];
 var allPlayers=[];
 var allInjuries=[];
+var _sqInjAvailable=0;
 // 부상 데이터(FPL 소스)랑 스쿼드 데이터(Fotmob 소스)는 서로 다른 ID 체계라
 // 이름으로만 매칭 가능하다 — 성(마지막 단어) 일치를 기본으로 하고, 전체
 // 이름이 완전히 같으면 그것도 인정한다(같은 성을 쓰는 선수가 둘 이상이면
@@ -1251,6 +1279,10 @@ function findInjuryFor(player){
 function updateInjStrip(){
   var el=document.getElementById('injStrip');
   if(!el) return;
+  // PC에서는 이 스트립 대신 우측 패널의 "부상자 현황"이 기본으로 보이므로
+  // 중복 노출을 막는다 — 인라인 스타일이 CSS의 display:none보다 우선하니
+  // 여기서 직접 걸러줘야 한다.
+  if(isDesktopLayout()){ el.style.display='none'; return; }
   var injCnt=allInjuries.filter(function(p){return p.status==='i';}).length;
   var dbtCnt=allInjuries.filter(function(p){return p.status==='d';}).length;
   if(!injCnt && !dbtCnt){ el.style.display='none'; return; }
@@ -1259,6 +1291,114 @@ function updateInjStrip(){
   if(injCnt) parts.push('<span style="color:#EF4444">부상 '+injCnt+'명</span>');
   if(dbtCnt) parts.push('<span style="color:#F59E0B">출전의심 '+dbtCnt+'명</span>');
   el.innerHTML=dIcon('injury',13)+parts.join(' <span style="color:var(--text-dim)">·</span> ');
+}
+// PC 선수단 우측 패널 기본 콘텐츠 — 감독 카드 + 부상자 현황, 두 섹션을
+// 이어서 보여준다. 선수를 클릭하면(openPlayerModal) 이 콘텐츠 전체가
+// 선수 상세로 통째로 덮어써지고, X를 누르면 다시 이 두 섹션으로 돌아온다.
+var _sqManagerData=null;
+var _sqManagerLoaded=false;
+function loadSquadManager(){
+  fetch('/data/managers.json').then(function(r){return r.ok?r.json():[];}).then(function(list){
+    var mgr=(list||[]).find(function(m){return m.to_year===null;});
+    if(!mgr) return;
+    _sqManagerData=mgr;
+    var panel=document.getElementById('sqDetailPanel');
+    if(panel && !panel.classList.contains('showing-detail')) renderSqInjuryPanel();
+    if(!isDesktopLayout() && allPlayers.length) renderSq(_sqActiveFilter);
+    if(mgr.fotmobId){
+      apiFetchCached(FN+'/football?type=managerStats&id='+mgr.fotmobId, 'sqMgrStats', function(data){
+        _sqManagerData=Object.assign({}, mgr, data);
+        var panel2=document.getElementById('sqDetailPanel');
+        if(panel2 && !panel2.classList.contains('showing-detail')) renderSqInjuryPanel();
+        if(!isDesktopLayout() && allPlayers.length) renderSq(_sqActiveFilter);
+      }, function(){});
+    }
+  }).catch(function(){});
+}
+function calcAge(iso){
+  if(!iso) return '';
+  var b=new Date(iso), n=new Date();
+  var age=n.getFullYear()-b.getFullYear();
+  if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate())) age--;
+  return age;
+}
+function renderSqManagerSection(){
+  var mgr=_sqManagerData;
+  if(!mgr) return '';
+  var age=calcAge(mgr.birthDate);
+  var tenure=mgr.tenureStart?mgr.tenureStart.slice(0,7):'';
+  var html='<div class="sq-panel-card">';
+  html+='<div style="display:flex;align-items:center;gap:12px;padding:16px 14px;background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);">';
+  html+='<img src="'+(mgr.photo||'')+'" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;" onerror="this.style.visibility=\'hidden\'">';
+  html+='<div><div style="font-size:9px;letter-spacing:1px;color:var(--gold);font-weight:700;text-transform:uppercase;">감독</div>';
+  html+='<div style="font-size:15px;font-weight:700;color:var(--text);margin-top:1px;">'+(mgr.name_en||mgr.name||'')+'</div>';
+  html+='<div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">'+(mgr.nationality||'')+(age?' · '+age+'세':'')+'</div></div>';
+  html+='</div>';
+  if(mgr.matches!==undefined){
+    html+='<div class="detail-info-grid">';
+    html+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.matches+'</div><div class="detail-info-lbl">경기</div></div>';
+    html+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.wins+'-'+mgr.draws+'-'+mgr.losses+'</div><div class="detail-info-lbl">승-무-패</div></div>';
+    html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:#22C55E">'+(mgr.pointsPerGame!=null?mgr.pointsPerGame.toFixed(2):'-')+'</div><div class="detail-info-lbl">평균 승점</div></div>';
+    html+='<div class="detail-info-cell"><div class="detail-info-val">'+(tenure||'-')+'</div><div class="detail-info-lbl">부임</div></div>';
+    html+='</div>';
+  }
+  if(mgr.career && mgr.career.length){
+    html+='<div class="mm-card-title" style="padding:10px 14px 0;">경력</div>';
+    html+='<div class="pm-career-hdr"><span>팀 / 기간</span><span>기록</span></div>';
+    mgr.career.forEach(function(c){
+      var period=c.startDate?c.startDate.slice(0,4):'';
+      period+=c.endDate?(' - '+c.endDate.slice(0,4)):' - 현재';
+      html+='<div class="pm-career-row">';
+      html+='<div><span class="pm-career-team">'+c.teamName+'</span><span class="pm-career-period">'+period+'</span></div>';
+      html+='<div class="pm-career-stat">'+c.matches+'경기</div>';
+      html+='</div>';
+    });
+  }
+  html+='</div>';
+  return html;
+}
+function renderSqInjuryPanel(){
+  var content=document.getElementById('sqDetailContent');
+  if(!content) return;
+  content.className='';
+  content.innerHTML=renderSqManagerSection()+renderSqInjuryHtml();
+}
+function renderSqInjuryHtml(){
+  var injCnt=allInjuries.filter(function(p){return p.status==='i';}).length;
+  var dbtCnt=allInjuries.filter(function(p){return p.status==='d';}).length;
+  var outCnt=allInjuries.filter(function(p){return p.status==='s'||p.status==='u';}).length;
+  var html='<div class="sq-panel-card"><div class="sq-inj-title">부상자 현황</div>';
+  html+='<div class="detail-info-grid">';
+  html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:#EF4444">'+injCnt+'</div><div class="detail-info-lbl">부상</div></div>';
+  html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:#F59E0B">'+dbtCnt+'</div><div class="detail-info-lbl">출전 의심</div></div>';
+  html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:var(--text-secondary)">'+outCnt+'</div><div class="detail-info-lbl">결장</div></div>';
+  html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:#22C55E">'+(_sqInjAvailable||'-')+'</div><div class="detail-info-lbl">출전 가능</div></div>';
+  html+='</div>';
+  if(!allInjuries.length){
+    html+='<div class="sq-inj-empty">'+dIcon('check',20)+'<span>현재 부상/결장 선수 없음</span></div>';
+  } else {
+    var STATUS_BADGE_COLOR={'i':'#EF4444','d':'#F59E0B','s':'#7A8099','u':'#7A8099'};
+    html+='<div class="sq-inj-list">';
+    allInjuries.forEach(function(p){
+      html+='<div class="sq-inj-row">';
+      html+='<div class="sq-inj-photo">'+(p.photo?'<img src="'+p.photo+'" alt="" onerror="this.parentElement.textContent=\''+((p.position||'?').charAt(0))+'\'">':(p.position||'?'))+'</div>';
+      html+='<div class="sq-inj-info"><div class="sq-inj-name">'+(p.fullName||p.name||'')+'</div><div class="sq-inj-detail">'+(p.news||'정보 없음')+'</div></div>';
+      html+='<div class="sq-inj-right">';
+      html+='<span class="sq-inj-badge" style="background:'+(STATUS_BADGE_COLOR[p.status]||'#7A8099')+'22;color:'+(STATUS_BADGE_COLOR[p.status]||'#7A8099')+'">'+(STATUS_LABEL[p.status]||p.status)+'</span>';
+      if(p.chance!==null&&p.chance!==undefined) html+='<span class="sq-inj-chance">출전 '+p.chance+'%</span>';
+      else if(p.status==='u') html+='<span class="sq-inj-chance">출전 불가</span>';
+      html+='</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  return html;
+}
+function resetSqDetailPanel(){
+  var panel=document.getElementById('sqDetailPanel');
+  if(panel) panel.classList.remove('showing-detail');
+  renderSqInjuryPanel();
 }
 var _sqActiveFilter='all';
 var _sqActiveLevel='first';
@@ -2490,11 +2630,49 @@ function loadSquad(){
   // apiFetchCached\uac00 'injuries' \uce90\uc2dc \ud0a4\ub97c \uacf5\uc720\ud574\uc11c \ub450 \ubc88 \ubd88\ub7ec\ub3c4 \uc911\ubcf5 \ud638\ucd9c\uc740 \uc544\ub2c8\ub2e4.
   apiFetchCached(FN+'/football?type=injuries', 'injuries', function(data){
     allInjuries=data.injured||[];
+    _sqInjAvailable=data.availableCount||0;
     updateInjStrip();
+    // 선수 상세를 이미 보고 있으면(우측 패널이 showing-detail) 그 화면을
+    // 덮어쓰지 않는다 — 부상자 데이터는 기본 상태로 돌아갔을 때만 보인다.
+    var panel=document.getElementById('sqDetailPanel');
+    if(panel && !panel.classList.contains('showing-detail')) renderSqInjuryPanel();
     if(allPlayers.length) renderSq(_sqActiveFilter);
   }, function(){});
+  if(!_sqManagerLoaded){ _sqManagerLoaded=true; loadSquadManager(); }
 }
 
+function buildSqManagerBanner(){
+  var mgr=_sqManagerData;
+  var card=document.createElement('div');
+  card.className='sq-panel-card';
+  card.style.cssText='grid-column:1/-1;cursor:pointer;';
+  card.onclick=function(){ openSqManagerModal(); };
+  var html='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(135deg,#1a0a0a 0%,#0d0d18 100%);">';
+  html+='<img src="'+(mgr.photo||'')+'" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;" onerror="this.style.visibility=\'hidden\'">';
+  html+='<div style="flex:1;min-width:0;">';
+  html+='<div style="font-size:8px;letter-spacing:1px;color:var(--gold);font-weight:700;text-transform:uppercase;">감독</div>';
+  html+='<div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(mgr.name_en||mgr.name||'')+'</div>';
+  html+='</div>';
+  if(mgr.matches!==undefined){
+    html+='<div style="text-align:right;flex-shrink:0;">';
+    html+='<div style="font-size:13px;font-weight:700;color:var(--text);">'+mgr.matches+'경기</div>';
+    html+='<div style="font-size:10px;color:var(--text-secondary);">'+mgr.wins+'승 '+mgr.draws+'무 '+mgr.losses+'패</div>';
+    html+='</div>';
+  }
+  html+='</div>';
+  card.innerHTML=html;
+  return card;
+}
+function openSqManagerModal(){
+  if(!_sqManagerData) return;
+  var modal=document.getElementById('playerModal');
+  var content=document.getElementById('modalContent');
+  content.className='';
+  content.innerHTML=renderSqManagerSection();
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+  requestAnimationFrame(function(){ content.scrollTop=0; });
+}
 function renderSq(filter){
   var el=document.getElementById('sqGrid');
   var SQ_GROUP_ORDER={GK:0,DF:1,MF:2,FW:3};
@@ -2502,6 +2680,11 @@ function renderSq(filter){
   var list=filter==='all'?levelPlayers.slice().sort(function(a,b){return (SQ_GROUP_ORDER[a.posGroup]??9)-(SQ_GROUP_ORDER[b.posGroup]??9);}):levelPlayers.filter(function(p){return p.posGroup===filter;});
   if(!list.length){el.innerHTML='<div class="loading-state" style="grid-column:1/-1">선수 데이터 없음</div>';return;}
   el.innerHTML='';
+  // 모바일 전용 — PC는 우측 패널에 이미 감독 카드가 있어서 중복 노출하지
+  // 않는다. "전체" 필터일 때만 그리드 맨 위에 풀와이드 배너로 붙인다.
+  if(filter==='all' && !isDesktopLayout() && _sqManagerData){
+    el.appendChild(buildSqManagerBanner());
+  }
 
   // positionKey → 포지션 약자 변환
   var POS_SHORT={
@@ -2547,7 +2730,6 @@ function renderSq(filter){
       img.onerror=function(){
         photoBox.className='pl-photo-box no-img';
         photoBox.innerHTML='<img src="/data/player_placeholder.png" alt="'+p.name+'">';
-        photoBox.removeChild(img);
       };
       photoBox.appendChild(img);
     } else {
@@ -2588,13 +2770,6 @@ function renderSq(filter){
 
     el.appendChild(card);
   });
-  // PC 화면(리스트+상세패널 구조)에서 패널이 계속 비어 보이지 않도록, 처음
-  // 한 번만 목록의 첫 선수를 자동으로 열어준다(경기 일정 패널과 동일한 패턴).
-  // 이후 필터를 바꿔도 사용자가 보고 있던 선수는 그대로 유지한다.
-  if(isDesktopLayout() && !window._sqPanelAutoOpened){
-    window._sqPanelAutoOpened = true;
-    openPlayerModal(list[0], _sqActiveLevel);
-  }
 }
 
 var STATUS_LABEL={'i':'\uBD80\uC0C1','d':'\uCD9C\uC804 \uC758\uC2EC','s':'\uCD9C\uC7A5 \uC815\uC9C0','u':'\uACB0\uC7A5'};
@@ -2835,7 +3010,7 @@ function renderHistoryNew(){
   // PC에서는 OTD를 상단 스트립 대신 우측 패널 기본 카드로 보여준다 —
   // 경기일정의 "다음 경기 자동 노출"과 동일한 패턴. History 탭은 한 번
   // 열리면 이 함수가 다시 호출되지 않으므로(탭 전환은 #histSection만
-  // 다시 그림) 플래그 하나로 충분하다(스쿼드의 _sqPanelAutoOpened와 동일).
+  // 다시 그림) 플래그 하나로 충분하다.
   if(isDesktopLayout() && !window._histPanelAutoOpened && otdItem){
     window._histPanelAutoOpened = true;
     openOtdModal(enc);
@@ -3727,11 +3902,7 @@ function closeFixDetailPanel(){
   }
 }
 function closeSqDetailPanel(){
-  var inner=document.getElementById('sqDetailContent');
-  if(inner){
-    inner.className='fix-detail-empty';
-    inner.innerHTML=dIcon('user',28)+'<span>선수를 선택하면 상세 정보가 여기에 표시됩니다</span>';
-  }
+  renderSqInjuryPanel();
 }
 function openMatchModal(m, isAuto){
   if(!isAuto) window._fixPanelUserSelected=true;
@@ -5172,6 +5343,8 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
     content = document.getElementById('sqDetailContent');
     if(!content) return;
     content.className='';
+    var sqPanelEl=document.getElementById('sqDetailPanel');
+    if(sqPanelEl) sqPanelEl.classList.add('showing-detail');
   } else {
     modal = document.getElementById('playerModal');
     content = document.getElementById('modalContent');

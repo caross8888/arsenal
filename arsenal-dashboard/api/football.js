@@ -902,11 +902,27 @@ export default async function handler(req, res) {
       const entry = (active && active.teamName === 'Arsenal') ? active
         : historical.find(e => e.teamName === 'Arsenal') || active || null;
       if(!entry) throw new Error('아스날 감독 기록을 찾을 수 없음');
+      const arsenalHist = historical.find(e => e.teamName === 'Arsenal');
+      const pointsPerGame = arsenalHist ? arsenalHist.pointsPerGame
+        : (entry.matches ? (entry.wins * 3 + entry.draws) / entry.matches : 0);
       result = {
         matches: entry.matches || 0,
         wins: entry.wins || 0,
         draws: entry.draws || 0,
         losses: entry.losses || 0,
+        pointsPerGame: Math.round(pointsPerGame * 100) / 100,
+        birthDate: cData.birthDate?.utcTime || null,
+        // 선수단 카드용 경력(모든 감독 재임 클럽) — 캐러티커/코치 겸직 등으로
+        // 과거 감독 항목이 없는 경우(아르테타처럼)엔 아스날 한 줄만 나온다.
+        career: historical.map(e => ({
+          teamName: e.teamName,
+          startDate: e.startDate?.utcTime || null,
+          endDate: e.endDate?.utcTime || null,
+          matches: e.matches || 0,
+          wins: e.wins || 0,
+          draws: e.draws || 0,
+          losses: e.losses || 0,
+        })),
       };
     }
 
