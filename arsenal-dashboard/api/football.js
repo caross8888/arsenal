@@ -746,8 +746,20 @@ export default async function handler(req, res) {
         'EFL Trophy': 'EFLT',
         'UEFA Youth League': 'UYL',
       };
-      // statSeasons[0]이 항상 "이번 시즌" — 그 안의 대회 목록에서 entryId를 뽑는다.
-      const currentSeason = (pd.statSeasons || [])[0];
+      // statSeasons[0]이 "이번 시즌"이라고 가정했었는데, 실측 결과 이번 시즌
+      // 출전 기록이 아직 없는 선수(예: 백업 GK)는 Fotmob이 애초에 이번
+      // 시즌 항목 자체를 안 만들어서 index 0이 여전히 "작년 시즌"이다 —
+      // 그걸 그대로 "이번 시즌"으로 오인해 작년 스탯(경기수 등)을 그대로
+      // 노출하는 버그가 있었다. seasonName("YYYY/YYYY")을 실제 "지금" 기준
+      // 시즌과 비교해서 정확히 일치하는 것만 쓰고(8월부터 다음 시즌으로
+      // 침 — 다른 곳의 currentSeasonYear 계산과 동일 기준), 없으면(이번
+      // 시즌 기록이 아예 없는 선수) currentSeason을 비워서 이번 시즌
+      // 데이터가 없는 상태 그대로(경기/평점 등 미노출) 내려보낸다 — 작년
+      // 시즌으로 조용히 폴백하지 않는다.
+      const now = new Date();
+      const seasonStartYear = now.getMonth() + 1 >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+      const expectedSeasonName = `${seasonStartYear}/${seasonStartYear + 1}`;
+      const currentSeason = (pd.statSeasons || []).find(s => s.seasonName === expectedSeasonName);
       const compEntries = {}; // code -> {entryId, name}
       (currentSeason?.tournaments || []).forEach(t => {
         const code = COMP_NAME_TO_CODE[t.name];
