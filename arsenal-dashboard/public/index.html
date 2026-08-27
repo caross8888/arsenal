@@ -586,6 +586,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border-radius:20px;padding:2px 8px;font-size:10px;color:rgba(255,255,255,.85);margin-top:5px;}
 .pm-season-chip{background:#C8A84B;color:#3a2e0f;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .pm-season-chip-arrow{font-style:normal;font-size:8px;}
+.pm-season-wrap{position:relative;display:inline-block;}
+.pm-season-menu{position:absolute;top:calc(100% + 4px);left:0;background:#1a1c22;border:1px solid rgba(255,255,255,.15);border-radius:10px;overflow:hidden;min-width:96px;z-index:30;display:none;box-shadow:0 4px 14px rgba(0,0,0,.45);}
+.pm-season-menu.open{display:block;}
+.pm-season-menu-item{padding:8px 12px;font-size:11px;font-weight:600;color:#fff;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+.pm-season-menu-item:active{background:rgba(255,255,255,.1);}
+.pm-season-menu-item.active{color:#C8A84B;}
 /* 상세모달 공용 기본정보 그리드 — 헤더 바로 아래 표처럼 붙여서 보여주는
    방식(선수 상세모달 원조). 헤더와 분리된 별도 박스가 아니라 헤더에 바로
    이어지는 느낌을 위해 모서리/여백/음영 없이 헤어라인만으로 구분한다 —
@@ -5491,10 +5497,19 @@ var _pmSeasonMode = 'current'; // 'current' | 'prev' — 상세모달 시즌 토
 var _pmPrevSeasonCache = {}; // fotmobId -> 직전 시즌 응답(같은 선수 재토글 시 재요청 방지)
 var _pmLastP = null; // 시즌 토글 시 재사용할, 마지막으로 그린 선수 객체(이름/사진 등 시즌 무관 필드용)
 var _pmCurrentSeasonSnapshot = null; // {competitions,shotmap,heatmap} — "이번 시즌"으로 되돌아갈 때 쓸 최신 스냅샷
-function togglePmSeason(){
-  if(!_pmLastP) return;
+function togglePmSeasonMenu(btn){
+  var menu = btn.parentElement.querySelector('.pm-season-menu');
+  var wasOpen = menu.classList.contains('open');
+  document.querySelectorAll('.pm-season-menu.open').forEach(function(m){ m.classList.remove('open'); });
+  if(!wasOpen) menu.classList.add('open');
+}
+document.addEventListener('click', function(){
+  document.querySelectorAll('.pm-season-menu.open').forEach(function(m){ m.classList.remove('open'); });
+});
+function selectPmSeason(targetMode){
+  document.querySelectorAll('.pm-season-menu.open').forEach(function(m){ m.classList.remove('open'); });
+  if(!_pmLastP || targetMode===_pmSeasonMode) return;
   var fotmobId = _pmLastP.fotmobId||_pmLastP.id;
-  var targetMode = _pmSeasonMode==='current' ? 'prev' : 'current';
   var levelSnapshot = _sqActiveLevel;
   function applyMode(seasonData){
     _pmSeasonMode = targetMode;
@@ -5627,7 +5642,13 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
     h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
     badges.forEach(function(b){ h += '<span class="pm-badge">'+b+'</span>'; });
     if(_pmFotmobId){
-      h += '<span class="pm-badge pm-season-chip" onclick="togglePmSeason()">'+(_pmSeasonMode==='current'?_pmCurLabel:_pmPrevLabel)+' <i class="pm-season-chip-arrow">\u25be</i></span>';
+      h += '<span class="pm-season-wrap">';
+      h += '<span class="pm-badge pm-season-chip" onclick="event.stopPropagation();togglePmSeasonMenu(this)">'+(_pmSeasonMode==='current'?_pmCurLabel:_pmPrevLabel)+' <i class="pm-season-chip-arrow">\u25be</i></span>';
+      h += '<span class="pm-season-menu" id="pmSeasonMenu">';
+      h += '<div class="pm-season-menu-item'+(_pmSeasonMode==='current'?' active':'')+'" onclick="event.stopPropagation();selectPmSeason(\'current\')">'+_pmCurLabel+' \uc2dc\uc98c</div>';
+      h += '<div class="pm-season-menu-item'+(_pmSeasonMode==='prev'?' active':'')+'" onclick="event.stopPropagation();selectPmSeason(\'prev\')">'+_pmPrevLabel+' \uc2dc\uc98c</div>';
+      h += '</span>';
+      h += '</span>';
     }
     h += '</div>';
   }
