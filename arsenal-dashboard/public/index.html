@@ -630,14 +630,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stat-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
 .stat-box{background:var(--overlay-10);border-radius:10px;padding:10px 6px;text-align:center;}
 .stat-box-val{font-family:var(--fd);font-size:20px;line-height:1;color:var(--text);}
-.stat-box-lbl{font-size:8px;letter-spacing:.5px;text-transform:uppercase;color:var(--overlay-35);margin-top:3px;}
+.stat-box-lbl{font-size:8px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-secondary);margin-top:3px;}
 .stat-box-sub{font-size:9px;color:var(--overlay-30);margin-top:1px;}
 /* 퍼센타일 바 */
-.pct-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
-.pct-label{font-size:11px;color:var(--overlay-50);width:100px;flex-shrink:0;}
+.pct-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.pct-label{font-size:11px;color:var(--text-secondary);width:44px;flex-shrink:0;}
+.pct-val{font-size:12px;font-weight:700;min-width:22px;flex-shrink:0;}
 .pct-bar-wrap{flex:1;height:5px;background:var(--overlay-10);border-radius:3px;overflow:hidden;}
 .pct-bar{height:100%;border-radius:3px;}
-.pct-val{font-size:11px;font-weight:700;width:36px;text-align:right;flex-shrink:0;}
 /* 경력 */
 /* 카드 박스로 감싸지 않고(다른 탭의 .detail-info-grid/선수 스탯 표와
    동일하게) 좌우가 패널 끝까지 닿는 표 형태 — 팀/기간을 한 줄로 붙이고
@@ -1399,12 +1399,43 @@ function renderSqManagerSection(){
   html+='<div style="font-size:15px;font-weight:700;color:var(--on-dark-header);margin-top:1px;">'+(mgr.name_en||mgr.name||'')+'</div>';
   html+='<div style="font-size:11px;color:var(--on-dark-header-secondary);margin-top:2px;">'+(mgr.country||mgr.nationality||'')+(age?' · '+age+'세':'')+'</div></div>';
   html+='</div>';
-  if(mgr.matches!==undefined){
+  var mgrFlagUrl = mgr.country ? getNatFlag(mgr.country) : null;
+  var bioItems = [];
+  if(mgr.height) bioItems.push({val: mgr.height, lbl:'키'});
+  if(mgr.country) bioItems.push({val:(mgrFlagUrl?'<img src="'+mgrFlagUrl+'" style="width:22px;height:16px;border-radius:2px;object-fit:cover;vertical-align:middle"> ':'')+mgr.country, lbl:'국가'});
+  if(mgr.preferredFoot) bioItems.push({val: mgr.preferredFoot==='Right'?'오른발':mgr.preferredFoot==='Left'?'왼발':mgr.preferredFoot, lbl:'주사용 발'});
+  if(tenure) bioItems.push({val: tenure, lbl:'부임'});
+  if(bioItems.length){
     html+='<div class="detail-info-grid">';
-    html+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.matches+'</div><div class="detail-info-lbl">경기</div></div>';
-    html+='<div class="detail-info-cell"><div class="detail-info-val"><span style="color:var(--green)">'+mgr.wins+'</span>-<span style="color:var(--amber)">'+mgr.draws+'</span>-<span style="color:var(--loss)">'+mgr.losses+'</span></div><div class="detail-info-lbl">승-무-패</div></div>';
+    bioItems.forEach(function(item){
+      html+='<div class="detail-info-cell"><div class="detail-info-val">'+item.val+'</div><div class="detail-info-lbl">'+item.lbl+'</div></div>';
+    });
+    html+='</div>';
+  }
+  if(mgr.matches!==undefined){
+    var mTotal = mgr.matches||0;
+    var winRate = mTotal ? Math.round(mgr.wins/mTotal*100) : 0;
+    var wdl = [
+      {lbl:'승리', val:mgr.wins, color:'var(--green)'},
+      {lbl:'무승부', val:mgr.draws, color:'var(--amber)'},
+      {lbl:'패배', val:mgr.losses, color:'var(--loss)'},
+    ];
+    html+='<div class="mm-card-title" style="padding:14px 14px 0;">전적</div>';
+    html+='<div style="display:flex;gap:16px;padding:16px 14px 10px;align-items:stretch;">';
+    html+='<div class="stat-box" style="flex:0 0 108px;display:flex;flex-direction:column;justify-content:center;">';
+    html+='<div class="stat-box-val" style="font-size:32px;">'+mTotal+'</div>';
+    html+='<div class="stat-box-lbl">경기</div>';
+    html+='</div>';
+    html+='<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:11px;">';
+    wdl.forEach(function(row){
+      var pct = mTotal ? Math.round(row.val/mTotal*100) : 0;
+      html+='<div class="pct-row" style="margin-bottom:0;"><div class="pct-label">'+row.lbl+'</div><div class="pct-val" style="color:'+row.color+'">'+row.val+'</div><div class="pct-bar-wrap"><div class="pct-bar" style="width:'+pct+'%;background:'+row.color+'"></div></div></div>';
+    });
+    html+='</div>';
+    html+='</div>';
+    html+='<div class="detail-info-grid">';
     html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:var(--green)">'+(mgr.pointsPerGame!=null?mgr.pointsPerGame.toFixed(2):'-')+'</div><div class="detail-info-lbl">평균 승점</div></div>';
-    html+='<div class="detail-info-cell"><div class="detail-info-val">'+(tenure||'-')+'</div><div class="detail-info-lbl">부임</div></div>';
+    html+='<div class="detail-info-cell"><div class="detail-info-val">'+winRate+'%</div><div class="detail-info-lbl">승률</div></div>';
     html+='</div>';
   }
   if(mgr.career && mgr.career.length){
@@ -1451,6 +1482,7 @@ function renderSqManagerModalContent(){
   if(mgr.height) bioItems.push({val: mgr.height, lbl:'키'});
   if(mgr.country) bioItems.push({val:(mgrFlagUrl?'<img src="'+mgrFlagUrl+'" style="width:22px;height:16px;border-radius:2px;object-fit:cover;vertical-align:middle"> ':'')+mgr.country, lbl:'국가'});
   if(mgr.preferredFoot) bioItems.push({val: mgr.preferredFoot==='Right'?'오른발':mgr.preferredFoot==='Left'?'왼발':mgr.preferredFoot, lbl:'주사용 발'});
+  if(tenure) bioItems.push({val: tenure, lbl:'부임'});
   if(bioItems.length){
     h+='<div class="detail-info-grid">';
     bioItems.forEach(function(item){
@@ -1458,12 +1490,33 @@ function renderSqManagerModalContent(){
     });
     h+='</div>';
   }
+  // 전적(경기/승/무/패) — Fotmob 감독 페이지 스타일: 왼쪽에 총 경기수를 큰
+  // 숫자로, 오른쪽에 승/무/패를 막대그래프로 세로 나열. 막대 길이는 총
+  // 경기수 대비 비율.
   if(mgr.matches!==undefined){
+    var mTotal = mgr.matches||0;
+    var winRate = mTotal ? Math.round(mgr.wins/mTotal*100) : 0;
+    var wdl = [
+      {lbl:'승리', val:mgr.wins, color:'var(--green)'},
+      {lbl:'무승부', val:mgr.draws, color:'var(--amber)'},
+      {lbl:'패배', val:mgr.losses, color:'var(--loss)'},
+    ];
+    h+='<div class="mm-card-title" style="padding:14px 14px 0;">전적</div>';
+    h+='<div style="display:flex;gap:16px;padding:16px 14px 10px;align-items:stretch;">';
+    h+='<div class="stat-box" style="flex:0 0 108px;display:flex;flex-direction:column;justify-content:center;">';
+    h+='<div class="stat-box-val" style="font-size:32px;">'+mTotal+'</div>';
+    h+='<div class="stat-box-lbl">경기</div>';
+    h+='</div>';
+    h+='<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:11px;">';
+    wdl.forEach(function(row){
+      var pct = mTotal ? Math.round(row.val/mTotal*100) : 0;
+      h+='<div class="pct-row" style="margin-bottom:0;"><div class="pct-label">'+row.lbl+'</div><div class="pct-val" style="color:'+row.color+'">'+row.val+'</div><div class="pct-bar-wrap"><div class="pct-bar" style="width:'+pct+'%;background:'+row.color+'"></div></div></div>';
+    });
+    h+='</div>';
+    h+='</div>';
     h+='<div class="detail-info-grid">';
-    h+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.matches+'</div><div class="detail-info-lbl">경기</div></div>';
-    h+='<div class="detail-info-cell"><div class="detail-info-val"><span style="color:var(--green)">'+mgr.wins+'</span>-<span style="color:var(--amber)">'+mgr.draws+'</span>-<span style="color:var(--loss)">'+mgr.losses+'</span></div><div class="detail-info-lbl">승-무-패</div></div>';
     h+='<div class="detail-info-cell"><div class="detail-info-val" style="color:var(--green)">'+(mgr.pointsPerGame!=null?mgr.pointsPerGame.toFixed(2):'-')+'</div><div class="detail-info-lbl">평균 승점</div></div>';
-    h+='<div class="detail-info-cell"><div class="detail-info-val">'+(tenure||'-')+'</div><div class="detail-info-lbl">부임</div></div>';
+    h+='<div class="detail-info-cell"><div class="detail-info-val">'+winRate+'%</div><div class="detail-info-lbl">승률</div></div>';
     h+='</div>';
   }
   if(mgr.career && mgr.career.length){
