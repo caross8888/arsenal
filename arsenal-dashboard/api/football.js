@@ -966,6 +966,13 @@ export default async function handler(req, res) {
       const arsenalHist = historical.find(e => e.teamName === 'Arsenal');
       const pointsPerGame = arsenalHist ? arsenalHist.pointsPerGame
         : (entry.matches ? (entry.wins * 3 + entry.draws) / entry.matches : 0);
+      // 선수 상세모달과 같은 형태(키/주사용 발/국가)로 보여주기 위한 필드 —
+      // 감독 데이터엔 계약기간 같은 필드는 없지만(market value가 null),
+      // playerInformation에 이 셋은 들어있다.
+      const findInfo = title => (cData.playerInformation || []).find(i => i.title === title);
+      const heightInfo = findInfo('Height');
+      const footInfo = findInfo('Preferred foot');
+      const countryInfo = findInfo('Country');
       result = {
         matches: entry.matches || 0,
         wins: entry.wins || 0,
@@ -973,6 +980,10 @@ export default async function handler(req, res) {
         losses: entry.losses || 0,
         pointsPerGame: Math.round(pointsPerGame * 100) / 100,
         birthDate: cData.birthDate?.utcTime || null,
+        height: heightInfo?.value?.fallback || null,
+        preferredFoot: footInfo?.value?.fallback || null,
+        country: countryInfo?.value?.fallback || null,
+        countryCode: countryInfo?.countryCode || null,
         // 선수단 카드용 경력(모든 감독 재임 클럽) — 캐러티커/코치 겸직 등으로
         // 과거 감독 항목이 없는 경우(아르테타처럼)엔 아스날 한 줄만 나온다.
         career: historical.map(e => ({

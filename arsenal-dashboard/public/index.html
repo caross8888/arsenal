@@ -261,7 +261,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .video-embed-wrap{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,var(--surface2),var(--surface3));}
 .video-embed-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
 .video-play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;pointer-events:none;}
-.video-only-badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);color:var(--white);font-size:10px;font-weight:700;letter-spacing:.3px;padding:3px 9px;border-radius:20px;pointer-events:none;}
+.video-only-badge{position:absolute;top:8px;right:8px;background:var(--red);color:var(--white);font-size:10px;font-weight:700;letter-spacing:.3px;padding:3px 9px;border-radius:20px;pointer-events:none;}
 .video-body{padding:12px 14px;}
 .video-title{font-weight:700;font-size:13px;line-height:1.4;margin-bottom:6px;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .video-time{font-size:11px;color:var(--text-secondary);display:inline-flex;align-items:center;gap:4px;}
@@ -474,7 +474,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .trophy-card-info{padding:7px 8px 9px;text-align:center;border-top:1px solid var(--border-bright);}
 .trophy-card-name{font-size:11px;font-weight:700;color:var(--text-secondary);line-height:1.3;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .trophy-card-count-wrap{display:flex;align-items:baseline;justify-content:center;gap:3px;}
-.trophy-card-count{font-size:22px;font-weight:900;line-height:1;font-family:var(--fd);}
+.trophy-card-count{font-size:22px;font-weight:900;line-height:1;font-family:var(--fd);color:var(--text);}
 .trophy-card-count.gold{color:var(--gold);}
 .trophy-card-count.silver{color:#aaa;}
 .trophy-card-count.bronze{color:#cd7f32;}
@@ -1397,7 +1397,7 @@ function renderSqManagerSection(){
   html+='<img src="'+(mgr.sqPhoto||'')+'" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;" onerror="this.style.visibility=\'hidden\'">';
   html+='<div><div style="font-size:9px;letter-spacing:1px;color:var(--on-dark-header-gold);font-weight:700;text-transform:uppercase;">감독</div>';
   html+='<div style="font-size:15px;font-weight:700;color:var(--on-dark-header);margin-top:1px;">'+(mgr.name_en||mgr.name||'')+'</div>';
-  html+='<div style="font-size:11px;color:var(--on-dark-header-secondary);margin-top:2px;">'+(mgr.nationality||'')+(age?' · '+age+'세':'')+'</div></div>';
+  html+='<div style="font-size:11px;color:var(--on-dark-header-secondary);margin-top:2px;">'+(mgr.country||mgr.nationality||'')+(age?' · '+age+'세':'')+'</div></div>';
   html+='</div>';
   if(mgr.matches!==undefined){
     html+='<div class="detail-info-grid">';
@@ -1443,10 +1443,21 @@ function renderSqManagerModalContent(){
   h+='<div class="pm-club"><img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> Arsenal FC</div>';
   h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
   h+='<span class="pm-badge">감독</span>';
-  if(mgr.nationality) h+='<span class="pm-badge">'+mgr.nationality+'</span>';
   if(age) h+='<span class="pm-badge">'+age+'세</span>';
   h+='</div>';
   h+='</div></div></div>';
+  var mgrFlagUrl = mgr.country ? getNatFlag(mgr.country) : null;
+  var bioItems = [];
+  if(mgr.height) bioItems.push({val: mgr.height, lbl:'키'});
+  if(mgr.country) bioItems.push({val:(mgrFlagUrl?'<img src="'+mgrFlagUrl+'" style="width:22px;height:16px;border-radius:2px;object-fit:cover;vertical-align:middle"> ':'')+mgr.country, lbl:'국가'});
+  if(mgr.preferredFoot) bioItems.push({val: mgr.preferredFoot==='Right'?'오른발':mgr.preferredFoot==='Left'?'왼발':mgr.preferredFoot, lbl:'주사용 발'});
+  if(bioItems.length){
+    h+='<div class="detail-info-grid">';
+    bioItems.forEach(function(item){
+      h+='<div class="detail-info-cell"><div class="detail-info-val">'+item.val+'</div><div class="detail-info-lbl">'+item.lbl+'</div></div>';
+    });
+    h+='</div>';
+  }
   if(mgr.matches!==undefined){
     h+='<div class="detail-info-grid">';
     h+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.matches+'</div><div class="detail-info-lbl">경기</div></div>';
@@ -2791,6 +2802,11 @@ function openSqManagerModal(){
   if(!_sqManagerData) return;
   var modal=document.getElementById('playerModal');
   var content=document.getElementById('modalContent');
+  // 히스토리 OTD/타임라인처럼 같은 시트를 짧게(hist-compact) 쓰는 모달을
+  // 먼저 열었다 닫은 적이 있으면 그 클래스가 남아있어서, 감독 모달을 처음
+  // 열 때 짧게 뜨는 버그가 있었다(다른 선수 모달을 한 번 거치면 그쪽에서
+  // 지워줘서 그 다음부턴 정상으로 보였음) — 여기서도 항상 지워준다.
+  modal.querySelector('.modal-sheet').classList.remove('hist-compact');
   content.className='';
   content.innerHTML=renderSqManagerModalContent();
   modal.classList.add('open');
