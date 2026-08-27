@@ -2797,6 +2797,23 @@ function openSqManagerModal(){
   document.body.style.overflow='hidden';
   requestAnimationFrame(function(){ content.scrollTop=0; });
 }
+// positionKey(정규화된 p.position) → 포지션 약자 — 선수단 그리드 카드와
+// 선수 상세모달 뱃지가 공용으로 쓴다.
+var POS_SHORT={
+  'keeper_long':'GK','goalkeeper':'GK',
+  'rightback':'RB','leftback':'LB','centerback':'CB','centreback':'CB',
+  'right_wing_back':'RWB','left_wing_back':'LWB',
+  'centermidfielder':'CM','centremidfielder':'CM',
+  'centerdefensivemidfielder':'DM','centredefensivemidfielder':'DM','defensivemidfielder':'DM',
+  'attackingmidfielder':'AM','centreattackingmidfielder':'AM',
+  'rightmidfielder':'RM','leftmidfielder':'LM',
+  'rightwinger':'RW','leftwinger':'LW','rightwing':'RW','leftwing':'LW',
+  'striker':'ST','centreforward':'ST','centerforward':'ST',
+};
+function posShortFor(p){
+  var key=(p.position||'').toLowerCase().replace(/_/g,'').replace(/-/g,'').replace(/ /g,'');
+  return POS_SHORT[key]||p.posGroup||'';
+}
 function renderSq(filter){
   var el=document.getElementById('sqGrid');
   var SQ_GROUP_ORDER={GK:0,DF:1,MF:2,FW:3};
@@ -2810,24 +2827,10 @@ function renderSq(filter){
     el.appendChild(buildSqManagerBanner());
   }
 
-  // positionKey → 포지션 약자 변환
-  var POS_SHORT={
-    'keeper_long':'GK','goalkeeper':'GK',
-    'rightback':'RB','leftback':'LB','centerback':'CB','centreback':'CB',
-    'right_wing_back':'RWB','left_wing_back':'LWB',
-    'centermidfielder':'CM','centremidfielder':'CM',
-    'centerdefensivemidfielder':'DM','centredefensivemidfielder':'DM','defensivemidfielder':'DM',
-    'attackingmidfielder':'AM','centreattackingmidfielder':'AM',
-    'rightmidfielder':'RM','leftmidfielder':'LM',
-    'rightwinger':'RW','leftwinger':'LW','rightwing':'RW','leftwing':'LW',
-    'right_wing_back':'RWB','left_wing_back':'LWB',
-    'striker':'ST','centreforward':'ST','centerforward':'ST',
-  };
   var POS_GROUP_CLS={GK:'gk',DF:'df',MF:'mf',FW:'fw'};
 
   list.forEach(function(p){
-    var posKey=(p.position||'').toLowerCase().replace(/_/g,'').replace(/-/g,'').replace(/ /g,'');
-    var posShort=POS_SHORT[posKey]||p.posGroup||'';
+    var posShort=posShortFor(p);
     var leftCls=POS_GROUP_CLS[p.posGroup]||'df';
     var jersey=p.jersey||'';
 
@@ -5524,17 +5527,13 @@ function selectPmSeason(targetMode){
       heatmap: seasonData.heatmap||[],
     });
     // 시즌을 바꿔도 지금 보고 있던 탭(기록/시즌 성적/경력)을 그대로 유지한다
-    // — 다시 그리면 기본값이 기본정보 탭이라, 안 하면 시즌만 바꾸려다
-    // 탭까지 기본정보로 튕겨나간다.
+    // — 처음부터 그 탭이 active인 상태로 그려서(openPlayerModal 5번째 인자),
+    // "기본정보로 그렸다가 다시 클릭해서 전환"하는 방식에서 생기던 깜빡임
+    // 없이 바로 원하는 탭이 보인다.
     var content = isDesktopLayout() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
     var activeBtn = content && content.querySelector('.live-tab-btn.active');
-    var activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : null;
-    openPlayerModal(merged, levelSnapshot, true);
-    if(activeTab && activeTab!=='pmbasic'){
-      var newContent = isDesktopLayout() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
-      var newBtn = newContent && newContent.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');
-      if(newBtn) newBtn.click();
-    }
+    var activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : 'pmbasic';
+    openPlayerModal(merged, levelSnapshot, true, false, activeTab);
   }
   if(targetMode==='current'){
     applyMode(_pmCurrentSeasonSnapshot||{competitions:{},shotmap:[],heatmap:[]});
@@ -5546,7 +5545,8 @@ function selectPmSeason(targetMode){
     applyMode(_pmPrevSeasonCache[fotmobId]);
   });
 }
-function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
+function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
+  initialTab = initialTab || 'pmbasic';
   var desktop = isDesktopLayout();
   var modal, content;
   if(desktop){
@@ -5579,39 +5579,6 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   var height      = p.height||'';
   var age         = p.age||'';
   var prefFoot    = p.preferredFoot||'';
-  var POS_LABEL_KO = {
-    'keeper_long':'골키퍼','goalkeeper':'골키퍼',
-    'rightback':'오른쪽 수비','leftback':'왼쪽 수비',
-    'centerback':'센터백','centreback':'센터백',
-    'right_wing_back':'오른쪽 윙백','left_wing_back':'왼쪽 윙백',
-    'rightwinger':'오른쪽 윙','leftwinger':'왼쪽 윙',
-    'rightwing':'오른쪽 윙','leftwing':'왼쪽 윙',
-    'rightmidfielder':'오른쪽 미드필더','leftmidfielder':'왼쪽 미드필더',
-    'centermidfielder':'중앙 미드필더','centremidfielder':'중앙 미드필더',
-    'centerdefensivemidfielder':'수비형 미드필더','centredefensivemidfielder':'수비형 미드필더',
-    'defensivemidfielder':'수비형 미드필더',
-    'attackingmidfielder':'공격형 미드필더','centreattackingmidfielder':'공격형 미드필더',
-    'striker':'스트라이커','centreforward':'스트라이커','centerforward':'스트라이커',
-  };
-  var _rawPos = p.position||'';
-  var _rawKey = _rawPos.toLowerCase().replace(/_/g,'').replace(/-/g,'').replace(/ /g,'');
-  // label(영문) 기반 한글 매핑 (key가 차단될 때 fallback)
-  var POS_LABEL_EN = {
-    'goalkeeper':'골키퍼','right back':'오른쪽 수비','left back':'왼쪽 수비',
-    'center back':'센터백','centre back':'센터백',
-    'right wing-back':'오른쪽 윙백','left wing-back':'왼쪽 윙백',
-    'right midfielder':'오른쪽 미드필더','left midfielder':'왼쪽 미드필더',
-    'central midfielder':'중앙 미드필더',
-    'defensive midfielder':'수비형 미드필더',
-    'attacking midfielder':'공격형 미드필더',
-    'right winger':'오른쪽 윙','left winger':'왼쪽 윙',
-    'striker':'스트라이커','centre forward':'스트라이커','center forward':'스트라이커',
-  };
-  var _labelRaw = (p.positionLabel||'').toLowerCase();
-  var posLabel = POS_LABEL_KO[_rawKey]
-    || POS_LABEL_EN[_labelRaw]
-    || p.positionLabel
-    || pos;
   var contractEnd = p.contractEnd ? p.contractEnd.slice(0,7) : '';
   var competitions= p.competitions||{};
   // 1군에서 열었으면 1군 대회만, 아카데미에서 열었으면 아카데미 대회만
@@ -5649,7 +5616,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   h += '</div>';
   var badges = [];
   if(jersey) badges.push('#'+jersey);
-  if(posLabel) badges.push(posLabel);
+  if(pos) badges.push(posShortFor(p));
   if(age) badges.push(age+'\uc138');
   var _pmNow=new Date(); var _pmCurYr=_pmNow.getMonth()+1>=8?_pmNow.getFullYear():_pmNow.getFullYear()-1;
   var _pmCurLabel=(_pmCurYr%100)+'-'+((_pmCurYr+1)%100), _pmPrevLabel=((_pmCurYr-1)%100)+'-'+(_pmCurYr%100);
@@ -5692,12 +5659,12 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   // 제외)만 따로 잘라낼 수 있게 시작 위치를 기록해둔다.
   var _tabsHtmlStart = h.length;
   h += '<div class="live-tabs">';
-  h += '<button class="live-tab-btn active" data-tab="pmbasic" onclick="liveSwitchTab(this,&quot;pmbasic&quot;)">기본정보</button>';
-  h += '<button class="live-tab-btn" data-tab="pmrecord" onclick="liveSwitchTab(this,&quot;pmrecord&quot;)">기록</button>';
-  h += '<button class="live-tab-btn" data-tab="pmperf" onclick="liveSwitchTab(this,&quot;pmperf&quot;)">시즌 성적</button>';
-  h += '<button class="live-tab-btn" data-tab="pmcareer" onclick="liveSwitchTab(this,&quot;pmcareer&quot;)">경력</button>';
+  h += '<button class="live-tab-btn'+(initialTab==='pmbasic'?' active':'')+'" data-tab="pmbasic" onclick="liveSwitchTab(this,&quot;pmbasic&quot;)">기본정보</button>';
+  h += '<button class="live-tab-btn'+(initialTab==='pmrecord'?' active':'')+'" data-tab="pmrecord" onclick="liveSwitchTab(this,&quot;pmrecord&quot;)">기록</button>';
+  h += '<button class="live-tab-btn'+(initialTab==='pmperf'?' active':'')+'" data-tab="pmperf" onclick="liveSwitchTab(this,&quot;pmperf&quot;)">시즌 성적</button>';
+  h += '<button class="live-tab-btn'+(initialTab==='pmcareer'?' active':'')+'" data-tab="pmcareer" onclick="liveSwitchTab(this,&quot;pmcareer&quot;)">경력</button>';
   h += '</div>';
-  h += '<div class="live-tab-panel" id="live-panel-pmbasic" style="padding-top:0;">';
+  h += '<div class="live-tab-panel" id="live-panel-pmbasic" style="padding-top:0;'+(initialTab!=='pmbasic'?'display:none;':'')+'">';
 
   // ── 기본 정보 그리드 ──
   var infoItems = [];
@@ -5757,7 +5724,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   }
 
   h += '</div>'; // live-panel-pmbasic 끝
-  h += '<div class="live-tab-panel" id="live-panel-pmrecord" style="display:none;padding-top:0;">';
+  h += '<div class="live-tab-panel" id="live-panel-pmrecord" style="'+(initialTab!=='pmrecord'?'display:none;':'')+'padding-top:0;">';
 
   // ── 대회별 기록 카드: 탭 + 스탯 + 슈팅맵 + 터치 히트맵을 하나로 묶음 ──
   if(compKeys.length > 0){
@@ -5863,7 +5830,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   // ── 시즌 성적 (Fotmob "Season performance" 프로그레스바 재현) ──
   // perfGroups는 정적 스냅샷(players.json)엔 없고 라이브 fetch가 끝난
   // 뒤에만 채워진다 — 그 전까지는 "불러오는 중" 안내만 보여준다.
-  h += '<div class="live-tab-panel" id="live-panel-pmperf" style="display:none;padding-top:0;">';
+  h += '<div class="live-tab-panel" id="live-panel-pmperf" style="'+(initialTab!=='pmperf'?'display:none;':'')+'padding-top:0;">';
   if(compKeys.length > 0){
     var perfCompKeys = compKeys.filter(function(k){ return competitions[k] && competitions[k].perfGroups && competitions[k].perfGroups.length; });
     if(perfCompKeys.length > 0){
@@ -5913,7 +5880,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade) {
   }
   h += '</div>'; // live-panel-pmperf 끝
 
-  h += '<div class="live-tab-panel" id="live-panel-pmcareer" style="display:none;padding-top:0;">';
+  h += '<div class="live-tab-panel" id="live-panel-pmcareer" style="'+(initialTab!=='pmcareer'?'display:none;':'')+'padding-top:0;">';
 
   // ── 경력 ──
   if(career && career.length){
