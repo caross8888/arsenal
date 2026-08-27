@@ -3474,7 +3474,7 @@ function renderTrophiesSection(){
   html += '<div class="trophy-grid">';
   trophies.forEach(function(t){
     var enc = encodeURIComponent(JSON.stringify(t)).replace(/'/g, '%27');
-    var countColor = t.color==='#FFD700' ? 'gold' : (t.color==='#9B9B9B' ? 'silver' : '');
+    var countColor = t.color==='#FFD700' ? 'gold' : '';
     html += '<div class="trophy-card" onclick="openTrophyDetailModal(\'' + enc + '\')">';
     html += '<div class="trophy-card-img-wrap">';
     if(t.image){
