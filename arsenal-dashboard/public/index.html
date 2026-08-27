@@ -1337,7 +1337,7 @@ function renderSqManagerSection(){
   if(mgr.matches!==undefined){
     html+='<div class="detail-info-grid">';
     html+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.matches+'</div><div class="detail-info-lbl">경기</div></div>';
-    html+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.wins+'-'+mgr.draws+'-'+mgr.losses+'</div><div class="detail-info-lbl">승-무-패</div></div>';
+    html+='<div class="detail-info-cell"><div class="detail-info-val"><span style="color:#22C55E">'+mgr.wins+'</span>-<span style="color:#F59E0B">'+mgr.draws+'</span>-<span style="color:#EF4444">'+mgr.losses+'</span></div><div class="detail-info-lbl">승-무-패</div></div>';
     html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:#22C55E">'+(mgr.pointsPerGame!=null?mgr.pointsPerGame.toFixed(2):'-')+'</div><div class="detail-info-lbl">평균 승점</div></div>';
     html+='<div class="detail-info-cell"><div class="detail-info-val">'+(tenure||'-')+'</div><div class="detail-info-lbl">부임</div></div>';
     html+='</div>';
@@ -1356,6 +1356,53 @@ function renderSqManagerSection(){
   }
   html+='</div>';
   return html;
+}
+// 모바일 상세모달 전용 — PC 우측 패널의 .sq-panel-card(자기 테두리를 가진
+// 카드)를 그대로 쓰면 이미 둥근 모서리인 모달 시트 안에 또 둥근 박스가
+// 떠 보인다. 선수 상세모달(.pm-header/.detail-info-grid, 시트 끝까지
+// 꽉 차는 방식)과 동일한 원칙으로 별도로 만든다.
+function renderSqManagerModalContent(){
+  var mgr=_sqManagerData;
+  if(!mgr) return '';
+  var age=calcAge(mgr.birthDate);
+  var tenure=mgr.tenureStart?mgr.tenureStart.slice(0,7):'';
+  var h='<div class="pm-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
+  h+='<div class="pm-header-inner">';
+  if(mgr.photo){
+    h+='<img class="pm-photo" src="'+mgr.photo+'" onerror="this.onerror=null;this.style.visibility=\'hidden\'">';
+  } else {
+    h+='<div class="pm-photo-ph"></div>';
+  }
+  h+='<div>';
+  h+='<div class="pm-name">'+(mgr.name_en||mgr.name||'')+'</div>';
+  h+='<div class="pm-club"><img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> Arsenal FC</div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
+  h+='<span class="pm-badge">감독</span>';
+  if(mgr.nationality) h+='<span class="pm-badge">'+mgr.nationality+'</span>';
+  if(age) h+='<span class="pm-badge">'+age+'세</span>';
+  h+='</div>';
+  h+='</div></div></div>';
+  if(mgr.matches!==undefined){
+    h+='<div class="detail-info-grid">';
+    h+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.matches+'</div><div class="detail-info-lbl">경기</div></div>';
+    h+='<div class="detail-info-cell"><div class="detail-info-val">'+mgr.wins+'-'+mgr.draws+'-'+mgr.losses+'</div><div class="detail-info-lbl">승-무-패</div></div>';
+    h+='<div class="detail-info-cell"><div class="detail-info-val" style="color:#22C55E">'+(mgr.pointsPerGame!=null?mgr.pointsPerGame.toFixed(2):'-')+'</div><div class="detail-info-lbl">평균 승점</div></div>';
+    h+='<div class="detail-info-cell"><div class="detail-info-val">'+(tenure||'-')+'</div><div class="detail-info-lbl">부임</div></div>';
+    h+='</div>';
+  }
+  if(mgr.career && mgr.career.length){
+    h+='<div class="mm-card-title" style="padding:14px 16px 0;">경력</div>';
+    h+='<div class="pm-career-hdr"><span>팀 / 기간</span><span>기록</span></div>';
+    mgr.career.forEach(function(c){
+      var period=c.startDate?c.startDate.slice(0,4):'';
+      period+=c.endDate?(' - '+c.endDate.slice(0,4)):' - 현재';
+      h+='<div class="pm-career-row">';
+      h+='<div><span class="pm-career-team">'+c.teamName+'</span><span class="pm-career-period">'+period+'</span></div>';
+      h+='<div class="pm-career-stat">'+c.matches+'경기</div>';
+      h+='</div>';
+    });
+  }
+  return h;
 }
 function renderSqInjuryPanel(){
   var content=document.getElementById('sqDetailContent');
@@ -2656,7 +2703,7 @@ function buildSqManagerBanner(){
   if(mgr.matches!==undefined){
     html+='<div style="text-align:right;flex-shrink:0;">';
     html+='<div style="font-size:13px;font-weight:700;color:var(--text);">'+mgr.matches+'경기</div>';
-    html+='<div style="font-size:10px;color:var(--text-secondary);">'+mgr.wins+'승 '+mgr.draws+'무 '+mgr.losses+'패</div>';
+    html+='<div style="font-size:10px;"><span style="color:#22C55E">'+mgr.wins+'승</span> <span style="color:#F59E0B">'+mgr.draws+'무</span> <span style="color:#EF4444">'+mgr.losses+'패</span></div>';
     html+='</div>';
   }
   html+='</div>';
@@ -2668,7 +2715,7 @@ function openSqManagerModal(){
   var modal=document.getElementById('playerModal');
   var content=document.getElementById('modalContent');
   content.className='';
-  content.innerHTML=renderSqManagerSection();
+  content.innerHTML=renderSqManagerModalContent();
   modal.classList.add('open');
   document.body.style.overflow='hidden';
   requestAnimationFrame(function(){ content.scrollTop=0; });
