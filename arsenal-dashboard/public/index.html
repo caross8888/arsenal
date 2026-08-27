@@ -4642,6 +4642,11 @@ function enableSheetSwipeClose(sheetEl, headerSelector, closeFn){
   var CLOSE_THRESHOLD = 100;
   sheetEl.addEventListener('pointerdown', function(e){
     if(!e.target.closest(headerSelector)) return;
+    // 헤더 안에 있는 실제 인터랙티브 컨트롤(시즌 선택 칩/드롭다운 등)은
+    // 스와이프 캡처 대상에서 제외한다 — setPointerCapture가 걸리면 그
+    // 위에서의 클릭이 칩/메뉴가 아니라 시트 쪽으로 리다이렉트돼 눌러도
+    // 반응이 없어진다.
+    if(e.target.closest('.pm-season-wrap')) return;
     dragging = true; dragged = 0; pointerId = e.pointerId;
     startY = e.clientY;
     sheetEl.style.transition = 'none';
