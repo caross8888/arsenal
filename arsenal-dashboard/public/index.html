@@ -1579,16 +1579,16 @@ function resetSqDetailPanel(){
   if(panel) panel.classList.remove('showing-detail');
   renderSqInjuryPanel();
 }
-// PC 리스트 칸(#sqListCol)의 빈 공간(카드/버튼이 아닌 곳)을 클릭하면
-// X버튼과 동일하게 상세패널을 닫는다 — 클릭 지점에서 위로 [onclick]
-// 요소가 하나도 없으면(카드/필터버튼 등이 아니면) "빈 공간"으로 간주한다.
+// PC 화면 빈 공간(선수 카드/버튼 등 실제 클릭 대상이 아닌 곳)을 클릭하면
+// X버튼과 동일하게 상세패널을 닫는다. 선수 카드(.pl-card)는 onclick을
+// HTML 속성이 아니라 JS 프로퍼티(card.onclick=...)로 붙이기 때문에
+// [onclick] 셀렉터로는 못 잡는다 — 그래서 클래스명으로 직접 확인한다.
 document.addEventListener('click', function(e){
   if(!isDesktopLayout()) return;
   var panel = document.getElementById('sqDetailPanel');
   if(!panel || !panel.classList.contains('showing-detail')) return;
-  var listCol = document.getElementById('sqListCol');
-  if(!listCol || !listCol.contains(e.target)) return;
-  if(e.target.closest('[onclick]')) return;
+  if(panel.contains(e.target)) return;
+  if(e.target.closest('.pl-card, button, a, input, select, textarea, [onclick]')) return;
   resetSqDetailPanel();
 });
 var _sqActiveFilter='all';
@@ -3245,17 +3245,23 @@ function resetHistDetailPanel(){
   } else {
     var content = document.getElementById('histDetailContent');
     if(content) content.innerHTML = '';
+    var panelEl = document.getElementById('histDetailPanel');
+    if(panelEl) panelEl.classList.remove('showing-detail');
   }
 }
-// PC 리스트 칸(#histListCol)의 빈 공간을 클릭하면 X버튼과 동일하게
-// 상세패널을 닫는다(선수단 쪽 #sqListCol과 동일한 패턴).
+// PC 화면 빈 공간을 클릭하면 X버튼과 동일하게 상세패널을 닫는다.
+// #histListCol 안쪽으로만 스코프를 좁히면 리스트 칸과 우측 칸 사이
+// gap이나 그리드 아래 여백처럼 실제로 "빈 공간"인 곳이 범위 밖으로
+// 빠져서 안 닫히는 문제가 있었다 — 패널 내부/실제 클릭 요소만
+// 제외하고 문서 전체를 대상으로 판별한다(선수단 쪽과 동일한 패턴).
 document.addEventListener('click', function(e){
   if(!isDesktopLayout()) return;
   var panel = document.getElementById('histDetailPanel');
   if(!panel || !panel.classList.contains('showing-detail')) return;
-  var listCol = document.getElementById('histListCol');
-  if(!listCol || !listCol.contains(e.target)) return;
-  if(e.target.closest('[onclick]')) return;
+  if(panel.contains(e.target)) return;
+  var factsCard = document.getElementById('histFactsCard');
+  if(factsCard && factsCard.contains(e.target)) return;
+  if(e.target.closest('button, a, input, select, textarea, [onclick]')) return;
   resetHistDetailPanel();
 });
 
