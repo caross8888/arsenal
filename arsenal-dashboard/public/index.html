@@ -963,7 +963,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   /* 리더보드 카드와 동일한 640px 캡 + flex:0 1 640px 패턴(이유는 #lbListCol
      주석 참고) — 우측 상세패널과 동일한 640px 기준으로 리스트 폭을 통일한다. */
   #fixWrap{flex:0 1 640px;min-width:0;container-type:inline-size;}
-  .fix-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;container-type:inline-size;position:relative;background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;}
+  .fix-detail-panel{display:block;flex:1 1 0%;min-width:340px;max-width:480px;container-type:inline-size;position:relative;background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;overflow:hidden;}
   .sq-layout{display:flex;gap:20px;align-items:flex-start;}
   /* fixWrap/lbListCol과 동일한 640px 캡 패턴 — 안 걸면 리스트 칸이 flex:2로
      계속 자라서 우측 패널(최대 480px)이 오히려 눌리는 문제가 있었다. */
