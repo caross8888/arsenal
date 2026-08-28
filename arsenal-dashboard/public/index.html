@@ -1579,6 +1579,18 @@ function resetSqDetailPanel(){
   if(panel) panel.classList.remove('showing-detail');
   renderSqInjuryPanel();
 }
+// PC 리스트 칸(#sqListCol)의 빈 공간(카드/버튼이 아닌 곳)을 클릭하면
+// X버튼과 동일하게 상세패널을 닫는다 — 클릭 지점에서 위로 [onclick]
+// 요소가 하나도 없으면(카드/필터버튼 등이 아니면) "빈 공간"으로 간주한다.
+document.addEventListener('click', function(e){
+  if(!isDesktopLayout()) return;
+  var panel = document.getElementById('sqDetailPanel');
+  if(!panel || !panel.classList.contains('showing-detail')) return;
+  var listCol = document.getElementById('sqListCol');
+  if(!listCol || !listCol.contains(e.target)) return;
+  if(e.target.closest('[onclick]')) return;
+  resetSqDetailPanel();
+});
 var _sqActiveFilter='all';
 var _sqActiveLevel='first';
 
@@ -3235,6 +3247,17 @@ function resetHistDetailPanel(){
     if(content) content.innerHTML = '';
   }
 }
+// PC 리스트 칸(#histListCol)의 빈 공간을 클릭하면 X버튼과 동일하게
+// 상세패널을 닫는다(선수단 쪽 #sqListCol과 동일한 패턴).
+document.addEventListener('click', function(e){
+  if(!isDesktopLayout()) return;
+  var panel = document.getElementById('histDetailPanel');
+  if(!panel || !panel.classList.contains('showing-detail')) return;
+  var listCol = document.getElementById('histListCol');
+  if(!listCol || !listCol.contains(e.target)) return;
+  if(e.target.closest('[onclick]')) return;
+  resetHistDetailPanel();
+});
 
 function renderHistSection(tab){
   if(tab === 'TROPHIES') return renderTrophiesSection();
