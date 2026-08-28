@@ -830,7 +830,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sns-post{background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;overflow:hidden;text-decoration:none;display:block;color:inherit;-webkit-tap-highlight-color:transparent;transition:border-color .2s}
 .sns-post:active{opacity:.85}
 .sns-post-head{display:flex;align-items:center;gap:10px;padding:12px 14px 8px}
-.sns-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:14px;color:var(--white);flex-shrink:0;border:1px solid rgba(239,1,7,.4)}
+.sns-avatar{width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:14px;color:var(--white);flex-shrink:0;border:1px solid rgba(239,1,7,.4);object-fit:cover;}
 .sns-author{flex:1;min-width:0}
 .sns-author-name{font-weight:700;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sns-author-label{font-size:10px;color:var(--text-muted)}
@@ -904,6 +904,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      커진다 — 원래 12px 캡(.overall-stat-grid .fm-stat-val, base CSS)에
      맞춰 훨씬 작은 별도 배율로 다시 캡을 건다. */
   .sq-detail-panel .overall-stat-grid .fm-stat-val{font-size:clamp(10px,2.5cqw,12px);}
+  /* SNS 포스트 상세모달 — 미디어 탭은 뉴스/SNS/YouTube 3열 고정 그리드라
+     선수단/히스토리처럼 옆에 붙일 상세패널 자리가 없다. 그래서 PC에서는
+     리스트+패널 대신 화면 가운데 뜨는 다이얼로그로 바꾼다(모바일은 기본
+     바텀시트 그대로 유지). */
+  #snsModal{align-items:center;}
+  #snsModal .modal-sheet{border-radius:16px;height:auto;max-height:80vh;}
   /* History도 선수단/경기일정/리더보드와 동일한 "리스트+우측 상세패널"
      구조로 맞춘다 — 섹션 자체는 max-width:none으로 채우고, 안에서
      리스트 칸(#histListCol)은 640px로 캡, 우측엔 상세 패널(.hist-detail-panel,
@@ -1291,6 +1297,14 @@ function playIntro(){
 <section id="history" class="section">
   <div id="historyContent"><div class="loading-state"><div class="spinner"><svg class="spinner-icon" viewBox="0 0 671.5 307.6" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><g><g><path pathLength="1" d="M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z"/><path pathLength="1" d="M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z"/><path pathLength="1" d="M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z"/><path pathLength="1" d="M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z"/><path pathLength="1" d="M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z"/><path pathLength="1" d="M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z"/><path pathLength="1" d="M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z"/><path pathLength="1" d="M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z"/></g><path pathLength="1" d="M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z"/></g></svg></div><span>로딩 중...</span></div></div>
 </section>
+</div>
+
+<!-- SNS POST DETAIL MODAL -->
+<div class="modal-overlay" id="snsModal" onclick="if(event.target===this) closeSnsModal()">
+  <div class="modal-sheet" id="snsModalSheet">
+    <button class="modal-close" onclick="closeSnsModal()" aria-label="닫기">&#10005;</button>
+    <div class="modal-sheet-inner" id="snsModalContent"></div>
+  </div>
 </div>
 
 <!-- PLAYER DETAIL MODAL -->
@@ -4053,6 +4067,27 @@ function loadNews(){
   }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); }); });
 }
 
+// SNS 포스트 본문에 링크/멘션 렌더링 — 백엔드가 facets 기반으로 잘라준
+// segments가 있으면 링크만 <a>로, 없으면(구버전 캐시 등) 그냥 평문으로.
+function renderSnsText(container, p){
+  container.innerHTML='';
+  if(p.segments && p.segments.length){
+    p.segments.forEach(function(seg){
+      if(seg.type==='link'){
+        var a=document.createElement('a');
+        a.href=seg.url;a.target='_blank';a.rel='noopener';
+        a.style.color='var(--blue)';
+        a.onclick=function(e){ e.stopPropagation(); };
+        a.textContent=seg.text;
+        container.appendChild(a);
+      } else {
+        container.appendChild(document.createTextNode(seg.text));
+      }
+    });
+  } else {
+    container.textContent=p.text||'';
+  }
+}
 // ── SNS (Bluesky) ──
 function loadSns(){
   var el=document.getElementById('snsGrid');
@@ -4063,16 +4098,21 @@ function loadSns(){
       if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
       el.innerHTML='';
       posts.forEach(function(p){
-        var a=document.createElement('a');
+        var a=document.createElement('div');
         a.className='sns-post';
-        a.href=p.url||'#';
-        a.target='_blank';
-        a.rel='noopener';
+        a.style.cursor='pointer';
+        a.onclick=function(){ openSnsModal(p); };
 
         // 헤더 (아바타 + 작성자 + 시간)
         var head=document.createElement('div');head.className='sns-post-head';
-        var av=document.createElement('div');av.className='sns-avatar';
-        av.textContent=(p.author.name||'?').charAt(0).toUpperCase();
+        var av;
+        if(p.author.avatar){
+          av=document.createElement('img');av.className='sns-avatar';av.src=p.author.avatar;av.alt='';
+          av.onerror=function(){ var ph=document.createElement('div'); ph.className='sns-avatar'; ph.textContent=(p.author.name||'?').charAt(0).toUpperCase(); this.replaceWith(ph); };
+        } else {
+          av=document.createElement('div');av.className='sns-avatar';
+          av.textContent=(p.author.name||'?').charAt(0).toUpperCase();
+        }
         var authorDiv=document.createElement('div');authorDiv.className='sns-author';
         var nameEl=document.createElement('div');nameEl.className='sns-author-name';nameEl.textContent=p.author.name||'';
         var labelEl=document.createElement('div');labelEl.className='sns-author-label';labelEl.textContent=p.author.label||'';
@@ -4082,7 +4122,7 @@ function loadSns(){
 
         // 본문
         var body=document.createElement('div');body.className='sns-body';
-        var txt=document.createElement('div');txt.className='sns-text';txt.textContent=p.text||'';
+        var txt=document.createElement('div');txt.className='sns-text';renderSnsText(txt,p);
         body.appendChild(txt);
 
         // 이미지
@@ -4115,6 +4155,43 @@ function loadSns(){
       el.innerHTML='<div class="loading-state">오류: '+err.message+'</div>';
     });
   });
+}
+
+// SNS 포스트 상세모달 — 목록에서 가진 데이터(text/image/likes 등)가 이미
+// 전문이라 별도 fetch 없이 그 자리에서 바로 그린다. 헤더는 다른 상세모달과
+// 동일하게 .pm-header(빨간 그라데이션, 고정 밝은 텍스트 토큰)를 재사용한다.
+function openSnsModal(p){
+  var author=p.author||{};
+  var initial=(author.name||'?').charAt(0).toUpperCase();
+  var avatarHtml=author.avatar
+    ? '<img class="pm-photo" src="'+author.avatar+'" onerror="this.style.visibility=\'hidden\'">'
+    : '<div class="pm-photo-ph">'+initial+'</div>';
+
+  var h='<div class="pm-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
+  h+='<div class="pm-header-inner">'+avatarHtml;
+  h+='<div><div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--on-dark-header-gold);text-transform:uppercase;">Bluesky</div>';
+  h+='<div class="pm-name" style="font-size:18px;margin-top:2px;">'+(author.name||'')+'</div>';
+  h+='<div class="pm-club">'+(author.label||'')+(p.timeAgo?' · '+p.timeAgo:'')+'</div>';
+  h+='</div></div></div>';
+  h+='<div id="snsModalText" style="padding:18px 20px 0;font-size:15px;line-height:1.7;color:var(--text);white-space:pre-wrap;"></div>';
+  if(p.image){
+    h+='<div style="margin:14px 20px 0;border-radius:12px;overflow:hidden;"><img src="'+p.image+'" style="width:100%;display:block;" onerror="this.parentElement.style.display=\'none\'"></div>';
+  }
+  h+='<div style="display:flex;align-items:center;gap:18px;padding:16px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border-bright);margin-top:16px;">';
+  h+='<span>&#9825; '+(p.likes||0)+'</span><span>&#8635; '+(p.reposts||0)+'</span><span>&#128172; '+(p.replies||0)+'</span>';
+  h+='</div>';
+  h+='<div style="padding:0 20px 20px;"><a href="'+(p.url||'#')+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;box-sizing:border-box;padding:12px;background:var(--red);color:#fff;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;">Bluesky에서 원문 보기 &#8599;</a></div>';
+
+  var sheet=document.getElementById('snsModalContent');
+  sheet.innerHTML=h;
+  renderSnsText(document.getElementById('snsModalText'), p);
+  document.getElementById('snsModal').classList.add('open');
+  document.body.style.overflow='hidden';
+  sheet.scrollTop=0;
+}
+function closeSnsModal(){
+  document.getElementById('snsModal').classList.remove('open');
+  document.body.style.overflow='';
 }
 
 // ── MATCH DETAIL MODAL ──
@@ -4787,6 +4864,7 @@ function enableSheetSwipeClose(sheetEl, headerSelector, closeFn){
 }
 enableSheetSwipeClose(document.getElementById('modalSheet'), '.pm-header, .hist-modal-photo', closePlayerModal);
 enableSheetSwipeClose(document.querySelector('.match-modal-sheet'), '.mm-header-top, .hist-modal-photo', closeMatchModal);
+enableSheetSwipeClose(document.getElementById('snsModalSheet'), '.pm-header', closeSnsModal);
 
 // ── TICKER ──
 
