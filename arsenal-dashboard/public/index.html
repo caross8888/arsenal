@@ -572,7 +572,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* PLAYER MODAL - Fotmob style */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
 .modal-overlay.open{display:flex;}
-.modal-sheet{position:relative;background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:540px;height:96vh;overflow:hidden;animation:slideUp .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}.modal-sheet-inner{overflow-y:auto;flex:1;padding-bottom:32px;}
+.modal-sheet{position:relative;background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:540px;height:96vh;overflow:hidden;animation:slideUp .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}.modal-sheet-inner{overflow-y:auto;flex:1;padding-bottom:32px;scrollbar-width:none;-ms-overflow-style:none;}.modal-sheet-inner::-webkit-scrollbar{display:none;}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:10px auto 0;}
 .modal-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:20;}
@@ -698,7 +698,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    길이에 맞춰 줄어들 수 있게 한다. 타임라인은 선수 상세모달(.modal-sheet)을
    같이 쓰므로 두 시트 모두에 적용한다 */
 .match-modal-sheet.hist-compact,.modal-sheet.hist-compact{height:auto;min-height:45vh;max-height:96vh;}
-.match-modal-inner{overflow-y:auto;flex:1;padding-bottom:32px;}
+.match-modal-inner{overflow-y:auto;flex:1;padding-bottom:32px;scrollbar-width:none;-ms-overflow-style:none;}.match-modal-inner::-webkit-scrollbar{display:none;}
 .mm-header{background:var(--modal-header-grad);padding:18px 16px 14px;position:relative;}
 .mm-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 14px;}
 .mm-header{display:flex;flex-direction:column;align-items:center;padding:16px 16px 14px;border-bottom:1px solid var(--border-bright);flex-shrink:0;}
@@ -5594,6 +5594,7 @@ function selectPmSeason(targetMode){
       competitions: seasonData.competitions||{},
       shotmap: seasonData.shotmap||[],
       heatmap: seasonData.heatmap||[],
+      traits: seasonData.traits||null,
     });
     // 시즌을 바꿔도 지금 보고 있던 탭(기록/시즌 성적/경력)을 그대로 유지한다
     // — 처음부터 그 탭이 active인 상태로 그려서(openPlayerModal 5번째 인자),
@@ -5638,7 +5639,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   if(_openPlayerId !== _newPlayerId) _pmSeasonMode = 'current';
   _openPlayerId = _newPlayerId;
   _pmLastP = p;
-  if(_pmSeasonMode==='current') _pmCurrentSeasonSnapshot = {competitions:p.competitions, shotmap:p.shotmap, heatmap:p.heatmap};
+  if(_pmSeasonMode==='current') _pmCurrentSeasonSnapshot = {competitions:p.competitions, shotmap:p.shotmap, heatmap:p.heatmap, traits:p.traits};
   var pos = p.posGroup; // GK DF MF FW
 
   // players.json 기반 데이터 직접 사용 (football.js에서 모든 데이터 전달)
@@ -6028,6 +6029,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
           competitions: (live.competitions && Object.keys(live.competitions).length) ? live.competitions : p.competitions,
           shotmap: live.shotmap && live.shotmap.length ? live.shotmap : p.shotmap,
           heatmap: live.heatmap && live.heatmap.length ? live.heatmap : p.heatmap,
+          traits: live.traits || p.traits,
         };
         return;
       }

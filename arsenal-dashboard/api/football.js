@@ -928,6 +928,9 @@ export default async function handler(req, res) {
         competitions,
         shotmap,
         heatmap,
+        // pd.traits는 Fotmob playerData 응답의 최상위 필드라 시즌별로
+        // 나뉘어 내려오지 않는다(statSeasons 밖) — 시즌 출전 기록 유무와
+        // 무관하게 있는 그대로 노출한다(currentSeason으로 게이팅하지 않음).
         traits: normalizeTraits(pd.traits) || null,
         career: career.map(t => ({
           team: t.team,
