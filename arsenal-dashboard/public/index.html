@@ -917,10 +917,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .hist-layout{display:flex;gap:20px;align-items:flex-start;}
   #histListCol{flex:0 1 640px;min-width:0;}
   /* 우측 칸엔 상세패널(.hist-detail-panel)과 "아스날 흥미로운 사실"
-     (#histFactsCard)이 세로로 쌓인다 — 둘은 서로 완전히 독립된 별개
-     섹션이라, 트로피/감독 등 상세를 열어도 사실 카드는 그대로 남아있고
-     반대로 사실 카드가 상세패널의 내용 일부로 지워지지도 않는다. 폭
-     제약(340~480px)은 이 둘을 감싸는 칸 자체에 건다. */
+     (#histFactsCard)이 세로로 쌓인다 — 콘텐츠상으론 서로 완전히 독립된
+     별개 섹션이라 트로피/감독 등 상세를 열어도 사실 카드 데이터 자체는
+     그대로 유지된다. 다만 트로피/감독 등 실제 상세(OTD 기본 상태 제외)가
+     열려있는 동안엔 사실 카드가 그 밑으로 밀려나 보이는 게 어색해서,
+     그 사이엔 시각적으로만 숨긴다(.showing-detail은 openOtdModal에서만
+     빠지고 나머지 상세 열기 함수들은 전부 붙인다). 폭 제약(340~480px)은
+     이 둘을 감싸는 칸 자체에 건다. */
   .hist-right-col{display:flex;flex-direction:column;gap:20px;flex:1 1 0%;min-width:340px;max-width:480px;}
   .hist-detail-panel{display:block;position:relative;background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;container-type:inline-size;overflow:hidden;}
   /* #histFactsCard는 .mm-card를 재사용하지만, .mm-card 본래 용도(모달 안
@@ -928,6 +931,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      가로폭을 나란히 맞춰야 하는 최상위 카드라서 margin을 지우고 상세패널과
      동일한 배경/테두리를 직접 준다. */
   #histFactsCard{display:block;margin:0;background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;overflow:hidden;}
+  #histDetailPanel.showing-detail ~ #histFactsCard{display:none;}
   .hist-detail-panel .hist-modal-handle{display:none;}
   /* OTD(기본 상태)에는 "닫기" 버튼이 필요 없다 — 애초에 아무것도 안
      열려있는 홈 화면이라 닫을 대상이 없다. 트로피/감독 등 실제 상세를
