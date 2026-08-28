@@ -91,24 +91,29 @@ function parseRSS(text, sourceName, filter) {
   const itemMatches = text.matchAll(/<item>([\s\S]*?)<\/item>/g);
   for (const m of itemMatches) {
     const item = m[1];
+    // [\s\S]*? (not .*?) — 일부 소스(CBS Sports)는 태그와 텍스트 사이에
+    // 줄바꿈이 들어간 pretty-print RSS를 내려주는데, JS 정규식의 .은
+    // 기본적으로 줄바꿈을 매치하지 않아서 .*?를 쓰면 그런 피드에서 항상
+    // 빈 문자열이 잡히고(특히 title이 비면 아래 continue로 통째로
+    // 건너뛰어짐) 해당 소스 기사가 전부 누락되는 버그가 있었다.
     const title = decodeHtml(
-      item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/)?.[1] ||
-      item.match(/<title>(.*?)<\/title>/)?.[1] || ''
+      item.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/)?.[1] ||
+      item.match(/<title>([\s\S]*?)<\/title>/)?.[1] || ''
     );
     if (!title) continue;
     if (filter && !filter.test(title)) continue;
 
     const link = (
-      item.match(/<link>(.*?)<\/link>/)?.[1] ||
-      item.match(/<guid[^>]*isPermaLink="true"[^>]*>(.*?)<\/guid>/)?.[1] || ''
+      item.match(/<link>([\s\S]*?)<\/link>/)?.[1] ||
+      item.match(/<guid[^>]*isPermaLink="true"[^>]*>([\s\S]*?)<\/guid>/)?.[1] || ''
     ).trim();
 
     const desc = decodeHtml(
-      item.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>/)?.[1] ||
-      item.match(/<description>(.*?)<\/description>/)?.[1] || ''
+      item.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/)?.[1] ||
+      item.match(/<description>([\s\S]*?)<\/description>/)?.[1] || ''
     ).substring(0, 150);
 
-    const pub = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
+    const pub = (item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '').trim();
     const pubDate = pub ? new Date(pub) : new Date(0);
 
     const rawImage = extractImage(item);

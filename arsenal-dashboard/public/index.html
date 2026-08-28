@@ -17,7 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@400;500;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:dark;--red:#EF0107;--red-dark:#b50004;--gold:#C8A84B;--navy:#0B0D12;--surface:#111318;--surface2:#181B22;--surface3:#1F2330;--border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,.15);--border-accent:rgba(200,168,75,0.3);--text:#F0F2F7;--text-muted:#7A8099;--text-dim:#4A5070;--text-secondary:rgba(255,255,255,.75);--green:#22C55E;--amber:#F59E0B;--loss:#EF4444;--blue:#60A5FA;--white:#fff;--overlay-10:rgba(255,255,255,.1);--overlay-18:rgba(255,255,255,.18);--overlay-30:rgba(255,255,255,.3);--overlay-35:rgba(255,255,255,.35);--overlay-50:rgba(255,255,255,.5);--overlay-60:rgba(255,255,255,.6);--overlay-black-55:rgba(0,0,0,.55);--chrome-bg:rgba(11,13,18,.96);--dday-bg:#1a0c0f;--otd-bg:#1a1917;--modal-bg:#1a1c22;--on-dark-header:#fff;--on-dark-header-secondary:rgba(255,255,255,.75);--on-dark-header-gold:#C8A84B;--modal-header-grad:linear-gradient(135deg,#c40004 0%,#3a0102 100%);--photo-ph-grad:linear-gradient(160deg,#c40004,#3a0102);--fd:'Bebas Neue',sans-serif;--fb:'Noto Sans KR',sans-serif;--fm:'Fira Mono',monospace;--safe-bottom:env(safe-area-inset-bottom,0px);}
-:root[data-theme="light"]{color-scheme:light;--gold:#B8923A;--navy:#ECEEF2;--surface:#FFFFFF;--surface2:#F8F9FB;--surface3:#EFF1F4;--border:rgba(0,0,0,.06);--border-bright:rgba(0,0,0,.12);--border-accent:rgba(184,146,58,.4);--text:#14161C;--text-muted:#6B7280;--text-dim:#A9AEBB;--text-secondary:rgba(20,22,28,.68);--green:#16A34A;--amber:#D97706;--loss:#DC2626;--blue:#2563EB;--overlay-10:rgba(0,0,0,.06);--overlay-18:rgba(0,0,0,.1);--overlay-30:rgba(0,0,0,.16);--overlay-35:rgba(0,0,0,.18);--overlay-50:rgba(0,0,0,.28);--overlay-60:rgba(0,0,0,.35);--overlay-black-55:rgba(0,0,0,.5);--chrome-bg:rgba(236,238,242,.92);--dday-bg:#FDECEC;--otd-bg:#FBF3E1;--modal-bg:#FFFFFF;--modal-header-grad:linear-gradient(135deg,#b50004 0%,#4a0002 100%);--photo-ph-grad:linear-gradient(160deg,#b50004,#4a0002);}
+:root[data-theme="light"]{color-scheme:light;--gold:#B8923A;--navy:#ECEEF2;--surface:#FFFFFF;--surface2:#F8F9FB;--surface3:#EFF1F4;--border:rgba(0,0,0,.06);--border-bright:rgba(0,0,0,.12);--border-accent:rgba(184,146,58,.4);--text:#14161C;--text-muted:#6B7280;--text-dim:#A9AEBB;--text-secondary:rgba(20,22,28,.68);--green:#16A34A;--amber:#D97706;--loss:#DC2626;--blue:#2563EB;--overlay-10:rgba(0,0,0,.06);--overlay-18:rgba(0,0,0,.1);--overlay-30:rgba(0,0,0,.16);--overlay-35:rgba(0,0,0,.18);--overlay-50:rgba(0,0,0,.28);--overlay-60:rgba(0,0,0,.35);--overlay-black-55:rgba(0,0,0,.72);--chrome-bg:rgba(236,238,242,.92);--dday-bg:#FDECEC;--otd-bg:#FBF3E1;--modal-bg:#FFFFFF;--modal-header-grad:linear-gradient(135deg,#b50004 0%,#4a0002 100%);--photo-ph-grad:linear-gradient(160deg,#b50004,#4a0002);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--navy);color:var(--text);font-family:var(--fb);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;padding-bottom:calc(64px + var(--safe-bottom));}
@@ -380,7 +380,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mom-card{position:relative;border-radius:14px;overflow:hidden;background:var(--surface2);border:1px solid var(--border-bright);cursor:default;-webkit-tap-highlight-color:transparent;}
 .mom-photo{width:100%;aspect-ratio:4/3;background:var(--surface3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--border-bright);}
 .mom-photo img{width:100%;height:100%;object-fit:cover;display:block;}
-.mom-rank-badge{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.7);color:var(--gold);font-size:10px;font-weight:900;min-width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:1px solid rgba(200,168,75,.4);font-family:var(--fd);letter-spacing:.5px;}
+.mom-rank-badge{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.7);color:var(--on-dark-header-gold);font-size:10px;font-weight:900;min-width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:1px solid rgba(200,168,75,.4);font-family:var(--fd);letter-spacing:.5px;}
 .mom-info{padding:8px 10px 10px;}
 .mom-title{font-size:11px;font-weight:700;color:var(--text);line-height:1.35;margin-bottom:3px;}
 .mom-year{font-size:10px;color:var(--text-secondary);}
@@ -390,7 +390,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .lgd-card:active{transform:scale(.97);}
 .lgd-card-img-wrap{position:relative;width:100%;aspect-ratio:2/3;overflow:hidden;}
 .lgd-card-gradient{position:absolute;bottom:0;left:0;right:0;height:65%;background:linear-gradient(to top,rgba(0,0,0,.9) 0%,transparent 100%);}
-.lgd-card-rank{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.65);color:var(--gold);font-size:9px;font-weight:800;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(212,175,55,.4);}
+.lgd-card-rank{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.65);color:var(--on-dark-header-gold);font-size:9px;font-weight:800;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(212,175,55,.4);}
 .lgd-card-overlay{position:absolute;bottom:0;left:0;right:0;padding:8px 8px 9px;}
 .lgd-card-name{font-size:11px;font-weight:800;color:var(--white);line-height:1.2;}
 .lgd-card-sub{font-size:9px;color:var(--overlay-50);margin-top:2px;letter-spacing:.2px;}
@@ -468,7 +468,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .trophy-card-img-wrap{width:100%;aspect-ratio:4/3;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;padding:18px;box-sizing:border-box;}
 .trophy-card-img{width:100%;height:100%;object-fit:contain;display:block;}
 .trophy-card-img-ph{font-size:36px;}
-.trophy-card-record{position:absolute;top:5px;right:5px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--overlay-black-55);color:var(--gold);white-space:nowrap;}
+.trophy-card-record{position:absolute;top:5px;right:5px;font-size:8px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(200,168,75,.18);border:1px solid rgba(200,168,75,.4);color:var(--gold);white-space:nowrap;}
 
 /* 하단 정보 — 사진 영역과 구분되도록 위쪽 보더 추가 */
 .trophy-card-info{padding:7px 8px 9px;text-align:center;border-top:1px solid var(--border-bright);}
