@@ -572,8 +572,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* PLAYER MODAL - Fotmob style */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
 .modal-overlay.open{display:flex;}
-.modal-sheet{position:relative;background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:540px;height:96vh;overflow:hidden;animation:slideUp .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}.modal-sheet-inner{overflow-y:auto;flex:1;padding-bottom:32px;scrollbar-width:none;-ms-overflow-style:none;}.modal-sheet-inner::-webkit-scrollbar{display:none;}
+.modal-sheet{position:relative;background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:540px;height:96vh;height:96dvh;overflow:hidden;animation:slideUp .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}.modal-sheet-inner{overflow-y:auto;flex:1;padding-bottom:32px;scrollbar-width:none;-ms-overflow-style:none;}.modal-sheet-inner::-webkit-scrollbar{display:none;}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes dialogPop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 .modal-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:10px auto 0;}
 .modal-close{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:20;}
 /* 헤더 */
@@ -691,13 +692,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .match-modal-sheet{position:relative;}
 .match-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
 .match-modal-overlay.open{display:flex;}
-.match-modal-sheet{background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:540px;height:96vh;overflow:hidden;animation:slideUp .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}
+.match-modal-sheet{background:var(--modal-bg);border-radius:20px 20px 0 0;width:100%;max-width:540px;height:96vh;height:96dvh;overflow:hidden;animation:slideUp .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;}
 /* 히스토리 계열 모달(매니저/레전드/온디스데이/타임라인)은 경기·선수 상세와
    달리 로딩 스피너 없이 한 번에 그려지므로 높이가 바뀌며 "튀는" 문제가 없다
    — 짧은 항목이 많아 고정 96vh를 쓰면 아래쪽이 텅 비어 보이므로 콘텐츠
    길이에 맞춰 줄어들 수 있게 한다. 타임라인은 선수 상세모달(.modal-sheet)을
    같이 쓰므로 두 시트 모두에 적용한다 */
-.match-modal-sheet.hist-compact,.modal-sheet.hist-compact{height:auto;min-height:45vh;max-height:96vh;}
+.match-modal-sheet.hist-compact,.modal-sheet.hist-compact{height:auto;min-height:45vh;min-height:45dvh;max-height:96vh;max-height:96dvh;}
 .match-modal-inner{overflow-y:auto;flex:1;padding-bottom:32px;scrollbar-width:none;-ms-overflow-style:none;}.match-modal-inner::-webkit-scrollbar{display:none;}
 .mm-header{background:var(--modal-header-grad);padding:18px 16px 14px;position:relative;}
 .mm-handle{width:36px;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 14px;}
@@ -908,8 +909,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      선수단/히스토리처럼 옆에 붙일 상세패널 자리가 없다. 그래서 PC에서는
      리스트+패널 대신 화면 가운데 뜨는 다이얼로그로 바꾼다(모바일은 기본
      바텀시트 그대로 유지). */
+  /* 센터 다이얼로그는 바텀시트가 아니라서 slideUp(translateY(100%))을
+     그대로 쓰면 안 된다 — 그 100%는 요소 자신의 높이 기준이라, PC에서
+     height:auto로 바뀐 이 모달은 글 길이에 따라 슬라이드 이동 거리가
+     들쭉날쭉해 보이는 버그가 있었다(글 짧으면 조금만, 길면 많이 올라옴).
+     높이와 무관한 페이드+스케일로 교체한다. */
   #snsModal{align-items:center;}
-  #snsModal .modal-sheet{border-radius:16px;height:auto;max-height:80vh;}
+  #snsModal .modal-sheet{border-radius:16px;height:auto;max-height:80vh;animation:dialogPop .25s cubic-bezier(.32,.72,0,1);}
   /* History도 선수단/경기일정/리더보드와 동일한 "리스트+우측 상세패널"
      구조로 맞춘다 — 섹션 자체는 max-width:none으로 채우고, 안에서
      리스트 칸(#histListCol)은 640px로 캡, 우측엔 상세 패널(.hist-detail-panel,
