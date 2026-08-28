@@ -4190,13 +4190,18 @@ function openSnsModal(p){
   var sheet=document.getElementById('snsModalContent');
   sheet.innerHTML=h;
   renderSnsText(document.getElementById('snsModalText'), p);
-  document.getElementById('snsModal').classList.add('open');
-  document.body.style.overflow='hidden';
+  var overlay=document.getElementById('snsModal');
+  if(!overlay.classList.contains('open')){
+    overlay.classList.add('open');
+    document.body.style.overflow='hidden';
+    history.pushState({modal:'sns'},'',' #sns-modal');
+  }
   sheet.scrollTop=0;
 }
-function closeSnsModal(){
+function closeSnsModal(fromHash){
   document.getElementById('snsModal').classList.remove('open');
   document.body.style.overflow='';
+  if(!fromHash && location.hash.includes('sns-modal')) history.replaceState(null,'',location.href.split('#')[0]);
 }
 
 // ── MATCH DETAIL MODAL ──
@@ -4907,11 +4912,15 @@ function showSec(id,btn){
   window.addEventListener('popstate', function(){
     var playerModal = document.getElementById('playerModal');
     var matchModal  = document.getElementById('matchModal');
+    var snsModal    = document.getElementById('snsModal');
     if(playerModal && playerModal.classList.contains('open')){
       closePlayerModal(true); return;
     }
     if(matchModal && matchModal.classList.contains('open')){
       closeMatchModal(); return;
+    }
+    if(snsModal && snsModal.classList.contains('open')){
+      closeSnsModal(true); return;
     }
     var hash = location.hash.replace('#','').trim();
     if(hash && VALID_SECS.indexOf(hash) !== -1){
