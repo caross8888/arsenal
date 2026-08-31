@@ -874,7 +874,7 @@ export default async function handler(req, res) {
           yellowCards: p.stats?.yellow_cards?.value || 0,
           redCards:    p.stats?.red_cards?.value || 0,
           rating:      p.stats?.rating?.value || null,
-          photo:       p.localPhoto || p.fotmobPhoto || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+          photo:       p.fotmobPhoto || `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
           stats:       p.stats || {},
           traits:      p.traits || null,
           shotmap:     p.shotmap || [],

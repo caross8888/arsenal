@@ -26,7 +26,6 @@ from datetime import datetime, timezone
 GITHUB_TOKEN = ''  # GitHub Personal Access Token 입력
 GITHUB_REPO  = 'caross8888/arsenal'
 OUTPUT_PATH  = Path('arsenal-dashboard/public/data/players.json')
-IMAGES_PATH  = Path('arsenal-dashboard/public/data/player_images')
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -280,21 +279,6 @@ def current_season_name_now() -> str:
     return f'{now.year - 1}/{now.year}'
 
 
-def download_photo(player_id):
-    """풋몹 선수 사진 다운로드 → 로컬 저장"""
-    dest = IMAGES_PATH / f'{player_id}.png'
-    if dest.exists():
-        return True
-    url = f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png'
-    try:
-        r = requests.get(url, headers=HEADERS, timeout=10)
-        if r.status_code == 200 and len(r.content) > 1000:
-            dest.write_bytes(r.content)
-            return True
-    except Exception:
-        pass
-    return False
-
 def fetch_player(player_id, slug):
     """Fotmob 선수 페이지 HTML에서 __NEXT_DATA__ 파싱"""
     url = f'https://www.fotmob.com/ko/players/{player_id}/{slug}'
@@ -485,7 +469,6 @@ def parse_stats(data, squad_levels=None):
         'squadLevels':  squad_levels,  # ['first'] | ['academy'] | ['first','academy'] 등
         'name':         data.get('name', ''),
         'fotmobPhoto':  f'https://images.fotmob.com/image_resources/playerimages/{player_id}.png' if player_id else None,
-        'localPhoto':   f'/data/player_images/{player_id}.png' if player_id else None,
         'nationality':  '',
         'position':     _get_primary_pos_key(data.get('positionDescription', {})),
         'posGroup':     _pos_to_group(_get_primary_pos_key(data.get('positionDescription', {}))),
@@ -830,14 +813,18 @@ def git_push(filepath):
 
 def main():
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    IMAGES_PATH.mkdir(parents=True, exist_ok=True)
 
-    # 1군은 Fotmob 스쿼드 목록 페이지 그대로. 아카데미는 U21/U18을 따로
-    # 안 나누고 "academy" 하나로 묶어서, 공홈 명단을 기준으로 이름마다
-    # Fotmob 검색으로 ID를 찾는다(팀 스쿼드 목록보다 누락이 적음).
-    # 두 소스에 동시에 이름이 올라오는 선수(예: 막스 다우먼처럼 1군과
-    # 아카데미를 오가는 선수)는 squadLevels에 두 레벨을 모두 태그해서
-    # 프론트엔드 1군/아카데미 탭 양쪽에 다 노출되게 한다.
+    # 1군은 더 이상 여기서 안 긁는다 — api/football.js가 Fotmob 팀 API
+    # (/api/data/teams?id=9825)로 직접 실시간 조회하도록 바뀌어서, 이 무거운
+    # "선수 한 명씩 상세 스크래핑" 루프에 1군을 넣는 게 그냥 낭비다. 다만
+    # 그 팀 스쿼드 조회 자체(가벼움, 이름/ID만)는 football.js의 FOTMOB_IDS
+    # (라이브 경기 이벤트에서 선수 이름 매칭용, 완전히 별개 용도)를 갱신하는
+    # 데 여전히 필요해서 그건 그대로 남겨둔다.
+    #
+    # 아카데미는 U21/U18을 따로 안 나누고 "academy" 하나로 묶어서, 공홈 명단을
+    # 기준으로 이름마다 Fotmob 검색으로 ID를 찾는다(팀 스쿼드 목록보다
+    # 누락이 적음). 두 아카데미 소스(U21 목록/공홈 명단)에 동시에 이름이
+    # 올라오는 선수는 squadLevels에 중복 없이 합쳐진다.
     by_id = {}
     order = []
 
@@ -848,11 +835,9 @@ def main():
         if level not in by_id[member['id']]['squadLevels']:
             by_id[member['id']]['squadLevels'].append(level)
 
-    print(f'🔍 Fotmob first 스쿼드 크롤 중... (team {ARSENAL_TEAM_ID})')
+    print(f'🔍 Fotmob first 스쿼드 조회 중... (team {ARSENAL_TEAM_ID}, FOTMOB_IDS 갱신 전용 — 스탯 스크래핑 대상 아님)')
     first_team_squad = fetch_squad_for_team(ARSENAL_TEAM_ID, 'arsenal')
-    for m in first_team_squad:
-        add_member(m, 'first')
-    print(f'  → first: {len(first_team_squad)}명')
+    print(f'  → first: {len(first_team_squad)}명 (players.json엔 안 들어감 — api/football.js가 라이브로 처리)')
 
     # 아카데미 1차: Fotmob 자체 U21 스쿼드 목록 페이지(기존 방식) — 안전망으로
     # 계속 유지한다. 공홈 크롤이 막히더라도(아래) 최소한 이 정도는 잡힌다.
@@ -908,8 +893,7 @@ def main():
                 players.append(parsed)
                 if not detected_season:
                     detected_season = parsed.get('season', '')
-                photo_ok = download_photo(p['id'])
-                print(f'✅ {parsed["name"]} ({parsed.get("season","")}) {"📷" if photo_ok else "❌사진없음"}')
+                print(f'✅ {parsed["name"]} ({parsed.get("season","")})')
             else:
                 print('파싱 실패')
         else:
