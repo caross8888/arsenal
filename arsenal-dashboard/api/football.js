@@ -1101,8 +1101,35 @@ export default async function handler(req, res) {
       // 다른 기기 접속과 무관하게 KV에 영구적으로 남는다.
       if(!wantPrevSeason){
         const prevResult = await kvGetJSON('player:' + playerId);
+        // competitions.perfGroups의 percentileRank/percentileRankPer90은 이
+        // 선수 본인 기록이 아니라 리그 전체 동료들 대비 순위라서, 이 선수가
+        // 아무것도 안 해도 다른 경기 결과만으로 계속 흔들린다(traits와 같은
+        // 사정 — 위 normalizeTraits 주석 참고). 이걸 그대로 비교에 포함하면
+        // 한 번 스탯이 실제로 바뀌어 changedOther=true가 뜬 뒤로, 그때 저장된
+        // KV 스냅샷의 percentileRank와 다음 요청의 percentileRank가 계속
+        // 어긋나서 실제로는 안 바뀐 선수도 열 때마다 계속 페이드되는 버그가
+        // 있었다. 비교용 사본에서는 이 두 필드만 제거하고, 실제 응답
+        // (result.competitions)엔 그대로 남겨서 화면 표시는 안 바뀐다.
+        const stripPercentiles = comps => {
+          const out = {};
+          for(const code of Object.keys(comps||{})){
+            const c = comps[code];
+            out[code] = Object.assign({}, c, {
+              perfGroups: (c.perfGroups||[]).map(g => Object.assign({}, g, {
+                items: (g.items||[]).map(it => {
+                  const { percentileRank, percentileRankPer90, ...rest } = it;
+                  return rest;
+                }),
+              })),
+            });
+          }
+          return out;
+        };
         const CHANGE_FIELDS = ['competitions', 'shotmap', 'heatmap', 'career'];
-        result.changedOther = !prevResult || CHANGE_FIELDS.some(k => JSON.stringify(prevResult[k]) !== JSON.stringify(result[k]));
+        result.changedOther = !prevResult || CHANGE_FIELDS.some(k => {
+          if(k === 'competitions') return JSON.stringify(stripPercentiles(prevResult[k])) !== JSON.stringify(stripPercentiles(result[k]));
+          return JSON.stringify(prevResult[k]) !== JSON.stringify(result[k]);
+        });
         result.changedTraits = !prevResult || JSON.stringify(prevResult.traits) !== JSON.stringify(result.traits);
       }
       // KV에 저장 — 실패해도 이번 응답엔 영향 없게 await는 하되 에러는
