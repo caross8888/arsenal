@@ -5772,6 +5772,11 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
     content.className='';
     var sqPanelEl=document.getElementById('sqDetailPanel');
     if(sqPanelEl) sqPanelEl.classList.add('showing-detail');
+    // 그리드 아래쪽 선수를 클릭하면 우측 상세패널은 화면 위쪽에 고정돼
+    // 있어서, 안 스크롤해주면 상세가 열렸는지 눈으로 바로 확인이 안 된다
+    // — 라이브 새로고침으로 다시 그릴 때(isLiveRefresh)는 이미 보고 있던
+    // 화면이니 건드리지 않는다.
+    if(!isLiveRefresh) window.scrollTo({top:0, behavior:'smooth'});
   } else {
     modal = document.getElementById('playerModal');
     content = document.getElementById('modalContent');
