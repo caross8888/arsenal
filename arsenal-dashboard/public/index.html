@@ -6178,12 +6178,17 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 사용자가 그 사이 "지난 시즌"으로 토글해뒀으면 이번 시즌 라이브
       // 데이터로 덮어쓰면 안 된다 — 스냅샷만 갱신해두고 화면은 그대로 둔다.
       if(_pmSeasonMode==='prev'){
-        _pmCurrentSeasonSnapshot = {
+        var currentSnap = {
           competitions: (live.competitions && Object.keys(live.competitions).length) ? live.competitions : p.competitions,
           shotmap: live.shotmap && live.shotmap.length ? live.shotmap : p.shotmap,
           heatmap: live.heatmap && live.heatmap.length ? live.heatmap : p.heatmap,
           traits: live.traits || p.traits,
         };
+        _pmCurrentSeasonSnapshot = currentSnap;
+        // "이번 시즌" 화면은 아니지만, p(=allPlayers의 같은 객체)는 그대로
+        // 둬야 다음에 새로 열었을 때(기본이 "이번 시즌") 빈 값과 비교하는
+        // 문제가 안 생긴다.
+        Object.assign(p, currentSnap);
         return;
       }
       var merged = Object.assign({}, p, {
@@ -6201,6 +6206,18 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
         return JSON.stringify(p[k]) !== JSON.stringify(merged[k]);
       });
       var traitsChanged = JSON.stringify(p.traits) !== JSON.stringify(merged.traits);
+      // p는 allPlayers 배열 안의 그 객체와 동일 참조라서, 여기서 갱신해둬야
+      // 다음에 같은 선수를 다시 열었을 때도 이번에 받은 라이브 값을 기준으로
+      // 비교한다 — 안 하면 1군 라이브 목록은 competitions/shotmap/career가
+      // 항상 빈 값으로 시작하니, 매번 열 때마다 "빈 값 → 실제 값"으로
+      // 오판해서 실제로는 안 바뀐 스탯인데도 열 때마다 계속 페이드된다.
+      Object.assign(p, {
+        competitions: merged.competitions,
+        traits: merged.traits,
+        shotmap: merged.shotmap,
+        heatmap: merged.heatmap,
+        career: merged.career,
+      });
       if(!otherChanged && !traitsChanged) return;
       // traits(선수 특성 레이더)는 이 선수 본인 기록이 아니라 리그 전체
       // 대비 백분위라서, 이 선수가 실제로 아무것도 안 해도 다른 선수들
@@ -6214,7 +6231,6 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
         var traitsBox = content.querySelector('.pm-traits');
         var hasNewTraits = merged.traits && merged.traits.items && merged.traits.items.length;
         if(traitsBox && hasNewTraits){
-          p.traits = merged.traits;
           traitsBox.style.transition = 'opacity .16s ease';
           traitsBox.style.opacity = '0.15';
           setTimeout(function(){
