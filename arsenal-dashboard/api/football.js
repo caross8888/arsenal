@@ -840,6 +840,12 @@ export default async function handler(req, res) {
           shotmap: (live.shotmap && live.shotmap.length) ? live.shotmap : p.shotmap,
           heatmap: (live.heatmap && live.heatmap.length) ? live.heatmap : p.heatmap,
           career: (live.career && live.career.length) ? live.career : p.career,
+          // 계약만료/주사용발은 Fotmob 팀 API(1군 라이브 목록)엔 아예 없는
+          // 값이라, 예전에 상세모달을 한 번이라도 열어봐서 KV에 남아있는
+          // 경우에만 목록 카드 뱃지에 채울 수 있다 — 안 그러면 계약만료
+          // 임박 뱃지가 "한 번도 안 열어본 선수는 영영 안 뜨는" 상태가 된다.
+          contractEnd: live.contractEnd || p.contractEnd,
+          preferredFoot: live.preferredFoot || p.preferredFoot,
         });
       });
 

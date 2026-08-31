@@ -6196,7 +6196,13 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 데이터로 덮어쓰면 안 된다 — 스냅샷만 갱신해두고 화면은 그대로 둔다.
       // 계약만료/주사용발은 1군 목록(Fotmob 팀 API)엔 아예 없는 값이라
       // playerDetail 라이브 응답에서만 채워진다 — 시즌 토글과 무관한 값이니
-      // "지난 시즌" 화면이든 아니든 항상 최신값으로 동기화해둔다.
+      // "지난 시즌" 화면이든 아니든 항상 최신값으로 동기화해둔다. "새로
+      // 채워지는 값인지"는 mutate하기 전 p 기준으로 미리 기억해둔다 —
+      // 아래서 화면에 이미 떠 있는지 textContent로 다시 스니핑하면, 계약
+      // 만료만 있고 주사용발은 아직 없는 선수처럼 "둘 중 하나라도 있으면
+      // 안 채워진 나머지는 영영 안 채워지는" 오탐이 난다.
+      var hadContractBefore = !!p.contractEnd;
+      var hadFootBefore = !!p.preferredFoot;
       if(live.contractEnd) p.contractEnd = live.contractEnd;
       if(live.preferredFoot) p.preferredFoot = live.preferredFoot;
       if(_pmSeasonMode==='prev'){
@@ -6251,9 +6257,10 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 값이라 정적 목록 기준으로 그린 첫 화면엔 "기본정보" 탭에 항목 자체가
       // 없다. 서버가 "안 바뀜"이라 해도(경기 기록 등은 실제로 그대로) 이
       // 값만큼은 화면에 처음 채워 넣어야 하니 traitsBoxMissing과 동일하게
-      // 페이드 없이 조용히 다시 그리는 경로를 태운다.
-      var basicPanel = content.querySelector('#live-panel-pmbasic');
-      var basicInfoMissing = !!(merged.contractEnd || merged.preferredFoot) && basicPanel && !/계약\s*만료|주사용\s*발/.test(basicPanel.textContent);
+      // 페이드 없이 조용히 다시 그리는 경로를 태운다. 이미 채워진 값을
+      // 갖고 있으면(hadXBefore) 매번 재확인할 필요 없다 — 실제로 "새로
+      // 생긴" 값일 때만 채운다.
+      var basicInfoMissing = (!!live.contractEnd && !hadContractBefore) || (!!live.preferredFoot && !hadFootBefore);
       if(!otherChanged && !traitsChanged && !traitsBoxMissing && !basicInfoMissing) return;
       // fetch가 도는 동안 사용자가 이미 다른 탭(기록/경력)으로 넘어가 있을
       // 수 있다 — 다시 그리면 항상 기본정보 탭이 기본값이라, 그 전에 어느
