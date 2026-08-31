@@ -818,14 +818,26 @@ export default async function handler(req, res) {
         const levels = p.squadLevels || [p.squadLevel || 'first'];
         return levels.indexOf('academy') !== -1 && levels.indexOf('first') === -1;
       });
-      // 예전에 누군가 선수 상세를 열어봐서 KV에 라이브 데이터가 남아있으면,
-      // players.json 스냅샷(며칠 전 것일 수 있음) 위에 그걸 덮어써서
-      // "처음 뜨는 화면"도 점점 최신에 가깝게 만든다. MGET 하나로 몰아서
-      // 선수 수만큼 명령을 안 쓰게 한다.
-      const liveById = await kvMGetPlayers(academyOnly.map(p => p.id));
+      // 예전에 누군가(1군이든 아카데미든) 선수 상세를 열어봐서 KV에 라이브
+      // 데이터가 남아있으면, 목록 단계에서부터 그걸 얹어서 내려준다 —
+      // 안 하면 상세모달을 열 때마다 "목록엔 빈 값 → 상세 fetch로 처음
+      // 채움" 과정을 거치는 동안 화면이 텅 빈 채로 몇 초씩 떠 있는다.
+      // MGET 하나로 몰아서 선수 수만큼 명령을 안 쓰게 한다.
+      const liveById = await kvMGetPlayers(academyOnly.map(p => p.id).concat(liveFirstTeam.map(p => p.id)));
+      const liveFirstTeamFilled = liveFirstTeam.map(p => {
+        const live = liveById[p.id];
+        if(!live) return p;
+        return Object.assign({}, p, {
+          competitions: (live.competitions && Object.keys(live.competitions).length) ? live.competitions : p.competitions,
+          traits: live.traits || p.traits,
+          shotmap: (live.shotmap && live.shotmap.length) ? live.shotmap : p.shotmap,
+          heatmap: (live.heatmap && live.heatmap.length) ? live.heatmap : p.heatmap,
+          career: (live.career && live.career.length) ? live.career : p.career,
+        });
+      });
 
       result = {
-        squad: liveFirstTeam.concat(academyOnly.map(p => {
+        squad: liveFirstTeamFilled.concat(academyOnly.map(p => {
           const live = liveById[p.id];
           if(live){
             p = Object.assign({}, p, {
