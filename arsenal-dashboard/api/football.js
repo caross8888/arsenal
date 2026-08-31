@@ -269,9 +269,18 @@ export default async function handler(req, res) {
   // 실제 배포에서는 같은 인스턴스가 두 요청을 다 받아서 재현됐다).
   const seasonParam = req.query.season || '';
   const cacheKey = type + (teamParam ? ('_'+teamParam) : '') + (idParam ? ('_'+idParam) : '') + (seasonParam ? ('_'+seasonParam) : '');
-  res.setHeader('Cache-Control', `public, max-age=${Math.floor(getTTL(type)/1000)}`);
+  // playerDetail(이번 시즌)의 changedOther/changedTraits는 "지금 이 순간 KV
+  // 기준으로 바뀌었는가"를 매 요청마다 새로 판정해야 하는 값이라, 응답
+  // 자체를 1시간짜리 일반 캐시(서버 메모리 + 브라우저 Cache-Control)에
+  // 태우면 안 된다 — 한 번 changed=true로 응답하고 나면(그 시점에 KV엔 이미
+  // 새 기준값이 저장됐는데도) 캐시된 그 응답이 그대로 최대 1시간 동안
+  // 재사용돼서, 그 사이 몇 번을 다시 열어도 "바뀜" 응답이 계속 재생되며
+  // 페이드가 반복되는 버그가 있었다(직전 시즌 조회는 kvGetPlayerSeason으로
+  // 별도의 영구 캐시를 쓰므로 영향 없음).
+  const isLivePlayerDiff = type === 'playerDetail' && seasonParam !== 'prev';
+  res.setHeader('Cache-Control', isLivePlayerDiff ? 'no-store' : `public, max-age=${Math.floor(getTTL(type)/1000)}`);
 
-  if(!nocache){
+  if(!nocache && !isLivePlayerDiff){
     const hit = getCache(cacheKey);
     if(hit) return res.json(hit);
   }
@@ -1191,7 +1200,7 @@ export default async function handler(req, res) {
       };
     }
 
-    if(!nocache) setCache(cacheKey, result);
+    if(!nocache && !isLivePlayerDiff) setCache(cacheKey, result);
     return res.json(result);
 
   } catch(err){
