@@ -6194,6 +6194,11 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       if(_openPlayerId !== fotmobId) return;
       // 사용자가 그 사이 "지난 시즌"으로 토글해뒀으면 이번 시즌 라이브
       // 데이터로 덮어쓰면 안 된다 — 스냅샷만 갱신해두고 화면은 그대로 둔다.
+      // 계약만료/주사용발은 1군 목록(Fotmob 팀 API)엔 아예 없는 값이라
+      // playerDetail 라이브 응답에서만 채워진다 — 시즌 토글과 무관한 값이니
+      // "지난 시즌" 화면이든 아니든 항상 최신값으로 동기화해둔다.
+      if(live.contractEnd) p.contractEnd = live.contractEnd;
+      if(live.preferredFoot) p.preferredFoot = live.preferredFoot;
       if(_pmSeasonMode==='prev'){
         var currentSnap = {
           competitions: (live.competitions && Object.keys(live.competitions).length) ? live.competitions : p.competitions,
@@ -6242,7 +6247,14 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       var traitsBoxPre = content.querySelector('.pm-traits');
       var hasNewTraits = merged.traits && merged.traits.items && merged.traits.items.length;
       var traitsBoxMissing = !traitsBoxPre && hasNewTraits;
-      if(!otherChanged && !traitsChanged && !traitsBoxMissing) return;
+      // 계약만료/주사용발도 traits와 같은 사정 — 1군 라이브 목록엔 아예 없는
+      // 값이라 정적 목록 기준으로 그린 첫 화면엔 "기본정보" 탭에 항목 자체가
+      // 없다. 서버가 "안 바뀜"이라 해도(경기 기록 등은 실제로 그대로) 이
+      // 값만큼은 화면에 처음 채워 넣어야 하니 traitsBoxMissing과 동일하게
+      // 페이드 없이 조용히 다시 그리는 경로를 태운다.
+      var basicPanel = content.querySelector('#live-panel-pmbasic');
+      var basicInfoMissing = !!(merged.contractEnd || merged.preferredFoot) && basicPanel && !/계약\s*만료|주사용\s*발/.test(basicPanel.textContent);
+      if(!otherChanged && !traitsChanged && !traitsBoxMissing && !basicInfoMissing) return;
       // fetch가 도는 동안 사용자가 이미 다른 탭(기록/경력)으로 넘어가 있을
       // 수 있다 — 다시 그리면 항상 기본정보 탭이 기본값이라, 그 전에 어느
       // 탭이 활성 상태였는지 기억해뒀다가 다시 그린 뒤 그 탭을 그대로
@@ -6271,7 +6283,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 경우 — 실제로 "바뀐" 게 아니라 처음 채워지는 거라 페이드 없이
       // 조용히 탭 패널만 다시 그린다(scopedFade로 #pmTabPanelsWrap만
       // 갈아끼우되, opacity 애니메이션은 생략).
-      if(!otherChanged && !traitsChanged && traitsBoxMissing){
+      if(!otherChanged && !traitsChanged && (traitsBoxMissing || basicInfoMissing)){
         openPlayerModal(merged, level, true, true, activeTab);
         if(activeTab && activeTab!=='pmbasic'){
           var quietBtn = content.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');

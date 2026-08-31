@@ -730,20 +730,27 @@ export default async function handler(req, res) {
         targetFplId = null; // 아래서 fplData.teams 조회 후 채움
       }
 
-      // players.json로 현재 스쿼드 이름 목록 확보 — 아스날 조회일 때만 의미
-      // 있다(스쿼드에 있는 선수인지 교차검증하는 용도). 상대팀은 이 스쿼드
-      // 데이터가 없으니 필터를 건너뛴다.
+      // 현재 스쿼드 이름 목록 확보 — 아스날 조회일 때만 의미 있다(스쿼드에
+      // 있는 선수인지 교차검증하는 용도). 상대팀은 이 스쿼드 데이터가 없으니
+      // 필터를 건너뛴다. 1군은 players.json에 더 이상 없으므로(라이브 로스터로
+      // 이관) 별도로 Fotmob 팀 API 조회 결과도 합쳐야 한다 — 안 그러면 1군
+      // 부상자가 전부 "스쿼드에 없는 선수"로 걸러져 사라진다.
       let squadNames = new Set();
       if(!isOpponentTeam){
+        const addName = name => {
+          squadNames.add(name.toLowerCase());
+          const parts = name.split(' ');
+          if(parts.length > 1) squadNames.add(parts[parts.length-1].toLowerCase());
+        };
         try {
-          const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
+          const [liveFirstTeam, pjRes] = await Promise.all([
+            fetchFirstTeamRosterLive().catch(() => []),
+            fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)}),
+          ]);
+          liveFirstTeam.forEach(p => addName(p.name));
           if(pjRes.ok) {
             const pjData = await pjRes.json();
-            (pjData.players || []).forEach(p => {
-              squadNames.add(p.name.toLowerCase());
-              const parts = p.name.split(' ');
-              if(parts.length > 1) squadNames.add(parts[parts.length-1].toLowerCase());
-            });
+            (pjData.players || []).forEach(p => addName(p.name));
           }
         } catch(_){}
       }
@@ -1046,8 +1053,24 @@ export default async function handler(req, res) {
 
       const career = (((pd.careerHistory || {}).careerItems || {}).senior || {}).teamEntries || [];
 
+      // 계약만료/주사용발 — 1군 목록(mapLiveSquadMember)은 이 값을 안 주므로
+      // (Fotmob 팀 API엔 없음) 여기서 playerData 응답(pd.playerInformation/
+      // pd.contractEnd)에서 뽑아 채운다. 기존 스크래퍼(parse_stats)가 같은
+      // 엔드포인트에서 뽑던 로직과 동일.
+      let preferredFoot = '';
+      (pd.playerInformation || []).forEach(info => {
+        const title = (info.title || '').toLowerCase();
+        if(title === 'preferred foot' || title === 'foot'){
+          preferredFoot = (info.value && info.value.fallback) || '';
+        }
+      });
+      const contractEndRaw = (pd.contractEnd || {}).utcTime || '';
+      const contractEnd = contractEndRaw ? contractEndRaw.slice(0,10) : null;
+
       result = {
         id: Number(playerId),
+        preferredFoot,
+        contractEnd,
         competitions,
         shotmap,
         heatmap,
