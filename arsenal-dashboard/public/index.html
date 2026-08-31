@@ -4855,6 +4855,15 @@ function enableSheetSwipeClose(sheetEl, headerSelector, closeFn){
   var startY = 0, dragging = false, dragged = 0, pointerId = null;
   var CLOSE_THRESHOLD = 100;
   sheetEl.addEventListener('pointerdown', function(e){
+    // 안드로이드 일부 기기는 터치가 중간에 끊기면(예: 시스템 뒤로가기
+    // 제스처 등에 가로채임) pointerup/pointercancel이 아예 안 와서
+    // dragging이 true로 눌러붙은 채 남을 수 있다 — 그 상태로 있다가
+    // 새 터치의 pointerId가 (안드로이드 웹뷰가 흔히 그러듯) 이전 값과
+    // 같은 걸로 재사용되면, 본문을 스크롤하려는 새 제스처의 pointermove가
+    // 그대로 이 눌러붙은 드래그 로직으로 흡수돼서 스크롤이 안 먹는
+    // 것처럼 보인다. 헤더 밖 터치라 아래서 return하기 전에, 어떤
+    // 상황이든 새 터치가 시작되면 이전 상태부터 확실히 지운다.
+    dragging = false;
     if(!e.target.closest(headerSelector)) return;
     // 헤더 안에 있는 실제 인터랙티브 컨트롤(시즌 선택 칩/드롭다운 등)은
     // 스와이프 캡처 대상에서 제외한다 — setPointerCapture가 걸리면 그
@@ -4876,6 +4885,9 @@ function enableSheetSwipeClose(sheetEl, headerSelector, closeFn){
   function finishDrag(e){
     if(!dragging || (e && e.pointerId !== pointerId)) return;
     dragging = false;
+    // 브라우저가 알아서 풀어주는 게 기본이지만, 위 dragging 눌러붙음
+    // 버그와 같은 이유로 안 풀리는 경우를 대비해 명시적으로도 풀어준다.
+    try{ sheetEl.releasePointerCapture(pointerId); }catch(err){}
     sheetEl.style.transition = 'transform .25s cubic-bezier(.32,.72,0,1)';
     if(dragged > CLOSE_THRESHOLD){
       sheetEl.style.transform = 'translateY(100%)';
