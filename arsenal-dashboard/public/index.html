@@ -6198,14 +6198,14 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
         heatmap: live.heatmap && live.heatmap.length ? live.heatmap : p.heatmap,
         career: (live.career && live.career.length) ? live.career : p.career,
       });
-      // 시즌 초반엔 정적 스냅샷과 라이브 값이 완전히 같은 경우가 대부분이다
-      // — 그럴 땐 다시 그릴 이유가 없다(전체 다시 그리기라 깜빡임만 생김).
-      // 실제로 달라진 필드가 하나라도 있을 때만 다시 그린다.
-      var OTHER_FIELDS = ['competitions','shotmap','heatmap','career'];
-      var otherChanged = OTHER_FIELDS.some(function(k){
-        return JSON.stringify(p[k]) !== JSON.stringify(merged[k]);
-      });
-      var traitsChanged = JSON.stringify(p.traits) !== JSON.stringify(merged.traits);
+      // "바뀌었는지"는 브라우저가 들고 있던 이전 값(p)이 아니라 서버가
+      // KV에 저장해둔 "마지막으로 본 값"과 비교해서 내려준 플래그를 그대로
+      // 믿는다 — p 기준으로 비교하면 새로고침할 때마다 p가 초기화(1군
+      // 라이브 목록은 competitions/shotmap/career가 원래 빈 값)돼서 실제로는
+      // 안 바뀐 값도 매번 "빈 값 → 실제 값"으로 오판해 페이드된다. 서버
+      // 쪽 KV 기준은 새로고침·다른 기기 접속과 무관하게 유지된다.
+      var otherChanged = !!live.changedOther;
+      var traitsChanged = !!live.changedTraits;
       // p는 allPlayers 배열 안의 그 객체와 동일 참조라서, 여기서 갱신해둬야
       // 다음에 같은 선수를 다시 열었을 때도 이번에 받은 라이브 값을 기준으로
       // 비교한다 — 안 하면 1군 라이브 목록은 competitions/shotmap/career가
@@ -6218,37 +6218,50 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
         heatmap: merged.heatmap,
         career: merged.career,
       });
-      if(!otherChanged && !traitsChanged) return;
-      // traits(선수 특성 레이더)는 이 선수 본인 기록이 아니라 리그 전체
-      // 대비 백분위라서, 이 선수가 실제로 아무것도 안 해도 다른 선수들
-      // 경기 결과만으로 계속 1~2점씩 흔들린다 — 그것 때문에 매번 탭
-      // 패널 전체(#pmTabPanelsWrap)를 페이드시키면 너무 자주 깜빡인다. traits만
-      // 바뀌고 다른 필드는 그대로면, 그 값을 실제로 쓰는 .pm-traits
-      // 영역만 페이드+재도색한다. traits가 아예 생기거나 없어지는
-      // 구조적 변화(이번 시즌 첫 출전 등, 드묾)는 안전하게 아래 전체
-      // 재그리기 경로로 넘긴다.
-      if(!otherChanged && traitsChanged){
-        var traitsBox = content.querySelector('.pm-traits');
-        var hasNewTraits = merged.traits && merged.traits.items && merged.traits.items.length;
-        if(traitsBox && hasNewTraits){
-          traitsBox.style.transition = 'opacity .16s ease';
-          traitsBox.style.opacity = '0.15';
-          setTimeout(function(){
-            var translated = merged.traits.items.map(function(item){
-              return {key: item.key, title: TRAIT_LABELS[item.key]||item.title, value: item.value};
-            });
-            drawFotmobRadar('radar_traits', translated);
-            traitsBox.style.opacity = '1';
-          }, 160);
-          return;
-        }
-      }
+      // 정적 목록(1군 라이브 명단)은 traits를 아예 안 담고 있어서, 새로고침
+      // 직후 첫 오픈은 화면에 .pm-traits 자체가 없다 — 서버가 "안 바뀜"이라고
+      // 해도(KV 기준 진짜 값은 그대로) 화면엔 아직 한 번도 안 그려졌으니
+      // 이 경우엔 채워는 넣어야 한다(페이드 없이, 조용히).
+      var traitsBoxPre = content.querySelector('.pm-traits');
+      var hasNewTraits = merged.traits && merged.traits.items && merged.traits.items.length;
+      var traitsBoxMissing = !traitsBoxPre && hasNewTraits;
+      if(!otherChanged && !traitsChanged && !traitsBoxMissing) return;
       // fetch가 도는 동안 사용자가 이미 다른 탭(기록/경력)으로 넘어가 있을
       // 수 있다 — 다시 그리면 항상 기본정보 탭이 기본값이라, 그 전에 어느
       // 탭이 활성 상태였는지 기억해뒀다가 다시 그린 뒤 그 탭을 그대로
       // 재선택한다.
       var activeBtn = content.querySelector('.live-tab-btn.active');
       var activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : null;
+      // traits(선수 특성 레이더)는 이 선수 본인 기록이 아니라 리그 전체
+      // 대비 백분위라서, 이 선수가 실제로 아무것도 안 해도 다른 선수들
+      // 경기 결과만으로 계속 1~2점씩 흔들린다 — 그것 때문에 매번 탭
+      // 패널 전체(#pmTabPanelsWrap)를 페이드시키면 너무 자주 깜빡인다. traits만
+      // 바뀌고 다른 필드는 그대로면, 그 값을 실제로 쓰는 .pm-traits
+      // 영역만 페이드+재도색한다.
+      if(!otherChanged && traitsChanged && traitsBoxPre && hasNewTraits){
+        traitsBoxPre.style.transition = 'opacity .16s ease';
+        traitsBoxPre.style.opacity = '0.15';
+        setTimeout(function(){
+          var translated = merged.traits.items.map(function(item){
+            return {key: item.key, title: TRAIT_LABELS[item.key]||item.title, value: item.value};
+          });
+          drawFotmobRadar('radar_traits', translated);
+          traitsBoxPre.style.opacity = '1';
+        }, 160);
+        return;
+      }
+      // otherChanged/traitsChanged 둘 다 false인데 traitsBoxMissing만 true인
+      // 경우 — 실제로 "바뀐" 게 아니라 처음 채워지는 거라 페이드 없이
+      // 조용히 탭 패널만 다시 그린다(scopedFade로 #pmTabPanelsWrap만
+      // 갈아끼우되, opacity 애니메이션은 생략).
+      if(!otherChanged && !traitsChanged && traitsBoxMissing){
+        openPlayerModal(merged, level, true, true, activeTab);
+        if(activeTab && activeTab!=='pmbasic'){
+          var quietBtn = content.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');
+          if(quietBtn) quietBtn.click();
+        }
+        return;
+      }
       // 값이 실제로 달라져 다시 그릴 때만 도달하는 경로 — 사진/이름 등
       // 헤더와 탭 버튼(.live-tabs)은 그대로 두고, 실제로 갱신되는 탭
       // 패널 내용(#pmTabPanelsWrap)만 opacity를 살짝 낮췄다 다시 올리는

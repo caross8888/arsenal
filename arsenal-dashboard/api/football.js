@@ -1053,6 +1053,17 @@ export default async function handler(req, res) {
           assists: t.assists,
         })),
       };
+      // 클라이언트(브라우저 메모리)만 보고 "바뀌었는지" 판단하면 새로고침할
+      // 때마다 기준이 초기화돼서 실제로 안 바뀐 값도 매번 바뀐 것처럼
+      // 페이드된다 — 여기서 KV에 저장된 "마지막으로 본 값"과 직접 비교해서
+      // 진짜 변경 여부를 서버가 판정해 내려준다. 이 판정 기준은 새로고침·
+      // 다른 기기 접속과 무관하게 KV에 영구적으로 남는다.
+      if(!wantPrevSeason){
+        const prevResult = await kvGetJSON('player:' + playerId);
+        const CHANGE_FIELDS = ['competitions', 'shotmap', 'heatmap', 'career'];
+        result.changedOther = !prevResult || CHANGE_FIELDS.some(k => JSON.stringify(prevResult[k]) !== JSON.stringify(result[k]));
+        result.changedTraits = !prevResult || JSON.stringify(prevResult.traits) !== JSON.stringify(result.traits);
+      }
       // KV에 저장 — 실패해도 이번 응답엔 영향 없게 await는 하되 에러는
       // kvSetPlayer(Player)Season 내부에서 이미 삼킨다. 직전 시즌(완결,
       // 안 바뀜)은 영구 저장, 이번 시즌(계속 바뀜)은 기존처럼 7일 TTL.
