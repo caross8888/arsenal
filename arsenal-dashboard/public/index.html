@@ -5871,16 +5871,20 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   // .live-tabs/.live-tab-btn/liveSwitchTab을 그대로 재사용한다. id는
   // 경기상세모달과 겹치지 않게 pm- 접두를 붙인다. ──
   h += '<div id="pmTabsWrap" style="border-top:1px solid var(--border-bright);">';
-  // 라이브 새로고침 때 헤더(사진/이름)는 놔두고 이 구간(탭+탭패널)만
-  // 페이드하며 갱신하기 위해, #pmTabsWrap의 내용물(자기 자신 태그는
-  // 제외)만 따로 잘라낼 수 있게 시작 위치를 기록해둔다.
-  var _tabsHtmlStart = h.length;
   h += '<div class="live-tabs">';
   h += '<button class="live-tab-btn'+(initialTab==='pmbasic'?' active':'')+'" data-tab="pmbasic" onclick="liveSwitchTab(this,&quot;pmbasic&quot;)">기본정보</button>';
   h += '<button class="live-tab-btn'+(initialTab==='pmrecord'?' active':'')+'" data-tab="pmrecord" onclick="liveSwitchTab(this,&quot;pmrecord&quot;)">기록</button>';
   h += '<button class="live-tab-btn'+(initialTab==='pmperf'?' active':'')+'" data-tab="pmperf" onclick="liveSwitchTab(this,&quot;pmperf&quot;)">시즌 성적</button>';
   h += '<button class="live-tab-btn'+(initialTab==='pmcareer'?' active':'')+'" data-tab="pmcareer" onclick="liveSwitchTab(this,&quot;pmcareer&quot;)">경력</button>';
   h += '</div>';
+  // 라이브 새로고침 때 헤더(사진/이름)와 탭 버튼(.live-tabs)은 놔두고
+  // 탭 "패널" 내용만 페이드하며 갱신한다 — 이전엔 #pmTabsWrap 전체(탭
+  // 버튼 포함)를 페이드시켜서, 데이터 갱신과 무관한 탭 버튼까지 매번
+  // 같이 깜빡이는 문제가 있었다. 패널만 담는 별도 래퍼(#pmTabPanelsWrap)
+  // 를 두고 그 내용물(자기 태그는 제외)만 잘라낼 수 있게 시작 위치를
+  // 기록해둔다.
+  h += '<div id="pmTabPanelsWrap">';
+  var _tabsHtmlStart = h.length;
   h += '<div class="live-tab-panel" id="live-panel-pmbasic" style="padding-top:0;'+(initialTab!=='pmbasic'?'display:none;':'')+'">';
 
   // ── 기본 정보 그리드 ──
@@ -6119,13 +6123,15 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
     });
   }
   h += '</div>'; // live-panel-pmcareer 끝
-  var tabsHtml = h.slice(_tabsHtmlStart); // pmTabsWrap 자기 태그는 제외한 내용물만
-  h += '</div>'; // 탭 wrapper 끝
+  var tabsHtml = h.slice(_tabsHtmlStart); // pmTabPanelsWrap 자기 태그는 제외한 내용물만
+  h += '</div>'; // pmTabPanelsWrap 끝
+  h += '</div>'; // 탭 wrapper(pmTabsWrap) 끝
 
   // scopedFade: 라이브 새로고침으로 값이 실제로 바뀌어 다시 그릴 때
-  // 쓰인다 — 헤더(사진/이름/배지)는 어차피 안 바뀌니 그대로 두고,
-  // 탭+탭패널(#pmTabsWrap)만 갈아끼워서 그 부분만 페이드되게 한다.
-  var existingWrap = scopedFade && content.querySelector('#pmTabsWrap');
+  // 쓰인다 — 헤더(사진/이름/배지)와 탭 버튼(.live-tabs)은 어차피 안
+  // 바뀌니 그대로 두고, 탭 패널 내용(#pmTabPanelsWrap)만 갈아끼워서
+  // 그 부분만 페이드되게 한다.
+  var existingWrap = scopedFade && content.querySelector('#pmTabPanelsWrap');
   if(existingWrap){
     existingWrap.innerHTML = tabsHtml;
     var hdrValEl = content.querySelector('#pmHdrRatingVal');
@@ -6190,11 +6196,37 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 시즌 초반엔 정적 스냅샷과 라이브 값이 완전히 같은 경우가 대부분이다
       // — 그럴 땐 다시 그릴 이유가 없다(전체 다시 그리기라 깜빡임만 생김).
       // 실제로 달라진 필드가 하나라도 있을 때만 다시 그린다.
-      var FIELDS_TO_COMPARE = ['competitions','traits','shotmap','heatmap','career'];
-      var changed = FIELDS_TO_COMPARE.some(function(k){
+      var OTHER_FIELDS = ['competitions','shotmap','heatmap','career'];
+      var otherChanged = OTHER_FIELDS.some(function(k){
         return JSON.stringify(p[k]) !== JSON.stringify(merged[k]);
       });
-      if(!changed) return;
+      var traitsChanged = JSON.stringify(p.traits) !== JSON.stringify(merged.traits);
+      if(!otherChanged && !traitsChanged) return;
+      // traits(선수 특성 레이더)는 이 선수 본인 기록이 아니라 리그 전체
+      // 대비 백분위라서, 이 선수가 실제로 아무것도 안 해도 다른 선수들
+      // 경기 결과만으로 계속 1~2점씩 흔들린다 — 그것 때문에 매번 탭
+      // 패널 전체(#pmTabPanelsWrap)를 페이드시키면 너무 자주 깜빡인다. traits만
+      // 바뀌고 다른 필드는 그대로면, 그 값을 실제로 쓰는 .pm-traits
+      // 영역만 페이드+재도색한다. traits가 아예 생기거나 없어지는
+      // 구조적 변화(이번 시즌 첫 출전 등, 드묾)는 안전하게 아래 전체
+      // 재그리기 경로로 넘긴다.
+      if(!otherChanged && traitsChanged){
+        var traitsBox = content.querySelector('.pm-traits');
+        var hasNewTraits = merged.traits && merged.traits.items && merged.traits.items.length;
+        if(traitsBox && hasNewTraits){
+          p.traits = merged.traits;
+          traitsBox.style.transition = 'opacity .16s ease';
+          traitsBox.style.opacity = '0.15';
+          setTimeout(function(){
+            var translated = merged.traits.items.map(function(item){
+              return {key: item.key, title: TRAIT_LABELS[item.key]||item.title, value: item.value};
+            });
+            drawFotmobRadar('radar_traits', translated);
+            traitsBox.style.opacity = '1';
+          }, 160);
+          return;
+        }
+      }
       // fetch가 도는 동안 사용자가 이미 다른 탭(기록/경력)으로 넘어가 있을
       // 수 있다 — 다시 그리면 항상 기본정보 탭이 기본값이라, 그 전에 어느
       // 탭이 활성 상태였는지 기억해뒀다가 다시 그린 뒤 그 탭을 그대로
@@ -6202,9 +6234,10 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       var activeBtn = content.querySelector('.live-tab-btn.active');
       var activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : null;
       // 값이 실제로 달라져 다시 그릴 때만 도달하는 경로 — 사진/이름 등
-      // 헤더는 그대로 두고, 실제로 갱신되는 탭+탭패널(#pmTabsWrap)만
-      // opacity를 살짝 낮췄다 다시 올리는 페이드로 감싼다.
-      var tabsWrap = content.querySelector('#pmTabsWrap');
+      // 헤더와 탭 버튼(.live-tabs)은 그대로 두고, 실제로 갱신되는 탭
+      // 패널 내용(#pmTabPanelsWrap)만 opacity를 살짝 낮췄다 다시 올리는
+      // 페이드로 감싼다.
+      var tabsWrap = content.querySelector('#pmTabPanelsWrap');
       if(tabsWrap){
         tabsWrap.style.transition = 'opacity .16s ease';
         tabsWrap.style.opacity = '0.15';

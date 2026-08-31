@@ -150,6 +150,106 @@ async function kvSetPlayerSeason(id, seasonName, data){
   } catch(e){ /* 캐시 저장 실패는 무시 */ }
 }
 
+// ── 1군 스쿼드 명단 — 스크래퍼(Playwright) 없이 Fotmob 팀 API로 실시간
+// 조회. players.json처럼 사람이 로컬에서 스크립트를 돌려야 갱신되는
+// 정적 스냅샷이 아니라, 매 요청마다(단 KV 캐시 유효 시간 내엔 캐시로)
+// Fotmob이 그 시점에 들고 있는 실제 1군 명단을 그대로 반영한다 —
+// 이적생이 Fotmob 팀 페이지에 올라오는 즉시 여기도 반영됨.
+const KV_TTL_ROSTER_SEC = 6 * 60 * 60; // 6시간 — 매 요청마다 Fotmob을 때리지 않으면서도 꽤 최신을 유지
+const FIRST_TEAM_ID = 9825;
+const POS_GROUP_FROM_CODE = {
+  GK: 'GK',
+  CB: 'DF', RB: 'DF', LB: 'DF', RWB: 'DF', LWB: 'DF',
+  CDM: 'MF', CM: 'MF', CAM: 'MF', RM: 'MF', LM: 'MF',
+  RW: 'FW', LW: 'FW', ST: 'FW', CF: 'FW',
+};
+
+async function kvGetJSON(key){
+  if(!KV_URL || !KV_TOKEN) return null;
+  try {
+    const r = await fetch(KV_URL, {
+      method: 'POST',
+      headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
+      body: JSON.stringify(['GET', key]),
+      signal: AbortSignal.timeout(5000),
+    });
+    if(!r.ok) return null;
+    const { result } = await r.json();
+    return result ? JSON.parse(result) : null;
+  } catch(e){ return null; }
+}
+async function kvSetJSON(key, data, ttlSec){
+  if(!KV_URL || !KV_TOKEN) return;
+  try {
+    await fetch(KV_URL, {
+      method: 'POST',
+      headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
+      body: JSON.stringify(['SET', key, JSON.stringify(data), 'EX', String(ttlSec)]),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch(e){ /* 캐시 저장 실패는 무시 */ }
+}
+
+// Fotmob 팀 API의 한 스쿼드 멤버 → 이 앱이 카드 목록에서 기대하는 모양으로
+// 변환한다. 이 엔드포인트는 명단/등번호/포지션/나이/평점처럼 "목록 카드"에
+// 필요한 값은 다 주지만, 계약만료/선호발/상세 대회별 기록/슛맵/히트맵/
+// traits/커리어처럼 더 깊은 값은 없다 — 그런 값은 원래도 상세모달을 열 때
+// type=playerDetail로 그때그때 라이브로 받아오던 것들이라(기존 동작),
+// 목록 단계에선 빈 값으로 두고 상세모달 오픈 시 채워지는 흐름을 그대로 둔다.
+function mapLiveSquadMember(m){
+  const codes = (m.positionIdsDesc || '').split(',').map(s => s.trim()).filter(Boolean);
+  const posShort = codes[0] || '';
+  return {
+    id: m.id,
+    fotmobId: m.id,
+    squadLevel: 'first',
+    squadLevels: ['first'],
+    name: m.name,
+    fullName: m.name,
+    nationality: m.cname || '',
+    posGroup: POS_GROUP_FROM_CODE[posShort] || 'MF',
+    position: posShort,
+    positionLabel: posShort,
+    jersey: m.shirtNumber ? String(m.shirtNumber) : '',
+    age: m.age || null,
+    height: m.height ? `${m.height} cm` : '',
+    preferredFoot: '',
+    contractEnd: null,
+    marketValue: m.transferValue ? { value: m.transferValue, currency: 'EUR' } : null,
+    goals: m.goals || 0,
+    assists: m.assists || 0,
+    appearances: 0,
+    starts: 0,
+    minutes: 0,
+    yellowCards: m.ycards || 0,
+    redCards: m.rcards || 0,
+    rating: m.rating || null,
+    photo: `https://images.fotmob.com/image_resources/playerimages/${m.id}.png`,
+    stats: {},
+    traits: null,
+    shotmap: [],
+    heatmap: [],
+    competitions: {},
+    career: [],
+    season: '',
+  };
+}
+
+async function fetchFirstTeamRosterLive(){
+  const cached = await kvGetJSON('firstTeamRoster');
+  if(cached) return cached;
+  const r = await fetch(`https://www.fotmob.com/api/data/teams?id=${FIRST_TEAM_ID}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+  if(!r.ok) throw new Error('Fotmob 팀 API 로드 실패');
+  const data = await r.json();
+  const groups = (data.squad && data.squad.squad) || [];
+  const roster = groups
+    .filter(g => g.title !== 'coach')
+    .flatMap(g => g.members)
+    .map(mapLiveSquadMember);
+  await kvSetJSON('firstTeamRoster', roster, KV_TTL_ROSTER_SEC);
+  return roster;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin','*');
 
@@ -703,18 +803,29 @@ export default async function handler(req, res) {
       }
 
     } else if(type === 'squad'){
-      // players.json (Fotmob 기반) 직접 사용
-      const pjRes = await fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)});
-      if(!pjRes.ok) throw new Error('players.json 로드 실패');
-      const pjData = await pjRes.json();
+      // 1군은 스크래퍼 없이 Fotmob 팀 API로 실시간 조회(KV 6시간 캐시) —
+      // 아카데미(U21/U18)는 아직 이 방식으로 못 옮겨서(Fotmob이 U18 스쿼드
+      // 자체를 이 API로 안 줌) players.json 정적 스냅샷을 그대로 쓴다.
+      // players.json 실패해도 1군 자체는 떠야 하므로 별도로 감싼다.
+      // liveFirstTeam(KV 조회, 미스면 Fotmob까지)과 players.json fetch는
+      // 서로 의존관계가 없는데 순서대로 await하면 시간이 그냥 더해져서
+      // 느려진다 — 동시에 시작해서 병렬로 기다린다.
+      const liveFirstTeamPromise = fetchFirstTeamRosterLive().catch(() => []); // 실패하면 아래 academy만이라도 노출
+      const pjPromise = fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)})
+        .then(r => { if(!r.ok) throw new Error('players.json 로드 실패'); return r.json(); });
+      const [liveFirstTeam, pjData] = await Promise.all([liveFirstTeamPromise, pjPromise]);
+      const academyOnly = (pjData.players || []).filter(p => {
+        const levels = p.squadLevels || [p.squadLevel || 'first'];
+        return levels.indexOf('academy') !== -1 && levels.indexOf('first') === -1;
+      });
       // 예전에 누군가 선수 상세를 열어봐서 KV에 라이브 데이터가 남아있으면,
       // players.json 스냅샷(며칠 전 것일 수 있음) 위에 그걸 덮어써서
       // "처음 뜨는 화면"도 점점 최신에 가깝게 만든다. MGET 하나로 몰아서
       // 선수 수만큼 명령을 안 쓰게 한다.
-      const liveById = await kvMGetPlayers((pjData.players || []).map(p => p.id));
+      const liveById = await kvMGetPlayers(academyOnly.map(p => p.id));
 
       result = {
-        squad: (pjData.players || []).map(p => {
+        squad: liveFirstTeam.concat(academyOnly.map(p => {
           const live = liveById[p.id];
           if(live){
             p = Object.assign({}, p, {
@@ -759,7 +870,7 @@ export default async function handler(req, res) {
           competitions: p.competitions || {},
           career:      p.career || [],
           season:      p.season || '',
-        }))
+        })))
       };
     } else if(type === 'playerDetail'){
       // 선수 상세모달(기록/경력 탭)을 위한 대회별 스탯·shotmap·heatmap·
