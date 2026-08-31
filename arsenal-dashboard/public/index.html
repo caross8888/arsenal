@@ -2894,7 +2894,7 @@ function openSqManagerModal(){
   // 열 때 짧게 뜨는 버그가 있었다(다른 선수 모달을 한 번 거치면 그쪽에서
   // 지워줘서 그 다음부턴 정상으로 보였음) — 여기서도 항상 지워준다.
   modal.querySelector('.modal-sheet').classList.remove('hist-compact');
-  content.className='';
+  content.className='modal-sheet-inner';
   content.innerHTML=renderSqManagerModalContent();
   modal.classList.add('open');
   document.body.style.overflow='hidden';
