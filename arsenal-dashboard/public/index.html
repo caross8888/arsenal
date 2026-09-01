@@ -5657,6 +5657,17 @@ window.testLiveMatch = function(opts){
     }
     return window._origApiFetch(url);
   };
+  // PC 우측 패널(openMatchModal)은 apiFetch가 아니라 raw fetch를 직접
+  // 쓰기 때문에, 위 apiFetch 가로채기만으로는 PC에서 mock 라이브 경기를
+  // 열었을 때 실제 백엔드로 요청이 나가 "match not found"가 뜬다 —
+  // window.fetch 자체도 같이 가로챈다.
+  if(!window._origFetch) window._origFetch = window.fetch;
+  window.fetch = function(url){
+    if(typeof url === 'string' && url.includes('match') && url.includes('mock-live-001')){
+      return Promise.resolve({ ok:true, json: function(){ return Promise.resolve(_mockMatchDetail); } });
+    }
+    return window._origFetch.apply(window, arguments);
+  };
 
   var upEl = document.getElementById('matchList');
   if(!upEl) return console.warn('matchList 요소를 찾을 수 없습니다.');
@@ -5668,6 +5679,7 @@ window.testLiveMatch = function(opts){
 
 window.testLiveStop = function(){
   if(window._origApiFetch){ window.apiFetch = window._origApiFetch; delete window._origApiFetch; }
+  if(window._origFetch){ window.fetch = window._origFetch; delete window._origFetch; }
   _mockMatchDetail = null;
   stopLivePolling();
   loadFixtures();
