@@ -4281,6 +4281,24 @@ window.addEventListener('resize', function(){
   updateInjStrip();
   var panel=document.getElementById('sqDetailPanel');
   if(panel && !panel.classList.contains('showing-detail')) renderSqInjuryPanel();
+  // 모바일에서 라이브 경기 카드의 "▼ 상세 보기"를 펼쳐둔 채로 PC 폭으로
+  // 넘어오면, 그 인라인 패널은 그대로 남아있는데 버튼만 CSS로 숨겨져서
+  // 접을 방법이 없어진다 — PC는 우측 패널로 보는 구조라 이 인라인 펼침은
+  // 필요 없으니, PC 폭으로 넘어가는 순간 열려있던 것들을 전부 접어준다
+  // (접기 버튼 클릭과 동일한 절차 — progress bar는 유지, 상세 폴링만 중단).
+  if(nowDesktop){
+    document.querySelectorAll('.fix-live-expand.open').forEach(function(expandPanel){
+      expandPanel.classList.remove('open');
+      var matchId = expandPanel.id.replace('live-expand-','');
+      var btn = expandPanel.nextElementSibling;
+      if(btn && btn.classList.contains('fix-expand-btn')) btn.textContent='▼ 상세 보기';
+      setTimeout(function(){
+        expandPanel.innerHTML='';
+        var st=_liveExpandTimers[matchId];
+        if(st){ if(st.timer){ clearInterval(st.timer); st.timer=null; } }
+      }, 350);
+    });
+  }
 });
 var _matchModalReqSeq=0;
 function closeFixDetailPanel(){
