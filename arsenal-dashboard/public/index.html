@@ -5317,7 +5317,7 @@ function buildLiveDetail(data){
   h += '<div class="live-tab-panel" id="live-panel-playerstats" style="display:none;padding-top:0;">'+renderPlayerStatsPanelInner(data,'playerstats')+'</div>';
 
   // ── 코멘트 패널 ──
-  h += '<div class="live-tab-panel" id="live-panel-commentary" style="display:none;">';
+  h += '<div class="live-tab-panel" id="live-panel-commentary" style="display:none;border-top:1px solid var(--border-bright);">';
   var commentary = data.commentary||[];
   if(commentary.length){
     h += '<div style="max-height:360px;overflow-y:auto;padding:10px 14px 14px;">';
