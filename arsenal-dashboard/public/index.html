@@ -53,7 +53,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .spinner .spinner-icon path{stroke-dasharray:1;stroke-width:1.2px;vector-effect:non-scaling-stroke;animation:cannonDraw 3s ease-in-out infinite;}
 @keyframes cannonDraw{0%{stroke-dashoffset:1;}55%{stroke-dashoffset:0;}70%{stroke-dashoffset:0;}100%{stroke-dashoffset:1;}}
 .error-state{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px;font-size:12px;color:#F87171;display:flex;align-items:center;gap:8px}
-.dday-card{align-items:center;gap:7px;padding:6px 16px;margin-top:-16px;margin-bottom:12px;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);background:var(--dday-bg);border-bottom:1px solid rgba(239,1,7,.25);color:var(--text);position:sticky;top:49px;z-index:90;line-height:1.3;}
+.dday-card{align-items:center;gap:7px;padding:6px 16px;margin-top:-16px;margin-bottom:12px;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);background:var(--dday-bg);border-bottom:1px solid rgba(239,1,7,.25);color:var(--text);position:sticky;top:var(--header-h,49px);z-index:90;line-height:1.3;}
 .dday-num{font-family:var(--fb);font-size:12px;font-weight:800;letter-spacing:.2px;color:var(--red);flex-shrink:0;}
 .dday-match{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .dday-time{font-size:12px;color:var(--text-secondary);margin-left:auto;flex-shrink:0;white-space:nowrap;}
@@ -61,7 +61,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    600px보다 넓은 기기(태블릿 등)에서 섹션 가장자리까지만 닿고 실제
    화면 끝까지는 못 닿는다 — 뷰포트 폭 기준 계산(100vw 풀블리드 공식)으로
    기기 폭과 무관하게 항상 화면 양끝까지 닿게 한다. */
-.inj-strip{display:flex;align-items:center;gap:7px;padding:6px 16px;margin-top:-16px;margin-bottom:12px;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);background:var(--dday-bg);border-bottom:1px solid rgba(239,1,7,.25);color:var(--text);position:sticky;top:49px;z-index:90;line-height:1.3;font-size:12px;font-weight:700;}
+.inj-strip{display:flex;align-items:center;gap:7px;padding:6px 16px;margin-top:-16px;margin-bottom:12px;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);background:var(--dday-bg);border-bottom:1px solid rgba(239,1,7,.25);color:var(--text);position:sticky;top:var(--header-h,49px);z-index:90;line-height:1.3;font-size:12px;font-weight:700;}
 .inj-strip svg{flex-shrink:0;}
 .fix-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:6px;padding-left:2px}
 .fix-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
@@ -289,7 +289,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tl-summary{font-size:11px;color:var(--text-secondary);line-height:1.65;}
 .tl-more{display:inline-block;margin-top:6px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--red);}
 /* ── History Tab ─────────────────────────── */
-.hist-otd-wrap{margin-top:-16px;margin-bottom:12px;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);position:sticky;top:49px;z-index:90;}
+.hist-otd-wrap{margin-top:-16px;margin-bottom:12px;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);position:sticky;top:var(--header-h,49px);z-index:90;}
 .hist-otd-card{display:flex;align-items:center;gap:7px;padding:6px 16px;background:var(--otd-bg);border-bottom:1px solid rgba(212,175,55,.25);cursor:pointer;-webkit-tap-highlight-color:transparent;line-height:1.3;}
 .hist-otd-card:active{opacity:.88;}
 .hist-otd-date{font-size:12px;font-weight:800;letter-spacing:.2px;color:var(--gold);flex-shrink:0;white-space:nowrap;}
@@ -4267,6 +4267,20 @@ function toggleTheme(){
   applyTheme(cur==='dark'?'light':'dark');
 }
 applyTheme(document.documentElement.getAttribute('data-theme')||'dark');
+// D-day/부상/OTD 스트립(.dday-card/.inj-strip/.hist-otd-wrap)이 헤더 바로
+// 아래 sticky로 붙는데, 예전엔 헤더 높이를 49px로 하드코딩해서 썼다 —
+// 실측해보니 실제 렌더 높이는 50.8px라 1.8px 차이가 났고, 스크롤 중 두
+// sticky 요소 경계가 미세하게 겹쳤다 풀렸다 하며 흔들려 보이는 원인이었다.
+// 헤더 높이를 실측해서 CSS 변수로 반영해두고 그 변수를 top에 쓴다 —
+// 폰트 로딩으로 높이가 나중에 미세하게 바뀔 수 있어 폰트 로딩 완료 후에도
+// 한 번 더 재보정한다.
+function syncHeaderHeight(){
+  var h = document.querySelector('.top-header');
+  if(h) document.documentElement.style.setProperty('--header-h', h.getBoundingClientRect().height+'px');
+}
+syncHeaderHeight();
+window.addEventListener('resize', syncHeaderHeight);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(syncHeaderHeight);
 function isDesktopLayout(){ return window.innerWidth>=900; }
 // 선수단 우측 패널(감독+부상자 현황)과 모바일 그리드의 감독 카드는 처음
 // 그려질 때의 폭을 기준으로 한 번만 결정된다 — 새로고침 없이 창 폭을
