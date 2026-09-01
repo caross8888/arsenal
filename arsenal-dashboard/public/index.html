@@ -6304,6 +6304,13 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 안 채워진 나머지는 영영 안 채워지는" 오탐이 난다.
       var hadContractBefore = !!p.contractEnd;
       var hadFootBefore = !!p.preferredFoot;
+      // 지금 화면에 그려진 값(=이 콜백이 실행되기 전 p의 값)을 미리 찍어둔다.
+      // p는 목록 API 응답(로컬스토리지 캐시 스냅샷일 수도 있음)에서 온
+      // 값이라, 서버 KV의 "마지막으로 본 값"보다 더 오래된 스냅샷일 수
+      // 있다 — 그 경우 KV 기준으로는 "안 바뀜"이라도, 실제 화면엔 여전히
+      // 옛날 값(예: 지난 경기 스탯)이 떠 있는 채로 영영 안 고쳐지는 버그가
+      // 있었다(KV엔 이미 최신값이 저장돼 있는데 화면만 옛 스냅샷).
+      var preFetchSnapshot = {competitions:p.competitions, shotmap:p.shotmap, heatmap:p.heatmap, career:p.career};
       if(live.contractEnd) p.contractEnd = live.contractEnd;
       if(live.preferredFoot) p.preferredFoot = live.preferredFoot;
       if(_pmSeasonMode==='prev'){
@@ -6327,14 +6334,25 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
         heatmap: live.heatmap && live.heatmap.length ? live.heatmap : p.heatmap,
         career: (live.career && live.career.length) ? live.career : p.career,
       });
-      // "바뀌었는지"는 브라우저가 들고 있던 이전 값(p)이 아니라 서버가
-      // KV에 저장해둔 "마지막으로 본 값"과 비교해서 내려준 플래그를 그대로
-      // 믿는다 — p 기준으로 비교하면 새로고침할 때마다 p가 초기화(1군
-      // 라이브 목록은 competitions/shotmap/career가 원래 빈 값)돼서 실제로는
-      // 안 바뀐 값도 매번 "빈 값 → 실제 값"으로 오판해 페이드된다. 서버
-      // 쪽 KV 기준은 새로고침·다른 기기 접속과 무관하게 유지된다.
-      var otherChanged = !!live.changedOther;
-      var traitsChanged = !!live.changedTraits;
+      // "바뀌었는지"는 기본적으로 서버가 KV에 저장해둔 "마지막으로 본 값"과
+      // 비교해서 내려준 플래그를 믿는다 — p 기준으로만 비교하면 새로고침할
+      // 때마다 p가 초기화(1군 라이브 목록은 competitions/shotmap/career가
+      // 원래 빈 값)돼서 실제로는 안 바뀐 값도 매번 "빈 값 → 실제 값"으로
+      // 오판해 페이드된다. 서버 쪽 KV 기준은 새로고침·다른 기기 접속과
+      // 무관하게 유지된다.
+      // 다만 KV 기준만 보면 놓치는 경우가 하나 있다 — 목록 API 응답(p)이
+      // 로컬스토리지 캐시라 KV의 "마지막으로 본 값"보다 더 오래된 스냅샷일
+      // 때(예: 그 사이 다른 기기/세션에서 이 선수를 열어봐서 KV는 이미
+      // 최신이 됐는데, 이 브라우저의 목록 캐시는 그걸 모름), KV 비교로는
+      // "안 바뀜"이 뜨지만 화면(p 스냅샷)엔 여전히 옛 스탯이 남아 영영 안
+      // 고쳐진다. 그래서 KV 플래그에 더해 "지금 화면에 그려진 값 자체가
+      // 방금 받아온 값과 실제로 다른가"도 같이 확인한다.
+      var CHANGE_FIELDS_CLIENT = ['competitions','shotmap','heatmap','career'];
+      var clientSideMismatch = CHANGE_FIELDS_CLIENT.some(function(k){
+        return JSON.stringify(preFetchSnapshot[k]) !== JSON.stringify(merged[k]);
+      });
+      var otherChanged = !!live.changedOther || clientSideMismatch;
+      var traitsChanged = !!live.changedTraits || JSON.stringify(p.traits) !== JSON.stringify(merged.traits);
       // p는 allPlayers 배열 안의 그 객체와 동일 참조라서, 여기서 갱신해둬야
       // 다음에 같은 선수를 다시 열었을 때도 이번에 받은 라이브 값을 기준으로
       // 비교한다 — 안 하면 1군 라이브 목록은 competitions/shotmap/career가
