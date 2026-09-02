@@ -1211,7 +1211,7 @@ export default async function handler(req, res) {
       const nowD = new Date();
       const wy = nowD.getUTCFullYear();
       const WINDOWS = [
-        { label: `${wy} 여름 이적시장`, start: Date.UTC(wy, 5, 1), end: Date.UTC(wy, 8, 8, 23, 59, 59) },
+        { label: `${wy} 여름 이적시장`, start: Date.UTC(wy, 4, 1), end: Date.UTC(wy, 8, 8, 23, 59, 59) },
         { label: `${wy} 겨울 이적시장`, start: Date.UTC(wy, 0, 1), end: Date.UTC(wy, 1, 8, 23, 59, 59) },
       ];
       const nowMs = nowD.getTime();
