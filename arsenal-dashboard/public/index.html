@@ -4325,8 +4325,8 @@ function renderTransferModal(data){
   var inList = isRumour ? (data.rumourIn||[]) : data.in;
   var outList = isRumour ? (data.rumourOut||[]) : data.out;
   var h = '<div class="pm-header" style="padding:16px 16px 14px;"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
-  h += '<div style="font-size:16px;font-weight:700;color:var(--text);margin-top:6px;">'+(isRumour?'이적 루머':(data.window?data.window.label:'이적시장'))+'</div>';
-  h += '<button onclick="toggleTransferMode()" style="margin-top:4px;background:none;border:none;padding:0;display:flex;align-items:center;gap:2px;color:var(--text-secondary);font-size:12px;cursor:pointer;">'+(isRumour?'확정 이적':'루머')+' &#8250;</button>';
+  h += '<div style="font-size:16px;font-weight:700;color:var(--on-dark-header);margin-top:6px;">'+(isRumour?'이적 루머':(data.window?data.window.label:'이적시장'))+'</div>';
+  h += '<button class="transfer-mode-toggle" onclick="toggleTransferMode()" style="margin-top:4px;background:none;border:none;padding:0;display:flex;align-items:center;gap:2px;color:var(--on-dark-header-secondary);font-size:12px;cursor:pointer;">'+(isRumour?'확정 이적':'루머')+' &#8250;</button>';
   h += '</div>';
   h += '<div class="live-tabs">';
   h += '<button class="live-tab-btn active" data-tab="in" onclick="liveSwitchTab(this,&quot;in&quot;)">영입 IN ('+inList.length+')</button>';
@@ -5057,7 +5057,7 @@ function enableSheetSwipeClose(sheetEl, headerSelector, closeFn){
     // 스와이프 캡처 대상에서 제외한다 — setPointerCapture가 걸리면 그
     // 위에서의 클릭이 칩/메뉴가 아니라 시트 쪽으로 리다이렉트돼 눌러도
     // 반응이 없어진다.
-    if(e.target.closest('.pm-season-wrap')) return;
+    if(e.target.closest('.pm-season-wrap, .transfer-mode-toggle')) return;
     dragging = true; dragged = 0; pointerId = e.pointerId;
     startY = e.clientY;
     sheetEl.style.transition = 'none';
