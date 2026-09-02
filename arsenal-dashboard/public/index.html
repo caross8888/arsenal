@@ -1766,9 +1766,6 @@ function formatDate(utcDate, tbd){
   var diff=kstDay(d.getTime())-kstDay(Date.now());
   if(diff===0) return '\uc624\ub298 '+time;
   if(diff===1) return '\ub0b4\uc77c '+time;
-  if(diff>1&&diff<8) return date+' '+time;
-  if(diff>=8) return date+' '+time;
-  if(diff===-1) return '\uc5b4\uc81c';
   return date+' '+time;
 }
 
