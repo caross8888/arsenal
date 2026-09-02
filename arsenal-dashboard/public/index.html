@@ -925,6 +925,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      높이와 무관한 페이드+스케일로 교체한다. */
   #snsModal{align-items:center;}
   #snsModal .modal-sheet{border-radius:16px;height:auto;max-height:80vh;animation:dialogPop .25s cubic-bezier(.32,.72,0,1);}
+  #transferModal{align-items:center;}
+  #transferModal .modal-sheet{border-radius:16px;height:auto;max-height:80vh;animation:dialogPop .25s cubic-bezier(.32,.72,0,1);}
   /* History도 선수단/경기일정/리더보드와 동일한 "리스트+우측 상세패널"
      구조로 맞춘다 — 섹션 자체는 max-width:none으로 채우고, 안에서
      리스트 칸(#histListCol)은 640px로 캡, 우측엔 상세 패널(.hist-detail-panel,
@@ -4332,10 +4334,10 @@ function renderTransferModal(data){
   h += '<button class="live-tab-btn active" data-tab="in" onclick="liveSwitchTab(this,&quot;in&quot;)">영입 IN ('+inList.length+')</button>';
   h += '<button class="live-tab-btn" data-tab="out" onclick="liveSwitchTab(this,&quot;out&quot;)">방출 OUT ('+outList.length+')</button>';
   h += '</div>';
-  h += '<div class="live-tab-panel" id="live-panel-in" style="padding:14px 16px;">';
+  h += '<div class="live-tab-panel" id="live-panel-in" style="padding:14px 16px;border-top:1px solid var(--border-bright);">';
   h += inList.length ? inList.map(function(p){return renderTransferCard(p,isRumour);}).join('') : '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:24px 0;">'+(isRumour?'도는 영입 루머 없음':'이번 이적시장 영입 없음')+'</div>';
   h += '</div>';
-  h += '<div class="live-tab-panel" id="live-panel-out" style="display:none;padding:14px 16px;">';
+  h += '<div class="live-tab-panel" id="live-panel-out" style="display:none;padding:14px 16px;border-top:1px solid var(--border-bright);">';
   h += outList.length ? outList.map(function(p){return renderTransferCard(p,isRumour);}).join('') : '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:24px 0;">'+(isRumour?'도는 방출 루머 없음':'이번 이적시장 방출 없음')+'</div>';
   h += '</div>';
   document.getElementById('transferModalContent').innerHTML = h;
