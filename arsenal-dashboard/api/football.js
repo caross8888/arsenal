@@ -190,6 +190,46 @@ async function kvSetJSON(key, data, ttlSec){
   } catch(e){ /* 캐시 저장 실패는 무시 */ }
 }
 
+// Fotmob 루머 데이터는 공개 API가 아니라 Next.js 내부 데이터 엔드포인트
+// (/_next/data/{buildId}/...)로만 나온다 — buildId는 Fotmob이 새로 배포할
+// 때마다 바뀌는 값이라 하드코딩할 수 없다. 팀 페이지 HTML 자체에 그 값이
+// __NEXT_DATA__로 박혀있어서, 그걸 정규식으로 뽑아 KV에 몇 시간 캐싱해두고
+// (배포 주기가 그렇게 잦지 않음) 매 요청마다 페이지를 새로 안 긁게 한다.
+// 이 값이 만료돼서 실제 데이터 요청이 실패하면(배포로 buildId가 바뀐 경우)
+// 호출부에서 캐시를 무시하고 한 번 더 새로 받아오게 되어 있다.
+async function getFotmobBuildId(forceRefresh){
+  if(!forceRefresh){
+    const cached = await kvGetJSON('fotmobBuildId');
+    if(cached) return cached;
+  }
+  const pageRes = await fetch('https://www.fotmob.com/teams/9825/transfers/arsenal', {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+  if(!pageRes.ok) throw new Error('Fotmob 페이지 로드 실패');
+  const html = await pageRes.text();
+  const m = html.match(/"buildId":"([^"]+)"/);
+  if(!m) throw new Error('buildId를 찾을 수 없음');
+  await kvSetJSON('fotmobBuildId', m[1], 12 * 60 * 60);
+  return m[1];
+}
+async function fetchFotmobRumours(){
+  const fetchWithBuildId = async buildId => {
+    const url = `https://www.fotmob.com/_next/data/${buildId}/ko/teams/${FIRST_TEAM_ID}/transfers/arsenal.json?mode=rumour&lng=ko&id=${FIRST_TEAM_ID}&tab=transfers&slug=arsenal`;
+    const r = await fetch(url, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+    if(!r.ok) return null;
+    const j = await r.json();
+    const team = j.pageProps && j.pageProps.fallback && j.pageProps.fallback[`team-${FIRST_TEAM_ID}`];
+    return (team && team.transfers && team.transfers.allRumours) || null;
+  };
+  try {
+    const buildId = await getFotmobBuildId(false);
+    let rumours = await fetchWithBuildId(buildId);
+    if(!rumours){
+      // 캐시된 buildId가 배포로 이미 바뀌었을 수 있음 — 한 번만 새로 받아서 재시도
+      const freshBuildId = await getFotmobBuildId(true);
+      rumours = await fetchWithBuildId(freshBuildId);
+    }
+    return rumours || [];
+  } catch(e){ return []; }
+}
 // Fotmob 팀 API의 한 스쿼드 멤버 → 이 앱이 카드 목록에서 기대하는 모양으로
 // 변환한다. 이 엔드포인트는 명단/등번호/포지션/나이/평점처럼 "목록 카드"에
 // 필요한 값은 다 주지만, 계약만료/선호발/상세 대회별 기록/슛맵/히트맵/
@@ -1146,6 +1186,85 @@ export default async function handler(req, res) {
       // 안 바뀜)은 영구 저장, 이번 시즌(계속 바뀜)은 기존처럼 7일 TTL.
       if(wantPrevSeason) await kvSetPlayerSeason(playerId, prevSeasonName, result);
       else await kvSetPlayer(playerId, result);
+    } else if(type === 'transfers'){
+      // 이적시장 IN/OUT 요약 — Fotmob 팀 API(이미 스쿼드 라이브 목록에 쓰는
+      // 그 엔드포인트)의 transfers 필드를 그대로 재사용한다. 이 필드는
+      // "이번 창"만이 아니라 최근 1년치 전체를 담고 있어서(다단계 임대/
+      // 완전이적이 중복으로도 잡힘), 지금이 이적시장 기간인지부터 판정하고
+      // 그 기간 안에 들어오는 것만 걸러낸다. 프리미어리그 이적시장은
+      // 시즌마다 정확한 날짜가 조금씩 바뀌지만(FIFA 큰 틀만 있고 리그가
+      // 매년 확정), 대략 여름(6월~9월 초)/겨울(1월~2월 초) 범위로만
+      // 판정해도 실사용에는 충분하다.
+      // 확정 이적(공식 API)과 루머(비공식 내부 엔드포인트)는 서로 의존관계가
+      // 없으니 병렬로 받는다 — 루머 쪽이 실패해도(위 fetchFotmobRumours가
+      // 이미 삼켜서 빈 배열 반환) 확정 이적은 그대로 응답된다.
+      const [teamRes, rumoursRaw] = await Promise.all([
+        fetch(`https://www.fotmob.com/api/data/teams?id=${FIRST_TEAM_ID}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)}),
+        fetchFotmobRumours(),
+      ]);
+      if(!teamRes.ok) throw new Error('Fotmob 팀 API 로드 실패');
+      const teamData = await teamRes.json();
+      const transfersRaw = (teamData.transfers && teamData.transfers.data) || {};
+      const rawIn = transfersRaw['Players in'] || [];
+      const rawOut = transfersRaw['Players out'] || [];
+
+      const nowD = new Date();
+      const wy = nowD.getUTCFullYear();
+      const WINDOWS = [
+        { label: `${wy} 여름 이적시장`, start: Date.UTC(wy, 5, 1), end: Date.UTC(wy, 8, 8, 23, 59, 59) },
+        { label: `${wy} 겨울 이적시장`, start: Date.UTC(wy, 0, 1), end: Date.UTC(wy, 1, 8, 23, 59, 59) },
+      ];
+      const nowMs = nowD.getTime();
+      const activeWindow = WINDOWS.find(w => nowMs >= w.start && nowMs <= w.end) || null;
+
+      const mapEntry = p => ({
+        name: p.name,
+        playerId: p.playerId,
+        position: (p.position && p.position.label) || '',
+        photo: p.playerId ? `https://images.fotmob.com/image_resources/playerimages/${p.playerId}.png` : null,
+        date: p.transferDate,
+        fromClub: p.fromClubFullName || p.fromClub || '',
+        fromCrest: p.fromClubId ? `https://images.fotmob.com/image_resources/logo/teamlogo/${p.fromClubId}.png` : null,
+        toClub: p.toClubFullName || p.toClub || '',
+        toCrest: p.toClubId ? `https://images.fotmob.com/image_resources/logo/teamlogo/${p.toClubId}.png` : null,
+        onLoan: !!p.onLoan,
+        feeValue: (p.fee && p.fee.value) || null,
+        feeFree: !!(p.fee && p.fee.localizedFeeText === 'transfer_type_free_transfer'),
+      });
+      const inWindow = arr => !activeWindow ? [] : arr.filter(p => {
+        const t = new Date(p.transferDate).getTime();
+        return t >= activeWindow.start && t <= activeWindow.end;
+      });
+
+      // 루머는 확정 이적과 달리 날짜로 "이번 창"만 거르지 않는다 — 마감일이
+      // 다가올수록 다음 창(겨울) 루머가 미리 도는 경우도 많아서, Fotmob이
+      // 이 팀 페이지에 지금 올려둔 루머 목록을 그대로 보여주는 쪽이 실제
+      // 관심사(지금 도는 소문이 뭐냐)에 더 맞는다.
+      const PROB_KO = { High: '유력', Medium: '보통', Low: '낮음' };
+      const mapRumour = p => ({
+        name: p.name,
+        playerId: p.playerId,
+        position: (p.position && p.position.label) || '',
+        photo: p.playerId ? `https://images.fotmob.com/image_resources/playerimages/${p.playerId}.png` : null,
+        date: p.transferDate,
+        fromClub: p.fromClubFullName || p.fromClub || '',
+        fromCrest: p.fromClubId ? `https://images.fotmob.com/image_resources/logo/teamlogo/${p.fromClubId}.png` : null,
+        toClub: p.toClubFullName || p.toClub || '',
+        toCrest: p.toClubId ? `https://images.fotmob.com/image_resources/logo/teamlogo/${p.toClubId}.png` : null,
+        feeValue: (p.fee && p.fee.value) || null,
+        probability: PROB_KO[p.probability] || null,
+        sourceName: p.sourceName || '',
+        sourceUrl: p.sourceUrl || '',
+      });
+      const rumoursMapped = (rumoursRaw || []).map(mapRumour).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      result = {
+        window: activeWindow ? { label: activeWindow.label } : null,
+        in: inWindow(rawIn).map(mapEntry).sort((a, b) => new Date(b.date) - new Date(a.date)),
+        out: inWindow(rawOut).map(mapEntry).sort((a, b) => new Date(b.date) - new Date(a.date)),
+        rumourIn: rumoursMapped.filter(p => p.toClub === 'Arsenal'),
+        rumourOut: rumoursMapped.filter(p => p.fromClub === 'Arsenal'),
+      };
     } else if(type === 'managerStats'){
       // History 탭의 감독 경기수(현재 감독 한정 — 과거 감독들은
       // managers.json에 손으로 채운 최종 games 값이 이미 있음)를 시즌별
