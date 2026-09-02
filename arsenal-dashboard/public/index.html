@@ -4330,12 +4330,10 @@ function renderTransferModal(data){
   h += '<div style="font-size:16px;font-weight:700;color:var(--on-dark-header);margin-top:6px;">'+(isRumour?'이적 루머':(data.window?data.window.label:'이적시장'))+'</div>';
   h += '<button class="transfer-mode-toggle" onclick="toggleTransferMode()" style="margin-top:4px;background:none;border:none;padding:0;display:flex;align-items:center;gap:2px;color:var(--on-dark-header-secondary);font-size:12px;cursor:pointer;">'+(isRumour?'확정 이적':'루머')+' &#8250;</button>';
   h += '</div>';
-  h += '<div style="border-top:1px solid var(--border-bright);">';
-  h += '<div class="live-tabs">';
+  h += '<div class="live-tabs" style="border-top:1px solid var(--border-bright);">';
   h += '<button class="live-tab-btn active" data-tab="in" onclick="liveSwitchTab(this,&quot;in&quot;)">영입 IN ('+inList.length+')</button>';
   h += '<button class="live-tab-btn" data-tab="out" onclick="liveSwitchTab(this,&quot;out&quot;)">방출 OUT ('+outList.length+')</button>';
   h += '</div>'; // .live-tabs 닫기
-  h += '</div>'; // border-top 래퍼 닫기
   h += '<div class="live-tab-panel" id="live-panel-in" style="padding:14px 16px;border-top:1px solid var(--border-bright);">';
   h += inList.length ? inList.map(function(p){return renderTransferCard(p,isRumour);}).join('') : '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:24px 0;">'+(isRumour?'도는 영입 루머 없음':'이번 이적시장 영입 없음')+'</div>';
   h += '</div>';
