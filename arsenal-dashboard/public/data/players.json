@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-31T01:42:41.921849+00:00",
+  "updated_at": "2026-09-04T00:55:03.705000+00:00",
   "season": "2026/2027",
   "source": "Fotmob",
   "players": [
@@ -34,16 +34,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 0,
-          "starts": 0,
+          "appearances": 1,
+          "starts": 1,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 0,
+          "minutesPlayed": 90,
           "cleanSheets": 0,
-          "goalsConceded": 0,
-          "avgRating": null
+          "goalsConceded": 2,
+          "avgRating": 6.8
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -61,24 +61,19 @@
       },
       "stats": {
         "saves": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 0
-        },
-        "save_percentage": {
-          "value": "28.6",
-          "per90": 28.57,
-          "percentile": 0
-        },
-        "goals_conceded": {
           "value": "5",
           "per90": 5,
-          "percentile": 0
+          "percentile": 54
         },
-        "goals_prevented": {
-          "value": "-5.00",
-          "per90": -5,
-          "percentile": 0
+        "save_percentage": {
+          "value": "71.4",
+          "per90": 71.43,
+          "percentile": 74
+        },
+        "goals_conceded": {
+          "value": "2",
+          "per90": 2,
+          "percentile": 54
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -88,47 +83,42 @@
         "error_led_to_goal": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
-        },
-        "keeper_sweeper": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 25
+          "percentile": 100
         },
         "keeper_high_claim": {
           "value": "1",
           "per90": 1,
-          "percentile": 25
+          "percentile": 46
         },
         "successful_passes": {
-          "value": "30",
-          "per90": 30,
-          "percentile": 50
+          "value": "22",
+          "per90": 22,
+          "percentile": 23
         },
         "successful_passes_accuracy": {
-          "value": "61.2",
-          "per90": 61.22,
-          "percentile": 25
+          "value": "75.9",
+          "per90": 75.86,
+          "percentile": 56
         },
         "long_balls_accurate": {
-          "value": "8",
-          "per90": 8,
-          "percentile": 25
+          "value": "2",
+          "per90": 2,
+          "percentile": 8
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "30.8",
-          "per90": 30.77,
-          "percentile": 0
+          "value": "25.0",
+          "per90": 25,
+          "percentile": 26
         },
         "yellow_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "red_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "clean_sheet_title": {
           "value": "0",
@@ -136,19 +126,19 @@
           "percentile": 0
         },
         "rating": {
-          "value": "4.59",
-          "per90": 4.59,
-          "percentile": 0
+          "value": "6.82",
+          "per90": 6.82,
+          "percentile": 64
         },
         "matches_uppercase": {
           "value": "1",
           "per90": 1,
-          "percentile": 100
+          "percentile": 0
         },
         "player_started_matches": {
           "value": "1",
           "per90": 1,
-          "percentile": 100
+          "percentile": 0
         },
         "saved_penalties": {
           "value": "0/0",
@@ -284,17 +274,17 @@
         "saves": {
           "value": "5",
           "per90": 5,
-          "percentile": 72
+          "percentile": 54
         },
         "save_percentage": {
           "value": "83.3",
           "per90": 83.33,
-          "percentile": 78
+          "percentile": 85
         },
         "goals_conceded": {
           "value": "1",
           "per90": 1,
-          "percentile": 53
+          "percentile": 69
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -309,37 +299,37 @@
         "keeper_sweeper": {
           "value": "1",
           "per90": 1,
-          "percentile": 56
+          "percentile": 46
         },
         "keeper_high_claim": {
           "value": "1",
           "per90": 1,
-          "percentile": 56
+          "percentile": 46
         },
         "successful_passes": {
           "value": "37",
           "per90": 37,
-          "percentile": 88
+          "percentile": 59
         },
         "successful_passes_accuracy": {
           "value": "92.5",
           "per90": 92.5,
-          "percentile": 91
+          "percentile": 90
         },
         "long_balls_accurate": {
           "value": "4",
           "per90": 4,
-          "percentile": 59
+          "percentile": 23
         },
         "long_ball_succeeeded_accuracy": {
           "value": "57.1",
           "per90": 57.14,
-          "percentile": 94
+          "percentile": 92
         },
         "yellow_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "red_cards": {
           "value": "0",
@@ -354,7 +344,7 @@
         "rating": {
           "value": "7.42",
           "per90": 7.42,
-          "percentile": 84
+          "percentile": 87
         },
         "matches_uppercase": {
           "value": "1",
@@ -373,6 +363,232 @@
         }
       },
       "traits": null,
+      "shotmap": [],
+      "heatmap": [],
+      "season": "2026/2027"
+    },
+    {
+      "id": 1360346,
+      "squadLevels": [
+        "academy"
+      ],
+      "name": "Habeeb Ogunneye",
+      "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/1360346.png",
+      "nationality": "England",
+      "position": "rightback",
+      "posGroup": "DF",
+      "jersey": "",
+      "age": 20,
+      "height": "179 cm",
+      "preferredFoot": "Right",
+      "marketValue": {
+        "value": 444966,
+        "currency": "EUR"
+      },
+      "contractEnd": "2027-06-30",
+      "positionLabel": "Right Back",
+      "career": [
+        {
+          "team": "Newport County",
+          "startDate": "2025-07",
+          "endDate": "2026-01",
+          "active": false,
+          "appearances": "21",
+          "goals": "1",
+          "assists": "0"
+        },
+        {
+          "team": "Manchester United",
+          "startDate": "2024-02",
+          "endDate": "2025-06",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        }
+      ],
+      "competitions": {
+        "PL2": {
+          "name": "프리미어리그 2",
+          "appearances": 1,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 75,
+          "cleanSheets": 0,
+          "goalsConceded": 2,
+          "avgRating": 6.2
+        }
+      },
+      "stats": {
+        "goals": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "shots": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "assists": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "successful_passes": {
+          "value": "14",
+          "per90": 16.8,
+          "percentile": 11
+        },
+        "successful_passes_accuracy": {
+          "value": "73.7",
+          "per90": 73.68,
+          "percentile": 24
+        },
+        "duel_won": {
+          "value": "6",
+          "per90": 7.2,
+          "percentile": 41
+        },
+        "duel_won_percent": {
+          "value": "54.5",
+          "per90": 54.55,
+          "percentile": 45
+        },
+        "aerials_won": {
+          "value": "2",
+          "per90": 2.4,
+          "percentile": 61
+        },
+        "aerials_won_percent": {
+          "value": "100.0",
+          "per90": 100,
+          "percentile": 100
+        },
+        "touches": {
+          "value": "39",
+          "per90": 46.8,
+          "percentile": 11
+        },
+        "dispossessed": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "fouls_won": {
+          "value": "1",
+          "per90": 1.2,
+          "percentile": 24
+        },
+        "defensive_actions": {
+          "value": "4",
+          "per90": 4.8,
+          "percentile": 25
+        },
+        "matchstats.headers.tackles": {
+          "value": "3",
+          "per90": 3.6,
+          "percentile": 49
+        },
+        "fouls": {
+          "value": "2",
+          "per90": 2.4,
+          "percentile": 29
+        },
+        "recoveries": {
+          "value": "1",
+          "per90": 1.2,
+          "percentile": 4
+        },
+        "dribbled_past": {
+          "value": "1",
+          "per90": 1.2,
+          "percentile": 28
+        },
+        "clearances": {
+          "value": "1",
+          "per90": 1.2,
+          "percentile": 16
+        },
+        "clean_sheet_team_title": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "goals_conceded_while_on_pitch": {
+          "value": "2",
+          "per90": 2.4,
+          "percentile": 53
+        },
+        "yellow_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "6.21",
+          "per90": 6.21,
+          "percentile": 24
+        },
+        "matches_uppercase": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 0
+        },
+        "player_started_matches": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 0
+        },
+        "minutes_played": {
+          "value": "75",
+          "per90": 90,
+          "percentile": 16
+        }
+      },
+      "traits": {
+        "title": "Stats compared to other fullbacks",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 2
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 20
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 50
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 53
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 3
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 6
+          }
+        ]
+      },
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027"
@@ -408,16 +624,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
+          "appearances": 2,
           "starts": 1,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 45,
+          "minutesPlayed": 60,
           "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 6.3
+          "goalsConceded": 3,
+          "avgRating": 6.2
         }
       },
       "stats": {
@@ -432,14 +648,14 @@
           "percentile": 0
         },
         "rating": {
-          "value": "6.25",
-          "per90": 6.25,
-          "percentile": 37
+          "value": "6.21",
+          "per90": 6.21,
+          "percentile": 25
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "player_started_matches": {
           "value": "0",
@@ -447,9 +663,9 @@
           "percentile": 0
         },
         "minutes_played": {
-          "value": "45",
+          "value": "60",
           "per90": 90,
-          "percentile": 20
+          "percentile": 23
         }
       },
       "traits": null,
@@ -472,7 +688,7 @@
       "height": "",
       "preferredFoot": "",
       "marketValue": {
-        "value": 1526880,
+        "value": 1832256,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
@@ -497,8 +713,53 @@
           "assists": "0"
         }
       ],
-      "competitions": {},
-      "stats": {},
+      "competitions": {
+        "PL2": {
+          "name": "프리미어리그 2",
+          "appearances": 1,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 27,
+          "cleanSheets": 0,
+          "goalsConceded": 2,
+          "avgRating": 6.6
+        }
+      },
+      "stats": {
+        "goals": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "assists": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "rating": {
+          "value": "6.59",
+          "per90": 6.59,
+          "percentile": 45
+        },
+        "matches_uppercase": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 0
+        },
+        "player_started_matches": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "minutes_played": {
+          "value": "27",
+          "per90": 90,
+          "percentile": 11
+        }
+      },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
@@ -535,16 +796,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
-          "starts": 1,
+          "appearances": 2,
+          "starts": 2,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 68,
+          "minutesPlayed": 158,
           "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 6.8
+          "goalsConceded": 3,
+          "avgRating": 6.9
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -567,9 +828,14 @@
           "percentile": 0
         },
         "shots": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 0
+          "value": "1",
+          "per90": 0.57,
+          "percentile": 47
+        },
+        "ShotsOnTarget": {
+          "value": "1",
+          "per90": 0.57,
+          "percentile": 80
         },
         "assists": {
           "value": "0",
@@ -577,54 +843,59 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "35",
-          "per90": 46.32,
-          "percentile": 71
+          "value": "79",
+          "per90": 45,
+          "percentile": 83
         },
         "successful_passes_accuracy": {
-          "value": "85.4",
-          "per90": 85.37,
-          "percentile": 73
+          "value": "87.8",
+          "per90": 87.78,
+          "percentile": 84
         },
         "long_balls_accurate": {
-          "value": "2",
-          "per90": 2.65,
-          "percentile": 65
-        },
-        "long_ball_succeeeded_accuracy": {
-          "value": "100.0",
-          "per90": 100,
-          "percentile": 100
-        },
-        "chances_created": {
-          "value": "1",
-          "per90": 1.32,
+          "value": "3",
+          "per90": 1.71,
           "percentile": 56
         },
-        "crosses_succeeeded": {
-          "value": "1",
-          "per90": 1.32,
-          "percentile": 71
-        },
-        "crosses_succeeeded_accuracy": {
+        "long_ball_succeeeded_accuracy": {
           "value": "50.0",
           "per90": 50,
-          "percentile": 85
+          "percentile": 56
+        },
+        "chances_created": {
+          "value": "2",
+          "per90": 1.14,
+          "percentile": 69
+        },
+        "big_chance_created_team_title": {
+          "value": "1",
+          "per90": 0.57,
+          "percentile": 80
+        },
+        "crosses_succeeeded": {
+          "value": "3",
+          "per90": 1.71,
+          "percentile": 92
+        },
+        "crosses_succeeeded_accuracy": {
+          "value": "75.0",
+          "per90": 75,
+          "percentile": 93
         },
         "duel_won": {
-          "value": "7",
-          "per90": 9.26,
-          "percentile": 82
+          "value": "9",
+          "per90": 5.13,
+          "percentile": 69
         },
         "duel_won_percent": {
-          "value": "63.6",
-          "per90": 63.64,
-          "percentile": 73
+          "value": "64.3",
+          "per90": 64.29,
+          "percentile": 67
         },
         "aerials_won": {
           "value": "2",
-          "per90": 2.65,
-          "percentile": 85
+          "per90": 1.14,
+          "percentile": 61
         },
         "aerials_won_percent": {
           "value": "100.0",
@@ -632,14 +903,14 @@
           "percentile": 100
         },
         "touches": {
-          "value": "64",
-          "per90": 84.71,
-          "percentile": 66
+          "value": "132",
+          "per90": 75.19,
+          "percentile": 77
         },
         "touches_opp_box": {
-          "value": "1",
-          "per90": 1.32,
-          "percentile": 42
+          "value": "3",
+          "per90": 1.71,
+          "percentile": 75
         },
         "dispossessed": {
           "value": "0",
@@ -647,39 +918,44 @@
           "percentile": 100
         },
         "fouls_won": {
-          "value": "3",
-          "per90": 3.97,
-          "percentile": 85
+          "value": "4",
+          "per90": 2.28,
+          "percentile": 87
         },
         "defensive_actions": {
-          "value": "3",
-          "per90": 3.97,
-          "percentile": 23
+          "value": "8",
+          "per90": 4.56,
+          "percentile": 49
         },
         "matchstats.headers.tackles": {
+          "value": "3",
+          "per90": 1.71,
+          "percentile": 49
+        },
+        "interceptions": {
           "value": "2",
-          "per90": 2.65,
-          "percentile": 48
+          "per90": 1.14,
+          "percentile": 61
         },
         "fouls": {
           "value": "3",
-          "per90": 3.97,
-          "percentile": 5
+          "per90": 1.71,
+          "percentile": 11
         },
         "recoveries": {
-          "value": "1",
-          "per90": 1.32,
-          "percentile": 18
+          "value": "8",
+          "per90": 4.56,
+          "percentile": 72
         },
         "dribbled_past": {
-          "value": "1",
-          "per90": 1.32,
-          "percentile": 16
+          "value": "2",
+          "per90": 1.14,
+          "percentile": 17
         },
         "clearances": {
-          "value": "1",
-          "per90": 1.32,
-          "percentile": 21
+          "value": "3",
+          "per90": 1.71,
+          "percentile": 44
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -687,9 +963,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "1",
-          "per90": 1.32,
-          "percentile": 55
+          "value": "3",
+          "per90": 1.71,
+          "percentile": 36
         },
         "yellow_cards": {
           "value": "0",
@@ -702,24 +978,24 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.84",
-          "per90": 6.84,
-          "percentile": 52
+          "value": "6.90",
+          "per90": 6.89,
+          "percentile": 59
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "minutes_played": {
-          "value": "68",
+          "value": "158",
           "per90": 90,
-          "percentile": 13
+          "percentile": 59
         }
       },
       "traits": null,
@@ -748,16 +1024,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
-          "starts": 1,
+          "appearances": 2,
+          "starts": 2,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 45,
+          "minutesPlayed": 108,
           "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 6.3
+          "goalsConceded": 3,
+          "avgRating": 6.4
         }
       },
       "stats": {
@@ -767,14 +1043,14 @@
           "percentile": 0
         },
         "shots": {
-          "value": "1",
-          "per90": 2,
-          "percentile": 61
+          "value": "2",
+          "per90": 1.67,
+          "percentile": 90
         },
         "headed_shots": {
-          "value": "1",
-          "per90": 2,
-          "percentile": 72
+          "value": "2",
+          "per90": 1.67,
+          "percentile": 95
         },
         "assists": {
           "value": "0",
@@ -782,59 +1058,104 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "34",
-          "per90": 68,
-          "percentile": 44
+          "value": "57",
+          "per90": 47.5,
+          "percentile": 38
         },
         "successful_passes_accuracy": {
-          "value": "89.5",
-          "per90": 89.47,
-          "percentile": 60
+          "value": "87.7",
+          "per90": 87.69,
+          "percentile": 43
         },
-        "duel_won": {
+        "long_balls_accurate": {
           "value": "1",
-          "per90": 2,
-          "percentile": 19
+          "per90": 0.83,
+          "percentile": 6
         },
-        "duel_won_percent": {
-          "value": "50.0",
-          "per90": 50,
-          "percentile": 29
+        "long_ball_succeeeded_accuracy": {
+          "value": "16.7",
+          "per90": 16.67,
+          "percentile": 9
         },
-        "aerials_won": {
+        "dribbles_succeeded": {
           "value": "1",
-          "per90": 2,
-          "percentile": 33
+          "per90": 0.83,
+          "percentile": 78
         },
-        "aerials_won_percent": {
+        "won_contest_subtitle": {
           "value": "100.0",
           "per90": 100,
           "percentile": 100
         },
+        "duel_won": {
+          "value": "4",
+          "per90": 3.33,
+          "percentile": 26
+        },
+        "duel_won_percent": {
+          "value": "57.1",
+          "per90": 57.14,
+          "percentile": 32
+        },
+        "aerials_won": {
+          "value": "2",
+          "per90": 1.67,
+          "percentile": 40
+        },
+        "aerials_won_percent": {
+          "value": "66.7",
+          "per90": 66.67,
+          "percentile": 42
+        },
         "touches": {
-          "value": "43",
-          "per90": 86,
-          "percentile": 28
+          "value": "81",
+          "per90": 67.5,
+          "percentile": 38
         },
         "touches_opp_box": {
-          "value": "1",
-          "per90": 2,
-          "percentile": 62
+          "value": "2",
+          "per90": 1.67,
+          "percentile": 75
         },
         "dispossessed": {
           "value": "1",
-          "per90": 2,
-          "percentile": 1
+          "per90": 0.83,
+          "percentile": 5
         },
         "defensive_actions": {
+          "value": "10",
+          "per90": 8.33,
+          "percentile": 52
+        },
+        "matchstats.headers.tackles": {
           "value": "1",
-          "per90": 2,
-          "percentile": 18
+          "per90": 0.83,
+          "percentile": 19
         },
         "interceptions": {
+          "value": "3",
+          "per90": 2.5,
+          "percentile": 90
+        },
+        "blocked_shots": {
           "value": "1",
-          "per90": 2,
-          "percentile": 60
+          "per90": 0.83,
+          "percentile": 38
+        },
+        "recoveries": {
+          "value": "2",
+          "per90": 1.67,
+          "percentile": 10
+        },
+        "dribbled_past": {
+          "value": "1",
+          "per90": 0.83,
+          "percentile": 14
+        },
+        "clearances": {
+          "value": "5",
+          "per90": 4.17,
+          "percentile": 43
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -842,9 +1163,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
+          "value": "2",
+          "per90": 1.67,
+          "percentile": 56
         },
         "yellow_cards": {
           "value": "0",
@@ -857,24 +1178,24 @@
           "percentile": 0
         },
         "rating": {
-          "value": "6.26",
-          "per90": 6.26,
-          "percentile": 36
+          "value": "6.44",
+          "per90": 6.45,
+          "percentile": 38
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "minutes_played": {
-          "value": "45",
+          "value": "108",
           "per90": 90,
-          "percentile": 0
+          "percentile": 48
         }
       },
       "traits": null,
@@ -942,7 +1263,7 @@
         "rating": {
           "value": "6.22",
           "per90": 6.22,
-          "percentile": 37
+          "percentile": 27
         },
         "matches_uppercase": {
           "value": "1",
@@ -957,7 +1278,7 @@
         "minutes_played": {
           "value": "22",
           "per90": 90,
-          "percentile": 10
+          "percentile": 8
         }
       },
       "traits": null,
@@ -975,15 +1296,15 @@
       "nationality": "England",
       "position": "centerback",
       "posGroup": "DF",
-      "jersey": "80",
+      "jersey": "",
       "age": 17,
       "height": "",
       "preferredFoot": "",
       "marketValue": {
-        "value": 3288176,
+        "value": 2630540,
         "currency": "EUR"
       },
-      "contractEnd": "2027-06-30",
+      "contractEnd": null,
       "positionLabel": "Center Back",
       "career": [
         {
@@ -999,16 +1320,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
-          "starts": 1,
+          "appearances": 2,
+          "starts": 2,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 90,
+          "minutesPlayed": 180,
           "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 7.6
+          "goalsConceded": 3,
+          "avgRating": 7.2
         }
       },
       "stats": {
@@ -1019,18 +1340,18 @@
         },
         "shots": {
           "value": "2",
-          "per90": 2,
-          "percentile": 92
+          "per90": 1,
+          "percentile": 90
         },
         "ShotsOnTarget": {
           "value": "2",
-          "per90": 2,
+          "per90": 1,
           "percentile": 100
         },
         "headed_shots": {
           "value": "1",
-          "per90": 1,
-          "percentile": 72
+          "per90": 0.5,
+          "percentile": 68
         },
         "assists": {
           "value": "0",
@@ -1038,29 +1359,29 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "74",
-          "per90": 74,
-          "percentile": 90
+          "value": "111",
+          "per90": 55.5,
+          "percentile": 86
         },
         "successful_passes_accuracy": {
-          "value": "91.4",
-          "per90": 91.36,
-          "percentile": 69
+          "value": "91.0",
+          "per90": 90.98,
+          "percentile": 71
         },
         "long_balls_accurate": {
           "value": "3",
-          "per90": 3,
-          "percentile": 69
+          "per90": 1.5,
+          "percentile": 35
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "42.9",
-          "per90": 42.86,
-          "percentile": 54
+          "value": "30.0",
+          "per90": 30,
+          "percentile": 22
         },
         "dribbles_succeeded": {
           "value": "1",
-          "per90": 1,
-          "percentile": 94
+          "per90": 0.5,
+          "percentile": 78
         },
         "won_contest_subtitle": {
           "value": "100.0",
@@ -1068,69 +1389,79 @@
           "percentile": 100
         },
         "duel_won": {
-          "value": "7",
-          "per90": 7,
-          "percentile": 89
+          "value": "13",
+          "per90": 6.5,
+          "percentile": 94
         },
         "duel_won_percent": {
-          "value": "63.6",
-          "per90": 63.64,
-          "percentile": 64
+          "value": "68.4",
+          "per90": 68.42,
+          "percentile": 65
         },
         "aerials_won": {
-          "value": "1",
+          "value": "2",
           "per90": 1,
-          "percentile": 33
+          "percentile": 40
         },
         "aerials_won_percent": {
-          "value": "50.0",
-          "per90": 50,
-          "percentile": 35
+          "value": "66.7",
+          "per90": 66.67,
+          "percentile": 42
         },
         "touches": {
-          "value": "101",
-          "per90": 101,
-          "percentile": 94
+          "value": "160",
+          "per90": 80,
+          "percentile": 90
         },
         "touches_opp_box": {
           "value": "4",
-          "per90": 4,
-          "percentile": 100
+          "per90": 2,
+          "percentile": 92
         },
         "dispossessed": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
+          "value": "2",
+          "per90": 1,
+          "percentile": 0
         },
         "fouls_won": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 88
+          "value": "4",
+          "per90": 2,
+          "percentile": 94
         },
         "defensive_actions": {
-          "value": "8",
-          "per90": 8,
-          "percentile": 62
+          "value": "19",
+          "per90": 9.5,
+          "percentile": 90
         },
         "matchstats.headers.tackles": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 61
+          "value": "6",
+          "per90": 3,
+          "percentile": 92
+        },
+        "interceptions": {
+          "value": "3",
+          "per90": 1.5,
+          "percentile": 90
+        },
+        "blocked_shots": {
+          "value": "1",
+          "per90": 0.5,
+          "percentile": 38
         },
         "fouls": {
           "value": "3",
-          "per90": 3,
-          "percentile": 4
+          "per90": 1.5,
+          "percentile": 5
         },
         "recoveries": {
-          "value": "5",
-          "per90": 5,
-          "percentile": 76
+          "value": "8",
+          "per90": 4,
+          "percentile": 78
         },
         "clearances": {
-          "value": "6",
-          "per90": 6,
-          "percentile": 69
+          "value": "9",
+          "per90": 4.5,
+          "percentile": 74
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -1138,9 +1469,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 53
+          "value": "3",
+          "per90": 1.5,
+          "percentile": 35
         },
         "yellow_cards": {
           "value": "0",
@@ -1153,61 +1484,27 @@
           "percentile": 0
         },
         "rating": {
-          "value": "7.61",
-          "per90": 7.61,
-          "percentile": 92
+          "value": "7.18",
+          "per90": 7.17,
+          "percentile": 75
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "minutes_played": {
-          "value": "90",
+          "value": "180",
           "per90": 90,
-          "percentile": 19
+          "percentile": 100
         }
       },
-      "traits": {
-        "title": "Stats compared to other center-backs",
-        "items": [
-          {
-            "key": "chances_created",
-            "title": "Chances created",
-            "value": 3
-          },
-          {
-            "key": "aerials_won",
-            "title": "Aerial duels",
-            "value": 8
-          },
-          {
-            "key": "defensive_actions",
-            "title": "Defensive actions",
-            "value": 8
-          },
-          {
-            "key": "goals",
-            "title": "Goals",
-            "value": 0
-          },
-          {
-            "key": "shot_attempts",
-            "title": "Shot attempts",
-            "value": 24
-          },
-          {
-            "key": "touches",
-            "title": "Touches",
-            "value": 21
-          }
-        ]
-      },
+      "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027"
@@ -1268,16 +1565,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 0,
+          "appearances": 1,
           "starts": 0,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 0,
+          "minutesPlayed": 15,
           "cleanSheets": 0,
-          "goalsConceded": 0,
-          "avgRating": null
+          "goalsConceded": 2,
+          "avgRating": 5.7
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -1299,160 +1596,30 @@
           "per90": 0,
           "percentile": 0
         },
-        "shots": {
-          "value": "2",
-          "per90": 2.54,
-          "percentile": 30
-        },
         "assists": {
           "value": "0",
           "per90": 0,
           "percentile": 0
         },
-        "successful_passes": {
-          "value": "9",
-          "per90": 11.41,
-          "percentile": 0
-        },
-        "successful_passes_accuracy": {
-          "value": "64.3",
-          "per90": 64.29,
-          "percentile": 20
-        },
-        "chances_created": {
-          "value": "1",
-          "per90": 1.27,
-          "percentile": 20
-        },
-        "crosses_succeeeded": {
-          "value": "1",
-          "per90": 1.27,
-          "percentile": 50
-        },
-        "crosses_succeeeded_accuracy": {
-          "value": "20.0",
-          "per90": 20,
-          "percentile": 70
-        },
-        "dribbles_succeeded": {
-          "value": "1",
-          "per90": 1.27,
-          "percentile": 0
-        },
-        "won_contest_subtitle": {
-          "value": "100.0",
-          "per90": 100,
-          "percentile": 100
-        },
-        "duel_won": {
-          "value": "9",
-          "per90": 11.41,
-          "percentile": 70
-        },
-        "duel_won_percent": {
-          "value": "56.2",
-          "per90": 56.25,
-          "percentile": 70
-        },
-        "aerials_won": {
-          "value": "1",
-          "per90": 1.27,
-          "percentile": 40
-        },
-        "aerials_won_percent": {
-          "value": "50.0",
-          "per90": 50,
-          "percentile": 70
-        },
-        "touches": {
-          "value": "42",
-          "per90": 53.24,
-          "percentile": 30
-        },
-        "dispossessed": {
-          "value": "2",
-          "per90": 2.54,
-          "percentile": 30
-        },
-        "fouls_won": {
-          "value": "4",
-          "per90": 5.07,
-          "percentile": 100
-        },
-        "defensive_actions": {
-          "value": "8",
-          "per90": 10.14,
-          "percentile": 100
-        },
-        "matchstats.headers.tackles": {
-          "value": "3",
-          "per90": 3.8,
-          "percentile": 80
-        },
-        "interceptions": {
-          "value": "1",
-          "per90": 1.27,
-          "percentile": 50
-        },
-        "blocked_shots": {
-          "value": "1",
-          "per90": 1.27,
-          "percentile": 100
-        },
-        "fouls": {
-          "value": "2",
-          "per90": 2.54,
-          "percentile": 10
-        },
-        "dribbled_past": {
-          "value": "2",
-          "per90": 2.54,
-          "percentile": 0
-        },
-        "clearances": {
-          "value": "3",
-          "per90": 3.8,
-          "percentile": 80
-        },
-        "clean_sheet_team_title": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 0
-        },
-        "goals_conceded_while_on_pitch": {
-          "value": "5",
-          "per90": 6.34,
-          "percentile": 0
-        },
-        "yellow_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
-        },
-        "red_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 0
-        },
         "rating": {
-          "value": "6.58",
-          "per90": 6.58,
-          "percentile": 10
+          "value": "5.72",
+          "per90": 5.72,
+          "percentile": 9
         },
         "matches_uppercase": {
           "value": "1",
           "per90": 1,
-          "percentile": 100
+          "percentile": 0
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 100
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
         },
         "minutes_played": {
-          "value": "71",
+          "value": "15",
           "per90": 90,
-          "percentile": 30
+          "percentile": 5
         }
       },
       "traits": null,
@@ -1470,12 +1637,12 @@
       "nationality": "England",
       "position": "centermidfielder",
       "posGroup": "MF",
-      "jersey": "",
+      "jersey": "39",
       "age": 19,
       "height": "175 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 201600,
+        "value": 241920,
         "currency": "EUR"
       },
       "contractEnd": null,
@@ -1547,16 +1714,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
-          "starts": 1,
+          "appearances": 2,
+          "starts": 2,
           "goals": 0,
-          "assists": 0,
+          "assists": 1,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 90,
+          "minutesPlayed": 165,
           "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 6.9
+          "goalsConceded": 3,
+          "avgRating": 7.0
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -1580,103 +1747,108 @@
         },
         "shots": {
           "value": "1",
-          "per90": 1,
-          "percentile": 40
+          "per90": 0.55,
+          "percentile": 33
         },
         "assists": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 0
+          "value": "1",
+          "per90": 0.55,
+          "percentile": 73
         },
         "successful_passes": {
-          "value": "46",
-          "per90": 46,
-          "percentile": 82
+          "value": "78",
+          "per90": 42.55,
+          "percentile": 79
         },
         "successful_passes_accuracy": {
-          "value": "86.8",
-          "per90": 86.79,
-          "percentile": 70
+          "value": "89.7",
+          "per90": 89.66,
+          "percentile": 85
         },
         "long_balls_accurate": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 56
+          "value": "3",
+          "per90": 1.64,
+          "percentile": 52
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "66.7",
-          "per90": 66.67,
-          "percentile": 67
+          "value": "60.0",
+          "per90": 60,
+          "percentile": 61
         },
         "chances_created": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 36
+          "value": "2",
+          "per90": 1.09,
+          "percentile": 57
         },
         "dribbles_succeeded": {
           "value": "2",
-          "per90": 2,
-          "percentile": 79
+          "per90": 1.09,
+          "percentile": 71
         },
         "won_contest_subtitle": {
           "value": "50.0",
           "per90": 50,
-          "percentile": 60
+          "percentile": 50
         },
         "duel_won": {
           "value": "3",
-          "per90": 3,
-          "percentile": 23
+          "per90": 1.64,
+          "percentile": 11
         },
         "duel_won_percent": {
-          "value": "33.3",
-          "per90": 33.33,
-          "percentile": 12
+          "value": "23.1",
+          "per90": 23.08,
+          "percentile": 5
         },
         "touches": {
-          "value": "65",
-          "per90": 65,
-          "percentile": 79
-        },
-        "touches_opp_box": {
-          "value": "3",
-          "per90": 3,
+          "value": "101",
+          "per90": 55.09,
           "percentile": 73
         },
+        "touches_opp_box": {
+          "value": "4",
+          "per90": 2.18,
+          "percentile": 79
+        },
         "dispossessed": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
+          "value": "1",
+          "per90": 0.55,
+          "percentile": 33
         },
         "defensive_actions": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 18
+          "value": "3",
+          "per90": 1.64,
+          "percentile": 22
         },
         "matchstats.headers.tackles": {
           "value": "1",
-          "per90": 1,
-          "percentile": 18
+          "per90": 0.55,
+          "percentile": 13
+        },
+        "interceptions": {
+          "value": "1",
+          "per90": 0.55,
+          "percentile": 34
         },
         "fouls": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 38
+          "value": "2",
+          "per90": 1.09,
+          "percentile": 30
         },
         "recoveries": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 37
+          "value": "6",
+          "per90": 3.27,
+          "percentile": 47
         },
         "dribbled_past": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 8
+          "value": "4",
+          "per90": 2.18,
+          "percentile": 2
         },
         "clearances": {
           "value": "1",
-          "per90": 1,
-          "percentile": 43
+          "per90": 0.55,
+          "percentile": 35
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -1684,9 +1856,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 48
+          "value": "3",
+          "per90": 1.64,
+          "percentile": 31
         },
         "yellow_cards": {
           "value": "0",
@@ -1699,24 +1871,24 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.90",
-          "per90": 6.9,
-          "percentile": 39
+          "value": "6.99",
+          "per90": 6.99,
+          "percentile": 41
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "minutes_played": {
-          "value": "90",
+          "value": "165",
           "per90": 90,
-          "percentile": 27
+          "percentile": 65
         }
       },
       "traits": null,
@@ -1755,16 +1927,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
-          "starts": 1,
+          "appearances": 2,
+          "starts": 2,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 78,
+          "minutesPlayed": 168,
           "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 6.4
+          "goalsConceded": 3,
+          "avgRating": 6.7
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -1787,9 +1959,9 @@
           "percentile": 0
         },
         "shots": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 0
+          "value": "1",
+          "per90": 0.54,
+          "percentile": 47
         },
         "assists": {
           "value": "0",
@@ -1797,74 +1969,94 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "35",
-          "per90": 40.38,
-          "percentile": 71
+          "value": "69",
+          "per90": 36.96,
+          "percentile": 77
         },
         "successful_passes_accuracy": {
-          "value": "85.4",
-          "per90": 85.37,
-          "percentile": 73
+          "value": "81.2",
+          "per90": 81.18,
+          "percentile": 57
         },
         "long_balls_accurate": {
-          "value": "3",
-          "per90": 3.46,
-          "percentile": 81
+          "value": "4",
+          "per90": 2.14,
+          "percentile": 68
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "100.0",
-          "per90": 100,
-          "percentile": 100
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 56
         },
         "duel_won": {
-          "value": "3",
-          "per90": 3.46,
-          "percentile": 27
+          "value": "8",
+          "per90": 4.29,
+          "percentile": 65
         },
         "duel_won_percent": {
           "value": "50.0",
           "per90": 50,
-          "percentile": 34
+          "percentile": 31
         },
         "touches": {
-          "value": "54",
-          "per90": 62.31,
-          "percentile": 39
+          "value": "115",
+          "per90": 61.61,
+          "percentile": 65
         },
         "touches_opp_box": {
-          "value": "2",
-          "per90": 2.31,
-          "percentile": 68
+          "value": "3",
+          "per90": 1.61,
+          "percentile": 75
         },
         "dispossessed": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
+          "value": "1",
+          "per90": 0.54,
+          "percentile": 27
         },
         "fouls_won": {
-          "value": "1",
-          "per90": 1.15,
-          "percentile": 24
+          "value": "2",
+          "per90": 1.07,
+          "percentile": 55
         },
         "defensive_actions": {
-          "value": "2",
-          "per90": 2.31,
-          "percentile": 13
+          "value": "11",
+          "per90": 5.89,
+          "percentile": 67
         },
         "matchstats.headers.tackles": {
-          "value": "2",
-          "per90": 2.31,
-          "percentile": 48
+          "value": "6",
+          "per90": 3.21,
+          "percentile": 88
+        },
+        "interceptions": {
+          "value": "1",
+          "per90": 0.54,
+          "percentile": 32
+        },
+        "blocked_shots": {
+          "value": "1",
+          "per90": 0.54,
+          "percentile": 73
         },
         "fouls": {
-          "value": "1",
-          "per90": 1.15,
-          "percentile": 45
+          "value": "3",
+          "per90": 1.61,
+          "percentile": 11
+        },
+        "recoveries": {
+          "value": "3",
+          "per90": 1.61,
+          "percentile": 17
         },
         "dribbled_past": {
-          "value": "2",
-          "per90": 2.31,
-          "percentile": 6
+          "value": "4",
+          "per90": 2.14,
+          "percentile": 3
+        },
+        "clearances": {
+          "value": "3",
+          "per90": 1.61,
+          "percentile": 44
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -1872,9 +2064,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "1",
-          "per90": 1.15,
-          "percentile": 55
+          "value": "3",
+          "per90": 1.61,
+          "percentile": 36
         },
         "yellow_cards": {
           "value": "0",
@@ -1887,9 +2079,186 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.36",
-          "per90": 6.36,
-          "percentile": 37
+          "value": "6.64",
+          "per90": 6.64,
+          "percentile": 41
+        },
+        "matches_uppercase": {
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
+        },
+        "player_started_matches": {
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
+        },
+        "minutes_played": {
+          "value": "168",
+          "per90": 90,
+          "percentile": 68
+        }
+      },
+      "traits": null,
+      "shotmap": [],
+      "heatmap": [],
+      "season": "2026/2027"
+    },
+    {
+      "id": 1435434,
+      "squadLevels": [
+        "academy"
+      ],
+      "name": "James Scanlon",
+      "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/1435434.png",
+      "nationality": "Gibraltar",
+      "position": "leftwinger",
+      "posGroup": "FW",
+      "jersey": "",
+      "age": 19,
+      "height": "180 cm",
+      "preferredFoot": "Right",
+      "marketValue": {
+        "value": 505434,
+        "currency": "EUR"
+      },
+      "contractEnd": null,
+      "positionLabel": "Left Winger",
+      "career": [
+        {
+          "team": "Swindon Town",
+          "startDate": "2026-02",
+          "endDate": "2026-06",
+          "active": false,
+          "appearances": "6",
+          "goals": "1",
+          "assists": "0"
+        },
+        {
+          "team": "Manchester United",
+          "startDate": "2024-07",
+          "endDate": "2025-06",
+          "active": false,
+          "appearances": null,
+          "goals": null,
+          "assists": null
+        }
+      ],
+      "competitions": {
+        "PL2": {
+          "name": "프리미어리그 2",
+          "appearances": 1,
+          "starts": 1,
+          "goals": 1,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 63,
+          "cleanSheets": 0,
+          "goalsConceded": 2,
+          "avgRating": 7.4
+        }
+      },
+      "stats": {
+        "goals": {
+          "value": "1",
+          "per90": 1.43,
+          "percentile": 75
+        },
+        "shots": {
+          "value": "1",
+          "per90": 1.43,
+          "percentile": 20
+        },
+        "ShotsOnTarget": {
+          "value": "1",
+          "per90": 1.43,
+          "percentile": 46
+        },
+        "assists": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "successful_passes": {
+          "value": "9",
+          "per90": 12.86,
+          "percentile": 13
+        },
+        "successful_passes_accuracy": {
+          "value": "75.0",
+          "per90": 75,
+          "percentile": 36
+        },
+        "duel_won": {
+          "value": "1",
+          "per90": 1.43,
+          "percentile": 5
+        },
+        "duel_won_percent": {
+          "value": "33.3",
+          "per90": 33.33,
+          "percentile": 16
+        },
+        "touches": {
+          "value": "16",
+          "per90": 22.86,
+          "percentile": 5
+        },
+        "touches_opp_box": {
+          "value": "2",
+          "per90": 2.86,
+          "percentile": 22
+        },
+        "dispossessed": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "defensive_actions": {
+          "value": "1",
+          "per90": 1.43,
+          "percentile": 6
+        },
+        "matchstats.headers.tackles": {
+          "value": "1",
+          "per90": 1.43,
+          "percentile": 14
+        },
+        "fouls": {
+          "value": "1",
+          "per90": 1.43,
+          "percentile": 44
+        },
+        "recoveries": {
+          "value": "1",
+          "per90": 1.43,
+          "percentile": 7
+        },
+        "clean_sheet_team_title": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "goals_conceded_while_on_pitch": {
+          "value": "2",
+          "per90": 2.86,
+          "percentile": 49
+        },
+        "yellow_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "7.44",
+          "per90": 7.44,
+          "percentile": 72
         },
         "matches_uppercase": {
           "value": "1",
@@ -1902,12 +2271,46 @@
           "percentile": 0
         },
         "minutes_played": {
-          "value": "78",
+          "value": "63",
           "per90": 90,
-          "percentile": 23
+          "percentile": 10
         }
       },
-      "traits": null,
+      "traits": {
+        "title": "Stats compared to other attacking midfielders/wingers",
+        "items": [
+          {
+            "key": "chances_created",
+            "title": "Chances created",
+            "value": 5
+          },
+          {
+            "key": "aerials_won",
+            "title": "Aerial duels",
+            "value": 15
+          },
+          {
+            "key": "defensive_actions",
+            "title": "Defensive actions",
+            "value": 8
+          },
+          {
+            "key": "goals",
+            "title": "Goals",
+            "value": 13
+          },
+          {
+            "key": "shot_attempts",
+            "title": "Shot attempts",
+            "value": 11
+          },
+          {
+            "key": "touches",
+            "title": "Touches",
+            "value": 6
+          }
+        ]
+      },
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027"
@@ -1943,16 +2346,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
-          "starts": 1,
+          "appearances": 2,
+          "starts": 2,
           "goals": 1,
           "assists": 0,
           "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 90,
+          "minutesPlayed": 180,
           "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 7.1
+          "goalsConceded": 3,
+          "avgRating": 7.0
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -1971,18 +2374,18 @@
       "stats": {
         "goals": {
           "value": "1",
-          "per90": 1,
-          "percentile": 80
+          "per90": 0.5,
+          "percentile": 45
         },
         "shots": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 42
+          "value": "3",
+          "per90": 1.5,
+          "percentile": 30
         },
         "ShotsOnTarget": {
           "value": "1",
-          "per90": 1,
-          "percentile": 46
+          "per90": 0.5,
+          "percentile": 25
         },
         "assists": {
           "value": "0",
@@ -1990,79 +2393,104 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "10",
-          "per90": 10,
-          "percentile": 38
+          "value": "27",
+          "per90": 13.5,
+          "percentile": 92
         },
         "successful_passes_accuracy": {
-          "value": "83.3",
-          "per90": 83.33,
-          "percentile": 66
+          "value": "81.8",
+          "per90": 81.82,
+          "percentile": 70
+        },
+        "chances_created": {
+          "value": "2",
+          "per90": 1,
+          "percentile": 62
         },
         "crosses_succeeeded": {
           "value": "1",
-          "per90": 1,
-          "percentile": 85
+          "per90": 0.5,
+          "percentile": 78
         },
         "crosses_succeeeded_accuracy": {
-          "value": "50.0",
-          "per90": 50,
-          "percentile": 90
+          "value": "25.0",
+          "per90": 25,
+          "percentile": 78
         },
         "duel_won": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 25
+          "value": "7",
+          "per90": 3.5,
+          "percentile": 60
         },
         "duel_won_percent": {
-          "value": "16.7",
-          "per90": 16.67,
-          "percentile": 18
+          "value": "28.0",
+          "per90": 28,
+          "percentile": 28
         },
-        "touches": {
-          "value": "30",
-          "per90": 30,
-          "percentile": 39
-        },
-        "touches_opp_box": {
-          "value": "5",
-          "per90": 5,
-          "percentile": 68
-        },
-        "dispossessed": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 4
-        },
-        "fouls_won": {
+        "aerials_won": {
           "value": "1",
-          "per90": 1,
-          "percentile": 21
+          "per90": 0.5,
+          "percentile": 35
         },
-        "defensive_actions": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 25
-        },
-        "matchstats.headers.tackles": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 37
-        },
-        "fouls": {
-          "value": "1",
-          "per90": 1,
+        "aerials_won_percent": {
+          "value": "25.0",
+          "per90": 25,
           "percentile": 42
         },
-        "recoveries": {
-          "value": "3",
+        "touches": {
+          "value": "71",
+          "per90": 35.5,
+          "percentile": 90
+        },
+        "touches_opp_box": {
+          "value": "9",
+          "per90": 4.5,
+          "percentile": 52
+        },
+        "dispossessed": {
+          "value": "4",
+          "per90": 2,
+          "percentile": 10
+        },
+        "fouls_won": {
+          "value": "4",
+          "per90": 2,
+          "percentile": 80
+        },
+        "defensive_actions": {
+          "value": "6",
           "per90": 3,
-          "percentile": 45
+          "percentile": 92
+        },
+        "matchstats.headers.tackles": {
+          "value": "2",
+          "per90": 1,
+          "percentile": 70
+        },
+        "interceptions": {
+          "value": "2",
+          "per90": 1,
+          "percentile": 100
+        },
+        "fouls": {
+          "value": "3",
+          "per90": 1.5,
+          "percentile": 12
+        },
+        "recoveries": {
+          "value": "7",
+          "per90": 3.5,
+          "percentile": 82
         },
         "dribbled_past": {
           "value": "1",
+          "per90": 0.5,
+          "percentile": 10
+        },
+        "clearances": {
+          "value": "2",
           "per90": 1,
-          "percentile": 7
+          "percentile": 88
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -2070,14 +2498,14 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 54
+          "value": "3",
+          "per90": 1.5,
+          "percentile": 40
         },
         "yellow_cards": {
           "value": "1",
-          "per90": 1,
-          "percentile": 1
+          "per90": 0.5,
+          "percentile": 5
         },
         "red_cards": {
           "value": "0",
@@ -2085,24 +2513,24 @@
           "percentile": 100
         },
         "rating": {
-          "value": "7.08",
-          "per90": 7.08,
-          "percentile": 61
+          "value": "7.06",
+          "per90": 7.06,
+          "percentile": 50
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "minutes_played": {
-          "value": "90",
+          "value": "180",
           "per90": 90,
-          "percentile": 34
+          "percentile": 100
         }
       },
       "traits": null,
@@ -2125,7 +2553,7 @@
       "height": "180 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 858681,
+        "value": 857375,
         "currency": "EUR"
       },
       "contractEnd": null,
@@ -2153,16 +2581,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
+          "appearances": 2,
           "starts": 1,
-          "goals": 0,
+          "goals": 1,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 64,
+          "minutesPlayed": 79,
           "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 5.9
+          "goalsConceded": 3,
+          "avgRating": 6.4
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -2180,14 +2608,19 @@
       },
       "stats": {
         "goals": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 0
+          "value": "1",
+          "per90": 1.14,
+          "percentile": 45
         },
         "shots": {
+          "value": "3",
+          "per90": 3.42,
+          "percentile": 30
+        },
+        "ShotsOnTarget": {
           "value": "1",
-          "per90": 1.41,
-          "percentile": 8
+          "per90": 1.14,
+          "percentile": 25
         },
         "assists": {
           "value": "0",
@@ -2195,54 +2628,54 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "4",
-          "per90": 5.62,
-          "percentile": 5
+          "value": "7",
+          "per90": 7.97,
+          "percentile": 22
         },
         "successful_passes_accuracy": {
-          "value": "100.0",
-          "per90": 100,
-          "percentile": 100
+          "value": "87.5",
+          "per90": 87.5,
+          "percentile": 88
         },
         "duel_won": {
           "value": "1",
-          "per90": 1.41,
-          "percentile": 5
+          "per90": 1.14,
+          "percentile": 8
         },
         "duel_won_percent": {
-          "value": "25.0",
-          "per90": 25,
-          "percentile": 24
+          "value": "20.0",
+          "per90": 20,
+          "percentile": 18
         },
         "touches": {
-          "value": "11",
-          "per90": 15.47,
-          "percentile": 8
+          "value": "22",
+          "per90": 25.06,
+          "percentile": 20
         },
         "touches_opp_box": {
-          "value": "2",
-          "per90": 2.81,
-          "percentile": 21
+          "value": "5",
+          "per90": 5.7,
+          "percentile": 25
         },
         "dispossessed": {
-          "value": "3",
-          "per90": 4.22,
-          "percentile": 8
+          "value": "4",
+          "per90": 4.56,
+          "percentile": 10
         },
         "defensive_actions": {
           "value": "1",
-          "per90": 1.41,
-          "percentile": 32
+          "per90": 1.14,
+          "percentile": 22
         },
         "matchstats.headers.tackles": {
           "value": "1",
-          "per90": 1.41,
-          "percentile": 61
+          "per90": 1.14,
+          "percentile": 45
         },
         "recoveries": {
           "value": "2",
-          "per90": 2.81,
-          "percentile": 37
+          "per90": 2.28,
+          "percentile": 28
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -2251,8 +2684,8 @@
         },
         "goals_conceded_while_on_pitch": {
           "value": "1",
-          "per90": 1.41,
-          "percentile": 55
+          "per90": 1.14,
+          "percentile": 70
         },
         "yellow_cards": {
           "value": "0",
@@ -2262,17 +2695,17 @@
         "red_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "rating": {
-          "value": "5.94",
-          "per90": 5.94,
-          "percentile": 16
+          "value": "6.43",
+          "per90": 6.43,
+          "percentile": 30
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "player_started_matches": {
           "value": "1",
@@ -2280,9 +2713,9 @@
           "percentile": 0
         },
         "minutes_played": {
-          "value": "64",
+          "value": "79",
           "per90": 90,
-          "percentile": 13
+          "percentile": 18
         }
       },
       "traits": null,
@@ -2330,16 +2763,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
-          "starts": 1,
+          "appearances": 2,
+          "starts": 2,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 90,
+          "minutesPlayed": 180,
           "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 7.4
+          "goalsConceded": 3,
+          "avgRating": 7.0
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -2362,9 +2795,14 @@
           "percentile": 0
         },
         "shots": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 65
+          "value": "3",
+          "per90": 1.5,
+          "percentile": 70
+        },
+        "ShotsOnTarget": {
+          "value": "1",
+          "per90": 0.5,
+          "percentile": 59
         },
         "assists": {
           "value": "0",
@@ -2372,104 +2810,104 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "28",
-          "per90": 28,
-          "percentile": 58
+          "value": "44",
+          "per90": 22,
+          "percentile": 59
         },
         "successful_passes_accuracy": {
-          "value": "82.4",
-          "per90": 82.35,
-          "percentile": 49
+          "value": "80.0",
+          "per90": 80,
+          "percentile": 32
         },
         "long_balls_accurate": {
-          "value": "2",
+          "value": "4",
           "per90": 2,
-          "percentile": 56
+          "percentile": 65
         },
         "long_ball_succeeeded_accuracy": {
           "value": "66.7",
           "per90": 66.67,
-          "percentile": 67
+          "percentile": 66
         },
         "chances_created": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 89
+          "value": "4",
+          "per90": 2,
+          "percentile": 83
         },
         "crosses_succeeeded": {
-          "value": "2",
+          "value": "4",
           "per90": 2,
-          "percentile": 92
+          "percentile": 97
         },
         "crosses_succeeeded_accuracy": {
-          "value": "33.3",
-          "per90": 33.33,
-          "percentile": 80
+          "value": "36.4",
+          "per90": 36.36,
+          "percentile": 82
         },
         "dribbles_succeeded": {
           "value": "1",
-          "per90": 1,
-          "percentile": 49
+          "per90": 0.5,
+          "percentile": 41
         },
         "won_contest_subtitle": {
-          "value": "100.0",
-          "per90": 100,
-          "percentile": 100
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 50
         },
         "duel_won": {
-          "value": "5",
-          "per90": 5,
-          "percentile": 44
+          "value": "12",
+          "per90": 6,
+          "percentile": 88
         },
         "duel_won_percent": {
-          "value": "71.4",
-          "per90": 71.43,
-          "percentile": 90
+          "value": "60.0",
+          "per90": 60,
+          "percentile": 73
         },
         "touches": {
-          "value": "54",
-          "per90": 54,
-          "percentile": 62
+          "value": "94",
+          "per90": 47,
+          "percentile": 69
         },
         "touches_opp_box": {
-          "value": "5",
-          "per90": 5,
-          "percentile": 87
+          "value": "8",
+          "per90": 4,
+          "percentile": 91
         },
         "dispossessed": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 15
+          "value": "4",
+          "per90": 2,
+          "percentile": 2
         },
         "fouls_won": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 77
+          "value": "8",
+          "per90": 4,
+          "percentile": 100
         },
         "defensive_actions": {
-          "value": "2",
+          "value": "4",
           "per90": 2,
-          "percentile": 18
+          "percentile": 32
         },
         "matchstats.headers.tackles": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 18
+          "value": "3",
+          "per90": 1.5,
+          "percentile": 48
         },
         "fouls": {
           "value": "1",
-          "per90": 1,
-          "percentile": 38
+          "per90": 0.5,
+          "percentile": 60
         },
         "recoveries": {
-          "value": "6",
-          "per90": 6,
-          "percentile": 71
+          "value": "8",
+          "per90": 4,
+          "percentile": 69
         },
         "clearances": {
           "value": "1",
-          "per90": 1,
-          "percentile": 43
+          "per90": 0.5,
+          "percentile": 35
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -2477,9 +2915,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 48
+          "value": "3",
+          "per90": 1.5,
+          "percentile": 31
         },
         "yellow_cards": {
           "value": "0",
@@ -2492,24 +2930,24 @@
           "percentile": 100
         },
         "rating": {
-          "value": "7.43",
-          "per90": 7.43,
-          "percentile": 62
+          "value": "7.01",
+          "per90": 7.01,
+          "percentile": 45
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "minutes_played": {
-          "value": "90",
+          "value": "180",
           "per90": 90,
-          "percentile": 27
+          "percentile": 100
         }
       },
       "traits": null,
@@ -2566,16 +3004,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
-          "starts": 1,
+          "appearances": 2,
+          "starts": 2,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 90,
+          "minutesPlayed": 165,
           "cleanSheets": 0,
-          "goalsConceded": 1,
-          "avgRating": 6.4
+          "goalsConceded": 3,
+          "avgRating": 6.5
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -2598,9 +3036,9 @@
           "percentile": 0
         },
         "shots": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 0
+          "value": "2",
+          "per90": 1.09,
+          "percentile": 42
         },
         "assists": {
           "value": "0",
@@ -2608,74 +3046,89 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "21",
-          "per90": 21,
-          "percentile": 70
+          "value": "28",
+          "per90": 15.27,
+          "percentile": 60
         },
         "successful_passes_accuracy": {
-          "value": "75.0",
-          "per90": 75,
-          "percentile": 38
+          "value": "68.3",
+          "per90": 68.29,
+          "percentile": 23
+        },
+        "chances_created": {
+          "value": "1",
+          "per90": 0.55,
+          "percentile": 26
         },
         "crosses_succeeeded": {
           "value": "2",
-          "per90": 2,
-          "percentile": 100
+          "per90": 1.09,
+          "percentile": 81
         },
         "crosses_succeeeded_accuracy": {
-          "value": "22.2",
-          "per90": 22.22,
-          "percentile": 87
-        },
-        "duel_won": {
-          "value": "4",
-          "per90": 4,
-          "percentile": 54
-        },
-        "duel_won_percent": {
-          "value": "44.4",
-          "per90": 44.44,
-          "percentile": 63
-        },
-        "touches": {
-          "value": "46",
-          "per90": 46,
-          "percentile": 76
-        },
-        "touches_opp_box": {
-          "value": "5",
-          "per90": 5,
+          "value": "14.3",
+          "per90": 14.29,
           "percentile": 68
         },
-        "dispossessed": {
-          "value": "1",
-          "per90": 1,
+        "duel_won": {
+          "value": "6",
+          "per90": 3.27,
+          "percentile": 51
+        },
+        "duel_won_percent": {
+          "value": "40.0",
+          "per90": 40,
           "percentile": 32
         },
+        "touches": {
+          "value": "75",
+          "per90": 40.91,
+          "percentile": 72
+        },
+        "touches_opp_box": {
+          "value": "9",
+          "per90": 4.91,
+          "percentile": 76
+        },
+        "dispossessed": {
+          "value": "3",
+          "per90": 1.64,
+          "percentile": 18
+        },
         "fouls_won": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 21
+          "value": "2",
+          "per90": 1.09,
+          "percentile": 49
         },
         "defensive_actions": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 58
+          "value": "5",
+          "per90": 2.73,
+          "percentile": 68
         },
         "matchstats.headers.tackles": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 85
+          "value": "4",
+          "per90": 2.18,
+          "percentile": 78
+        },
+        "interceptions": {
+          "value": "1",
+          "per90": 0.55,
+          "percentile": 56
+        },
+        "fouls": {
+          "value": "2",
+          "per90": 1.09,
+          "percentile": 24
         },
         "recoveries": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 45
+          "value": "8",
+          "per90": 4.36,
+          "percentile": 85
         },
         "dribbled_past": {
           "value": "1",
-          "per90": 1,
-          "percentile": 7
+          "per90": 0.55,
+          "percentile": 16
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -2683,9 +3136,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 54
+          "value": "3",
+          "per90": 1.64,
+          "percentile": 32
         },
         "yellow_cards": {
           "value": "0",
@@ -2698,24 +3151,94 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.42",
-          "per90": 6.42,
-          "percentile": 38
+          "value": "6.52",
+          "per90": 6.51,
+          "percentile": 29
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
         },
         "player_started_matches": {
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
+        },
+        "minutes_played": {
+          "value": "165",
+          "per90": 90,
+          "percentile": 76
+        }
+      },
+      "traits": null,
+      "shotmap": [],
+      "heatmap": [],
+      "season": "2026/2027"
+    },
+    {
+      "id": 1838813,
+      "squadLevels": [
+        "academy"
+      ],
+      "name": "Louis Zecevic-John",
+      "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/1838813.png",
+      "nationality": "Serbia",
+      "position": "striker",
+      "posGroup": "FW",
+      "jersey": "61",
+      "age": 18,
+      "height": "",
+      "preferredFoot": "",
+      "marketValue": null,
+      "contractEnd": null,
+      "positionLabel": "Striker",
+      "career": [],
+      "competitions": {
+        "PL2": {
+          "name": "프리미어리그 2",
+          "appearances": 2,
+          "starts": 0,
+          "goals": 0,
+          "assists": 1,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 53,
+          "cleanSheets": 0,
+          "goalsConceded": 3,
+          "avgRating": 6.9
+        }
+      },
+      "stats": {
+        "goals": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "assists": {
           "value": "1",
-          "per90": 1,
+          "per90": 1.7,
+          "percentile": 86
+        },
+        "rating": {
+          "value": "6.86",
+          "per90": 6.86,
+          "percentile": 58
+        },
+        "matches_uppercase": {
+          "value": "2",
+          "per90": 2,
+          "percentile": 100
+        },
+        "player_started_matches": {
+          "value": "0",
+          "per90": 0,
           "percentile": 0
         },
         "minutes_played": {
-          "value": "90",
+          "value": "53",
           "per90": 90,
-          "percentile": 34
+          "percentile": 21
         }
       },
       "traits": null,
@@ -2852,7 +3375,23 @@
       "positionLabel": "defender",
       "career": [],
       "competitions": {},
-      "stats": {},
+      "stats": {
+        "goals": {
+          "value": "1",
+          "per90": 0,
+          "percentile": 100
+        },
+        "yellow_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        }
+      },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
@@ -2894,7 +3433,7 @@
       "position": "centerback",
       "posGroup": "DF",
       "jersey": "",
-      "age": 16,
+      "age": 17,
       "height": "",
       "preferredFoot": "",
       "marketValue": null,
@@ -2919,7 +3458,7 @@
       "position": "centerattackingmidfielder",
       "posGroup": "MF",
       "jersey": "",
-      "age": 17,
+      "age": 18,
       "height": "",
       "preferredFoot": "",
       "marketValue": null,
@@ -3030,7 +3569,7 @@
         "rating": {
           "value": "6.38",
           "per90": 6.38,
-          "percentile": 44
+          "percentile": 35
         },
         "matches_uppercase": {
           "value": "1",
@@ -3045,7 +3584,7 @@
         "minutes_played": {
           "value": "12",
           "per90": 90,
-          "percentile": 5
+          "percentile": 4
         }
       },
       "traits": null,
@@ -3076,7 +3615,7 @@
           "startDate": "2026-08",
           "endDate": "2027-06",
           "active": true,
-          "appearances": "5",
+          "appearances": "6",
           "goals": "0",
           "assists": "0"
         }
@@ -3103,19 +3642,29 @@
           "percentile": 0
         },
         "expected_goals": {
-          "value": "0.24",
-          "per90": 0.11,
-          "percentile": 79
+          "value": "0.31",
+          "per90": 0.1,
+          "percentile": 75
+        },
+        "expected_goals_on_target": {
+          "value": "0.07",
+          "per90": 0.02,
+          "percentile": 68
         },
         "non_penalty_xg": {
-          "value": "0.24",
-          "per90": 0.11,
-          "percentile": 80
+          "value": "0.31",
+          "per90": 0.1,
+          "percentile": 76
         },
         "shots": {
-          "value": "3",
-          "per90": 1.44,
-          "percentile": 71
+          "value": "5",
+          "per90": 1.63,
+          "percentile": 81
+        },
+        "ShotsOnTarget": {
+          "value": "1",
+          "per90": 0.33,
+          "percentile": 62
         },
         "assists": {
           "value": "0",
@@ -3123,109 +3672,119 @@
           "percentile": 0
         },
         "expected_assists": {
-          "value": "0.11",
-          "per90": 0.05,
-          "percentile": 45
+          "value": "0.35",
+          "per90": 0.11,
+          "percentile": 77
         },
         "successful_passes": {
-          "value": "12",
-          "per90": 5.78,
-          "percentile": 6
+          "value": "24",
+          "per90": 7.83,
+          "percentile": 10
         },
         "successful_passes_accuracy": {
-          "value": "60.0",
-          "per90": 60,
-          "percentile": 10
+          "value": "68.6",
+          "per90": 68.57,
+          "percentile": 24
         },
         "long_balls_accurate": {
           "value": "1",
-          "per90": 0.48,
-          "percentile": 15
+          "per90": 0.33,
+          "percentile": 9
         },
         "long_ball_succeeeded_accuracy": {
           "value": "33.3",
           "per90": 33.33,
-          "percentile": 37
+          "percentile": 32
         },
         "chances_created": {
-          "value": "2",
-          "per90": 0.96,
-          "percentile": 43
+          "value": "7",
+          "per90": 2.28,
+          "percentile": 90
         },
         "crosses_succeeeded": {
-          "value": "3",
-          "per90": 1.44,
-          "percentile": 79
-        },
-        "crosses_succeeeded_accuracy": {
-          "value": "60.0",
-          "per90": 60,
+          "value": "8",
+          "per90": 2.61,
           "percentile": 93
         },
+        "crosses_succeeeded_accuracy": {
+          "value": "53.3",
+          "per90": 53.33,
+          "percentile": 94
+        },
         "dribbles_succeeded": {
-          "value": "3",
-          "per90": 1.44,
-          "percentile": 83
+          "value": "6",
+          "per90": 1.96,
+          "percentile": 97
         },
         "won_contest_subtitle": {
-          "value": "37.5",
-          "per90": 37.5,
-          "percentile": 48
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 55
         },
         "duel_won": {
-          "value": "6",
-          "per90": 2.89,
-          "percentile": 22
+          "value": "13",
+          "per90": 4.24,
+          "percentile": 47
         },
         "duel_won_percent": {
-          "value": "30.0",
-          "per90": 30,
-          "percentile": 6
+          "value": "37.1",
+          "per90": 37.14,
+          "percentile": 18
         },
         "touches": {
-          "value": "57",
-          "per90": 27.43,
-          "percentile": 16
+          "value": "106",
+          "per90": 34.57,
+          "percentile": 36
         },
         "touches_opp_box": {
-          "value": "8",
-          "per90": 3.85,
-          "percentile": 89
+          "value": "13",
+          "per90": 4.24,
+          "percentile": 92
         },
         "dispossessed": {
-          "value": "4",
-          "per90": 1.93,
-          "percentile": 7
+          "value": "10",
+          "per90": 3.26,
+          "percentile": 0
+        },
+        "fouls_won": {
+          "value": "2",
+          "per90": 0.65,
+          "percentile": 34
         },
         "defensive_actions": {
-          "value": "6",
-          "per90": 2.89,
-          "percentile": 30
+          "value": "8",
+          "per90": 2.61,
+          "percentile": 27
         },
         "matchstats.headers.tackles": {
-          "value": "3",
-          "per90": 1.44,
-          "percentile": 29
+          "value": "5",
+          "per90": 1.63,
+          "percentile": 51
+        },
+        "fouls": {
+          "value": "1",
+          "per90": 0.33,
+          "percentile": 75
         },
         "recoveries": {
-          "value": "10",
-          "per90": 4.81,
-          "percentile": 59
+          "value": "12",
+          "per90": 3.91,
+          "percentile": 58
         },
         "poss_won_att_3rd_team_title": {
-          "value": "2",
-          "per90": 0.96,
-          "percentile": 83
+          "value": "3",
+          "per90": 0.98,
+          "percentile": 90
         },
         "dribbled_past": {
           "value": "4",
-          "per90": 1.93,
-          "percentile": 2
+          "per90": 1.3,
+          "percentile": 11
         },
         "clearances": {
           "value": "3",
-          "per90": 1.44,
-          "percentile": 41
+          "per90": 0.98,
+          "percentile": 31
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -3233,14 +3792,14 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "4",
-          "per90": 1.93,
-          "percentile": 6
+          "value": "5",
+          "per90": 1.63,
+          "percentile": 9
         },
         "expected_goals_against_while_on_pitch": {
-          "value": "3.41",
-          "per90": 1.64,
-          "percentile": 32
+          "value": "3.38",
+          "per90": 1.1,
+          "percentile": 51
         },
         "yellow_cards": {
           "value": "0",
@@ -3250,27 +3809,27 @@
         "red_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "rating": {
-          "value": "6.33",
-          "per90": 6.33,
-          "percentile": 21
+          "value": "6.46",
+          "per90": 6.46,
+          "percentile": 18
         },
         "matches_uppercase": {
-          "value": "3",
-          "per90": 3,
+          "value": "4",
+          "per90": 4,
           "percentile": 100
         },
         "player_started_matches": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 29
+          "value": "3",
+          "per90": 3,
+          "percentile": 44
         },
         "minutes_played": {
-          "value": "187",
+          "value": "276",
           "per90": 90,
-          "percentile": 46
+          "percentile": 61
         }
       },
       "traits": {
@@ -3279,12 +3838,12 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 86
+            "value": 93
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 20
+            "value": 18
           },
           {
             "key": "defensive_actions",
@@ -3294,12 +3853,12 @@
           {
             "key": "goals",
             "title": "Goals",
-            "value": 87
+            "value": 85
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 80
+            "value": 82
           },
           {
             "key": "touches",
@@ -3466,7 +4025,7 @@
         "shots": {
           "value": "1",
           "per90": 1,
-          "percentile": 23
+          "percentile": 20
         },
         "ShotsOnTarget": {
           "value": "1",
@@ -3476,62 +4035,62 @@
         "assists": {
           "value": "0",
           "per90": 1,
-          "percentile": 80
+          "percentile": 78
         },
         "successful_passes": {
           "value": "33",
           "per90": 33,
-          "percentile": 87
+          "percentile": 71
         },
         "successful_passes_accuracy": {
           "value": "82.5",
           "per90": 82.5,
-          "percentile": 63
+          "percentile": 58
         },
         "long_balls_accurate": {
           "value": "3",
           "per90": 3,
-          "percentile": 90
+          "percentile": 82
         },
         "long_ball_succeeeded_accuracy": {
           "value": "60.0",
           "per90": 60,
-          "percentile": 76
+          "percentile": 68
         },
         "chances_created": {
           "value": "4",
           "per90": 4,
-          "percentile": 96
+          "percentile": 88
         },
         "big_chance_created_team_title": {
           "value": "1",
           "per90": 1,
-          "percentile": 100
+          "percentile": 74
         },
         "dribbles_succeeded": {
           "value": "2",
           "per90": 2,
-          "percentile": 80
+          "percentile": 67
         },
         "won_contest_subtitle": {
           "value": "28.6",
           "per90": 28.57,
-          "percentile": 59
+          "percentile": 47
         },
         "duel_won": {
           "value": "9",
           "per90": 9,
-          "percentile": 96
+          "percentile": 78
         },
         "duel_won_percent": {
           "value": "47.4",
           "per90": 47.37,
-          "percentile": 75
+          "percentile": 59
         },
         "aerials_won": {
           "value": "1",
           "per90": 1,
-          "percentile": 77
+          "percentile": 61
         },
         "aerials_won_percent": {
           "value": "100.0",
@@ -3541,42 +4100,42 @@
         "touches": {
           "value": "70",
           "per90": 70,
-          "percentile": 90
+          "percentile": 66
         },
         "touches_opp_box": {
           "value": "4",
           "per90": 4,
-          "percentile": 56
+          "percentile": 47
         },
         "dispossessed": {
           "value": "2",
           "per90": 2,
-          "percentile": 15
+          "percentile": 28
         },
         "fouls_won": {
           "value": "1",
           "per90": 1,
-          "percentile": 21
+          "percentile": 23
         },
         "defensive_actions": {
           "value": "5",
           "per90": 5,
-          "percentile": 89
+          "percentile": 68
         },
         "matchstats.headers.tackles": {
           "value": "5",
           "per90": 5,
-          "percentile": 97
+          "percentile": 88
         },
         "fouls": {
           "value": "3",
           "per90": 3,
-          "percentile": 6
+          "percentile": 14
         },
         "recoveries": {
           "value": "2",
           "per90": 2,
-          "percentile": 35
+          "percentile": 14
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -3586,7 +4145,7 @@
         "goals_conceded_while_on_pitch": {
           "value": "1",
           "per90": 1,
-          "percentile": 54
+          "percentile": 68
         },
         "yellow_cards": {
           "value": "0",
@@ -3601,7 +4160,7 @@
         "rating": {
           "value": "8.28",
           "per90": 8.28,
-          "percentile": 87
+          "percentile": 92
         },
         "matches_uppercase": {
           "value": "0",
@@ -3616,7 +4175,7 @@
         "minutes_played": {
           "value": "0",
           "per90": 90,
-          "percentile": 34
+          "percentile": 29
         }
       },
       "traits": {
@@ -3650,45 +4209,10 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 27
+            "value": 25
           }
         ]
       },
-      "shotmap": [],
-      "heatmap": [],
-      "season": "2026/2027"
-    },
-    {
-      "id": 1557045,
-      "squadLevels": [
-        "academy"
-      ],
-      "name": "Louis Zecevic-John",
-      "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/1557045.png",
-      "nationality": "England",
-      "position": "",
-      "posGroup": "MF",
-      "jersey": "",
-      "age": null,
-      "height": "",
-      "preferredFoot": "",
-      "marketValue": null,
-      "contractEnd": null,
-      "positionLabel": "forward",
-      "career": [
-        {
-          "team": "Arsenal U18",
-          "startDate": "",
-          "endDate": null,
-          "active": true,
-          "appearances": null,
-          "goals": null,
-          "assists": null
-        }
-      ],
-      "competitions": {},
-      "stats": {},
-      "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027"
@@ -3772,7 +4296,23 @@
       "positionLabel": "midfielder",
       "career": [],
       "competitions": {},
-      "stats": {},
+      "stats": {
+        "goals": {
+          "value": "1",
+          "per90": 0,
+          "percentile": 100
+        },
+        "yellow_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        }
+      },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
@@ -3828,7 +4368,7 @@
       "height": "",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 358317,
+        "value": 429980,
         "currency": "EUR"
       },
       "contractEnd": null,
@@ -3839,7 +4379,7 @@
           "startDate": "2026-08",
           "endDate": "2027-06",
           "active": true,
-          "appearances": "2",
+          "appearances": "3",
           "goals": "0",
           "assists": "0"
         },
@@ -3879,33 +4419,33 @@
           "percentile": 0
         },
         "expected_goals": {
-          "value": "0.20",
-          "per90": 0.24,
-          "percentile": 29
+          "value": "0.38",
+          "per90": 0.23,
+          "percentile": 47
         },
         "expected_goals_on_target": {
-          "value": "0.06",
-          "per90": 0.07,
-          "percentile": 34
+          "value": "0.10",
+          "per90": 0.06,
+          "percentile": 42
         },
         "non_penalty_xg": {
-          "value": "0.20",
-          "per90": 0.24,
-          "percentile": 32
+          "value": "0.38",
+          "per90": 0.23,
+          "percentile": 49
         },
         "shots": {
-          "value": "3",
-          "per90": 3.6,
-          "percentile": 27
+          "value": "4",
+          "per90": 2.42,
+          "percentile": 31
         },
         "ShotsOnTarget": {
           "value": "1",
-          "per90": 1.2,
-          "percentile": 29
+          "per90": 0.6,
+          "percentile": 22
         },
         "headed_shots": {
           "value": "1",
-          "per90": 1.2,
+          "per90": 0.6,
           "percentile": 56
         },
         "assists": {
@@ -3914,104 +4454,104 @@
           "percentile": 0
         },
         "expected_assists": {
-          "value": "0.26",
-          "per90": 0.32,
-          "percentile": 66
+          "value": "0.39",
+          "per90": 0.24,
+          "percentile": 69
         },
         "successful_passes": {
-          "value": "13",
-          "per90": 15.6,
-          "percentile": 12
+          "value": "33",
+          "per90": 19.93,
+          "percentile": 31
         },
         "successful_passes_accuracy": {
-          "value": "76.5",
-          "per90": 76.47,
-          "percentile": 49
+          "value": "82.5",
+          "per90": 82.5,
+          "percentile": 64
         },
         "chances_created": {
-          "value": "1",
-          "per90": 1.2,
-          "percentile": 20
+          "value": "3",
+          "per90": 1.81,
+          "percentile": 49
         },
         "crosses_succeeeded": {
           "value": "2",
-          "per90": 2.4,
+          "per90": 1.21,
           "percentile": 71
         },
         "crosses_succeeeded_accuracy": {
-          "value": "33.3",
-          "per90": 33.33,
-          "percentile": 78
+          "value": "22.2",
+          "per90": 22.22,
+          "percentile": 73
         },
         "dribbles_succeeded": {
-          "value": "2",
-          "per90": 2.4,
-          "percentile": 49
+          "value": "3",
+          "per90": 1.81,
+          "percentile": 58
         },
         "won_contest_subtitle": {
-          "value": "33.3",
-          "per90": 33.33,
-          "percentile": 32
-        },
-        "duel_won": {
-          "value": "5",
-          "per90": 6,
+          "value": "23.1",
+          "per90": 23.08,
           "percentile": 22
         },
+        "duel_won": {
+          "value": "8",
+          "per90": 4.83,
+          "percentile": 31
+        },
         "duel_won_percent": {
-          "value": "33.3",
-          "per90": 33.33,
-          "percentile": 17
+          "value": "26.7",
+          "per90": 26.67,
+          "percentile": 7
         },
         "aerials_won": {
           "value": "1",
-          "per90": 1.2,
-          "percentile": 22
+          "per90": 0.6,
+          "percentile": 20
         },
         "aerials_won_percent": {
-          "value": "100.0",
-          "per90": 100,
-          "percentile": 100
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 64
         },
         "touches": {
-          "value": "43",
-          "per90": 51.6,
-          "percentile": 17
+          "value": "87",
+          "per90": 52.55,
+          "percentile": 38
         },
         "touches_opp_box": {
-          "value": "10",
-          "per90": 12,
-          "percentile": 54
+          "value": "15",
+          "per90": 9.06,
+          "percentile": 67
         },
         "dispossessed": {
-          "value": "3",
-          "per90": 3.6,
-          "percentile": 24
+          "value": "4",
+          "per90": 2.42,
+          "percentile": 31
         },
         "fouls_won": {
-          "value": "2",
-          "per90": 2.4,
-          "percentile": 44
+          "value": "4",
+          "per90": 2.42,
+          "percentile": 53
         },
         "fouls": {
-          "value": "1",
-          "per90": 1.2,
-          "percentile": 63
+          "value": "3",
+          "per90": 1.81,
+          "percentile": 29
         },
         "recoveries": {
-          "value": "1",
-          "per90": 1.2,
-          "percentile": 5
+          "value": "6",
+          "per90": 3.62,
+          "percentile": 40
         },
         "poss_won_att_3rd_team_title": {
           "value": "1",
-          "per90": 1.2,
-          "percentile": 32
+          "per90": 0.6,
+          "percentile": 27
         },
         "dribbled_past": {
-          "value": "2",
-          "per90": 2.4,
-          "percentile": 22
+          "value": "4",
+          "per90": 2.42,
+          "percentile": 7
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -4020,13 +4560,13 @@
         },
         "goals_conceded_while_on_pitch": {
           "value": "2",
-          "per90": 2.4,
-          "percentile": 34
+          "per90": 1.21,
+          "percentile": 47
         },
         "expected_goals_against_while_on_pitch": {
-          "value": "1.68",
-          "per90": 2.01,
-          "percentile": 73
+          "value": "2.18",
+          "per90": 1.32,
+          "percentile": 69
         },
         "yellow_cards": {
           "value": "0",
@@ -4039,24 +4579,24 @@
           "percentile": 0
         },
         "rating": {
-          "value": "6.56",
-          "per90": 6.56,
-          "percentile": 32
+          "value": "6.70",
+          "per90": 6.71,
+          "percentile": 36
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 7
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 27
         },
         "minutes_played": {
-          "value": "75",
+          "value": "149",
           "per90": 90,
-          "percentile": 15
+          "percentile": 36
         }
       },
       "traits": {
@@ -4070,22 +4610,22 @@
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 8
+            "value": 6
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 4
+            "value": 5
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 71
+            "value": 70
           },
           {
             "key": "shot_attempts",
             "title": "Shot attempts",
-            "value": 61
+            "value": 62
           },
           {
             "key": "touches",
@@ -4122,8 +4662,8 @@
           "comp": "PL"
         },
         {
-          "x": 79.67,
-          "y": 13.84,
+          "x": 71.22,
+          "y": 14.12,
           "comp": "PL"
         },
         {
@@ -4147,8 +4687,8 @@
           "comp": "PL"
         },
         {
-          "x": 94.77,
-          "y": 11.87,
+          "x": 96.32,
+          "y": 10.36,
           "comp": "PL"
         },
         {
@@ -4177,8 +4717,8 @@
           "comp": "PL"
         },
         {
-          "x": 100.35,
-          "y": 20.57,
+          "x": 98.63,
+          "y": 21.27,
           "comp": "PL"
         },
         {
@@ -4217,11 +4757,6 @@
           "comp": "PL"
         },
         {
-          "x": 92.8,
-          "y": 32.25,
-          "comp": "PL"
-        },
-        {
           "x": 67.51,
           "y": 20.22,
           "comp": "PL"
@@ -4237,8 +4772,8 @@
           "comp": "PL"
         },
         {
-          "x": 95.35,
-          "y": 30.28,
+          "x": 96.51,
+          "y": 27.95,
           "comp": "PL"
         },
         {
@@ -4297,8 +4832,8 @@
           "comp": "PL"
         },
         {
-          "x": 94.19,
-          "y": 24.7,
+          "x": 95.06,
+          "y": 26.77,
           "comp": "PL"
         },
         {
@@ -4340,6 +4875,281 @@
           "x": 28.26,
           "y": 8.4,
           "comp": "PL"
+        },
+        {
+          "x": 66.94,
+          "y": 15.45,
+          "comp": "PL"
+        },
+        {
+          "x": 59.01,
+          "y": 19.94,
+          "comp": "PL"
+        },
+        {
+          "x": 84.51,
+          "y": 9.45,
+          "comp": "PL"
+        },
+        {
+          "x": 89.5,
+          "y": 8.66,
+          "comp": "PL"
+        },
+        {
+          "x": 59.31,
+          "y": 2.16,
+          "comp": "PL"
+        },
+        {
+          "x": 97.86,
+          "y": 9.84,
+          "comp": "PL"
+        },
+        {
+          "x": 36.37,
+          "y": 2.75,
+          "comp": "PL"
+        },
+        {
+          "x": 86.78,
+          "y": 12.2,
+          "comp": "PL"
+        },
+        {
+          "x": 86.25,
+          "y": 18.88,
+          "comp": "PL"
+        },
+        {
+          "x": 85.39,
+          "y": 4.07,
+          "comp": "PL"
+        },
+        {
+          "x": 99.97,
+          "y": 18.04,
+          "comp": "PL"
+        },
+        {
+          "x": 29.5,
+          "y": 4.99,
+          "comp": "PL"
+        },
+        {
+          "x": 26.46,
+          "y": 9.45,
+          "comp": "PL"
+        },
+        {
+          "x": 32.54,
+          "y": 7.35,
+          "comp": "PL"
+        },
+        {
+          "x": 81.7,
+          "y": 3.15,
+          "comp": "PL"
+        },
+        {
+          "x": 93.3,
+          "y": 12.79,
+          "comp": "PL"
+        },
+        {
+          "x": 63.56,
+          "y": 3.02,
+          "comp": "PL"
+        },
+        {
+          "x": 96.12,
+          "y": 22.46,
+          "comp": "PL"
+        },
+        {
+          "x": 96.99,
+          "y": 23.44,
+          "comp": "PL"
+        },
+        {
+          "x": 63,
+          "y": 5.97,
+          "comp": "PL"
+        },
+        {
+          "x": 58.19,
+          "y": 8.66,
+          "comp": "PL"
+        },
+        {
+          "x": 98.34,
+          "y": 9.9,
+          "comp": "PL"
+        },
+        {
+          "x": 23.64,
+          "y": 20.5,
+          "comp": "PL"
+        },
+        {
+          "x": 15.1,
+          "y": 42.7,
+          "comp": "PL"
+        },
+        {
+          "x": 31.41,
+          "y": 61.11,
+          "comp": "PL"
+        },
+        {
+          "x": 84.4,
+          "y": 2.95,
+          "comp": "PL"
+        },
+        {
+          "x": 82.6,
+          "y": 5.38,
+          "comp": "PL"
+        },
+        {
+          "x": 96.41,
+          "y": 16.29,
+          "comp": "PL"
+        },
+        {
+          "x": 63.45,
+          "y": 51.43,
+          "comp": "PL"
+        },
+        {
+          "x": 58.4,
+          "y": 51.99,
+          "comp": "PL"
+        },
+        {
+          "x": 85.82,
+          "y": 16.36,
+          "comp": "PL"
+        },
+        {
+          "x": 74.38,
+          "y": 9.25,
+          "comp": "PL"
+        },
+        {
+          "x": 82.82,
+          "y": 2.36,
+          "comp": "PL"
+        },
+        {
+          "x": 99.11,
+          "y": 19.3,
+          "comp": "PL"
+        },
+        {
+          "x": 79.22,
+          "y": 15.66,
+          "comp": "PL"
+        },
+        {
+          "x": 72.91,
+          "y": 8.72,
+          "comp": "PL"
+        },
+        {
+          "x": 68.63,
+          "y": 4.79,
+          "comp": "PL"
+        },
+        {
+          "x": 91.7,
+          "y": 17.83,
+          "comp": "PL"
+        },
+        {
+          "x": 93.3,
+          "y": 4.53,
+          "comp": "PL"
+        },
+        {
+          "x": 97.28,
+          "y": 5.18,
+          "comp": "PL"
+        },
+        {
+          "x": 68.75,
+          "y": 6.1,
+          "comp": "PL"
+        },
+        {
+          "x": 59.72,
+          "y": 3.74,
+          "comp": "PL"
+        },
+        {
+          "x": 59.72,
+          "y": 3.74,
+          "comp": "PL"
+        },
+        {
+          "x": 87.96,
+          "y": 6.1,
+          "comp": "PL"
+        },
+        {
+          "x": 40.87,
+          "y": 4.33,
+          "comp": "PL"
+        },
+        {
+          "x": 43.12,
+          "y": 9.64,
+          "comp": "PL"
+        },
+        {
+          "x": 57.18,
+          "y": 3.54,
+          "comp": "PL"
+        },
+        {
+          "x": 93.5,
+          "y": 10.43,
+          "comp": "PL"
+        },
+        {
+          "x": 91.1,
+          "y": 18.39,
+          "comp": "PL"
+        },
+        {
+          "x": 69.42,
+          "y": 3.61,
+          "comp": "PL"
+        },
+        {
+          "x": 27.7,
+          "y": 24.14,
+          "comp": "PL"
+        },
+        {
+          "x": 77.98,
+          "y": 5.18,
+          "comp": "PL"
+        },
+        {
+          "x": 46.91,
+          "y": 0.98,
+          "comp": "PL"
+        },
+        {
+          "x": 28.93,
+          "y": 6.89,
+          "comp": "PL"
+        },
+        {
+          "x": 26.91,
+          "y": 9.71,
+          "comp": "PL"
         }
       ],
       "season": "2026/2027"
@@ -4359,7 +5169,7 @@
       "height": "",
       "preferredFoot": "",
       "marketValue": {
-        "value": 625077,
+        "value": 750092,
         "currency": "EUR"
       },
       "contractEnd": null,
