@@ -5,48 +5,6 @@ const ARSENAL_TEAM_ID = 9825; // Fotmob 팀 ID
 const FPL_POS = {1:'GK',2:'DF',3:'MF',4:'FW'};
 const LOAN_KEYWORDS = /loan|loaned|joined|transferred|released|left the club/i;
 
-// Fotmob 선수 ID 매핑 (사진: images.fotmob.com/image_resources/playerimages/{id}.png)
-const FOTMOB_IDS = {
-  'raya':          562727,
-  'arrizabalaga':  317564,
-  'meslier':       952029,
-  'saliba':        955406,
-  'mosquera':      1298907,
-  'white':         776151,
-  'hincapie':      1137667,
-  'gabriel':       795179,
-  'timber':        942381,
-  'konsa':         710159,
-  'calafiori':     1105912,
-  'skelly':        1406436,
-  'degaard':       534670,
-  'eze':           818975,
-  'merino':        574645,
-  'zubimendi':     1031325,
-  'guimaraes':     850354,
-  'rice':          654096,
-  'dowman':        1635773,
-  'saka':          961995,
-  'martinelli':    1021586,
-  'gyokeres':      664500,
-  'tzolis':        1157237,
-  'madueke':       1084981,
-  'havertz':       749736,
-};
-
-function getFotmobId(p) {
-  const web = p.web_name.toLowerCase().replace(/[^a-z]/g, '');
-  const second = p.second_name.toLowerCase().replace(/[^a-z]/g, '');
-  const full = (p.first_name + ' ' + p.second_name).toLowerCase().replace(/[^a-z ]/g, '');
-  for (const [key, id] of Object.entries(FOTMOB_IDS)) {
-    const k = key.replace(/[^a-z]/g, '');
-    if (web.includes(k) || second.includes(k) || k.includes(second) || full.includes(k)) {
-      return id;
-    }
-  }
-  return null;
-}
-
 const cache = {};
 const TTL = 60 * 60 * 1000;
 // 리더보드는 경기 끝나고 스탯 반영을 더 빨리 보여주기 위해 캐시를 짧게 둔다

@@ -750,46 +750,6 @@ def parse_stats(data, squad_levels=None):
     return result
 
 
-# ── football.js FOTMOB_IDS 자동 업데이트 ──────────────
-FOOTBALL_JS_PATH = Path('arsenal-dashboard/api/football.js')
-
-def update_fotmob_ids(squad):
-    """
-    스쿼드 리스트로 football.js의 FOTMOB_IDS 블록을 덮어쓴다.
-    slug의 첫 번째 파트(성 or 특이 이름)를 key로 사용.
-    """
-    if not FOOTBALL_JS_PATH.exists():
-        print('⚠️  football.js 없음 — FOTMOB_IDS 업데이트 스킵')
-        return
-
-    # key: slug에서 마지막 파트(성) 사용, 단 한 단어 slug면 그대로
-    def slug_to_key(slug):
-        parts = slug.split('-')
-        return parts[-1] if len(parts) > 1 else parts[0]
-
-    lines = ["const FOTMOB_IDS = {\n"]
-    for p in squad:
-        key = slug_to_key(p['slug'])
-        lines.append(f"  '{key}':{' ' * max(1, 14 - len(key))}{p['id']},\n")
-    lines.append("};\n")
-    new_block = ''.join(lines)
-
-    content = FOOTBALL_JS_PATH.read_text(encoding='utf-8')
-    # FOTMOB_IDS 블록 교체
-    updated = re.sub(
-        r'const FOTMOB_IDS = \{.*?\};',
-        new_block.strip(),
-        content,
-        flags=re.DOTALL
-    )
-    if updated == content:
-        print('✅ football.js FOTMOB_IDS 변경 없음 (스쿼드 동일)')
-        return
-
-    FOOTBALL_JS_PATH.write_text(updated, encoding='utf-8')
-    print(f'✅ football.js FOTMOB_IDS 업데이트 완료 ({len(squad)}명)')
-
-
 # ── Git push ───────────────────────────────────────
 
 def git_push(filepath):
@@ -816,10 +776,7 @@ def main():
 
     # 1군은 더 이상 여기서 안 긁는다 — api/football.js가 Fotmob 팀 API
     # (/api/data/teams?id=9825)로 직접 실시간 조회하도록 바뀌어서, 이 무거운
-    # "선수 한 명씩 상세 스크래핑" 루프에 1군을 넣는 게 그냥 낭비다. 다만
-    # 그 팀 스쿼드 조회 자체(가벼움, 이름/ID만)는 football.js의 FOTMOB_IDS
-    # (라이브 경기 이벤트에서 선수 이름 매칭용, 완전히 별개 용도)를 갱신하는
-    # 데 여전히 필요해서 그건 그대로 남겨둔다.
+    # "선수 한 명씩 상세 스크래핑" 루프에 1군을 넣는 게 그냥 낭비다.
     #
     # 아카데미는 U21/U18을 따로 안 나누고 "academy" 하나로 묶어서, 공홈 명단을
     # 기준으로 이름마다 Fotmob 검색으로 ID를 찾는다(팀 스쿼드 목록보다
@@ -834,10 +791,6 @@ def main():
             order.append(member['id'])
         if level not in by_id[member['id']]['squadLevels']:
             by_id[member['id']]['squadLevels'].append(level)
-
-    print(f'🔍 Fotmob first 스쿼드 조회 중... (team {ARSENAL_TEAM_ID}, FOTMOB_IDS 갱신 전용 — 스탯 스크래핑 대상 아님)')
-    first_team_squad = fetch_squad_for_team(ARSENAL_TEAM_ID, 'arsenal')
-    print(f'  → first: {len(first_team_squad)}명 (players.json엔 안 들어감 — api/football.js가 라이브로 처리)')
 
     # 아카데미 1차: Fotmob 자체 U21 스쿼드 목록 페이지(기존 방식) — 안전망으로
     # 계속 유지한다. 공홈 크롤이 막히더라도(아래) 최소한 이 정도는 잡힌다.
@@ -869,10 +822,6 @@ def main():
     tagged_squad = [by_id[pid] for pid in order]
 
     print(f'🔍 Fotmob 선수 스탯 스크래핑 시작 (총 {len(tagged_squad)}명)')
-
-    # football.js FOTMOB_IDS는 1군 선수 이름 매칭(라이브 경기용)에만 쓰이므로
-    # U21은 제외하고 기존처럼 1군 스쿼드로만 갱신한다.
-    update_fotmob_ids(first_team_squad)
 
     players = []
     detected_season = None
@@ -913,10 +862,10 @@ def main():
     print(f'\n✅ 완료! {len(players)}명 → {OUTPUT_PATH}  (시즌: {detected_season})')
 
     if GITHUB_TOKEN:
-        git_push([OUTPUT_PATH, FOOTBALL_JS_PATH])
+        git_push([OUTPUT_PATH])
     else:
         print('\n⚠️  GITHUB_TOKEN 미설정 — 수동으로 git push 해주세요')
-        print('   git add arsenal-dashboard/public/data/players.json arsenal-dashboard/public/data/player_images/ arsenal-dashboard/api/football.js')
+        print('   git add arsenal-dashboard/public/data/players.json arsenal-dashboard/public/data/player_images/')
         print('   git commit -m "📊 stats update"')
         print('   git push')
 
