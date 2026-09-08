@@ -194,10 +194,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .std-pts{font-family:var(--fm);font-weight:700;color:var(--text);text-align:right;font-size:11px}
 .lb-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border-bright);border-bottom:1px solid var(--border-bright);}
 .lb-tab{position:relative;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:700;-webkit-tap-highlight-color:transparent;}
-/* 세로 패딩이 비대칭인 건 의도적이다 — Noto Sans KR은 한글 기준 어센트가 커서
-   숫자/영문 글자가 라인박스 안에서 1.1px 아래로 쏠린다. 그만큼 위아래 패딩을
-   나눠 실제 글자가 뱃지 안에서 중앙에 오게 맞춘 값. */
-.lb-tab-badge{margin-left:2px;font-size:8px;padding:.4px 6px 2.6px;line-height:10.4px;background:rgba(200,168,75,.35);color:var(--gold);border:1px solid rgba(200,168,75,.55);position:relative;top:.7px;}
+/* 소수점 padding/line-height를 쓰면 브라우저 배율(100%/125%)에 따라 반올림이
+   달라져서 글자가 위아래로 붙어 보인다 — 값은 전부 정수로 두고, 세로 중앙정렬은
+   inline-flex에 맡긴다. */
+.lb-tab-badge{display:inline-flex;align-items:center;justify-content:center;margin-left:2px;height:15px;padding:0 6px;font-size:8px;line-height:1;background:var(--gold);color:#3a2e0f;border:none;position:relative;top:1px;}
 .lb-tab-badge:empty{display:none;}
 .lb-tab svg{width:14px;height:14px;stroke:var(--text-muted);transition:stroke .15s;flex-shrink:0;}
 .lb-tab.active{background:var(--red-dark);color:var(--white);}
