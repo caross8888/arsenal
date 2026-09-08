@@ -189,6 +189,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .std-pos{font-family:var(--fm);font-size:10px;color:var(--text)}
 .std-team{font-weight:500;display:flex;align-items:center;gap:5px;font-size:11px;min-width:0;color:var(--text)}
 .std-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 팀명은 축약형/풀네임 두 벌을 다 넣어두고 CSS로 전환한다 — JS로 폭을 보고 고르면
+   창 크기를 바꿨을 때 순위표를 다시 그려야 해서. PC 전환은 아래 900px 블록. */
+.std-team-full{display:none}
 .std-crest{width:15px;height:15px;border-radius:50%;object-fit:contain;border:none;flex-shrink:0;filter:drop-shadow(0 0 1px var(--overlay-35))}
 .std-s{font-family:var(--fm);color:var(--text);text-align:center;font-size:10px}
 .std-pts{font-family:var(--fm);font-weight:700;color:var(--text);text-align:right;font-size:11px}
@@ -1027,6 +1030,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   #lbListCol .std-hdr{font-size:clamp(9px,1.72cqw,11px);}
   #lbListCol .std-pos{font-size:clamp(10px,2.03cqw,13px);}
   #lbListCol .std-team{font-size:clamp(11px,2.19cqw,14px);gap:clamp(5px,1.41cqw,9px);}
+  /* PC는 팀명 컬럼이 330px 이상 확보돼서 가장 긴 "Wolverhampton Wanderers"(183px)도
+     여유롭게 들어간다. 900px 근처 좁은 구간에서만 기존 ellipsis로 잘린다. */
+  .std-team-short{display:none}
+  .std-team-full{display:inline}
   #lbListCol .std-crest{width:clamp(15px,3.44cqw,22px);height:clamp(15px,3.44cqw,22px);}
   #lbListCol .std-s{font-size:clamp(10px,2.03cqw,13px);}
   #lbListCol .std-fa{font-size:clamp(9px,1.88cqw,12px);}
@@ -2639,7 +2646,8 @@ function renderStandings(){
     var pos=document.createElement('span');pos.className='std-pos';pos.textContent=s.position;
     var team=document.createElement('div');team.className='std-team';
     if(s.team.crest){var img=document.createElement('img');img.className='std-crest';img.src=s.team.crest;img.alt='';img.onerror=function(){this.style.display='none';};team.appendChild(img);}
-    var nm=document.createElement('span');nm.textContent=s.team.shortName||s.team.name;team.appendChild(nm);
+    var nm=document.createElement('span');nm.className='std-team-short';nm.textContent=s.team.shortName||s.team.name;team.appendChild(nm);
+    var nmFull=document.createElement('span');nmFull.className='std-team-full';nmFull.textContent=s.team.name||s.team.shortName;team.appendChild(nmFull);
     var pg=document.createElement('span');pg.className='std-s';pg.textContent=s.playedGames;
     var w=document.createElement('span');w.className='std-s';w.textContent=s.won;
     var d=document.createElement('span');d.className='std-s';d.textContent=s.draw;
