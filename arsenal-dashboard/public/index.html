@@ -194,7 +194,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .std-pts{font-family:var(--fm);font-weight:700;color:var(--text);text-align:right;font-size:11px}
 .lb-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border-bright);border-bottom:1px solid var(--border-bright);}
 .lb-tab{position:relative;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:5px;padding:10px 4px;border:none;background:var(--surface2);color:var(--text-muted);cursor:pointer;font-family:var(--fb);font-size:12px;font-weight:700;-webkit-tap-highlight-color:transparent;}
-.lb-tab-badge{margin-left:2px;font-size:8px;padding:1px 6px;}
+/* 세로 패딩이 비대칭인 건 의도적이다 — Noto Sans KR은 한글 기준 어센트가 커서
+   숫자/영문 글자가 라인박스 안에서 1.1px 아래로 쏠린다. 그만큼 위아래 패딩을
+   나눠 실제 글자가 뱃지 안에서 중앙에 오게 맞춘 값. */
+.lb-tab-badge{margin-left:2px;font-size:8px;padding:.4px 6px 2.6px;line-height:10.4px;background:rgba(200,168,75,.35);color:var(--gold);border:1px solid rgba(200,168,75,.55);position:relative;top:.7px;}
+.lb-tab-badge:empty{display:none;}
 .lb-tab svg{width:14px;height:14px;stroke:var(--text-muted);transition:stroke .15s;flex-shrink:0;}
 .lb-tab.active{background:var(--red-dark);color:var(--white);}
 .lb-tab.active svg{stroke:var(--gold);}
@@ -1225,7 +1229,7 @@ function playIntro(){
       <button class="lb-tab active" data-tab="team" onclick="switchLbTab('team',this)">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/></svg>
         &#54016; &#49692;&#50948;
-        <span class="lb-tab-badge comp-tag tag-cl" id="stdMatchday"></span>
+        <span class="lb-tab-badge comp-tag" id="stdMatchday"></span>
       </button>
       <button class="lb-tab" data-tab="player" onclick="switchLbTab('player',this)">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
