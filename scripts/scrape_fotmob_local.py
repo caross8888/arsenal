@@ -865,7 +865,7 @@ def main():
         git_push([OUTPUT_PATH])
     else:
         print('\n⚠️  GITHUB_TOKEN 미설정 — 수동으로 git push 해주세요')
-        print('   git add arsenal-dashboard/public/data/players.json arsenal-dashboard/public/data/player_images/')
+        print('   git add arsenal-dashboard/public/data/players.json')
         print('   git commit -m "📊 stats update"')
         print('   git push')
 

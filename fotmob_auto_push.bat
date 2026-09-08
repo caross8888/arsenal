@@ -11,7 +11,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-git add arsenal-dashboard/public/data/players.json arsenal-dashboard/public/data/player_images/
+git add arsenal-dashboard/public/data/players.json
 git diff --staged --quiet
 if %errorlevel% equ 0 (
     echo [%date% %time%] no changes.
