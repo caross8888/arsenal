@@ -243,6 +243,54 @@ async function fetchFirstTeamRosterLive(){
   return roster;
 }
 
+// 프리미어리그 밖 상대(챔피언스리그 등)는 FPL에 아예 없어서 부상 정보를 못 준다.
+// Fotmob 팀 API의 overview.lastLineupStats.unavailable이 리그를 안 가리고 결장자를
+// 주므로 그걸 폴백으로 쓴다 — 이적/로스터 조회에 이미 쓰는 엔드포인트라 새로 붙는
+// 의존성은 없다. 실패하면 null을 돌려서 호출부가 기존 "정보 없음" 처리를 하게 둔다.
+async function fetchFotmobTeamInjuries(teamName){
+  try {
+    const sr = await fetch(`https://apigw.fotmob.com/searchapi/suggest?term=${encodeURIComponent(teamName)}&lang=en`,
+      {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+    if(!sr.ok) return null;
+    const sd = await sr.json();
+    let teamId = null;
+    for(const block of (sd.teamSuggest || [])){
+      for(const opt of (block.options || [])){
+        if(opt.payload && opt.payload.id){ teamId = opt.payload.id; break; }
+      }
+      if(teamId) break;
+    }
+    if(!teamId) return null;
+
+    const tr = await fetch(`https://www.fotmob.com/api/data/teams?id=${teamId}`,
+      {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+    if(!tr.ok) return null;
+    const td = await tr.json();
+    const unavailable = (td.overview && td.overview.lastLineupStats && td.overview.lastLineupStats.unavailable) || [];
+
+    // Fotmob은 type(injury/suspension)과 expectedReturn 문자열만 준다. FPL의
+    // i/d/s/u 4단계 중 "출전 의심"은 expectedReturn === 'Doubtful'로만 구분된다.
+    const injured = unavailable.map(p => {
+      const u = p.unavailability || {};
+      const ret = u.expectedReturn || '';
+      const status = u.type === 'suspension' ? 's' : (ret === 'Doubtful' ? 'd' : 'i');
+      return {
+        id:       p.id,
+        name:     p.name,
+        fullName: p.name,
+        position: '',
+        photo:    `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
+        status,
+        news:     ret,
+        chance:   null,
+      };
+    });
+    return injured;
+  } catch(_){
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin','*');
 
@@ -782,8 +830,11 @@ export default async function handler(req, res) {
       }
 
       if(targetFplId === null){
-        // 프리미어리그 소속이 아닌 상대 — FPL에 데이터 자체가 없다
-        result = { injured: [], availableCount: 0, teamFound: false };
+        // 프리미어리그 소속이 아닌 상대 — FPL에 데이터 자체가 없어 Fotmob으로 폴백
+        const fotmobInjured = isOpponentTeam ? await fetchFotmobTeamInjuries(teamParam) : null;
+        result = fotmobInjured
+          ? { injured: fotmobInjured, availableCount: 0, teamFound: true, source: 'fotmob' }
+          : { injured: [], availableCount: 0, teamFound: false };
       } else {
         const teamPlayers = (fplData.elements || []).filter(p => p.team === targetFplId);
         const squadFilter = (p) => {

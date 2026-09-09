@@ -4664,13 +4664,14 @@ function renderInjuryListCard(title, injuries){
   html+='</div></div>';
   return html;
 }
-// 아스날 부상자 카드 + (예정 경기일 때) 상대팀 부상자 카드. 상대가
-// 프리미어리그 소속이 아니면 FPL에 데이터가 없어 그 사실을 안내한다.
+// 아스날 부상자 카드 + (예정 경기일 때) 상대팀 부상자 카드. 상대가 프리미어리그
+// 소속이면 FPL, 아니면 Fotmob으로 폴백한다(api/football.js) — 둘 다 실패했을 때만
+// teamFound:false로 내려온다.
 function renderInjuryCards(data){
   var html=renderInjuryListCard('Arsenal 부상자 명단', allInjuries);
   if(data&&data.oppName){
     if(data.oppInjuries&&data.oppInjuries.teamFound===false){
-      html+='<div class="mm-card"><div class="mm-card-title">'+data.oppName+' 부상자 명단</div><div style="padding:10px 14px 14px;font-size:12px;color:var(--text-secondary);">프리미어리그 소속이 아니라 부상 정보를 확인할 수 없습니다</div></div>';
+      html+='<div class="mm-card"><div class="mm-card-title">'+data.oppName+' 부상자 명단</div><div style="padding:10px 14px 14px;font-size:12px;color:var(--text-secondary);">부상 정보를 확인할 수 없습니다</div></div>';
     } else {
       var oppList=(data.oppInjuries&&data.oppInjuries.injured)||[];
       html+=renderInjuryListCard(data.oppName+' 부상자 명단', oppList);
