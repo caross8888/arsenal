@@ -765,6 +765,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-team-name{font-size:11px;font-weight:800;text-align:center;color:var(--on-dark-header);line-height:1.25;max-width:90px;}
 .mm-center-col{display:flex;flex-direction:column;align-items:center;gap:5px;padding:0 6px;}
 .mm-score{font-family:var(--fd);font-size:30px;font-weight:900;color:var(--on-dark-header);letter-spacing:2px;line-height:1;}
+/* 헤더 배경이 테마와 무관하게 짙은 빨강이라 고정 밝은 토큰을 쓴다 */
+.mm-pen{font-size:11px;font-weight:700;letter-spacing:1px;line-height:1;margin-top:5px;color:var(--on-dark-header-secondary);}
 .mm-center-meta{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;}
 .mm-meta-row{font-size:9px;color:var(--on-dark-header-secondary);text-align:center;white-space:nowrap;letter-spacing:.3px;}
 .mm-meta-date{font-size:10px;font-weight:700;color:var(--on-dark-header-secondary);}
@@ -1941,6 +1943,30 @@ function renderDday(list){
   }
 }
 
+// 종료 경기의 아스날 기준 결과 — 'win' | 'draw' | 'loss' | null(스코어 없음).
+// 일정 카드·달력·상세모달 헤더가 전부 이걸로 색을 정한다.
+// 기본은 정규(+연장) 스코어로 판정하되, 친선전이 아닌 대회에서 승부차기로
+// 승부가 난 경기는 승부차기 결과를 따른다 — 컵대회는 승부차기 승자가 다음
+// 라운드로 가니 그게 실제 결과다(2차전 합산 동률 후 승부차기도 마찬가지).
+// 친선전은 정규 스코어만 본다: 결과와 무관하게 승부차기를 하는 경우가 많아서
+// (도르트문트전 2-3 패배 후 승부차기 5-4) 섞으면 진 경기가 이긴 걸로 나온다.
+function matchOutcome(m, isArsHome){
+  var sc=m&&m.score, ft=sc&&sc.fullTime;
+  if(!ft||ft.home==null||ft.away==null) return null;
+  var ars=isArsHome?ft.home:ft.away, opp=isArsHome?ft.away:ft.home;
+  var pen=sc.penalties, code=(m.competition&&m.competition.short)||'';
+  if(code!=='FR'&&pen&&pen.home!=null&&pen.away!=null&&pen.home!==pen.away){
+    ars=isArsHome?pen.home:pen.away; opp=isArsHome?pen.away:pen.home;
+  }
+  return ars>opp?'win':ars===opp?'draw':'loss';
+}
+var OUTCOME_COLOR={win:'var(--green)',draw:'var(--amber)',loss:'var(--loss)'};
+// 상세모달 헤더의 스코어 아래 승부차기 한 줄 — 승부차기 없으면 빈 문자열.
+function penLineHtml(pen){
+  if(!pen||pen.home==null||pen.away==null) return '';
+  return '<div class="mm-pen">PEN '+pen.home+' : '+pen.away+'</div>';
+}
+
 function buildFixCard(m){
   var isArsHome=isArsenalTeam(m.homeTeam);
   var isLive=m.status==='IN_PLAY'||m.status==='PAUSED';
@@ -1952,12 +1978,10 @@ function buildFixCard(m){
   var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
   var hasScore=hs!==null&&hs!==undefined&&isDone;
   var resultCls=''; var resultBg='';
-  if(isDone&&hasScore){
-    var arsS=isArsHome?hs:as_; var oppS=isArsHome?as_:hs;
-    if(arsS>oppS){resultCls='result-win';resultBg='rgba(34,197,94,0.08)';}
-    else if(arsS===oppS){resultCls='result-draw';resultBg='rgba(245,158,11,0.08)';}
-    else{resultCls='result-loss';resultBg='rgba(239,68,68,0.08)';}
-  }
+  var outcome=(isDone&&hasScore)?matchOutcome(m,isArsHome):null;
+  if(outcome==='win'){resultCls='result-win';resultBg='rgba(34,197,94,0.08)';}
+  else if(outcome==='draw'){resultCls='result-draw';resultBg='rgba(245,158,11,0.08)';}
+  else if(outcome==='loss'){resultCls='result-loss';resultBg='rgba(239,68,68,0.08)';}
   var isNeutral=m.neutralSite===true||compObj.short==='CS'||m.round==='final'||(code==='FR'&&isArsHome&&m.venue&&m.venue!=='Emirates Stadium');
   var upcomingCls=isNeutral?'neutral-fixture':(isArsHome?'home-fixture':'away-fixture');
   var card=document.createElement('div');
@@ -1999,19 +2023,17 @@ function buildFixCard(m){
   var sb=document.createElement('div');sb.className='fix-score-box';
   if(hasScore){
     var sd=document.createElement('div');sd.className='fix-score';
-    var arsS2=isArsHome?hs:as_; var oppS2=isArsHome?as_:hs;
-    sd.style.color=arsS2>oppS2?'var(--green)':arsS2===oppS2?'var(--amber)':'var(--loss)';
+    sd.style.color=OUTCOME_COLOR[outcome]||'';
     sd.textContent=hs+' : '+as_;sb.appendChild(sd);
     // 승부차기 스코어는 정규 스코어 바로 아래에 붙인다. 이 카드만 스코어를 조금
     // 줄여서(.has-pk) 두 줄이 기존 스코어 행 높이 안에 들어가게 한다 — 줄이지
     // 않으면 이 카드만 7px 커져서 목록의 카드 높이가 들쭉날쭉해진다.
-    // 승/무/패 색은 정규 스코어 기준 그대로 — 친선전은 이기고도 승부차기를 하는
-    // 경우가 있어 섞으면 결과가 틀어진다.
+    // 결과 색(승/무/패)은 matchOutcome이 대회 종류에 맞춰 정한다.
     var pk=m.score&&m.score.penalties;
     if(pk&&pk.home!=null&&pk.away!=null){
       sb.classList.add('has-pk');
       var pd=document.createElement('div');pd.className='fix-pk';
-      pd.textContent='PK '+pk.home+':'+pk.away;sb.appendChild(pd);
+      pd.textContent='PEN '+pk.home+':'+pk.away;sb.appendChild(pd);
     }
   } else if(isLive){
     var ld=document.createElement('div');ld.className='fix-score';ld.style.color='var(--green)';
@@ -2215,9 +2237,9 @@ function getSeasonMatches(season, opts){
   // 끝난 시즌은 불변이라 캐시버스터 없이 요청 → 재방문 시 브라우저 캐시 히트.
   // 대신 서버 응답 형식이 바뀌면 v를 올려야 한다 — 1년짜리 immutable 캐시라
   // URL이 같으면 브라우저가 옛 응답을 영원히 재사용한다. v2: 승부차기 경기가
-  // 정규+승부차기 합산 스코어로 저장돼 있던 문제 수정.
+  // 정규+승부차기 합산 스코어로 저장돼 있던 문제 수정. v3: 컵대회 라운드 추가.
   var isPast = (_mCurrentSeason !== undefined) && season < _mCurrentSeason;
-  var pending = apiFetch(FN+'/football?type=results&season='+season+'&v=2', {immutable:isPast}).then(function(data){
+  var pending = apiFetch(FN+'/football?type=results&season='+season+'&v=3', {immutable:isPast}).then(function(data){
     var m = data.matches||[];
     assignPlRounds(m);
     _resultsCache[season] = m;
@@ -2650,10 +2672,8 @@ function renderCalendarGrid(year, month, monthMatches){
       var as_ = m.score&&m.score.fullTime?m.score.fullTime.away:null;
       var hasScore = m.status==='FINISHED' && hs!==null && hs!==undefined && as_!==null && as_!==undefined;
       if(hasScore){
-        var arsS=isArsHome?hs:as_, oppS=isArsHome?as_:hs;
-        if(arsS>oppS) cell.classList.add('cal-day-win');
-        else if(arsS===oppS) cell.classList.add('cal-day-draw');
-        else cell.classList.add('cal-day-loss');
+        var calOutcome=matchOutcome(m,isArsHome);
+        if(calOutcome) cell.classList.add('cal-day-'+calOutcome);
       } else {
         if(isNeutral) cell.classList.add('neutral-fixture');
         else if(!isArsHome) cell.classList.add('away-fixture');
@@ -4601,8 +4621,9 @@ function openMatchModal(m, isAuto){
   var hs0=m.score&&m.score.fullTime?(m.score.fullTime.home||0):0;
   var as0=m.score&&m.score.fullTime?(m.score.fullTime.away||0):0;
   var isPlayedSkel=m.status==='FINISHED'||m.status==='IN_PLAY'||m.status==='PAUSED';
-  var scoreColorSkel=m.status==='FINISHED'?(isArsHomeSkel?(hs0>as0?'var(--green)':hs0===as0?'var(--amber)':'var(--loss)'):(as0>hs0?'var(--green)':as0===hs0?'var(--amber)':'var(--loss)')):'';
+  var scoreColorSkel=m.status==='FINISHED'?(OUTCOME_COLOR[matchOutcome(m,isArsHomeSkel)]||''):'';
   var scoreDisplaySkel=isPlayedSkel?(hs0+' : '+as0):'VS';
+  var penSkel=m.status==='FINISHED'?penLineHtml(m.score&&m.score.penalties):'';
   if(!allInjuries.length){
     apiFetchCached(FN+'/football?type=injuries', 'injuries', function(data){ allInjuries=data.injured||[]; }, function(){});
   }
@@ -4628,6 +4649,7 @@ function openMatchModal(m, isAuto){
         '<div class="mm-center-col">'+
           '<div class="mm-meta-date">'+formatDate(m.utcDate||m.date,m.tbd)+'</div>'+
           '<div class="mm-score" style="'+(scoreColorSkel?'color:'+scoreColorSkel+';':'')+'">'+scoreDisplaySkel+'</div>'+
+          penSkel+
           '<div class="mm-center-meta">'+
             (m.venue?'<div class="mm-meta-row">'+dIcon('stadium',11)+' '+m.venue+'</div>':'')+
             (m.competition&&m.competition.name?'<span class="mm-meta-comp">'+(m.competition.name)+'</span>':'')+
@@ -4809,11 +4831,18 @@ function renderMatchModal(content, m, data, desktop){
   var EVENT_ICON={goal:'⚽',pen_goal:'⚽(P)',own_goal:'🔴(OG)',red_card:'🟥'};
   var EVENT_ICON_AWAY={goal:'⚽',pen_goal:'(P)⚽',own_goal:'(OG)🔴',red_card:'🟥'};
   var STAT_LABELS={possessionPct:'점유율',totalShots:'슈팅',shotsOnTarget:'유효슈팅',passingAccuracy:'패스성공',cornerKicks:'코너킥',offsides:'오프사이드',yellowCards:'경고',redCards:'퇴장'};
-  var scoreColor=isArsHome?(h.score>a.score?'var(--green)':h.score===a.score?'var(--amber)':'var(--loss)'):(a.score>h.score?'var(--green)':a.score===h.score?'var(--amber)':'var(--loss)');
+  // 승부차기 스코어는 경기 상세(shootout.score)를 우선하고, 없으면 일정 목록에서
+  // 넘어온 값(m.score.penalties)을 쓴다 — 헤더 색도 카드와 같은 규칙(matchOutcome).
+  var soScore=data.shootout&&Array.isArray(data.shootout.score)?data.shootout.score:null;
+  var pens=soScore?{home:soScore[0],away:soScore[1]}:(m.score&&m.score.penalties)||null;
+  var hdrMatch={score:{fullTime:{home:h.score,away:a.score},penalties:pens},competition:m.competition};
   var isDoneR=m.status==='FINISHED', isLiveR=m.status==='IN_PLAY'||m.status==='PAUSED';
   var isUpcomingR=!isDoneR&&!isLiveR;
+  var scoreColor=isDoneR?(OUTCOME_COLOR[matchOutcome(hdrMatch,isArsHome)]||''):
+    (isArsHome?(h.score>a.score?'var(--green)':h.score===a.score?'var(--amber)':'var(--loss)'):(a.score>h.score?'var(--green)':a.score===h.score?'var(--amber)':'var(--loss)'));
   var scoreDisplay=isUpcomingR?'VS':(h.score+' : '+a.score);
   var scoreColorFinal=isUpcomingR?'':scoreColor;
+  var penHdr=isDoneR?penLineHtml(pens):'';
 
   var dateStr = formatDate(m.utcDate||m.date, m.tbd);
   var compName = (m.competition&&m.competition.name)||'';
@@ -4831,6 +4860,7 @@ function renderMatchModal(content, m, data, desktop){
         '<div class="mm-center-col">'+
           '<div class="mm-meta-date">'+dateStr+'</div>'+
           '<div class="mm-score" style="'+(scoreColorFinal?'color:'+scoreColorFinal+';':'')+'">'+scoreDisplay+'</div>'+
+          penHdr+
           '<div class="mm-center-meta">'+
             (venueStr?'<div class="mm-meta-row">'+dIcon('stadium',11)+' '+venueStr+'</div>':'')+
             (compName?'<span class="mm-meta-comp">'+compName+'</span>':'')+

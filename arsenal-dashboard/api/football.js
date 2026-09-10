@@ -350,9 +350,11 @@ async function warmTeamSlices(teamPayload){
     const rawFixtures = teamPayload?.fixtures?.allFixtures?.fixtures || [];
     const fixtures = rawFixtures.map(mapFotmobFixture).filter(m => m.utcDate)
       .sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
+    const now = new Date();
+    await attachCupRounds(fixtures, now.getMonth() + 1 >= 8 ? now.getFullYear() : now.getFullYear() - 1);
     const ttl = sliceTtlFor(fixtures);
     const jobs = [];
-    if(fixtures.length) jobs.push(kvSetJSON(`fixtures:v2:${FIRST_TEAM_ID}`, fixtures, ttl));
+    if(fixtures.length) jobs.push(kvSetJSON(`fixtures:v3:${FIRST_TEAM_ID}`, fixtures, ttl));
 
     const standings = mapFotmobStandings(teamPayload);
     if(standings && standings.length) jobs.push(kvSetJSON(`standings:${PL_LEAGUE_ID}`, standings, ttl));
@@ -410,6 +412,84 @@ const FOTMOB_COMP_MAP = {
   'Club Friendlies':  {name:'Friendly',         short:'FR'},
 };
 
+// ── 컵대회 라운드 ─────────────────────────────────────────────────────
+// 팀 일정 API(teams?id=)의 tournament.stage는 모든 대회에서 빈 문자열이라
+// 카드에 "리그페이즈/16강/3라운드"를 못 붙인다(ESPN 시절엔 ESPN이 줘서 됐는데
+// Fotmob으로 옮기면서 빠졌다). 라운드는 리그 API(leagues?id=&season=)의
+// fixtures.allMatches[].round에만 있어서, 일정에 등장하는 컵대회마다 한 번씩
+// 불러 아스날 경기의 "경기ID → 라운드" 맵을 만든다. 리그 응답은 200~800KB라
+// 통째로 두지 않고 이 맵(수백 바이트)만 KV에 둔다 — 끝난 시즌은 영구, 진행 중
+// 시즌은 토너먼트 대진이 추가되므로 6시간.
+// PL은 라운드를 프론트(assignPlRounds)가 날짜순으로 직접 매기고, 커뮤니티
+// 실드는 단판이라 프론트가 대회코드만으로 "결승"을 붙이므로 대상에서 뺀다.
+const ROUND_LEAGUES = new Set([42, 73, 133, 132]); // UCL, UEL, EFL컵, FA컵
+const KV_TTL_ROUNDS_LIVE_SEC = 6 * 60 * 60;
+
+function seasonStartYearOf(utcDate){
+  const d = new Date(utcDate);
+  return d.getUTCMonth() + 1 >= 8 ? d.getUTCFullYear() : d.getUTCFullYear() - 1;
+}
+
+async function fetchLeagueRounds(leagueId, seasonYear, isPast){
+  const key = `rounds:${leagueId}:${seasonYear}`;
+  const hit = await kvGetJSON(key);
+  if(hit) return hit;
+  try {
+    const season = encodeURIComponent(`${seasonYear}/${seasonYear + 1}`);
+    const r = await fetch(`https://www.fotmob.com/api/data/leagues?id=${leagueId}&season=${season}`,
+      {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+    if(!r.ok) return {};
+    const j = await r.json();
+    const map = {};
+    for(const m of (j.fixtures?.allMatches || [])){
+      const ours = String(m.home?.id) === String(FIRST_TEAM_ID) || String(m.away?.id) === String(FIRST_TEAM_ID);
+      if(ours && m.round != null) map[String(m.id)] = String(m.round);
+    }
+    if(Object.keys(map).length) await kvSetJSON(key, map, isPast ? undefined : KV_TTL_ROUNDS_LIVE_SEC);
+    return map;
+  } catch(_){ return {}; }
+}
+
+// Fotmob 라운드 표기 → 프론트 getRoundLabel이 읽는 토큰. 숫자 라운드는 대회에
+// 따라 뜻이 다르다: 컵대회는 "N라운드", 챔스·유로파는 조별리그/리그페이즈의
+// 경기 차수라 단계 이름으로 바꾼다(2024/25 개편부터 리그페이즈).
+function normalizeCupRound(raw, leagueId, seasonYear){
+  if(raw == null || raw === '') return null;
+  const r = String(raw).toLowerCase();
+  if(r === 'final') return 'final';
+  if(r === '1/2') return 'semifinals';
+  if(r === '1/4') return 'quarterfinals';
+  if(r === '1/8') return 'roundof16';
+  if(r === '1/16') return 'roundof32';
+  if(r.startsWith('playoff')) return 'playoffround';
+  if(/^\d+$/.test(r)){
+    if(leagueId === 42 || leagueId === 73) return seasonYear >= 2024 ? 'leaguephase' : 'groupstage';
+    return `round-${r}`;
+  }
+  return null;
+}
+
+// 일정 배열에 컵대회 라운드를 제자리에서 채운다. 실패하면 조용히 넘어간다 —
+// 라운드는 부가 정보라 이것 때문에 일정 자체가 안 뜨면 안 된다.
+async function attachCupRounds(fixtures, curSeasonYear){
+  const groups = new Map();
+  for(const m of fixtures || []){
+    if(!ROUND_LEAGUES.has(m.leagueId) || !m.utcDate) continue;
+    const sy = seasonStartYearOf(m.utcDate);
+    const k = `${m.leagueId}:${sy}`;
+    if(!groups.has(k)) groups.set(k, {leagueId: m.leagueId, seasonYear: sy, matches: []});
+    groups.get(k).matches.push(m);
+  }
+  await Promise.all([...groups.values()].map(async g => {
+    const map = await fetchLeagueRounds(g.leagueId, g.seasonYear, g.seasonYear < curSeasonYear);
+    for(const m of g.matches){
+      const round = normalizeCupRound(map[String(m.id)], g.leagueId, g.seasonYear);
+      if(round) m.round = round;
+    }
+  }));
+  return fixtures;
+}
+
 // Fotmob 팀 일정 1건 → ESPN parseEvent와 같은 모양으로. 프론트 계약(경기카드·
 // 모달·라이브 폴링)이 전부 이 모양을 전제하므로 필드명을 그대로 맞춘다.
 // ESPN에 있고 Fotmob 팀 일정엔 없는 값(venue, neutralSite)은 null로 두고,
@@ -461,7 +541,11 @@ function mapFotmobFixture(m){
     fotmobId:    m.id,
     utcDate:     st.utcTime,
     competition: comp,
-    round:       (m.tournament || {}).stage || null,
+    // 팀 일정 API의 stage는 모든 대회에서 빈 문자열이라 여기선 라운드를 알 수
+    // 없다 — 컵대회 라운드는 attachCupRounds가 리그 API에서 따로 채운다. 챔스
+    // 예선(10611, 2011~2014)은 아스날이 치른 게 전부 플레이오프 라운드였다.
+    round:       tourObj.leagueId === 10611 ? 'playoffround' : (tourObj.stage || null),
+    leagueId:    tourObj.leagueId ?? null,
     neutralSite: false,
     venue:       null,
     status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
@@ -647,7 +731,7 @@ export default async function handler(req, res) {
       // 비면 그쪽으로 흘러가서 화면이 비지 않게.
       try {
         // 가공된 일정만 KV에 둔다(원본 600KB가 아니라 30KB 수준이라 되읽기가 빠르다)
-        let fmMatches = nocache ? null : await kvGetJSON(`fixtures:v2:${FIRST_TEAM_ID}`);
+        let fmMatches = nocache ? null : await kvGetJSON(`fixtures:v3:${FIRST_TEAM_ID}`);
         if(!fmMatches){
           const teamPayload = await fetchTeamPayload();
           // 일정만 만들지 않고 순위·선수단 조각까지 같이 채운다 — 지금 도는
@@ -757,7 +841,7 @@ export default async function handler(req, res) {
         const hit = getCache(cacheKey);
         if(hit) return res.json(hit);
         if(isPastSeason){
-          const kvHit = await kvGetJSON(`results:v2:${requestedSeason}`);
+          const kvHit = await kvGetJSON(`results:v3:${requestedSeason}`);
           if(kvHit){ setCache(cacheKey, kvHit); return res.json(kvHit); }
         }
       }
@@ -766,10 +850,11 @@ export default async function handler(req, res) {
       try {
         const fmSeason = await fetchFotmobSeasonFixtures(requestedSeason);
         const fmFinished = (fmSeason || []).filter(m => m.status === 'FINISHED');
+        await attachCupRounds(fmFinished, curSeasonYear);
         if(fmFinished.length){
           const payload = {matches: fmFinished, season: requestedSeason, source: 'fotmob'};
           setCache(cacheKey, payload);
-          if(isPastSeason) await kvSetJSON(`results:v2:${requestedSeason}`, payload);
+          if(isPastSeason) await kvSetJSON(`results:v3:${requestedSeason}`, payload);
           return res.json(payload);
         }
       } catch(_){ /* ESPN 폴백으로 진행 */ }
@@ -835,7 +920,7 @@ export default async function handler(req, res) {
         // 끝난 시즌 결과는 두 번 다시 안 바뀌므로 만료 없이 영구 저장 —
         // 이후 누가 그 달을 열어도 ESPN을 아예 안 부른다. 시즌당 30KB 수준이라
         // 수십 시즌을 모아도 1MB가 안 된다.
-        if(isPastSeason) await kvSetJSON(`results:v2:${requestedSeason}`, payload);
+        if(isPastSeason) await kvSetJSON(`results:v3:${requestedSeason}`, payload);
       }
       return res.json(payload);
 
