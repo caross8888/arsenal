@@ -19,4 +19,8 @@
 // 다르게 처리해서(ESM은 import 속성이 필요) 양쪽에서 확실히 도는 형식으로 뒀다.
 // 내용은 JSON과 똑같이 데이터만 넣으면 된다.
 export const OVERRIDES = [
+  // ESPN 2026-09-10 — 구글이 "챔스 데뷔팀이자 아스날·맨유의 상대인"이라는 수식어를
+  // 별도 질문("아스날/맨유의 상대는 누구일까요?")으로 쪼갰다.
+  { en: 'Who are Sabah FK, Champions League debutants, Arsenal/Man United opponents?',
+    ko: '챔피언스 리그 데뷔팀이자 아스날·맨유의 상대, 사바흐 FK는 어떤 팀인가?' },
 ];

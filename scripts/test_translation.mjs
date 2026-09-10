@@ -46,6 +46,11 @@ suite('이름', applyGlossary, [
   ['Ceadach O’Neill and Elijah Upson', '시아다흐 오닐 and 엘리야 업슨'],
   ['Edwin Quintero and Holger Quintero', '에드윈 퀸테로 and 홀거 퀸테로'],
   ['grilled salmon recipe', 'grilled salmon recipe'],           // Salmon 성 단독은 안 잡음(연어)
+  // 상대팀
+  ['챔피언스 리그 데뷔팀인 사바 FK는 누구이며', '챔피언스 리그 데뷔팀인 사바흐 FK는 누구이며'],
+  ['Arsenal vs Sabah FK', '아스날 vs 사바흐 FK'],
+  ['10년 전만 해도 존재하지 않았던 클럽 사바흐가', '10년 전만 해도 존재하지 않았던 클럽 사바흐가'],
+  ['사바나 기후처럼 뜨거운 경기', '사바나 기후처럼 뜨거운 경기'],   // "사바" 단독은 안 잡음
 ]);
 
 // ── 2. 축구 용어 오역 교정 ───────────────────────────────────────────
