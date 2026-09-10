@@ -150,6 +150,16 @@ async function buildFromFotmob(matchId){
   // ── 선수 ──
   // 개별 스탯은 lineup이 아니라 playerStats에 들어있어서 id로 합친다.
   const psById = content.playerStats || {};
+  // 카드는 playerStats에 없고 이벤트에만 있어서 선수별로 집계해둔다.
+  const cardsByPlayer = {};
+  for(const ev of (mf.events?.events || [])){
+    if(String(ev.type) !== 'Card') continue;
+    const pid = String(ev.player?.id || '');
+    if(!pid) continue;
+    if(!cardsByPlayer[pid]) cardsByPlayer[pid] = {yellow: 0, red: 0};
+    if(/red/i.test(String(ev.card || ''))) cardsByPlayer[pid].red++;
+    else cardsByPlayer[pid].yellow++;
+  }
   // 항목에 따라 key가 비어있는 것도 있어서(예: Shots on target) 영문 title로도 찾는다
   const statVal = (p, keyOrTitle) => {
     for(const grp of (p?.stats || [])){
@@ -187,8 +197,8 @@ async function buildFromFotmob(matchId){
         shots: statVal(ps, 'total_shots'),
         shotsOnTarget: statVal(ps, 'Shots on target'),
         fouls: statVal(ps, 'fouls'),
-        yellowCards: undefined,
-        redCards: undefined,
+        yellowCards: cardsByPlayer[String(p.id)]?.yellow,
+        redCards: cardsByPlayer[String(p.id)]?.red,
       },
     };
   };

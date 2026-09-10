@@ -4968,6 +4968,15 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="'+circleTextColor+'" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
     svg+='<text x="'+c.x+'" y="'+(c.y+r+8)+'" text-anchor="middle" font-size="7.5" font-weight="600" fill="'+nameTextColor+'" font-family="sans-serif">'+lastName+'</text>';
+    // 평점 배지 — 원 좌측 상단(교체 아이콘은 우측 상단이라 안 겹친다).
+    // 아래쪽에 두면 이름 텍스트와 겹친다(실측 3.7px).
+    if(p.rating!=null && !isNaN(parseFloat(p.rating))){
+      var rv=parseFloat(p.rating).toFixed(1);
+      var rx=c.x-r-1, ry=c.y-r+3;
+      var rc2=rv>=8?'#22C55E':rv>=7?'#84CC16':rv>=6?'#F59E0B':'#EF4444';
+      svg+='<rect x="'+(rx-6.5)+'" y="'+(ry-4)+'" width="13" height="8" rx="2" fill="'+rc2+'" stroke="rgba(0,0,0,.35)" stroke-width="0.5"/>';
+      svg+='<text x="'+rx+'" y="'+ry+'" text-anchor="middle" dominant-baseline="central" font-size="6" font-weight="700" fill="#0B0D12" font-family="sans-serif">'+rv+'</text>';
+    }
     // 교체 아이콘 (ESPN substitution icon)
     if(wasSubbed){
       var ix=c.x+r-1, iy=c.y-r+1;
@@ -4986,10 +4995,29 @@ function getPosBadge(pos){
   if(/^(F|ST|FW|LW|RW|LF|RF|CF|RCF|SS)/.test(p)) return '<span class="mm-pos-badge mm-pos-fw">FW</span>';
   return '<span class="mm-pos-badge mm-pos-sub">'+pos+'</span>';
 }
+// 평점 색 — 8+ 초록 / 7+ 연두 / 6+ 앰버 / 6 미만 레드.
+// 선수 모달 헤더(hdrRatingColor)는 시즌 평균이라 6 미만이 사실상 안 나와서
+// 회색으로 뒀지만, 단일 경기 평점은 4~5점대가 흔하므로 부정 수치 전용
+// 레드(#EF4444, CLAUDE.md 색상 기준)를 쓴다.
+function ratingColor(v){
+  var n=parseFloat(v);
+  if(isNaN(n)) return 'var(--text-dim)';
+  return n>=8?'var(--green)':n>=7?'#84CC16':n>=6?'var(--amber)':'var(--loss)';
+}
+function ratingBadgeHtml(v){
+  if(v==null||v==='') return '-';
+  var n=parseFloat(v);
+  if(isNaN(n)) return '-';
+  return '<span style="display:inline-block;min-width:26px;padding:1px 4px;border-radius:4px;font-family:var(--fm);font-size:10px;font-weight:700;'
+    +'color:'+ratingColor(n)+';background:color-mix(in srgb,'+(n>=8?'#22C55E':n>=7?'#84CC16':n>=6?'#F59E0B':'#EF4444')+' 15%,transparent);">'
+    +n.toFixed(1)+'</span>';
+}
 function renderPlayerRow(p){
   var s=p.stats||{};
-  // 교체 아웃 선수: 이름 아래에 교체 아이콘 + 시간 + 교체 선수 이름
-  var nameCell=getPosBadge(p.position)+(p.name||'')+(p.jersey?' <span style="color:var(--text-dim);font-size:9px">#'+p.jersey+'</span>':'');
+  // 카드는 열을 따로 두지 않고 이름 옆 아이콘으로 — 그 자리를 평점이 쓴다.
+  var y=parseInt(s.yellowCards)||0, rc=parseInt(s.redCards)||0;
+  var cardIcon=rc?' <span style="font-size:9px">🟥</span>':y?' <span style="font-size:9px">🟨</span>':'';
+  var nameCell=getPosBadge(p.position)+(p.name||'')+(p.jersey?' <span style="color:var(--text-dim);font-size:9px">#'+p.jersey+'</span>':'')+cardIcon;
   if(p.subbedOut&&p.subTime){
     var subForName=p.subFor?p.subFor.name:'';
     var subForJersey=p.subFor&&p.subFor.jersey?p.subFor.jersey:'';
@@ -5007,7 +5035,7 @@ function renderPlayerRow(p){
     '<td>'+(s.shots||'-')+'</td>'+
     '<td>'+(s.shotsOnTarget||'-')+'</td>'+
     '<td>'+(s.fouls||'-')+'</td>'+
-    '<td>'+(function(s){var y=parseInt(s.yellowCards)||0;var r=parseInt(s.redCards)||0;return r?'🟥':y?'🟨':'-';})(s)+'</td>'+
+    '<td>'+ratingBadgeHtml(p.rating)+'</td>'+
   '</tr>';
 }
 function renderPlayerTable(side, players, visible){
@@ -5016,7 +5044,7 @@ function renderPlayerTable(side, players, visible){
   var starters=players.filter(function(p){return p.starter;});
   var subs=players.filter(function(p){return !p.starter;});
   var colgroup='<colgroup><col><col style="width:1%"><col style="width:1%"><col style="width:1%"><col style="width:1%"><col style="width:1%"><col style="width:1%"></colgroup>';
-  var thead='<thead><tr><th>선수</th><th>골</th><th>도움</th><th>슈팅</th><th>유효</th><th>파울</th><th>경고</th></tr></thead>';
+  var thead='<thead><tr><th>선수</th><th>골</th><th>도움</th><th>슈팅</th><th>유효</th><th>파울</th><th>평점</th></tr></thead>';
   var html='<div class="mm-section mm-players-'+side+'" style="'+style+'">';
   // 선발
   html+='<div class="mm-lineup-block"><div class="mm-lineup-block-title">선발</div>';
