@@ -832,7 +832,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-stat-val.lead{color:var(--green);}
 .mm-stat-label{font-size:10px;color:var(--text-secondary);text-align:center;letter-spacing:.3px;}
 .mm-poss-label{font-size:10px;color:var(--text-secondary);text-align:center;letter-spacing:.3px;margin-bottom:4px;}
-.mm-poss-bar-wrap{grid-column:1/-1;display:flex;height:32px;border-radius:6px;overflow:hidden;margin:0 0 4px;}
+/* 팀 컬러가 흰색이면 라이트 모드 카드와 구분이 안 되고, 두 팀 컬러가 비슷하면
+   경계가 사라져서 — 공통 라인색 테두리 + 두 칸 사이 2px 틈을 둔다 */
+.mm-poss-bar-wrap{grid-column:1/-1;display:flex;gap:2px;height:32px;border-radius:6px;overflow:hidden;margin:0 0 4px;border:1px solid var(--border-bright);box-sizing:border-box;}
+/* 매치 도미넌스의 밝은 팀 컬러 막대 외곽선 (renderMomentumCard). SVG 프레젠테이션
+   속성엔 var()가 안 먹을 수 있어 CSS 클래스로 준다 */
+.mm-mo-light{stroke:var(--overlay-50);stroke-width:1px;}
 .mm-poss-bar-home{background:var(--red);display:flex;align-items:center;padding-left:10px;color:var(--white);font-size:13px;font-weight:800;white-space:nowrap;transition:width .4s;}
 .mm-poss-bar-away{background:rgba(96,165,250,.75);display:flex;align-items:center;justify-content:flex-end;padding-right:10px;color:var(--white);font-size:13px;font-weight:800;white-space:nowrap;transition:width .4s;}
 .mm-pitch-wrap{overflow:hidden;border-radius:10px;}
@@ -5608,6 +5613,20 @@ function renderEventsPanelInner(data){
   h += '</tbody></table></div>';
   return h;
 }
+// 팀 컬러 바탕 위에 올릴 글자색. Fotmob 팀 컬러에는 흰색(빨강끼리 겹치면
+// 원정팀을 #ffffff로 준다)·노랑(도르트문트 #FFD900)·하늘색(맨시티 #76b4e5)처럼
+// 밝은 색이 흔해서 흰 글씨를 고정하면 안 보인다. 흰 글씨와 짙은 글씨 중
+// WCAG 대비가 더 큰 쪽을 고른다.
+function readableTextOn(color){
+  var m=String(color||'').replace('#','').match(/^([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if(!m) return '#fff';
+  var hx=m[1].length===3?m[1].replace(/(.)/g,'$1$1'):m[1];
+  var lin=function(c){c/=255;return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);};
+  var L=0.2126*lin(parseInt(hx.slice(0,2),16))+0.7152*lin(parseInt(hx.slice(2,4),16))+0.0722*lin(parseInt(hx.slice(4,6),16));
+  var DARK_L=0.0056; // #111의 상대 휘도
+  var onWhite=1.05/(L+0.05), onDark=(L+0.05)/(DARK_L+0.05);
+  return onDark>onWhite?'#111':'#fff';
+}
 function renderStatsPanelInner(data){
   var stats = data.teamStats||[];
   if(!stats.length) return '<div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:14px">이 경기는 팀 스탯이 제공되지 않습니다</div>';
@@ -5640,11 +5659,17 @@ function renderStatsPanelInner(data){
     }
     var hv=s.home||0, av=s.away||0;
     if(s.label==='점유율'){
-      // 점유율만 PL처럼 좌우 색이 꽉 채워진 큰 바로 보여준다.
+      // 점유율만 PL처럼 좌우 색이 꽉 채워진 큰 바로 보여준다. 색은 매치
+      // 도미넌스와 같은 팀 컬러(없으면 같은 기본값), 글자색은 바탕 밝기에 맞춰.
       var rawH=parseFloat((hv+'').replace('%',''))||0;
       var homePct=Math.round(rawH); var awayPct=100-homePct;
+      var hC=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
+      var aC=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
       h += '<div class="mm-poss-label" style="grid-column:1/-1;">'+s.label+'</div>';
-      h += '<div class="mm-poss-bar-wrap"><div class="mm-poss-bar-home" style="width:'+homePct+'%">'+hv+'%</div><div class="mm-poss-bar-away" style="width:'+awayPct+'%">'+av+'%</div></div>';
+      h += '<div class="mm-poss-bar-wrap">'+
+        '<div class="mm-poss-bar-home" style="width:'+homePct+'%;background:'+hC+';color:'+readableTextOn(hC)+'">'+hv+'%</div>'+
+        '<div class="mm-poss-bar-away" style="width:'+awayPct+'%;background:'+aC+';color:'+readableTextOn(aC)+'">'+av+'%</div>'+
+      '</div>';
       return;
     }
     // 나머지 스탯은 바 없이 숫자만 — 더 우세한 쪽만 색으로 강조.
@@ -5820,6 +5845,10 @@ function renderMomentumCard(data){
   if(!m||!m.length) return '';
   var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
   var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
+  // 밝은 팀 컬러(흰색·노랑·하늘색)는 라이트 모드 카드 바탕에 막대가 묻혀서
+  // 사라지므로, 그 팀 막대에만 얇은 외곽선(.mm-mo-light)을 두른다. 짙은 팀 컬러에까지
+  // 두르면 막대 90여 개가 전부 테두리를 달고 지저분해진다.
+  var hLight=readableTextOn(hColor)==='#111', aLight=readableTextOn(aColor)==='#111';
   var W=100, H=46, MID=H/2;          // viewBox 기준(가로는 100% 늘어남)
   var bw=W/m.length;
   var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="width:100%;height:88px;display:block">';
@@ -5829,18 +5858,21 @@ function renderMomentumCard(data){
     var hgt=Math.abs(v)/100*MID;
     var x=i*bw;
     var y=v>0?MID-hgt:MID;
-    svg+='<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+Math.max(bw*0.8,0.4).toFixed(2)+'" height="'+hgt.toFixed(2)+'" fill="'+(v>0?hColor:aColor)+'"/>';
+    // 가로로 늘어나는 SVG라 선 굵기가 같이 늘지 않게 non-scaling-stroke
+    var light=v>0?hLight:aLight;
+    svg+='<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+Math.max(bw*0.8,0.4).toFixed(2)+'" height="'+hgt.toFixed(2)+'" fill="'+(v>0?hColor:aColor)+'"'+
+      (light?' class="mm-mo-light" vector-effect="non-scaling-stroke"':'')+'/>';
   });
   svg+='<line x1="0" y1="'+MID+'" x2="'+W+'" y2="'+MID+'" stroke="var(--border-bright)" stroke-width="0.4"/>';
   svg+='</svg>';
-  var legend=function(c,n){return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary)">'
-    +'<span style="width:8px;height:8px;border-radius:2px;background:'+c+'"></span>'+n+'</span>';};
+  var legend=function(c,n,light){return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary)">'
+    +'<span style="width:8px;height:8px;border-radius:2px;background:'+c+(light?';box-shadow:inset 0 0 0 1px var(--overlay-50)':'')+'"></span>'+n+'</span>';};
   return '<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">매치 도미넌스</div>'+
     '<div style="padding:6px 14px 12px;">'+svg+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">'+
-      legend(hColor,(data.homeTeam&&data.homeTeam.name)||'홈')+
+      legend(hColor,(data.homeTeam&&data.homeTeam.name)||'홈',hLight)+
       '<span style="font-size:9px;color:var(--text-dim)">'+m.length+'분</span>'+
-      legend(aColor,(data.awayTeam&&data.awayTeam.name)||'원정')+
+      legend(aColor,(data.awayTeam&&data.awayTeam.name)||'원정',aLight)+
     '</div></div></div>';
 }
 // 승부차기 카드 — 승부차기가 있었던 경기에서만 매치 도미넌스 위에 붙는다
