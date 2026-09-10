@@ -1709,6 +1709,35 @@ function apiFetch(url, opts){
 // 결과를 즉시 렌더링해서 먼저 보여주고, 그 사이 최신 데이터를 백그라운드로
 // 받아와서 조용히 다시 렌더링(같은 콜백 재호출)한다. 캐시가 없으면(첫 방문)
 // 기존과 동일하게 로딩 상태 → 결과 순서로 동작한다.
+// 지난 경기 상세를 미리 받아 브라우저 캐시에 넣어둔다 — 확정된 경기(종료 후
+// 24시간 경과)는 서버가 immutable로 내려주므로, 여기서 한 번 받아두면 나중에
+// 사용자가 카드를 눌렀을 때 네트워크를 안 타고 즉시 열린다(스피너 없음).
+// 모달이 만드는 URL과 한 글자도 다르면 캐시가 안 맞으므로 같은 방식으로 만든다.
+function matchDetailUrl(m){
+  var slug=COMP_SLUG_MAP[m.competition&&m.competition.short]||'eng.1';
+  return FN+'/match?id='+m.id+'&slug='+slug;
+}
+function isSettledMatch(m){
+  return m && m.status==='FINISHED' && m.utcDate &&
+    (Date.now() - new Date(m.utcDate).getTime() > 24*60*60*1000);
+}
+var _prefetchedMatches = {};
+function prefetchFinishedMatches(list, limit){
+  var targets=(list||[]).filter(isSettledMatch).filter(function(m){ return m.id && !_prefetchedMatches[m.id]; });
+  if(!targets.length) return;
+  // 최근 경기부터 — 사용자가 누를 확률이 높은 순서
+  targets.sort(function(a,b){ return new Date(b.utcDate)-new Date(a.utcDate); });
+  targets=targets.slice(0, limit||8);
+  var i=0;
+  var next=function(){
+    if(i>=targets.length) return;
+    var m=targets[i++];
+    _prefetchedMatches[m.id]=true;
+    fetch(matchDetailUrl(m)).catch(function(){}).then(function(){ setTimeout(next, 150); });
+  };
+  if(window.requestIdleCallback) requestIdleCallback(function(){ next(); }, {timeout:6000});
+  else setTimeout(next, 3000);
+}
 function apiFetchCached(url, cacheKey, onData, onError){
   var cached = null;
   try{ var raw = localStorage.getItem('cache_'+cacheKey); if(raw) cached = JSON.parse(raw); }catch(e){}
@@ -2262,7 +2291,10 @@ function initMatchNav(data){
   updateMatchLabel();
   var season = resultsSeasonForYM(_mYear, _mMonth);
   getSeasonMatches(season).then(function(seasonMatches){
-    renderMatches(monthMatchesFrom(seasonMatches, _mYear, _mMonth));
+    var mm = monthMatchesFrom(seasonMatches, _mYear, _mMonth);
+    renderMatches(mm);
+    // 지금 보고 있는 달의 지난 경기도 미리 받아둔다
+    prefetchFinishedMatches(mm, 8);
   });
 }
 // 화살표 이동은 경기 없는 달을 자동으로 건너뛰고, 데이터 상/하한(가장 이른
@@ -2387,6 +2419,8 @@ function loadFixtures(){
       if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')) renderCalendarMonth();
       initMatchNav(data);
       renderDday(upcomingAll);
+      // 지난 경기 상세를 유휴 시간에 미리 받아둔다 — 카드를 눌렀을 때 스피너 없이 열리게
+      prefetchFinishedMatches(data.finished||[], 8);
       // 라이브 경기 있으면 폴링 시작, 없으면 가장 가까운 예정 경기 킥오프에 맞춰
       // 감시 타이머를 걸어둔다 — 페이지를 계속 열어두고 있어도 킥오프 시점에
       // 자동으로 라이브 전환을 감지하기 위함(안 그러면 새로고침 전까진 못 알아챔).
@@ -4572,10 +4606,10 @@ function openMatchModal(m, isAuto){
     : Promise.resolve(null);
 
   // 하루 지난 종료 경기는 데이터가 확정돼서 서버가 immutable로 내려준다 —
-  // 캐시버스터를 빼야 브라우저 캐시가 히트해 재조회 시 스피너가 안 뜬다.
-  var mSettled = (m.status==='FINISHED') && m.utcDate &&
-    (Date.now() - new Date(m.utcDate).getTime() > 24*60*60*1000);
-  var matchUrl = FN+'/match?id='+m.id+'&slug='+slug + (mSettled ? '' : '&_='+Date.now());
+  // 캐시버스터를 빼야 브라우저 캐시가 히트해 스피너 없이 열린다. 프리페치도
+  // 같은 URL(matchDetailUrl)을 써야 캐시가 맞는다.
+  var matchUrl = isSettledMatch(m) ? matchDetailUrl(m)
+    : FN+'/match?id='+m.id+'&slug='+slug+'&_='+Date.now();
   Promise.all([
     fetch(matchUrl).then(function(r){ return r.json(); }),
     oppInjPromise
