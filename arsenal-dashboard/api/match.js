@@ -324,12 +324,29 @@ async function buildFromFotmob(matchId){
     ? momentumRaw.map(d => ({minute: d.minute, value: d.value}))
     : null;
 
+  // 승부차기 — Fotmob이 킥 순서대로 준다(Fotmob 화면의 순서와 같다). 성공/실패만
+  // 필요해서 type이 'Goal'이면 성공, 나머지('MissedPenalty' 등)는 실패로 본다.
+  // penShootoutScore는 그 킥 직후의 [홈, 원정] 누적 스코어. 승부차기 없는 경기는
+  // null이다 — 이 필드가 아예 없는(undefined) KV 캐시는 이 기능 이전에 저장된
+  // 옛 형식이라, 핸들러가 한 번 새로 받아 덮어쓴다.
+  const psRaw = mf.events?.penaltyShootoutEvents;
+  const shootout = Array.isArray(psRaw) && psRaw.length ? {
+    score: Array.isArray(header.status?.reason?.penalties) ? header.status.reason.penalties : null,
+    kicks: psRaw.map(e => ({
+      side: e.isHome ? 'home' : 'away',
+      player: e.player?.name || e.nameStr || '',
+      scored: e.type === 'Goal',
+      score: Array.isArray(e.penShootoutScore) ? e.penShootoutScore : null,
+    })),
+  } : null;
+
   const ib = mf.infoBox || {};
   return {
     eventId: String(matchId),
     source: 'fotmob',
     utcDate: general.matchTimeUTCDate || general.matchTimeUTC || null,
     momentum,
+    shootout,
     venue: ib.Stadium?.name || null,
     referee: ib.Referee?.text || null,
     attendance: ib.Attendance ?? null,
@@ -402,7 +419,13 @@ export default async function handler(req, res) {
   try {
     // 종료 경기는 KV에 영구 보관되어 있으면 그대로 — Fotmob을 아예 안 부른다.
     const kvHit = await kvGet(`match:${eventId}`);
-    if (kvHit) {
+    // shootout 필드가 아예 없는 Fotmob 캐시는 승부차기 카드 도입 전에 저장된 옛
+    // 형식이다. 영구 캐시라 그대로 두면 승부차기 경기가 영원히 카드 없이 나가므로,
+    // 캐시 미스로 취급해 한 번만 Fotmob에서 다시 받아 같은 키에 덮어쓴다(키를
+    // 새로 만들지 않아서 옛 키가 고아로 남지 않는다). ESPN 출처 캐시는 승부차기
+    // 데이터가 원래 없으니 그대로 쓴다.
+    const kvStale = kvHit && kvHit.source === 'fotmob' && !('shootout' in kvHit);
+    if (kvHit && !kvStale) {
       cache[cacheKey] = { data: kvHit, ts: Date.now() };
       if (isSettled(kvHit)) setImmutable(res);
       else if (kvHit.status === 'Full Time') res.setHeader('Cache-Control', 'public, max-age=600');

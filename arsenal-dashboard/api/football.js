@@ -352,7 +352,7 @@ async function warmTeamSlices(teamPayload){
       .sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
     const ttl = sliceTtlFor(fixtures);
     const jobs = [];
-    if(fixtures.length) jobs.push(kvSetJSON(`fixtures:${FIRST_TEAM_ID}`, fixtures, ttl));
+    if(fixtures.length) jobs.push(kvSetJSON(`fixtures:v2:${FIRST_TEAM_ID}`, fixtures, ttl));
 
     const standings = mapFotmobStandings(teamPayload);
     if(standings && standings.length) jobs.push(kvSetJSON(`standings:${PL_LEAGUE_ID}`, standings, ttl));
@@ -382,6 +382,23 @@ async function fetchFirstTeamRosterLive(){
 
 // Fotmob 대회명 → 앱이 쓰는 (name, short) 쌍. 앱 전반이 short 코드로 대회를
 // 구분하므로(대회 태그 색·선수 모달 탭 등) ESPN이 쓰던 코드를 그대로 유지한다.
+// Fotmob 리그ID → 앱 대회코드. 이름보다 이걸 먼저 본다 — 같은 대회도 시기에 따라
+// 이름이 바뀌어서(리그컵: 2015년까지 "League Cup", 이후 "EFL Cup") 이름으로만
+// 매핑하면 옛 리그컵이 친선전(FR)으로 떨어졌다. 이름 부분일치로 때우면 반대로
+// "Premier League Asia Trophy"(프리시즌)가 PL로, "Champions Cup"(ICC 프리시즌)이
+// UCL로 잘못 잡힌다. 아래는 Fotmob에 아스날 경기가 있는 전 기간(2010-07~)을
+// 훑어서 나온 공식 대회 ID 전부이고, 나머지(489 친선, 9408 ICC, 9543 아시아
+// 트로피 등)는 전부 프리시즌이라 FR로 떨어지는 게 맞다.
+const FOTMOB_COMP_BY_LEAGUE = {
+  47:    {name:'Premier League',   short:'PL'},
+  42:    {name:'Champions League', short:'UCL'},
+  10611: {name:'Champions League', short:'UCL'},  // 예선·플레이오프 (2011~2014)
+  73:    {name:'Europa League',    short:'EL'},
+  133:   {name:'EFL Cup',          short:'EFL'},  // 2015년까지 이름이 "League Cup"
+  132:   {name:'FA Cup',           short:'FAC'},
+  247:   {name:'Community Shield', short:'CS'},
+};
+// leagueId가 없을 때를 위한 이름 폴백.
 const FOTMOB_COMP_MAP = {
   'Premier League':   {name:'Premier League',   short:'PL'},
   'Champions League': {name:'Champions League', short:'UCL'},
@@ -401,10 +418,31 @@ function mapFotmobFixture(m){
   const st = m.status || {};
   const finished = !!st.finished;
   const live = !!st.ongoing || (!!st.started && !finished);
-  const tour = (m.tournament || {}).name || '';
-  const comp = FOTMOB_COMP_MAP[tour] || {name: tour || 'Friendly', short: 'FR'};
+  const tourObj = m.tournament || {};
+  const tour = tourObj.name || '';
+  const comp = FOTMOB_COMP_BY_LEAGUE[tourObj.leagueId] || FOTMOB_COMP_MAP[tour] || {name: tour || 'Friendly', short: 'FR'};
   const crest = id => id ? `https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png` : null;
   const scoreOf = side => (finished || live) ? (typeof side?.score === 'number' ? side.score : null) : null;
+
+  // 승부차기까지 간 경기는 home.score/away.score가 "정규(+연장) 골 + 승부차기 골"
+  // 합산값으로 온다 — 실측: 코모전 정규 1-1·승부차기 4-3 → 5-4, 도르트문트전
+  // 정규 2-3·승부차기 5-4 → 7-7. 정규 스코어는 status.scoreStr("1 - 1")에만 있어서
+  // 거기서 뽑고, 승부차기 스코어는 합산값에서 빼서 따로 싣는다. 친선전은 결과와
+  // 무관하게 승부차기를 하는 경우가 많아(2-3 패배 후 승부차기) 무승부 여부로
+  // 판단하면 안 되고 reason으로만 판단한다. 경기 상세(matchDetails)의
+  // header.teams[].score는 원래 정규 스코어라 이 문제는 팀 일정 API에만 있다.
+  let fullTime = {home: scoreOf(m.home), away: scoreOf(m.away)};
+  let penalties = null;
+  const isPens = finished && (st.reason?.shortKey === 'penalties_short' || st.reason?.short === 'Pen');
+  if(isPens && fullTime.home != null && fullTime.away != null){
+    const reg = String(st.scoreStr || '').match(/(\d+)\s*-\s*(\d+)/);
+    if(reg){
+      const rh = +reg[1], ra = +reg[2];
+      const ph = fullTime.home - rh, pa = fullTime.away - ra;
+      fullTime = {home: rh, away: ra};
+      if(ph >= 0 && pa >= 0) penalties = {home: ph, away: pa};
+    }
+  }
 
   // liveTime.short는 "37‎’‎"처럼 방향 제어문자(U+200E)가 섞여 온다 — 숫자만 뽑아
   // 앱이 쓰던 "37'" 형태로 정규화한다.
@@ -433,7 +471,7 @@ function mapFotmobFixture(m){
     tbd:         st.cancelled ? 'canceled' : null,
     homeTeam: {id: m.home?.id != null ? String(m.home.id) : null, name: m.home?.name, crest: crest(m.home?.id)},
     awayTeam: {id: m.away?.id != null ? String(m.away.id) : null, name: m.away?.name, crest: crest(m.away?.id)},
-    score: {fullTime: {home: scoreOf(m.home), away: scoreOf(m.away)}},
+    score: {fullTime, penalties},
   };
 }
 
@@ -609,7 +647,7 @@ export default async function handler(req, res) {
       // 비면 그쪽으로 흘러가서 화면이 비지 않게.
       try {
         // 가공된 일정만 KV에 둔다(원본 600KB가 아니라 30KB 수준이라 되읽기가 빠르다)
-        let fmMatches = nocache ? null : await kvGetJSON(`fixtures:${FIRST_TEAM_ID}`);
+        let fmMatches = nocache ? null : await kvGetJSON(`fixtures:v2:${FIRST_TEAM_ID}`);
         if(!fmMatches){
           const teamPayload = await fetchTeamPayload();
           // 일정만 만들지 않고 순위·선수단 조각까지 같이 채운다 — 지금 도는
@@ -719,7 +757,7 @@ export default async function handler(req, res) {
         const hit = getCache(cacheKey);
         if(hit) return res.json(hit);
         if(isPastSeason){
-          const kvHit = await kvGetJSON(`results:${requestedSeason}`);
+          const kvHit = await kvGetJSON(`results:v2:${requestedSeason}`);
           if(kvHit){ setCache(cacheKey, kvHit); return res.json(kvHit); }
         }
       }
@@ -731,7 +769,7 @@ export default async function handler(req, res) {
         if(fmFinished.length){
           const payload = {matches: fmFinished, season: requestedSeason, source: 'fotmob'};
           setCache(cacheKey, payload);
-          if(isPastSeason) await kvSetJSON(`results:${requestedSeason}`, payload);
+          if(isPastSeason) await kvSetJSON(`results:v2:${requestedSeason}`, payload);
           return res.json(payload);
         }
       } catch(_){ /* ESPN 폴백으로 진행 */ }
@@ -797,7 +835,7 @@ export default async function handler(req, res) {
         // 끝난 시즌 결과는 두 번 다시 안 바뀌므로 만료 없이 영구 저장 —
         // 이후 누가 그 달을 열어도 ESPN을 아예 안 부른다. 시즌당 30KB 수준이라
         // 수십 시즌을 모아도 1MB가 안 된다.
-        if(isPastSeason) await kvSetJSON(`results:${requestedSeason}`, payload);
+        if(isPastSeason) await kvSetJSON(`results:v2:${requestedSeason}`, payload);
       }
       return res.json(payload);
 
