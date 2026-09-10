@@ -66,6 +66,13 @@ const FM_GROUP_LABEL = {
 };
 // 값이 낮을수록 좋은 항목(반칙·카드류)만 별도 표기 — 나머지는 높은 쪽이 우세
 const FM_LOWER_IS_BETTER = new Set(['반칙','경고','퇴장','큰 기회 놓침']);
+const FM_POS_BY_ID = {0:'GK', 1:'DF', 2:'MF', 3:'FW'};
+// 거리 항목은 미터로 온다(팀 합계 116576 = 116.6km) — 그대로 두면 숫자가 의미
+// 없으니 km로 환산해서 보여준다.
+const FM_DISTANCE_LABELS = new Set(['활동량','스프린트 거리']);
+const fmFormatStat = (label, v) => FM_DISTANCE_LABELS.has(label) && !isNaN(parseFloat(v))
+  ? (parseFloat(v)/1000).toFixed(1)+'km'
+  : String(v);
 
 function fmStatWinner(label, hv, av){
   const num = v => parseFloat(String(v).replace('%','').replace(/[()]/g,' ').trim().split(' ')[0]);
@@ -87,14 +94,18 @@ async function buildFromFotmob(matchId){
 
   const teamsArr = header.teams || [];
   const crest = id => id ? `https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png` : null;
+  // teamColors는 {darkMode:{home,away}, lightMode:{...}} 형태로 중첩돼 있다 —
+  // 예전엔 colors[side]로 바로 꺼내다 undefined가 나와서 피치 유니폼 색이
+  // 통째로 빠졌다. 앱이 다크 기준이라 darkMode를 쓰고 lightMode로 폴백한다.
   const colors = general.teamColors || {};
+  const colorOf = side => colors.darkMode?.[side] || colors.lightMode?.[side] || null;
   const mkTeam = (t, side) => ({
     id: t?.id != null ? String(t.id) : null,
     name: t?.name || '',
     crest: crest(t?.id),
     score: typeof t?.score === 'number' ? t.score : null,
     stats: {},
-    color: (colors[side] || colors.home || '').replace(/^#?/, '#'),
+    color: colorOf(side),
     alternateColor: null,
   });
   const home = mkTeam(teamsArr[0], 'home');
@@ -111,9 +122,10 @@ async function buildFromFotmob(matchId){
       if(hv == null || av == null) continue;          // 그룹 헤더 행(값이 null)
       const label = FM_STAT_LABEL[it.title] || it.title;
       if(!label) continue;
-      teamStats.push({label, cat, home: String(hv), away: String(av), better: fmStatWinner(label, hv, av)});
-      home.stats[label] = String(hv);
-      away.stats[label] = String(av);
+      const hs = fmFormatStat(label, hv), as_ = fmFormatStat(label, av);
+      teamStats.push({label, cat, home: hs, away: as_, better: fmStatWinner(label, hv, av)});
+      home.stats[label] = hs;
+      away.stats[label] = as_;
     }
   }
 
@@ -156,7 +168,9 @@ async function buildFromFotmob(matchId){
     return {
       name: p.name,
       jersey: p.shirtNumber != null ? String(p.shirtNumber) : '',
-      position: '',
+      // Fotmob은 포지션을 숫자로 준다(0=GK,1=DF,2=MF,3=FW). 프론트 getPosBadge가
+      // GK/DF/MF/FW 문자열을 그대로 인식하므로 여기서 환산해 넘긴다.
+      position: FM_POS_BY_ID[p.usualPlayingPositionId] || '',
       starter,
       formationPlace: null,
       // Fotmob은 포메이션 슬롯 번호 대신 정규화 좌표를 준다 — 프론트가 이걸
