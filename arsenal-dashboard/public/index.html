@@ -120,7 +120,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-card.result-draw{border-color:var(--gold);}
 .fix-card.result-loss{border-color:var(--red);}
 .fix-grid{display:grid;grid-template-columns:1fr 58px 1fr;grid-template-rows:auto auto auto;gap:2px 4px;align-items:center;padding:2px 0}
-.fix-z3label{grid-column:2;grid-row:3;display:flex;align-items:center;justify-content:center;}
+.fix-z3label{grid-column:2;grid-row:3;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .fix-z1{grid-column:1;grid-row:1;display:flex;align-items:center;}
 .fix-z2{grid-column:1;grid-row:2;display:flex;align-items:center;}
 .fix-z3top{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:center;}
@@ -178,8 +178,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-score{font-family:var(--fd);font-size:24px;letter-spacing:3px;line-height:1;color:var(--text)}
 .fix-vs{font-family:var(--fd);font-size:16px;letter-spacing:2px;color:var(--text-secondary);line-height:1;display:block;}
 .fix-vs-label{font-size:8px;font-weight:700;letter-spacing:1px;line-height:1;}
-.fix-score-box.has-pk .fix-score{font-size:19px;}
-.fix-pk{font-size:9px;font-weight:700;letter-spacing:.5px;line-height:1;margin-top:2px;color:var(--text-secondary);white-space:nowrap;}
+.fix-pk{font-size:9px;font-weight:700;letter-spacing:.5px;line-height:1;margin-bottom:2px;color:var(--text-secondary);white-space:nowrap;}
+/* 승부차기 카드: HOME/AWAY 레이어에 PEN 한 줄(9px + 간격 2px)이 늘어난 만큼
+   아래 여백(13px)에서 빼서 다른 카드와 높이를 맞춘다 */
+.fix-card.has-pk{padding-bottom:2px;}
 .fix-round-text{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-secondary);}
 .fix-round-final{color:#D4AF37;font-weight:700;}
 .std-hdr,.std-row{display:grid;grid-template-columns:16px 1fr 18px 18px 18px 18px 30px 22px 28px;gap:3px;align-items:center;padding:8px 10px 8px 8px;border-left:3px solid transparent;border-bottom:1px solid var(--border-bright);font-size:12px}
@@ -1083,8 +1085,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   #fixWrap .comp-tag{font-size:clamp(9px,1.88cqw,12px);padding:3px 10px;}
   #fixWrap .fix-date{font-size:clamp(10px,2.03cqw,13px);}
   #fixWrap .fix-vs-label{font-size:clamp(8px,1.56cqw,10px);}
-  #fixWrap .fix-score-box.has-pk .fix-score{font-size:clamp(19px,4.38cqw,28px);}
   #fixWrap .fix-pk{font-size:clamp(9px,1.76cqw,12px);}
+  /* PC도 같은 원리 — PEN 글자 크기가 폭 따라 변하므로 같은 식으로 빼준다
+     (카드와 PEN 모두 #fixWrap 컨테이너 기준 cqw라 값이 정확히 맞는다) */
+  #fixWrap .fix-card.has-pk{padding-bottom:calc(18px - clamp(9px,1.76cqw,12px) - 2px);}
   #fixWrap .cal-day{padding:6px 3px 8px;}
   /* 우측 상세패널(경기 상세모달 .mm-*)은 지금까지 모바일 바텀시트 고정폭
      기준의 px 값을 그대로 썼다 — 패널 폭이 340~480px 사이에서 실제로
@@ -2025,16 +2029,6 @@ function buildFixCard(m){
     var sd=document.createElement('div');sd.className='fix-score';
     sd.style.color=OUTCOME_COLOR[outcome]||'';
     sd.textContent=hs+' : '+as_;sb.appendChild(sd);
-    // 승부차기 스코어는 정규 스코어 바로 아래에 붙인다. 이 카드만 스코어를 조금
-    // 줄여서(.has-pk) 두 줄이 기존 스코어 행 높이 안에 들어가게 한다 — 줄이지
-    // 않으면 이 카드만 7px 커져서 목록의 카드 높이가 들쭉날쭉해진다.
-    // 결과 색(승/무/패)은 matchOutcome이 대회 종류에 맞춰 정한다.
-    var pk=m.score&&m.score.penalties;
-    if(pk&&pk.home!=null&&pk.away!=null){
-      sb.classList.add('has-pk');
-      var pd=document.createElement('div');pd.className='fix-pk';
-      pd.textContent='PEN '+pk.home+':'+pk.away;sb.appendChild(pd);
-    }
   } else if(isLive){
     var ld=document.createElement('div');ld.className='fix-score';ld.style.color='var(--green)';
     ld.textContent=(hs||0)+' : '+(as_||0);sb.appendChild(ld);
@@ -2045,6 +2039,16 @@ function buildFixCard(m){
 
   // 중앙 최하단: HOME/AWAY/NEUTRAL 라벨
   var z3label=document.createElement('div');z3label.className='fix-z3label';
+  // 승부차기 스코어는 HOME/AWAY 레이어(z3label)에 라벨 바로 위로 넣는다 — 스코어
+  // 칸에 넣으면 스코어를 줄여야 해서 다른 카드와 스코어 크기가 달라진다. 이
+  // 레이어가 한 줄 늘어난 만큼 카드 아래 여백을 줄여(.has-pk) 카드 높이는 그대로.
+  // 결과 색(승/무/패)은 matchOutcome이 대회 종류에 맞춰 정한다.
+  var pk=hasScore&&m.score&&m.score.penalties;
+  if(pk&&pk.home!=null&&pk.away!=null){
+    card.classList.add('has-pk');
+    var pd=document.createElement('div');pd.className='fix-pk';
+    pd.textContent='PEN '+pk.home+':'+pk.away;z3label.appendChild(pd);
+  }
   if(!isLive){
     var vlabel=document.createElement('div');vlabel.className='fix-vs-label';
     vlabel.textContent=isNeutral?'NEUTRAL':(isArsHome?'HOME':'AWAY');
