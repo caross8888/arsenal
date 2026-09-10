@@ -150,6 +150,24 @@ async function buildFromFotmob(matchId){
   // ── 선수 ──
   // 개별 스탯은 lineup이 아니라 playerStats에 들어있어서 id로 합친다.
   const psById = content.playerStats || {};
+  // 교체 상대(누구와 바뀌었는지)는 Substitution 이벤트의 swap 배열에만 있다 —
+  // swap[0]이 투입, swap[1]이 아웃(라인업의 subIn/subOut 기록과 대조해 확인).
+  // 선수 id → 상대 선수 {name, jersey}로 만들어 둔다.
+  const shirtById = {};
+  for(const side of ['homeTeam','awayTeam']){
+    const t = content.lineup?.[side] || {};
+    for(const p of [...(t.starters||[]), ...(t.subs||[])]) shirtById[String(p.id)] = p.shirtNumber;
+  }
+  const swapPartner = {};
+  for(const ev of (mf.events?.events || [])){
+    if(String(ev.type) !== 'Substitution') continue;
+    const [inP, outP] = ev.swap || [];
+    if(!inP || !outP) continue;
+    const mk = q => ({name: q.name, jersey: shirtById[String(q.id)] != null ? String(shirtById[String(q.id)]) : ''});
+    swapPartner[String(outP.id)] = mk(inP);   // 나간 선수 → 들어온 선수
+    swapPartner[String(inP.id)]  = mk(outP);  // 들어온 선수 → 나간 선수
+  }
+
   // 카드는 playerStats에 없고 이벤트에만 있어서 선수별로 집계해둔다.
   const cardsByPlayer = {};
   for(const ev of (mf.events?.events || [])){
@@ -193,7 +211,7 @@ async function buildFromFotmob(matchId){
       subbedOut: !!subOut,
       subbedIn: !!subIn,
       subTime: subIn ? `${subIn.time}'` : subOut ? `${subOut.time}'` : null,
-      subFor: null,
+      subFor: swapPartner[String(p.id)] || null,
       stats: {
         goals: statVal(ps, 'goals'),
         assists: statVal(ps, 'assists'),
