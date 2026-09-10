@@ -20,7 +20,7 @@
 //     걸리든 결과는 "원문 그대로 노출"이다.
 
 import { createHash } from 'crypto';
-import { applyGlossary, applyGlossaryToSegments } from './_glossary.js';
+import { applyGlossary, applyGlossaryToSegments, prepareSource } from './_glossary.js';
 
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
@@ -185,17 +185,30 @@ export async function translateTexts(rawTexts, opts) {
   }
   if (!uniq.length) return map;
 
+  // 실제로 구글에 보낼 문자열. 평문 모드는 여기서 원문 구문 치환(prepareSource)을
+  // 적용하고, HTML 모드는 호출부(translateSegments)가 조각 단위로 이미 적용했다.
+  // 캐시 키도 이 "보낼 문자열" 기준이라, 치환 규칙에 안 걸린 원문은 치환 전후가
+  // 똑같아 기존 캐시를 그대로 탄다(재번역 0). 반환 맵은 호출부가 원문으로 찾으므로
+  // 마지막에 원문 → 번역문으로 되돌려 매핑한다.
+  const sendOf = new Map(uniq.map(t => [t, isHtml ? t : prepareSource(t)]));
+  const sends = Array.from(new Set(sendOf.values()));
+  const bySend = {};
+  const resolve = () => {
+    for (const t of uniq) { const v = bySend[sendOf.get(t)]; if (v) map[t] = v; }
+    return finalizeMap(map, isHtml);
+  };
+
   // 1) 캐시 먼저
-  const cached = await loadCached(uniq, prefix);
-  Object.assign(map, cached);
-  const missing = uniq.filter(t => !cached[t]);
-  if (!missing.length) return finalizeMap(map, isHtml);
+  const cached = await loadCached(sends, prefix);
+  Object.assign(bySend, cached);
+  const missing = sends.filter(t => !cached[t]);
+  if (!missing.length) return resolve();
 
   // 2) 월 사용량 컷오프 — 넘었으면 새 번역은 포기하고 캐시된 것만 돌려준다
   const used = await getMonthlyUsage();
   if (used >= MONTHLY_SOFT_LIMIT) {
     console.warn('[translate] 월 한도 도달 (' + used + '자) — 원문 유지');
-    return finalizeMap(map, isHtml);
+    return resolve();
   }
   let budget = MONTHLY_SOFT_LIMIT - used;
 
@@ -227,9 +240,9 @@ export async function translateTexts(rawTexts, opts) {
     // 적용해서, 사전을 나중에 고쳐도 이미 캐시된 번역까지 전부 재번역 없이
     // 교정되게 한다.
     await saveCached(fresh, prefix);
-    Object.assign(map, fresh);
+    Object.assign(bySend, fresh);
   }
-  return finalizeMap(map, isHtml);
+  return resolve();
 }
 
 // HTML 모드에선 여기서 치환하지 않는다 — 태그/속성 안까지 건드릴 위험이 있어서,
@@ -297,7 +310,7 @@ function segmentsToHtml(segments) {
       html += '<a data-i="' + links.length + '" translate="no">' + escapeHtml(seg.text || '') + '</a>';
       links.push(seg);
     } else {
-      html += escapeHtml((seg && seg.text) || '').replace(/\n/g, '<br>');
+      html += escapeHtml(prepareSource((seg && seg.text) || '')).replace(/\n/g, '<br>');
     }
   }
   return { html, links };

@@ -191,6 +191,56 @@ export function applyGlossary(text) {
   return out.replace(/\u0000(\d+)\u0000/g, (_, i) => stash[Number(i)]);
 }
 
+// ── 번역 "전" 원문 구문 치환 ─────────────────────────────────────────────
+//
+// 위 ENTRIES는 번역 "후" 한국어를 고친다. 그런데 뜻 자체가 잘못 옮겨진 경우는
+// 번역 후엔 고칠 수가 없다 — 예컨대 "Anti-ruthless"는 번역되는 순간 "반대되는
+// 입장이었다"로 흩어져서, 한국어 쪽엔 치환할 대상이 남아있지 않다. 그래서 이런
+// 표현은 구글에 보내기 전에 영어 원문 단계에서 바꾼다.
+//
+// 비용: 여기 걸린 원문만 해시(캐시 키)가 바뀌어 한 번 재번역된다. 안 걸린 원문은
+// 치환 결과가 원문과 똑같아 캐시 키도 그대로라 비용이 0이다.
+//
+// 규칙은 전부 실측으로 고른 것이다. 원칙 두 가지:
+//  1. **대체어는 가능하면 영어로.** 한국어를 끼워 넣으면 구글이 그 단어를 제멋대로
+//     바꾼다 — "lack of 결정력"을 보냈더니 "결단력 부족"으로 돌아왔다. 반면
+//     "clinical"은 축구 문맥에서 구글이 안정적으로 "결정력"으로 옮긴다.
+//     (예외: "anti-ruthless"는 한국어 삽입이 이 문장에서 실측 검증됐다.)
+//  2. **단어 하나가 아니라 구문으로 잡는다.** "ruthless" 단독을 바꾸면 다른 뜻으로
+//     쓰인 문장이 망가진다 — 실측: "ruthless in his team selection"(냉정했다)이
+//     "결정적인 역할을 했다"로, "a ruthless tackle"(거친 태클)이 "결정력 태클"로
+//     뜻이 바뀌었다. "ruthless edge"는 구글이 이미 "결정력"으로 잘 옮겨서 뺐다.
+const SOURCE_RULES = [
+  // 에이미 로렌스(The Observer)의 조어 — 검색해도 용례가 안 나오는 1회성 표현. 실측:
+  // "결정력 부족 shooting, …" → "결정력이 부족했던 슈팅이었지만, …"
+  [/\banti-ruthless\b/gi, '결정력 부족'],
+  // "lack of ruthlessness" → (그대로) 냉정함의 부족 / (치환) 결정력 부족
+  [/\bruthlessness\b/gi, 'clinical finishing'],
+  // "ruthless enough to win the title" → (그대로) 냉혹해질 / (치환) 결정력을 갖출
+  [/\bruthless enough\b/gi, 'clinical enough'],
+  // "ruthless in front of goal" → (그대로) 냉혹했다 / (치환) 결정력이 뛰어났습니다
+  [/\bruthless in front of goal\b/gi, 'clinical in front of goal'],
+];
+
+// 문장 첫머리처럼 대문자로 시작한 표현이면 대체어도 대문자로 시작시킨다.
+function matchCase(original, replacement) {
+  const c = original.charAt(0);
+  return c && c === c.toUpperCase() && c !== c.toLowerCase()
+    ? replacement.charAt(0).toUpperCase() + replacement.slice(1)
+    : replacement;
+}
+
+/** 구글에 보내기 직전의 영어 원문에 구문 치환을 적용한다. */
+export function prepareSource(text) {
+  if (typeof text !== 'string' || !text) return text;
+  let out = text;
+  for (const [re, rep] of SOURCE_RULES) {
+    re.lastIndex = 0;
+    out = out.replace(re, (m) => matchCase(m, rep));
+  }
+  return out;
+}
+
 /** segments 배열의 텍스트 조각에만 적용한다 — 링크 조각은 표시 URL/핸들이라 건드리면 안 된다. */
 export function applyGlossaryToSegments(segments) {
   for (const seg of segments) {
