@@ -21,6 +21,45 @@
 
 import { createHash } from 'crypto';
 import { applyGlossary, applyGlossaryToSegments, prepareSource } from './_glossary.js';
+import { OVERRIDES } from './_translation_overrides.js';
+
+// ── 수동 교정(_translation_overrides.js) ────────────────────────────────
+// 원문이 정확히 같은 항목 하나에만 적용되는 사람이 쓴 번역. 구글을 부르지도,
+// 캐시를 보지도, 번역 사전을 덮어쓰지도 않고 그대로 내보낸다. 공백·줄바꿈
+// 차이로 안 맞는 일이 없게 비교 전에 공백을 한 칸으로 접는다.
+const normKey = (t) => String(t == null ? '' : t).replace(/\s+/g, ' ').trim();
+const OVERRIDE_MAP = new Map((OVERRIDES || [])
+  .filter(o => o && typeof o.en === 'string' && typeof o.ko === 'string' && o.en.trim() && o.ko.trim())
+  .map(o => [normKey(o.en), o.ko]));
+export function overrideFor(text) {
+  return OVERRIDE_MAP.size ? OVERRIDE_MAP.get(normKey(text)) : undefined;
+}
+
+// SNS 포스트용: 사람이 쓴 번역문(ko) 안에서 원문 링크 조각들의 표기를 찾아
+// 클릭 가능한 링크로 되살린다. 한국어는 어순이 달라 멘션 위치가 바뀔 수 있으니
+// (with @handle → @handle과 함께) 원문 순서가 아니라 번역문 속 위치 순으로 놓는다.
+// 하나라도 못 찾으면 null — 호출부는 이 교정을 무시하고 평소대로 번역한다.
+export function segmentsFromOverride(ko, links) {
+  const found = [];
+  for (const link of links) {
+    let at = ko.indexOf(link.text);
+    while (at >= 0 && found.some(f => at < f.at + f.link.text.length && f.at < at + link.text.length)) {
+      at = ko.indexOf(link.text, at + 1);
+    }
+    if (at < 0 || !link.text) return null;
+    found.push({ at, link });
+  }
+  found.sort((a, b) => a.at - b.at);
+  const out = [];
+  let cursor = 0;
+  for (const { at, link } of found) {
+    if (at > cursor) out.push({ type: 'text', text: ko.slice(cursor, at) });
+    out.push({ type: 'link', text: link.text, url: link.url });
+    cursor = at + link.text.length;
+  }
+  if (cursor < ko.length) out.push({ type: 'text', text: ko.slice(cursor) });
+  return out;
+}
 
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
@@ -164,6 +203,21 @@ async function callGoogle(texts, format) {
  * 검사한 뒤라 여기선 추가로 거르지 않는다.
  */
 export async function translateTexts(rawTexts, opts) {
+  // 수동 교정은 평문 경로에서만 여기서 처리한다(HTML 경로는 translateSegments가
+  // 링크를 되살려야 해서 그쪽에서 따로 본다). 교정된 항목은 구글로 보내지 않는다.
+  const isHtml = !!(opts && opts.format === 'html');
+  if (isHtml || !OVERRIDE_MAP.size) return translateTextsCore(rawTexts, opts);
+  const fixed = {};
+  const rest = [];
+  for (const raw of rawTexts) {
+    const o = typeof raw === 'string' ? overrideFor(raw) : undefined;
+    if (o) fixed[clamp(raw)] = o; else rest.push(raw);
+  }
+  const map = rest.length ? await translateTextsCore(rest, opts) : {};
+  return Object.assign(map, fixed);
+}
+
+async function translateTextsCore(rawTexts, opts) {
   const format = (opts && opts.format) || 'text';
   const isHtml = format === 'html';
   const prefix = isHtml ? 'tr:koh:' : 'tr:ko:';
@@ -260,7 +314,7 @@ function finalizeMap(map, isHtml) {
  * 값이라 기존 렌더링 코드는 손댈 필요가 없다.
  */
 export async function translateFields(items, fields) {
-  if (!API_KEY || !Array.isArray(items) || !items.length) return items;
+  if (!Array.isArray(items) || !items.length) return items;
   const texts = [];
   for (const it of items) {
     for (const f of fields) {
@@ -365,13 +419,25 @@ function tidySegments(segs) {
  * segments가 없는 아이템은 호출부에서 translateFields로 따로 처리하면 된다.
  */
 export async function translateSegments(items) {
-  if (!API_KEY || !Array.isArray(items) || !items.length) return items;
+  if (!Array.isArray(items) || !items.length) return items;
 
   const jobs = [];
   for (const it of items) {
     const segs = it && it.segments;
     if (!Array.isArray(segs) || !segs.length) continue;
     const plain = segs.map(s => (s && s.text) || '').join('');
+    const ov = overrideFor(plain);
+    if (ov) {
+      const rebuilt = segmentsFromOverride(ov, segs.filter(x => x && x.type === 'link'));
+      if (rebuilt) {
+        it.textEn = it.text;
+        it.segments = rebuilt;
+        it.text = rebuilt.map(x => x.text).join('');
+        continue;
+      }
+      console.warn('[translate] 수동 교정에서 링크 표기를 못 찾아 무시: ' + normKey(plain).slice(0, 50));
+    }
+    if (!API_KEY) continue;
     // 길이·언어 판정은 태그 없는 평문 기준으로 — 태그를 포함해서 재면
     // 짧은 본문이 길다고 잘못 걸러진다.
     if (!shouldTranslate(plain) || plain.length > MAX_CHARS_PER_ITEM) continue;
