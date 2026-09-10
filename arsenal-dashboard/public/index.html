@@ -2108,7 +2108,7 @@ function markSeasonEmptyIfBoundary(season, matches){
   var p = kstParts(earliest);
   _mMinYear = p.y; _mMinMonth = p.m+1;
 }
-function getSeasonMatches(season){
+function getSeasonMatches(season, opts){
   if(season===_mCurrentSeason) return Promise.resolve(_mCurrentSeasonCache);
   if(_resultsCache[season]){
     // 배열이면 이미 완료된 결과, Promise면 같은 시즌을 동시에 여러 번 호출한
@@ -2128,6 +2128,7 @@ function getSeasonMatches(season){
     assignPlRounds(m);
     _resultsCache[season] = m;
     markSeasonEmptyIfBoundary(season, m);
+    if(!opts || !opts.isPrefetch) prefetchAdjacentSeason(season);
     return m;
   }).catch(function(){
     delete _resultsCache[season]; // 실패한 시즌은 캐시에 남기지 않음 — 다음에 다시 시도
@@ -2135,6 +2136,17 @@ function getSeasonMatches(season){
   });
   _resultsCache[season] = pending;
   return pending;
+}
+// 달력에서 한 시즌을 열면 유휴 시간에 직전 시즌 "하나만" 미리 받아둔다 —
+// 이전 버튼을 눌렀을 때 스피너가 안 뜨게. 프리페치로 받아온 시즌은 다시
+// 프리페치를 유발하지 않는다(isPrefetch) — 안 그러면 2024→2023→2022…로
+// 연쇄 호출이 일어난다(실제로 겪음).
+function prefetchAdjacentSeason(season){
+  var prev = season - 1;
+  if(prev < 1990 || _resultsCache[prev] || prev === _mCurrentSeason) return;
+  var run = function(){ if(!_resultsCache[prev]) getSeasonMatches(prev, {isPrefetch:true}); };
+  if(window.requestIdleCallback) requestIdleCallback(run, {timeout:5000});
+  else setTimeout(run, 3000);
 }
 function mAtOrAfterMax(year, month){
   return _mMaxYear!==undefined && (year>_mMaxYear || (year===_mMaxYear && month>=_mMaxMonth));

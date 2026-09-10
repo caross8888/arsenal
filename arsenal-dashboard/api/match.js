@@ -14,7 +14,6 @@ const TTL = 5 * 60 * 1000;
 // 열어본 경기는 이후 모든 사용자에게 스피너 없이 즉시 뜬다.
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
-const KV_TTL_FINISHED_SEC = 180 * 24 * 60 * 60; // 180일 — 안 열리는 경기가 무한정 쌓이지 않게
 async function kvGet(key){
   if(!KV_URL || !KV_TOKEN) return null;
   try {
@@ -29,13 +28,17 @@ async function kvGet(key){
     return result ? JSON.parse(result) : null;
   } catch(_){ return null; }
 }
+// ttlSec이 없으면 만료 없이 영구 저장
 async function kvSet(key, data, ttlSec){
   if(!KV_URL || !KV_TOKEN) return;
   try {
+    const cmd = ttlSec
+      ? ['SET', key, JSON.stringify(data), 'EX', String(ttlSec)]
+      : ['SET', key, JSON.stringify(data)];
     await fetch(KV_URL, {
       method:'POST',
       headers:{Authorization:`Bearer ${KV_TOKEN}`,'Content-Type':'application/json'},
-      body: JSON.stringify(['SET', key, JSON.stringify(data), 'EX', String(ttlSec)]),
+      body: JSON.stringify(cmd),
       signal: AbortSignal.timeout(5000),
     });
   } catch(_){}
@@ -315,6 +318,7 @@ async function buildFromFotmob(matchId){
   return {
     eventId: String(matchId),
     source: 'fotmob',
+    utcDate: general.matchTimeUTCDate || general.matchTimeUTC || null,
     momentum,
     venue: ib.Stadium?.name || null,
     referee: ib.Referee?.text || null,
@@ -398,7 +402,14 @@ export default async function handler(req, res) {
       const fm = await buildFromFotmob(eventId);
       if (fm) {
         cache[cacheKey] = { data: fm, ts: Date.now() };
-        if (fm.status === 'Full Time') await kvSet(`match:${eventId}`, fm, KV_TTL_FINISHED_SEC);
+        // 종료 경기만 KV에 보관하되, 끝난 직후에는 선수 평점·스탯이 아직
+        // 확정 전이라 그대로 굳히면 미완성 데이터가 영구히 남는다. 하루가
+        // 지난 경기만 영구 저장하고, 갓 끝난 경기는 1시간짜리로 둔다.
+        if (fm.status === 'Full Time') {
+          const age = fm.utcDate ? Date.now() - new Date(fm.utcDate).getTime() : 0;
+          const settled = age > 24 * 60 * 60 * 1000;
+          await kvSet(`match:${eventId}`, fm, settled ? null : 60 * 60);
+        }
         return res.json(fm);
       }
     } catch (_) {}

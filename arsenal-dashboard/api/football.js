@@ -132,13 +132,18 @@ async function kvGetJSON(key){
     return result ? JSON.parse(result) : null;
   } catch(e){ return null; }
 }
+// ttlSec을 안 주면 만료 없이 영구 저장한다 — 끝난 시즌 결과처럼 두 번 다시
+// 안 바뀌는 데이터용.
 async function kvSetJSON(key, data, ttlSec){
   if(!KV_URL || !KV_TOKEN) return;
   try {
+    const cmd = ttlSec
+      ? ['SET', key, JSON.stringify(data), 'EX', String(ttlSec)]
+      : ['SET', key, JSON.stringify(data)];
     await fetch(KV_URL, {
       method: 'POST',
       headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
-      body: JSON.stringify(['SET', key, JSON.stringify(data), 'EX', String(ttlSec)]),
+      body: JSON.stringify(cmd),
       signal: AbortSignal.timeout(5000),
     });
   } catch(e){ /* 캐시 저장 실패는 무시 */ }
@@ -658,13 +663,22 @@ export default async function handler(req, res) {
 
     } else if(type === 'results'){
       // 연도·월 브라우징용 — 특정 시즌 하나의 종료된 경기만 조회.
-      // 완결된 시즌 데이터는 절대 안 바뀌므로 기본 캐시(1시간)로 충분히 재사용됨.
+      // Fotmob 팀 API는 season 파라미터를 줘도 과거 시즌을 안 주므로(실측) 이
+      // 경로만 ESPN을 계속 쓴다. 대신 끝난 시즌 결과는 두 번 다시 안 바뀌므로
+      // KV에 1년 보관해서 호출 자체를 없앤다 — 메모리 캐시(1시간, 인스턴스별)만
+      // 있을 땐 달력에서 월을 옮길 때마다 ESPN을 20여 회씩 다시 긁고 있었다.
       const requestedSeason = parseInt(req.query.season, 10);
       if(!requestedSeason) return res.status(400).json({error:'season 파라미터가 필요합니다'});
       const cacheKey = `results_${requestedSeason}`;
+      const curSeasonYear = now.getMonth() + 1 >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+      const isPastSeason = requestedSeason < curSeasonYear;
       if(!nocache){
         const hit = getCache(cacheKey);
         if(hit) return res.json(hit);
+        if(isPastSeason){
+          const kvHit = await kvGetJSON(`results:${requestedSeason}`);
+          if(kvHit){ setCache(cacheKey, kvHit); return res.json(kvHit); }
+        }
       }
 
       const fetchSeasonSlug = async ({slug, name, short}) => {
@@ -723,7 +737,13 @@ export default async function handler(req, res) {
       // 존재하는 시즌 데이터가 1시간(TTL) 동안 "경기 없음"으로 고정돼버린다.
       // 이미 끝난 시즌이 진짜로 0경기일 일은 사실상 없으므로, 빈 결과는
       // 캐시하지 않고 다음 요청 때 다시 시도하게 둔다.
-      if(seasonMatches.length > 0) setCache(cacheKey, payload);
+      if(seasonMatches.length > 0){
+        setCache(cacheKey, payload);
+        // 끝난 시즌 결과는 두 번 다시 안 바뀌므로 만료 없이 영구 저장 —
+        // 이후 누가 그 달을 열어도 ESPN을 아예 안 부른다. 시즌당 30KB 수준이라
+        // 수십 시즌을 모아도 1MB가 안 된다.
+        if(isPastSeason) await kvSetJSON(`results:${requestedSeason}`, payload);
+      }
       return res.json(payload);
 
     } else if(type === 'teamOfTheWeek'){
