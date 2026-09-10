@@ -186,7 +186,10 @@ async function buildFromFotmob(matchId){
       // Fotmob은 포메이션 슬롯 번호 대신 정규화 좌표를 준다 — 프론트가 이걸
       // 그대로 쓰면 FORM_MAP에 없는 대형도 그릴 수 있다.
       layout: (starter && v.x != null) ? {x: v.x, y: v.y} : null,
-      rating: p.performance?.rating ?? null,
+      // lineup의 rating은 소수 1자리로 반올림된 값이고, playerStats에 2자리
+      // 원본(8.39)이 있다. 최고평점자를 가릴 때 1자리로는 동점이 잦아서
+      // 정밀한 쪽을 쓴다 — 화면에는 어차피 1자리로 표시한다.
+      rating: statVal(ps, 'FotMob rating') ?? p.performance?.rating ?? null,
       subbedOut: !!subOut,
       subbedIn: !!subIn,
       subTime: subIn ? `${subIn.time}'` : subOut ? `${subOut.time}'` : null,

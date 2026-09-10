@@ -4745,7 +4745,25 @@ function renderMatchModal(content, m, data, desktop){
   content.innerHTML=html;
 }
 
-function renderPitch(starters, formation, teamColor, allPlayers){
+// 양팀 전체(교체 포함)에서 최고 평점 선수 1명 — 피치의 별 배지 기준.
+// 평점은 2자리 원본으로 비교하고(1자리로 반올림하면 동점이 잦다), 그래도
+// 같으면 득점 > 공격포인트 > 슈팅 순으로 가린다. 최고평점자가 교체 선수면
+// 어느 피치에도 별이 안 붙는데, 피치는 선발만 그리므로 그게 맞다.
+function bothTeamsTopPlayer(homePlayers, awayPlayers){
+  var best=null;
+  function score(p){
+    var s=p.stats||{};
+    return [parseFloat(p.rating), parseInt(s.goals)||0, (parseInt(s.goals)||0)+(parseInt(s.assists)||0), parseInt(s.shots)||0];
+  }
+  [].concat(homePlayers||[], awayPlayers||[]).forEach(function(p){
+    if(!p || isNaN(parseFloat(p.rating))) return;
+    if(!best){ best=p; return; }
+    var a=score(p), b=score(best);
+    for(var i=0;i<a.length;i++){ if(a[i]!==b[i]){ if(a[i]>b[i]) best=p; return; } }
+  });
+  return best;
+}
+function renderPitch(starters, formation, teamColor, allPlayers, topPlayer){
   var W=220, H=300;
   var FIRST_Y=29, LAST_Y=H-29;
   var r=11;
@@ -4873,7 +4891,9 @@ function renderPitch(starters, formation, teamColor, allPlayers){
       var key = p.formationPlace || ('_l'+i);
       p.formationPlace = key;   // 아래 좌표 조회가 formationPlace를 키로 쓴다
       coords[key] = {
-        x: Math.round(p.layout.x * W),
+        // Fotmob의 x는 우리와 좌우 기준이 반대다 — 그대로 쓰면 우측 수비수가
+        // 왼쪽에, 좌측 수비수가 오른쪽에 그려진다(화이트 0.125 / 칼라피오리 0.875).
+        x: Math.round((1 - p.layout.x) * W),
         y: Math.round(LAST_Y - p.layout.y * (LAST_Y - FIRST_Y)),
       };
     });
@@ -4970,12 +4990,15 @@ function renderPitch(starters, formation, teamColor, allPlayers){
     svg+='<text x="'+c.x+'" y="'+(c.y+r+8)+'" text-anchor="middle" font-size="7.5" font-weight="600" fill="'+nameTextColor+'" font-family="sans-serif">'+lastName+'</text>';
     // 평점 배지 — 원 좌측 상단(교체 아이콘은 우측 상단이라 안 겹친다).
     // 아래쪽에 두면 이름 텍스트와 겹친다(실측 3.7px).
+    // 팀 내 최고평점자는 파란 배지 + 별로 따로 구분한다.
     if(p.rating!=null && !isNaN(parseFloat(p.rating))){
       var rv=parseFloat(p.rating).toFixed(1);
+      var isBest=(topPlayer && p===topPlayer);
       var rx=c.x-r-1, ry=c.y-r+3;
-      var rc2=rv>=8?'#22C55E':rv>=7?'#84CC16':rv>=6?'#F59E0B':'#EF4444';
-      svg+='<rect x="'+(rx-6.5)+'" y="'+(ry-4)+'" width="13" height="8" rx="2" fill="'+rc2+'" stroke="rgba(0,0,0,.35)" stroke-width="0.5"/>';
-      svg+='<text x="'+rx+'" y="'+ry+'" text-anchor="middle" dominant-baseline="central" font-size="6" font-weight="700" fill="#0B0D12" font-family="sans-serif">'+rv+'</text>';
+      var rc2=isBest?'#60A5FA':rv>=8?'#22C55E':rv>=7?'#84CC16':rv>=6?'#F59E0B':'#EF4444';
+      var rw=isBest?18:13;
+      svg+='<rect x="'+(rx-rw/2)+'" y="'+(ry-4)+'" width="'+rw+'" height="8" rx="2" fill="'+rc2+'" stroke="rgba(0,0,0,.35)" stroke-width="0.5"/>';
+      svg+='<text x="'+rx+'" y="'+ry+'" text-anchor="middle" dominant-baseline="central" font-size="6" font-weight="700" fill="#0B0D12" font-family="sans-serif">'+rv+(isBest?'★':'')+'</text>';
     }
     // 교체 아이콘 (ESPN substitution icon)
     if(wasSubbed){
@@ -5473,11 +5496,12 @@ function renderLineupPanelInner(data, panelName){
   var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
   var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
   var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
+  var _topP=bothTeamsTopPlayer(hP,aP);
   // 피치는 14px 인셋 카드로, 선발/교체 표는 .mm-section의 좁은 좌우 패딩(6px)만
   // 받아 피치보다 좌우로 더 넓게 — 의도적으로 폭을 다르게 둔다. 바깥
   // .live-side-panel에 마진을 또 주면 이중으로 겹쳐 좁아지므로 없앰.
-  h += '<div class="live-side-panel" data-suffix="'+panelName+'-home" style="margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(hF)+renderPitch(hS,hF,hColor,hP)+'</div>'+renderPlayerTable('home',hP,true)+'</div>';
-  h += '<div class="live-side-panel" data-suffix="'+panelName+'-away" style="display:none;margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(aF)+renderPitch(aS,aF,aColor,aP)+'</div>'+renderPlayerTable('away',aP,true)+'</div>';
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-home" style="margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(hF)+renderPitch(hS,hF,hColor,hP,_topP)+'</div>'+renderPlayerTable('home',hP,true)+'</div>';
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-away" style="display:none;margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(aF)+renderPitch(aS,aF,aColor,aP,_topP)+'</div>'+renderPlayerTable('away',aP,true)+'</div>';
   return h;
 }
 // 선발(피치만) 패널 — 종료 경기 PC 패널의 "선발" 탭 전용
@@ -5490,8 +5514,9 @@ function renderStartingPanelInner(data, panelName){
   var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
   var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
   var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
-  h += '<div class="live-side-panel" data-suffix="'+panelName+'-home" style="margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(hF)+renderPitch(hS,hF,hColor,hP)+'</div></div>';
-  h += '<div class="live-side-panel" data-suffix="'+panelName+'-away" style="display:none;margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(aF)+renderPitch(aS,aF,aColor,aP)+'</div></div>';
+  var _topP=bothTeamsTopPlayer(hP,aP);
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-home" style="margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(hF)+renderPitch(hS,hF,hColor,hP,_topP)+'</div></div>';
+  h += '<div class="live-side-panel" data-suffix="'+panelName+'-away" style="display:none;margin-top:8px;"><div class="mm-pitch-wrap" style="margin:0 14px;">'+pitchHeaderHtml(aF)+renderPitch(aS,aF,aColor,aP,_topP)+'</div></div>';
   return h;
 }
 // 선수 스탯(테이블만) 패널 — 종료 경기 PC 패널의 "선수 스탯" 탭 전용
