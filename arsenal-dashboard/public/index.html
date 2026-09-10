@@ -5553,6 +5553,7 @@ function buildLiveDetail(data){
   // 정보" 탭과 동일한 구성(팀 스탯을 별도 하위탭이 아니라 그냥 이어 붙임).
   h += '<div class="live-tab-panel" id="live-panel-info" style="padding-top:0;border-top:1px solid var(--border-bright);">'+
     '<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">골 &amp; 이벤트</div>'+renderEventsPanelInner(data)+'</div>'+
+    renderMomentumCard(data)+
     '<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">팀 스탯</div>'+renderStatsPanelInner(data)+'</div>'+
   '</div>';
   h += '<div class="live-tab-panel" id="live-panel-starting" style="display:none;padding-top:0;">'+renderStartingPanelInner(data,'starting')+'</div>';
@@ -5613,6 +5614,37 @@ function loadLiveCommentary(matchId){
       panel.innerHTML='<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트를 불러오지 못했습니다</div>';
     });
 }
+// 매치 도미넌스 — Fotmob의 분당 모멘텀(-100~100, 양수=홈 우세)을 가운데
+// 기준선 위아래 막대로 그린다. 오래된 경기는 Fotmob이 이 데이터를 아예 안 줘서
+// (2010년 경기 실측) 그때는 카드 자체를 만들지 않는다.
+function renderMomentumCard(data){
+  var m=(data&&data.momentum)||null;
+  if(!m||!m.length) return '';
+  var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
+  var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
+  var W=100, H=46, MID=H/2;          // viewBox 기준(가로는 100% 늘어남)
+  var bw=W/m.length;
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="width:100%;height:88px;display:block">';
+  m.forEach(function(d,i){
+    var v=Math.max(-100,Math.min(100,d.value||0));
+    if(!v) return;
+    var hgt=Math.abs(v)/100*MID;
+    var x=i*bw;
+    var y=v>0?MID-hgt:MID;
+    svg+='<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+Math.max(bw*0.8,0.4).toFixed(2)+'" height="'+hgt.toFixed(2)+'" fill="'+(v>0?hColor:aColor)+'"/>';
+  });
+  svg+='<line x1="0" y1="'+MID+'" x2="'+W+'" y2="'+MID+'" stroke="var(--border-bright)" stroke-width="0.4"/>';
+  svg+='</svg>';
+  var legend=function(c,n){return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary)">'
+    +'<span style="width:8px;height:8px;border-radius:2px;background:'+c+'"></span>'+n+'</span>';};
+  return '<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">매치 도미넌스</div>'+
+    '<div style="padding:6px 14px 12px;">'+svg+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">'+
+      legend(hColor,(data.homeTeam&&data.homeTeam.name)||'홈')+
+      '<span style="font-size:9px;color:var(--text-dim)">'+m.length+'분</span>'+
+      legend(aColor,(data.awayTeam&&data.awayTeam.name)||'원정')+
+    '</div></div></div>';
+}
 // 종료 경기 상세 — 모바일/데스크톱 구분 없이 항상 이 구조를 쓴다. live
 // 모달과 같은 탭 UI를 쓰되, 코멘터리는 빼고 이벤트·스탯은 한 탭에 같이
 // 노출한다(라이브와 요구사항이 달라 별도 함수).
@@ -5635,6 +5667,7 @@ function buildFinishedDetail(data){
   // 자체에 border-top을 준다.
   h += '<div class="live-tab-panel" id="live-panel-info" style="padding-top:0;border-top:1px solid var(--border-bright);">'+
     '<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">골 &amp; 이벤트</div>'+renderEventsPanelInner(data)+'</div>'+
+    renderMomentumCard(data)+
     '<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">팀 스탯</div>'+renderStatsPanelInner(data)+'</div>'+
   '</div>';
   h += '<div class="live-tab-panel" id="live-panel-starting" style="display:none;padding-top:0;">'+renderStartingPanelInner(data,'starting')+'</div>';

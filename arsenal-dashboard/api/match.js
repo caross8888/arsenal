@@ -253,10 +253,18 @@ async function buildFromFotmob(matchId){
     };
   });
 
+  // 매치 도미넌스(모멘텀) — 분당 -100~100, 양수면 홈 우세. 오래된 경기는
+  // Fotmob이 아예 안 주므로(2010년 경기 실측) 없으면 null로 넘겨 화면에서 숨긴다.
+  const momentumRaw = content.momentum?.main?.data;
+  const momentum = Array.isArray(momentumRaw) && momentumRaw.length
+    ? momentumRaw.map(d => ({minute: d.minute, value: d.value}))
+    : null;
+
   const ib = mf.infoBox || {};
   return {
     eventId: String(matchId),
     source: 'fotmob',
+    momentum,
     venue: ib.Stadium?.name || null,
     referee: ib.Referee?.text || null,
     attendance: ib.Attendance ?? null,
