@@ -110,6 +110,7 @@ async function kvSetPlayerSeason(id, seasonName, data){
 // 이적생이 Fotmob 팀 페이지에 올라오는 즉시 여기도 반영됨.
 const KV_TTL_ROSTER_SEC = 6 * 60 * 60; // 6시간 — 매 요청마다 Fotmob을 때리지 않으면서도 꽤 최신을 유지
 const FIRST_TEAM_ID = 9825;
+const PL_LEAGUE_ID = 47; // Fotmob 프리미어리그 id — 팀 API의 table 배열에서 UCL과 구분용
 const POS_GROUP_FROM_CODE = {
   GK: 'GK',
   CB: 'DF', RB: 'DF', LB: 'DF', RWB: 'DF', LWB: 'DF',
@@ -228,12 +229,34 @@ function mapLiveSquadMember(m){
   };
 }
 
+// Fotmob 팀 API 응답 하나에 일정(fixtures)·순위표(table)·스쿼드(squad)·이적
+// (transfers)·결장자(overview)가 전부 들어있다. 예전엔 용도별로 이 엔드포인트를
+// 따로따로 때렸는데, 한 번 받아 KV에 넣고 나눠 쓰면 상류 호출이 그만큼 준다.
+// 메모리 캐시가 아니라 KV를 쓰는 이유는 서버리스라 인스턴스마다 메모리가
+// 따로 놀아서, 인스턴스가 여러 개 뜨면 캐시가 있으나 마나이기 때문이다.
+// TTL이 짧은 건 라이브 경기 스코어가 이 응답에서 나오기 때문 — 로스터/이적은
+// 이보다 훨씬 늦게 바뀌지만 같이 신선해지는 건 손해가 아니다.
+// 이 응답은 600KB에 달해서 원본을 통째로 KV에 넣으면 안 된다 — 실측상 KV에서
+// 되읽는 데만 2.6초가 걸려서(Fotmob 직접 호출 2.9초와 거의 차이 없음) 캐시 의미가
+// 없고 Upstash 대역폭만 태운다. 그래서 원본은 인스턴스 메모리에만 잠깐 들고,
+// KV에는 각 용도별로 가공된 작은 조각(fixtures 등)을 따로 저장한다.
+const KV_TTL_TEAM_SLICE_SEC = 5 * 60;
+const TEAM_PAYLOAD_MEM_TTL_MS = 60 * 1000;
+const _teamPayloadMem = {};
+async function fetchTeamPayload(teamId = FIRST_TEAM_ID){
+  const hit = _teamPayloadMem[teamId];
+  if(hit && Date.now() - hit.ts < TEAM_PAYLOAD_MEM_TTL_MS) return hit.data;
+  const r = await fetch(`https://www.fotmob.com/api/data/teams?id=${teamId}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+  if(!r.ok) throw new Error('Fotmob 팀 API 로드 실패');
+  const data = await r.json();
+  _teamPayloadMem[teamId] = {data, ts: Date.now()};
+  return data;
+}
+
 async function fetchFirstTeamRosterLive(){
   const cached = await kvGetJSON('firstTeamRoster');
   if(cached) return cached;
-  const r = await fetch(`https://www.fotmob.com/api/data/teams?id=${FIRST_TEAM_ID}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
-  if(!r.ok) throw new Error('Fotmob 팀 API 로드 실패');
-  const data = await r.json();
+  const data = await fetchTeamPayload();
   const groups = (data.squad && data.squad.squad) || [];
   const roster = groups
     .filter(g => g.title !== 'coach')
@@ -241,6 +264,63 @@ async function fetchFirstTeamRosterLive(){
     .map(mapLiveSquadMember);
   await kvSetJSON('firstTeamRoster', roster, KV_TTL_ROSTER_SEC);
   return roster;
+}
+
+// Fotmob 대회명 → 앱이 쓰는 (name, short) 쌍. 앱 전반이 short 코드로 대회를
+// 구분하므로(대회 태그 색·선수 모달 탭 등) ESPN이 쓰던 코드를 그대로 유지한다.
+const FOTMOB_COMP_MAP = {
+  'Premier League':   {name:'Premier League',   short:'PL'},
+  'Champions League': {name:'Champions League', short:'UCL'},
+  'Europa League':    {name:'Europa League',    short:'EL'},
+  'EFL Cup':          {name:'EFL Cup',          short:'EFL'},
+  'Carabao Cup':      {name:'EFL Cup',          short:'EFL'},
+  'FA Cup':           {name:'FA Cup',           short:'FAC'},
+  'Community Shield': {name:'Community Shield', short:'CS'},
+  'Club Friendlies':  {name:'Friendly',         short:'FR'},
+};
+
+// Fotmob 팀 일정 1건 → ESPN parseEvent와 같은 모양으로. 프론트 계약(경기카드·
+// 모달·라이브 폴링)이 전부 이 모양을 전제하므로 필드명을 그대로 맞춘다.
+// ESPN에 있고 Fotmob 팀 일정엔 없는 값(venue, neutralSite)은 null로 두고,
+// 경기 상세(matchDetails)에서 채운다.
+function mapFotmobFixture(m){
+  const st = m.status || {};
+  const finished = !!st.finished;
+  const live = !!st.ongoing || (!!st.started && !finished);
+  const tour = (m.tournament || {}).name || '';
+  const comp = FOTMOB_COMP_MAP[tour] || {name: tour || 'Friendly', short: 'FR'};
+  const crest = id => id ? `https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png` : null;
+  const scoreOf = side => (finished || live) ? (typeof side?.score === 'number' ? side.score : null) : null;
+
+  // liveTime.short는 "37‎’‎"처럼 방향 제어문자(U+200E)가 섞여 온다 — 숫자만 뽑아
+  // 앱이 쓰던 "37'" 형태로 정규화한다.
+  let clock = null, period = null, isHT = false;
+  if(live){
+    const lt = st.liveTime || {};
+    const mins = String(lt.short || '').match(/(\d+)/);
+    const added = lt.addedTime ? `+${lt.addedTime}` : '';
+    clock = mins ? `${mins[1]}${added}'` : null;
+    period = lt.basePeriod >= 90 ? 2 : 1;
+    isHT = /ht|half/i.test(String(lt.shortKey || lt.short || '')) || (!!st.halfs?.firstHalfEnded && !st.halfs?.secondHalfStarted);
+  }
+
+  return {
+    id:          String(m.id),
+    fotmobId:    m.id,
+    utcDate:     st.utcTime,
+    competition: comp,
+    round:       (m.tournament || {}).stage || null,
+    neutralSite: false,
+    venue:       null,
+    status:      finished ? 'FINISHED' : live ? 'IN_PLAY' : 'SCHEDULED',
+    clock,
+    period,
+    isHT,
+    tbd:         st.cancelled ? 'canceled' : null,
+    homeTeam: {id: m.home?.id != null ? String(m.home.id) : null, name: m.home?.name, crest: crest(m.home?.id)},
+    awayTeam: {id: m.away?.id != null ? String(m.away.id) : null, name: m.away?.name, crest: crest(m.away?.id)},
+    score: {fullTime: {home: scoreOf(m.home), away: scoreOf(m.away)}},
+  };
 }
 
 // 프리미어리그 밖 상대(챔피언스리그 등)는 FPL에 아예 없어서 부상 정보를 못 준다.
@@ -408,6 +488,35 @@ export default async function handler(req, res) {
       // 새 시즌 시작 직후(8월)엔 아직 경기가 없을 수 있어 직전 시즌도 함께 조회 —
       // 그 외 기간엔 currentSeasonYear 하나로 충분하므로 불필요한 조회를 피함.
       const seasonsToFetch = now.getMonth() === 7 ? [currentSeasonYear, currentSeasonYear - 1] : [currentSeasonYear];
+
+      // ── Fotmob 우선 ──────────────────────────────────────────
+      // 팀 API 한 번이면 시즌 전체 일정(친선 포함)이 대회명·스코어·라이브 분까지
+      // 붙어서 온다. 아래 ESPN 경로는 폴백으로 남긴다 — Fotmob이 막히거나 응답이
+      // 비면 그쪽으로 흘러가서 화면이 비지 않게.
+      try {
+        // 가공된 일정만 KV에 둔다(원본 600KB가 아니라 30KB 수준이라 되읽기가 빠르다)
+        let fmMatches = nocache ? null : await kvGetJSON(`fixtures:${FIRST_TEAM_ID}`);
+        if(!fmMatches){
+          const teamPayload = await fetchTeamPayload();
+          const rawFixtures = teamPayload?.fixtures?.allFixtures?.fixtures || [];
+          if(rawFixtures.length){
+            fmMatches = rawFixtures
+              .map(mapFotmobFixture)
+              .filter(m => m.utcDate)
+              .sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
+            await kvSetJSON(`fixtures:${FIRST_TEAM_ID}`, fmMatches, KV_TTL_TEAM_SLICE_SEC);
+          }
+        }
+        if(fmMatches && fmMatches.length){
+          return res.json({
+            matches:  fmMatches,
+            finished: fmMatches.filter(m => m.status === 'FINISHED'),
+            upcoming: fmMatches.filter(m => m.status !== 'FINISHED'),
+            seasonsFetched: seasonsToFetch,
+            source: 'fotmob',
+          });
+        }
+      } catch(_){ /* ESPN 폴백으로 진행 */ }
 
       const fetchSlug = async ({slug, name, short}) => {
         try {
@@ -665,6 +774,51 @@ export default async function handler(req, res) {
         if(/relegation/i.test(description)) return '#EF4444'; // 앱 전역 패배색과 동일
         return null;
       };
+      // ── Fotmob 우선 ──
+      // 순위표는 일정과 같은 팀 API 응답(table)에 들어있어서 추가 호출이 없다.
+      // 진출권/강등권 구간은 legend의 indices로 오므로 ESPN의 note 문자열 대신
+      // 그걸 쓰되, 표시 색은 기존처럼 우리 팔레트로 통일한다.
+      try {
+        let fmStandings = nocache ? null : await kvGetJSON(`standings:${PL_LEAGUE_ID}`);
+        if(!fmStandings){
+          const teamPayload = await fetchTeamPayload();
+          const plTable = (teamPayload?.table || []).find(t => t?.data?.leagueId === PL_LEAGUE_ID);
+          const rows = plTable?.data?.table?.all || [];
+          if(rows.length){
+            const legend = plTable?.data?.legend || [];
+            const zoneOf = idx => legend.find(l => (l.indices || []).includes(idx)) || null;
+            fmStandings = rows.map((row, i) => {
+              const [gf, ga] = String(row.scoresStr || '').split('-').map(n => parseInt(n, 10) || 0);
+              const zone = zoneOf(i);
+              return {
+                position: row.idx,
+                team: {
+                  id: String(row.id),
+                  name: row.name || '',
+                  shortName: row.shortName || row.name || '',
+                  crest: `https://images.fotmob.com/image_resources/logo/teamlogo/${row.id}.png`,
+                },
+                playedGames: row.played, won: row.wins, draw: row.draws, lost: row.losses,
+                points: row.pts, goalsFor: gf, goalsAgainst: ga, goalDifference: row.goalConDiff,
+                isArsenal: row.id === FIRST_TEAM_ID,
+                zoneColor: zoneColorFor(zone?.title) || zone?.color || null,
+                zoneLabel: zone?.title || null,
+              };
+            }).sort((a,b) => a.position - b.position);
+            await kvSetJSON(`standings:${PL_LEAGUE_ID}`, fmStandings, KV_TTL_TEAM_SLICE_SEC);
+          }
+        }
+        if(fmStandings && fmStandings.length){
+          result = {
+            season: fmStandings.reduce((mx, s) => Math.max(mx, s.playedGames || 0), 0),
+            standings: fmStandings,
+            source: 'fotmob',
+          };
+          if(!nocache) setCache(cacheKey, result);
+          return res.json(result);
+        }
+      } catch(_){ /* ESPN 폴백으로 진행 */ }
+
       const r = await fetch('https://site.api.espn.com/apis/v2/sports/soccer/eng.1/standings', {signal:AbortSignal.timeout(8000)});
       if(!r.ok) throw new Error(`ESPN standings: ${r.status}`);
       const json = await r.json();

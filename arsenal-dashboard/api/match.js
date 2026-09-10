@@ -8,6 +8,274 @@ const SLUG_MAP = {
 
 const cache = {};
 const TTL = 5 * 60 * 1000;
+const FOTMOB_HEADERS = {
+  'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+};
+
+// 일정 목록이 Fotmob 기반으로 바뀌면서 경기 id도 Fotmob 것(7자리)이 넘어온다.
+// ESPN id(9자리)와 체계가 달라 그대로는 조회가 안 되므로, Fotmob id로 날짜와
+// 양 팀 이름을 알아낸 뒤 그 날짜의 ESPN 스코어보드에서 같은 경기를 찾아
+// ESPN id로 환산한다. 상세 데이터 자체를 Fotmob으로 옮기더라도 이 경로는
+// ESPN 폴백용으로 계속 쓰인다.
+async function resolveEspnIdFromFotmob(fotmobId){
+  const r = await fetch(`https://www.fotmob.com/api/data/matchDetails?matchId=${fotmobId}`,
+    {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+  if(!r.ok) return null;
+  const d = await r.json();
+  const g = d.general || {};
+  const utc = g.matchTimeUTCDate || g.matchTimeUTC;
+  if(!utc) return null;
+  const dateStr = new Date(utc).toISOString().slice(0,10).replace(/-/g,'');
+  const norm = s => String(s||'').toLowerCase().replace(/[^a-z]/g,'');
+  const wanted = [norm(g.homeTeam?.name), norm(g.awayTeam?.name)].sort().join('|');
+
+  const sr = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=${dateStr}&limit=1000`,
+    {headers: {'User-Agent':'Mozilla/5.0'}, signal: AbortSignal.timeout(8000)});
+  if(!sr.ok) return null;
+  const sj = await sr.json();
+  for(const e of (sj.events || [])){
+    const cs = e.competitions?.[0]?.competitors || [];
+    const names = cs.map(c => norm(c.team?.shortDisplayName || c.team?.displayName || c.team?.name)).sort().join('|');
+    if(names === wanted) return e.id;
+  }
+  return null;
+}
+
+// ── Fotmob 경기 상세 ─────────────────────────────────────────
+// ESPN엔 없는 xG·큰 기회·박스 내 터치·선수 평점이 여기서 들어온다.
+// 출력 모양은 아래 ESPN 경로와 동일하게 맞춘다 — 프론트가 둘을 구분하지 않도록.
+const FM_STAT_LABEL = {
+  'Ball possession':'점유율', 'Expected goals (xG)':'xG', 'Total shots':'슈팅',
+  'Shots on target':'유효슈팅', 'Shots off target':'유효슈팅 외', 'Blocked shots':'막힌 슈팅',
+  'Shots inside box':'박스 안 슈팅', 'Shots outside box':'박스 밖 슈팅', 'Hit woodwork':'골대 강타',
+  'Touches in opposition box':'박스 내 터치', 'Big chances':'큰 기회', 'Big chances missed':'큰 기회 놓침',
+  'Accurate passes':'정확한 패스', 'Passes':'패스', 'Own half':'자기 진영 패스', 'Opposition half':'상대 진영 패스',
+  'Accurate long balls':'정확한 롱볼', 'Accurate crosses':'정확한 크로스', 'Throws':'스로인',
+  'Offsides':'오프사이드', 'Corners':'코너킥', 'Fouls committed':'반칙',
+  'Yellow cards':'경고', 'Red cards':'퇴장', 'Tackles':'태클', 'Interceptions':'인터셉트',
+  'Blocks':'블록', 'Clearances':'클리어링', 'Keeper saves':'선방',
+  'Duels won':'경합 승리', 'Ground duels won':'지상 경합', 'Aerial duels won':'공중 경합',
+  'Successful dribbles':'드리블 성공', 'xG open play':'xG(오픈플레이)', 'xG set play':'xG(세트피스)',
+  'xG non-penalty':'xG(PK 제외)', 'xG on target (xGOT)':'xGOT',
+  'Distance covered':'활동량', 'Sprinting distance':'스프린트 거리', 'Number of sprints':'스프린트 횟수',
+};
+const FM_GROUP_LABEL = {
+  'Top stats':'주요 스탯', 'Shots':'슈팅', 'Expected goals (xG)':'기대 득점',
+  'Passes':'패스', 'Defence':'수비', 'Duels':'경합', 'Discipline':'징계',
+  'Physical performance':'활동량',
+};
+// 값이 낮을수록 좋은 항목(반칙·카드류)만 별도 표기 — 나머지는 높은 쪽이 우세
+const FM_LOWER_IS_BETTER = new Set(['반칙','경고','퇴장','큰 기회 놓침']);
+
+function fmStatWinner(label, hv, av){
+  const num = v => parseFloat(String(v).replace('%','').replace(/[()]/g,' ').trim().split(' ')[0]);
+  const h = num(hv), a = num(av);
+  if(isNaN(h) || isNaN(a) || h === a) return null;
+  return FM_LOWER_IS_BETTER.has(label) ? (h < a ? 'home' : 'away') : (h > a ? 'home' : 'away');
+}
+
+async function buildFromFotmob(matchId){
+  const r = await fetch(`https://www.fotmob.com/api/data/matchDetails?matchId=${matchId}`,
+    {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(9000)});
+  if(!r.ok) return null;
+  const d = await r.json();
+  const general = d.general || {};
+  const header = d.header || {};
+  const content = d.content || {};
+  const mf = content.matchFacts || {};
+  if(!general.matchId) return null;
+
+  const teamsArr = header.teams || [];
+  const crest = id => id ? `https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png` : null;
+  const colors = general.teamColors || {};
+  const mkTeam = (t, side) => ({
+    id: t?.id != null ? String(t.id) : null,
+    name: t?.name || '',
+    crest: crest(t?.id),
+    score: typeof t?.score === 'number' ? t.score : null,
+    stats: {},
+    color: (colors[side] || colors.home || '').replace(/^#?/, '#'),
+    alternateColor: null,
+  });
+  const home = mkTeam(teamsArr[0], 'home');
+  const away = mkTeam(teamsArr[1], 'away');
+
+  // ── 팀 스탯 ──
+  const groups = content.stats?.Periods?.All?.stats || [];
+  const teamStats = [];
+  for(const grp of groups){
+    const cat = FM_GROUP_LABEL[grp.title] || grp.title || '';
+    for(const it of (grp.stats || [])){
+      const vals = it.stats || [];
+      const hv = vals[0], av = vals[1];
+      if(hv == null || av == null) continue;          // 그룹 헤더 행(값이 null)
+      const label = FM_STAT_LABEL[it.title] || it.title;
+      if(!label) continue;
+      teamStats.push({label, cat, home: String(hv), away: String(av), better: fmStatWinner(label, hv, av)});
+      home.stats[label] = String(hv);
+      away.stats[label] = String(av);
+    }
+  }
+
+  // ── 이벤트(골/퇴장) ──
+  const events = [];
+  for(const ev of (mf.events?.events || [])){
+    const type = String(ev.type || '');
+    const isGoal = type === 'Goal';
+    const isRed = type === 'Card' && /red/i.test(String(ev.card || ''));
+    if(!isGoal && !isRed) continue;
+    const own = /own/i.test(String(ev.goalDescription || ''));
+    const pen = /penalty/i.test(String(ev.goalDescription || ''));
+    const added = ev.overloadTime ? `+${ev.overloadTime}` : '';
+    events.push({
+      minute: `${ev.time}${added}'`,
+      type: own ? 'own_goal' : pen ? 'pen_goal' : isGoal ? 'goal' : 'red_card',
+      player: ev.nameStr || ev.player?.name || '',
+      homeAway: ev.isHome ? 'home' : 'away',
+    });
+  }
+
+  // ── 선수 ──
+  // 개별 스탯은 lineup이 아니라 playerStats에 들어있어서 id로 합친다.
+  const psById = content.playerStats || {};
+  // 항목에 따라 key가 비어있는 것도 있어서(예: Shots on target) 영문 title로도 찾는다
+  const statVal = (p, keyOrTitle) => {
+    for(const grp of (p?.stats || [])){
+      for(const [title, v] of Object.entries(grp.stats || {})){
+        if(v?.key === keyOrTitle || title === keyOrTitle) return v?.stat?.value;
+      }
+    }
+    return undefined;
+  };
+  const mapPlayer = (p, starter) => {
+    const ps = psById[String(p.id)];
+    const subEv = (p.performance?.substitutionEvents || []);
+    const subIn = subEv.find(e => e.type === 'subIn');
+    const subOut = subEv.find(e => e.type === 'subOut');
+    const v = p.verticalLayout || {};
+    return {
+      name: p.name,
+      jersey: p.shirtNumber != null ? String(p.shirtNumber) : '',
+      position: '',
+      starter,
+      formationPlace: null,
+      // Fotmob은 포메이션 슬롯 번호 대신 정규화 좌표를 준다 — 프론트가 이걸
+      // 그대로 쓰면 FORM_MAP에 없는 대형도 그릴 수 있다.
+      layout: (starter && v.x != null) ? {x: v.x, y: v.y} : null,
+      rating: p.performance?.rating ?? null,
+      subbedOut: !!subOut,
+      subbedIn: !!subIn,
+      subTime: subIn ? `${subIn.time}'` : subOut ? `${subOut.time}'` : null,
+      subFor: null,
+      stats: {
+        goals: statVal(ps, 'goals'),
+        assists: statVal(ps, 'assists'),
+        shots: statVal(ps, 'total_shots'),
+        shotsOnTarget: statVal(ps, 'Shots on target'),
+        fouls: statVal(ps, 'fouls'),
+        yellowCards: undefined,
+        redCards: undefined,
+      },
+    };
+  };
+  const sidePlayers = side => {
+    const t = content.lineup?.[side] || {};
+    return [
+      ...(t.starters || []).map(p => mapPlayer(p, true)),
+      ...(t.subs || []).map(p => mapPlayer(p, false)),
+    ].filter(p => p.name);
+  };
+  const players = {
+    home: sidePlayers('homeTeam'),
+    away: sidePlayers('awayTeam'),
+    homeFormation: content.lineup?.homeTeam?.formation || '',
+    awayFormation: content.lineup?.awayTeam?.formation || '',
+  };
+
+  // ── 상대 전적 ──
+  const h2hRaw = content.h2h || {};
+  // 최상위 finished는 항상 false로 오고 실제 값은 status.finished에 있다.
+  // 배열은 최신순이라 앞에서부터 5개를 집으면 최근 맞대결이 된다.
+  const h2hMatches = (h2hRaw.matches || []).filter(m => m.status?.finished).slice(0, 5);
+  const h2h = h2hMatches.length ? {
+    summary: Array.isArray(h2hRaw.summary) ? `${h2hRaw.summary[0]}승 ${h2hRaw.summary[1]}무 ${h2hRaw.summary[2]}패` : '',
+    seriesScore: '',
+    events: h2hMatches.map(m => {
+      const [hs, as_] = String(m.status?.scoreStr || '').split(' - ');
+      return {
+        date: m.time?.utcTime || null,
+        homeTeam: {id: String(m.home?.id), name: m.home?.name, crest: crest(m.home?.id)},
+        awayTeam: {id: String(m.away?.id), name: m.away?.name, crest: crest(m.away?.id)},
+        homeScore: hs ?? null, awayScore: as_ ?? null,
+      };
+    }),
+  } : null;
+
+  // ── 최근 5경기 폼 ──
+  const recentForm = (mf.teamForm || []).map((formArr, i) => {
+    const t = teamsArr[i] || {};
+    return {
+      teamId: t.id != null ? String(t.id) : null,
+      teamName: t.name || '',
+      events: (formArr || []).slice(-5).map(f => ({
+        date: f.date?.utcTime || null,
+        opponent: {name: (f.linkToMatch || '').split('/')[2] || '', crest: f.imageUrl || null},
+        score: f.score || '',
+        result: f.resultString || '',
+      })),
+    };
+  });
+
+  const ib = mf.infoBox || {};
+  return {
+    eventId: String(matchId),
+    source: 'fotmob',
+    venue: ib.Stadium?.name || null,
+    referee: ib.Referee?.text || null,
+    attendance: ib.Attendance ?? null,
+    homeTeam: home,
+    awayTeam: away,
+    teamStats,
+    events,
+    commentary: [],
+    players,
+    h2h,
+    recentForm,
+    status: general.finished ? 'Full Time' : general.started ? 'In Progress' : 'Scheduled',
+  };
+}
+
+// Fotmob은 텍스트 중계를 공개 API로 주지 않는다(라이브 경기에서도 liveticker가
+// 비어 있고, 실제 데이터가 있는 S3 경로는 403). 그래서 코멘터리만 ESPN에서
+// 따로 가져온다 — 라이브 경기의 "코멘트" 탭을 열 때만 호출된다.
+async function fetchEspnCommentary(eventId){
+  let espnId = /^\d{9,}$/.test(String(eventId)) ? String(eventId) : await resolveEspnIdFromFotmob(eventId);
+  if(!espnId) return [];
+  for(const s of Object.values(SLUG_MAP)){
+    try {
+      const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${s}/summary?event=${espnId}`,
+        {headers: {'User-Agent':'Mozilla/5.0'}, signal: AbortSignal.timeout(7000)});
+      if(!r.ok) continue;
+      const raw = await r.json();
+      if(!raw?.commentary) continue;
+      const comp = raw.header?.competitions?.[0];
+      const teamNameToSide = {};
+      for(const c of (comp?.competitors || [])){
+        const nm = c.team?.displayName || c.team?.name;
+        if(nm) teamNameToSide[nm] = c.homeAway;
+      }
+      return raw.commentary
+        .filter(c => c.text)
+        .map(c => ({
+          minute: c.play?.clock?.displayValue || c.time?.displayValue || null,
+          text: c.text,
+          homeAway: c.play?.team?.displayName ? (teamNameToSide[c.play.team.displayName] || null) : null,
+        }))
+        .reverse();
+    } catch(_){}
+  }
+  return [];
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,17 +284,37 @@ export default async function handler(req, res) {
   const { id: eventId, slug } = req.query;
   if (!eventId) return res.status(400).json({ error: 'event id required' });
 
+  // 코멘터리만 따로 (라이브 경기 "코멘트" 탭 전용, 지연 로드)
+  if (req.query.commentary) {
+    const ck = `commentary:${eventId}`;
+    if (cache[ck] && Date.now() - cache[ck].ts < 60 * 1000) return res.json(cache[ck].data);
+    const commentary = await fetchEspnCommentary(eventId);
+    const payload = { commentary };
+    cache[ck] = { data: payload, ts: Date.now() };
+    return res.json(payload);
+  }
+
   const cacheKey = eventId;
   if (cache[cacheKey] && Date.now() - cache[cacheKey].ts < TTL) {
     return res.json(cache[cacheKey].data);
   }
 
   try {
+    // Fotmob 우선 — 실패하면 아래 ESPN 경로로 흘러간다(폴백).
+    try {
+      const fm = await buildFromFotmob(eventId);
+      if (fm) {
+        cache[cacheKey] = { data: fm, ts: Date.now() };
+        return res.json(fm);
+      }
+    } catch (_) {}
+
     let raw = null;
+    let espnId = eventId;
     const slugsToTry = slug ? [slug] : Object.values(SLUG_MAP);
     for (const s of slugsToTry) {
       try {
-        const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${s}/summary?event=${eventId}`;
+        const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${s}/summary?event=${espnId}`;
         const r = await fetch(url, {
           headers: { 'User-Agent': 'Mozilla/5.0' },
           signal: AbortSignal.timeout(7000),
@@ -34,6 +322,26 @@ export default async function handler(req, res) {
         if (!r.ok) continue;
         const data = await r.json();
         if (data && (data.header || data.boxscore || data.plays)) { raw = data; break; }
+      } catch (_) {}
+    }
+    // ESPN id로 못 찾았으면 Fotmob id로 보고 환산해서 한 번 더 시도
+    if (!raw) {
+      try {
+        const resolved = await resolveEspnIdFromFotmob(eventId);
+        if (resolved) {
+          espnId = resolved;
+          for (const s of slugsToTry) {
+            try {
+              const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${s}/summary?event=${espnId}`, {
+                headers: { 'User-Agent': 'Mozilla/5.0' },
+                signal: AbortSignal.timeout(7000),
+              });
+              if (!r.ok) continue;
+              const data = await r.json();
+              if (data && (data.header || data.boxscore || data.plays)) { raw = data; break; }
+            } catch (_) {}
+          }
+        }
       } catch (_) {}
     }
     if (!raw) return res.status(404).json({ error: 'match not found - tried slugs: ' + slugsToTry.join(',') + ' for event: ' + eventId });

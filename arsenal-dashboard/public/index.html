@@ -4863,7 +4863,21 @@ function renderPitch(starters, formation, teamColor, allPlayers){
   var coords={};
   var formMap = formation ? FORM_MAP[formation] : null;
 
-  if(formMap){
+  // Fotmob은 포메이션 슬롯 번호 대신 정규화 좌표(layout {x,y})를 준다 —
+  // 있으면 그걸 그대로 쓴다. FORM_MAP에 없는 대형(3-4-2-1 등)도 그려지고,
+  // ESPN 응답(formationPlace)일 땐 layout이 없으니 아래 기존 경로로 간다.
+  var usingLayout = starters.some(function(p){ return p.layout && p.layout.x!=null; });
+  if(usingLayout){
+    starters.forEach(function(p,i){
+      if(!p.layout || p.layout.x==null) return;
+      var key = p.formationPlace || ('_l'+i);
+      p.formationPlace = key;   // 아래 좌표 조회가 formationPlace를 키로 쓴다
+      coords[key] = {
+        x: Math.round(p.layout.x * W),
+        y: Math.round(LAST_Y - p.layout.y * (LAST_Y - FIRST_Y)),
+      };
+    });
+  } else if(formMap){
     // ── 포메이션 테이블로 직접 배치 ──
     // row별 col 수 계산
     var rowMeta={};
@@ -5426,8 +5440,8 @@ function renderLineupPanelInner(data, panelName){
   if(!data.players) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
   var h=teamTabsHtml(data, panelName);
   var hP=data.players.home||[], aP=data.players.away||[];
-  var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
-  var aS=aP.filter(function(p){return p.starter&&p.formationPlace;});
+  var hS=hP.filter(function(p){return p.starter&&(p.formationPlace||p.layout);});
+  var aS=aP.filter(function(p){return p.starter&&(p.formationPlace||p.layout);});
   var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
   var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
   var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
@@ -5443,8 +5457,8 @@ function renderStartingPanelInner(data, panelName){
   if(!data.players) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">라인업 없음</div>';
   var h=teamTabsUnderlineHtml(data, panelName);
   var hP=data.players.home||[], aP=data.players.away||[];
-  var hS=hP.filter(function(p){return p.starter&&p.formationPlace;});
-  var aS=aP.filter(function(p){return p.starter&&p.formationPlace;});
+  var hS=hP.filter(function(p){return p.starter&&(p.formationPlace||p.layout);});
+  var aS=aP.filter(function(p){return p.starter&&(p.formationPlace||p.layout);});
   var hF=data.players.homeFormation||'', aF=data.players.awayFormation||'';
   var hColor=(data.homeTeam&&data.homeTeam.color)||'#C8102E';
   var aColor=(data.awayTeam&&data.awayTeam.color)||'#1a3a6c';
@@ -5478,7 +5492,7 @@ function buildLiveDetail(data){
   h += '<button class="live-tab-btn active" data-tab="info" onclick="liveSwitchTab(this,&quot;info&quot;)">기본정보</button>';
   h += '<button class="live-tab-btn" data-tab="starting" onclick="liveSwitchTab(this,&quot;starting&quot;)">선발</button>';
   h += '<button class="live-tab-btn" data-tab="playerstats" onclick="liveSwitchTab(this,&quot;playerstats&quot;)">선수 스탯</button>';
-  h += '<button class="live-tab-btn" data-tab="commentary" onclick="liveSwitchTab(this,&quot;commentary&quot;)">코멘트</button>';
+  h += '<button class="live-tab-btn" data-tab="commentary" onclick="liveSwitchTab(this,&quot;commentary&quot;);loadLiveCommentary(&quot;'+(data.eventId||'')+'&quot;)">코멘트</button>';
   h += '</div>';
 
   // 기본정보 = 골&이벤트 카드 + 팀 스탯 카드, buildFinishedDetail의 "경기
@@ -5507,12 +5521,43 @@ function buildLiveDetail(data){
     });
     h += '</div>';
   } else {
-    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트 없음</div>';
+    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트 불러오는 중...</div>';
   }
   h += '</div>';
 
   h += '</div>';
   return h;
+}
+// Fotmob은 텍스트 중계를 공개 API로 안 줘서 코멘터리만 ESPN에서 따로 받는다.
+// 탭을 열 때만 호출하고, 한 번 채우면 다시 부르지 않는다.
+function loadLiveCommentary(matchId){
+  if(!matchId) return;
+  var panel=document.getElementById('live-panel-commentary');
+  if(!panel || panel.dataset.loaded==='1' || panel.dataset.loading==='1') return;
+  panel.dataset.loading='1';
+  fetch(FN+'/match?id='+encodeURIComponent(matchId)+'&commentary=1')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      var list=(d&&d.commentary)||[];
+      panel.dataset.loaded='1';
+      panel.dataset.loading='';
+      if(!list.length){
+        panel.innerHTML='<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트 없음</div>';
+        return;
+      }
+      var h='<div style="max-height:360px;overflow-y:auto;padding:10px 14px 14px;">';
+      list.forEach(function(c){
+        h+='<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-bright);">'
+          +'<span style="flex-shrink:0;min-width:32px;font-size:10px;color:var(--text-secondary);font-family:var(--fm);">'+(c.minute||'')+'</span>'
+          +'<span style="font-size:11px;color:var(--text-secondary);line-height:1.5;">'+c.text+'</span>'
+          +'</div>';
+      });
+      panel.innerHTML=h+'</div>';
+    })
+    .catch(function(){
+      panel.dataset.loading='';
+      panel.innerHTML='<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트를 불러오지 못했습니다</div>';
+    });
 }
 // 종료 경기 상세 — 모바일/데스크톱 구분 없이 항상 이 구조를 쓴다. live
 // 모달과 같은 탭 UI를 쓰되, 코멘터리는 빼고 이벤트·스탯은 한 탭에 같이
