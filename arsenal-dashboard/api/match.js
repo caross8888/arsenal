@@ -405,6 +405,7 @@ export default async function handler(req, res) {
     if (kvHit) {
       cache[cacheKey] = { data: kvHit, ts: Date.now() };
       if (isSettled(kvHit)) setImmutable(res);
+      else if (kvHit.status === 'Full Time') res.setHeader('Cache-Control', 'public, max-age=600');
       return res.json(kvHit);
     }
 
@@ -419,7 +420,11 @@ export default async function handler(req, res) {
         if (fm.status === 'Full Time') {
           const settled = isSettled(fm);
           await kvSet(`match:${eventId}`, fm, settled ? null : 60 * 60);
+          // 확정 전(종료 24시간 이내)이라도 스코어는 안 바뀌고 평점만 미세
+          // 조정되므로, 브라우저엔 10분짜리 캐시를 준다 — 영구 저장은 막되
+          // 다시 열 때 스피너는 안 뜨게.
           if (settled) setImmutable(res);
+          else res.setHeader('Cache-Control', 'public, max-age=600');
         }
         return res.json(fm);
       }

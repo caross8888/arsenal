@@ -1717,9 +1717,11 @@ function matchDetailUrl(m){
   var slug=COMP_SLUG_MAP[m.competition&&m.competition.short]||'eng.1';
   return FN+'/match?id='+m.id+'&slug='+slug;
 }
+// 종료된 경기면 전부 대상 — 서버가 확정 여부에 따라 캐시 수명만 다르게 준다
+// (확정 24시간 경과: 영구 / 그 이전: 10분). 예전엔 24시간이 안 지난 경기를
+// 아예 제외해서, 어제 끝난 경기만 스피너가 뜨는 문제가 있었다.
 function isSettledMatch(m){
-  return m && m.status==='FINISHED' && m.utcDate &&
-    (Date.now() - new Date(m.utcDate).getTime() > 24*60*60*1000);
+  return !!(m && m.status==='FINISHED');
 }
 var _prefetchedMatches = {};
 function prefetchFinishedMatches(list, limit){
@@ -5537,8 +5539,13 @@ function renderStatsPanelInner(data){
   // 슈팅이 22개인 경기에 "막힌 슈팅 0:0", "블록 0:0"이 뜨는 게 그런 경우라,
   // 양 팀 모두 0인 항목은 아예 숨긴다. (경고·퇴장이 실제로 0인 경기도 같이
   // 사라지지만, 0으로만 채워진 줄을 보여주는 것보다 낫다고 판단)
+  // 경고·퇴장은 0이어도 "그런 일이 없었다"는 정보라 남긴다.
+  var KEEP_ZERO = {'경고':1, '퇴장':1};
   var firstNum=function(v){ var m=String(v==null?'':v).match(/-?\d+(\.\d+)?/); return m?parseFloat(m[0]):0; };
-  stats = stats.filter(function(s){ return !(firstNum(s.home)===0 && firstNum(s.away)===0); });
+  stats = stats.filter(function(s){
+    if(KEEP_ZERO[s.label]) return true;
+    return !(firstNum(s.home)===0 && firstNum(s.away)===0);
+  });
   if(!stats.length) return '<div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:14px">이 경기는 팀 스탯이 제공되지 않습니다</div>';
   var curCat=null;
   stats.forEach(function(s, i){
