@@ -1,6 +1,8 @@
 // api/social.js — Vercel Serverless Function
 // Bluesky 아스날 1티어 기자 피드
 
+import { translateFields, translateSegments } from './_translate.js';
+
 const JOURNALISTS = [
   { handle: 'david-ornstein.bsky.social', name: 'David Ornstein', label: 'The Athletic' },
   { handle: 'amylawrence.bsky.social',    name: 'Amy Lawrence',   label: 'The Observer' },
@@ -105,6 +107,16 @@ async function fetchJournalist(j) {
   return out;
 }
 
+// 포스트 본문 한글화. 링크/멘션/해시태그가 섞인 본문(segments 있음)은
+// translateSegments가 HTML 모드로 통째로 처리해서 링크를 살린 채 번역하고,
+// 링크가 없는 순수 텍스트 포스트만 평문 경로로 보낸다.
+async function translatePosts(posts) {
+  const plain = posts.filter(p => !Array.isArray(p.segments) || !p.segments.length);
+  await translateSegments(posts);
+  if (plain.length) await translateFields(plain, ['text']);
+  return posts;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
@@ -124,6 +136,7 @@ export default async function handler(req, res) {
     all.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
 
     const payload = { posts: all.slice(0, 12), count: all.length };
+    await translatePosts(payload.posts);
     _cache   = payload;
     _cacheTs = Date.now();
 

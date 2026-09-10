@@ -530,7 +530,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .news-src-badge{position:absolute;top:10px;left:10px;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--red);color:var(--white);font-weight:700}
 .news-body{padding:12px 14px}
 .news-hl{font-weight:700;font-size:13px;line-height:1.4;margin-bottom:6px;color:var(--text)}
-.news-ex{font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* 요약은 말줄임하지 않고 필요한 줄 수만큼 다 보여준다 — .news-list가 세로
+   flex(그리드가 아님)라 카드마다 높이가 달라져도 옆 카드와 어긋나지 않는다.
+   RSS 소스는 백엔드에서 150자로 자르지만 ESPN/Guardian 요약은 그대로 내려와
+   더 길 수 있다(실측 최대 영문 251자). 다만 한글 번역문은 영문의 6할 정도
+   길이라 실제로는 3~5줄 선에서 끝난다. */
+.news-ex{font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:8px}
 .news-foot{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text-secondary)}
 .live-setup{background:var(--surface);border:1px solid var(--border-accent);border-radius:12px;padding:16px;margin-bottom:16px}
 .live-setup-title{font-weight:700;font-size:13px;margin-bottom:4px}

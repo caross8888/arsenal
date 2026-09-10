@@ -2,6 +2,8 @@
 // Guardian Arsenal RSS + Sky Sports + BBC Sport RSS
 // 최신순 정렬, 이미지 URL 정상화
 
+import { translateFields } from './_translate.js';
+
 const RSS_SOURCES = [
   {
     url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',
@@ -18,7 +20,12 @@ const RSS_SOURCES = [
 function decodeHtml(str) {
   return (str||'')
     .replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&')
-    .replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&apos;/g,"'")
+    .replace(/&quot;/g,'"').replace(/&apos;/g,"'")
+    // 숫자 엔티티는 코드포인트로 직접 변환한다 — &#39;만 개별 처리하면
+    // CBS Sports처럼 0을 채워 보내는 소스(&#039;)가 안 풀려서 제목에
+    // 그대로 노출되고, 번역까지 그 상태로 넘어간다.
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)))
     .replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
 }
 
@@ -155,8 +162,8 @@ export default async function handler(req, res) {
       const espnArticles = (espnData.articles || []).map(a => {
         const pub = new Date(a.published || Date.now());
         return {
-          title:       a.headline || '',
-          description: a.description || '',
+          title:       decodeHtml(a.headline || ''),
+          description: decodeHtml(a.description || ''),
           url:         a.links?.web?.href || '',
           image:       a.images?.[0]?.url || null,
           pubDate:     pub.getTime(),
@@ -182,8 +189,11 @@ export default async function handler(req, res) {
       const gArticles = (gData.response?.results || []).map(a => {
         const pub = new Date(a.webPublicationDate || Date.now());
         return {
-          title:       a.webTitle || '',
-          description: a.fields?.trailText || '',
+          // Guardian의 trailText에는 <strong> 같은 태그가 그대로 들어있다 —
+          // RSS 경로와 달리 이쪽은 decodeHtml을 안 태우고 있어서 카드에
+          // 태그가 그대로 노출되고, 번역할 때도 태그째로 넘어간다.
+          title:       decodeHtml(a.webTitle || ''),
+          description: decodeHtml(a.fields?.trailText || ''),
           url:         a.webUrl || '',
           image:       a.fields?.thumbnail || null,
           pubDate:     pub.getTime(),
@@ -232,6 +242,11 @@ export default async function handler(req, res) {
     source: 'RSS',
     sourceErrors: Object.keys(sourceErrors).length ? sourceErrors : undefined,
   };
+
+  // 헤드라인·요약 한글화. 목록을 12개로 자른 뒤에 번역해야 화면에 안 나올
+  // 기사까지 문자 수를 쓰지 않는다. 실패하면 원문(영어)이 그대로 남는다.
+  await translateFields(result.articles, ['title', 'description']);
+
   cache.data = result;
   cache.ts = Date.now();
   return res.json(result);

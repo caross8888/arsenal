@@ -1,6 +1,8 @@
 // api/videos.js — Vercel Serverless Function
 // Arsenal 공식 유튜브 채널 최신 영상 (RSS, API 키 불필요)
 
+import { translateFields } from './_translate.js';
+
 const CHANNEL_ID = 'UCpryVRk_VDudG8SHXgWcG0w'; // Arsenal 공식 채널
 const FEED_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
 
@@ -101,6 +103,10 @@ export default async function handler(req, res) {
       })),
       source: 'YouTube',
     };
+
+    // 영상 제목 한글화 (실패 시 원문 유지)
+    await translateFields(result.videos, ['title']);
+
     cache.data = result;
     cache.ts = Date.now();
     return res.json(result);
