@@ -1723,7 +1723,10 @@ function showErr(el,msg){el.innerHTML='<div class="error-state">&#9888;&#65039; 
 // 아이콘이 스치듯 지나가지 않게. containerEl에 스피너가 이미 없다면(캐시로
 // 즉시 렌더링된 뒤의 백그라운드 갱신, 혹은 이미 한 번 렌더링된 상태)
 // 지연 없이 바로 실행한다.
-var MIN_LOADING_MS = 1200;
+// 캐시(KV·프리페치)가 강화되면서 응답이 대부분 수백 ms 안에 오는데, 이 값이
+// 1200이면 서버가 50ms에 답해도 사용자는 1.2초를 기다린다 — 아이콘이 스치는
+// 걸 막는다는 원래 목적은 유지하면서 체감 지연을 줄이려고 400으로 낮췄다.
+var MIN_LOADING_MS = 400;
 function withMinLoading(containerEl, startTime, renderFn){
   if(!containerEl || !containerEl.querySelector('.spinner')){
     renderFn();
@@ -7245,6 +7248,20 @@ loadFixtures();
 loadTransferWindow();
 closeFixDetailPanel();
 closeSqDetailPanel();
+
+// 첫 화면(경기 일정)이 그려진 뒤, 유휴 시간에 나머지 탭 데이터를 미리 받아둔다.
+// 서버가 팀 API 응답 하나로 일정·순위·선수단 조각을 같이 채워두기 때문에
+// 이 프리페치는 대부분 KV 히트로 끝나고, 탭을 옮길 때 스피너가 안 뜬다.
+// 이미 본 탭은 loaded[]로 걸러져서 중복 호출되지 않는다.
+(function prefetchOtherTabs(){
+  var run=function(){
+    if(!loaded['leaderboard']){ loaded['leaderboard']=true; loadStandings(); loadLeaders(); loadRoundResults(); loadTeamOfWeek(); }
+    if(!loaded['squad']){ loaded['squad']=true; loadSquad(); }
+  };
+  // 첫 탭 렌더를 방해하지 않도록 유휴 시점까지 미룬다
+  if(window.requestIdleCallback) requestIdleCallback(run, {timeout:4000});
+  else setTimeout(run, 2500);
+})();
 
 </script>
 </body>

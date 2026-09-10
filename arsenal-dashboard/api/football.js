@@ -240,7 +240,10 @@ function mapLiveSquadMember(m){
 // 되읽는 데만 2.6초가 걸려서(Fotmob 직접 호출 2.9초와 거의 차이 없음) 캐시 의미가
 // 없고 Upstash 대역폭만 태운다. 그래서 원본은 인스턴스 메모리에만 잠깐 들고,
 // KV에는 각 용도별로 가공된 작은 조각(fixtures 등)을 따로 저장한다.
-const KV_TTL_TEAM_SLICE_SEC = 5 * 60;
+// TTL은 라이브 경기 유무에 따라 다르게 준다 — 스코어가 실시간으로 바뀌는 건
+// 경기 중뿐이고, 그 외 시간엔 30분을 써도 체감 차이가 없으면서 호출은 6배 준다.
+const KV_TTL_SLICE_LIVE_SEC = 60;
+const KV_TTL_SLICE_IDLE_SEC = 30 * 60;
 const TEAM_PAYLOAD_MEM_TTL_MS = 60 * 1000;
 const _teamPayloadMem = {};
 async function fetchTeamPayload(teamId = FIRST_TEAM_ID){
@@ -251,6 +254,73 @@ async function fetchTeamPayload(teamId = FIRST_TEAM_ID){
   const data = await r.json();
   _teamPayloadMem[teamId] = {data, ts: Date.now()};
   return data;
+}
+
+// ESPN이 주던 note 문자열 대신 Fotmob legend의 순위 인덱스로 구간을 판정하되,
+// 표시 색은 앱 팔레트로 통일한다(Fotmob 원색은 앱 전역 승리/패배색과 어긋난다).
+function standingsZoneColor(title){
+  if(!title) return null;
+  if(/champions/i.test(title)) return '#22C55E';
+  if(/europa/i.test(title)) return '#3B82F6';
+  if(/conference/i.test(title)) return '#F59E0B';
+  if(/relegation/i.test(title)) return '#EF4444';
+  return null;
+}
+function mapFotmobStandings(teamPayload){
+  const plTable = (teamPayload?.table || []).find(t => t?.data?.leagueId === PL_LEAGUE_ID);
+  const rows = plTable?.data?.table?.all || [];
+  if(!rows.length) return null;
+  const legend = plTable?.data?.legend || [];
+  const zoneOf = idx => legend.find(l => (l.indices || []).includes(idx)) || null;
+  return rows.map((row, i) => {
+    const [gf, ga] = String(row.scoresStr || '').split('-').map(n => parseInt(n, 10) || 0);
+    const zone = zoneOf(i);
+    return {
+      position: row.idx,
+      team: {
+        id: String(row.id),
+        name: row.name || '',
+        shortName: row.shortName || row.name || '',
+        crest: `https://images.fotmob.com/image_resources/logo/teamlogo/${row.id}.png`,
+      },
+      playedGames: row.played, won: row.wins, draw: row.draws, lost: row.losses,
+      points: row.pts, goalsFor: gf, goalsAgainst: ga, goalDifference: row.goalConDiff,
+      isArsenal: row.id === FIRST_TEAM_ID,
+      zoneColor: standingsZoneColor(zone?.title) || zone?.color || null,
+      zoneLabel: zone?.title || null,
+    };
+  }).sort((a,b) => a.position - b.position);
+}
+
+function sliceTtlFor(fixtures){
+  const live = (fixtures || []).some(m => m.status === 'IN_PLAY');
+  return live ? KV_TTL_SLICE_LIVE_SEC : KV_TTL_SLICE_IDLE_SEC;
+}
+
+// 팀 API 응답 하나에 일정·순위·스쿼드가 다 들어있으므로, 어느 탭이 먼저
+// 불려서 이 응답을 받아오든 나머지 조각까지 한꺼번에 KV에 채워둔다. 그러면
+// 일정 탭에서 스피너가 도는 그 순간 순위·선수단도 같이 준비돼서, 탭을
+// 옮길 때 다시 로딩이 뜨지 않는다.
+async function warmTeamSlices(teamPayload){
+  try {
+    const rawFixtures = teamPayload?.fixtures?.allFixtures?.fixtures || [];
+    const fixtures = rawFixtures.map(mapFotmobFixture).filter(m => m.utcDate)
+      .sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
+    const ttl = sliceTtlFor(fixtures);
+    const jobs = [];
+    if(fixtures.length) jobs.push(kvSetJSON(`fixtures:${FIRST_TEAM_ID}`, fixtures, ttl));
+
+    const standings = mapFotmobStandings(teamPayload);
+    if(standings && standings.length) jobs.push(kvSetJSON(`standings:${PL_LEAGUE_ID}`, standings, ttl));
+
+    const groups = (teamPayload?.squad && teamPayload.squad.squad) || [];
+    if(groups.length){
+      const roster = groups.filter(g => g.title !== 'coach').flatMap(g => g.members).map(mapLiveSquadMember);
+      if(roster.length) jobs.push(kvSetJSON('firstTeamRoster', roster, KV_TTL_ROSTER_SEC));
+    }
+    await Promise.all(jobs);
+    return {fixtures, ttl};
+  } catch(_){ return null; }
 }
 
 async function fetchFirstTeamRosterLive(){
@@ -498,14 +568,10 @@ export default async function handler(req, res) {
         let fmMatches = nocache ? null : await kvGetJSON(`fixtures:${FIRST_TEAM_ID}`);
         if(!fmMatches){
           const teamPayload = await fetchTeamPayload();
-          const rawFixtures = teamPayload?.fixtures?.allFixtures?.fixtures || [];
-          if(rawFixtures.length){
-            fmMatches = rawFixtures
-              .map(mapFotmobFixture)
-              .filter(m => m.utcDate)
-              .sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
-            await kvSetJSON(`fixtures:${FIRST_TEAM_ID}`, fmMatches, KV_TTL_TEAM_SLICE_SEC);
-          }
+          // 일정만 만들지 않고 순위·선수단 조각까지 같이 채운다 — 지금 도는
+          // 이 스피너 한 번으로 다른 탭들도 준비된다.
+          const warmed = await warmTeamSlices(teamPayload);
+          fmMatches = warmed && warmed.fixtures;
         }
         if(fmMatches && fmMatches.length){
           return res.json({
@@ -782,31 +848,9 @@ export default async function handler(req, res) {
         let fmStandings = nocache ? null : await kvGetJSON(`standings:${PL_LEAGUE_ID}`);
         if(!fmStandings){
           const teamPayload = await fetchTeamPayload();
-          const plTable = (teamPayload?.table || []).find(t => t?.data?.leagueId === PL_LEAGUE_ID);
-          const rows = plTable?.data?.table?.all || [];
-          if(rows.length){
-            const legend = plTable?.data?.legend || [];
-            const zoneOf = idx => legend.find(l => (l.indices || []).includes(idx)) || null;
-            fmStandings = rows.map((row, i) => {
-              const [gf, ga] = String(row.scoresStr || '').split('-').map(n => parseInt(n, 10) || 0);
-              const zone = zoneOf(i);
-              return {
-                position: row.idx,
-                team: {
-                  id: String(row.id),
-                  name: row.name || '',
-                  shortName: row.shortName || row.name || '',
-                  crest: `https://images.fotmob.com/image_resources/logo/teamlogo/${row.id}.png`,
-                },
-                playedGames: row.played, won: row.wins, draw: row.draws, lost: row.losses,
-                points: row.pts, goalsFor: gf, goalsAgainst: ga, goalDifference: row.goalConDiff,
-                isArsenal: row.id === FIRST_TEAM_ID,
-                zoneColor: zoneColorFor(zone?.title) || zone?.color || null,
-                zoneLabel: zone?.title || null,
-              };
-            }).sort((a,b) => a.position - b.position);
-            await kvSetJSON(`standings:${PL_LEAGUE_ID}`, fmStandings, KV_TTL_TEAM_SLICE_SEC);
-          }
+          fmStandings = mapFotmobStandings(teamPayload);
+          // 같은 응답에 들어있는 일정·선수단 조각도 같이 채워둔다
+          await warmTeamSlices(teamPayload);
         }
         if(fmStandings && fmStandings.length){
           result = {

@@ -8,6 +8,39 @@ const SLUG_MAP = {
 
 const cache = {};
 const TTL = 5 * 60 * 1000;
+
+// 종료된 경기의 상세는 다시는 안 바뀐다 — 메모리 캐시(5분, 인스턴스별)로는
+// 같은 경기를 계속 다시 받게 되므로 KV에 사실상 영구 저장한다. 한 번 누가
+// 열어본 경기는 이후 모든 사용자에게 스피너 없이 즉시 뜬다.
+const KV_URL = process.env.KV_REST_API_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+const KV_TTL_FINISHED_SEC = 180 * 24 * 60 * 60; // 180일 — 안 열리는 경기가 무한정 쌓이지 않게
+async function kvGet(key){
+  if(!KV_URL || !KV_TOKEN) return null;
+  try {
+    const r = await fetch(KV_URL, {
+      method:'POST',
+      headers:{Authorization:`Bearer ${KV_TOKEN}`,'Content-Type':'application/json'},
+      body: JSON.stringify(['GET', key]),
+      signal: AbortSignal.timeout(5000),
+    });
+    if(!r.ok) return null;
+    const {result} = await r.json();
+    return result ? JSON.parse(result) : null;
+  } catch(_){ return null; }
+}
+async function kvSet(key, data, ttlSec){
+  if(!KV_URL || !KV_TOKEN) return;
+  try {
+    await fetch(KV_URL, {
+      method:'POST',
+      headers:{Authorization:`Bearer ${KV_TOKEN}`,'Content-Type':'application/json'},
+      body: JSON.stringify(['SET', key, JSON.stringify(data), 'EX', String(ttlSec)]),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch(_){}
+}
+
 const FOTMOB_HEADERS = {
   'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
 };
@@ -353,11 +386,19 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 종료 경기는 KV에 영구 보관되어 있으면 그대로 — Fotmob을 아예 안 부른다.
+    const kvHit = await kvGet(`match:${eventId}`);
+    if (kvHit) {
+      cache[cacheKey] = { data: kvHit, ts: Date.now() };
+      return res.json(kvHit);
+    }
+
     // Fotmob 우선 — 실패하면 아래 ESPN 경로로 흘러간다(폴백).
     try {
       const fm = await buildFromFotmob(eventId);
       if (fm) {
         cache[cacheKey] = { data: fm, ts: Date.now() };
+        if (fm.status === 'Full Time') await kvSet(`match:${eventId}`, fm, KV_TTL_FINISHED_SEC);
         return res.json(fm);
       }
     } catch (_) {}
