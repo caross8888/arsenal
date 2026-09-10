@@ -28,6 +28,16 @@ async function kvGet(key){
     return result ? JSON.parse(result) : null;
   } catch(_){ return null; }
 }
+// 경기가 끝나고 하루가 지나면 평점·스탯이 확정된 것으로 보고 불변 취급한다.
+function isSettled(data){
+  if(!data || data.status !== 'Full Time' || !data.utcDate) return false;
+  return Date.now() - new Date(data.utcDate).getTime() > 24 * 60 * 60 * 1000;
+}
+// 브라우저가 다시 요청조차 안 하게 만드는 헤더 — 불변 데이터에만 쓴다.
+function setImmutable(res){
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+}
+
 // ttlSec이 없으면 만료 없이 영구 저장
 async function kvSet(key, data, ttlSec){
   if(!KV_URL || !KV_TOKEN) return;
@@ -394,6 +404,7 @@ export default async function handler(req, res) {
     const kvHit = await kvGet(`match:${eventId}`);
     if (kvHit) {
       cache[cacheKey] = { data: kvHit, ts: Date.now() };
+      if (isSettled(kvHit)) setImmutable(res);
       return res.json(kvHit);
     }
 
@@ -406,9 +417,9 @@ export default async function handler(req, res) {
         // 확정 전이라 그대로 굳히면 미완성 데이터가 영구히 남는다. 하루가
         // 지난 경기만 영구 저장하고, 갓 끝난 경기는 1시간짜리로 둔다.
         if (fm.status === 'Full Time') {
-          const age = fm.utcDate ? Date.now() - new Date(fm.utcDate).getTime() : 0;
-          const settled = age > 24 * 60 * 60 * 1000;
+          const settled = isSettled(fm);
           await kvSet(`match:${eventId}`, fm, settled ? null : 60 * 60);
+          if (settled) setImmutable(res);
         }
         return res.json(fm);
       }

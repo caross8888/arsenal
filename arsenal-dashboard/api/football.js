@@ -297,6 +297,45 @@ function mapFotmobStandings(teamPayload){
   }).sort((a,b) => a.position - b.position);
 }
 
+// 과거 시즌 일정 — 팀 API(teams?id=)는 현재 시즌만 주지만, 사이트가 "이전 경기"
+// 버튼에 쓰는 pageableFixtures는 커서로 계속 거슬러 올라갈 수 있다. 커서는
+// beforetimestamp를 직접 만들어 원하는 시점으로 바로 점프할 수 있어서, 시즌
+// 끝(7/31)부터 시작해 시즌 시작(8/1) 이전이 나올 때까지 20건씩 모은다.
+// 시즌당 3~4회 호출이지만 최초 1회뿐이고 이후엔 KV 영구 저장으로 끝난다.
+async function fetchFotmobSeasonFixtures(seasonYear){
+  const startMs = Date.UTC(seasonYear, 7, 1);
+  const endMs   = Date.UTC(seasonYear + 1, 6, 31, 23, 59, 59);
+  let url = `https://www.fotmob.com/api/data/pageableFixtures?teamId=${FIRST_TEAM_ID}`
+    + `&cursor=${encodeURIComponent(`/prod/db/api/team/${FIRST_TEAM_ID}/fixture-by-date?beforetimestamp=${Math.floor(endMs/1000)}`)}`;
+  const collected = [];
+  for(let page = 0; page < 12; page++){   // 안전 상한 — 한 시즌은 보통 3~4페이지
+    const r = await fetch(url, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+    if(!r.ok) break;
+    const j = await r.json();
+    const batch = j.matches || [];
+    if(!batch.length) break;
+    collected.push(...batch);
+    const oldest = batch.reduce((min, m) => {
+      const t = new Date(m.status?.utcTime || 0).getTime();
+      return (!min || t < min) ? t : min;
+    }, 0);
+    if(oldest && oldest < startMs) break;   // 시즌 시작 이전까지 닿았으면 끝
+    if(!j.previous) break;
+    url = `https://www.fotmob.com${j.previous}`;
+  }
+  const seen = new Set();
+  return collected
+    .map(mapFotmobFixture)
+    .filter(m => {
+      if(!m.utcDate || seen.has(m.id)) return false;
+      const t = new Date(m.utcDate).getTime();
+      if(t < startMs || t > endMs) return false;
+      seen.add(m.id);
+      return true;
+    })
+    .sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
+}
+
 function sliceTtlFor(fixtures){
   const live = (fixtures || []).some(m => m.status === 'IN_PLAY');
   return live ? KV_TTL_SLICE_LIVE_SEC : KV_TTL_SLICE_IDLE_SEC;
@@ -663,15 +702,19 @@ export default async function handler(req, res) {
 
     } else if(type === 'results'){
       // 연도·월 브라우징용 — 특정 시즌 하나의 종료된 경기만 조회.
-      // Fotmob 팀 API는 season 파라미터를 줘도 과거 시즌을 안 주므로(실측) 이
-      // 경로만 ESPN을 계속 쓴다. 대신 끝난 시즌 결과는 두 번 다시 안 바뀌므로
-      // KV에 1년 보관해서 호출 자체를 없앤다 — 메모리 캐시(1시간, 인스턴스별)만
-      // 있을 땐 달력에서 월을 옮길 때마다 ESPN을 20여 회씩 다시 긁고 있었다.
+      // Fotmob(pageableFixtures)이 우선이고 ESPN은 폴백이다. 예전엔 이 경로만
+      // ESPN이었는데, 그러면 과거 경기 ID가 ESPN 것이 되어 상세 조회가 Fotmob에
+      // 못 붙고 ESPN 폴백으로 떨어졌다 — ESPN은 옛 경기의 팀 스탯을 전부 0으로
+      // 주고 선수 평점은 아예 없어서 점유율·xG·평점이 통째로 비어 보였다.
       const requestedSeason = parseInt(req.query.season, 10);
       if(!requestedSeason) return res.status(400).json({error:'season 파라미터가 필요합니다'});
       const cacheKey = `results_${requestedSeason}`;
       const curSeasonYear = now.getMonth() + 1 >= 8 ? now.getFullYear() : now.getFullYear() - 1;
       const isPastSeason = requestedSeason < curSeasonYear;
+      // 끝난 시즌은 브라우저에도 영구 캐싱시킨다 — 두 번째 방문부터는 네트워크
+      // 요청 자체가 안 나가서 스피너가 원천적으로 안 뜬다. 클라이언트도 이때는
+      // 캐시버스터(_=timestamp)를 안 붙여야 실제로 히트한다.
+      if(isPastSeason) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       if(!nocache){
         const hit = getCache(cacheKey);
         if(hit) return res.json(hit);
@@ -680,6 +723,18 @@ export default async function handler(req, res) {
           if(kvHit){ setCache(cacheKey, kvHit); return res.json(kvHit); }
         }
       }
+
+      // ── Fotmob 우선 ──
+      try {
+        const fmSeason = await fetchFotmobSeasonFixtures(requestedSeason);
+        const fmFinished = (fmSeason || []).filter(m => m.status === 'FINISHED');
+        if(fmFinished.length){
+          const payload = {matches: fmFinished, season: requestedSeason, source: 'fotmob'};
+          setCache(cacheKey, payload);
+          if(isPastSeason) await kvSetJSON(`results:${requestedSeason}`, payload);
+          return res.json(payload);
+        }
+      } catch(_){ /* ESPN 폴백으로 진행 */ }
 
       const fetchSeasonSlug = async ({slug, name, short}) => {
         try {

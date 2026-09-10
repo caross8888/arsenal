@@ -1693,9 +1693,12 @@ function getNatFlag(nationality){
 }
 var NAT_FLAG=NAT_FLAG_ISO;
 
-function apiFetch(url){
-  var sep=url.indexOf('?')>=0?'&':'?';
-  return fetch(url+sep+'_='+Date.now()).then(function(r){
+// immutable:true면 캐시버스터를 안 붙인다 — 서버가 불변으로 표시한 데이터
+// (끝난 시즌 결과, 확정된 경기 상세)는 URL이 매번 같아야 브라우저 HTTP 캐시가
+// 히트해서 두 번째부터는 네트워크 요청 자체가 사라진다.
+function apiFetch(url, opts){
+  var full = (opts && opts.immutable) ? url : url+(url.indexOf('?')>=0?'&':'?')+'_='+Date.now();
+  return fetch(full).then(function(r){
     if(!r.ok) return r.json().then(function(e){throw new Error(e.error||'HTTP '+r.status);});
     return r.json();
   });
@@ -2123,7 +2126,9 @@ function getSeasonMatches(season, opts){
     }
     return _resultsCache[season];
   }
-  var pending = apiFetch(FN+'/football?type=results&season='+season).then(function(data){
+  // 끝난 시즌은 불변이라 캐시버스터 없이 요청 → 재방문 시 브라우저 캐시 히트
+  var isPast = (_mCurrentSeason !== undefined) && season < _mCurrentSeason;
+  var pending = apiFetch(FN+'/football?type=results&season='+season, {immutable:isPast}).then(function(data){
     var m = data.matches||[];
     assignPlRounds(m);
     _resultsCache[season] = m;
@@ -4566,8 +4571,13 @@ function openMatchModal(m, isAuto){
     ? fetch(FN+'/football?type=injuries&team='+encodeURIComponent(oppNameSkel)+'&_='+Date.now()).then(function(r){ return r.json(); }).catch(function(){ return null; })
     : Promise.resolve(null);
 
+  // 하루 지난 종료 경기는 데이터가 확정돼서 서버가 immutable로 내려준다 —
+  // 캐시버스터를 빼야 브라우저 캐시가 히트해 재조회 시 스피너가 안 뜬다.
+  var mSettled = (m.status==='FINISHED') && m.utcDate &&
+    (Date.now() - new Date(m.utcDate).getTime() > 24*60*60*1000);
+  var matchUrl = FN+'/match?id='+m.id+'&slug='+slug + (mSettled ? '' : '&_='+Date.now());
   Promise.all([
-    fetch(FN+'/match?id='+m.id+'&slug='+slug+'&_='+Date.now()).then(function(r){ return r.json(); }),
+    fetch(matchUrl).then(function(r){ return r.json(); }),
     oppInjPromise
   ])
     .then(function(results){
