@@ -5100,12 +5100,24 @@ function ratingBadgeHtml(v){
     +'color:'+ratingColor(n)+';background:color-mix(in srgb,'+(n>=8?'#22C55E':n>=7?'#84CC16':n>=6?'#F59E0B':'#EF4444')+' 15%,transparent);">'
     +n.toFixed(1)+'</span>';
 }
-function renderPlayerRow(p){
+// Fotmob은 오래된 경기(대략 2017년 이전)엔 선수 스탯·평점·포지션을 아예 안 준다.
+// 그때는 빈 표(전부 '-')를 그리는 대신 없는 열을 지우거나 안내로 대체한다.
+function hasAnyRating(players){
+  return (players||[]).some(function(p){ return p && p.rating!=null && !isNaN(parseFloat(p.rating)); });
+}
+function hasAnyPlayerStat(players){
+  return (players||[]).some(function(p){
+    var s=p&&p.stats; if(!s) return false;
+    return Object.keys(s).some(function(k){ return s[k]!=null && s[k]!==0 && s[k]!==''; });
+  });
+}
+function renderPlayerRow(p, showRating){
   var s=p.stats||{};
   // 카드는 열을 따로 두지 않고 이름 옆 아이콘으로 — 그 자리를 평점이 쓴다.
   var y=parseInt(s.yellowCards)||0, rc=parseInt(s.redCards)||0;
   var cardIcon=rc?' <span style="font-size:9px">🟥</span>':y?' <span style="font-size:9px">🟨</span>':'';
-  var nameCell=getPosBadge(p.position)+(p.name||'')+(p.jersey?' <span style="color:var(--text-dim);font-size:9px">#'+p.jersey+'</span>':'')+cardIcon;
+  // 포지션이 없는(옛 경기) 선수는 빈 배지를 그리지 않는다
+  var nameCell=(p.position?getPosBadge(p.position):'')+(p.name||'')+(p.jersey?' <span style="color:var(--text-dim);font-size:9px">#'+p.jersey+'</span>':'')+cardIcon;
   if(p.subbedOut&&p.subTime){
     var subForName=p.subFor?p.subFor.name:'';
     var subForJersey=p.subFor&&p.subFor.jersey?p.subFor.jersey:'';
@@ -5123,7 +5135,7 @@ function renderPlayerRow(p){
     '<td>'+(s.shots||'-')+'</td>'+
     '<td>'+(s.shotsOnTarget||'-')+'</td>'+
     '<td>'+(s.fouls||'-')+'</td>'+
-    '<td>'+ratingBadgeHtml(p.rating)+'</td>'+
+    (showRating ? '<td>'+ratingBadgeHtml(p.rating)+'</td>' : '')+
   '</tr>';
 }
 function renderPlayerTable(side, players, visible){
@@ -5131,19 +5143,31 @@ function renderPlayerTable(side, players, visible){
   var style=visible?'margin-top:10px':'margin-top:10px;display:none';
   var starters=players.filter(function(p){return p.starter;});
   var subs=players.filter(function(p){return !p.starter;});
-  var colgroup='<colgroup><col><col style="width:1%"><col style="width:1%"><col style="width:1%"><col style="width:1%"><col style="width:1%"><col style="width:1%"></colgroup>';
-  var thead='<thead><tr><th>선수</th><th>골</th><th>도움</th><th>슈팅</th><th>유효</th><th>파울</th><th>평점</th></tr></thead>';
+  // 스탯도 평점도 하나도 없으면(옛 경기) 전부 '-'인 표 대신 안내만 남긴다
+  if(!hasAnyPlayerStat(players) && !hasAnyRating(players)){
+    return '<div class="mm-section mm-players-'+side+'" style="'+style+'">'
+      +'<div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:14px;">'
+      +'이 경기는 선수 기록이 제공되지 않습니다</div>'
+      +'<div class="mm-lineup-block"><div class="mm-lineup-block-title">출전 선수</div>'
+      +'<div style="padding:4px 14px 12px;font-size:11px;color:var(--text-secondary);line-height:1.9;">'
+      + players.map(function(p){ return (p.jersey?'<span style="color:var(--text-dim)">#'+p.jersey+'</span> ':'')+(p.name||''); }).join(' · ')
+      +'</div></div></div>';
+  }
+  var showRating = hasAnyRating(players);   // 평점이 아예 없으면 열 자체를 뺀다
+  var colgroup='<colgroup><col>'+new Array(showRating?7:6).join('<col style="width:1%">')+'</colgroup>';
+  var thead='<thead><tr><th>선수</th><th>골</th><th>도움</th><th>슈팅</th><th>유효</th><th>파울</th>'
+    +(showRating?'<th>평점</th>':'')+'</tr></thead>';
   var html='<div class="mm-section mm-players-'+side+'" style="'+style+'">';
   // 선발
   html+='<div class="mm-lineup-block"><div class="mm-lineup-block-title">선발</div>';
   html+='<table class="mm-player-table">'+colgroup+thead+'<tbody>';
-  starters.forEach(function(p){ html+=renderPlayerRow(p); });
+  starters.forEach(function(p){ html+=renderPlayerRow(p, showRating); });
   html+='</tbody></table></div>';
   // 교체
   if(subs.length){
     html+='<div class="mm-lineup-block"><div class="mm-lineup-block-title">교체</div>';
     html+='<table class="mm-player-table">'+colgroup+thead+'<tbody>';
-    subs.forEach(function(p){ html+=renderPlayerRow(p); });
+    subs.forEach(function(p){ html+=renderPlayerRow(p, showRating); });
     html+='</tbody></table></div>';
   }
   html+='</div>';
@@ -5495,8 +5519,14 @@ function renderEventsPanelInner(data){
 }
 function renderStatsPanelInner(data){
   var stats = data.teamStats||[];
-  if(!stats.length) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">스탯 없음</div>';
+  if(!stats.length) return '<div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:14px">이 경기는 팀 스탯이 제공되지 않습니다</div>';
   var h='';
+  // Fotmob이 오래된 경기엔 점유율·슈팅 정도만 준다(최근 경기는 40개 안팎).
+  // 왜 항목이 몇 개뿐인지 알 수 있게 안내를 얹는다.
+  if(stats.length < 10){
+    h += '<div style="padding:12px 14px 0;font-size:10px;color:var(--text-secondary);line-height:1.5;">'
+      + '오래된 경기라 기본 기록만 제공됩니다</div>';
+  }
   var curCat=null;
   stats.forEach(function(s, i){
     if(s.cat!==curCat){
