@@ -4988,21 +4988,22 @@ function renderPitch(starters, formation, teamColor, allPlayers, topPlayer){
     svg+='<text x="'+c.x+'" y="'+c.y+'" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="'+circleTextColor+'" font-family="sans-serif">'+p.jersey+'</text>';
     // 이름
     svg+='<text x="'+c.x+'" y="'+(c.y+r+8)+'" text-anchor="middle" font-size="7.5" font-weight="600" fill="'+nameTextColor+'" font-family="sans-serif">'+lastName+'</text>';
-    // 평점 배지 — 원 좌측 상단(교체 아이콘은 우측 상단이라 안 겹친다).
-    // 아래쪽에 두면 이름 텍스트와 겹친다(실측 3.7px).
-    // 팀 내 최고평점자는 파란 배지 + 별로 따로 구분한다.
+    // 평점 배지 — Fotmob 피치와 같은 배치(평점 우측 상단 / 교체 아이콘 좌측 상단),
+    // 흰 글자. 다만 앱 팔레트 원색(#22C55E 등) 위에 흰 글자를 올리면 대비가
+    // 2:1대라 6px에선 뭉개져서, 같은 계열의 한 단계 진한 톤을 쓴다(3.3~5.2:1).
+    // 최고평점자는 Fotmob처럼 파란 배지 + 별.
     if(p.rating!=null && !isNaN(parseFloat(p.rating))){
       var rv=parseFloat(p.rating).toFixed(1);
       var isBest=(topPlayer && p===topPlayer);
-      var rx=c.x-r-1, ry=c.y-r+3;
-      var rc2=isBest?'#60A5FA':rv>=8?'#22C55E':rv>=7?'#84CC16':rv>=6?'#F59E0B':'#EF4444';
       var rw=isBest?18:13;
+      var rx=c.x+r+1-(isBest?2.5:0), ry=c.y-r+3;
+      var rc2=isBest?'#2563EB':rv>=8?'#16A34A':rv>=7?'#65A30D':rv>=6?'#EA580C':'#DC2626';
       svg+='<rect x="'+(rx-rw/2)+'" y="'+(ry-4)+'" width="'+rw+'" height="8" rx="2" fill="'+rc2+'" stroke="rgba(0,0,0,.35)" stroke-width="0.5"/>';
-      svg+='<text x="'+rx+'" y="'+ry+'" text-anchor="middle" dominant-baseline="central" font-size="6" font-weight="700" fill="#0B0D12" font-family="sans-serif">'+rv+(isBest?'★':'')+'</text>';
+      svg+='<text x="'+rx+'" y="'+ry+'" text-anchor="middle" dominant-baseline="central" font-size="6" font-weight="700" fill="#FFFFFF" font-family="sans-serif">'+rv+(isBest?'★':'')+'</text>';
     }
-    // 교체 아이콘 (ESPN substitution icon)
+    // 교체 아이콘 — Fotmob과 동일하게 좌측 상단(평점 배지가 우측을 쓴다)
     if(wasSubbed){
-      var ix=c.x+r-1, iy=c.y-r+1;
+      var ix=c.x-r+1, iy=c.y-r+1;
       svg+='<circle cx="'+ix+'" cy="'+iy+'" r="4" fill="var(--red)" stroke="var(--white)" stroke-width="1"/>';
       svg+='<g transform="translate('+(ix-3.36)+','+(iy-3.36)+') scale(0.28)" stroke="var(--white)" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14"/><path d="M18 13l-6 6"/><path d="M6 13l6 6"/></g>';
     }
