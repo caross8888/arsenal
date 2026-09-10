@@ -4626,7 +4626,13 @@ function openMatchModal(m, isAuto){
       if(data.error) throw new Error(data.error);
       data.oppName=oppNameSkel;
       data.oppInjuries=results[1];
-      withMinLoading(content, _t0, function(){ if(reqId===_matchModalReqSeq) renderMatchModal(content, m, data, desktop); });
+      withMinLoading(content, _t0, function(){
+        if(reqId!==_matchModalReqSeq) return;
+        // 응답을 기다리는 사이 closeFixDetailPanel()이 빈 상태 클래스를 다시
+        // 붙였을 수 있다(초기 로드 때 순서 경쟁) — 내용을 그리기 직전에 정리한다.
+        if(desktop) content.className='';
+        renderMatchModal(content, m, data, desktop);
+      });
     })
     .catch(function(err){
       clearTimeout(timer);
@@ -5527,6 +5533,13 @@ function renderStatsPanelInner(data){
     h += '<div style="padding:12px 14px 0;font-size:10px;color:var(--text-secondary);line-height:1.5;">'
       + '오래된 경기라 기본 기록만 제공됩니다</div>';
   }
+  // Fotmob은 오래된 경기에서 "기록이 없는" 항목을 null이 아니라 0으로 준다.
+  // 슈팅이 22개인 경기에 "막힌 슈팅 0:0", "블록 0:0"이 뜨는 게 그런 경우라,
+  // 양 팀 모두 0인 항목은 아예 숨긴다. (경고·퇴장이 실제로 0인 경기도 같이
+  // 사라지지만, 0으로만 채워진 줄을 보여주는 것보다 낫다고 판단)
+  var firstNum=function(v){ var m=String(v==null?'':v).match(/-?\d+(\.\d+)?/); return m?parseFloat(m[0]):0; };
+  stats = stats.filter(function(s){ return !(firstNum(s.home)===0 && firstNum(s.away)===0); });
+  if(!stats.length) return '<div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:14px">이 경기는 팀 스탯이 제공되지 않습니다</div>';
   var curCat=null;
   stats.forEach(function(s, i){
     if(s.cat!==curCat){
@@ -7334,11 +7347,14 @@ function loadESPNStats(){
 }
 
 
+// 상세 패널 빈 상태를 먼저 그려두고 데이터를 부른다 — 순서가 반대면 캐시로
+// 일정이 즉시 렌더돼 예정 경기 패널이 열린 직후에 빈 상태가 덮어써진다.
+closeFixDetailPanel();
+closeSqDetailPanel();
+
 loadESPNStats();
 loadFixtures();
 loadTransferWindow();
-closeFixDetailPanel();
-closeSqDetailPanel();
 
 // 첫 화면(경기 일정)이 그려진 뒤, 유휴 시간에 나머지 탭 데이터를 미리 받아둔다.
 // 서버가 팀 API 응답 하나로 일정·순위·선수단 조각을 같이 채워두기 때문에
