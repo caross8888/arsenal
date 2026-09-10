@@ -143,7 +143,11 @@ const ENTRIES = [
   // 여기 넣을 항목은 "축구 기사에 그 단어가 나오면 100% 오역"인 것만으로 제한한다.
   // 한글→한글 치환이라 원문을 볼 수 없어서, 애매한 단어를 넣으면 멀쩡한 문장까지
   // 망가뜨린다. 조사(을/를/의/은)는 명사 뒤에 붙으므로 어간만 바꾸면 된다.
-  ['슈팅', ['사격', '촬영']],
+  // "촬영"은 넣지 말 것 — 축구 문맥에서 shooting이 새는 방향은 사격이고(실측 4건 중
+  // 2건 사격, 촬영 0건), 촬영은 유튜브 유니폼 발표·비하인드 영상 제목에 원래 뜻으로
+  // 늘 나온다("photoshoot" → 사진 촬영 현장, "Filming with Saka" → 사카와 함께 촬영).
+  // 한 번 촬영으로 샜던 건 원문 치환 규칙이 한국어를 끼워 넣어서 생긴 것이었다.
+  ['슈팅', ['사격']],
   ['정확한 마무리', ['임상 마무리', '임상적 마무리', '임상적인 마무리']],
   ['무실점', ['깨끗한 경력', '깨끗한 시트']],
   ['멀티골', ['중괄호']],
@@ -205,15 +209,22 @@ export function applyGlossary(text) {
 //  1. **대체어는 가능하면 영어로.** 한국어를 끼워 넣으면 구글이 그 단어를 제멋대로
 //     바꾼다 — "lack of 결정력"을 보냈더니 "결단력 부족"으로 돌아왔다. 반면
 //     "clinical"은 축구 문맥에서 구글이 안정적으로 "결정력"으로 옮긴다.
-//     (예외: "anti-ruthless"는 한국어 삽입이 이 문장에서 실측 검증됐다.)
+//     예외를 두지 말 것 — "anti-ruthless"를 한국어 "결정력 부족"으로 바꿨다가,
+//     평문 모드로는 멀쩡했는데 실제 SNS가 쓰는 HTML 모드에선 구글이 문장을 못
+//     읽고 "shooting"을 "촬영"으로, "결정력 부족"을 "결정하는 것이 불가능했습니다"로
+//     흩어버렸다. **검증은 반드시 실제 경로와 같은 format(SNS=html)으로 할 것.**
 //  2. **단어 하나가 아니라 구문으로 잡는다.** "ruthless" 단독을 바꾸면 다른 뜻으로
 //     쓰인 문장이 망가진다 — 실측: "ruthless in his team selection"(냉정했다)이
 //     "결정적인 역할을 했다"로, "a ruthless tackle"(거친 태클)이 "결정력 태클"로
 //     뜻이 바뀌었다. "ruthless edge"는 구글이 이미 "결정력"으로 잘 옮겨서 뺐다.
 const SOURCE_RULES = [
-  // 에이미 로렌스(The Observer)의 조어 — 검색해도 용례가 안 나오는 1회성 표현. 실측:
-  // "결정력 부족 shooting, …" → "결정력이 부족했던 슈팅이었지만, …"
-  [/\banti-ruthless\b/gi, '결정력 부족'],
+  // 에이미 로렌스(The Observer)의 조어 — 검색해도 용례가 안 나오는 1회성 표현.
+  // HTML 모드 실측: "A lack of clinical finishing, until Martin Odegaard showed
+  // them how to do it." → "…방법을 보여주기 전까지는 결정력이 부족했다."
+  // (비교: "Poor finishing" → 마무리가 형편없었다 / "Wasteful shooting" → 낭비적인 슈팅)
+  // 구문째 먼저 잡고, "shooting"이 안 붙은 경우만 단어 규칙으로 떨어진다.
+  [/\banti-ruthless shooting\b/gi, 'a lack of clinical finishing'],
+  [/\banti-ruthless\b/gi, 'wasteful'],
   // "lack of ruthlessness" → (그대로) 냉정함의 부족 / (치환) 결정력 부족
   [/\bruthlessness\b/gi, 'clinical finishing'],
   // "ruthless enough to win the title" → (그대로) 냉혹해질 / (치환) 결정력을 갖출
