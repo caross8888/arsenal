@@ -4823,9 +4823,13 @@ function renderFormCard(data){
         if(!isNaN(d)) dateStr=(d.getMonth()+1)+'.'+d.getDate();
       }
       var oppName=ev.opponent?ev.opponent.name:'';
+      // 홈/원정 — D-day 줄과 같은 표기("(H) vs 상대" / "(A) @ 상대"). 스코어가
+      // "홈 - 원정" 순서라 원정 승리가 "0 - 1"로 보이는 걸 읽을 수 있게 해준다.
+      // 옛 응답(isHome 없음)은 접두어 없이 "vs 상대".
+      var oppPrefix=ev.isHome===true?'(H) vs ':ev.isHome===false?'(A) @ ':'vs ';
       html+='<div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid var(--border-bright);font-size:12px;">'+
         '<span style="width:36px;color:var(--text-secondary);font-size:11px;">'+dateStr+'</span>'+
-        '<span style="flex:1;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">vs '+oppName+'</span>'+
+        '<span style="flex:1;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+oppPrefix+oppName+'</span>'+
         '<span style="width:20px;text-align:center;font-weight:700;color:'+col+';">'+(ev.result||'-')+'</span>'+
         '<span style="width:44px;text-align:right;font-family:var(--fm);color:var(--text);">'+(ev.score||'')+'</span>'+
       '</div>';

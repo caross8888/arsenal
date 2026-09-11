@@ -314,6 +314,7 @@ async function buildFromFotmob(matchId){
       events: (formArr || []).slice(-5).map(f => ({
         date: f.date?.utcTime || null,
         opponent: {name: (f.home?.isOurTeam ? f.away?.name : f.home?.name) || '', crest: f.imageUrl || null},
+        isHome: f.home?.isOurTeam === true ? true : f.away?.isOurTeam === true ? false : null,
         score: f.score || '',
         result: f.resultString || '',
       })),
@@ -708,6 +709,7 @@ export default async function handler(req, res) {
         return {
           date: ev.gameDate || null,
           opponent: ev.opponent ? { name: ev.opponent.displayName || ev.opponent.abbreviation, crest: ev.opponent.logo } : null,
+          isHome,
           score: ev.score || '',
           result,
           competition: ev.leagueAbbreviation || ev.competitionName || '',
