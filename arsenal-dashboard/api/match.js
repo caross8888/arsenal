@@ -308,9 +308,12 @@ async function buildFromFotmob(matchId){
     return {
       teamId: t.id != null ? String(t.id) : null,
       teamName: t.name || '',
+      // 상대팀은 home/away 중 isOurTeam이 false인 쪽. linkToMatch 경로
+      // ("/matches/sunderland-vs-rennes/...")에서 뽑으면 두 팀이 붙은 슬러그가
+      // 통째로 나와 "vs sunderland-vs-rennes"가 됐었다. imageUrl은 원래 상대 로고다.
       events: (formArr || []).slice(-5).map(f => ({
         date: f.date?.utcTime || null,
-        opponent: {name: (f.linkToMatch || '').split('/')[2] || '', crest: f.imageUrl || null},
+        opponent: {name: (f.home?.isOurTeam ? f.away?.name : f.home?.name) || '', crest: f.imageUrl || null},
         score: f.score || '',
         result: f.resultString || '',
       })),
