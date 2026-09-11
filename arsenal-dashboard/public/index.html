@@ -777,22 +777,27 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-section-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
 .mm-card{margin:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border-bright);border-radius:16px;overflow:hidden;}
 .mm-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text);padding:14px 14px 0;}
-/* 승부차기 카드(renderShootoutCard). 순번 원은 3개씩 줄바꿈 — 5번 이후
-   서든데스로 6·7번…이 붙어도 같은 격자로 이어진다. 원 색은 테마와 무관하게
-   흰 숫자가 읽히는 짙은 초록/빨강으로 고정한다. */
-.so-dots{display:flex;justify-content:center;align-items:stretch;gap:26px;padding:12px 14px 6px;}
-.so-grp{display:flex;flex-wrap:wrap;gap:8px;width:94px;align-content:flex-start;}
-.so-div{width:1px;background:var(--border-bright);}
-.so-dot{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;}
-.so-hit{background:#15803D;}
-.so-miss{background:#B91C1C;}
-.so-list{padding:8px 14px 14px;display:flex;flex-direction:column;gap:6px;}
-.so-row{display:grid;grid-template-columns:1fr 28px 1fr;gap:10px;align-items:center;min-height:28px;}
-.so-l{text-align:right;}
-.so-r{text-align:left;}
-.so-name{font-size:12px;color:var(--text);}
-.so-score{font-size:12px;color:var(--text-secondary);white-space:nowrap;}
-.so-icon{width:28px;height:28px;border-radius:50%;border:1px solid var(--border-bright);display:inline-flex;align-items:center;justify-content:center;}
+/* 승부차기 카드(renderShootoutCard) — 한 줄 = 한 라운드. 바깥쪽에 키커 이름,
+   안쪽에 성공/실패 아이콘(원 테두리 안 골대 + 체크/X), 가운데 라운드 번호.
+   가운데 결과 원 두 열이 세로로 나란히 서서 스코어보드 역할도 겸한다.
+   긴 이름(Maxence Caqueret 등)은 모바일 한쪽 칸이 120px 남짓이라 말줄임하면
+   누군지 못 알아보므로 두 줄로 줄바꿈시킨다. */
+.so-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:10px 14px 12px;border-bottom:1px solid var(--border-bright);}
+.so-team{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text);min-width:0;line-height:1.25;}
+.so-team.away{flex-direction:row-reverse;text-align:right;}
+.so-team img{width:22px;height:22px;object-fit:contain;flex-shrink:0;}
+.so-first{font-size:9px;font-weight:700;color:var(--gold);border:1px solid var(--border-accent);border-radius:4px;padding:1px 4px;flex-shrink:0;white-space:nowrap;}
+.so-sum{text-align:center;}
+.so-total{font-family:var(--fd);font-size:24px;letter-spacing:2px;color:var(--text);line-height:1;}
+.so-winner{font-size:10px;color:var(--text-secondary);margin-top:3px;white-space:nowrap;}
+.so-row{display:grid;grid-template-columns:1fr 28px 16px 28px 1fr;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);}
+.so-row:last-child{border-bottom:none;}
+.so-l{text-align:left;min-width:0;}
+.so-r{text-align:right;min-width:0;}
+.so-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;overflow-wrap:anywhere;}
+.so-rno{font-size:11px;font-weight:700;color:var(--text-secondary);text-align:center;}
+.so-icon{width:28px;height:28px;border-radius:50%;border:1px solid var(--border-bright);display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;}
+.so-none{border-style:dashed;}
 /* 팀 스탯 카드 안의 공격/수비/반칙 같은 하위 카테고리 제목 — 카드
    타이틀(.mm-card-title)과 같은 스타일을 쓰면 "팀 스탯"이라는 카드
    제목과 그 하위 그룹 제목이 구분이 안 갔다. 더 작고 옅게 눌러서
@@ -819,11 +824,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-evt-home{width:calc(50% - 1px);text-align:right;}
 .mm-evt-away{width:calc(50% - 1px);text-align:left;}
 .mm-evt-div{width:2px;background:var(--border-bright);}
-.mm-evt-cell{display:inline-flex;align-items:center;gap:3px;padding:3px 6px;max-width:100%;min-width:0;overflow:hidden;}
+/* 이름(Noto Sans KR)과 시간(Fira Mono)은 폰트가 달라 박스 중앙을 맞춰도 글자
+   기준선이 어긋난다(한글 폰트는 기준선 아래 여백이 커서 이름 글자가 더 아래에
+   앉음 → 시간이 1.5px 떠 보였다). 두 텍스트는 기준선(baseline)으로 맞추고,
+   글자가 아닌 아이콘만 가운데 정렬한다. 시간 글자 크기도 이름과 같게. */
+.mm-evt-cell{display:inline-flex;align-items:baseline;gap:3px;padding:3px 6px;max-width:100%;min-width:0;overflow:hidden;}
 .mm-evt-home .mm-evt-cell{flex-direction:row;}
 .mm-evt-away .mm-evt-cell{flex-direction:row;}
-.mm-event-icon{font-size:10px;flex-shrink:0;}
-.mm-event-min{font-family:var(--fm);font-size:9px;color:var(--gold);font-weight:700;flex-shrink:0;width:28px;text-align:center;}
+.mm-event-icon{font-size:10px;flex-shrink:0;align-self:center;}
+.mm-event-min{font-family:var(--fm);font-size:10px;color:var(--gold);font-weight:700;flex-shrink:0;min-width:3.2em;text-align:center;}
 .mm-event-player{font-size:10px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;}
 .mm-stats-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:8px 8px;align-items:center;}
 .mm-stat-val{font-size:13px;font-weight:800;color:var(--text);}
@@ -1106,7 +1115,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .fix-detail-panel .mm-team-name{font-size:clamp(10px,2.5cqw,12px);max-width:clamp(80px,20.83cqw,100px);}
   .fix-detail-panel .mm-score{font-size:clamp(26px,7.08cqw,34px);}
   .fix-detail-panel .mm-stat-val{font-size:clamp(12px,2.92cqw,14px);}
-  .fix-detail-panel .mm-event-player{font-size:clamp(9px,2.29cqw,11px);}
+  .fix-detail-panel .mm-event-player,.fix-detail-panel .mm-event-min{font-size:clamp(9px,2.29cqw,11px);}
   .fix-detail-panel .mm-team-tab img{width:clamp(24px,5.83cqw,28px);height:clamp(24px,5.83cqw,28px);}
   /* .live-tab-btn(경기정보/선발/선수 스탯 · 기본정보/기록/경력)와
      .rec-subnav-btn(대회 하위탭, 라인업 홈/원정 전환)는 두 패널 모두에서
@@ -1768,6 +1777,18 @@ function apiFetch(url, opts){
 function matchDetailUrl(m){
   var slug=COMP_SLUG_MAP[m.competition&&m.competition.short]||'eng.1';
   return FN+'/match?id='+m.id+'&slug='+slug+'&v=2';
+}
+// 팀 이름은 API마다 다르게 온다 — 일정 카드(Fotmob 팀 일정)는 짧은 표시명
+// ("PSG", "Man City"), 경기 상세(matchDetails)는 정식 이름("Paris Saint-Germain",
+// "Manchester City")이라 같은 경기가 카드와 모달에서 다른 이름으로 보였다. 모달은
+// 늘 카드(m)를 눌러 열리므로 카드의 짧은 이름을 displayName으로 얹어 모달 헤더·
+// 승부차기 카드에서 쓴다. 경기 상세에는 짧은 이름이 없어서(승부 예측 poll에만
+// 간혹 있음) 서버에서 붙일 수 없다. 원래 name은 isArsenalTeam 판별 등에 그대로 둔다.
+function applyCardTeamNames(data, m){
+  if(!data||!m) return data;
+  if(data.homeTeam&&m.homeTeam&&m.homeTeam.name) data.homeTeam.displayName=m.homeTeam.name;
+  if(data.awayTeam&&m.awayTeam&&m.awayTeam.name) data.awayTeam.displayName=m.awayTeam.name;
+  return data;
 }
 // 종료된 경기면 전부 대상 — 서버가 확정 여부에 따라 캐시 수명만 다르게 준다
 // (확정 24시간 경과: 영구 / 그 이전: 10분). 예전엔 24시간이 안 지난 경기를
@@ -4835,6 +4856,7 @@ function renderInjuryCards(data){
   return html;
 }
 function renderMatchModal(content, m, data, desktop){
+  applyCardTeamNames(data, m);
   var h=data.homeTeam, a=data.awayTeam;
   var isArsHome=isArsenalTeam(h);
   var EVENT_ICON={goal:'⚽',pen_goal:'⚽(P)',own_goal:'🔴(OG)',red_card:'🟥'};
@@ -4863,7 +4885,7 @@ function renderMatchModal(content, m, data, desktop){
         // 1열: 홈팀
         '<div class="mm-team">'+
           (h.crest?'<img class="mm-crest" src="'+h.crest+'" onerror="this.style.display=\'none\'">':'')+
-          '<div class="mm-team-name">'+(h.name||'')+'</div>'+
+          '<div class="mm-team-name">'+(h.displayName||h.name||'')+'</div>'+
         '</div>'+
         // 2열: 날짜·스코어·경기장·대회
         '<div class="mm-center-col">'+
@@ -4878,7 +4900,7 @@ function renderMatchModal(content, m, data, desktop){
         // 3열: 어웨이팀
         '<div class="mm-team away">'+
           (a.crest?'<img class="mm-crest" src="'+a.crest+'" onerror="this.style.display=\'none\'">':'')+
-          '<div class="mm-team-name">'+(a.name||'')+'</div>'+
+          '<div class="mm-team-name">'+(a.displayName||a.name||'')+'</div>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -5465,7 +5487,7 @@ function loadLiveExpand(m, panel){
   (window.apiFetch||apiFetch)(matchApiUrl).then(function(data){
     var el = document.getElementById('live-detail-'+m.id);
     if(!el) return;
-    el.innerHTML = buildLiveDetail(data);
+    el.innerHTML = buildLiveDetail(applyCardTeamNames(data, m));
     if(activeTab !== 'events'){
       var btn = el.querySelector('[data-tab="'+activeTab+'"]');
       if(btn) liveSwitchTab(btn, activeTab);
@@ -5562,7 +5584,7 @@ function startLiveExpandPolling(m, panel){
     (window.apiFetch||apiFetch)(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
       var el = document.getElementById('live-detail-'+m.id);
       if(!el) return;
-      el.innerHTML = buildLiveDetail(data);
+      el.innerHTML = buildLiveDetail(applyCardTeamNames(data, m));
       if(activeTabPoll !== 'events'){
         var btn = el.querySelector('[data-tab="'+activeTabPoll+'"]');
         if(btn) liveSwitchTab(btn, activeTabPoll);
@@ -5865,54 +5887,67 @@ function renderMomentumCard(data){
   });
   svg+='<line x1="0" y1="'+MID+'" x2="'+W+'" y2="'+MID+'" stroke="var(--border-bright)" stroke-width="0.4"/>';
   svg+='</svg>';
-  var legend=function(c,n,light){return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary)">'
-    +'<span style="width:8px;height:8px;border-radius:2px;background:'+c+(light?';box-shadow:inset 0 0 0 1px var(--overlay-50)':'')+'"></span>'+n+'</span>';};
+  var legend=function(c,n,light,end){return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);min-width:0;justify-self:'+(end?'end':'start')+'">'
+    +'<span style="width:8px;height:8px;border-radius:2px;flex-shrink:0;background:'+c+(light?';box-shadow:inset 0 0 0 1px var(--overlay-50)':'')+'"></span>'+n+'</span>';};
+  // 범례는 3칸 그리드(1fr auto 1fr) — flex space-between이면 양쪽 팀 이름 길이가
+  // 다를 때 가운데 경기 시간이 짧은 쪽으로 밀린다. 양옆 칸 폭을 같게 고정해야
+  // 시간이 차트 한가운데에 선다.
   return '<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">매치 도미넌스</div>'+
     '<div style="padding:6px 14px 12px;">'+svg+
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">'+
-      legend(hColor,(data.homeTeam&&data.homeTeam.name)||'홈',hLight)+
-      '<span style="font-size:9px;color:var(--text-dim)">'+m.length+'분</span>'+
-      legend(aColor,(data.awayTeam&&data.awayTeam.name)||'원정',aLight)+
+    '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;margin-top:6px;">'+
+      legend(hColor,(data.homeTeam&&data.homeTeam.name)||'홈',hLight,false)+
+      '<span style="font-size:9px;color:var(--text-secondary)">'+m.length+'분</span>'+
+      legend(aColor,(data.awayTeam&&data.awayTeam.name)||'원정',aLight,true)+
     '</div></div></div>';
 }
-// 승부차기 카드 — 승부차기가 있었던 경기에서만 매치 도미넌스 위에 붙는다
-// (Fotmob 경기 상세의 "승부차기" 블록과 같은 구성). 위: 팀별 키커 순번 원
-// (성공 초록/실패 빨강, 홈 왼쪽·원정 오른쪽). 아래: 킥 순서대로 한 줄씩, 찬
-// 팀 쪽에 이름과 그 킥 직후 누적 스코어를 두고 가운데에 성공/실패 아이콘.
-// 누적 스코어에서 방금 찬 팀 숫자만 성공/실패 색으로 강조한다.
+// 승부차기 카드 — 승부차기가 있었던 경기에서만 매치 도미넌스 위에 붙는다.
+// 한 줄 = 한 라운드로, 양 팀 키커를 같은 줄에 마주 보게 놓는다: 바깥쪽 이름,
+// 안쪽 결과 아이콘, 가운데 라운드 번호. 가운데 아이콘 두 열이 세로로 서서
+// "몇 라운드에 누가 실축했는지"가 한눈에 비교된다. 킥이 번갈아 들어오므로
+// 팀별로 나눈 뒤 같은 순번끼리 짝짓고, 먼저 찬 팀은 헤더에 "선축"으로 표시한다
+// (줄 안에선 선후가 안 보이니까). 승부가 일찍 나서 한쪽이 못 찬 라운드는 점선 빈 원.
+// 결과 문구(골/실축)와 등번호는 따로 안 쓴다 — 결과는 가운데 아이콘으로 이미
+// 보이고, Fotmob이 실패를 선방/골대 밖으로 구분해 주지 않아 문구가 정보를 더하지
+// 않는다. 팀 이름은 카드와 같은 짧은 이름(displayName, applyCardTeamNames 참고).
 function renderShootoutCard(data){
   var so=data&&data.shootout;
   if(!so||!so.kicks||!so.kicks.length) return '';
   var esc=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
-  var dots=function(side){
-    var n=0;
-    return so.kicks.filter(function(k){return k.side===side;}).map(function(k){
-      n++;
-      return '<span class="so-dot '+(k.scored?'so-hit':'so-miss')+'">'+n+'</span>';
-    }).join('');
-  };
-  var icon=function(scored){
-    var c=scored?'var(--green)':'var(--loss)';
-    var mark=scored?'<path d="M5.2 8.6l2 2 3.8-4"/>':'<path d="M6 7l4 4M10 7l-4 4"/>';
+  var H=so.kicks.filter(function(k){return k.side==='home';});
+  var A=so.kicks.filter(function(k){return k.side==='away';});
+  var rounds=Math.max(H.length,A.length);
+  var first=so.kicks[0].side;
+  var hScore=so.score?so.score[0]:H.filter(function(k){return k.scored;}).length;
+  var aScore=so.score?so.score[1]:A.filter(function(k){return k.scored;}).length;
+  var ht=data.homeTeam||{}, at=data.awayTeam||{};
+  var winner=hScore>aScore?ht:at;
+  var tname=function(t){return t.displayName||t.name||'';};
+  // 원 테두리 안에 골대 모양 + 체크(성공, 초록)/X(실패, 빨강). 승부가 일찍 나서
+  // 한쪽이 못 찬 라운드는 점선 빈 원.
+  var dot=function(k){
+    if(!k) return '<span class="so-icon so-none"></span>';
+    var c=k.scored?'var(--green)':'var(--loss)';
+    var mark=k.scored?'<path d="M5.2 8.6l2 2 3.8-4"/>':'<path d="M6 7l4 4M10 7l-4 4"/>';
     return '<span class="so-icon" style="color:'+c+'"><svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+
       '<path d="M2 13.5V3h12v10.5"/>'+mark+'</svg></span>';
   };
-  var rows=so.kicks.map(function(k){
-    var sc=k.score||[];
-    var col=k.scored?'var(--green)':'var(--loss)';
-    var hs=k.side==='home'?'<span style="color:'+col+'">'+sc[0]+'</span>':sc[0];
-    var as=k.side==='away'?'<span style="color:'+col+'">'+sc[1]+'</span>':sc[1];
-    var txt='<span class="so-name">'+esc(k.player)+'</span>'+(sc.length===2?' <span class="so-score">('+hs+' - '+as+')</span>':'');
-    return '<div class="so-row">'+
-      '<div class="so-l">'+(k.side==='home'?txt:'')+'</div>'+
-      icon(k.scored)+
-      '<div class="so-r">'+(k.side==='away'?txt:'')+'</div>'+
-    '</div>';
-  }).join('');
-  return '<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">승부차기</div>'+
-    '<div class="so-dots"><div class="so-grp">'+dots('home')+'</div><div class="so-div"></div><div class="so-grp">'+dots('away')+'</div></div>'+
-    '<div class="so-list">'+rows+'</div>'+
-  '</div>';
+  var team=function(t,side){
+    return '<div class="so-team '+side+'">'+(t.crest?'<img src="'+t.crest+'" onerror="this.style.display=\'none\'">':'')+
+      '<span>'+esc(tname(t))+'</span>'+(first===side?'<span class="so-first">선축</span>':'')+'</div>';
+  };
+  var who=function(k){
+    if(!k) return '';
+    return '<div class="so-name">'+esc(k.player)+'</div>';
+  };
+  var h='<div class="mm-card"><div class="mm-card-title" style="padding:14px 14px 4px;">승부차기</div>';
+  h+='<div class="so-head">'+team(ht,'home')+
+    '<div class="so-sum"><div class="so-total">'+hScore+' : '+aScore+'</div><div class="so-winner">'+esc(tname(winner))+' 승</div></div>'+
+    team(at,'away')+'</div>';
+  for(var r=0;r<rounds;r++){
+    h+='<div class="so-row"><div class="so-l">'+who(H[r])+'</div>'+dot(H[r])+
+      '<div class="so-rno">'+(r+1)+'</div>'+dot(A[r])+'<div class="so-r">'+who(A[r])+'</div></div>';
+  }
+  return h+'</div>';
 }
 // 종료 경기 상세 — 모바일/데스크톱 구분 없이 항상 이 구조를 쓴다. live
 // 모달과 같은 탭 UI를 쓰되, 코멘터리는 빼고 이벤트·스탯은 한 탭에 같이
