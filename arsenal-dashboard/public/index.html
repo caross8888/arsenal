@@ -1195,8 +1195,8 @@ function playIntro(){
   video.addEventListener('ended', dismissIntro);
   video.addEventListener('error', dismissIntro);
   overlay.addEventListener('click', dismissIntro);
-  // 자동재생이 막히는 브라우저 대비 — 영상 길이(5.2초)보다 넉넉하게 기다렸다가 강제로 넘어감
-  setTimeout(dismissIntro, 8000);
+  // 자동재생이 막히는 브라우저 대비 — 영상 길이(3.9초)보다 넉넉하게 기다렸다가 강제로 넘어감
+  setTimeout(dismissIntro, 6000);
 }
 (function(){
   // 앱을 완전히 껐다가 다시 켰을 때(새 세션)만 자동으로 보여주고, 같은 세션
