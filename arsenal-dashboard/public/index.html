@@ -5176,20 +5176,24 @@ function renderPitch(starters, formation, teamColor, allPlayers, topPlayer){
     // 흰 글자. 다만 앱 팔레트 원색(#22C55E 등) 위에 흰 글자를 올리면 대비가
     // 2:1대라 6px에선 뭉개져서, 같은 계열의 한 단계 진한 톤을 쓴다(3.3~5.2:1).
     // 최고평점자는 Fotmob처럼 파란 배지 + 별.
+    // 평점 배지와 교체 아이콘은 BADGE_H(바깥 높이, 교체 아이콘은 흰 테두리
+    // 포함)와 세로 중심 BADGE_CY를 공유해 양쪽 상단에 같은 크기·같은 줄로 선다.
+    var BADGE_H=8.5, BADGE_CY=c.y-r+2;
     if(p.rating!=null && !isNaN(parseFloat(p.rating))){
       var rv=parseFloat(p.rating).toFixed(1);
       var isBest=(topPlayer && p===topPlayer);
-      var rw=isBest?18:13;
-      var rx=c.x+r+1-(isBest?2.5:0), ry=c.y-r+3;
+      var rw=isBest?19.5:14;
+      var rx=c.x+r+1-(isBest?2.5:0), ry=BADGE_CY;
       var rc2=isBest?'#2563EB':rv>=8?'#16A34A':rv>=7?'#65A30D':rv>=6?'#EA580C':'#DC2626';
-      svg+='<rect x="'+(rx-rw/2)+'" y="'+(ry-4)+'" width="'+rw+'" height="8" rx="2" fill="'+rc2+'" stroke="rgba(0,0,0,.35)" stroke-width="0.5"/>';
-      svg+='<text x="'+rx+'" y="'+ry+'" text-anchor="middle" dominant-baseline="central" font-size="6" font-weight="700" fill="#FFFFFF" font-family="sans-serif">'+rv+(isBest?'★':'')+'</text>';
+      svg+='<rect x="'+(rx-rw/2)+'" y="'+(ry-BADGE_H/2)+'" width="'+rw+'" height="'+BADGE_H+'" rx="2" fill="'+rc2+'" stroke="rgba(0,0,0,.35)" stroke-width="0.5"/>';
+      svg+='<text x="'+rx+'" y="'+ry+'" text-anchor="middle" dominant-baseline="central" font-size="6.5" font-weight="700" fill="#FFFFFF" font-family="sans-serif">'+rv+(isBest?'★':'')+'</text>';
     }
-    // 교체 아이콘 — Fotmob과 동일하게 좌측 상단(평점 배지가 우측을 쓴다)
+    // 교체 아이콘 — Fotmob과 동일하게 좌측 상단(평점 배지가 우측을 쓴다).
+    // 흰 테두리(1)가 원 바깥으로 0.5씩 나가므로 반지름 = BADGE_H/2 - 0.5.
     if(wasSubbed){
-      var ix=c.x-r+1, iy=c.y-r+1;
-      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="4" fill="var(--red)" stroke="var(--white)" stroke-width="1"/>';
-      svg+='<g transform="translate('+(ix-3.36)+','+(iy-3.36)+') scale(0.28)" stroke="var(--white)" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14"/><path d="M18 13l-6 6"/><path d="M6 13l6 6"/></g>';
+      var ix=c.x-r+1, iy=BADGE_CY, ir=BADGE_H/2-0.5, as=0.26, ah=12*as;
+      svg+='<circle cx="'+ix+'" cy="'+iy+'" r="'+ir+'" fill="var(--red)" stroke="var(--white)" stroke-width="1"/>';
+      svg+='<g transform="translate('+(ix-ah)+','+(iy-ah)+') scale('+as+')" stroke="var(--white)" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14"/><path d="M18 13l-6 6"/><path d="M6 13l6 6"/></g>';
     }
   });
   svg+='</svg>';
@@ -5619,9 +5623,22 @@ function stopLiveExpandPolling(matchId){
 // 골&이벤트/팀스탯/라인업 탭 패널 내용 — buildLiveDetail(라이브 경기, 4탭:
 // 기본정보/선발/라인업/코멘트)과 buildFinishedDetail(종료 경기 상세, 3탭:
 // 경기정보/선발/선수 스탯)이 같은 렌더러를 공유한다.
+// 골&이벤트용 짧은 이름 — "Jean-Philippe Mateta" → "J. Mateta". 반쪽 칸에
+// 풀네임을 넣으면 말줄임(…)으로 잘려서, ESPN 경로가 원래 주던 shortName
+// 형식("G. Jesus")으로 통일한다. 첫 단어만 이니셜로 줄이고 나머지는 성으로
+// 그대로 둬서 "Virgil van Dijk" → "V. van Dijk", "Emile Smith Rowe" →
+// "E. Smith Rowe"처럼 여러 단어 성도 안 깨진다. 한 단어 이름이나 이미 줄인
+// 이름("G. Jesus")은 그대로. 풀네임은 title(마우스 오버)로 남긴다.
+function shortPlayerName(full){
+  var s=String(full||'').trim();
+  var t=s.split(/\s+/);
+  if(t.length<2 || /\.$/.test(t[0])) return s;
+  return t[0].charAt(0)+'. '+t.slice(1).join(' ');
+}
 function renderEventsPanelInner(data){
   var events = data.events||[];
   if(!events.length) return '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">이벤트 없음</div>';
+  var pname=function(ev){return '<span class="mm-event-player" title="'+String(ev.player||'').replace(/"/g,'&quot;')+'">'+shortPlayerName(ev.player)+'</span>';};
   var homeEvs=events.filter(function(ev){return (ev.homeAway||ev.team)==='home';});
   var awayEvs=events.filter(function(ev){return (ev.homeAway||ev.team)!=='home';});
   var maxLen=Math.max(homeEvs.length,awayEvs.length);
@@ -5629,9 +5646,9 @@ function renderEventsPanelInner(data){
   for(var ei=0; ei<maxLen; ei++){
     var evH=homeEvs[ei], evA=awayEvs[ei];
     h += '<tr>';
-    h += evH ? '<td class="mm-evt-home"><span class="mm-evt-cell"><span class="mm-event-player">'+evH.player+'</span><span class="mm-event-min">'+(evH.minute||'')+'</span><span class="mm-event-icon">'+eventIconHtml(evH.type)+'</span></span></td>' : '<td class="mm-evt-home"></td>';
+    h += evH ? '<td class="mm-evt-home"><span class="mm-evt-cell">'+pname(evH)+'<span class="mm-event-min">'+(evH.minute||'')+'</span><span class="mm-event-icon">'+eventIconHtml(evH.type)+'</span></span></td>' : '<td class="mm-evt-home"></td>';
     h += '<td class="mm-evt-div"></td>';
-    h += evA ? '<td class="mm-evt-away"><span class="mm-evt-cell"><span class="mm-event-icon">'+eventIconHtml(evA.type)+'</span><span class="mm-event-min">'+(evA.minute||'')+'</span><span class="mm-event-player">'+evA.player+'</span></span></td>' : '<td class="mm-evt-away"></td>';
+    h += evA ? '<td class="mm-evt-away"><span class="mm-evt-cell"><span class="mm-event-icon">'+eventIconHtml(evA.type)+'</span><span class="mm-event-min">'+(evA.minute||'')+'</span>'+pname(evA)+'</span></td>' : '<td class="mm-evt-away"></td>';
     h += '</tr>';
   }
   h += '</tbody></table></div>';
