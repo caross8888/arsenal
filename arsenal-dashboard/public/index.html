@@ -1993,6 +1993,14 @@ function matchOutcome(m, isArsHome){
   return ars>opp?'win':ars===opp?'draw':'loss';
 }
 var OUTCOME_COLOR={win:'var(--green)',draw:'var(--amber)',loss:'var(--loss)'};
+// 상세모달 헤더의 경기장 한 줄 — 경기장을 모르면 같은 높이의 빈 줄로 자리만
+// 잡는다. 일정 카드 데이터(Fotmob 팀 일정)엔 경기장이 없어서, 로딩 화면
+// 헤더엔 이 줄이 없다가 상세가 도착하며 생기면 헤더가 18px 커지며 튀었다.
+// 로딩 전·후 두 헤더가 모두 이 함수를 써서 높이가 항상 같게 한다.
+function venueRowHtml(venue){
+  return '<div class="mm-meta-row"'+(venue?'':' style="visibility:hidden" aria-hidden="true"')+'>'+
+    dIcon('stadium',11)+' '+(venue||'&nbsp;')+'</div>';
+}
 // 상세모달 헤더의 스코어 아래 승부차기 한 줄 — 승부차기 없으면 빈 문자열.
 function penLineHtml(pen){
   if(!pen||pen.home==null||pen.away==null) return '';
@@ -4683,7 +4691,7 @@ function openMatchModal(m, isAuto){
           '<div class="mm-score" style="'+(scoreColorSkel?'color:'+scoreColorSkel+';':'')+'">'+scoreDisplaySkel+'</div>'+
           penSkel+
           '<div class="mm-center-meta">'+
-            (m.venue?'<div class="mm-meta-row">'+dIcon('stadium',11)+' '+m.venue+'</div>':'')+
+            venueRowHtml(m.venue)+
             (m.competition&&m.competition.name?'<span class="mm-meta-comp">'+(m.competition.name)+'</span>':'')+
           '</div>'+
         '</div>'+
@@ -4895,7 +4903,7 @@ function renderMatchModal(content, m, data, desktop){
           '<div class="mm-score" style="'+(scoreColorFinal?'color:'+scoreColorFinal+';':'')+'">'+scoreDisplay+'</div>'+
           penHdr+
           '<div class="mm-center-meta">'+
-            (venueStr?'<div class="mm-meta-row">'+dIcon('stadium',11)+' '+venueStr+'</div>':'')+
+            venueRowHtml(venueStr)+
             (compName?'<span class="mm-meta-comp">'+compName+'</span>':'')+
           '</div>'+
         '</div>'+
