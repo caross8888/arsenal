@@ -607,6 +607,19 @@ async function fetchFotmobTeamInjuries(teamName){
   }
 }
 
+// 같은 배포에 올라간 정적 파일(public/data/players.json 등)의 주소.
+// 도메인을 코드에 박아두면 주소를 바꾸거나 옛 주소를 지울 때 스쿼드 데이터가
+// 조용히 비므로, 요청이 들어온 호스트를 그대로 쓴다(로컬 vercel dev는 http).
+// 호스트 헤더가 없는 경우(Node에서 핸들러 직접 호출 등)만 Vercel이 넣어주는
+// 프로덕션 도메인으로 폴백한다. VERCEL_URL(배포별 고유 주소)은 쓰지 않는다 —
+// Deployment Protection이 걸려 있으면 401이 난다.
+function selfOrigin(req){
+  const h = (req && req.headers) || {};
+  const host = h['x-forwarded-host'] || h.host || process.env.VERCEL_PROJECT_PRODUCTION_URL || '';
+  const proto = /^(localhost|127\.0\.0\.1)(:|$)/.test(host) ? 'http' : 'https';
+  return proto + '://' + host;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin','*');
 
@@ -1191,7 +1204,7 @@ export default async function handler(req, res) {
         try {
           const [liveFirstTeam, pjRes] = await Promise.all([
             fetchFirstTeamRosterLive().catch(() => []),
-            fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)}),
+            fetch(selfOrigin(req) + '/data/players.json', {signal: AbortSignal.timeout(8000)}),
           ]);
           liveFirstTeam.forEach(p => addName(p.name));
           if(pjRes.ok) {
@@ -1267,7 +1280,7 @@ export default async function handler(req, res) {
       // 서로 의존관계가 없는데 순서대로 await하면 시간이 그냥 더해져서
       // 느려진다 — 동시에 시작해서 병렬로 기다린다.
       const liveFirstTeamPromise = fetchFirstTeamRosterLive().catch(() => []); // 실패하면 아래 academy만이라도 노출
-      const pjPromise = fetch('https://arsenal-seven.vercel.app/data/players.json', {signal: AbortSignal.timeout(8000)})
+      const pjPromise = fetch(selfOrigin(req) + '/data/players.json', {signal: AbortSignal.timeout(8000)})
         .then(r => { if(!r.ok) throw new Error('players.json 로드 실패'); return r.json(); });
       const [liveFirstTeam, pjData] = await Promise.all([liveFirstTeamPromise, pjPromise]);
       const academyOnly = (pjData.players || []).filter(p => {
