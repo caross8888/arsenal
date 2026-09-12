@@ -2007,6 +2007,35 @@ function penLineHtml(pen){
   return '<div class="mm-pen">PEN '+pen.home+' : '+pen.away+'</div>';
 }
 
+// 라이브 카드 인라인 펼침(.fix-live-expand) 열기/닫기. max-height 트랜지션으로
+// 펼치는데 .open의 2000px가 그대로 상한으로 남으면, 기본정보 탭(이벤트+도미넌스+
+// 팀 스탯 전체)이 모바일에서 2000px를 넘어 맨 아래 "징계" 그룹이 잘렸다.
+// 열림 애니메이션이 끝나면 상한을 풀고(none), 닫을 땐 지금 실제 높이에서
+// 0으로 줄어들게 시작점을 px로 되돌린 뒤 접는다.
+// transitionend만 믿으면 안 된다 — 탭이 백그라운드로 가면 트랜지션 자체가
+// 멈춰 이벤트가 안 오므로(실측), 트랜지션 길이(0.35s) 직후 타이머로도 푼다.
+function openLiveExpandPanel(panel){
+  panel.style.maxHeight='';
+  panel.classList.add('open');
+  var timer;
+  var done=function(e){
+    if(e && (e.target!==panel || e.propertyName!=='max-height')) return;
+    panel.removeEventListener('transitionend', done);
+    clearTimeout(timer);
+    if(panel.classList.contains('open')) panel.style.maxHeight='none';
+  };
+  panel.addEventListener('transitionend', done);
+  timer=setTimeout(done, 400);
+}
+function closeLiveExpandPanel(panel){
+  if(panel.style.maxHeight==='none'){
+    panel.style.maxHeight=panel.scrollHeight+'px';
+    void panel.offsetHeight; // 시작 높이를 확정시켜야 0까지 트랜지션이 걸린다
+  }
+  panel.classList.remove('open');
+  panel.style.maxHeight='';
+}
+
 function buildFixCard(m){
   var isArsHome=isArsenalTeam(m.homeTeam);
   var isLive=m.status==='IN_PLAY'||m.status==='PAUSED';
@@ -2181,11 +2210,11 @@ function buildFixCard(m){
       var isOpen = expandPanel.classList.contains('open');
       if(!isOpen){
         openLiveExpand(m, expandPanel);
-        expandPanel.classList.add('open');
+        openLiveExpandPanel(expandPanel);
         expandBtn.textContent = '▲ 접기';
         startLiveExpandPolling(m, expandPanel);
       } else {
-        expandPanel.classList.remove('open');
+        closeLiveExpandPanel(expandPanel);
         expandBtn.textContent = '▼ 상세 보기';
         setTimeout(function(){
           expandPanel.innerHTML='';
@@ -4615,7 +4644,7 @@ window.addEventListener('resize', function(){
   // (접기 버튼 클릭과 동일한 절차 — progress bar는 유지, 상세 폴링만 중단).
   if(nowDesktop){
     document.querySelectorAll('.fix-live-expand.open').forEach(function(expandPanel){
-      expandPanel.classList.remove('open');
+      closeLiveExpandPanel(expandPanel);
       var matchId = expandPanel.id.replace('live-expand-','');
       var btn = expandPanel.nextElementSibling;
       if(btn && btn.classList.contains('fix-expand-btn')) btn.textContent='▼ 상세 보기';
@@ -5488,13 +5517,8 @@ function loadLiveExpand(m, panel){
   var comp = m.competition&&m.competition.short || 'PL';
   var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':'eng.1';
 
-  // 현재 활성 탭 기억
-  var activeTab = 'events';
-  var existing = document.getElementById('live-detail-'+m.id);
-  if(existing){
-    var activeBtn = existing.querySelector('.live-tab-btn.active');
-    if(activeBtn) activeTab = activeBtn.getAttribute('data-tab') || 'events';
-  }
+  // 현재 보던 탭·홈/원정 선택 기억
+  var viewState = captureLiveView(document.getElementById('live-detail-'+m.id));
 
   // 기존 콘텐츠 없을 때만 로딩 스피너 표시
   if(!document.getElementById('live-detail-'+m.id)){
@@ -5506,10 +5530,7 @@ function loadLiveExpand(m, panel){
     var el = document.getElementById('live-detail-'+m.id);
     if(!el) return;
     el.innerHTML = buildLiveDetail(applyCardTeamNames(data, m));
-    if(activeTab !== 'events'){
-      var btn = el.querySelector('[data-tab="'+activeTab+'"]');
-      if(btn) liveSwitchTab(btn, activeTab);
-    }
+    restoreLiveView(el, viewState, 'events');
     // 주심(좌)·경기장(우) 업데이트 — 관중수는 표시 안 함
     var refEl = document.getElementById('fix-referee-'+m.id);
     if(refEl && data.referee) refEl.innerHTML = dIcon('card',11)+'<span>'+data.referee+'</span>';
@@ -5587,35 +5608,13 @@ function startLiveExpandPolling(m, panel){
     var comp = m.competition&&m.competition.short || 'PL';
     var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':comp==='CS'?'eng.charity':comp==='FR'?'club.friendly':'eng.1';
     // 매치 상세 갱신
-    var elPoll = document.getElementById('live-detail-'+m.id);
-    var activeTabPoll = 'events';
-    var activeSidePoll = 'home';
-    if(elPoll){
-      var ab = elPoll.querySelector('.live-tab-btn.active');
-      if(ab){ activeTabPoll = ab.getAttribute('data-tab') || 'events'; }
-      var activePanel2 = elPoll.querySelector('.live-tab-panel:not([style*="none"])') || elPoll.querySelector('.live-tab-panel');
-      if(activePanel2){
-        var asb = activePanel2.querySelector('.mm-team-tab.active[data-side]');
-        if(asb) activeSidePoll = asb.getAttribute('data-side') || 'home';
-      }
-    }
     (window.apiFetch||apiFetch)(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
       var el = document.getElementById('live-detail-'+m.id);
       if(!el) return;
+      // 응답이 도착한 시점의 선택을 기억해야 요청 중에 바꾼 탭도 안 튄다
+      var viewStatePoll = captureLiveView(el);
       el.innerHTML = buildLiveDetail(applyCardTeamNames(data, m));
-      if(activeTabPoll !== 'events'){
-        var btn = el.querySelector('[data-tab="'+activeTabPoll+'"]');
-        if(btn) liveSwitchTab(btn, activeTabPoll);
-      }
-      if(activeSidePoll === 'away'){
-        setTimeout(function(){
-          var activePanel = el.querySelector('.live-tab-panel:not([style*="none"]),.live-tab-panel:not([style])');
-          if(activePanel){
-            var sideBtn = activePanel.querySelector('[data-side="away"]');
-            if(sideBtn) sideBtn.click();
-          }
-        }, 50);
-      }
+      restoreLiveView(el, viewStatePoll, 'events');
     }).catch(function(){});
     // 프로그레스바 리셋
     startProgressBar(m.id);
@@ -6031,6 +6030,37 @@ function liveSwitchSide(btn, panelId, side){
   });
 }
 
+// 라이브 상세를 30초마다 innerHTML로 통째로 다시 그릴 때, 보고 있던 상위 탭
+// (경기정보/선발/선수 스탯)과 탭별 홈/원정 선택을 기억했다가 되살린다. 예전엔
+// 옛 버튼 클래스(.mm-team-tab)로만 원정 선택을 찾아서, 지금 쓰는 .rec-subnav-btn
+// 에선 못 찾고 매 갱신마다 홈으로 튀었다 — 클래스 대신 [data-side]로 찾는다.
+// id는 모바일 인라인 펼침과 PC 패널에 같은 게 있을 수 있어 root 안에서만 찾는다.
+function captureLiveView(root){
+  var st={tab:null, sides:{}};
+  if(!root) return st;
+  var ab=root.querySelector('.live-tab-btn.active');
+  if(ab) st.tab=ab.getAttribute('data-tab');
+  root.querySelectorAll('[data-side].active').forEach(function(b){
+    var p=b.closest('.live-tab-panel');
+    if(p && p.id) st.sides[p.id]=b.getAttribute('data-side');
+  });
+  return st;
+}
+function restoreLiveView(root, st, defaultTab){
+  if(!root || !st) return;
+  if(st.tab && st.tab!==defaultTab){
+    var tb=root.querySelector('.live-tab-btn[data-tab="'+st.tab+'"]');
+    if(tb) liveSwitchTab(tb, st.tab);
+  }
+  Object.keys(st.sides).forEach(function(pid){
+    var side=st.sides[pid];
+    if(side==='home') return; // 다시 그리면 기본이 홈
+    var p=root.querySelector('[id="'+pid+'"]');
+    var sb=p && p.querySelector('[data-side="'+side+'"]');
+    if(sb) liveSwitchSide(sb, pid.replace(/^live-panel-/,''), side);
+  });
+}
+
 function liveSwitchTab(btn, panel){
   var tabRow = btn.parentElement;
   var container = tabRow.parentElement;
@@ -6086,13 +6116,9 @@ function pollLiveOnce(){
           fetch(FN+'/match?id='+liveRef.id+'&slug='+slugPoll+'&_='+Date.now()).then(function(r){ return r.json(); }).then(function(freshData){
             if(!panelContent._liveMatchRef || panelContent._liveMatchRef.id!==liveRef.id) return; // 그 사이 다른 경기로 바뀌었으면 버림
             if(freshData.error) return;
-            var activeBtn = panelContent.querySelector('.live-tab-btn.active');
-            var activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : null;
+            var viewStatePc = captureLiveView(panelContent);
             renderMatchModal(panelContent, liveRef, freshData, true);
-            if(activeTab && activeTab!=='info'){
-              var newBtn = panelContent.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');
-              if(newBtn) liveSwitchTab(newBtn, activeTab);
-            }
+            restoreLiveView(panelContent, viewStatePc, 'info');
           }).catch(function(){});
         }
       }
