@@ -494,6 +494,49 @@ async function attachCupRounds(fixtures, curSeasonYear){
 // 모달·라이브 폴링)이 전부 이 모양을 전제하므로 필드명을 그대로 맞춘다.
 // ESPN에 있고 Fotmob 팀 일정엔 없는 값(venue, neutralSite)은 null로 두고,
 // 경기 상세(matchDetails)에서 채운다.
+// liveTime.short는 "37‎’‎"처럼 방향 제어문자(U+200E)가 섞여 온다 — 숫자만 뽑아
+// 앱이 쓰던 "37'" 형태로 정규화한다. 팀 일정의 status와 경기 상세의
+// header.status가 같은 모양이라 둘 다 이걸로 읽는다.
+function liveClockOf(st){
+  const lt = st?.liveTime || {};
+  const mins = String(lt.short || '').match(/(\d+)/);
+  const added = lt.addedTime ? `+${lt.addedTime}` : '';
+  return {
+    clock:  mins ? `${mins[1]}${added}'` : null,
+    period: lt.basePeriod >= 90 ? 2 : 1,
+    isHT:   /ht|half/i.test(String(lt.shortKey || lt.short || '')) || (!!st?.halfs?.firstHalfEnded && !st?.halfs?.secondHalfStarted),
+  };
+}
+
+// 팀 일정 API의 라이브 시계는 거의 갱신되지 않는다 — 실측: 72분 진행 중인데
+// 팀 일정은 liveTime "1'", 같은 시각 경기 상세(matchDetails)는 "72'". 그래서
+// 라이브 경기만 경기 상세의 header.status로 시계·하프타임·스코어를 덮어쓴다.
+// 목록 폴링(30초, 사용자마다)이 매번 상세를 부르지 않게 경기별로 20초 메모리 캐시.
+const _liveHeaderCache = {};
+async function refreshLiveFromDetails(matches){
+  const live = (matches || []).filter(m => m.status === 'IN_PLAY');
+  await Promise.all(live.map(async m => {
+    try {
+      let hdr = _liveHeaderCache[m.id];
+      if(!hdr || Date.now() - hdr.ts > 20 * 1000){
+        const r = await fetch(`https://www.fotmob.com/api/data/matchDetails?matchId=${m.id}`,
+          {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(5000)});
+        if(!r.ok) return;
+        const j = await r.json();
+        if(!j?.header?.status) return;
+        hdr = {status: j.header.status, teams: j.header.teams || [], ts: Date.now()};
+        _liveHeaderCache[m.id] = hdr;
+      }
+      Object.assign(m, liveClockOf(hdr.status));
+      const [h, a] = hdr.teams;
+      if(typeof h?.score === 'number' && typeof a?.score === 'number'){
+        m.score = {...(m.score || {}), fullTime: {home: h.score, away: a.score}};
+      }
+    } catch(_){ /* 실패하면 팀 일정 값 그대로 */ }
+  }));
+  return matches;
+}
+
 function mapFotmobFixture(m){
   const st = m.status || {};
   const finished = !!st.finished;
@@ -524,17 +567,8 @@ function mapFotmobFixture(m){
     }
   }
 
-  // liveTime.short는 "37‎’‎"처럼 방향 제어문자(U+200E)가 섞여 온다 — 숫자만 뽑아
-  // 앱이 쓰던 "37'" 형태로 정규화한다.
   let clock = null, period = null, isHT = false;
-  if(live){
-    const lt = st.liveTime || {};
-    const mins = String(lt.short || '').match(/(\d+)/);
-    const added = lt.addedTime ? `+${lt.addedTime}` : '';
-    clock = mins ? `${mins[1]}${added}'` : null;
-    period = lt.basePeriod >= 90 ? 2 : 1;
-    isHT = /ht|half/i.test(String(lt.shortKey || lt.short || '')) || (!!st.halfs?.firstHalfEnded && !st.halfs?.secondHalfStarted);
-  }
+  if(live) ({clock, period, isHT} = liveClockOf(st));
 
   return {
     id:          String(m.id),
@@ -753,6 +787,7 @@ export default async function handler(req, res) {
           fmMatches = warmed && warmed.fixtures;
         }
         if(fmMatches && fmMatches.length){
+          await refreshLiveFromDetails(fmMatches);
           return res.json({
             matches:  fmMatches,
             finished: fmMatches.filter(m => m.status === 'FINISHED'),

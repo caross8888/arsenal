@@ -5530,7 +5530,7 @@ function loadLiveExpand(m, panel){
     var el = document.getElementById('live-detail-'+m.id);
     if(!el) return;
     el.innerHTML = buildLiveDetail(applyCardTeamNames(data, m));
-    restoreLiveView(el, viewState, 'events');
+    restoreLiveView(el, viewState, 'info');
     // 주심(좌)·경기장(우) 업데이트 — 관중수는 표시 안 함
     var refEl = document.getElementById('fix-referee-'+m.id);
     if(refEl && data.referee) refEl.innerHTML = dIcon('card',11)+'<span>'+data.referee+'</span>';
@@ -5550,12 +5550,18 @@ function updateCardCommentary(m){
   // 실제 존재 확인은 fetch가 끝난 뒤 el2에서 한다.
   var comp = m.competition&&m.competition.short || 'PL';
   var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':comp==='CS'?'eng.charity':comp==='FR'?'club.friendly':'eng.1';
-  (window.apiFetch||apiFetch)(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
+  // 코멘터리는 상세 데이터(Fotmob)에 없어서 ESPN 코멘터리 요청을 따로 한다
+  // (최신순이라 [0]이 가장 최근). 받은 목록은 코멘트 탭용으로도 기억해 둔다.
+  (window.apiFetch||apiFetch)(FN+'/match?id='+m.id+'&commentary=1').then(function(d){
+    var list = (d&&d.commentary)||[];
+    if(list.length) _liveCommentary[m.id] = list;
     var el2 = document.getElementById('fix-comment-'+m.id);
-    var latest = (data.commentary||[])[0];
+    var latest = list[0];
     if(el2 && latest && latest.text){
-      el2.innerHTML = '<span style="color:var(--gold);font-weight:700;">'+(latest.minute||'')+'</span> '+latest.text;
+      el2.innerHTML = (latest.minute?'<span style="color:var(--gold);font-weight:700;">'+latest.minute+'</span> ':'')+latest.text;
     }
+  }).catch(function(){});
+  (window.apiFetch||apiFetch)(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
     // 주심·경기장도 상세보기를 펼치기 전부터 바로 채운다(예전엔 상세보기를
     // 펼쳐서 loadLiveExpand가 도는 시점까지 빈 채로 있었음).
     var refEl = document.getElementById('fix-referee-'+m.id);
@@ -5614,7 +5620,7 @@ function startLiveExpandPolling(m, panel){
       // 응답이 도착한 시점의 선택을 기억해야 요청 중에 바꾼 탭도 안 튄다
       var viewStatePoll = captureLiveView(el);
       el.innerHTML = buildLiveDetail(applyCardTeamNames(data, m));
-      restoreLiveView(el, viewStatePoll, 'events');
+      restoreLiveView(el, viewStatePoll, 'info');
     }).catch(function(){});
     // 프로그레스바 리셋
     startProgressBar(m.id);
@@ -5823,7 +5829,7 @@ function buildLiveDetail(data){
   h += '<button class="live-tab-btn active" data-tab="info" onclick="liveSwitchTab(this,&quot;info&quot;)">기본정보</button>';
   h += '<button class="live-tab-btn" data-tab="starting" onclick="liveSwitchTab(this,&quot;starting&quot;)">선발</button>';
   h += '<button class="live-tab-btn" data-tab="playerstats" onclick="liveSwitchTab(this,&quot;playerstats&quot;)">선수 스탯</button>';
-  h += '<button class="live-tab-btn" data-tab="commentary" onclick="liveSwitchTab(this,&quot;commentary&quot;);loadLiveCommentary(&quot;'+(data.eventId||'')+'&quot;)">코멘트</button>';
+  h += '<button class="live-tab-btn" data-tab="commentary" onclick="liveSwitchTab(this,&quot;commentary&quot;);loadLiveCommentary(&quot;'+(data.eventId||'')+'&quot;,this)">코멘트</button>';
   h += '</div>';
 
   // 기본정보 = 골&이벤트 카드 + 팀 스탯 카드, buildFinishedDetail의 "경기
@@ -5842,54 +5848,54 @@ function buildLiveDetail(data){
   h += '<div class="live-tab-panel" id="live-panel-playerstats" style="display:none;padding-top:0;">'+renderPlayerStatsPanelInner(data,'playerstats')+'</div>';
 
   // ── 코멘트 패널 ──
+  // 상세 데이터(Fotmob)엔 코멘터리가 없어서(commentary: []) 보통은 앞서 받아둔
+  // ESPN 코멘터리(_liveCommentary)로 채운다 — 30초 갱신으로 다시 그려도 비지 않게.
   h += '<div class="live-tab-panel" id="live-panel-commentary" style="display:none;border-top:1px solid var(--border-bright);">';
-  var commentary = data.commentary||[];
-  if(commentary.length){
-    h += '<div style="max-height:360px;overflow-y:auto;padding:10px 14px 14px;">';
-    commentary.forEach(function(c){
-      h += '<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-bright);">';
-      h += '<span style="flex-shrink:0;min-width:32px;font-size:10px;color:var(--text-secondary);font-family:var(--fm);">'+(c.minute||'')+'</span>';
-      h += '<span style="font-size:11px;color:var(--text-secondary);line-height:1.5;">'+c.text+'</span>';
-      h += '</div>';
-    });
-    h += '</div>';
-  } else {
-    h += '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트 불러오는 중...</div>';
-  }
+  var commentary = (data.commentary&&data.commentary.length) ? data.commentary : (_liveCommentary[data.eventId]||[]);
+  h += commentary.length ? commentaryListHtml(commentary)
+    : '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트 불러오는 중...</div>';
   h += '</div>';
 
   h += '</div>';
   return h;
 }
-// Fotmob은 텍스트 중계를 공개 API로 안 줘서 코멘터리만 ESPN에서 따로 받는다.
-// 탭을 열 때만 호출하고, 한 번 채우면 다시 부르지 않는다.
-function loadLiveCommentary(matchId){
+// Fotmob은 텍스트 중계를 공개 API로 안 줘서 코멘터리만 ESPN에서 따로 받는다
+// (/match?...&commentary=1, 최신순). 경기별로 마지막에 받은 목록을 기억해 둬서
+// 30초 갱신으로 상세를 다시 그릴 때 곧바로 채우고, 새 목록은 뒤이어 받는다.
+var _liveCommentary = {};
+function commentaryListHtml(list){
+  var h='<div style="max-height:360px;overflow-y:auto;padding:10px 14px 14px;">';
+  list.forEach(function(c){
+    h+='<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-bright);">'
+      +'<span style="flex-shrink:0;min-width:32px;font-size:10px;color:var(--text-secondary);font-family:var(--fm);">'+(c.minute||'')+'</span>'
+      +'<span style="font-size:11px;color:var(--text-secondary);line-height:1.5;">'+c.text+'</span>'
+      +'</div>';
+  });
+  return h+'</div>';
+}
+// 코멘트 탭을 열 때(버튼 onclick) 호출 — 30초 갱신 뒤 restoreLiveView가 같은
+// 버튼을 다시 눌러주므로 탭을 보고 있는 동안은 갱신 때마다 새로 받는다. 패널은
+// 누른 버튼 기준으로 찾는다(모바일 인라인 펼침과 PC 패널에 같은 id가 있을 수 있음).
+// 한 패널에서 한 번 채우면 그 패널에선 다시 안 부른다(다시 그리면 새 패널).
+function loadLiveCommentary(matchId, btn){
   if(!matchId) return;
-  var panel=document.getElementById('live-panel-commentary');
+  var scope = btn && btn.parentElement && btn.parentElement.parentElement;
+  var panel = scope ? scope.querySelector('[id="live-panel-commentary"]') : document.getElementById('live-panel-commentary');
   if(!panel || panel.dataset.loaded==='1' || panel.dataset.loading==='1') return;
   panel.dataset.loading='1';
-  fetch(FN+'/match?id='+encodeURIComponent(matchId)+'&commentary=1')
-    .then(function(r){ return r.json(); })
+  (window.apiFetch||apiFetch)(FN+'/match?id='+encodeURIComponent(matchId)+'&commentary=1')
     .then(function(d){
       var list=(d&&d.commentary)||[];
       panel.dataset.loaded='1';
       panel.dataset.loading='';
-      if(!list.length){
-        panel.innerHTML='<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트 없음</div>';
-        return;
-      }
-      var h='<div style="max-height:360px;overflow-y:auto;padding:10px 14px 14px;">';
-      list.forEach(function(c){
-        h+='<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-bright);">'
-          +'<span style="flex-shrink:0;min-width:32px;font-size:10px;color:var(--text-secondary);font-family:var(--fm);">'+(c.minute||'')+'</span>'
-          +'<span style="font-size:11px;color:var(--text-secondary);line-height:1.5;">'+c.text+'</span>'
-          +'</div>';
-      });
-      panel.innerHTML=h+'</div>';
+      if(list.length) _liveCommentary[matchId]=list;
+      list = list.length ? list : (_liveCommentary[matchId]||[]);
+      panel.innerHTML = list.length ? commentaryListHtml(list)
+        : '<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트 없음</div>';
     })
     .catch(function(){
       panel.dataset.loading='';
-      panel.innerHTML='<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트를 불러오지 못했습니다</div>';
+      if(!_liveCommentary[matchId]) panel.innerHTML='<div style="color:var(--text-dim);font-size:11px;text-align:center;padding:12px">코멘트를 불러오지 못했습니다</div>';
     });
 }
 // 매치 도미넌스 — Fotmob의 분당 모멘텀(-100~100, 양수=홈 우세)을 가운데
@@ -6048,9 +6054,11 @@ function captureLiveView(root){
 }
 function restoreLiveView(root, st, defaultTab){
   if(!root || !st) return;
+  // liveSwitchTab 직접 호출이 아니라 버튼을 눌러준다 — 코멘트 탭은 onclick에서
+  // 코멘터리를 받아오는데, 전환만 하면 "불러오는 중"에서 멈춘다.
   if(st.tab && st.tab!==defaultTab){
     var tb=root.querySelector('.live-tab-btn[data-tab="'+st.tab+'"]');
-    if(tb) liveSwitchTab(tb, st.tab);
+    if(tb) tb.click();
   }
   Object.keys(st.sides).forEach(function(pid){
     var side=st.sides[pid];
