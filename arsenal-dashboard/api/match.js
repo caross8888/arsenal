@@ -73,16 +73,19 @@ async function resolveEspnIdFromFotmob(fotmobId){
   if(!utc) return null;
   const dateStr = new Date(utc).toISOString().slice(0,10).replace(/-/g,'');
   const norm = s => String(s||'').toLowerCase().replace(/[^a-z]/g,'');
-  const wanted = [norm(g.homeTeam?.name), norm(g.awayTeam?.name)].sort().join('|');
+  const fmNames = [norm(g.homeTeam?.name), norm(g.awayTeam?.name)];
 
   const sr = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=${dateStr}&limit=1000`,
     {headers: {'User-Agent':'Mozilla/5.0'}, signal: AbortSignal.timeout(8000)});
   if(!sr.ok) return null;
   const sj = await sr.json();
+  // Fotmob 이름은 풀네임("Manchester City"), ESPN shortDisplayName은 축약형
+  // ("Man City")이라 축약형 하나로만 비교하면 PL 경기 대부분이 안 맞았다 —
+  // ESPN 쪽 이름 후보(축약·풀네임·name) 중 하나라도 같으면 같은 팀으로 본다.
+  const namesOf = c => new Set([c.team?.shortDisplayName, c.team?.displayName, c.team?.name].map(norm).filter(Boolean));
   for(const e of (sj.events || [])){
-    const cs = e.competitions?.[0]?.competitors || [];
-    const names = cs.map(c => norm(c.team?.shortDisplayName || c.team?.displayName || c.team?.name)).sort().join('|');
-    if(names === wanted) return e.id;
+    const cs = (e.competitions?.[0]?.competitors || []).map(namesOf);
+    if(cs.length === 2 && fmNames.every(n => cs.some(set => set.has(n)))) return e.id;
   }
   return null;
 }
@@ -398,6 +401,103 @@ async function fetchEspnCommentary(eventId){
   return [];
 }
 
+// ESPN summary의 seasonseries(두 팀의 최근 맞대결, 대회 무관 최대 5경기)를
+// 상대전적 모양으로. teamById는 ESPN 팀 id → {name, crest} 덮어쓰기용.
+function espnH2h(raw, teamById = {}){
+  const ss = (raw?.seasonseries || [])[0];
+  if(!ss || !(ss.events || []).length) return null;
+  const team = c => {
+    if(!c.team) return null;
+    const o = teamById[c.team.id] || {};
+    return { id: c.team.id, name: o.name || c.team.displayName || c.team.abbreviation, crest: o.crest || c.team.logo };
+  };
+  return {
+    summary: ss.summary || '',
+    seriesScore: ss.seriesScore || '',
+    events: ss.events.slice(0, 5).map(e => {
+      const hc = (e.competitors || []).find(c => c.homeAway === 'home') || {};
+      const ac = (e.competitors || []).find(c => c.homeAway === 'away') || {};
+      return { date: e.date || null, homeTeam: team(hc), awayTeam: team(ac), homeScore: hc.score, awayScore: ac.score };
+    }),
+  };
+}
+
+// ESPN summary의 lastFiveGames를 최근 5경기 폼 모양으로.
+function espnRecentForm(raw){
+  return (raw?.lastFiveGames || []).map(t => ({
+    teamId: t.team?.id,
+    teamName: t.team?.displayName || t.team?.abbreviation || '',
+    events: (t.events || []).slice(-5).map(ev => {
+      // ESPN의 gameResult 필드를 그대로 믿지 않는다 — 프리시즌 친선경기
+      // 몇 건에서 실제 스코어(홈/원정 점수)와 gameResult가 서로 어긋나는
+      // 걸 확인했다(예: 2-3 패배인데 gameResult만 "W"). 같은 응답 안의
+      // 스코어 필드는 정확하므로 거기서 직접 계산한다.
+      const isHome = String(ev.homeTeamId) === String(t.team?.id);
+      const ownScore = parseInt(isHome ? ev.homeTeamScore : ev.awayTeamScore, 10);
+      const oppScore = parseInt(isHome ? ev.awayTeamScore : ev.homeTeamScore, 10);
+      const result = (Number.isNaN(ownScore) || Number.isNaN(oppScore))
+        ? (ev.gameResult || '')
+        : (ownScore > oppScore ? 'W' : ownScore < oppScore ? 'L' : 'D');
+      // ESPN의 score 문자열은 승자 점수가 앞("1-0" = 원정 1:0 승도, "3-0" = 원정
+      // 0:3 패도)이라 Fotmob 경로("홈 - 원정")와 읽는 법이 달랐다 — 홈/원정 점수로
+      // 다시 만들어 형식을 맞춘다((H)/(A) 표기와 같이 읽힌다).
+      const hs = parseInt(ev.homeTeamScore, 10), as = parseInt(ev.awayTeamScore, 10);
+      return {
+        date: ev.gameDate || null,
+        opponent: ev.opponent ? { name: ev.opponent.displayName || ev.opponent.abbreviation, crest: ev.opponent.logo } : null,
+        isHome,
+        score: (Number.isNaN(hs) || Number.isNaN(as)) ? (ev.score || '') : `${hs} - ${as}`,
+        result,
+        competition: ev.leagueAbbreviation || ev.competitionName || '',
+      };
+    }),
+  })).filter(t => t.events.length);
+}
+
+// 예정 경기 보강 — Fotmob은 먼 경기엔 최근 5경기(teamForm)를 아예 안 주고,
+// 상대전적(h2h)도 맨시티·토트넘처럼 맞대결이 많은 팀조차 빈 채로 주는 경우가
+// 많다(실측: 예정 20경기 중 폼은 가까운 2경기만, h2h는 절반 이상 없음). 그러면
+// 예정경기 모달 본문이 통째로 빈다. ESPN summary는 먼 경기에도 lastFiveGames·
+// seasonseries를 주므로, Fotmob에 없는 쪽만 거기서 채운다. ESPN 조회(스코어보드
+// + summary)가 느려서 결과를 6시간 KV에 둔다(예정 경기 폼은 경기가 끝날 때마다
+// 바뀌니 영구 저장은 안 한다).
+async function fillUpcomingFromEspn(fm, slug){
+  const noH2h = !fm.h2h || !(fm.h2h.events || []).length;
+  const noForm = !(fm.recentForm || []).some(t => (t.events || []).length);
+  if(!noH2h && !noForm) return fm;
+  const key = `espnPre:${fm.eventId}`;
+  let pre = await kvGet(key);
+  if(!pre){
+    const espnId = await resolveEspnIdFromFotmob(fm.eventId).catch(() => null);
+    if(!espnId) return fm;
+    let raw = null;
+    for(const s of (slug ? [slug, ...Object.values(SLUG_MAP)] : Object.values(SLUG_MAP))){
+      try {
+        const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${s}/summary?event=${espnId}`,
+          {headers: {'User-Agent':'Mozilla/5.0'}, signal: AbortSignal.timeout(7000)});
+        if(!r.ok) continue;
+        const j = await r.json();
+        if(j?.header){ raw = j; break; }
+      } catch(_){}
+    }
+    if(!raw) return fm;
+    // ESPN 팀 id → Fotmob 쪽 이름·엠블럼(모달의 나머지 부분과 표기를 맞춘다)
+    const cs = raw.header?.competitions?.[0]?.competitors || [];
+    const teamById = {};
+    for(const c of cs){
+      const t = c.homeAway === 'home' ? fm.homeTeam : fm.awayTeam;
+      if(c.team?.id && t) teamById[c.team.id] = {name: t.name, crest: t.crest};
+    }
+    // 폼의 팀 제목도 Fotmob 이름으로(Fotmob 경로는 header.teams 이름을 쓴다)
+    const recentForm = espnRecentForm(raw).map(t => ({...t, teamName: (teamById[t.teamId] || {}).name || t.teamName}));
+    pre = { h2h: espnH2h(raw, teamById), recentForm };
+    await kvSet(key, pre, 6 * 60 * 60);
+  }
+  if(noH2h && pre.h2h) fm.h2h = pre.h2h;
+  if(noForm && (pre.recentForm || []).length) fm.recentForm = pre.recentForm;
+  return fm;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
@@ -440,6 +540,9 @@ export default async function handler(req, res) {
     try {
       const fm = await buildFromFotmob(eventId);
       if (fm) {
+        if (fm.status === 'Scheduled') {
+          try { await fillUpcomingFromEspn(fm, slug); } catch (_) { /* 보강 실패해도 Fotmob 값 그대로 */ }
+        }
         cache[cacheKey] = { data: fm, ts: Date.now() };
         // 종료 경기만 KV에 보관하되, 끝난 직후에는 선수 평점·스탯이 아직
         // 확정 전이라 그대로 굳히면 미완성 데이터가 영구히 남는다. 하루가
@@ -674,48 +777,10 @@ export default async function handler(req, res) {
     // home/away의 이름(fixtures/results와 동일하게 shortDisplayName 우선)을
     // id로 매칭해 재사용한다 — 칸이 좁은 카드라 "Nottingham Forest" 같은
     // 풀네임 대신 "Nottm Forest" 식 축약명으로 통일하기 위함.
-    const shortNameById = { [home.id]: home.name, [away.id]: away.name };
-    const seasonSeriesRaw = (raw.seasonseries || [])[0] || null;
-    const h2h = seasonSeriesRaw ? {
-      summary: seasonSeriesRaw.summary || '',
-      seriesScore: seasonSeriesRaw.seriesScore || '',
-      events: (seasonSeriesRaw.events || []).slice(0, 5).map(e => {
-        const hc = (e.competitors || []).find(c => c.homeAway === 'home') || {};
-        const ac = (e.competitors || []).find(c => c.homeAway === 'away') || {};
-        return {
-          date: e.date || null,
-          homeTeam: hc.team ? { id: hc.team.id, name: shortNameById[hc.team.id] || hc.team.displayName || hc.team.abbreviation, crest: hc.team.logo } : null,
-          awayTeam: ac.team ? { id: ac.team.id, name: shortNameById[ac.team.id] || ac.team.displayName || ac.team.abbreviation, crest: ac.team.logo } : null,
-          homeScore: hc.score, awayScore: ac.score,
-        };
-      }),
-    } : null;
+    const h2h = espnH2h(raw, { [home.id]: {name: home.name}, [away.id]: {name: away.name} });
 
     // ── 양팀 최근 5경기 폼 ──
-    const recentForm = (raw.lastFiveGames || []).map(t => ({
-      teamId: t.team?.id,
-      teamName: t.team?.displayName || t.team?.abbreviation || '',
-      events: (t.events || []).slice(-5).map(ev => {
-        // ESPN의 gameResult 필드를 그대로 믿지 않는다 — 프리시즌 친선경기
-        // 몇 건에서 실제 스코어(홈/원정 점수)와 gameResult가 서로 어긋나는
-        // 걸 확인했다(예: 2-3 패배인데 gameResult만 "W"). 같은 응답 안의
-        // 스코어 필드는 정확하므로 거기서 직접 계산한다.
-        const isHome = String(ev.homeTeamId) === String(t.team?.id);
-        const ownScore = parseInt(isHome ? ev.homeTeamScore : ev.awayTeamScore, 10);
-        const oppScore = parseInt(isHome ? ev.awayTeamScore : ev.homeTeamScore, 10);
-        const result = (Number.isNaN(ownScore) || Number.isNaN(oppScore))
-          ? (ev.gameResult || '')
-          : (ownScore > oppScore ? 'W' : ownScore < oppScore ? 'L' : 'D');
-        return {
-          date: ev.gameDate || null,
-          opponent: ev.opponent ? { name: ev.opponent.displayName || ev.opponent.abbreviation, crest: ev.opponent.logo } : null,
-          isHome,
-          score: ev.score || '',
-          result,
-          competition: ev.leagueAbbreviation || ev.competitionName || '',
-        };
-      }),
-    }));
+    const recentForm = espnRecentForm(raw);
 
     // ── 주심 & 관중 ──
     const officials = raw.gameInfo?.officials || comp?.officials || [];

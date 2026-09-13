@@ -4950,8 +4950,11 @@ function renderMatchModal(content, m, data, desktop){
 
   // 예정 경기: 상세 이벤트/스탯/라인업 대신 상대전적·최근폼·부상자 미리보기
   if(isUpcomingR){
-    html+=renderH2HCard(data)+renderFormCard(data);
-    if(m.id===window._nextMatchId) html+=renderInjuryCards(data);
+    var preview=renderH2HCard(data)+renderFormCard(data);
+    if(m.id===window._nextMatchId) preview+=renderInjuryCards(data);
+    // 서버가 Fotmob·ESPN 둘 다에서 못 받은 경우 — 본문이 통째로 비어 보이지
+    // 않게 안내 한 줄.
+    html+=preview||'<div class="mm-card"><div style="padding:18px 14px;font-size:12px;color:var(--text-secondary);text-align:center;">아직 상대전적·최근 폼 정보가 없습니다</div></div>';
   }
 
   // 종료 경기: 모바일/데스크톱 구분 없이 동일한 탭 UI(경기정보/선발/선수
