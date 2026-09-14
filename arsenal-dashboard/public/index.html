@@ -4827,14 +4827,28 @@ function eventIconHtml(type){
   if(type==='substitution') return '🔄';
   return '<img src="data:image/svg+xml;base64,'+EVENT_ICON_SVG_B64.goal+'" style="width:12px;height:12px;vertical-align:middle;display:inline-block">';
 }
+// 상대전적·최근 폼 카드의 팀 이름을 헤더와 같은 짧은 이름(카드 이름,
+// applyCardTeamNames가 넣은 displayName — "Man City")으로. 상세 데이터는
+// Fotmob·ESPN 모두 풀네임("Manchester City")이라 이 경기의 두 팀과 id나 이름이
+// 같으면 바꿔 끼운다(ESPN 보강분은 id가 ESPN 것이라 이름으로 맞는다).
+function modalTeamName(t, data){
+  if(!t) return '';
+  var name=typeof t==='string'?t:(t.name||'');
+  var id=typeof t==='string'?null:t.id;
+  var pick=function(x){ return x && ((id!=null && x.id!=null && String(id)===String(x.id)) || (name && name===x.name)); };
+  var H=data.homeTeam||{}, A=data.awayTeam||{};
+  if(pick(H)) return H.displayName||name;
+  if(pick(A)) return A.displayName||name;
+  return name;
+}
 function renderH2HCard(data){
   if(!data.h2h||!data.h2h.events||!data.h2h.events.length) return '';
   var html='<div class="mm-card"><div class="mm-card-title">최근 상대전적</div><div style="padding:10px 14px 14px;">';
   var arsWins=0, oppWins=0, draws=0;
   data.h2h.events.forEach(function(e){
     var dateStr=e.date?e.date.slice(0,10).replace(/-/g,'.'):'';
-    var hName=(e.homeTeam&&e.homeTeam.name)||'';
-    var aName=(e.awayTeam&&e.awayTeam.name)||'';
+    var hName=modalTeamName(e.homeTeam, data);
+    var aName=modalTeamName(e.awayTeam, data);
     html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--border-bright);font-size:12px;">'+
       '<span style="color:var(--text-secondary);width:62px;flex-shrink:0;">'+dateStr+'</span>'+
       '<span style="flex:1;text-align:right;color:var(--text);">'+hName+'</span>'+
@@ -4865,7 +4879,7 @@ function renderFormCard(data){
       var col=ev.result==='W'?'var(--green)':ev.result==='D'?'var(--amber)':'var(--loss)';
       return '<span style="color:'+col+';">'+(RESULT_KO[ev.result]||'-')+'</span>';
     }).join('<span style="color:var(--text-secondary);">-</span>');
-    html+='<div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><span style="font-size:13px;font-weight:600;color:var(--text);">'+(t.teamName||'')+'</span><span style="font-size:11px;font-weight:700;">'+seq+'</span></div><div style="display:flex;flex-direction:column;">';
+    html+='<div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><span style="font-size:13px;font-weight:600;color:var(--text);">'+modalTeamName({id:t.teamId,name:t.teamName||''}, data)+'</span><span style="font-size:11px;font-weight:700;">'+seq+'</span></div><div style="display:flex;flex-direction:column;">';
     (t.events||[]).forEach(function(ev){
       var col=ev.result==='W'?'var(--green)':ev.result==='D'?'var(--amber)':'var(--loss)';
       var dateStr='';
