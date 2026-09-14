@@ -72,7 +72,8 @@ async function resolveEspnIdFromFotmob(fotmobId){
   const utc = g.matchTimeUTCDate || g.matchTimeUTC;
   if(!utc) return null;
   const dateStr = new Date(utc).toISOString().slice(0,10).replace(/-/g,'');
-  const norm = s => String(s||'').toLowerCase().replace(/[^a-z]/g,'');
+  // 악센트는 떼고 비교("München" → "munchen")
+  const norm = s => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z]/g,'');
   const fmNames = [norm(g.homeTeam?.name), norm(g.awayTeam?.name)];
 
   const sr = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=${dateStr}&limit=1000`,
@@ -83,9 +84,16 @@ async function resolveEspnIdFromFotmob(fotmobId){
   // ("Man City")이라 축약형 하나로만 비교하면 PL 경기 대부분이 안 맞았다 —
   // ESPN 쪽 이름 후보(축약·풀네임·name) 중 하나라도 같으면 같은 팀으로 본다.
   const namesOf = c => new Set([c.team?.shortDisplayName, c.team?.displayName, c.team?.name].map(norm).filter(Boolean));
-  for(const e of (sj.events || [])){
-    const cs = (e.competitions?.[0]?.competitors || []).map(namesOf);
-    if(cs.length === 2 && fmNames.every(n => cs.some(set => set.has(n)))) return e.id;
+  const evs = (sj.events || []).map(e => ({id: e.id, cs: (e.competitions?.[0]?.competitors || []).map(namesOf)})).filter(e => e.cs.length === 2);
+  for(const e of evs){
+    if(fmNames.every(n => e.cs.some(set => set.has(n)))) return e.id;
+  }
+  // 정확히 같은 이름이 없으면 한쪽이 다른 쪽을 품는 경우까지 — 현지어 표기가
+  // 다른 팀(Fotmob "Bayern München" ↔ ESPN "Bayern Munich"/"Bayern"). 같은 날짜의
+  // 스코어보드 안에서만 찾고, 짧은 조각(4자 미만)은 안 쓴다.
+  const loose = (n, set) => [...set].some(c => c === n || (c.length >= 4 && n.length >= 4 && (n.includes(c) || c.includes(n))));
+  for(const e of evs){
+    if(fmNames.every(n => e.cs.some(set => loose(n, set)))) return e.id;
   }
   return null;
 }
