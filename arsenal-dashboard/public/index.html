@@ -4771,8 +4771,8 @@ function gooLayers(){
   function mk(z){ var s=document.createElementNS(NS,'svg'); s.setAttribute('aria-hidden','true'); s.style.cssText='position:fixed;left:0;top:0;width:100vw;height:260px;pointer-events:none;z-index:'+z+';overflow:visible'; document.body.appendChild(s); return s; }
   function add(parent,tag){ var e=document.createElementNS(NS,tag||'path'); parent.appendChild(e); return e; }
   var mask=mk(94), fill=mk(95), top=mk(101);
-  var L={NS:NS, fill:fill, defs:add(fill,'defs'), bands:[], wingL:null, wingR:null, mL:add(mask,'rect'), mR:add(mask,'rect'), edge:add(top)};
-  L.wingL=add(fill); L.wingR=add(fill); L.strip=add(fill);
+  var L={NS:NS, fill:fill, defs:add(fill,'defs'), bands:[], mL:add(mask), mR:add(mask), edge:add(top)};
+  L.strip=add(fill); L.wings={L:[], R:[]};
   L.edge.setAttribute('fill','none');
   return (_goo.layers=L);
 }
@@ -4784,8 +4784,20 @@ function gooBand(i){
   var rc=document.createElementNS(L.NS,'rect'); rc.setAttribute('y','-50'); rc.setAttribute('height','400');
   cp.appendChild(rc); L.defs.appendChild(cp);
   var p=document.createElementNS(L.NS,'path'); p.setAttribute('clip-path','url(#gooClip'+i+')');
-  L.fill.insertBefore(p, L.wingL);
+  L.fill.insertBefore(p, L.strip);
   return (L.bands[i]={rc:rc, p:p});
+}
+// 날개 조각(k: 'L'/'R', i: 버튼 줄 번호) — 날개는 탭 바깥(+테두리 한 줄)에만 칠하고(탭 안쪽을 칠하면 두 줄짜리
+// 탭의 아랫줄 버튼을 윗줄 색이 덮는다), 줄마다 그 줄 끝 버튼 색으로 칠하도록 가로·세로 범위를 clipPath로 자른다.
+function gooWing(k, i){
+  var L=gooLayers(), arr=L.wings[k];
+  if(arr[i]) return arr[i];
+  var cp=document.createElementNS(L.NS,'clipPath'); cp.id='gooWing'+k+i;
+  var rc=document.createElementNS(L.NS,'rect');
+  cp.appendChild(rc); L.defs.appendChild(cp);
+  var p=document.createElementNS(L.NS,'path'); p.setAttribute('clip-path','url(#gooWing'+k+i+')');
+  L.fill.insertBefore(p, L.strip);
+  return (arr[i]={rc:rc, p:p});
 }
 // 채움 색 칠하기 — 색 전환(버튼 배경과 같은 속도)은 직전 프레임에도 보이던 도형에만 건다. 레이어는 섹션끼리
 // 같이 쓰고 마지막 색이 남아 있어서, 새로 나타나는 도형에 전환을 걸면 옛 색(예: 다른 섹션/탭의 빨간
@@ -4797,10 +4809,10 @@ function gooFill(p, color, tr){
 }
 function gooClearLayers(){
   var L=_goo.layers; if(!L) return;
-  L.bands.map(function(b){ return b.p; }).concat([L.wingL, L.wingR]).forEach(function(p){ p._gooWas=!!p._gooShown; p._gooShown=false; });
-  L.bands.forEach(function(b){ b.p.setAttribute('d',''); });
-  L.wingL.setAttribute('d',''); L.wingR.setAttribute('d',''); L.strip.setAttribute('d',''); L.edge.setAttribute('d','');
-  L.mL.setAttribute('width',0); L.mR.setAttribute('width',0);
+  var paths=L.bands.concat(L.wings.L, L.wings.R).map(function(b){ return b.p; });
+  paths.forEach(function(p){ p._gooWas=!!p._gooShown; p._gooShown=false; p.setAttribute('d',''); });
+  L.strip.setAttribute('d',''); L.edge.setAttribute('d','');
+  L.mL.setAttribute('d',''); L.mR.setAttribute('d','');
 }
 function gooBind(it, el){
   it.el=el;
@@ -4955,7 +4967,9 @@ function gooFrame(){
     var tr=now-S.snapAt, ty=0;
     if(S.cling) ty=-s*GOO_PULL;
     else if(!S.attached && tr<800){ ty=-S.pullS*Math.exp(-tr/150)*Math.cos(2*Math.PI*tr/320); busy=true; }
-    var rTop=s>0 ? it.r0 : gooLerp(it.r0,0,gooEaseOut(pb));
+    // 붙어 있는 동안 탭 자체 윗모서리는 각지게 두고, 둥근 정도는 아래 날개 곡선이 대신 만든다
+    // (곡선 바깥의 탭 모서리는 가림막이 페이지 배경색으로 깎는다)
+    var rTop=s<0 ? 0 : it.r0;
     var rBot=it.rb0*(1-gooEaseInOut(pc));
     var spread=side0*gooEaseInOut(pc);
     var a=it.bc[3]*(1-gooEaseInOut(pc));
@@ -4982,11 +4996,21 @@ function gooFrame(){
     var L=gooLayers();
     var box=el.getBoundingClientRect(), W=box.width, Lx=box.left, Rx=Lx+W, H=box.height, cx=Lx+W/2;
     var bs=[].slice.call(el.querySelectorAll('button')).map(function(b){ return {b:b, r:b.getBoundingClientRect()}; }).filter(function(x){ return x.r.width>0; });
-    var row=bs.filter(function(x){ return Math.abs(x.r.top-bs[0].r.top)<4; }).sort(function(x,y){ return x.r.left-y.r.left; });
+    var btnColor=function(x){ return x.b.classList.contains('active') ? it.cActive : it.cIdle; };
+    // 버튼을 줄 단위로 묶는다(선수단은 1군/아카데미 + 포지션 두 줄) — 날개는 줄마다 그 줄 양끝 버튼 색으로 칠한다
+    var rows=[];
+    bs.forEach(function(x){
+      var g=rows.filter(function(q){ return Math.abs(q.top-x.r.top)<4; })[0];
+      if(!g){ g={top:x.r.top, bottom:x.r.bottom, list:[]}; rows.push(g); }
+      g.bottom=Math.max(g.bottom,x.r.bottom); g.list.push(x);
+    });
+    rows.sort(function(p,q){ return p.top-q.top; });
+    rows.forEach(function(g){ g.list.sort(function(p,q){ return p.r.left-q.r.left; }); });
+    var row=rows.length ? rows[0].list : [];                    // 윗줄 — 볼록/목은 탭 윗면에서 솟으니 윗줄 색
     var bands=row.length ? row.map(function(x,i){ return {
       x0: i===0 ? -1e4 : (row[i-1].r.right+x.r.left)/2,
       x1: i===row.length-1 ? 1e4 : (x.r.right+row[i+1].r.left)/2,
-      color: x.b.classList.contains('active') ? it.cActive : it.cIdle
+      color: btnColor(x)
     }; }) : [{x0:-1e4, x1:1e4, color:it.color}];
     var fillTr='fill '+it.dur, fl=it.r0, base=box.top;           // base: 탭의 실제 윗면(끌림·반동 포함)
     // 윤곽선 굵기는 CSS 1px 테두리처럼 기기 픽셀에 맞춘다(1.25배 화면에선 0.8px, 2배는 1px) — 날개 윗줄 두께도 같은 값
@@ -5030,25 +5054,42 @@ function gooFrame(){
       // 브라우저는 반 픽셀을 올림으로 붙이는데(63.5→64) 측정값은 63.4999990처럼 살짝 모자라게 나와서 보정값을 더한다
       var snap=function(v){ return Math.round(v*dpr+0.01)/dpr; };
       var y0=snap(cb), xL=snap(Lx), xR=snap(Rx), ys=y0+sw/2;
-      var e=gooEaseOut(pb), r0=it.r0, rc=r0+1, KAPPA=0.5523;       // KAPPA: 베지어로 1/4 원호를 그리는 제어점 비율
+      var e=gooEaseOut(pb), r0=it.r0, KAPPA=0.5523;               // KAPPA: 베지어로 1/4 원호를 그리는 제어점 비율
       var tsF=Math.min(side0,xL), hbF=Math.min(H*gooLerp(0.35,1,e), H-rBot);
-      // 날개 바깥 곡선 — 위 끝 P0(수평 접선)에서 아래 끝 P3(수직 접선)까지. e=0이면 탭의 둥근 모서리 호와 똑같고
-      // (날개가 없는 것과 같은 모양), e가 커질수록 위 끝은 헤더를 따라 바깥으로 번지고 아래 끝은 옆면을 따라
-      // 내려가 \ 모양이 된다. 예전엔 붙자마자 날개가 모서리의 둥근 빈자리를 통째로 채우고 시작해서, 닿는
-      // 다음 프레임에 둥근 모서리가 한 번에 각져 보였다.
+      // 모서리 윤곽 곡선 하나 — 위 끝 P0(수평 접선)에서 아래 끝 P3(탭 옆면, 수직 접선)까지. e=0이면 탭의 둥근
+      // 모서리 호와 똑같고, e가 커질수록 위 끝은 헤더를 따라 바깥으로 번지고 아래 끝은 옆면을 따라 내려가
+      // \ 모양이 된다(둥근 빈자리가 한 번에 채워지지 않고 서서히 채워진다). 탭은 붙은 동안 윗모서리가 각져
+      // 있으므로, 곡선 바깥으로 튀어나온 탭 모서리는 가림막이 페이지 배경색으로 깎고, 곡선이 탭 밖으로 번진
+      // 부분만 날개가 채운다 — 날개가 탭 안쪽을 칠하지 않아야 두 줄짜리 탭의 아랫줄을 덮지 않는다.
       // x: 탭 옆면, y: 윗면, r: 모서리 반지름, out: 바깥 방향(왼쪽 -1, 오른쪽 +1)
       function wingCurve(x, y, r, out){
         return { p0x:x+gooLerp(-out*r, out*tsF, e), c1x:x+gooLerp(-out*r*(1-KAPPA), out*tsF*0.55, e),
                  c2y:gooLerp(y+r*(1-KAPPA), y+hbF*0.4, e), p3y:gooLerp(y+r, y+hbF, e) };
       }
-      [[L.mL,0,xL],[L.mR,xR,window.innerWidth]].forEach(function(r){
-        r[0].setAttribute('x',r[1]); r[0].setAttribute('y',y0-1); r[0].setAttribute('width',Math.max(0,r[2]-r[1])); r[0].setAttribute('height',H+1); r[0].setAttribute('fill',it.pageBg);
+      var fL=wingCurve(xL,y0,r0,-1), fR=wingCurve(xR,y0,r0,1), W2=window.innerWidth, yB=y0+H;
+      function curve(f,x){ return ' C'+f.c1x+','+y0+' '+x+','+f.c2y+' '+x+','+f.p3y; }   // P0 → P3 방향
+      // 가림막: 화면 가장자리 ~ 윤곽 곡선 ~ 탭 옆면(아래). 곡선이 탭 안쪽에 있는 동안엔 탭 모서리까지 깎는다.
+      L.mL.setAttribute('fill',it.pageBg); L.mR.setAttribute('fill',it.pageBg);
+      L.mL.setAttribute('d','M0,'+(y0-1)+' L'+fL.p0x+','+(y0-1)+' L'+fL.p0x+','+y0+curve(fL,xL)+' L'+xL+','+yB+' L0,'+yB+' Z');
+      L.mR.setAttribute('d','M'+W2+','+(y0-1)+' L'+fR.p0x+','+(y0-1)+' L'+fR.p0x+','+y0+curve(fR,xR)+' L'+xR+','+yB+' L'+W2+','+yB+' Z');
+      // 날개: 윤곽 곡선 ~ 탭 옆면 테두리 한 줄(테두리가 날개 속 세로줄로 비치지 않게)까지, 그 바깥으로 자른다
+      // 날개가 탭 안으로 덮는 폭: 옆 테두리 + 1px. 붙는 순간 젤리 흔들림(좌우 scale) 중엔 탭이 소수점 위치에
+      // 그려져 1px 테두리가 기기 픽셀 두 칸에 번지는데, 테두리 한 칸만 덮으면 나머지 반 칸이 날개와 탭 사이
+      // 세로선으로 남았다. 더 덮는 자리는 줄마다 바로 옆 버튼과 같은 색이라 티가 안 난다.
+      var ext=sw+1;
+      var dWL='M'+fL.p0x+','+y0+' L'+(xL+ext)+','+y0+' L'+(xL+ext)+','+fL.p3y+' L'+xL+','+fL.p3y+' C'+xL+','+fL.c2y+' '+fL.c1x+','+y0+' '+fL.p0x+','+y0+' Z';
+      var dWR='M'+fR.p0x+','+y0+' L'+(xR-ext)+','+y0+' L'+(xR-ext)+','+fR.p3y+' L'+xR+','+fR.p3y+' C'+xR+','+fR.c2y+' '+fR.c1x+','+y0+' '+fR.p0x+','+y0+' Z';
+      // 줄마다 날개 조각 — 줄 경계는 두 줄 사이 틈의 가운데. 가로로는 탭 바깥(+테두리와 1px)까지만 자른다.
+      var wrows=rows.length ? rows : [{top:0, bottom:0, list:[]}];
+      wrows.forEach(function(g,i){
+        var yT=i===0 ? -1e4 : (wrows[i-1].bottom+g.top)/2, yE=i===wrows.length-1 ? 1e4 : (g.bottom+wrows[i+1].top)/2;
+        var cLft=g.list.length ? btnColor(g.list[0]) : it.color, cRgt=g.list.length ? btnColor(g.list[g.list.length-1]) : it.color;
+        [['L',-1e4,1e4+xL+ext,cLft,dWL],['R',xR-ext,1e4,cRgt,dWR]].forEach(function(w){
+          var piece=gooWing(w[0],i);
+          piece.rc.setAttribute('x',w[1]); piece.rc.setAttribute('width',w[2]); piece.rc.setAttribute('y',yT); piece.rc.setAttribute('height',yE-yT);
+          gooFill(piece.p,w[3],fillTr); piece.p.setAttribute('d',w[4]);
+        });
       });
-      var fL=wingCurve(xL,y0,r0,-1), fR=wingCurve(xR,y0,r0,1);
-      gooFill(L.wingL,bands[0].color,fillTr); gooFill(L.wingR,bands[bands.length-1].color,fillTr);
-      // 채움: 바깥 곡선 + 탭 안쪽 모서리 사각형(탭 속이라 같은 버튼 색이 겹칠 뿐 안 보인다)
-      L.wingL.setAttribute('d','M'+fL.p0x+','+y0+' L'+(xL+rc)+','+y0+' L'+(xL+rc)+','+(y0+rc)+' L'+(xL+1)+','+fL.p3y+' L'+xL+','+fL.p3y+' C'+xL+','+fL.c2y+' '+fL.c1x+','+y0+' '+fL.p0x+','+y0+' Z');
-      L.wingR.setAttribute('d','M'+fR.p0x+','+y0+' L'+(xR-rc)+','+y0+' L'+(xR-rc)+','+(y0+rc)+' L'+(xR-1)+','+fR.p3y+' L'+xR+','+fR.p3y+' C'+xR+','+fR.c2y+' '+fR.c1x+','+y0+' '+fR.p0x+','+y0+' Z');
       // 날개 맨 윗줄(탭 윗테두리 두께)은 탭과 같은 색으로 — 붙은 동안 탭 윗테두리는 투명이라 그 자리에
       // 컨테이너 색이 보이는데, 날개 쪽은 버튼 색이라 윤곽선이 옅어지는 구간에서 윗줄이 서로 달라 보였다.
       L.strip.setAttribute('fill',it.color);
