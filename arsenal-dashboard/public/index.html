@@ -4924,7 +4924,9 @@ function gooFrame(){
     // 더 멀리(snapD)까지 버티다 끊어진다(히스테리시스) — 이게 "쫀득"의 핵심.
     var S=it.st;
     if(!S) S=it.st={lastS:s, lastT:now, v:0, attached:s<=0, cling:false, jellyAt:-1e9, jellyAmp:0, snapAt:-1e9, snapS:0, pullS:0, m:m, mV:0};
-    var dt=gooClamp(now-S.lastT,1,64);
+    // 한 프레임 간격까지만 — 한동안 멈췄다 다시 스크롤하면 직전 프레임이 오래전이라 간격이 크게 잡혀,
+    // 첫 프레임에 스프링이 한꺼번에 튀어 날개가 "짠" 하고 나타났다
+    var dt=gooClamp(now-S.lastT,1,24);
     S.v=S.v*0.5+(s-S.lastS)/dt*0.5; S.lastS=s; S.lastT=now;  // px/ms, +면 헤더에서 멀어지는 중
     var snapD=gooClamp(gap0*0.8,6,22);
     if(!S.attached && !S.cling && s<=0){
@@ -5028,22 +5030,33 @@ function gooFrame(){
       // 브라우저는 반 픽셀을 올림으로 붙이는데(63.5→64) 측정값은 63.4999990처럼 살짝 모자라게 나와서 보정값을 더한다
       var snap=function(v){ return Math.round(v*dpr+0.01)/dpr; };
       var y0=snap(cb), xL=snap(Lx), xR=snap(Rx), ys=y0+sw/2;
-      var ts=Math.min(gooLerp(2,side0,gooEaseOut(pb)),xL);
-      var hb2=Math.min(H*gooLerp(0.35,1,gooEaseOut(pb)), H-rBot), rc=rTop+1;
+      var e=gooEaseOut(pb), r0=it.r0, rc=r0+1, KAPPA=0.5523;       // KAPPA: 베지어로 1/4 원호를 그리는 제어점 비율
+      var tsF=Math.min(side0,xL), hbF=Math.min(H*gooLerp(0.35,1,e), H-rBot);
+      // 날개 바깥 곡선 — 위 끝 P0(수평 접선)에서 아래 끝 P3(수직 접선)까지. e=0이면 탭의 둥근 모서리 호와 똑같고
+      // (날개가 없는 것과 같은 모양), e가 커질수록 위 끝은 헤더를 따라 바깥으로 번지고 아래 끝은 옆면을 따라
+      // 내려가 \ 모양이 된다. 예전엔 붙자마자 날개가 모서리의 둥근 빈자리를 통째로 채우고 시작해서, 닿는
+      // 다음 프레임에 둥근 모서리가 한 번에 각져 보였다.
+      // x: 탭 옆면, y: 윗면, r: 모서리 반지름, out: 바깥 방향(왼쪽 -1, 오른쪽 +1)
+      function wingCurve(x, y, r, out){
+        return { p0x:x+gooLerp(-out*r, out*tsF, e), c1x:x+gooLerp(-out*r*(1-KAPPA), out*tsF*0.55, e),
+                 c2y:gooLerp(y+r*(1-KAPPA), y+hbF*0.4, e), p3y:gooLerp(y+r, y+hbF, e) };
+      }
       [[L.mL,0,xL],[L.mR,xR,window.innerWidth]].forEach(function(r){
         r[0].setAttribute('x',r[1]); r[0].setAttribute('y',y0-1); r[0].setAttribute('width',Math.max(0,r[2]-r[1])); r[0].setAttribute('height',H+1); r[0].setAttribute('fill',it.pageBg);
       });
-      if(ts>0.5 || rTop>0.5){
-        gooFill(L.wingL,bands[0].color,fillTr); gooFill(L.wingR,bands[bands.length-1].color,fillTr);
-        L.wingL.setAttribute('d','M'+(xL-ts)+','+y0+' L'+(xL+rc)+','+y0+' L'+(xL+rc)+','+(y0+rc)+' L'+(xL+1)+','+(y0+hb2)+' L'+xL+','+(y0+hb2)+' C'+xL+','+(y0+hb2*0.4)+' '+(xL-ts*0.55)+','+y0+' '+(xL-ts)+','+y0+' Z');
-        L.wingR.setAttribute('d','M'+(xR+ts)+','+y0+' L'+(xR-rc)+','+y0+' L'+(xR-rc)+','+(y0+rc)+' L'+(xR-1)+','+(y0+hb2)+' L'+xR+','+(y0+hb2)+' C'+xR+','+(y0+hb2*0.4)+' '+(xR+ts*0.55)+','+y0+' '+(xR+ts)+','+y0+' Z');
-        // 날개 맨 윗줄(탭 윗테두리 두께)은 탭과 같은 색으로 — 붙은 동안 탭 윗테두리는 투명이라 그 자리에
-        // 컨테이너 색이 보이는데, 날개 쪽은 버튼 색이라 윤곽선이 옅어지는 구간에서 윗줄이 서로 달라 보였다.
-        L.strip.setAttribute('fill',it.color);
-        L.strip.setAttribute('d','M'+(xL-ts)+','+y0+' H'+(xR+ts)+' V'+(y0+sw)+' H'+(xL-ts)+' Z');
-      }
-      edges.push('M'+(xL+sw/2)+','+(y0+hb2)+' C'+(xL+sw/2)+','+(y0+hb2*0.4)+' '+(xL-ts*0.55)+','+ys+' '+(xL-ts)+','+ys
-        +' L'+(xR+ts)+','+ys+' C'+(xR+ts*0.55)+','+ys+' '+(xR-sw/2)+','+(y0+hb2*0.4)+' '+(xR-sw/2)+','+(y0+hb2));
+      var fL=wingCurve(xL,y0,r0,-1), fR=wingCurve(xR,y0,r0,1);
+      gooFill(L.wingL,bands[0].color,fillTr); gooFill(L.wingR,bands[bands.length-1].color,fillTr);
+      // 채움: 바깥 곡선 + 탭 안쪽 모서리 사각형(탭 속이라 같은 버튼 색이 겹칠 뿐 안 보인다)
+      L.wingL.setAttribute('d','M'+fL.p0x+','+y0+' L'+(xL+rc)+','+y0+' L'+(xL+rc)+','+(y0+rc)+' L'+(xL+1)+','+fL.p3y+' L'+xL+','+fL.p3y+' C'+xL+','+fL.c2y+' '+fL.c1x+','+y0+' '+fL.p0x+','+y0+' Z');
+      L.wingR.setAttribute('d','M'+fR.p0x+','+y0+' L'+(xR-rc)+','+y0+' L'+(xR-rc)+','+(y0+rc)+' L'+(xR-1)+','+fR.p3y+' L'+xR+','+fR.p3y+' C'+xR+','+fR.c2y+' '+fR.c1x+','+y0+' '+fR.p0x+','+y0+' Z');
+      // 날개 맨 윗줄(탭 윗테두리 두께)은 탭과 같은 색으로 — 붙은 동안 탭 윗테두리는 투명이라 그 자리에
+      // 컨테이너 색이 보이는데, 날개 쪽은 버튼 색이라 윤곽선이 옅어지는 구간에서 윗줄이 서로 달라 보였다.
+      L.strip.setAttribute('fill',it.color);
+      L.strip.setAttribute('d','M'+fL.p0x+','+y0+' H'+fR.p0x+' V'+(y0+sw)+' H'+fL.p0x+' Z');
+      // 윤곽선은 테두리 두께의 가운데를 지나도록 선 두께 절반만큼 안쪽 곡선으로
+      var xsL=xL+sw/2, xsR=xR-sw/2, rs=Math.max(0,r0-sw/2), sL=wingCurve(xsL,ys,rs,-1), sR=wingCurve(xsR,ys,rs,1);
+      edges.push('M'+xsL+','+sL.p3y+' C'+xsL+','+sL.c2y+' '+sL.c1x+','+ys+' '+sL.p0x+','+ys
+        +' L'+sR.p0x+','+ys+' C'+sR.c1x+','+ys+' '+xsR+','+sR.c2y+' '+xsR+','+sR.p3y);
       edgeOp=it.bc[3] ? a/it.bc[3] : 0;
     }
     if(edges.length){
