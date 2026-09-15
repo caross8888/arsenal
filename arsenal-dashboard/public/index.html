@@ -958,6 +958,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      배경 위에 미리 겹친 불투명 색으로 — 붙어 있는 동안 밑으로 지나가는
      콘텐츠가 틈으로 비치지 않게. 겉보기 색은 원래와 같다. */
   .goo-tab{position:sticky;z-index:80;transform-origin:50% 0;background:linear-gradient(var(--border-bright),var(--border-bright)),var(--navy);}
+  /* 다 펴진 탭은 좌우 테두리가 화면 밖으로 살짝(테두리 두께) 나가고, 붙는 순간 젤리 흔들림도 옆으로 늘어난다 —
+     가로로 삐져나온 만큼 화면이 옆으로 밀리지 않게 자른다. hidden은 sticky를 깨지만 clip은 스크롤 영역을
+     만들지 않아 sticky가 그대로 동작한다. */
+  .page{overflow-x:clip;}
   /* 리더보드 탭은 모바일에서 순위 카드 밖(#lbLayout 바로 아래)으로 옮겨진다
      (gooPlaceLbTabs) — 카드 안에 있으면 sticky가 카드 끝에서 풀려 아래 라운드
      카드까지 못 따라간다. 카드 윗부분의 테두리/둥근 모서리는 탭이 대신 맡는다. */
@@ -4857,6 +4861,7 @@ function gooMeasure(it){
   var cs=getComputedStyle(el);
   it.r0=parseFloat(cs.borderTopLeftRadius)||0;
   it.rb0=parseFloat(cs.borderBottomLeftRadius)||0;
+  it.bw=parseFloat(cs.borderLeftWidth)||0;
   it.bc=gooParse(cs.borderLeftColor);
   var rootCs=getComputedStyle(document.documentElement);
   var container=gooBlend(gooParse(rootCs.getPropertyValue('--border-bright')), gooSolid(el.parentElement));
@@ -4955,7 +4960,12 @@ function gooFrame(){
     // 따로 노는 모양이 보였다. 헤더에서 떨어진 상태(s>=0)에선 스프링 없이 바로 0.
     if(GOO_CALM || s>=0){ S.m=m; S.mV=0; }
     else {
-      for(var n=Math.ceil(dt/8), h=dt/n, i=0; i<n; i++){ S.mV+=(GOO_K*(m-S.m)-GOO_C*S.mV)*h; S.m+=S.mV*h; }
+      // 0·1에서는 벽처럼 멈춘다 — 다 펴질 때 1을 넘었다 돌아오면 날개가 1 근처에서 생겼다 사라졌다 하며
+      // 좌우 끝 윤곽선이 깜빡였다(중간 구간의 출렁임은 그대로 둔다)
+      for(var n=Math.ceil(dt/8), h=dt/n, i=0; i<n; i++){
+        S.mV+=(GOO_K*(m-S.m)-GOO_C*S.mV)*h; S.m+=S.mV*h;
+        if(S.m>1){ S.m=1; if(S.mV>0) S.mV=0; } else if(S.m<0){ S.m=0; if(S.mV<0) S.mV=0; }
+      }
       if(Math.abs(m-S.m)<1e-3 && Math.abs(S.mV)<1e-5){ S.m=m; S.mV=0; } else busy=true;
     }
     var mE=gooClamp(S.m,0,1);
@@ -4971,7 +4981,8 @@ function gooFrame(){
     // (곡선 바깥의 탭 모서리는 가림막이 페이지 배경색으로 깎는다)
     var rTop=s<0 ? 0 : it.r0;
     var rBot=it.rb0*(1-gooEaseInOut(pc));
-    var spread=side0*gooEaseInOut(pc);
+    // 다 펴지면 좌우 테두리까지 화면 밖으로 — 투명 테두리 자리에 탭 배경(회색)이 비쳐 화면 양끝에 1px 줄이 남는다
+    var spread=(side0+it.bw)*gooEaseInOut(pc);
     var a=it.bc[3]*(1-gooEaseInOut(pc));
     var bcol='rgba('+it.bc[0]+','+it.bc[1]+','+it.bc[2]+','+a+')';
     var st=el.style;
@@ -5055,7 +5066,7 @@ function gooFrame(){
       var snap=function(v){ return Math.round(v*dpr+0.01)/dpr; };
       var y0=snap(cb), xL=snap(Lx), xR=snap(Rx), ys=y0+sw/2;
       var e=gooEaseOut(pb), r0=it.r0, KAPPA=0.5523;               // KAPPA: 베지어로 1/4 원호를 그리는 제어점 비율
-      var tsF=Math.min(side0,xL), hbF=Math.min(H*gooLerp(0.35,1,e), H-rBot);
+      var tsF=Math.max(0,Math.min(side0,xL)), hbF=Math.min(H*gooLerp(0.35,1,e), H-rBot);
       // 모서리 윤곽 곡선 하나 — 위 끝 P0(수평 접선)에서 아래 끝 P3(탭 옆면, 수직 접선)까지. e=0이면 탭의 둥근
       // 모서리 호와 똑같고, e가 커질수록 위 끝은 헤더를 따라 바깥으로 번지고 아래 끝은 옆면을 따라 내려가
       // \ 모양이 된다(둥근 빈자리가 한 번에 채워지지 않고 서서히 채워진다). 탭은 붙은 동안 윗모서리가 각져
