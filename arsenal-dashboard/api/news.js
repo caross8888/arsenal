@@ -3,19 +3,19 @@
 // 최신순 정렬, 이미지 URL 정상화
 
 import { translateFields } from './_translate.js';
+import { loadTerms, isArsenalText } from './_arsenalTerms.js';
 
+// BBC·CBS는 축구 전체 피드라 아스날 기사만 골라야 한다(ESPN·Guardian은 요청 자체가
+// 아스날 한정). 예전엔 헤드라인에 "arsenal"이 있어야만 통과해서 "Madueke a target
+// for Euro loans"처럼 선수 이름만 있는 기사를 놓쳤다 — 헤드라인 + RSS 요약을
+// SNS와 같은 선수·감독 키워드(_arsenalTerms.js)로 본다. 요약까지 보는 건 파워랭킹·
+// 챔스 예측처럼 요약에서 아스날을 다루는 기사도 받기 위해서다(사용자 요청).
+// 단 여자축구는 뺀다 — BBC "Women's Football Weekly"가 요약의 Arsenal로 걸렸다.
 const RSS_SOURCES = [
-  {
-    url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',
-    name: 'BBC Sport',
-    filter: /arsenal/i,
-  },
-  {
-    url: 'https://www.cbssports.com/rss/headlines/soccer/',
-    name: 'CBS Sports',
-    filter: /arsenal/i,
-  },
+  { url: 'https://feeds.bbci.co.uk/sport/football/rss.xml', name: 'BBC Sport',  filterArsenal: true },
+  { url: 'https://www.cbssports.com/rss/headlines/soccer/',  name: 'CBS Sports', filterArsenal: true },
 ];
+const WOMEN_RE = /\bwomen'?s?\b|\bwsl\b|\blionesses\b/i;
 
 function decodeHtml(str) {
   return (str||'')
@@ -108,17 +108,20 @@ function parseRSS(text, sourceName, filter) {
       item.match(/<title>([\s\S]*?)<\/title>/)?.[1] || ''
     );
     if (!title) continue;
-    if (filter && !filter.test(title)) continue;
+
+    const descFull = decodeHtml(
+      item.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/)?.[1] ||
+      item.match(/<description>([\s\S]*?)<\/description>/)?.[1] || ''
+    );
+    // filter: (제목, 요약 전체) → 통과 여부. 표시용 요약은 150자로 자르지만
+    // 판별은 자르기 전 전체로 한다.
+    if (filter && !filter(title, descFull)) continue;
+    const desc = descFull.substring(0, 150);
 
     const link = (
       item.match(/<link>([\s\S]*?)<\/link>/)?.[1] ||
       item.match(/<guid[^>]*isPermaLink="true"[^>]*>([\s\S]*?)<\/guid>/)?.[1] || ''
     ).trim();
-
-    const desc = decodeHtml(
-      item.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/)?.[1] ||
-      item.match(/<description>([\s\S]*?)<\/description>/)?.[1] || ''
-    ).substring(0, 150);
 
     const pub = (item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '').trim();
     const pubDate = pub ? new Date(pub) : new Date(0);
@@ -208,6 +211,8 @@ export default async function handler(req, res) {
   } catch(e) { sourceErrors['Guardian'] = e.message; }
 
   // RSS 소스
+  const terms = await loadTerms();
+  const arsenalFilter = (title, desc) => !WOMEN_RE.test(title) && isArsenalText(title + ' ' + desc, terms);
   await Promise.all(RSS_SOURCES.map(async (src) => {
     try {
       const r = await fetch(src.url, {
@@ -216,7 +221,7 @@ export default async function handler(req, res) {
       });
       if (!r.ok) { sourceErrors[src.name] = `HTTP ${r.status}`; return; }
       const text = await r.text();
-      const items = parseRSS(text, src.name, src.filter);
+      const items = parseRSS(text, src.name, src.filterArsenal ? arsenalFilter : null);
       allArticles.push(...items);
     } catch (e) { sourceErrors[src.name] = e.message; }
   }));
