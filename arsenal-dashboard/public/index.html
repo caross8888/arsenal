@@ -6002,6 +6002,10 @@ function showSec(id,btn){
       if(btn) showSec(hash, btn, true);
     }
   });
+  // 새로고침 때 브라우저가 직전 스크롤 위치를 되돌려 놓지 않게 한다 — 섹션은 늘 맨 위에서 시작하는 구조이고
+  // (showSec), 모바일에서 당겨서 새로고침하면 맨 위가 아니라 몇 px 내려온 위치가 복원돼 스티키 탭이 헤더로
+  // 다가가는 도중 모양(윗면 볼록)으로 멈춘 채 열렸다.
+  if('scrollRestoration' in history) history.scrollRestoration='manual';
   // 초기 해시 복원
   var hash = location.hash.replace('#','').trim();
   // 구 URL 호환 (news/sns → media)
