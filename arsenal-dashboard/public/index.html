@@ -4745,7 +4745,7 @@ var GOO_TARGETS=[
 var GOO_MERGE=110; // 닿은 뒤 화면 폭으로 다 펼쳐지기까지의 스크롤 거리(px)
 var GOO_GRAB=5;    // 다가갈 때 이 거리(px)부터 표면장력처럼 헤더에 먼저 들러붙는다(떨어질 땐 더 멀리서 끊긴다)
 var GOO_PULL=0.4;  // 떨어지며 버티는 동안 탭이 헤더 쪽으로 끌려 올라가 있는 비율(벌어진 거리 대비)
-var GOO_K=5.8e-4, GOO_C=0.024; // 날개 스프링 — 주기 약 260ms, 감쇠비 0.5(살짝 늦게 따라와 자리 잡음)
+var GOO_K=5.8e-4, GOO_C=0.024; // 붙는 정도 스프링 — 주기 약 260ms, 감쇠비 0.5(살짝 늦게 따라와 자리 잡음)
 // 동작 줄이기 설정이면 시간 기반 흔들림·반동은 끄고 스크롤에 묶인 모양만 보여준다
 var GOO_CALM=!!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 var GOO_STYLE_PROPS=['top','border-top-left-radius','border-top-right-radius','border-bottom-left-radius','border-bottom-right-radius','margin-left','margin-right','border-left-color','border-right-color','border-top-color','transform'];
@@ -4914,7 +4914,7 @@ function gooFrame(){
     // 끊기는 목과 반동, 날개의 점성 있는 따라옴은 시간으로 굴린다. 떨어질 땐 붙을 때(GOO_GRAB)보다
     // 더 멀리(snapD)까지 버티다 끊어진다(히스테리시스) — 이게 "쫀득"의 핵심.
     var S=it.st;
-    if(!S) S=it.st={lastS:s, lastT:now, v:0, attached:s<=0, cling:false, jellyAt:-1e9, jellyAmp:0, snapAt:-1e9, snapS:0, pullS:0, pb:gooClamp(m/0.6,0,1), pbV:0};
+    if(!S) S=it.st={lastS:s, lastT:now, v:0, attached:s<=0, cling:false, jellyAt:-1e9, jellyAmp:0, snapAt:-1e9, snapS:0, pullS:0, m:m, mV:0};
     var dt=gooClamp(now-S.lastT,1,64);
     S.v=S.v*0.5+(s-S.lastS)/dt*0.5; S.lastS=s; S.lastT=now;  // px/ms, +면 헤더에서 멀어지는 중
     var snapD=gooClamp(gap0*0.8,6,22);
@@ -4926,14 +4926,17 @@ function gooFrame(){
       if(s<=0) { S.cling=false; S.attached=true; }
       else if(s>=snapD || GOO_CALM){ S.cling=false; S.snapAt=now; S.snapS=Math.min(s,snapD); S.pullS=S.snapS*GOO_PULL; }
     }
-    // 날개 단계는 스크롤을 살짝 늦게 따라가는 스프링으로 — 점성 있는 액체처럼 번졌다가 자리 잡게
-    var pbT=gooClamp(m/0.6,0,1), pc=gooClamp((m-0.6)/0.4,0,1);   // 날개(\ /) 단계, 아래까지 펼침 단계
-    if(GOO_CALM){ S.pb=pbT; S.pbV=0; }
+    // 붙은 정도(m)는 스크롤을 살짝 늦게 따라가는 스프링으로 — 점성 있는 액체처럼 번졌다가 자리 잡게.
+    // 날개·탭 폭·모서리·윤곽선을 전부 이 값 하나에서 뽑아야 한다: 예전엔 날개 단계만 스프링을 태우고
+    // 탭 폭은 스크롤에 바로 묶어서, 빠르게 스크롤하면 탭이 먼저 넓어지고 날개가 뒤따라와 1~2프레임
+    // 따로 노는 모양이 보였다. 헤더에서 떨어진 상태(s>=0)에선 스프링 없이 바로 0.
+    if(GOO_CALM || s>=0){ S.m=m; S.mV=0; }
     else {
-      for(var n=Math.ceil(dt/8), h=dt/n, i=0; i<n; i++){ S.pbV+=(GOO_K*(pbT-S.pb)-GOO_C*S.pbV)*h; S.pb+=S.pbV*h; }
-      if(Math.abs(pbT-S.pb)<1e-3 && Math.abs(S.pbV)<1e-5){ S.pb=pbT; S.pbV=0; } else busy=true;
+      for(var n=Math.ceil(dt/8), h=dt/n, i=0; i<n; i++){ S.mV+=(GOO_K*(m-S.m)-GOO_C*S.mV)*h; S.m+=S.mV*h; }
+      if(Math.abs(m-S.m)<1e-3 && Math.abs(S.mV)<1e-5){ S.m=m; S.mV=0; } else busy=true;
     }
-    var pb=gooClamp(S.pb,0,1);
+    var mE=gooClamp(S.m,0,1);
+    var pb=gooClamp(mE/0.6,0,1), pc=gooClamp((mE-0.6)/0.4,0,1); // 날개(\ /) 단계, 아래까지 펼침 단계
     // 붙는 순간: 눌렸다(scaleY↓, 옆으로 퍼짐) 튀어오르며 잦아드는 젤리 — 빨리 붙을수록 세게
     var tj=now-S.jellyAt, j=0;
     if(tj<900){ j=S.jellyAmp*Math.exp(-tj/170)*Math.sin(2*Math.PI*tj/260); busy=true; }
@@ -4953,15 +4956,16 @@ function gooFrame(){
     st.borderLeftColor=st.borderRightColor=bcol;
     // 붙어 있는 동안 탭 자체 윗테두리는 숨긴다 — 헤더 위 윤곽선 한 줄만 보이게(두 줄이 겹치면 진해 보인다)
     st.borderTopColor=s<0 ? 'transparent' : bcol;
-    st.transform=(j||ty) ? 'translateY('+ty+'px) scale('+(1+j*0.4)+','+(1-j)+')' : '';
-    if(m>0) headerLine=bcol;
+    // 옆으로 퍼지는 흔들림은 탭이 화면 폭으로 펼쳐질수록 뺀다 — 꽉 찬 상태에서 좌우로 줄면 화면 가장자리에 틈이 난다
+    st.transform=(j||ty) ? 'translateY('+ty+'px) scale('+(1+j*0.4*(1-pc))+','+(1-j)+')' : '';
+    if(mE>0) headerLine=bcol;
     var free=!S.attached && !S.cling;
     var humpFrom=gap0*0.83;                                     // 이 거리부터 윗면이 볼록 솟기 시작
     var humpOn=free && s>=GOO_GRAB && s<humpFrom;
     var neckOn=S.cling || (free && s>0 && s<GOO_GRAB);          // 버티는 중 / 닿기 직전 표면장력으로 먼저 들러붙음
     var capOn=!S.cling && tr<220;                               // 끊긴 뒤 헤더 쪽에 남은 방울이 빨려 올라감
     var bumpOn=free && tr<800;                                  // 끊긴 뒤 탭 윗면에 남은 방울이 튕기며 가라앉음
-    var wingOn=s<0 && m<1;
+    var wingOn=s<0 && mE<1;
     if(!(humpOn||neckOn||capOn||bumpOn||wingOn)) return;
     // ── 레이어 ──
     var L=gooLayers();
