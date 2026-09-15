@@ -229,7 +229,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .f-btns{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border-bright);border-radius:12px;overflow:hidden;margin-bottom:16px}
 .f-btn{background:var(--surface2);border:none;color:var(--text-muted);font-family:var(--fb);font-size:12px;font-weight:700;padding:10px 4px;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .f-btn.active{background:var(--red-dark);color:var(--white)}
-.sq-tabs-group{border-radius:12px;overflow:hidden;margin-bottom:16px;background:var(--border-bright);display:flex;flex-direction:column;gap:1px;border:1px solid var(--border-bright);}
+.sq-tabs-group{border-radius:12px;overflow:hidden;margin-bottom:14px;background:var(--border-bright);display:flex;flex-direction:column;gap:1px;border:1px solid var(--border-bright);}
 .sq-tabs-group .f-btns{border-radius:0;margin-bottom:0;background:transparent}
 .sq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 /* PC 선수단 우측 패널 기본 콘텐츠 — 감독/부상자 현황, 완전히 독립된 두 개의
@@ -325,15 +325,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .hist-filter-btn .hf-icon{font-size:13px;}
 /* 선수단 필터(.f-btns)와 동일한 방식 — 세그먼트끼리 1px 틈으로만 구분되고
    바깥 양 끝만 둥글게, 활성 탭만 넓어지고 나머지는 아이콘만 남도록 압축 */
-.hist-nav{display:flex;gap:1px;background:var(--border-bright);border:1px solid var(--border-bright);border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.hist-nav{display:flex;gap:1px;background:var(--border-bright);border:1px solid var(--border-bright);border-radius:12px;overflow:hidden;margin-bottom:14px;}
 /* 비활성 탭은 폭을 40px로 고정해서 절대 움직이지 않게 하고, 활성 탭 하나만
    flex-grow로 남는 공간을 전부 차지하게 한다 — 이러면 활성 탭이 바뀔 때
    "이전 활성" ↔ "다음 활성" 두 칸만 폭이 바뀌고 나머지는 완전히 고정이라
    다른 아이콘이 쏠리거나 흔들리는 문제가 구조적으로 생기지 않는다.
    gap은 비활성 상태(라벨이 안 보임)일 땐 0으로 둔다 — flex gap은 자식의
    실제 폭이 0이어도 예약되기 때문에, 라벨이 안 보이는데 gap만 남아있으면
-   아이콘이 진짜 중앙에서 gap의 절반만큼 밀려 보인다(쏠림의 실제 원인). */
-.hist-nav-btn{box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:0;flex:0 0 34px;height:40px;padding:0;border:none;background:var(--surface2);color:var(--text-dim);cursor:pointer;transition:flex-grow .25s ease,flex-basis .25s ease,gap .2s ease,padding .25s ease,background .2s,color .2s;-webkit-tap-highlight-color:transparent;overflow:hidden;}
+   아이콘이 진짜 중앙에서 gap의 절반만큼 밀려 보인다(쏠림의 실제 원인).
+   높이 36.8px = 다른 상단 탭(.f-btn/.lb-tab/.media-seg-btn: 위아래 10px + 12px 글자 줄높이 16.8px)과 같은 값 —
+   헤더에 붙는 스티키 탭들의 높이를 통일한다. */
+.hist-nav-btn{box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:0;flex:0 0 34px;height:36.8px;padding:0;border:none;background:var(--surface2);color:var(--text-dim);cursor:pointer;transition:flex-grow .25s ease,flex-basis .25s ease,gap .2s ease,padding .25s ease,background .2s,color .2s;-webkit-tap-highlight-color:transparent;overflow:hidden;}
 .hist-nav-btn svg{width:17px;height:17px;flex-shrink:0;transition:color .2s;}
 /* 라벨은 등장할 때(비활성→활성)만 지연시킨다 — 박스가 넓어지는 도중에
    라벨까지 같이 나타나면 겹쳐 보이기 때문. 반대로 사라질 때(활성→비활성)는
