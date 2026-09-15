@@ -4772,7 +4772,7 @@ function gooLayers(){
   function add(parent,tag){ var e=document.createElementNS(NS,tag||'path'); parent.appendChild(e); return e; }
   var mask=mk(94), fill=mk(95), top=mk(101);
   var L={NS:NS, fill:fill, defs:add(fill,'defs'), bands:[], wingL:null, wingR:null, mL:add(mask,'rect'), mR:add(mask,'rect'), edge:add(top)};
-  L.wingL=add(fill); L.wingR=add(fill);
+  L.wingL=add(fill); L.wingR=add(fill); L.strip=add(fill);
   L.edge.setAttribute('fill','none');
   return (_goo.layers=L);
 }
@@ -4787,10 +4787,19 @@ function gooBand(i){
   L.fill.insertBefore(p, L.wingL);
   return (L.bands[i]={rc:rc, p:p});
 }
+// 채움 색 칠하기 — 색 전환(버튼 배경과 같은 속도)은 직전 프레임에도 보이던 도형에만 건다. 레이어는 섹션끼리
+// 같이 쓰고 마지막 색이 남아 있어서, 새로 나타나는 도형에 전환을 걸면 옛 색(예: 다른 섹션/탭의 빨간
+// 활성 버튼)에서 넘어오는 애니메이션이 돌아 순간 엉뚱한 색이 비친다.
+function gooFill(p, color, tr){
+  p.style.transition=p._gooWas ? tr : 'none';
+  p.setAttribute('fill', color);
+  p._gooShown=true;
+}
 function gooClearLayers(){
   var L=_goo.layers; if(!L) return;
+  L.bands.map(function(b){ return b.p; }).concat([L.wingL, L.wingR]).forEach(function(p){ p._gooWas=!!p._gooShown; p._gooShown=false; });
   L.bands.forEach(function(b){ b.p.setAttribute('d',''); });
-  L.wingL.setAttribute('d',''); L.wingR.setAttribute('d',''); L.edge.setAttribute('d','');
+  L.wingL.setAttribute('d',''); L.wingR.setAttribute('d',''); L.strip.setAttribute('d',''); L.edge.setAttribute('d','');
   L.mL.setAttribute('width',0); L.mR.setAttribute('width',0);
 }
 function gooBind(it, el){
@@ -4978,8 +4987,12 @@ function gooFrame(){
       color: x.b.classList.contains('active') ? it.cActive : it.cIdle
     }; }) : [{x0:-1e4, x1:1e4, color:it.color}];
     var fillTr='fill '+it.dur, fl=it.r0, base=box.top;           // base: 탭의 실제 윗면(끌림·반동 포함)
-    // 윤곽선 굵기는 CSS 1px 테두리처럼 기기 픽셀에 맞춘다(1.25배 화면에선 0.8px)
-    var dpr=window.devicePixelRatio||1, sw=Math.max(1,Math.floor(dpr))/dpr, ey=cb+sw/2;
+    // 윤곽선 굵기는 CSS 1px 테두리처럼 기기 픽셀에 맞춘다(1.25배 화면에선 0.8px, 2배는 1px) — 날개 윗줄 두께도 같은 값
+    // 기기 배율은 실제로 그려진 탭 테두리 두께로 검산한다 — 화면 에뮬레이션(개발 미리보기)은 배율 보고값만
+    // 바꾸고 실제 렌더링은 원래 배율로 해서(보고 2, 테두리 0.8px=1.25배), 보고값을 믿으면 선이 어긋난다.
+    var dpr=window.devicePixelRatio||1, bwNow=parseFloat(getComputedStyle(el).borderLeftWidth)||0;
+    if(bwNow>0 && bwNow<1 && Math.abs(Math.max(1,Math.floor(dpr))/dpr-bwNow)>0.02) dpr=1/bwNow;
+    var sw=Math.max(1,Math.floor(dpr))/dpr, ey=cb+sw/2;
     var fills=[], edges=[];
     if(humpOn){
       // 다가가는 중: 윗면 전체가 가운데로 볼록하게 솟아 헤더로(GOO_GRAB 거리에서 헤더에 닿는다)
@@ -5004,25 +5017,33 @@ function gooFrame(){
     }
     if(fills.length){
       var d=fills.join(' ');
-      bands.forEach(function(b,i){ var g=gooBand(i); g.rc.setAttribute('x',b.x0); g.rc.setAttribute('width',b.x1-b.x0); g.p.style.transition=fillTr; g.p.setAttribute('fill',b.color); g.p.setAttribute('d',d); });
+      bands.forEach(function(b,i){ var g=gooBand(i); g.rc.setAttribute('x',b.x0); g.rc.setAttribute('width',b.x1-b.x0); gooFill(g.p,b.color,fillTr); g.p.setAttribute('d',d); });
     }
     var edgeOp=1;
     if(wingOn){
       // 닿은 뒤: 윗부분이 헤더를 따라 바깥으로 번지고 아래는 제자리(\ /). 날개·윤곽선은 탭 아래 둥근
       // 모서리가 시작되는 곳(높이 - 아래 반지름)까지만 — 더 내려가면 둥근 모서리의 빈 자리에 세로줄이 남는다.
-      var ts=Math.min(gooLerp(2,side0,gooEaseOut(pb)),Lx);
+      // 좌표는 기기 픽셀에 맞춘다: 탭 테두리는 브라우저가 픽셀 격자에 딱 맞춰 그리는데, 닿는 선이 50.8px
+      // (1.25배 화면에서 기기 63.5px)처럼 반 픽셀에 걸리면 날개 쪽 선만 두 줄에 번져 1픽셀 어긋나 보였다.
+      // 브라우저는 반 픽셀을 올림으로 붙이는데(63.5→64) 측정값은 63.4999990처럼 살짝 모자라게 나와서 보정값을 더한다
+      var snap=function(v){ return Math.round(v*dpr+0.01)/dpr; };
+      var y0=snap(cb), xL=snap(Lx), xR=snap(Rx), ys=y0+sw/2;
+      var ts=Math.min(gooLerp(2,side0,gooEaseOut(pb)),xL);
       var hb2=Math.min(H*gooLerp(0.35,1,gooEaseOut(pb)), H-rBot), rc=rTop+1;
-      [[L.mL,0,Lx],[L.mR,Rx,window.innerWidth]].forEach(function(r){
-        r[0].setAttribute('x',r[1]); r[0].setAttribute('y',cb-1); r[0].setAttribute('width',Math.max(0,r[2]-r[1])); r[0].setAttribute('height',H+1); r[0].setAttribute('fill',it.pageBg);
+      [[L.mL,0,xL],[L.mR,xR,window.innerWidth]].forEach(function(r){
+        r[0].setAttribute('x',r[1]); r[0].setAttribute('y',y0-1); r[0].setAttribute('width',Math.max(0,r[2]-r[1])); r[0].setAttribute('height',H+1); r[0].setAttribute('fill',it.pageBg);
       });
       if(ts>0.5 || rTop>0.5){
-        L.wingL.style.transition=L.wingR.style.transition=fillTr;
-        L.wingL.setAttribute('fill',bands[0].color); L.wingR.setAttribute('fill',bands[bands.length-1].color);
-        L.wingL.setAttribute('d','M'+(Lx-ts)+','+cb+' L'+(Lx+rc)+','+cb+' L'+(Lx+rc)+','+(cb+rc)+' L'+(Lx+1)+','+(cb+hb2)+' L'+Lx+','+(cb+hb2)+' C'+Lx+','+(cb+hb2*0.4)+' '+(Lx-ts*0.55)+','+cb+' '+(Lx-ts)+','+cb+' Z');
-        L.wingR.setAttribute('d','M'+(Rx+ts)+','+cb+' L'+(Rx-rc)+','+cb+' L'+(Rx-rc)+','+(cb+rc)+' L'+(Rx-1)+','+(cb+hb2)+' L'+Rx+','+(cb+hb2)+' C'+Rx+','+(cb+hb2*0.4)+' '+(Rx+ts*0.55)+','+cb+' '+(Rx+ts)+','+cb+' Z');
+        gooFill(L.wingL,bands[0].color,fillTr); gooFill(L.wingR,bands[bands.length-1].color,fillTr);
+        L.wingL.setAttribute('d','M'+(xL-ts)+','+y0+' L'+(xL+rc)+','+y0+' L'+(xL+rc)+','+(y0+rc)+' L'+(xL+1)+','+(y0+hb2)+' L'+xL+','+(y0+hb2)+' C'+xL+','+(y0+hb2*0.4)+' '+(xL-ts*0.55)+','+y0+' '+(xL-ts)+','+y0+' Z');
+        L.wingR.setAttribute('d','M'+(xR+ts)+','+y0+' L'+(xR-rc)+','+y0+' L'+(xR-rc)+','+(y0+rc)+' L'+(xR-1)+','+(y0+hb2)+' L'+xR+','+(y0+hb2)+' C'+xR+','+(y0+hb2*0.4)+' '+(xR+ts*0.55)+','+y0+' '+(xR+ts)+','+y0+' Z');
+        // 날개 맨 윗줄(탭 윗테두리 두께)은 탭과 같은 색으로 — 붙은 동안 탭 윗테두리는 투명이라 그 자리에
+        // 컨테이너 색이 보이는데, 날개 쪽은 버튼 색이라 윤곽선이 옅어지는 구간에서 윗줄이 서로 달라 보였다.
+        L.strip.setAttribute('fill',it.color);
+        L.strip.setAttribute('d','M'+(xL-ts)+','+y0+' H'+(xR+ts)+' V'+(y0+sw)+' H'+(xL-ts)+' Z');
       }
-      edges.push('M'+Lx+','+(cb+hb2)+' C'+Lx+','+(cb+hb2*0.4)+' '+(Lx-ts*0.55)+','+ey+' '+(Lx-ts)+','+ey
-        +' L'+(Rx+ts)+','+ey+' C'+(Rx+ts*0.55)+','+ey+' '+Rx+','+(cb+hb2*0.4)+' '+Rx+','+(cb+hb2));
+      edges.push('M'+(xL+sw/2)+','+(y0+hb2)+' C'+(xL+sw/2)+','+(y0+hb2*0.4)+' '+(xL-ts*0.55)+','+ys+' '+(xL-ts)+','+ys
+        +' L'+(xR+ts)+','+ys+' C'+(xR+ts*0.55)+','+ys+' '+(xR-sw/2)+','+(y0+hb2*0.4)+' '+(xR-sw/2)+','+(y0+hb2));
       edgeOp=it.bc[3] ? a/it.bc[3] : 0;
     }
     if(edges.length){
