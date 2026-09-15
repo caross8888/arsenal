@@ -4751,7 +4751,6 @@ var GOO_TARGETS=[
 var GOO_MERGE=110; // 닿은 뒤 화면 폭으로 다 펼쳐지기까지의 스크롤 거리(px)
 var GOO_GRAB=5;    // 다가갈 때 이 거리(px) 안에 들어오면 스스로 튀어 올라 달라붙고, 떨어질 땐 여기까진 딱 붙은 채 버틴다
 var GOO_CAP_MS=180; // 튀어 올라 달라붙는 데 걸리는 시간(ms) — 살짝 넘쳤다 자리 잡는다
-var GOO_WALL_AT=0.5, GOO_WALL_MS=220; // 옆면이 벽(화면 끝)에 톡 달라붙는 시점(붙은 정도)과 걸리는 시간(ms)
 var GOO_PULL=0.4;  // 떨어지며 버티는 동안 탭이 헤더 쪽으로 끌려 올라가 있는 비율(벌어진 거리 대비)
 var GOO_K=5.8e-4, GOO_C=0.024; // 붙는 정도 스프링 — 주기 약 260ms, 감쇠비 0.5(살짝 늦게 따라와 자리 잡음)
 // 동작 줄이기 설정이면 시간 기반 흔들림·반동은 끄고 스크롤에 묶인 모양만 보여준다
@@ -4836,9 +4835,29 @@ function gooBind(it, el){
   el.addEventListener('transitionend', gooSchedule);
   it.theme=null;
 }
+// 반지름 r인 둥근 모서리에서 모서리 끝부터 d만큼 떨어진 높이의 안쪽 들어간 거리(음수)
+function gooArcO(d, r){ return (r>0 && d<r) ? -(r-Math.sqrt(Math.max(0, r*r-(r-d)*(r-d)))) : 0; }
+// 붙는 중인 탭 옆모서리 윤곽: 윗면에서 dy 내려온 높이에서 원래 탭 옆면보다 바깥으로 번진 거리 o(음수면 안쪽).
+//  · 붙은 구간(0~yc): 화면 끝을 따라 세로줄(o=oTop). yc가 위에서부터 아래로 내려오며 채워진다(zip).
+//  · 앞머리(yc 아래 hTop): 붙은 곳에서 탭 옆면으로 이어지는 작은 \ — 처음(e1=0)엔 탭의 둥근 윗모서리 호와
+//    똑같고, e1이 커질수록 헤더를 따라 화면 끝까지 번진 오목한 곡선이 된다(둥근 빈자리가 서서히 채워짐).
+//  · 아래 모서리 호(rb)는 탭이 다 펴질 때 같이 펴진다.
+// 윤곽을 그리는 쪽(gooFrame의 sil)과 줄마다 탭 폭을 정하는 쪽이 같은 값을 써야 모양과 폭이 어긋나지 않는다.
+function gooSilO(dy, Hs, r, rb, oEdge, e1, zip){
+  var hf=Math.min(18,0.5*Hs), oTop=gooLerp(-r,oEdge,e1), hTop=gooLerp(r,hf,e1), yc=(Hs+hTop)*zip, o;
+  if(dy<=yc) o=oTop;
+  else { var t=(dy-yc)/hTop; o=t<1 ? (1-e1)*gooArcO(t*r,r)+e1*oEdge*(1-t)*(1-t) : 0; }
+  return o+gooArcO(Hs-dy,rb);
+}
+// 여러 줄짜리 탭(선수단)의 줄 요소들 — 한 줄짜리(버튼이 바로 자식)면 null
+function gooRowEls(el){
+  var kids=[].slice.call(el.children).filter(function(c){ return c.tagName!=='BUTTON' && c.querySelector('button') && c.offsetHeight>0; });
+  return kids.length>1 ? kids : null;
+}
 function gooUnbind(it){
   if(!it.el) return;
   GOO_STYLE_PROPS.forEach(function(p){ it.el.style.removeProperty(p); });
+  (gooRowEls(it.el)||[]).forEach(function(r){ r.style.removeProperty('margin-left'); r.style.removeProperty('margin-right'); });
   it.el.classList.remove('goo-tab');
   it.el.removeEventListener('transitionend', gooSchedule);
   if(it.mo) it.mo.disconnect();
@@ -4923,7 +4942,7 @@ function gooFrame(){
     if(it.theme!==(document.documentElement.getAttribute('data-theme')||'dark')) gooMeasure(it);
     // ── 읽기 ──
     var hb=header.getBoundingClientRect().bottom;
-    var sr=it.sentinel.getBoundingClientRect(), nat=sr.top, side0=sr.left;
+    var sr=it.sentinel.getBoundingClientRect(), nat=sr.top, side0=sr.left, sideR=sr.right;  // 원래(펴지기 전) 탭 양옆
     var strip=it.t.strip && document.querySelector(it.t.strip);
     // offsetHeight는 정수로 반올림돼(28.4→28) 다 밀어 올려도 띠 아랫선이 헤더 밑으로 0.4px 비친다 — 실측 높이로
     var sH=(strip && strip.offsetParent) ? strip.getBoundingClientRect().height : 0;
@@ -4945,7 +4964,7 @@ function gooFrame(){
     // 끊기는 목과 반동, 날개의 점성 있는 따라옴은 시간으로 굴린다. 떨어질 땐 붙을 때(GOO_GRAB)보다
     // 더 멀리(snapD)까지 버티다 끊어진다(히스테리시스) — 이게 "쫀득"의 핵심.
     var S=it.st;
-    if(!S) S=it.st={lastS:s, lastT:now, v:0, attached:s<=0, cling:false, capAt:-1e9, wall:false, wallAt:-1e9, wallOffAt:-1e9, jellyAt:-1e9, jellyAmp:0, snapAt:-1e9, snapS:0, pullS:0, m:m, mV:0, full:m>=1};
+    if(!S) S=it.st={lastS:s, lastT:now, v:0, attached:s<=0, cling:false, capAt:-1e9, jellyAt:-1e9, jellyAmp:0, snapAt:-1e9, snapS:0, pullS:0, m:m, mV:0, full:m>=1};
     // 한 프레임 간격까지만 — 한동안 멈췄다 다시 스크롤하면 직전 프레임이 오래전이라 간격이 크게 잡혀,
     // 첫 프레임에 스프링이 한꺼번에 튀어 날개가 "짠" 하고 나타났다
     var dt=gooClamp(now-S.lastT,1,24);
@@ -4989,19 +5008,14 @@ function gooFrame(){
       if(!GOO_CALM){ S.jellyAt=now; S.jellyAmp=-gooClamp(1.5+hitV*400,1.5,4.5)/Math.max(20,el.offsetHeight); }
     } else if(S.m<0.9) S.full=false;
     var mE=gooClamp(S.m,0,1);
-    // 붙는 과정(물방울이 천장과 옆벽에 달라붙듯):
-    //  e1 윗모서리가 헤더를 적시며 번짐(\)   bf 옆면이 벽(화면 끝) 쪽으로 불룩해짐(()
-    //  w  불룩한 배가 벽 가까이 오면 스크롤과 상관없이 톡 튀어 벽에 달라붙음(시간 기반, 살짝 넘쳤다 자리 잡음)
-    //  u2 벽에 닿은 면이 위아래로 번짐   pc 탭 폭이 넓어지며 펴짐(|)
-    var e1=gooEaseOut(gooClamp(mE/0.4,0,1));
-    var bf=0.9*gooEaseInOut(gooClamp((mE-0.12)/0.45,0,1));
-    var pc=gooClamp((mE-0.6)/0.4,0,1), u2=gooClamp((mE-GOO_WALL_AT)/(1-GOO_WALL_AT),0,1);
-    if(!S.wall && s<0 && mE>=GOO_WALL_AT){ S.wall=true; S.wallAt=now; }
-    else if(S.wall && (s>=0 || mE<GOO_WALL_AT-0.1)){ S.wall=false; S.wallOffAt=now; }   // 떨어질 땐 조금 더 버틴다
-    var w;
-    if(GOO_CALM) w=S.wall?1:0;
-    else if(S.wall){ var tw=(now-S.wallAt)/GOO_WALL_MS; w=tw<1 ? gooEaseOutBack(tw) : 1; if(tw<1) busy=true; }
-    else { var tw2=(now-S.wallOffAt)/GOO_WALL_MS; w=tw2<1 ? 1-gooEaseOut(tw2) : 0; if(tw2<1) busy=true; }
+    // 붙는 과정:
+    //  e1 둥근 윗모서리가 헤더를 따라 화면 끝까지 번짐(\)
+    //  zip 화면 끝에 붙은 부분이 위에서부터 아래로 내려오며 채워짐(붙은 곳은 세로줄, 그 아래 작은 \ 앞머리만 함께 내려감)
+    //      — 예전엔 윗부분만 \로 붙은 채 옆면 전체가 한꺼번에 기울었다가 세로로 서며 채워져서 어색했다
+    //  pc 탭 폭이 넓어지며 펴짐(|), 아래 모서리도 이때 펴진다
+    var e1=gooEaseOut(gooClamp(mE/0.25,0,1));
+    var zip=gooEaseInOut(gooClamp((mE-0.2)/0.45,0,1));
+    var pc=gooClamp((mE-0.6)/0.4,0,1);
     // 붙는 순간: 눌렸다(scaleY↓, 옆으로 퍼짐) 튀어오르며 잦아드는 젤리 — 빨리 붙을수록 세게
     var tj=now-S.jellyAt, j=0;
     // (튀어 붙을 땐 탭이 헤더에 닿는 시점에 맞춰 조금 뒤에 시작하도록 예약된다 — 그 전엔 0)
@@ -5020,16 +5034,27 @@ function gooFrame(){
     // 붙어 있는 동안 탭 자체 윗모서리는 각지게 두고, 둥근 정도는 아래 날개 곡선이 대신 만든다
     // (곡선 바깥의 탭 모서리는 가림막이 페이지 배경색으로 깎는다)
     var rTop=s<0 ? 0 : it.r0;
-    // 아래 모서리는 옆면이 불룩해지기 시작하면 빠르게 펴진다(불룩한 윤곽과 둥근 아래 모서리 사이 틈이 오래 남지 않게)
-    var rBot=it.rb0*(1-gooClamp(bf/0.3,0,1));
+    var rBot=it.rb0*(1-gooEaseInOut(pc));
     // 다 펴지면 좌우 테두리까지 화면 밖으로 — 투명 테두리 자리에 탭 배경(회색)이 비쳐 화면 양끝에 1px 줄이 남는다
-    var spread=(side0+it.bw)*gooEaseInOut(pc);
+    // 탭 폭은 줄마다 그 줄 높이에서 윤곽이 번진 만큼(가장 많이 번진 곳 기준 — 윤곽을 늘 덮게) 넓어진다.
+    // 윤곽이 위에서부터 붙어 내려오므로 윗줄부터 차례로 넓어진다(예전엔 날개만 채워지다 마지막에 탭 전체가
+    // 한꺼번에, 그다음엔 탭 전체가 같이 넓어졌다). 한 줄짜리 탭은 탭이 곧 한 줄. 줄보다 넓게 튀어나온 부분은
+    // 윤곽 바깥이라 가림막이 깎는다. 다 붙으면 좌우 테두리까지 화면 밖으로(bw) — 투명 테두리 자리에 탭 배경이 비치지 않게.
+    var Hs=el.offsetHeight, rowEls=gooRowEls(el), fullSp=side0+it.bw;
+    var rowSpread=function(top,bot){
+      var mx=0; for(var k=0;k<=12;k++) mx=Math.max(mx, gooSilO(top+(bot-top)*k/12, Hs, it.r0, rBot, side0, e1, zip));
+      return side0>0 ? fullSp*Math.min(1,mx/side0) : 0;
+    };
+    var rowSp=rowEls ? rowEls.map(function(r){ return rowSpread(r.offsetTop, r.offsetTop+r.offsetHeight); }) : null;
+    var spread=rowSp ? Math.max.apply(null,rowSp) : rowSpread(0,Hs);
     var a=it.bc[3]*(1-gooEaseInOut(pc));
     var bcol='rgba('+it.bc[0]+','+it.bc[1]+','+it.bc[2]+','+a+')';
     var st=el.style;
     st.borderTopLeftRadius=st.borderTopRightRadius=rTop+'px';
     st.borderBottomLeftRadius=st.borderBottomRightRadius=rBot+'px';
     st.marginLeft=st.marginRight=(-spread)+'px';
+    // 탭(가장 넓은 줄 기준)보다 덜 번진 줄은 안으로 들여서 그 줄 폭만큼만
+    if(rowEls) rowEls.forEach(function(r,i){ r.style.marginLeft=r.style.marginRight=(spread-rowSp[i])+'px'; });
     st.borderLeftColor=st.borderRightColor=bcol;
     // 붙어 있는 동안 탭 자체 윗테두리는 숨긴다 — 헤더 위 윤곽선 한 줄만 보이게(두 줄이 겹치면 진해 보인다)
     st.borderTopColor=s<0 ? 'transparent' : bcol;
@@ -5105,36 +5130,30 @@ function gooFrame(){
     }
     var edgeOp=1;
     if(wingOn){
-      // 닿은 뒤: 옆모서리 윤곽이 \ → ( → 벽에 달라붙음 → ㅣ로 변하며 헤더와 한 몸이 된다(아래 sil 참고).
+      // 닿은 뒤: 옆모서리가 \로 번진 다음 위에서부터 화면 끝에 붙어 내려오고, 탭이 펴지며 ㅣ가 된다(아래 sil 참고).
       // 좌표는 기기 픽셀에 맞춘다: 탭 테두리는 브라우저가 픽셀 격자에 딱 맞춰 그리는데, 닿는 선이 50.8px
       // (1.25배 화면에서 기기 63.5px)처럼 반 픽셀에 걸리면 날개 쪽 선만 두 줄에 번져 1픽셀 어긋나 보였다.
       // 브라우저는 반 픽셀을 올림으로 붙이는데(63.5→64) 측정값은 63.4999990처럼 살짝 모자라게 나와서 보정값을 더한다
       var snap=function(v){ return Math.round(v*dpr+0.01)/dpr; };
       var y0=snap(cb), xL=snap(Lx), xR=snap(Rx), ys=y0+sw/2;
       var r0=it.r0, W2=window.innerWidth, yB=y0+H;
-      // 옆모서리 윤곽 — 곡선 하나로는 "불룩했다가 벽에 달라붙는" 모양을 못 만들어서 높이별 점들(o: 탭 옆면에서
-      // 바깥쪽 거리)로 계산한다. o = 윗모서리(둥근 호 → 헤더를 적시며 번지는 쐐기) + 옆면 불룩 + 아래 모서리 호,
-      // 그리고 벽(화면 끝) 근처에선 벽을 따라 눕듯이 매끄럽게 붙인다. 붙기 직전(모든 값 0)엔 탭의 둥근 모서리와 똑같다.
+      // 옆모서리 윤곽 — 높이별 점들(o: 탭 옆면에서 바깥쪽 거리)로 계산한다.
+      //  · 붙은 구간(yT~yc): 화면 끝을 따라 세로줄(o=oTop). yc가 위에서부터 아래로 내려오며 채워진다.
+      //  · 앞머리(yc 아래 hTop): 붙은 곳에서 탭 옆면으로 이어지는 작은 \ — 처음(e1=0)엔 탭의 둥근 윗모서리 호와
+      //    똑같고, e1이 커질수록 헤더를 따라 화면 끝까지 번진 오목한 곡선이 된다(둥근 빈자리가 서서히 채워짐).
+      //  · 아래 모서리 호(rb)는 탭 폭이 펴질 때 같이 펴진다.
       // 탭은 붙은 동안 윗모서리가 각져 있으므로, 윤곽 바깥으로 튀어나온 탭 모서리는 가림막이 페이지 배경색으로
       // 깎고, 윤곽이 탭 밖으로 번진 부분만 날개가 채운다(날개가 탭 안쪽을 칠하면 두 줄짜리 탭의 아랫줄을 덮는다).
       // x: 탭 옆면, yT/yE: 윗면/아랫면, r/rb: 위/아래 모서리 반지름, oEdge: 탭 옆면~화면 끝, out: 왼쪽 -1 오른쪽 +1
-      function arcO(d, r){ return (r>0 && d<r) ? -(r-Math.sqrt(Math.max(0, r*r-(r-d)*(r-d)))) : 0; }
       function sil(x, yT, yE, r, rb, oEdge, out){
         var Hs=Math.max(1,yE-yT), N=40, pts=[];
-        var oM=oEdge*(0.55*e1+0.9*w), hM=gooLerp(r,0.45*Hs,e1)+0.2*Hs*w;    // 헤더를 적시는 쐐기의 끝 거리·깊이
-        var b=oEdge*(bf+w*(0.35+2.5*u2*u2));                               // 옆면 불룩 — 벽에 붙은 뒤엔 벽 너머까지 밀어 붙여 닿은 면을 넓힌다
-        var kf=Math.min(2.5, oEdge*0.5);                                   // 벽에 붙는 가장자리의 둥글기
-        for(var i=0;i<=N;i++){
-          var y=yT+Hs*i/N, dy=y-yT;
-          var o=arcO(dy,r*(1-e1)) + (dy<hM ? oM*Math.pow(1-dy/hM,2) : 0) + b*Math.pow(Math.sin(Math.PI*i/N),0.7) + arcO(yE-y,rb);
-          // 벽: 벽에서 kf 이상 떨어진 곳은 그대로, 가까워지면 벽을 따라 눕듯이(기울기가 0으로) 붙는다
-          if(o>oEdge+kf) o=oEdge; else if(kf>0 && o>oEdge-kf) o=oEdge-(oEdge+kf-o)*(oEdge+kf-o)/(4*kf); else if(kf<=0) o=Math.min(o,oEdge);
-          pts.push([x+out*o, y]);
-        }
+        for(var i=0;i<=N;i++){ var y=yT+Hs*i/N; pts.push([x+out*gooSilO(y-yT,Hs,r,rb,oEdge,e1,zip), y]); }
         return pts;
       }
       function poly(pts, cont){ return pts.map(function(p,i){ return (i||cont?' L':'M')+p[0]+','+p[1]; }).join(''); }
-      var fL=sil(xL,y0,yB,r0,rBot,Math.max(0,xL),-1), fR=sil(xR,y0,yB,r0,rBot,Math.max(0,W2-xR),1);
+      // 윤곽은 원래(펴지기 전) 탭 옆면 기준 — 탭은 먼저 넓어지고, 보이는 모양은 이 윤곽이 정한다
+      var x0L=snap(side0), x0R=snap(sideR);
+      var fL=sil(x0L,y0,yB,r0,rBot,Math.max(0,x0L),-1), fR=sil(x0R,y0,yB,r0,rBot,Math.max(0,W2-x0R),1);
       // 가림막: 화면 가장자리 ~ 윤곽 ~ (윤곽 끝) ~ 아래. 윤곽이 탭 안쪽에 있는 동안엔 탭 모서리까지 깎는다.
       L.mL.setAttribute('fill',it.pageBg); L.mR.setAttribute('fill',it.pageBg);
       L.mL.setAttribute('d','M0,'+(y0-1)+' L'+fL[0][0]+','+(y0-1)+poly(fL,true)+' L0,'+yB+' Z');
@@ -5167,9 +5186,11 @@ function gooFrame(){
       L.strip.setAttribute('fill',it.color);
       L.strip.setAttribute('d','M'+fL[0][0]+','+y0+' H'+fR[0][0]+' V'+(y0+sw)+' H'+fL[0][0]+' Z');
       // 윤곽선은 테두리 두께의 가운데를 지나도록 선 두께 절반만큼 안쪽 윤곽으로
-      var xsL=xL+sw/2, xsR=xR-sw/2, rs=Math.max(0,r0-sw/2), rbs=Math.max(0,rBot-sw/2);
-      var sL=sil(xsL,ys,yB-sw/2,rs,rbs,Math.max(0,xL),-1), sR=sil(xsR,ys,yB-sw/2,rs,rbs,Math.max(0,W2-xR),1);
-      edges.push(poly(sL.slice().reverse())+poly(sR,true));
+      var xsL=x0L+sw/2, xsR=x0R-sw/2, rs=Math.max(0,r0-sw/2), rbs=Math.max(0,rBot-sw/2);
+      var sL=sil(xsL,ys,yB-sw/2,rs,rbs,Math.max(0,x0L),-1), sR=sil(xsR,ys,yB-sw/2,rs,rbs,Math.max(0,W2-x0R),1);
+      // 윤곽 끝에서 탭 아랫테두리가 시작되는 곳(아래 모서리 호 끝)까지 이어서, 아래 모서리가 날개로 채워질 때도 선이 끊기지 않게
+      var yBs=yB-sw/2;
+      edges.push('M'+(xsL+rbs)+','+yBs+poly(sL.slice().reverse(),true)+poly(sR,true)+' L'+(xsR-rbs)+','+yBs);
       edgeOp=it.bc[3] ? a/it.bc[3] : 0;
     }
     if(edges.length){
