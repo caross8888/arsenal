@@ -7178,6 +7178,14 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   initialTab = initialTab || 'pmbasic';
   var desktop = isDesktopLayout();
   var modal, content;
+  // 라이브 데이터가 늦게 도착해 다시 그리는(isLiveRefresh) 사이 사용자가 이미 상세를 닫았으면 되살리지 않는다 —
+  // 예전엔 페이드 전에 뒤로가기로 닫아도 곧바로 모달이 다시 열리면서 방문 기록(#player)까지 새로 쌓았는데,
+  // 크롬은 사용자 조작 없이 코드가 쌓은 기록을 뒤로가기 때 건너뛰어서 그다음 뒤로가기에 브라우저 창 자체가 닫혔다.
+  // (PC 우측 패널도 X로 닫은 뒤 선수 상세가 다시 떠오르던 같은 문제)
+  if(isLiveRefresh){
+    var holder = desktop ? document.getElementById('sqDetailPanel') : document.getElementById('playerModal');
+    if(!holder || !holder.classList.contains(desktop ? 'showing-detail' : 'open')) return;
+  }
   if(desktop){
     content = document.getElementById('sqDetailContent');
     if(!content) return;
