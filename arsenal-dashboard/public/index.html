@@ -4743,6 +4743,11 @@ var GOO_TARGETS=[
   {sec:'history',     sel:'#history .hist-nav',    strip:'#history .hist-otd-wrap'}
 ];
 var GOO_MERGE=110; // 닿은 뒤 화면 폭으로 다 펼쳐지기까지의 스크롤 거리(px)
+var GOO_GRAB=5;    // 다가갈 때 이 거리(px)부터 표면장력처럼 헤더에 먼저 들러붙는다(떨어질 땐 더 멀리서 끊긴다)
+var GOO_PULL=0.4;  // 떨어지며 버티는 동안 탭이 헤더 쪽으로 끌려 올라가 있는 비율(벌어진 거리 대비)
+var GOO_K=5.8e-4, GOO_C=0.024; // 날개 스프링 — 주기 약 260ms, 감쇠비 0.5(살짝 늦게 따라와 자리 잡음)
+// 동작 줄이기 설정이면 시간 기반 흔들림·반동은 끄고 스크롤에 묶인 모양만 보여준다
+var GOO_CALM=!!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 var GOO_STYLE_PROPS=['top','border-top-left-radius','border-top-right-radius','border-bottom-left-radius','border-bottom-right-radius','margin-left','margin-right','border-left-color','border-right-color','border-top-color','transform'];
 var _goo={on:false, raf:0, layers:null, items:GOO_TARGETS.map(function(t){ return {t:t, el:null, sentinel:null, mo:null, theme:null}; })};
 function gooClamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
@@ -4851,19 +4856,39 @@ function gooMeasure(it){
   it.pageBg=getComputedStyle(document.body).backgroundColor;
   it.theme=document.documentElement.getAttribute('data-theme')||'dark';
 }
+// 붙기 직전 목(neck) — 탭 윗면에서 헤더(또는 띠) 바닥까지 이어진 액체 다리. q(0~1)가 클수록 가운데가
+// 가늘어진다. 반환: 채움 경로와 양옆 윤곽선 경로.
+function gooNeckPath(cx, W, Lx, Rx, fl, cb, base, q){
+  var len=Math.max(0,base-cb), wt=W*gooLerp(0.40,0.15,q), ww=W*gooLerp(0.36,0.045,Math.pow(q,1.3));
+  var xr=Rx-fl;
+  var P=[[cx+wt,cb],[cx+wt,cb+len*0.3],[cx+ww,cb+len*0.25],[cx+ww,cb+len*0.5],[cx+ww,cb+len*0.78],[xr-(xr-cx-ww)*0.45,base],[xr,base+0.5]];
+  function r(p){ return p[0]+','+p[1]; }
+  function l(p){ return (2*cx-p[0])+','+p[1]; }
+  var right='M'+r(P[0])+' C'+r(P[1])+' '+r(P[2])+' '+r(P[3])+' C'+r(P[4])+' '+r(P[5])+' '+r(P[6]);
+  var left='M'+l(P[0])+' C'+l(P[1])+' '+l(P[2])+' '+l(P[3])+' C'+l(P[4])+' '+l(P[5])+' '+l(P[6]);
+  var fill=right+' L'+xr+','+(base+1)+' L'+(2*cx-xr)+','+(base+1)+' L'+l(P[6])+' C'+l(P[5])+' '+l(P[4])+' '+l(P[3])+' C'+l(P[2])+' '+l(P[1])+' '+l(P[0])+' Z';
+  return {fill:fill, edge:right+' '+left};
+}
+// 탭 윗면 가운데로 솟는 볼록(높이 h)
+function gooHumpPath(cx, W, Lx, Rx, fl, base, h){
+  var tp=base-h;
+  return 'M'+(Lx+fl)+','+(base+1)+' C'+(Lx+fl*1.5)+','+base+' '+(cx-W*0.25)+','+tp+' '+cx+','+tp
+    +' C'+(cx+W*0.25)+','+tp+' '+(Rx-fl*1.5)+','+base+' '+(Rx-fl)+','+(base+1)+' Z';
+}
 function gooFrame(){
   _goo.raf=0;
   gooClearLayers();
   var header=document.querySelector('.top-header');
-  var headerLine='';
+  var headerLine='', busy=false, now=performance.now();
   _goo.items.forEach(function(it){
     var el=_goo.on ? document.querySelector(it.t.sel) : null;
     // 요소가 다시 그려져 바뀌었거나(히스토리) PC로 넘어갔으면 풀어준다
     if(it.el && (it.el!==el || !it.sentinel.isConnected || it.sentinel.nextSibling!==el)) gooUnbind(it);
-    if(!el) return;
+    if(!el){ it.st=null; return; }
     if(!it.el) gooBind(it, el);
     var sec=document.getElementById(it.t.sec);
-    if(!sec || !sec.classList.contains('active') || !el.offsetParent) return;
+    // 섹션을 떠나면 물리 상태를 버린다 — 돌아왔을 때 옛 속도/애니메이션이 튀지 않게
+    if(!sec || !sec.classList.contains('active') || !el.offsetParent){ it.st=null; return; }
     if(it.theme!==(document.documentElement.getAttribute('data-theme')||'dark')) gooMeasure(it);
     // ── 읽기 ──
     var hb=header.getBoundingClientRect().bottom;
@@ -4883,13 +4908,42 @@ function gooFrame(){
     }
     el.style.top=cb+'px';
     var s=nat-cb;                                               // >0: 아직 떨어짐, <0: 닿은 뒤 더 내림
-    var t=s>0 ? gooClamp(1-s/(gap0*0.98),0,1) : 1;              // 다가간 정도
     var m=s<0 ? gooClamp(-s/GOO_MERGE,0,1) : 0;                 // 붙은 정도
-    var pb=gooClamp(m/0.6,0,1), pc=gooClamp((m-0.6)/0.4,0,1);   // 날개(\ /) 단계, 아래까지 펼침 단계
+    // ── 쫀득함(시간 기반 물리) ──
+    // 스크롤 위치에 1:1로 묶인 모양만으로는 딱딱하다 — 붙는 순간의 젤리 흔들림, 떨어질 때 늘어났다
+    // 끊기는 목과 반동, 날개의 점성 있는 따라옴은 시간으로 굴린다. 떨어질 땐 붙을 때(GOO_GRAB)보다
+    // 더 멀리(snapD)까지 버티다 끊어진다(히스테리시스) — 이게 "쫀득"의 핵심.
+    var S=it.st;
+    if(!S) S=it.st={lastS:s, lastT:now, v:0, attached:s<=0, cling:false, jellyAt:-1e9, jellyAmp:0, snapAt:-1e9, snapS:0, pullS:0, pb:gooClamp(m/0.6,0,1), pbV:0};
+    var dt=gooClamp(now-S.lastT,1,64);
+    S.v=S.v*0.5+(s-S.lastS)/dt*0.5; S.lastS=s; S.lastT=now;  // px/ms, +면 헤더에서 멀어지는 중
+    var snapD=gooClamp(gap0*0.8,6,22);
+    if(!S.attached && !S.cling && s<=0){
+      S.attached=true;
+      if(!GOO_CALM){ S.jellyAt=now; S.jellyAmp=gooClamp(0.03+Math.abs(S.v)*0.02,0.03,0.07); }
+    } else if(S.attached && s>0){ S.attached=false; S.cling=true; }
+    if(S.cling){
+      if(s<=0) { S.cling=false; S.attached=true; }
+      else if(s>=snapD || GOO_CALM){ S.cling=false; S.snapAt=now; S.snapS=Math.min(s,snapD); S.pullS=S.snapS*GOO_PULL; }
+    }
+    // 날개 단계는 스크롤을 살짝 늦게 따라가는 스프링으로 — 점성 있는 액체처럼 번졌다가 자리 잡게
+    var pbT=gooClamp(m/0.6,0,1), pc=gooClamp((m-0.6)/0.4,0,1);   // 날개(\ /) 단계, 아래까지 펼침 단계
+    if(GOO_CALM){ S.pb=pbT; S.pbV=0; }
+    else {
+      for(var n=Math.ceil(dt/8), h=dt/n, i=0; i<n; i++){ S.pbV+=(GOO_K*(pbT-S.pb)-GOO_C*S.pbV)*h; S.pb+=S.pbV*h; }
+      if(Math.abs(pbT-S.pb)<1e-3 && Math.abs(S.pbV)<1e-5){ S.pb=pbT; S.pbV=0; } else busy=true;
+    }
+    var pb=gooClamp(S.pb,0,1);
+    // 붙는 순간: 눌렸다(scaleY↓, 옆으로 퍼짐) 튀어오르며 잦아드는 젤리 — 빨리 붙을수록 세게
+    var tj=now-S.jellyAt, j=0;
+    if(tj<900){ j=S.jellyAmp*Math.exp(-tj/170)*Math.sin(2*Math.PI*tj/260); busy=true; }
+    // 떨어질 때: 버티는 동안 탭이 헤더 쪽으로 끌려 올라가 있다가, 끊기면 제자리로 튕겨 돌아가며 출렁인다
+    var tr=now-S.snapAt, ty=0;
+    if(S.cling) ty=-s*GOO_PULL;
+    else if(!S.attached && tr<800){ ty=-S.pullS*Math.exp(-tr/150)*Math.cos(2*Math.PI*tr/320); busy=true; }
     var rTop=s>0 ? it.r0 : gooLerp(it.r0,0,gooEaseOut(pb));
     var rBot=it.rb0*(1-gooEaseInOut(pc));
     var spread=side0*gooEaseInOut(pc);
-    var squash=s<0 ? 0.05*Math.sin(Math.PI*gooClamp(m*5,0,1)) : 0; // 닿는 순간 살짝 눌렸다 튀어오르는 탄성
     var a=it.bc[3]*(1-gooEaseInOut(pc));
     var bcol='rgba('+it.bc[0]+','+it.bc[1]+','+it.bc[2]+','+a+')';
     var st=el.style;
@@ -4899,9 +4953,16 @@ function gooFrame(){
     st.borderLeftColor=st.borderRightColor=bcol;
     // 붙어 있는 동안 탭 자체 윗테두리는 숨긴다 — 헤더 위 윤곽선 한 줄만 보이게(두 줄이 겹치면 진해 보인다)
     st.borderTopColor=s<0 ? 'transparent' : bcol;
-    st.transform=squash ? 'scaleY('+(1-squash)+')' : '';
+    st.transform=(j||ty) ? 'translateY('+ty+'px) scale('+(1+j*0.4)+','+(1-j)+')' : '';
     if(m>0) headerLine=bcol;
-    if(!(s>0 && t>0.15) && !(s<0 && m<1)) return;
+    var free=!S.attached && !S.cling;
+    var humpFrom=gap0*0.83;                                     // 이 거리부터 윗면이 볼록 솟기 시작
+    var humpOn=free && s>=GOO_GRAB && s<humpFrom;
+    var neckOn=S.cling || (free && s>0 && s<GOO_GRAB);          // 버티는 중 / 닿기 직전 표면장력으로 먼저 들러붙음
+    var capOn=!S.cling && tr<220;                               // 끊긴 뒤 헤더 쪽에 남은 방울이 빨려 올라감
+    var bumpOn=free && tr<800;                                  // 끊긴 뒤 탭 윗면에 남은 방울이 튕기며 가라앉음
+    var wingOn=s<0 && m<1;
+    if(!(humpOn||neckOn||capOn||bumpOn||wingOn)) return;
     // ── 레이어 ──
     var L=gooLayers();
     var box=el.getBoundingClientRect(), W=box.width, Lx=box.left, Rx=Lx+W, H=box.height, cx=Lx+W/2;
@@ -4912,36 +4973,62 @@ function gooFrame(){
       x1: i===row.length-1 ? 1e4 : (x.r.right+row[i+1].r.left)/2,
       color: x.b.classList.contains('active') ? it.cActive : it.cIdle
     }; }) : [{x0:-1e4, x1:1e4, color:it.color}];
-    var fillTr='fill '+it.dur;
-    if(s>0){
-      // 닿기 직전: 윗면 전체가 가운데로 볼록하게 솟아 헤더로
-      var k=gooEaseOut((t-0.15)/0.85), base=cb+s, tp=base-s*k, fl=it.r0;
-      var d='M'+(Lx+fl)+','+(base+1)+' C'+(Lx+fl*1.5)+','+base+' '+(cx-W*0.25)+','+tp+' '+cx+','+tp
-           +' C'+(cx+W*0.25)+','+tp+' '+(Rx-fl*1.5)+','+base+' '+(Rx-fl)+','+(base+1)+' Z';
-      bands.forEach(function(b,i){ var g=gooBand(i); g.rc.setAttribute('x',b.x0); g.rc.setAttribute('width',b.x1-b.x0); g.p.style.transition=fillTr; g.p.setAttribute('fill',b.color); g.p.setAttribute('d',d); });
-      return;
-    }
-    // 닿은 뒤: 윗부분이 헤더를 따라 바깥으로 번지고 아래는 제자리(\ /). 날개·윤곽선은 탭 아래 둥근
-    // 모서리가 시작되는 곳(높이 - 아래 반지름)까지만 — 더 내려가면 둥근 모서리의 빈 자리에 세로줄이 남는다.
-    var ts=Math.min(gooLerp(2,side0,gooEaseOut(pb)),Lx);
-    var hb2=Math.min(H*gooLerp(0.35,1,gooEaseOut(pb)), H-rBot), rc=rTop+1;
-    [[L.mL,0,Lx],[L.mR,Rx,window.innerWidth]].forEach(function(r){
-      r[0].setAttribute('x',r[1]); r[0].setAttribute('y',cb-1); r[0].setAttribute('width',Math.max(0,r[2]-r[1])); r[0].setAttribute('height',H+1); r[0].setAttribute('fill',it.pageBg);
-    });
-    if(ts>0.5 || rTop>0.5){
-      L.wingL.style.transition=L.wingR.style.transition=fillTr;
-      L.wingL.setAttribute('fill',bands[0].color); L.wingR.setAttribute('fill',bands[bands.length-1].color);
-      L.wingL.setAttribute('d','M'+(Lx-ts)+','+cb+' L'+(Lx+rc)+','+cb+' L'+(Lx+rc)+','+(cb+rc)+' L'+(Lx+1)+','+(cb+hb2)+' L'+Lx+','+(cb+hb2)+' C'+Lx+','+(cb+hb2*0.4)+' '+(Lx-ts*0.55)+','+cb+' '+(Lx-ts)+','+cb+' Z');
-      L.wingR.setAttribute('d','M'+(Rx+ts)+','+cb+' L'+(Rx-rc)+','+cb+' L'+(Rx-rc)+','+(cb+rc)+' L'+(Rx-1)+','+(cb+hb2)+' L'+Rx+','+(cb+hb2)+' C'+Rx+','+(cb+hb2*0.4)+' '+(Rx+ts*0.55)+','+cb+' '+(Rx+ts)+','+cb+' Z');
-    }
+    var fillTr='fill '+it.dur, fl=it.r0, base=box.top;           // base: 탭의 실제 윗면(끌림·반동 포함)
     // 윤곽선 굵기는 CSS 1px 테두리처럼 기기 픽셀에 맞춘다(1.25배 화면에선 0.8px)
     var dpr=window.devicePixelRatio||1, sw=Math.max(1,Math.floor(dpr))/dpr, ey=cb+sw/2;
-    L.edge.setAttribute('stroke-width',sw);
-    L.edge.style.stroke=it.line; L.edge.style.strokeOpacity=it.bc[3] ? String(a/it.bc[3]) : '0';
-    L.edge.setAttribute('d','M'+Lx+','+(cb+hb2)+' C'+Lx+','+(cb+hb2*0.4)+' '+(Lx-ts*0.55)+','+ey+' '+(Lx-ts)+','+ey
-      +' L'+(Rx+ts)+','+ey+' C'+(Rx+ts*0.55)+','+ey+' '+Rx+','+(cb+hb2*0.4)+' '+Rx+','+(cb+hb2));
+    var fills=[], edges=[];
+    if(humpOn){
+      // 다가가는 중: 윗면 전체가 가운데로 볼록하게 솟아 헤더로(GOO_GRAB 거리에서 헤더에 닿는다)
+      var k=humpFrom>GOO_GRAB ? gooEaseOut((humpFrom-s)/(humpFrom-GOO_GRAB)) : 1;
+      fills.push(gooHumpPath(cx,W,Lx,Rx,fl,base,(base-cb)*k));
+    }
+    if(neckOn){
+      var nk=gooNeckPath(cx,W,Lx,Rx,fl,cb,base,gooClamp(s/snapD,0,1));
+      fills.push(nk.fill); edges.push(nk.edge);
+    }
+    if(capOn){
+      var e=gooEaseOut(gooClamp(tr/220,0,1)), wc=W*0.15*(1-e), hc=S.snapS*(1-GOO_PULL)*0.5*(1-e);
+      if(hc>0.3){
+        var cap='M'+(cx-wc)+','+cb+' C'+(cx-wc)+','+(cb+hc*0.7)+' '+(cx-wc*0.45)+','+(cb+hc)+' '+cx+','+(cb+hc)
+          +' C'+(cx+wc*0.45)+','+(cb+hc)+' '+(cx+wc)+','+(cb+hc*0.7)+' '+(cx+wc)+','+cb;
+        fills.push(cap+' Z'); edges.push(cap);
+      }
+    }
+    if(bumpOn){
+      var hh=S.snapS*0.35*Math.exp(-tr/160)*Math.max(0,Math.cos(2*Math.PI*tr/300));
+      if(hh>0.3) fills.push(gooHumpPath(cx,W,Lx,Rx,fl,base,hh));
+    }
+    if(fills.length){
+      var d=fills.join(' ');
+      bands.forEach(function(b,i){ var g=gooBand(i); g.rc.setAttribute('x',b.x0); g.rc.setAttribute('width',b.x1-b.x0); g.p.style.transition=fillTr; g.p.setAttribute('fill',b.color); g.p.setAttribute('d',d); });
+    }
+    var edgeOp=1;
+    if(wingOn){
+      // 닿은 뒤: 윗부분이 헤더를 따라 바깥으로 번지고 아래는 제자리(\ /). 날개·윤곽선은 탭 아래 둥근
+      // 모서리가 시작되는 곳(높이 - 아래 반지름)까지만 — 더 내려가면 둥근 모서리의 빈 자리에 세로줄이 남는다.
+      var ts=Math.min(gooLerp(2,side0,gooEaseOut(pb)),Lx);
+      var hb2=Math.min(H*gooLerp(0.35,1,gooEaseOut(pb)), H-rBot), rc=rTop+1;
+      [[L.mL,0,Lx],[L.mR,Rx,window.innerWidth]].forEach(function(r){
+        r[0].setAttribute('x',r[1]); r[0].setAttribute('y',cb-1); r[0].setAttribute('width',Math.max(0,r[2]-r[1])); r[0].setAttribute('height',H+1); r[0].setAttribute('fill',it.pageBg);
+      });
+      if(ts>0.5 || rTop>0.5){
+        L.wingL.style.transition=L.wingR.style.transition=fillTr;
+        L.wingL.setAttribute('fill',bands[0].color); L.wingR.setAttribute('fill',bands[bands.length-1].color);
+        L.wingL.setAttribute('d','M'+(Lx-ts)+','+cb+' L'+(Lx+rc)+','+cb+' L'+(Lx+rc)+','+(cb+rc)+' L'+(Lx+1)+','+(cb+hb2)+' L'+Lx+','+(cb+hb2)+' C'+Lx+','+(cb+hb2*0.4)+' '+(Lx-ts*0.55)+','+cb+' '+(Lx-ts)+','+cb+' Z');
+        L.wingR.setAttribute('d','M'+(Rx+ts)+','+cb+' L'+(Rx-rc)+','+cb+' L'+(Rx-rc)+','+(cb+rc)+' L'+(Rx-1)+','+(cb+hb2)+' L'+Rx+','+(cb+hb2)+' C'+Rx+','+(cb+hb2*0.4)+' '+(Rx+ts*0.55)+','+cb+' '+(Rx+ts)+','+cb+' Z');
+      }
+      edges.push('M'+Lx+','+(cb+hb2)+' C'+Lx+','+(cb+hb2*0.4)+' '+(Lx-ts*0.55)+','+ey+' '+(Lx-ts)+','+ey
+        +' L'+(Rx+ts)+','+ey+' C'+(Rx+ts*0.55)+','+ey+' '+Rx+','+(cb+hb2*0.4)+' '+Rx+','+(cb+hb2));
+      edgeOp=it.bc[3] ? a/it.bc[3] : 0;
+    }
+    if(edges.length){
+      L.edge.setAttribute('stroke-width',sw);
+      L.edge.style.stroke=it.line; L.edge.style.strokeOpacity=String(edgeOp);
+      L.edge.setAttribute('d',edges.join(' '));
+    }
   });
   if(header) header.style.borderBottomColor=headerLine;
+  if(busy) gooSchedule();   // 흔들림·반동·스프링이 잦아들 때까지 스크롤이 없어도 계속 그린다
 }
 function gooSchedule(){ if(_goo && !_goo.raf) _goo.raf=requestAnimationFrame(gooFrame); }
 // 리더보드 탭: 모바일에선 순위 카드 밖(#lbLayout, #lbListCol 앞)으로 — 라운드 카드까지 내려가도
