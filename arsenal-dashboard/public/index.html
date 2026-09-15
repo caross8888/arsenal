@@ -65,6 +65,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    기기 폭과 무관하게 항상 화면 양끝까지 닿게 한다. */
 .inj-strip{display:flex;align-items:center;gap:7px;padding:6px 16px;margin-top:-16px;margin-bottom:12px;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);background:var(--dday-bg);border-bottom:1px solid rgba(239,1,7,.25);color:var(--text);position:sticky;top:var(--header-h,49px);z-index:90;line-height:1.3;font-size:12px;font-weight:700;}
 .inj-strip svg{flex-shrink:0;}
+.inj-strip{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.inj-strip-chevron{margin-left:auto;color:var(--text-dim);}
 .fix-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:6px;padding-left:2px}
 .fix-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
 /* 예전엔 이 안에 있는 헤더/리스트가 카드 하나로 통째로 둘러싸여 있어서,
@@ -252,6 +254,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sq-inj-chance{font-size:10px;color:var(--text-secondary);}
 .sq-inj-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px 20px;color:var(--green);font-size:12px;text-align:center;}
 .sq-inj-empty span{color:var(--text-secondary);}
+/* 모바일 부상자 현황 상세모달 — 시트 폭 끝까지 쓰고(PC 카드의 12px 여백 대신
+   모달 공통 16px), 좁은 폭에서 부상 내용이 한 줄 말줄임으로 잘리지 않게 줄바꿈한다. */
+.sq-inj-modal .sq-inj-list{padding:0 16px;}
+.sq-inj-modal .sq-inj-detail{white-space:normal;}
 .pl-card{background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s;position:relative;-webkit-tap-highlight-color:transparent;}
 .pl-contract-badge{position:absolute;top:6px;right:6px;z-index:2;background:rgba(239,68,68,.92);color:var(--white);font-size:8px;font-weight:800;letter-spacing:.3px;padding:2px 6px;border-radius:10px;display:flex;align-items:center;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .pl-card:active{transform:scale(.98)}
@@ -945,6 +951,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .sq-grid .pl-pos-txt{font-size:clamp(10px,3cqw,13px);}
   .sq-grid .pl-card-name{font-size:clamp(11px,3cqw,14px);}
 }
+/* ── 모바일 스티키 탭(물방울 효과, gooFrame 참고) — JS가 .goo-tab을 붙이고
+   top/모서리/좌우 여백/테두리 색은 스크롤마다 인라인으로 갱신한다. ── */
+@media (max-width: 899px) {
+  /* 버튼 사이 1px 틈으로 비치는 컨테이너 배경(--border-bright, 반투명)을 페이지
+     배경 위에 미리 겹친 불투명 색으로 — 붙어 있는 동안 밑으로 지나가는
+     콘텐츠가 틈으로 비치지 않게. 겉보기 색은 원래와 같다. */
+  .goo-tab{position:sticky;z-index:80;transform-origin:50% 0;background:linear-gradient(var(--border-bright),var(--border-bright)),var(--navy);}
+  /* 리더보드 탭은 모바일에서 순위 카드 밖(#lbLayout 바로 아래)으로 옮겨진다
+     (gooPlaceLbTabs) — 카드 안에 있으면 sticky가 카드 끝에서 풀려 아래 라운드
+     카드까지 못 따라간다. 카드 윗부분의 테두리/둥근 모서리는 탭이 대신 맡는다. */
+  #lbLayout>.lb-tabs{border:1px solid var(--border-bright);border-radius:12px 12px 0 0;overflow:hidden;}
+  #lbLayout>.lb-tabs+#lbListCol>.card{border-top:none;border-top-left-radius:0;border-top-right-radius:0;}
+}
 /* ── PC 반응형: 하단 탭바 → 좌측 사이드바 (모바일 레이아웃은 그대로, 이 폭 이상에서만 전환) ── */
 @media (min-width: 900px) {
   body{padding-bottom:0;}
@@ -1359,7 +1378,7 @@ function playIntro(){
   </div>
 </section>
 <section id="squad" class="section">
-  <div class="inj-strip" id="injStrip" style="display:none"></div>
+  <div class="inj-strip" id="injStrip" style="display:none" onclick="openSqInjuryModal()"></div>
   <div class="sq-layout" id="sqLayout">
   <div id="sqListCol">
   <div class="sq-tabs-group">
@@ -1485,7 +1504,26 @@ function updateInjStrip(){
   var parts=[];
   if(injCnt) parts.push('<span style="color:var(--loss)">부상 '+injCnt+'명</span>');
   if(dbtCnt) parts.push('<span style="color:var(--amber)">출전의심 '+dbtCnt+'명</span>');
-  el.innerHTML=dIcon('injury',13)+parts.join(' <span style="color:var(--text-dim)">·</span> ');
+  el.innerHTML=dIcon('injury',13)+parts.join(' <span style="color:var(--text-dim)">·</span> ')
+    +'<svg class="inj-strip-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M9 6l6 6l-6 6"/></svg>';
+}
+// 모바일 상단 부상 띠를 누르면 — PC 우측 패널의 "부상자 현황"과 같은 내용을
+// 상세모달로 띄운다(감독 모달과 같은 시트, 같은 원칙: 카드 테두리 없이 시트 끝까지).
+function openSqInjuryModal(){
+  var modal=document.getElementById('playerModal');
+  var content=document.getElementById('modalContent');
+  if(!modal||!content) return;
+  // 목록이 짧은 편이라 시트를 콘텐츠 길이에 맞춰 줄인다(선수 상세를 열면 그쪽에서 지움).
+  modal.querySelector('.modal-sheet').classList.add('hist-compact');
+  content.className='modal-sheet-inner';
+  var h='<div class="pm-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
+  h+='<div class="pm-header-inner"><div class="pm-name" style="display:flex;align-items:center;gap:8px;">'+dIcon('injury',20)+'부상자 현황</div></div></div>';
+  h+='<div class="sq-inj-modal">'+renderSqInjuryBody()+'</div>';
+  content.innerHTML=h;
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+  history.pushState({modal:'player'},'',' #player');
+  requestAnimationFrame(function(){ content.scrollTop=0; });
 }
 // PC 선수단 우측 패널 기본 콘텐츠 — 감독 카드 + 부상자 현황, 두 섹션을
 // 이어서 보여준다. 선수를 클릭하면(openPlayerModal) 이 콘텐츠 전체가
@@ -1674,11 +1712,14 @@ function renderSqInjuryPanel(){
   content.innerHTML=renderSqManagerSection()+renderSqInjuryHtml();
 }
 function renderSqInjuryHtml(){
+  return '<div class="sq-panel-card"><div class="sq-inj-title">부상자 현황</div>'+renderSqInjuryBody()+'</div>';
+}
+// 부상자 현황 본문(집계 4칸 + 선수 목록) — PC 우측 패널 카드와 모바일 상세모달이 같이 쓴다.
+function renderSqInjuryBody(){
   var injCnt=allInjuries.filter(function(p){return p.status==='i';}).length;
   var dbtCnt=allInjuries.filter(function(p){return p.status==='d';}).length;
   var outCnt=allInjuries.filter(function(p){return p.status==='s'||p.status==='u';}).length;
-  var html='<div class="sq-panel-card"><div class="sq-inj-title">부상자 현황</div>';
-  html+='<div class="detail-info-grid">';
+  var html='<div class="detail-info-grid">';
   html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:var(--loss)">'+injCnt+'</div><div class="detail-info-lbl">부상</div></div>';
   html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:var(--amber)">'+dbtCnt+'</div><div class="detail-info-lbl">출전 의심</div></div>';
   html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:var(--text-secondary)">'+outCnt+'</div><div class="detail-info-lbl">결장</div></div>';
@@ -1702,7 +1743,6 @@ function renderSqInjuryHtml(){
     });
     html+='</div>';
   }
-  html+='</div>';
   return html;
 }
 function resetSqDetailPanel(){
@@ -4678,6 +4718,246 @@ window.addEventListener('resize', function(){
     });
   }
 });
+// ── 모바일 스티키 탭: 물방울처럼 헤더에 달라붙는 효과 ──
+// 선수단/리더보드/미디어/히스토리의 상단 탭을 스크롤하면 헤더 아래에 고정하되,
+// (1) 다가가는 동안 탭 윗면 전체가 헤더 쪽으로 볼록 솟고 (2) 닿은 뒤엔 윗모서리가
+// 헤더를 따라 좌우로 번지는 날개(\ /)가 생겼다가 (3) 아래까지 화면 폭으로 펼쳐지며
+// 헤더와 한 몸이 된다. 부상/OTD 띠가 있는 섹션은 탭이 띠에 닿는 순간부터 띠를
+// 밀어 올리고, 띠가 다 올라간 뒤에 (2)(3)이 시작된다.
+// 볼록/날개는 탭 요소 밖으로 그려야 해서 position:fixed SVG 레이어 셋에 그린다:
+//   z94 가림막 — 펼쳐지는 동안 탭 좌우 여백을 페이지 배경으로(날개 곡선 밖에 콘텐츠가 비치지 않게)
+//   z95 볼록·날개 채움
+//   z101 윤곽선 — 헤더(z100) 위. 붙은 탭의 윗테두리는 헤더 바닥선과 같은 높이라 헤더에 가려진다.
+var GOO_TARGETS=[
+  {sec:'squad',       sel:'#squad .sq-tabs-group', strip:'#injStrip'},
+  {sec:'leaderboard', sel:'#lbTabs'},
+  {sec:'media',       sel:'#mediaSeg'},
+  {sec:'history',     sel:'#history .hist-nav',    strip:'#history .hist-otd-wrap'}
+];
+var GOO_MERGE=110; // 닿은 뒤 화면 폭으로 다 펼쳐지기까지의 스크롤 거리(px)
+var GOO_STYLE_PROPS=['top','border-top-left-radius','border-top-right-radius','border-bottom-left-radius','border-bottom-right-radius','margin-left','margin-right','border-left-color','border-right-color','border-top-color','transform'];
+var _goo={on:false, raf:0, layers:null, items:GOO_TARGETS.map(function(t){ return {t:t, el:null, sentinel:null, mo:null, theme:null}; })};
+function gooClamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function gooLerp(a,b,t){ return a+(b-a)*t; }
+function gooEaseOut(t){ return 1-Math.pow(1-t,3); }
+function gooEaseInOut(t){ return t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
+function gooParse(c){ var m=(String(c).match(/[\d.]+/g)||[0,0,0,0]).map(Number); return [m[0],m[1],m[2],m.length>3?m[3]:1]; }
+function gooBlend(fg,bg){ return [0,1,2].map(function(i){ return fg[i]*fg[3]+bg[i]*(1-fg[3]); }).concat(1); }
+function gooRgb(c){ return 'rgb('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+')'; }
+// 반투명 배경을 조상 배경들 위에 차례로 겹쳐 실제로 보이는 불투명 색으로
+function gooSolid(el){
+  var stack=[];
+  for(var e=el; e; e=e.parentElement){ var c=gooParse(getComputedStyle(e).backgroundColor); if(c[3]>0) stack.push(c); }
+  var base=[0,0,0,1];
+  for(var i=stack.length-1; i>=0; i--) base=gooBlend(stack[i],base);
+  return base;
+}
+function gooLayers(){
+  if(_goo.layers) return _goo.layers;
+  var NS='http://www.w3.org/2000/svg';
+  function mk(z){ var s=document.createElementNS(NS,'svg'); s.setAttribute('aria-hidden','true'); s.style.cssText='position:fixed;left:0;top:0;width:100vw;height:260px;pointer-events:none;z-index:'+z+';overflow:visible'; document.body.appendChild(s); return s; }
+  function add(parent,tag){ var e=document.createElementNS(NS,tag||'path'); parent.appendChild(e); return e; }
+  var mask=mk(94), fill=mk(95), top=mk(101);
+  var L={NS:NS, fill:fill, defs:add(fill,'defs'), bands:[], wingL:null, wingR:null, mL:add(mask,'rect'), mR:add(mask,'rect'), edge:add(top)};
+  L.wingL=add(fill); L.wingR=add(fill);
+  L.edge.setAttribute('fill','none');
+  return (_goo.layers=L);
+}
+// 볼록 채움은 버튼 구간마다 그 아래 버튼 색으로 칠한다 — 같은 경로를 구간별 clipPath로 잘라 겹친다.
+function gooBand(i){
+  var L=gooLayers();
+  if(L.bands[i]) return L.bands[i];
+  var cp=document.createElementNS(L.NS,'clipPath'); cp.id='gooClip'+i;
+  var rc=document.createElementNS(L.NS,'rect'); rc.setAttribute('y','-50'); rc.setAttribute('height','400');
+  cp.appendChild(rc); L.defs.appendChild(cp);
+  var p=document.createElementNS(L.NS,'path'); p.setAttribute('clip-path','url(#gooClip'+i+')');
+  L.fill.insertBefore(p, L.wingL);
+  return (L.bands[i]={rc:rc, p:p});
+}
+function gooClearLayers(){
+  var L=_goo.layers; if(!L) return;
+  L.bands.forEach(function(b){ b.p.setAttribute('d',''); });
+  L.wingL.setAttribute('d',''); L.wingR.setAttribute('d',''); L.edge.setAttribute('d','');
+  L.mL.setAttribute('width',0); L.mR.setAttribute('width',0);
+}
+function gooBind(it, el){
+  it.el=el;
+  el.classList.add('goo-tab');
+  // 스티키가 아니었다면 탭이 있었을 자리 — 탭 바로 앞의 높이 0짜리 표식으로 잰다
+  it.sentinel=document.createElement('div');
+  it.sentinel.style.cssText='height:0;margin:0;padding:0';
+  el.parentNode.insertBefore(it.sentinel, el);
+  // 탭 전환(버튼 active 변경)·버튼 폭 전환이 끝났을 때 날개/볼록 색·구간을 다시 그린다
+  it.mo=new MutationObserver(gooSchedule);
+  it.mo.observe(el, {subtree:true, attributes:true, attributeFilter:['class']});
+  el.addEventListener('transitionend', gooSchedule);
+  it.theme=null;
+}
+function gooUnbind(it){
+  if(!it.el) return;
+  GOO_STYLE_PROPS.forEach(function(p){ it.el.style.removeProperty(p); });
+  it.el.classList.remove('goo-tab');
+  it.el.removeEventListener('transitionend', gooSchedule);
+  if(it.mo) it.mo.disconnect();
+  if(it.sentinel) it.sentinel.remove();
+  var strip=it.t.strip && document.querySelector(it.t.strip);
+  if(strip) strip.style.removeProperty('transform');
+  it.el=it.sentinel=it.mo=null;
+}
+// 버튼 배경색은 전환(.2s) 도중에 재면 옛 색이 나온다(테마 전환·탭 전환 직후에 재게 됨) —
+// 전환을 끈 복제본을 같은 자리에 잠깐 붙여 최종 색을 잰다(absolute라 레이아웃엔 안 낀다).
+function gooBtnColor(b){
+  var probe=b.cloneNode(false);
+  probe.removeAttribute('onclick');
+  probe.style.cssText='transition:none;position:absolute;visibility:hidden;pointer-events:none';
+  b.parentNode.appendChild(probe);
+  var c=gooRgb(gooSolid(probe));
+  probe.remove();
+  return c;
+}
+// 원래 모양/색은 테마마다 다르니 테마가 바뀔 때마다 인라인 값을 걷어내고 다시 잰다.
+// 색은 섹션이 화면에 보일 때만 잰다(숨겨진 섹션에선 계산값이 틀리게 나온다).
+function gooMeasure(it){
+  var el=it.el;
+  GOO_STYLE_PROPS.forEach(function(p){ el.style.removeProperty(p); });
+  var cs=getComputedStyle(el);
+  it.r0=parseFloat(cs.borderTopLeftRadius)||0;
+  it.rb0=parseFloat(cs.borderBottomLeftRadius)||0;
+  it.bc=gooParse(cs.borderLeftColor);
+  var rootCs=getComputedStyle(document.documentElement);
+  var container=gooBlend(gooParse(rootCs.getPropertyValue('--border-bright')), gooSolid(el.parentElement));
+  // 윤곽선 색 — 붙기 전 탭 테두리가 실제로 보이던 색(컨테이너 위 반투명 테두리)을 불투명 색으로
+  it.line=gooRgb(gooBlend(it.bc, container));
+  it.color=gooRgb(container);
+  var btns=[].slice.call(el.querySelectorAll('button')).filter(function(b){ return b.getBoundingClientRect().width>0; });
+  var act=btns.filter(function(b){ return b.classList.contains('active'); })[0];
+  var idle=btns.filter(function(b){ return !b.classList.contains('active'); })[0];
+  it.cActive=act?gooBtnColor(act):it.color;
+  it.cIdle=idle?gooBtnColor(idle):it.color;
+  // 버튼 배경색 전환 시간(transition-property에 background/all이 있을 때만) — 날개 색도 같은 속도로 바꾼다
+  it.dur='0s';
+  if(act){
+    var bcs=getComputedStyle(act), props=bcs.transitionProperty.split(','), durs=bcs.transitionDuration.split(',');
+    for(var i=0;i<props.length;i++){ var p=props[i].trim(); if(p==='all'||p.indexOf('background')===0){ it.dur=(durs[i]||durs[0]).trim(); break; } }
+  }
+  it.pageBg=getComputedStyle(document.body).backgroundColor;
+  it.theme=document.documentElement.getAttribute('data-theme')||'dark';
+}
+function gooFrame(){
+  _goo.raf=0;
+  gooClearLayers();
+  var header=document.querySelector('.top-header');
+  var headerLine='';
+  _goo.items.forEach(function(it){
+    var el=_goo.on ? document.querySelector(it.t.sel) : null;
+    // 요소가 다시 그려져 바뀌었거나(히스토리) PC로 넘어갔으면 풀어준다
+    if(it.el && (it.el!==el || !it.sentinel.isConnected || it.sentinel.nextSibling!==el)) gooUnbind(it);
+    if(!el) return;
+    if(!it.el) gooBind(it, el);
+    var sec=document.getElementById(it.t.sec);
+    if(!sec || !sec.classList.contains('active') || !el.offsetParent) return;
+    if(it.theme!==(document.documentElement.getAttribute('data-theme')||'dark')) gooMeasure(it);
+    // ── 읽기 ──
+    var hb=header.getBoundingClientRect().bottom;
+    var sr=it.sentinel.getBoundingClientRect(), nat=sr.top, side0=sr.left;
+    var strip=it.t.strip && document.querySelector(it.t.strip);
+    // offsetHeight는 정수로 반올림돼(28.4→28) 다 밀어 올려도 띠 아랫선이 헤더 밑으로 0.4px 비친다 — 실측 높이로
+    var sH=(strip && strip.offsetParent) ? strip.getBoundingClientRect().height : 0;
+    // 맨 위(scrollY=0)에서 탭과 닿는 선(헤더 바닥 + 띠) 사이 간격 — 볼록이 솟기 시작하는 거리
+    var gap0=Math.max(4, nat+window.scrollY-(hb+sH));
+    // ── 쓰기 ──
+    // 띠: 탭이 띠 아래에 닿는 순간부터 밀어 올리고, 닿는 선 = 헤더 바닥 + 남은 띠 높이
+    var cb=hb;
+    if(sH){
+      var pushed=gooClamp(hb+sH-nat,0,sH);
+      strip.style.transform=pushed?'translateY('+(-pushed)+'px)':'';
+      cb=hb+sH-pushed;
+    }
+    el.style.top=cb+'px';
+    var s=nat-cb;                                               // >0: 아직 떨어짐, <0: 닿은 뒤 더 내림
+    var t=s>0 ? gooClamp(1-s/(gap0*0.98),0,1) : 1;              // 다가간 정도
+    var m=s<0 ? gooClamp(-s/GOO_MERGE,0,1) : 0;                 // 붙은 정도
+    var pb=gooClamp(m/0.6,0,1), pc=gooClamp((m-0.6)/0.4,0,1);   // 날개(\ /) 단계, 아래까지 펼침 단계
+    var rTop=s>0 ? it.r0 : gooLerp(it.r0,0,gooEaseOut(pb));
+    var rBot=it.rb0*(1-gooEaseInOut(pc));
+    var spread=side0*gooEaseInOut(pc);
+    var squash=s<0 ? 0.05*Math.sin(Math.PI*gooClamp(m*5,0,1)) : 0; // 닿는 순간 살짝 눌렸다 튀어오르는 탄성
+    var a=it.bc[3]*(1-gooEaseInOut(pc));
+    var bcol='rgba('+it.bc[0]+','+it.bc[1]+','+it.bc[2]+','+a+')';
+    var st=el.style;
+    st.borderTopLeftRadius=st.borderTopRightRadius=rTop+'px';
+    st.borderBottomLeftRadius=st.borderBottomRightRadius=rBot+'px';
+    st.marginLeft=st.marginRight=(-spread)+'px';
+    st.borderLeftColor=st.borderRightColor=bcol;
+    // 붙어 있는 동안 탭 자체 윗테두리는 숨긴다 — 헤더 위 윤곽선 한 줄만 보이게(두 줄이 겹치면 진해 보인다)
+    st.borderTopColor=s<0 ? 'transparent' : bcol;
+    st.transform=squash ? 'scaleY('+(1-squash)+')' : '';
+    if(m>0) headerLine=bcol;
+    if(!(s>0 && t>0.15) && !(s<0 && m<1)) return;
+    // ── 레이어 ──
+    var L=gooLayers();
+    var box=el.getBoundingClientRect(), W=box.width, Lx=box.left, Rx=Lx+W, H=box.height, cx=Lx+W/2;
+    var bs=[].slice.call(el.querySelectorAll('button')).map(function(b){ return {b:b, r:b.getBoundingClientRect()}; }).filter(function(x){ return x.r.width>0; });
+    var row=bs.filter(function(x){ return Math.abs(x.r.top-bs[0].r.top)<4; }).sort(function(x,y){ return x.r.left-y.r.left; });
+    var bands=row.length ? row.map(function(x,i){ return {
+      x0: i===0 ? -1e4 : (row[i-1].r.right+x.r.left)/2,
+      x1: i===row.length-1 ? 1e4 : (x.r.right+row[i+1].r.left)/2,
+      color: x.b.classList.contains('active') ? it.cActive : it.cIdle
+    }; }) : [{x0:-1e4, x1:1e4, color:it.color}];
+    var fillTr='fill '+it.dur;
+    if(s>0){
+      // 닿기 직전: 윗면 전체가 가운데로 볼록하게 솟아 헤더로
+      var k=gooEaseOut((t-0.15)/0.85), base=cb+s, tp=base-s*k, fl=it.r0;
+      var d='M'+(Lx+fl)+','+(base+1)+' C'+(Lx+fl*1.5)+','+base+' '+(cx-W*0.25)+','+tp+' '+cx+','+tp
+           +' C'+(cx+W*0.25)+','+tp+' '+(Rx-fl*1.5)+','+base+' '+(Rx-fl)+','+(base+1)+' Z';
+      bands.forEach(function(b,i){ var g=gooBand(i); g.rc.setAttribute('x',b.x0); g.rc.setAttribute('width',b.x1-b.x0); g.p.style.transition=fillTr; g.p.setAttribute('fill',b.color); g.p.setAttribute('d',d); });
+      return;
+    }
+    // 닿은 뒤: 윗부분이 헤더를 따라 바깥으로 번지고 아래는 제자리(\ /). 날개·윤곽선은 탭 아래 둥근
+    // 모서리가 시작되는 곳(높이 - 아래 반지름)까지만 — 더 내려가면 둥근 모서리의 빈 자리에 세로줄이 남는다.
+    var ts=Math.min(gooLerp(2,side0,gooEaseOut(pb)),Lx);
+    var hb2=Math.min(H*gooLerp(0.35,1,gooEaseOut(pb)), H-rBot), rc=rTop+1;
+    [[L.mL,0,Lx],[L.mR,Rx,window.innerWidth]].forEach(function(r){
+      r[0].setAttribute('x',r[1]); r[0].setAttribute('y',cb-1); r[0].setAttribute('width',Math.max(0,r[2]-r[1])); r[0].setAttribute('height',H+1); r[0].setAttribute('fill',it.pageBg);
+    });
+    if(ts>0.5 || rTop>0.5){
+      L.wingL.style.transition=L.wingR.style.transition=fillTr;
+      L.wingL.setAttribute('fill',bands[0].color); L.wingR.setAttribute('fill',bands[bands.length-1].color);
+      L.wingL.setAttribute('d','M'+(Lx-ts)+','+cb+' L'+(Lx+rc)+','+cb+' L'+(Lx+rc)+','+(cb+rc)+' L'+(Lx+1)+','+(cb+hb2)+' L'+Lx+','+(cb+hb2)+' C'+Lx+','+(cb+hb2*0.4)+' '+(Lx-ts*0.55)+','+cb+' '+(Lx-ts)+','+cb+' Z');
+      L.wingR.setAttribute('d','M'+(Rx+ts)+','+cb+' L'+(Rx-rc)+','+cb+' L'+(Rx-rc)+','+(cb+rc)+' L'+(Rx-1)+','+(cb+hb2)+' L'+Rx+','+(cb+hb2)+' C'+Rx+','+(cb+hb2*0.4)+' '+(Rx+ts*0.55)+','+cb+' '+(Rx+ts)+','+cb+' Z');
+    }
+    // 윤곽선 굵기는 CSS 1px 테두리처럼 기기 픽셀에 맞춘다(1.25배 화면에선 0.8px)
+    var dpr=window.devicePixelRatio||1, sw=Math.max(1,Math.floor(dpr))/dpr, ey=cb+sw/2;
+    L.edge.setAttribute('stroke-width',sw);
+    L.edge.style.stroke=it.line; L.edge.style.strokeOpacity=it.bc[3] ? String(a/it.bc[3]) : '0';
+    L.edge.setAttribute('d','M'+Lx+','+(cb+hb2)+' C'+Lx+','+(cb+hb2*0.4)+' '+(Lx-ts*0.55)+','+ey+' '+(Lx-ts)+','+ey
+      +' L'+(Rx+ts)+','+ey+' C'+(Rx+ts*0.55)+','+ey+' '+Rx+','+(cb+hb2*0.4)+' '+Rx+','+(cb+hb2));
+  });
+  if(header) header.style.borderBottomColor=headerLine;
+}
+function gooSchedule(){ if(_goo && !_goo.raf) _goo.raf=requestAnimationFrame(gooFrame); }
+// 리더보드 탭: 모바일에선 순위 카드 밖(#lbLayout, #lbListCol 앞)으로 — 라운드 카드까지 내려가도
+// 고정되게. PC는 원래대로 카드 맨 위(좌우 2열 flex 레이아웃에 끼면 안 된다).
+function gooPlaceLbTabs(mobile){
+  var tabs=document.getElementById('lbTabs'), layout=document.getElementById('lbLayout'), col=document.getElementById('lbListCol');
+  if(!tabs || !layout || !col) return;
+  var card=col.querySelector('.card');
+  if(mobile && tabs.parentElement!==layout) layout.insertBefore(tabs, col);
+  else if(!mobile && tabs.parentElement===layout && card) card.insertBefore(tabs, card.firstChild);
+}
+function gooSetMode(){
+  var on=!isDesktopLayout();
+  if(on===_goo.on && _goo.inited) return;
+  _goo.inited=true;
+  _goo.on=on;
+  if(!on){ gooFrame(); }   // 먼저 전부 풀고(표식 제거) 탭을 카드로 되돌린다
+  gooPlaceLbTabs(on);
+  if(on) gooSchedule();
+}
+gooSetMode();
+window.addEventListener('scroll', gooSchedule, {passive:true});
+window.addEventListener('resize', function(){ gooSetMode(); gooSchedule(); });
+new MutationObserver(gooSchedule).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
 var _matchModalReqSeq=0;
 function closeFixDetailPanel(){
   var inner=document.getElementById('fixDetailContent');
@@ -5507,6 +5787,7 @@ function showSec(id,btn){
   }
   window.history.pushState({tab:id},'','#'+id);
   window.scrollTo(0,0);
+  gooSchedule(); // 이미 맨 위였으면 scroll 이벤트가 안 나서 새 섹션의 스티키 탭 상태를 여기서 갱신
 }
 
 // 뒤로가기 처리: 모달 열려있으면 모달 먼저 닫기, 아니면 탭 전환
