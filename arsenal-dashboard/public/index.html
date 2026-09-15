@@ -4942,7 +4942,7 @@ function gooFrame(){
     // 끊기는 목과 반동, 날개의 점성 있는 따라옴은 시간으로 굴린다. 떨어질 땐 붙을 때(GOO_GRAB)보다
     // 더 멀리(snapD)까지 버티다 끊어진다(히스테리시스) — 이게 "쫀득"의 핵심.
     var S=it.st;
-    if(!S) S=it.st={lastS:s, lastT:now, v:0, attached:s<=0, cling:false, jellyAt:-1e9, jellyAmp:0, snapAt:-1e9, snapS:0, pullS:0, m:m, mV:0};
+    if(!S) S=it.st={lastS:s, lastT:now, v:0, attached:s<=0, cling:false, jellyAt:-1e9, jellyAmp:0, snapAt:-1e9, snapS:0, pullS:0, m:m, mV:0, full:m>=1};
     // 한 프레임 간격까지만 — 한동안 멈췄다 다시 스크롤하면 직전 프레임이 오래전이라 간격이 크게 잡혀,
     // 첫 프레임에 스프링이 한꺼번에 튀어 날개가 "짠" 하고 나타났다
     var dt=gooClamp(now-S.lastT,1,24);
@@ -4960,16 +4960,24 @@ function gooFrame(){
     // 날개·탭 폭·모서리·윤곽선을 전부 이 값 하나에서 뽑아야 한다: 예전엔 날개 단계만 스프링을 태우고
     // 탭 폭은 스크롤에 바로 묶어서, 빠르게 스크롤하면 탭이 먼저 넓어지고 날개가 뒤따라와 1~2프레임
     // 따로 노는 모양이 보였다. 헤더에서 떨어진 상태(s>=0)에선 스프링 없이 바로 0.
+    var hitV=0;                                                 // 이번 프레임에 1(다 펴짐)에 부딪힌 속도
     if(GOO_CALM || s>=0){ S.m=m; S.mV=0; }
     else {
       // 0·1에서는 벽처럼 멈춘다 — 다 펴질 때 1을 넘었다 돌아오면 날개가 1 근처에서 생겼다 사라졌다 하며
-      // 좌우 끝 윤곽선이 깜빡였다(중간 구간의 출렁임은 그대로 둔다)
+      // 좌우 끝 윤곽선이 깜빡였다(중간 구간의 출렁임은 그대로 둔다). 대신 1에 부딪힌 속도는 아래 젤리로 넘긴다.
       for(var n=Math.ceil(dt/8), h=dt/n, i=0; i<n; i++){
         S.mV+=(GOO_K*(m-S.m)-GOO_C*S.mV)*h; S.m+=S.mV*h;
-        if(S.m>1){ S.m=1; if(S.mV>0) S.mV=0; } else if(S.m<0){ S.m=0; if(S.mV<0) S.mV=0; }
+        if(S.m>1){ S.m=1; if(S.mV>0){ hitV=Math.max(hitV,S.mV); S.mV=0; } } else if(S.m<0){ S.m=0; if(S.mV<0) S.mV=0; }
       }
       if(Math.abs(m-S.m)<1e-3 && Math.abs(S.mV)<1e-5){ S.m=m; S.mV=0; } else busy=true;
     }
+    // 다 펴지는 순간: 부딪힌 기세만큼 아래로 늘어졌다 되돌아오며 출렁인다(떨어질 때의 반동과 짝).
+    // 빨리 스크롤할수록 세게(늘어지는 폭 1.5~4.5px — 비율로 잡으면 두 줄짜리 선수단 탭만 과하게 출렁인다).
+    // 0.9 아래로 내려가야 다시 걸리게 해서 1 근처에서 여러 번 튀지 않게 한다.
+    if(S.m>=1 && !S.full){
+      S.full=true;
+      if(!GOO_CALM){ S.jellyAt=now; S.jellyAmp=-gooClamp(1.5+hitV*400,1.5,4.5)/Math.max(20,el.offsetHeight); }
+    } else if(S.m<0.9) S.full=false;
     var mE=gooClamp(S.m,0,1);
     var pb=gooClamp(mE/0.6,0,1), pc=gooClamp((mE-0.6)/0.4,0,1); // 날개(\ /) 단계, 아래까지 펼침 단계
     // 붙는 순간: 눌렸다(scaleY↓, 옆으로 퍼짐) 튀어오르며 잦아드는 젤리 — 빨리 붙을수록 세게
