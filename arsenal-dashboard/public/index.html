@@ -625,6 +625,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    상대 팀에 안 맞고, 테마를 타는 --modal-bg를 쓰면 라이트 모드에서 흰 배경에 흰 글자가 된다
    (헤더 글자색은 흰색 고정). */
 .pm-header.team-header{background-color:#1a1c22;}
+/* 팀 정보 모달 탭 — 다른 상세모달 탭(.live-tabs)처럼 헤더 바로 아래에 꽉 차게 붙인다(여백·둥근 모서리
+   없음). 칸 사이 1px 틈과 위아래 공통 라인(--border-bright)이 아웃라인 역할을 한다. 활성 탭 배경색만
+   팀 색이라 인라인으로 붙는다(teamTabStyle). */
+.team-tabs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-bright);border-top:1px solid var(--border-bright);border-bottom:1px solid var(--border-bright);}
 .pm-photo{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);flex-shrink:0;}
 .pm-photo-ph{width:68px;height:68px;border-radius:50%;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;color:var(--white);flex-shrink:0;}
 .pm-name{font-family:var(--fd);font-size:22px;color:var(--white);letter-spacing:1px;line-height:1.1;}
@@ -2997,16 +3001,35 @@ function renderTeamModal(t){
   }
   h+='</div></div></div>';
   // 탭 — 활성 탭은 그 팀 색으로(글자색은 Fotmob이 팀 색과 짝으로 주는 값이라 밝은 팀 색이면 어두운 글자)
-  var actCss=t.color ? 'background:'+t.color+';color:'+(t.fontColor||'var(--white)') : '';
+  var actCss=teamTabStyle(t.color);
   var tabBtn=function(key,label,on){
     return '<button class="live-tab-btn'+(on?' active':'')+'" data-team-tab="'+key+'"'
       +(actCss?' data-active-style="'+actCss+'"'+(on?' style="'+actCss+'"':''):'')
       +' onclick="switchTeamTab(this)">'+label+'</button>';
   };
-  h+='<div class="live-tabs" id="teamTabs">'+tabBtn('info','기본정보',true)+tabBtn('squad','선수단',false)+'</div>';
+  h+='<div class="team-tabs" id="teamTabs">'+tabBtn('info','기본정보',true)+tabBtn('squad','선수단',false)+'</div>';
   h+='<div id="teamPanel-info">'+renderTeamInfoPanel(t)+'</div>'
     +'<div id="teamPanel-squad" style="display:none">'+renderTeamSquadPanel(t)+'</div>';
   return h;
+}
+// 활성 탭 배경 = 팀 색, 글자는 항상 흰색. 팀 색은 밝은 경우가 많아서(맨시티 하늘색, 울버햄튼 주황은
+// 흰 글자 대비가 2.0~2.2로 흐리다) 흰 글자가 읽힐 만큼만 눌러서 쓴다 — 색감은 남고 글자는 또렷해진다.
+// 순백(뉴캐슬·리즈·토트넘·풀럼)은 아무리 눌러도 회색이 되어 팀 색 의미가 없으니 진한 회색으로 둔다.
+// Fotmob이 주는 짝 글자색(fontColor)은 밝은 팀에 검은 글자를 주는데, 팀마다 글자색이 달라 통일감이 없다.
+var TEAM_TAB_GREY='#3a3f4b';
+function teamTabStyle(hex){
+  var m=/^#?([0-9a-f]{6})$/i.exec(String(hex||'')); if(!m) return '';
+  var n=parseInt(m[1],16), rgb=[(n>>16)&255,(n>>8)&255,n&255];
+  var lin=function(c){ c/=255; return c<=0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4); };
+  var lum=function(c){ return 0.2126*lin(c[0])+0.7152*lin(c[1])+0.0722*lin(c[2]); };
+  var contrastWhite=function(c){ return 1.05/(lum(c)+0.05); };
+  var bg;
+  if(lum(rgb)>0.78) bg=TEAM_TAB_GREY;
+  else {
+    for(var i=0; i<40 && contrastWhite(rgb)<3.5; i++) rgb=rgb.map(function(v){ return v*0.94; });
+    bg='#'+rgb.map(function(v){ return Math.round(v).toString(16).padStart(2,'0'); }).join('');
+  }
+  return 'background:'+bg+';color:var(--white)';
 }
 // 활성 탭 배경색은 팀마다 달라 CSS로 못 박아두고 인라인으로 옮겨 붙인다
 function switchTeamTab(btn){
