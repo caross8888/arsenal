@@ -620,6 +620,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* 헤더 */
 .pm-header{background:var(--modal-header-grad);padding:20px 16px 18px;position:sticky;top:0;z-index:10;touch-action:none;}
 .pm-header-inner{display:flex;gap:14px;align-items:center;}
+/* 팀 정보 모달 헤더 — 바탕은 라이트 모드에서도 다크 테마 값(#1a1c22)으로 고정하고, 그 위에 팀 색을
+   인라인 style의 background-image로 얹는다. 다른 모달 헤더(--modal-header-grad)는 아스날 레드라
+   상대 팀에 안 맞고, 테마를 타는 --modal-bg를 쓰면 라이트 모드에서 흰 배경에 흰 글자가 된다
+   (헤더 글자색은 흰색 고정). */
+.pm-header.team-header{background-color:#1a1c22;}
 .pm-photo{width:68px;height:68px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3);flex-shrink:0;}
 .pm-photo-ph{width:68px;height:68px;border-radius:50%;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;color:var(--white);flex-shrink:0;}
 .pm-name{font-family:var(--fd);font-size:22px;color:var(--white);letter-spacing:1px;line-height:1.1;}
@@ -2955,7 +2960,7 @@ function openTeamModal(teamId, teamName){
   if(!modal||!content) return;
   modal.querySelector('.modal-sheet').classList.add('hist-compact');
   content.className='modal-sheet-inner';
-  content.innerHTML='<div class="pm-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>'
+  content.innerHTML='<div class="pm-header team-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>'
     +'<div class="pm-header-inner"><div class="pm-name">'+(teamName||'')+'</div></div></div>'
     +'<div class="loading-state" style="padding:40px 20px"><span>불러오는 중...</span></div>';
   modal.classList.add('open');
@@ -2983,8 +2988,9 @@ function renderTeamModal(t){
     var v=typeof s.value==='number' ? (opt&&opt.int ? Math.round(s.value) : s.value.toFixed(1)) : s.value;
     return cell(v+((opt&&opt.suffix)||'')+(s.rank?' <span style="font-size:11px;color:var(--gold)">('+s.rank+'위)</span>':''), lbl);
   };
-  // 헤더 배경: 팀 색을 옅게 깔되 불투명 바탕 위에 올린다 — 반투명만 쓰면 sticky 헤더 뒤로 본문이 비친다
-  var h='<div class="pm-header" style="background:linear-gradient(135deg,'+(t.color?t.color+'38':'transparent')+',transparent),var(--modal-bg)">'
+  // 팀 색은 고정 다크 바탕 위에 얹는다(위 .team-header 참고) — 진하게 깔면 흰 글자가 묻히므로 45%로
+  var tint=t.color ? 'background-image:linear-gradient(135deg,'+t.color+'73,transparent);' : '';
+  var h='<div class="pm-header team-header" style="'+tint+'">'
     +'<div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div><div class="pm-header-inner">';
   if(t.crest) h+='<img src="'+t.crest+'" alt="" style="width:56px;height:56px" onerror="this.style.visibility=\'hidden\'">';
   h+='<div><div class="pm-name">'+(t.name||'')+'</div>';
