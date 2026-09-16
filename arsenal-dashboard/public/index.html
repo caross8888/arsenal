@@ -650,6 +650,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .detail-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border-bright);border-bottom:1px solid var(--border-bright);}
 .detail-info-cell{padding:12px 16px;border-right:1px solid var(--border-bright);border-bottom:1px solid var(--border-bright);min-width:0;}
 .detail-info-cell:nth-child(2n){border-right:none;}
+/* 3열로 쓰는 경우(팀 정보 모달 요약) — 위 규칙은 2열 기준이라 가운데 칸의 세로줄이 지워진다.
+   3의 배수 칸만 오른쪽 선을 빼고, 마지막 줄은 아래 선을 뺀다. */
+.detail-info-grid.cols3 .detail-info-cell{border-right:1px solid var(--border-bright);}
+.detail-info-grid.cols3 .detail-info-cell:nth-child(3n){border-right:none;}
+.detail-info-grid.cols3 .detail-info-cell:nth-last-child(-n+3){border-bottom:none;}
 .detail-info-val{font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px;overflow-wrap:anywhere;}
 .detail-info-lbl{font-size:10px;color:var(--text-secondary);}
 /* 선수 특성 (레이더) */
@@ -1804,7 +1809,9 @@ var NAT_FLAG_ISO={
   'Senegal':'sn','Nigeria':'ng','Ghana':'gh','Ivory Coast':'ci',
   'Cameroon':'cm','Mali':'ml','Morocco':'ma','Algeria':'dz',
   'Egypt':'eg','South Africa':'za','Guinea':'gn','Gabon':'ga',
-  'Congo':'cd','Tunisia':'tn','Benin':'bj','Burkina Faso':'bf',
+  // Congo는 콩고 공화국(cg), DR Congo가 콩고민주공화국(cd) — Fotmob이 둘을 따로 준다.
+  'Congo':'cg','DR Congo':'cd','Congo DR':'cd','Democratic Republic of the Congo':'cd',
+  'Tunisia':'tn','Benin':'bj','Burkina Faso':'bf',
   'South Korea':'kr','Japan':'jp','China':'cn','Australia':'au',
   'United States':'us','Canada':'ca','Mexico':'mx','Jamaica':'jm',
   'Trinidad and Tobago':'tt','Costa Rica':'cr','Ecuador':'ec',
@@ -1814,9 +1821,59 @@ var NAT_FLAG_ISO={
   'Angola':'ao','Guinea-Bissau':'gw','Cape Verde':'cv',
   'Mozambique':'mz','Zimbabwe':'zw','Zambia':'zm',
   'United Kingdom':'gb',
+  // 아래는 위 목록에 없어서 국기가 안 나오던 나라들 — EPL 선수단 전수 조사에서
+  // 실제로 빠져 있던 국가(우즈베키스탄·카자흐스탄·칠레·파라과이·뉴질랜드·아이티·
+  // 모리타니·룩셈부르크·감비아 등)를 포함해, 앞으로 누가 영입돼도 걸리도록 채워둔다.
+  'Russia':'ru','Belarus':'by','Latvia':'lv','Lithuania':'lt','Estonia':'ee',
+  'Moldova':'md','Cyprus':'cy','Malta':'mt','Luxembourg':'lu','Liechtenstein':'li',
+  'Andorra':'ad','San Marino':'sm','Monaco':'mc','Faroe Islands':'fo','Gibraltar':'gi',
+  'Chile':'cl','Peru':'pe','Venezuela':'ve','Bolivia':'bo','Paraguay':'py',
+  'Guyana':'gy','Suriname':'sr','Panama':'pa','Honduras':'hn','Guatemala':'gt',
+  'El Salvador':'sv','Nicaragua':'ni','Belize':'bz','Cuba':'cu','Haiti':'ht',
+  'Dominican Republic':'do','Puerto Rico':'pr','Bermuda':'bm','Barbados':'bb',
+  'Grenada':'gd','Saint Lucia':'lc','Saint Kitts and Nevis':'kn','Dominica':'dm',
+  'Antigua and Barbuda':'ag','Curacao':'cw','Aruba':'aw','Bahamas':'bs',
+  'Cayman Islands':'ky','Montserrat':'ms','Saint Vincent and the Grenadines':'vc',
+  'British Virgin Islands':'vg','US Virgin Islands':'vi','Turks and Caicos Islands':'tc',
+  'Anguilla':'ai','Guadeloupe':'gp','Martinique':'mq','French Guiana':'gf','New Zealand':'nz',
+  'Kenya':'ke','Uganda':'ug','Tanzania':'tz','Ethiopia':'et','Sudan':'sd',
+  'South Sudan':'ss','Libya':'ly','Mauritania':'mr','Niger':'ne','Chad':'td',
+  'Togo':'tg','Sierra Leone':'sl','Liberia':'lr','Gambia':'gm','Namibia':'na',
+  'Botswana':'bw','Malawi':'mw','Madagascar':'mg','Mauritius':'mu','Seychelles':'sc',
+  'Comoros':'km','Djibouti':'dj','Somalia':'so','Eritrea':'er','Rwanda':'rw',
+  'Burundi':'bi','Central African Republic':'cf','Equatorial Guinea':'gq',
+  'Sao Tome and Principe':'st','Lesotho':'ls','Eswatini':'sz','Swaziland':'sz',
+  'Uzbekistan':'uz','Kazakhstan':'kz','Kyrgyzstan':'kg','Tajikistan':'tj',
+  'Turkmenistan':'tm','North Korea':'kp','Hong Kong':'hk','Macau':'mo',
+  'Taiwan':'tw','Chinese Taipei':'tw','Vietnam':'vn','Thailand':'th',
+  'Indonesia':'id','Malaysia':'my','Singapore':'sg','Philippines':'ph',
+  'Myanmar':'mm','Cambodia':'kh','Laos':'la','India':'in','Pakistan':'pk',
+  'Bangladesh':'bd','Sri Lanka':'lk','Nepal':'np','Bhutan':'bt','Maldives':'mv',
+  'Afghanistan':'af','United Arab Emirates':'ae','Qatar':'qa','Kuwait':'kw',
+  'Bahrain':'bh','Oman':'om','Yemen':'ye','Jordan':'jo','Lebanon':'lb',
+  'Syria':'sy','Palestine':'ps','Mongolia':'mn','Brunei':'bn','Timor-Leste':'tl',
+  'New Caledonia':'nc','Tahiti':'pf','Fiji':'fj','Papua New Guinea':'pg',
+  'Solomon Islands':'sb','Vanuatu':'vu','Samoa':'ws','American Samoa':'as',
+  'Tonga':'to','Cook Islands':'ck','Guam':'gu',
+  // 같은 나라를 표기만 다르게 주는 것들(Fotmob 실측: USA·Czechia·Turkiye·The Gambia…)
+  'USA':'us','Czechia':'cz','Turkiye':'tr','Türkiye':'tr','The Gambia':'gm',
+  'Korea Republic':'kr','Korea DPR':'kp','Republic of Ireland':'ie',
+  'Côte d’Ivoire':'ci',"Côte d'Ivoire":'ci','Cabo Verde':'cv','Curaçao':'cw',
 };
+// 표기 흔들림은 위 별칭만으로는 계속 새로 생긴다("Bosnia & Herzegovina", "St. Lucia" 등).
+// 국가명을 소문자·발음기호·비문자 제거로 정규화한 색인을 한 번 만들어 두고 거기서도 찾는다.
+var _natFlagIdx=null;
+function natFlagKey(s){
+  return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toLowerCase().replace(/^the\s+/,'').replace(/\bst\.?\s+/g,'saint ')
+    .replace(/\band\b|&/g,'').replace(/[^a-z0-9]/g,'');
+}
 function getNatFlag(nationality){
-  var code=NAT_FLAG_ISO[nationality];
+  if(!_natFlagIdx){
+    _natFlagIdx={};
+    for(var k in NAT_FLAG_ISO) _natFlagIdx[natFlagKey(k)]=NAT_FLAG_ISO[k];
+  }
+  var code=NAT_FLAG_ISO[nationality]||_natFlagIdx[natFlagKey(nationality)];
   if(!code)return null;
   return 'https://flagcdn.com/24x18/'+code+'.png';
 }
@@ -3050,7 +3107,7 @@ function renderTeamInfoPanel(t){
   var cell=function(val,lbl,color){ return '<div class="detail-info-cell"><div class="detail-info-val" style="font-size:17px'+(color?';color:'+color:'')+'">'+val+'</div><div class="detail-info-lbl">'+lbl+'</div></div>'; };
   if(tb.played!=null){
     // 득실(8-2)과 득실차(+6)는 같은 정보라 한 칸으로 합쳤다
-    h+='<div class="detail-info-grid" style="grid-template-columns:repeat(3,1fr);font-variant-numeric:tabular-nums">'
+    h+='<div class="detail-info-grid cols3" style="grid-template-columns:repeat(3,1fr);font-variant-numeric:tabular-nums">'
       +cell(tb.played,'경기')
       +cell(tb.won+'-'+tb.draw+'-'+tb.lost,'승-무-패')
       +cell((tb.goalDifference>0?'+':'')+tb.goalDifference+' <span style="font-size:12px;color:var(--text-secondary)">('+tb.goalsFor+'-'+tb.goalsAgainst+')</span>','득실차',
@@ -3107,11 +3164,41 @@ function renderTeamInfoPanel(t){
     });
     h+='</div>';
   }
-  // 홈구장·감독은 숫자 격자에 두면 스탯처럼 보여서 맨 아래 캡션으로
-  var foot=[];
-  if(t.venue&&t.venue.name) foot.push(t.venue.name+(t.venue.city?' · '+t.venue.city:'')+(t.venue.capacity?' · '+Number(t.venue.capacity).toLocaleString()+'석':''));
-  if(t.coach&&t.coach.name) foot.push('감독 '+t.coach.name+(t.coach.age?' · '+t.coach.age+'세':''));
-  if(foot.length) h+='<div style="margin:16px 16px 0;padding-top:12px;border-top:1px solid var(--border-bright);font-size:11px;color:var(--text-secondary);line-height:1.7">'+foot.join('<br>')+'</div>';
+  // 구단 정보 — 예전엔 맨 아래 캡션이라 푸터처럼 보였다. 다른 구역과 같은 제목 + 행 구조로 둔다.
+  // 라벨을 왼쪽 열로 두면 사진 있는 행(감독)만 균형이 깨져서, 라벨은 보조설명 줄로 내리고
+  // 두 행 모두 "왼쪽 원형 썸네일 + 2줄 텍스트"로 맞춘다(사진 없는 행은 아이콘이 그 자리를 채운다).
+  var VENUE_ICON='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
+    +'<ellipse cx="12" cy="9" rx="9" ry="4.5"/><path d="M3 9v5c0 2.5 4 4.5 9 4.5s9-2 9-4.5V9"/><ellipse cx="12" cy="9" rx="3.4" ry="1.7"/></svg>';
+  var infoRows=[];
+  if(t.venue&&t.venue.name){
+    infoRows.push({name:t.venue.name, icon:VENUE_ICON,
+      sub:['홈구장', t.venue.city||'', t.venue.capacity?Number(t.venue.capacity).toLocaleString()+'석':''].filter(Boolean).join(' · ')});
+  }
+  if(t.coach&&t.coach.name){
+    // 감독 사진 — Fotmob은 코치도 선수와 같은 playerimages 엔드포인트를 쓴다(History 탭 감독 사진과 동일).
+    infoRows.push({name:t.coach.name,
+      photo:t.coach.id?('https://images.fotmob.com/image_resources/playerimages/'+t.coach.id+'.png'):'',
+      icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4 3.4-6.2 7.5-6.2s7.5 2.2 7.5 6.2"/></svg>',
+      flag:t.coach.country?getNatFlag(t.coach.country):null,
+      sub:['감독', t.coach.age?t.coach.age+'세':''].filter(Boolean).join(' · ')});
+  }
+  if(infoRows.length){
+    h+='<div class="mm-card-title" style="padding:16px 16px 8px">구단 정보</div>'
+      +'<div style="display:grid;gap:6px;padding:0 16px">';
+    infoRows.forEach(function(r){
+      h+='<div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border-bright);border-radius:10px;padding:8px 10px">'
+        +'<span style="width:38px;height:38px;flex-shrink:0;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);overflow:hidden">'
+        +(r.photo?'<img src="'+r.photo+'" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top" onerror="this.parentNode.innerHTML=this.getAttribute(\'data-fb\')" data-fb="'+r.icon.replace(/"/g,'&quot;')+'">':r.icon)
+        +'</span>'
+        +'<span style="flex:1;min-width:0">'
+        +'<span style="display:block;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.name+'</span>'
+        +'<span style="display:block;font-size:11px;color:var(--text-secondary);margin-top:2px">'+r.sub+'</span>'
+        +'</span>'
+        +(r.flag?'<img src="'+r.flag+'" alt="" style="width:20px;height:15px;border-radius:2px;object-fit:cover;flex-shrink:0" onerror="this.style.visibility=\'hidden\'">':'')
+        +'</div>';
+    });
+    h+='</div>';
+  }
   return h+'<div style="height:22px"></div>';
 }
 // ── 선수단 탭 ── 이름·등번호·나이·국적·포지션만(기록은 기본정보 탭의 주요 선수로 충분)
