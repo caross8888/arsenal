@@ -701,7 +701,6 @@ export default async function handler(req, res) {
     {slug:'club.friendly', name:'Friendly',         short:'FR'},
   ];
   const now = new Date();
-  const fmtDate = d => d.toISOString().slice(0,10).replace(/-/g,'');
   const parseEvent = (e, name, short) => {
     const comp = e.competitions?.[0];
     const home = comp?.competitors?.find(c => c.homeAway === 'home');
@@ -751,11 +750,6 @@ export default async function handler(req, res) {
   const isArsenal = m =>
     m.homeTeam?.id === ARSENAL_ESPN_ID || m.awayTeam?.id === ARSENAL_ESPN_ID ||
     m.homeTeam?.name?.includes('Arsenal') || m.awayTeam?.name?.includes('Arsenal');
-  // soccer/all 검색은 전 세계 모든 "Arsenal" 이름 클럽(아르헨티나 Arsenal de Sarandí 등)까지
-  // 걸러내므로, ID 일치만 인정하는 엄격한 필터를 별도로 사용
-  const isArsenalStrict = m =>
-    m.homeTeam?.id === ARSENAL_ESPN_ID || m.awayTeam?.id === ARSENAL_ESPN_ID;
-
   try {
     let result;
 
@@ -763,7 +757,6 @@ export default async function handler(req, res) {
       // 시즌 종료(5월 31일)까지 조회 — 1~5월(시즌 중)이면 올해 5월,
       // 6~12월(오프시즌 또는 새 시즌 진행 중)이면 다음 해 5월
       const seasonEndYear = now.getMonth() + 1 <= 5 ? now.getFullYear() : now.getFullYear() + 1;
-      const futureEnd = fmtDate(new Date(seasonEndYear, 4, 31));
       // ESPN team/schedule는 season 파라미터 없으면 자체 "현재 시즌" 포인터를 쓰는데,
       // 다음 시즌 일정이 아직 없는 오프시즌엔 그게 빈 시즌을 가리켜 직전 시즌 결과가 통째로 빠짐.
       // 8월 이전이면 작년 8월에 시작한 시즌이 아직 "현재/직전" 시즌이므로 명시적으로 지정.
@@ -813,52 +806,36 @@ export default async function handler(req, res) {
             .flatMap(sj => (sj.events||[]).map(e => parseEvent(e, name, short)))
             .filter(isArsenal);
 
-          const todayStr = fmtDate(now);
-          const br = await fetch(
-            `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard?dates=${todayStr}-${futureEnd}&limit=500`,
-            {signal: AbortSignal.timeout(8000)}
-          );
-          const bj = br.ok ? await br.json() : {events:[]};
-          const future = (bj.events||[]).map(e => parseEvent(e, name, short)).filter(isArsenal);
+          // ESPN 스코어보드는 2026-09 기준 날짜 "범위"(YYYYMMDD-YYYYMMDD) 요청을 400으로 막았다 —
+          // 단일 날짜·월(YYYYMM)·연도만 받는다. 남은 시즌을 달 단위로 나눠 받는다(대회 하나치라
+          // 한 달이 수백 KB 수준이고, 1000경기 상한에도 안 걸린다).
+          const futureMonths = [];
+          for(let d = new Date(now.getFullYear(), now.getMonth(), 1), last = new Date(seasonEndYear, 4, 1);
+              d <= last && futureMonths.length < 12; d.setMonth(d.getMonth()+1)){
+            futureMonths.push(`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}`);
+          }
+          const monthResults = await Promise.all(futureMonths.map(ym =>
+            fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard?dates=${ym}&limit=500`,
+              {signal: AbortSignal.timeout(8000)}
+            ).then(r => r.ok ? r.json() : {events:[]}).catch(() => ({events:[]}))
+          ));
+          const future = monthResults
+            .flatMap(bj => (bj.events||[]).map(e => parseEvent(e, name, short)))
+            .filter(isArsenal);
 
           return [...past, ...future];
         } catch(_){ return []; }
       };
 
-      // 에미레이츠컵처럼 매년 이름이 바뀌는 단독 브랜드 프리시즌 대회는
-      // club.friendly 슬러그로 조회되지 않음(ESPN이 별도 리그로 분류) —
-      // 근시일 60일을 soccer/all 스코어보드로 7일 단위 보강 조회해서 채움
-      const fetchAllRange = async (startStr, endStr) => {
-        try {
-          const r = await fetch(
-            `https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=${startStr}-${endStr}&limit=1000`,
-            {signal: AbortSignal.timeout(8000)}
-          );
-          const j = r.ok ? await r.json() : {events:[]};
-          return (j.events||[]).map(e => {
-            const note = e.competitions?.[0]?.altGameNote;
-            const name = note ? note.split(',')[0].trim() : 'Friendly';
-            return parseEvent(e, name, 'FR');
-          }).filter(isArsenalStrict);
-        } catch(_){ return []; }
-      };
-
-      // 과거 30일(off=-30)부터 미래 59일까지 — 에미레이츠컵처럼 이미 끝난
-      // 브랜드 프리시즌 친선전도 결과로 잡히도록 과거 방향도 함께 훑는다.
-      // (예전엔 off=0부터라 어제 끝난 경기조차 누락되는 문제가 있었음)
-      const nearWindowChunks = [];
-      for(let off=-30; off<60; off+=7){
-        const s = new Date(now); s.setDate(s.getDate()+off);
-        const e = new Date(now); e.setDate(e.getDate()+Math.min(off+6,59));
-        nearWindowChunks.push([fmtDate(s), fmtDate(e)]);
-      }
-
-      const [results, extraResults] = await Promise.all([
-        Promise.all(SLUGS.map(fetchSlug)),
-        Promise.all(nearWindowChunks.map(([s,e]) => fetchAllRange(s,e))),
-      ]);
+      // 에미레이츠컵처럼 매년 이름이 바뀌는 단독 브랜드 프리시즌 대회는 ESPN이 별도 리그로 분류해
+      // club.friendly 슬러그로도, 팀 일정으로도 안 잡힌다 — 예전엔 근시일 90일을 soccer/all
+      // 스코어보드로 7일 단위로 훑어 채웠는데, ESPN이 날짜 범위 요청을 막으면서(2026-09 확인: 400)
+      // 이 보강 조회는 쓸 수 없게 됐다. 월 단위로 바꿔도 soccer/all은 1000경기 상한에 걸려 잘리고
+      // (실측: 2026-08 조회에 도르트문트 친선전 누락), 날짜별로 쪼개면 하루 1.4MB라 두 달이면 80MB다.
+      // 지금은 이 경로 자체가 Fotmob(팀 API, 브랜드 친선전 포함)이 막혔을 때만 타는 폴백이라 삭제한다.
+      const results = await Promise.all(SLUGS.map(fetchSlug));
       const seen = new Set();
-      const allMatches = [...results.flat(), ...extraResults.flat()].filter(m => {
+      const allMatches = results.flat().filter(m => {
         if(seen.has(m.id)) return false;
         seen.add(m.id);
         return true;
@@ -918,38 +895,11 @@ export default async function handler(req, res) {
         } catch(_){ return []; }
       };
 
-      // 에미레이츠컵처럼 매년 이름이 바뀌는 브랜드 프리시즌 대회는 SLUGS로 안
-      // 잡히므로(위 type==='fixtures'의 근시일 보강 조회와 동일한 이유), 여기서도
-      // 놓치지 않도록 해당 시즌 프리시즌 기간(7~8월)만 soccer/all로 보강 조회한다.
-      // 시즌 전체(365일)를 훑기엔 비용이 크고, 브랜드 친선전은 실제로 이 기간에만 열림.
-      const fetchSeasonAllRange = async (startStr, endStr) => {
-        try {
-          const r = await fetch(
-            `https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates=${startStr}-${endStr}&limit=1000`,
-            {signal: AbortSignal.timeout(8000)}
-          );
-          const j = r.ok ? await r.json() : {events:[]};
-          return (j.events||[]).map(e => {
-            const note = e.competitions?.[0]?.altGameNote;
-            const name = note ? note.split(',')[0].trim() : 'Friendly';
-            return parseEvent(e, name, 'FR');
-          }).filter(isArsenalStrict);
-        } catch(_){ return []; }
-      };
-      const preseasonChunks = [];
-      const preseasonStart = new Date(Date.UTC(requestedSeason, 6, 1)); // 7월 1일
-      const preseasonEnd = new Date(Date.UTC(requestedSeason, 7, 31));  // 8월 31일
-      for(let d = new Date(preseasonStart); d <= preseasonEnd; d.setUTCDate(d.getUTCDate()+7)){
-        const chunkEnd = new Date(Math.min(new Date(d).setUTCDate(d.getUTCDate()+6), preseasonEnd.getTime()));
-        preseasonChunks.push([fmtDate(d), fmtDate(chunkEnd)]);
-      }
-
-      const [seasonResults, preseasonResults] = await Promise.all([
-        Promise.all(SLUGS.map(fetchSeasonSlug)),
-        Promise.all(preseasonChunks.map(([s,e]) => fetchSeasonAllRange(s,e))),
-      ]);
+      // 프리시즌 브랜드 친선전(에미레이츠컵 등) 보강 조회는 위 type==='fixtures'와 같은 이유로
+      // 삭제했다 — ESPN이 날짜 범위 요청을 막았고 월 단위는 1000경기 상한에 걸려 잘린다.
+      const seasonResults = await Promise.all(SLUGS.map(fetchSeasonSlug));
       const seenSeason = new Set();
-      const seasonMatches = [...seasonResults.flat(), ...preseasonResults.flat()].filter(m => {
+      const seasonMatches = seasonResults.flat().filter(m => {
         if(m.status !== 'FINISHED') return false;
         if(seenSeason.has(m.id)) return false;
         seenSeason.add(m.id);

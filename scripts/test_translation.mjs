@@ -82,6 +82,15 @@ suite('원문치환', prepareSource, [
   ['Arsenal pay heavy price for lack of ruthlessness', 'Arsenal pay heavy price for lack of clinical finishing'],
   ['Can Arsenal become ruthless enough to win the title?', 'Can Arsenal become clinical enough to win the title?'],
   ['Arsenal were ruthless in front of goal', 'Arsenal were clinical in front of goal'],
+  // 헤드라인의 "with ~ Cup double"은 2골 — 구글이 트로피 두 개("더블 우승")로 읽는다
+  ["Arsenal's Max Dowman equals Wayne Rooney record with Carabao Cup double",
+   "Arsenal's Max Dowman equals Wayne Rooney record with Carabao Cup brace"],
+  ['Saka levelled the record with a League Cup double', 'Saka levelled the record with a League Cup brace'],
+  // 컵 두 개 우승이라는 진짜 뜻, 동사가 붙은 형태(구글이 이미 2골로 옮김)는 건드리면 안 된다
+  ['Arsenal complete the cup double', 'Arsenal complete the cup double'],
+  ['Arsenal are chasing a cup double this season', 'Arsenal are chasing a cup double this season'],
+  ['Dowman scored a double in the cup', 'Dowman scored a double in the cup'],
+  ['Arsenal did the double over Tottenham', 'Arsenal did the double over Tottenham'],
   // 다른 뜻의 ruthless는 건드리면 안 된다
   ['Arteta was ruthless in his team selection', 'Arteta was ruthless in his team selection'],
   ['A ruthless tackle left Saka injured', 'A ruthless tackle left Saka injured'],

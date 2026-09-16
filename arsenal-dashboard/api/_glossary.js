@@ -237,6 +237,13 @@ const SOURCE_RULES = [
   [/\bruthless enough\b/gi, 'clinical enough'],
   // "ruthless in front of goal" → (그대로) 냉혹했다 / (치환) 결정력이 뛰어났습니다
   [/\bruthless in front of goal\b/gi, 'clinical in front of goal'],
+  // 헤드라인의 "with (a) ... Cup double" = 그 컵대회에서 2골. 구글은 이걸 트로피 두 개로 읽는다
+  // (실측: "…equals Wayne Rooney record with Carabao Cup double" → "카라바오컵 더블 우승으로").
+  // "brace"로 바꾸면 "카라바오컵 2골"로 제대로 옮겨진다. 컵 두 개를 우승했다는 진짜 뜻
+  // ("Arsenal complete the cup double")도 실제로 쓰이므로, 득점을 가리킬 때만 쓰는
+  // "with ~ Cup double" 형태에서만 바꾼다. 동사가 붙은 "scored a double"류는 구글이
+  // 이미 "2골"로 옮기므로 건드리지 않는다.
+  [/(?<=\bwith (?:a |his |the )?(?:[A-Z]\w+ )*Cup )double\b/g, 'brace'],
 ];
 
 // 문장 첫머리처럼 대문자로 시작한 표현이면 대체어도 대문자로 시작시킨다.
