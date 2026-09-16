@@ -1056,6 +1056,8 @@ export default async function handler(req, res) {
         shortName: tj.details?.shortName || '',
         crest: `https://images.fotmob.com/image_resources/logo/teamlogo/${teamId}.png`,
         color: tj.history?.teamColors?.darkMode || null,
+        // 팀 색 위에 얹을 글자색 — Fotmob이 팀 색과 짝으로 준다(밝은 팀 색이면 어두운 글자)
+        fontColor: tj.history?.teamColors?.fontDarkMode || null,
         table: {
           position: tableRow.idx ?? null, points: tableRow.pts ?? null, played: tableRow.played ?? null,
           won: tableRow.wins ?? null, draw: tableRow.draws ?? null, lost: tableRow.losses ?? null,
@@ -1078,6 +1080,19 @@ export default async function handler(req, res) {
           xg: statOf('Expected goals'), bigChances: statOf('Big chances'),
         },
         topPlayers: {rating: topOf('byRating'), goals: topOf('byGoals'), assists: topOf('byAssists')},
+        // 선수단 — 같은 응답에 이미 들어있어 추가 호출이 없다. 이름·등번호·나이·국적·포지션만 추린다
+        // (골/도움 등 기록은 이 모달에서 안 쓴다).
+        squad: ((tj.squad?.squad) || [])
+          .filter(g => !/coach/i.test(g.title || ''))
+          .map(g => ({
+            group: /keeper/i.test(g.title) ? 'GK' : /defend/i.test(g.title) ? 'DF' : /midfield/i.test(g.title) ? 'MF' : 'FW',
+            players: (g.members || []).map(p => ({
+              id: p.id, name: p.name, number: p.shirtNumber ?? null, age: p.age ?? null,
+              country: p.cname || '', position: String(p.positionIdsDesc || '').split(',')[0] || '',
+              injured: !!p.injury,
+            })),
+          }))
+          .filter(g => g.players.length),
         trophies: ((tj.history?.trophyList) || [])
           .map(t => ({
             name: t.name?.[0] || '',
