@@ -2933,8 +2933,113 @@ function renderStandings(){
     var gd=document.createElement('span');gd.className='std-s';gd.textContent=(s.goalDifference>0?'+':'')+s.goalDifference;
     var pts=document.createElement('span');pts.className='std-pts';pts.textContent=s.points;
     row.appendChild(pos);row.appendChild(team);row.appendChild(pg);row.appendChild(w);row.appendChild(d);row.appendChild(l);row.appendChild(fa);row.appendChild(gd);row.appendChild(pts);
+    row.style.cursor='pointer';
+    row.onclick=function(){ openTeamModal(s.team.id, s.team.name||s.team.shortName); };
     el.appendChild(row);
   });
+}
+
+// ── 팀 간략 정보 모달 (순위표 행 클릭) ──
+// 대회 이름은 Fotmob 원문(영어)으로 와서 자주 나오는 것만 한글로 바꾼다 — 없는 건 원문 그대로.
+var TEAM_COMP_KO={
+  'Premier League':'프리미어리그','Championship':'챔피언십','FA Cup':'FA컵','EFL Cup':'EFL컵',
+  'League Cup':'리그컵','Community Shield':'커뮤니티 실드','Champions League':'챔피언스리그',
+  'Europa League':'유로파리그','Europa Conference League':'컨퍼런스리그','Conference League':'컨퍼런스리그',
+  'UEFA Super Cup':'UEFA 슈퍼컵','FIFA Club World Cup':'클럽 월드컵','UEFA Cup Winners\' Cup':'UEFA 컵위너스컵',
+  'Club Friendlies':'친선경기',
+};
+var compKo=function(name){ return TEAM_COMP_KO[name]||name||''; };
+function openTeamModal(teamId, teamName){
+  if(!teamId) return;
+  var modal=document.getElementById('playerModal'), content=document.getElementById('modalContent');
+  if(!modal||!content) return;
+  modal.querySelector('.modal-sheet').classList.add('hist-compact');
+  content.className='modal-sheet-inner';
+  content.innerHTML='<div class="pm-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>'
+    +'<div class="pm-header-inner"><div class="pm-name">'+(teamName||'')+'</div></div></div>'
+    +'<div class="loading-state" style="padding:40px 20px"><span>불러오는 중...</span></div>';
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+  history.pushState({modal:'player'},'',' #player');
+  requestAnimationFrame(function(){ content.scrollTop=0; });
+  var reqId=(_teamModalSeq=(_teamModalSeq||0)+1);
+  apiFetchCached(FN+'/football?type=team&id='+teamId, 'team_'+teamId, function(data){
+    // 응답이 오는 사이 모달을 닫았거나 다른 팀을 열었으면 덮어쓰지 않는다
+    if(reqId!==_teamModalSeq || !modal.classList.contains('open')) return;
+    content.innerHTML=renderTeamModal(data);
+  }, function(){
+    if(reqId!==_teamModalSeq || !modal.classList.contains('open')) return;
+    content.innerHTML='<div class="loading-state" style="padding:40px 20px"><span>팀 정보를 불러오지 못했습니다</span></div>';
+  });
+}
+var _teamModalSeq=0;
+function renderTeamModal(t){
+  var tb=t.table||{}, st=t.stats||{}, tp=t.topPlayers||{};
+  var formColor={W:'var(--green)',D:'var(--amber)',L:'var(--loss)'};
+  var cell=function(val,lbl,color){ return '<div class="detail-info-cell"><div class="detail-info-val"'+(color?' style="color:'+color+'"':'')+'>'+val+'</div><div class="detail-info-lbl">'+lbl+'</div></div>'; };
+  // 경기당 득점/실점·xG·점유율은 소수 한 자리로 통일(2 → 2.0), 클린시트·빅찬스는 정수
+  var statCell=function(s,lbl,opt){
+    if(!s||s.value==null) return '';
+    var v=typeof s.value==='number' ? (opt&&opt.int ? Math.round(s.value) : s.value.toFixed(1)) : s.value;
+    return cell(v+((opt&&opt.suffix)||'')+(s.rank?' <span style="font-size:11px;color:var(--gold)">('+s.rank+'위)</span>':''), lbl);
+  };
+  // 헤더 배경: 팀 색을 옅게 깔되 불투명 바탕 위에 올린다 — 반투명만 쓰면 sticky 헤더 뒤로 본문이 비친다
+  var h='<div class="pm-header" style="background:linear-gradient(135deg,'+(t.color?t.color+'38':'transparent')+',transparent),var(--modal-bg)">'
+    +'<div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div><div class="pm-header-inner">';
+  if(t.crest) h+='<img src="'+t.crest+'" alt="" style="width:56px;height:56px" onerror="this.style.visibility=\'hidden\'">';
+  h+='<div><div class="pm-name">'+(t.name||'')+'</div>';
+  if(tb.position) h+='<div class="pm-club">프리미어리그 '+tb.position+'위 · 승점 '+tb.points+'</div>';
+  if((t.form||[]).length){
+    h+='<div style="display:flex;gap:4px;margin-top:8px">'+t.form.map(function(f){
+      return '<span style="width:18px;height:18px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--white);background:'+(formColor[f]||'var(--text-dim)')+'">'+f+'</span>';
+    }).join('')+'</div>';
+  }
+  h+='</div></div></div>';
+  if(tb.played!=null){
+    h+='<div class="detail-info-grid">'
+      +cell(tb.played,'경기')
+      +cell(tb.won+'-'+tb.draw+'-'+tb.lost,'승-무-패')
+      +cell(tb.goalsFor+'-'+tb.goalsAgainst,'득실')
+      +cell((tb.goalDifference>0?'+':'')+tb.goalDifference,'득실차', tb.goalDifference>0?'var(--green)':tb.goalDifference<0?'var(--loss)':null)
+      +'</div>';
+  }
+  if(t.nextMatch){
+    var nd=t.nextMatch.utcDate?new Date(t.nextMatch.utcDate):null;
+    var when=nd?((nd.getMonth()+1)+'월 '+nd.getDate()+'일 '+String(nd.getHours()).padStart(2,'0')+':'+String(nd.getMinutes()).padStart(2,'0')):'';
+    h+='<div class="mm-card-title" style="padding:14px 16px 6px">다음 경기</div>'
+      +'<div style="display:flex;align-items:center;gap:10px;margin:0 16px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border-bright);border-radius:12px">'
+      +(t.nextMatch.opponentId?'<img src="https://images.fotmob.com/image_resources/logo/teamlogo/'+t.nextMatch.opponentId+'.png" alt="" style="width:26px;height:26px" onerror="this.style.visibility=\'hidden\'">':'')
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+(t.nextMatch.home?'vs ':'@ ')+t.nextMatch.opponent+'</div>'
+      +'<div style="font-size:11px;color:var(--text-secondary)">'+compKo(t.nextMatch.competition)+(when?' · '+when:'')+'</div></div></div>';
+  }
+  var statsHtml=statCell(st.goalsPerMatch,'경기당 득점')+statCell(st.concededPerMatch,'경기당 실점')
+    +statCell(st.possession,'평균 점유율',{suffix:'%'})+statCell(st.cleanSheets,'클린시트',{int:true})
+    +statCell(st.xg,'기대 득점(xG)')+statCell(st.bigChances,'빅찬스',{int:true});
+  if(statsHtml) h+='<div class="mm-card-title" style="padding:16px 16px 6px">팀 스탯 <span style="color:var(--text-secondary);font-weight:600">(괄호는 리그 순위)</span></div><div class="detail-info-grid">'+statsHtml+'</div>';
+  var topRows=[['평점',tp.rating,''],['득점',tp.goals,'골'],['도움',tp.assists,'도움']].filter(function(r){ return r[1]; });
+  if(topRows.length){
+    h+='<div class="mm-card-title" style="padding:16px 16px 6px">주요 선수</div><div class="sq-inj-list" style="padding:0 16px">';
+    topRows.forEach(function(r){
+      h+='<div class="sq-inj-row"><div class="sq-inj-photo"><img src="https://images.fotmob.com/image_resources/playerimages/'+r[1].id+'.png" alt="" onerror="this.parentElement.textContent=\'\'"></div>'
+        +'<div class="sq-inj-info"><div class="sq-inj-name">'+r[1].name+'</div><div class="sq-inj-detail">'+r[0]+' 1위</div></div>'
+        +'<div class="sq-inj-right"><span class="sq-inj-badge" style="background:rgba(200,168,75,.13);color:var(--gold)">'+r[1].value+r[2]+'</span></div></div>';
+    });
+    h+='</div>';
+  }
+  if((t.trophies||[]).length){
+    h+='<div class="mm-card-title" style="padding:16px 16px 6px">우승 이력</div><div class="sq-inj-list" style="padding:0 16px">';
+    t.trophies.forEach(function(tr){
+      h+='<div class="sq-inj-row" style="padding:7px 0"><div class="sq-inj-info"><div class="sq-inj-name">'+compKo(tr.name)+'</div>'
+        +(tr.lastSeason?'<div class="sq-inj-detail">최근 '+tr.lastSeason+'</div>':'')+'</div>'
+        +'<div class="sq-inj-right"><span style="font-family:var(--fd);font-size:15px;color:var(--gold)">'+tr.won+'<span style="font-size:11px;color:var(--text-secondary);margin-left:2px">회</span></span></div></div>';
+    });
+    h+='</div>';
+  }
+  var foot='';
+  if(t.venue&&t.venue.name) foot+=cell('<span style="font-size:14px">'+t.venue.name+'</span>','홈구장'+(t.venue.city?' · '+t.venue.city:'')+(t.venue.capacity?' · '+Number(t.venue.capacity).toLocaleString()+'석':''));
+  if(t.coach&&t.coach.name) foot+=cell('<span style="font-size:14px">'+t.coach.name+'</span>','감독'+(t.coach.age?' · '+t.coach.age+'세':''));
+  if(foot) h+='<div class="detail-info-grid" style="margin-top:14px">'+foot+'</div>';
+  return h+'<div style="height:20px"></div>';
 }
 
 // ── 선수 순위 (EPL 전체, Fotmob 기반) ──

@@ -1019,6 +1019,79 @@ export default async function handler(req, res) {
         matches: roundMatches,
       });
 
+    } else if(type === 'team'){
+      // 순위표에서 팀을 누르면 뜨는 간략 팀 정보 — Fotmob 팀 API 한 번이면 순위·폼·다음 경기·
+      // 팀 스탯·주요 선수·우승 이력·홈구장·감독이 전부 들어있다. 원본이 800KB라 쓰는 필드만
+      // 추려 내려준다(10KB 수준). 상대 팀 20개가 각각 캐시되므로 TTL은 짧게 두지 않아도 된다.
+      const teamId = String(req.query.id || '').replace(/\D/g,'');
+      if(!teamId) return res.status(400).json({error:'id 파라미터가 필요합니다'});
+      const teamCacheKey = `teamInfo_${teamId}`;
+      const cached = nocache ? null : getCache(teamCacheKey);
+      if(cached) return res.json(cached);
+
+      const tr = await fetch(`https://www.fotmob.com/api/data/teams?id=${teamId}`,
+        {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(10000)});
+      if(!tr.ok) throw new Error(`Fotmob team: ${tr.status}`);
+      const tj = await tr.json();
+      const ov = tj.overview || {};
+      const plTable = (tj.table || []).find(t => t?.data?.leagueId === PL_LEAGUE_ID);
+      const tableRow = ((plTable?.data?.table?.all) || []).find(r => String(r.id) === teamId) || {};
+      const [gf, ga] = String(tableRow.scoresStr || '').split('-').map(n => parseInt(n, 10) || 0);
+      // 팀 스탯은 리그 전체 순위와 함께 오므로(participant.rank) 값과 순위를 같이 담는다
+      const statOf = header => {
+        const s = (tj.stats?.teams || []).find(x => x.header === header);
+        const p = s?.participant;
+        return p ? {value: p.stat?.value ?? null, rank: p.rank ?? null} : null;
+      };
+      const topOf = key => {
+        const list = (ov.topPlayers?.[key]?.players) || [];
+        const p = list.find(x => String(x.teamId) === teamId) || null;
+        return p ? {id: p.id, name: p.name, value: p.value} : null;
+      };
+      const coach = ((tj.squad?.squad || []).find(g => /coach/i.test(g.title || ''))?.members || [])[0] || null;
+      const nm = ov.nextMatch;
+      const payload = {
+        id: teamId,
+        name: tj.details?.name || '',
+        shortName: tj.details?.shortName || '',
+        crest: `https://images.fotmob.com/image_resources/logo/teamlogo/${teamId}.png`,
+        color: tj.history?.teamColors?.darkMode || null,
+        table: {
+          position: tableRow.idx ?? null, points: tableRow.pts ?? null, played: tableRow.played ?? null,
+          won: tableRow.wins ?? null, draw: tableRow.draws ?? null, lost: tableRow.losses ?? null,
+          goalsFor: gf, goalsAgainst: ga, goalDifference: tableRow.goalConDiff ?? null,
+        },
+        form: (ov.teamForm || []).slice(-5).map(f => f.resultString || ''),
+        nextMatch: nm ? {
+          opponent: nm.opponent?.name || '', opponentId: nm.opponent?.id || null,
+          competition: nm.tournament?.name || '', utcDate: nm.status?.utcTime || null,
+          home: String(nm.home?.id) === teamId,
+        } : null,
+        venue: ov.venue ? {
+          name: ov.venue.widget?.name || '', city: ov.venue.widget?.city || '',
+          capacity: (ov.venue.statPairs || []).find(p => p[0] === 'Capacity')?.[1] ?? null,
+        } : null,
+        coach: coach ? {id: coach.id, name: coach.name, age: coach.age ?? null, country: coach.cname || ''} : null,
+        stats: {
+          goalsPerMatch: statOf('Goals per match'), concededPerMatch: statOf('Goals conceded per match'),
+          possession: statOf('Average possession'), cleanSheets: statOf('Clean sheets'),
+          xg: statOf('Expected goals'), bigChances: statOf('Big chances'),
+        },
+        topPlayers: {rating: topOf('byRating'), goals: topOf('byGoals'), assists: topOf('byAssists')},
+        trophies: ((tj.history?.trophyList) || [])
+          .map(t => ({
+            name: t.name?.[0] || '',
+            won: parseInt(t.won?.[0], 10) || 0,
+            // "2023/2024" 또는 "2023" 형태만 남긴다 — 클럽 월드컵처럼 "2023 Saudi Arabia"로 개최지가 붙어 온다
+            lastSeason: (String(t.season_won?.[0] || '').split(',')[0].match(/\d{4}(?:\/\d{2,4})?/) || [''])[0],
+          }))
+          .filter(t => t.won > 0)
+          .sort((a,b) => b.won - a.won)
+          .slice(0, 8),
+      };
+      setCache(teamCacheKey, payload);
+      return res.json(payload);
+
     } else if(type === 'standings'){
       // football-data.org 대신 ESPN 순위 엔드포인트를 쓴다 — 팀별 note 필드에
       // 유럽대항전 진출권/강등권 설명이 이미 계산되어 내려오므로(예:
