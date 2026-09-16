@@ -3215,7 +3215,9 @@ function renderTeamSquadPanel(t){
     g.players.forEach(function(p,i){
       var flag=p.country?getNatFlag(p.country):null;
       h+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0'+(i<g.players.length-1?';border-bottom:1px solid var(--border-bright)':'')+'">'
-        +'<span style="width:26px;text-align:center;font-family:var(--fd);font-size:16px;color:var(--text-secondary);font-variant-numeric:tabular-nums">'+(p.number!=null?p.number:'')+'</span>'
+        // 등번호가 없는 선수(리그 등록 스쿼드에 번호가 배정되지 않은 유망주·신규 영입)는
+        // 빈칸 대신 자리표시 대시를 둔다 — 데이터가 빠진 게 아니라 번호가 없는 것.
+        +'<span style="width:26px;text-align:center;font-family:var(--fd);font-size:16px;font-variant-numeric:tabular-nums;color:var(--text-'+(p.number!=null?'secondary':'dim')+')">'+(p.number!=null?p.number:'–')+'</span>'
         +'<span style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.name
         +(p.injured?' <span style="font-size:10px;color:var(--loss)">부상</span>':'')+'</span>'
         +(p.position?'<span style="font-size:10px;font-weight:700;color:var(--text-secondary);background:var(--surface2);border:1px solid var(--border-bright);border-radius:6px;padding:2px 6px;min-width:34px;text-align:center">'+p.position+'</span>':'')
