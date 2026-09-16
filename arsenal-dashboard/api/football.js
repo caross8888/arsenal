@@ -1024,38 +1024,36 @@ export default async function handler(req, res) {
       return res.json({ round: requestedRound, maxRound, minRound, players });
 
     } else if(type === 'roundResults'){
-      // 순위표 옆 "라운드별 EPL 전체 결과" 패널용 — ESPN 원본엔 라운드(매치위크)
-      // 번호가 아예 없다. 처음엔 "아스날이 그 라운드에 뛴 날짜" 앞뒤 며칠을
-      // 스코어보드로 훑는 방식이었는데, 박싱데이처럼 라운드 간격이 좁아지거나
-      // UEFA 대항전 때문에 팀마다 다음 리그 경기가 서로 다른 주에 열리면
-      // 날짜 창이 다른 라운드 경기를 같이 집어오거나 일부를 놓치는 문제가
-      // 있었다 — 대신 시즌 전체 380경기를 한 번에 받아서, 각 팀이 "몇 번째
-      // 치르는 PL 경기인지" 순번을 세어 라운드를 매긴다(아스날 자기 경기만
-      // 세던 프론트의 assignPlRounds와 같은 원리를 20개 팀 전체에 적용) —
-      // 날짜 간격과 무관하게 항상 정확하다.
+      // 순위표 옆 "라운드별 EPL 전체 결과" 패널용 — Fotmob 리그 일정에서 시즌 전체를 받는다.
+      // 원래는 ESPN 스코어보드를 시즌 전체 날짜 범위로 받아, 각 팀이 "몇 번째 치르는 PL 경기인지"
+      // 순번을 세어 라운드를 매겼다(ESPN 원본엔 라운드 번호가 아예 없다). 2026-09 기준 ESPN이
+      // 날짜 범위(YYYYMMDD-YYYYMMDD) 요청을 400으로 막으면서 이 패널이 통째로 안 떴고, Fotmob은
+      // 경기마다 라운드 번호를 직접 주므로 순번 세기(연기/재편성 때 어긋날 수 있음)도 필요 없다.
       const roundCacheKey = 'roundResults_season';
       let seasonData = nocache ? null : getCache(roundCacheKey);
       if(!seasonData){
-        const seasonEndYear = now.getMonth() + 1 <= 5 ? now.getFullYear() : now.getFullYear() + 1;
-        const currentSeasonYear = now.getMonth() + 1 >= 8 ? now.getFullYear() : now.getFullYear() - 1;
-        const seasonStart = fmtDate(new Date(currentSeasonYear, 7, 1));
-        const seasonEnd = fmtDate(new Date(seasonEndYear, 4, 31));
-        const sr = await fetch(
-          `https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard?dates=${seasonStart}-${seasonEnd}&limit=500`,
-          {signal: AbortSignal.timeout(10000)}
-        );
-        if(!sr.ok) throw new Error(`ESPN season scoreboard: ${sr.status}`);
-        const sj = await sr.json();
-        const allSeasonMatches = (sj.events||[])
-          .map(e => parseEvent(e, 'Premier League', 'PL'))
+        const fr = await fetch('https://www.fotmob.com/api/data/leagues?id=47',
+          {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(10000)});
+        if(!fr.ok) throw new Error(`Fotmob league fixtures: ${fr.status}`);
+        const fj = await fr.json();
+        const fmCrest = id => id ? `https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png` : null;
+        const allSeasonMatches = ((fj.fixtures && fj.fixtures.allMatches) || []).map(m => {
+          const st = m.status || {};
+          const sc = String(st.scoreStr||'').match(/(\d+)\s*-\s*(\d+)/);
+          return {
+            id: m.id,
+            utcDate: st.utcTime,
+            status: st.cancelled ? 'CANCELED' : st.finished ? 'FINISHED' : st.started ? 'IN_PLAY' : 'TIMED',
+            round: parseInt(m.round, 10) || 0,
+            homeTeam: {id: m.home?.id, name: m.home?.shortName || m.home?.name, crest: fmCrest(m.home?.id)},
+            awayTeam: {id: m.away?.id, name: m.away?.shortName || m.away?.name, crest: fmCrest(m.away?.id)},
+            score: {fullTime: {home: sc ? +sc[1] : null, away: sc ? +sc[2] : null}},
+          };
+        })
+          .filter(m => m.utcDate && m.round)
           .sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
-        const teamCount = {};
         let maxRound = 0, latestFinishedRound = 0;
         for(const m of allSeasonMatches){
-          const hId = m.homeTeam.id, aId = m.awayTeam.id;
-          teamCount[hId] = (teamCount[hId]||0) + 1;
-          teamCount[aId] = (teamCount[aId]||0) + 1;
-          m.round = teamCount[hId];
           if(m.round > maxRound) maxRound = m.round;
           if(m.status === 'FINISHED' && m.round > latestFinishedRound) latestFinishedRound = m.round;
         }
