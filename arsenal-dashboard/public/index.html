@@ -12,6 +12,23 @@
 <link rel="apple-touch-icon" href="/data/cannon_app_icon_512.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Arsenal FC · The Gunners Hub</title>
+<script>
+// 새로고침 때 "일정 탭이 잠깐 보였다가 원래 탭으로 바뀌는" 깜빡임 방지.
+// HTML에는 #fixtures가 active로 박혀 있고 해시 복원은 파일 한참 아래 스크립트가 하는데,
+// 이 파일이 500KB대라 브라우저가 그 전에 일정 탭을 한 번 그려버린다. 그래서 head에서
+// 해시를 먼저 읽어 CSS로만 목표 탭을 띄워둔다(실제 class 전환은 아래 스크립트가 한다).
+(function(){
+  var h=(location.hash||'').replace('#','').trim();
+  if(h==='news'||h==='sns') h='media';                       // 구 URL 호환
+  if(['leaderboard','squad','media','history'].indexOf(h)===-1) return;
+  document.documentElement.setAttribute('data-start-sec',h);
+  var st=document.createElement('style');
+  st.id='startSecCss';
+  st.textContent='html[data-start-sec] #fixtures.section{display:none}'
+    +'html[data-start-sec="'+h+'"] #'+h+'.section{display:block}';
+  document.head.appendChild(st);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@400;500;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -2712,7 +2729,11 @@ function loadFixtures(){
       // 인스턴스가 된다 — 위에서 finished/upcoming에 매긴 round가
       // _allMatchesForCal 쪽 객체엔 반영되지 않으므로 별도로 한 번 더 매긴다.
       assignPlRounds(window._allMatchesForCal);
-      if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')) renderCalendarMonth();
+      // 달력 뷰로 시작한 경우(하위 탭 복원)는 데이터가 이제야 왔으니 여기서 가장 가까운
+      // 경기가 있는 달로 맞춘다 — 이미 자리를 잡았으면 그 달 그대로 다시 그린다.
+      if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')){
+        if(_calPlaced) renderCalendarMonth(); else { _calPlaced=true; calGoToNearestMatch(); }
+      }
       initMatchNav(data);
       renderDday(upcomingAll);
       // 지난 경기 상세를 유휴 시간에 미리 받아둔다 — 카드를 눌렀을 때 스피너 없이 열리게
@@ -2738,7 +2759,10 @@ function kstParts(ts){
   var d=new Date(ts+KST);
   return {y:d.getUTCFullYear(), m:d.getUTCMonth(), d:d.getUTCDate()};
 }
+var _calPlaced=false;  // 달력이 "가장 가까운 경기" 달로 한 번 이동했는지
 function switchFixView(view){
+  uiRemember('fixView', view);
+  if(view==='cal') _calPlaced=true;
   document.querySelectorAll('.fix-view-btn').forEach(function(b){b.classList.toggle('active', b.getAttribute('data-view')===view);});
   document.getElementById('matchList').style.display = view==='list' ? '' : 'none';
   document.getElementById('matchNav').style.display = view==='list' ? '' : 'none';
@@ -3282,6 +3306,7 @@ function renderLeaders(){
   if(!list.length){el.innerHTML='<div class="loading-state" style="padding:20px"><span>데이터 없음</span></div>';}
 }
 function switchLbTab(tab,btn){
+  uiRemember('lbTab', tab);
   document.getElementById('lbTabs').querySelectorAll('.lb-tab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   var teamPanel=document.getElementById('lbPanel-team');
@@ -3304,6 +3329,7 @@ function switchLbTab(tab,btn){
   }
 }
 function switchLbStat(stat,btn){
+  uiRemember('lbStat', stat);
   document.getElementById('lbStatSubnav').querySelectorAll('.rec-subnav-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   _leadersCat=stat;
@@ -3649,6 +3675,7 @@ function renderSq(filter){
 var STATUS_LABEL={'i':'\uBD80\uC0C1','d':'\uCD9C\uC804 \uC758\uC2EC','s':'\uCD9C\uC7A5 \uC815\uC9C0','u':'\uACB0\uC7A5'};
 // ── NEWS ──
 function switchMedia(tab, btn){
+  uiRemember('mediaTab', tab);
   document.querySelectorAll('.media-seg-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
   document.getElementById('mediaNews').style.display = tab==='news' ? '' : 'none';
@@ -3893,6 +3920,7 @@ function renderHistoryNew(){
 
 function switchHistTab(tab){
   _histTab = tab;
+  uiRemember('histTab', tab);
   document.querySelectorAll('.hist-nav-btn').forEach(function(b){
     b.classList.toggle('active', b.getAttribute('data-tab') === tab);
   });
@@ -6391,9 +6419,33 @@ enableSheetSwipeClose(document.getElementById('transferModalSheet'), '.pm-header
 
 // ── NAV ──
 var VALID_SECS = ['fixtures','leaderboard','squad','media','history'];
+
+// ── 하위 탭 기억 ──
+// 상단 탭은 주소 해시로 복원되지만(showSec), 탭 안의 하위 선택(일정 리스트/달력,
+// 선수단 1군/아카데미·포지션, 미디어 뉴스/SNS/유튜브, 리더보드 팀/선수 순위,
+// 히스토리 구역)은 새로고침하면 전부 첫 번째 것으로 돌아갔다. 해시에 넣으면 주소가
+// 길어지고 뒤로가기 기록이 하위 탭까지 쌓여서, 브라우저에만 저장한다.
+var UI_PREFS_KEY='uiPrefs_v1';
+var _uiPrefs={};
+try{ _uiPrefs=JSON.parse(localStorage.getItem(UI_PREFS_KEY))||{}; }catch(e){ _uiPrefs={}; }
+function uiRemember(k,v){
+  _uiPrefs[k]=v;
+  try{ localStorage.setItem(UI_PREFS_KEY, JSON.stringify(_uiPrefs)); }catch(e){}
+}
+function uiRecall(k,def,allowed){
+  var v=_uiPrefs[k];
+  if(v===undefined || v===null) return def;
+  if(allowed && allowed.indexOf(v)===-1) return def;  // 옛 버전이 남긴 값 방어
+  return v;
+}
 var SEC_TITLES = {fixtures:'경기 일정', leaderboard:'리더보드', squad:'선수단', media:'미디어', history:'History'};
 var loaded={fixtures:true};
-function showSec(id,btn){
+// fromHistory — 해시 복원이나 뒤로가기로 불린 경우. 이때 pushState를 하면 방문 기록이
+// 하나 더 쌓여서, 뒤로가기를 눌러도 같은 탭에 머무는(한 번 더 눌러야 나가는) 문제가 있었다.
+function showSec(id,btn,fromHistory){
+  // head에서 깜빡임 방지로 걸어둔 임시 CSS는 진짜 class 전환이 시작되면 필요 없다.
+  var startCss=document.getElementById('startSecCss');
+  if(startCss){ startCss.remove(); document.documentElement.removeAttribute('data-start-sec'); }
   document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
   document.getElementById(id).classList.add('active');
@@ -6413,7 +6465,7 @@ function showSec(id,btn){
     if(id==='media') loadMedia();
     if(id==='history') loadHistory();
   }
-  window.history.pushState({tab:id},'','#'+id);
+  if(!fromHistory) window.history.pushState({tab:id},'','#'+id);
   window.scrollTo(0,0);
   gooSchedule(); // 이미 맨 위였으면 scroll 이벤트가 안 나서 새 섹션의 스티키 탭 상태를 여기서 갱신
 }
@@ -6434,7 +6486,11 @@ function showSec(id,btn){
       closeTransferModal(true); return;
     }
     var hash = location.hash.replace('#','').trim();
-    if(hash && VALID_SECS.indexOf(hash) !== -1){
+    if(hash === 'news' || hash === 'sns') hash = 'media';
+    // 해시 없는 기록(첫 방문 진입점, 모달 닫으며 해시를 지운 기록)은 일정 탭이다 —
+    // 예전엔 빈 해시를 무시해서, 일정에서 다른 탭으로 갔다가 뒤로가기를 눌러도 그 탭에 남았다.
+    if(!hash) hash = 'fixtures';
+    if(VALID_SECS.indexOf(hash) !== -1){
       var btn = document.querySelector('.nav-btn[onclick*="\''+hash+"'"+'\"]');
       if(btn) showSec(hash, btn, true);
     }
@@ -6451,6 +6507,49 @@ function showSec(id,btn){
     var btn = document.querySelector('.nav-btn[onclick*="\''+hash+"'"+'\"]');
     if(btn) showSec(hash, btn, true);
   }
+
+  // 하위 탭 복원 — 각 탭이 실제로 그려지기 전에 상태만 맞춰둔다. 렌더 함수들이
+  // 이 값(_sqActiveFilter/_histTab 등)과 버튼의 active 클래스를 보고 그리므로,
+  // 데이터가 나중에 도착해도 복원한 하위 탭 그대로 그려진다.
+  var fixView = uiRecall('fixView','list',['list','cal']);
+  if(fixView==='cal'){
+    // 이 시점엔 경기 데이터가 없어서 달력을 그릴 수 없다 — 버튼/표시 상태만 바꾸고,
+    // 실제 달력은 loadFixtures가 데이터를 받은 뒤 가장 가까운 경기 달로 그린다.
+    document.querySelectorAll('.fix-view-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view')==='cal'); });
+    document.getElementById('matchList').style.display='none';
+    document.getElementById('matchNav').style.display='none';
+    document.getElementById('upcomingCalView').style.display='';
+  }
+
+  _sqActiveLevel  = uiRecall('sqLevel','first',['first','academy']);
+  _sqActiveFilter = uiRecall('sqFilter','all',['all','GK','DF','MF','FW']);
+  var sqRows = document.querySelectorAll('#squad .f-btns');
+  if(sqRows.length >= 2){
+    sqRows[0].querySelectorAll('.f-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('onclick').indexOf("'"+_sqActiveLevel+"'")!==-1); });
+    sqRows[1].querySelectorAll('.f-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('onclick').indexOf("'"+_sqActiveFilter+"'")!==-1); });
+  }
+
+  var mediaTab = uiRecall('mediaTab','news',['news','sns','youtube']);
+  if(mediaTab!=='news'){
+    var mBtn = document.querySelector('.media-seg-btn[onclick*="\''+mediaTab+"'"+'\"]');
+    if(mBtn) switchMedia(mediaTab, mBtn);
+  }
+
+  var lbTab = uiRecall('lbTab','team',['team','player']);
+  if(lbTab!=='team'){
+    var lBtn = document.querySelector('#lbTabs .lb-tab[onclick*="\''+lbTab+"'"+'\"]');
+    if(lBtn) switchLbTab(lbTab, lBtn);
+  }
+
+  // 선수 순위의 기록 종류(득점/어시스트/평점/…)도 같이 — 버튼의 data-stat이 곧 값이다.
+  var statBtns = document.querySelectorAll('#lbStatSubnav .rec-subnav-btn');
+  var lbStat = uiRecall('lbStat','goals',[].map.call(statBtns,function(b){return b.getAttribute('data-stat');}));
+  if(lbStat!=='goals'){
+    _leadersCat = lbStat;
+    statBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-stat')===lbStat); });
+  }
+
+  _histTab = uiRecall('histTab', _histTab, HIST_TABS);
 })();
 // ── 라이브 카드 확장 ──
 var _liveExpandTimers = {}; // matchId → {timer, progressTimer, startTime}
@@ -7384,12 +7483,12 @@ window.toggleMockLive = function(){
 
 function filterSq(f,btn){
   btn.parentElement.querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');_sqActiveFilter=f;renderSq(f);
+  btn.classList.add('active');_sqActiveFilter=f;uiRemember('sqFilter',f);renderSq(f);
 }
 
 function filterSqLevel(level,btn){
   btn.parentElement.querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active');});
-  btn.classList.add('active');_sqActiveLevel=level;renderSq(_sqActiveFilter);
+  btn.classList.add('active');_sqActiveLevel=level;uiRemember('sqLevel',level);renderSq(_sqActiveFilter);
 }
 
 
