@@ -8,9 +8,12 @@ import { loadTerms, isArsenalText } from './_arsenalTerms.js';
 const JOURNALISTS = [
   { handle: 'david-ornstein.bsky.social', name: 'David Ornstein', label: 'The Athletic' },
   { handle: 'amylawrence.bsky.social',    name: 'Amy Lawrence',   label: 'The Observer' },
-  { handle: 'charleswatts.bsky.social',   name: 'Charles Watts',  label: 'Goal' },
   { handle: 'gunnerblog.bsky.social',     name: 'Gunnerblog',     label: 'The Athletic', filter: false },
   { handle: 'philcosta.bsky.social',      name: 'Phil Costa',     label: 'Arseblog' },
+  // 아스날 전담이지만 독일 대표팀 명단 같은 타 팀 소식도 올려서 키워드 필터는 켜둔다.
+  // 하루 4개꼴·경기 날엔 골 속보까지 올리는 계정이라 최신 12칸을 많이 차지하지만,
+  // 아래 보강 규칙으로 다른 기자의 최근 7일 글은 2개씩 남는다.
+  { handle: 'srcollings.bsky.social',     name: 'Simon Collings', label: 'The Sun' },
 ];
 
 const BSKY = 'https://public.api.bsky.app/xrpc';
@@ -144,16 +147,26 @@ export default async function handler(req, res) {
 
     all.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
 
-    // 경기 날 실시간으로 여러 개씩 올리는 계정(Phil Costa 등)이 12칸을 독차지하지
-    // 않게 작성자당 3개까지만 먼저 뽑고, 칸이 남으면 나머지로 최신순 채운다.
-    const SHOW = 12, PER_AUTHOR = 3;
-    const picked = [], rest = [], perAuthor = {};
-    for (const p of all) {
+    // 최신 12개는 무조건 시간순으로 넣고, 거기에 기자마다 최근 7일 안의 글이
+    // 2개가 안 되면 그 기자의 최신 글로 2개까지 덧붙인다(최대 12 + 2×기자 수).
+    //
+    // 예전엔 "12칸 고정 + 작성자당 3개"였는데, 칸 수가 고정이라 조용한 기자의 옛 글이
+    // 칸을 지키는 대가로 최신 글이 밀려났다(실측: 11일 전 Gunnerblog 글이 남고 당일
+    // Collings 메리노 인터뷰가 빠짐). 순수 최신순은 반대로 경기 날 Collings 중계가
+    // 12칸 중 10칸을 채워 다른 기자 분석이 사라진다. 보강은 7일 안으로만 해서 한참
+    // 조용한 계정(Ornstein 등)의 옛 글이 피드에 눌러앉지 않게 한다.
+    const SHOW = 12, MIN_PER_AUTHOR = 2, BACKFILL_DAYS = 7;
+    const picked = all.slice(0, SHOW);
+    const perAuthor = {};
+    for (const p of picked) perAuthor[p.author.handle] = (perAuthor[p.author.handle] || 0) + 1;
+    const cutoff = Date.now() - BACKFILL_DAYS * 24 * 60 * 60 * 1000;
+    for (const p of all.slice(SHOW)) {
       const k = p.author.handle;
-      if ((perAuthor[k] || 0) < PER_AUTHOR && picked.length < SHOW) { picked.push(p); perAuthor[k] = (perAuthor[k] || 0) + 1; }
-      else rest.push(p);
+      if ((perAuthor[k] || 0) >= MIN_PER_AUTHOR) continue;
+      if (new Date(p.createdAt).getTime() < cutoff) continue;
+      picked.push(p);
+      perAuthor[k] = (perAuthor[k] || 0) + 1;
     }
-    picked.push(...rest.slice(0, SHOW - picked.length));
     picked.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
 
     const payload = { posts: picked, count: all.length };
