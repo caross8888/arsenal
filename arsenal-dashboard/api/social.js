@@ -14,6 +14,10 @@ const JOURNALISTS = [
   // 하루 4개꼴·경기 날엔 골 속보까지 올리는 계정이라 최신 12칸을 많이 차지하지만,
   // 아래 보강 규칙으로 다른 기자의 최근 7일 글은 2개씩 남는다.
   { handle: 'srcollings.bsky.social',     name: 'Simon Collings', label: 'The Sun' },
+  // 프리미어리그 공식 X 계정을 그대로 옮겨 올리는 비공식 봇(운영: @darthblaise.bsky.social).
+  // X API를 못 쓰는 대신 여기서 공식 피드(골 영상·사진)를 받는다. 리그 전체 계정이라
+  // 아스날 얘기는 10% 안팎 — 키워드 필터를 켠다. 개인 봇이라 언제든 멈출 수 있다.
+  { handle: 'premierleaguebot.bsky.social', name: 'Premier League', label: 'Official X mirror' },
 ];
 
 const BSKY = 'https://public.api.bsky.app/xrpc';
@@ -99,6 +103,22 @@ async function fetchJournalist(j, terms) {
       if (imgs && imgs.length > 0) image = imgs[0].thumb || imgs[0].fullsize || null;
       if (!image && embed.external && embed.external.thumb) image = embed.external.thumb;
 
+      // 영상 — 예전엔 images/external만 봐서 영상 글이 카드에 글자만 나왔다(실측: PL 봇
+      // 최근 100개 중 40개가 영상). 영상은 embed 자체(app.bsky.embed.video#view)나, 인용글이
+      // 붙은 경우 embed.media에 온다. playlist는 HLS(.m3u8)이고 video.bsky.app이
+      // Access-Control-Allow-Origin:*라 우리 페이지에서 바로 재생된다(대역폭도 블루스카이 쪽).
+      let video = null;
+      const vEmbed = /embed\.video/.test(embed['$type'] || '') ? embed
+        : (embed.media && /embed\.video/.test(embed.media['$type'] || '') ? embed.media : null);
+      if (vEmbed && vEmbed.playlist) {
+        video = {
+          playlist:    vEmbed.playlist,
+          thumbnail:   vEmbed.thumbnail || null,
+          aspectRatio: vEmbed.aspectRatio || null,   // {width, height}
+        };
+        if (!image) image = vEmbed.thumbnail || null;
+      }
+
       const postId = (post.uri || '').split('/').pop();
       out.push({
         id:        post.uri || '',
@@ -110,6 +130,7 @@ async function fetchJournalist(j, terms) {
         reposts:   post.repostCount || 0,
         replies:   post.replyCount  || 0,
         image,
+        video,
         url: 'https://bsky.app/profile/' + j.handle + '/post/' + postId,
         author: { handle: j.handle, name: j.name, label: j.label, avatar: post.author?.avatar || null },
       });

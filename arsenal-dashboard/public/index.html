@@ -954,6 +954,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sns-body{padding:0 14px 10px}
 .sns-text{font-size:13px;line-height:1.5;color:var(--text);white-space:pre-wrap;word-break:break-word}
 .sns-image{width:100%;max-height:200px;object-fit:cover;display:block;border-top:1px solid var(--border-bright)}
+/* 영상은 잘리면 안 돼서(자막·스코어 그래픽) 사진과 달리 contain + 검은 배경. 세로 영상이
+   카드를 과하게 늘리지 않게 높이만 제한한다. */
+.sns-video{position:relative;width:100%;max-height:420px;background:#000;border-top:1px solid var(--border-bright);cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.sns-video-thumb,.sns-video-el{width:100%;height:100%;max-height:420px;object-fit:contain;display:block;background:#000}
+.sns-video-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.35);color:#fff;display:flex;align-items:center;justify-content:center;padding-left:3px;pointer-events:none}
+.sns-video-err{padding:28px 16px;font-size:12px;color:rgba(255,255,255,.75);text-align:center}
 .sns-foot{display:flex;gap:14px;padding:8px 14px 12px;border-top:1px solid var(--border-bright)}
 .sns-stat{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted)}
 .sns-read{margin-left:auto;flex-shrink:0;font-size:10px;font-weight:700;color:var(--red);white-space:nowrap}
@@ -4751,6 +4757,84 @@ function renderSnsText(container, p){
     container.textContent=p.text||'';
   }
 }
+// ── SNS 영상 (Bluesky HLS) ──
+// 블루스카이 영상은 HLS(.m3u8)이고 video.bsky.app이 CORS를 열어둬서 우리 페이지에서
+// 바로 재생된다. 사파리(iOS 포함)는 <video>가 HLS를 기본 지원하고, 크롬 등은 hls.js가
+// 필요하다 — 약 150KB라 첫 재생 때만 불러온다. 처음엔 썸네일 + ▶만 그려서 목록 로딩
+// 때는 영상 데이터를 한 바이트도 받지 않는다.
+var _hlsLoader=null;
+function loadHlsJs(){
+  if(window.Hls) return Promise.resolve(window.Hls);
+  if(_hlsLoader) return _hlsLoader;
+  _hlsLoader=new Promise(function(resolve,reject){
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.20/hls.min.js';
+    s.onload=function(){ window.Hls?resolve(window.Hls):reject(new Error('hls.js 로드 실패')); };
+    s.onerror=function(){ _hlsLoader=null; reject(new Error('hls.js 로드 실패')); };
+    document.head.appendChild(s);
+  });
+  return _hlsLoader;
+}
+var _snsPlaying=null; // 동시에 하나만 — 다른 영상을 틀면 이전 것은 멈춘다
+function buildSnsVideo(v){
+  var box=document.createElement('div');
+  box.className='sns-video';
+  var ar=v.aspectRatio;
+  // 세로 영상(9:16)이 카드를 화면 끝까지 늘리지 않게 높이는 CSS max-height로 제한하고,
+  // 비율만 잡아 레이아웃이 재생 전후로 튀지 않게 한다.
+  if(ar&&ar.width&&ar.height) box.style.aspectRatio=ar.width+' / '+ar.height;
+  if(v.thumbnail){
+    var th=document.createElement('img');th.className='sns-video-thumb';th.src=v.thumbnail;th.alt='';
+    th.onerror=function(){this.style.display='none';};
+    box.appendChild(th);
+  }
+  var play=document.createElement('div');play.className='sns-video-play';
+  play.innerHTML='<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>';
+  box.appendChild(play);
+  // 카드 전체 클릭(원문 열기)으로 번지지 않게 막는다 — 본문 속 링크와 같은 처리.
+  box.onclick=function(e){
+    e.stopPropagation();
+    if(box._started) return;
+    box._started=true;
+    var vid=document.createElement('video');
+    vid.className='sns-video-el';
+    vid.controls=true; vid.playsInline=true; vid.setAttribute('playsinline','');
+    if(v.thumbnail) vid.poster=v.thumbnail;
+    box.innerHTML='';
+    box.appendChild(vid);
+    function start(){
+      if(_snsPlaying&&_snsPlaying!==vid){ try{_snsPlaying.pause();}catch(_){} }
+      _snsPlaying=vid;
+      var pr=vid.play(); if(pr&&pr.catch) pr.catch(function(){});
+    }
+    vid.addEventListener('play',function(){ if(_snsPlaying&&_snsPlaying!==vid){ try{_snsPlaying.pause();}catch(_){} } _snsPlaying=vid; });
+    function fail(){
+      box.innerHTML='<div class="sns-video-err">영상을 불러오지 못했습니다 · 카드를 눌러 Bluesky에서 보기</div>';
+      box.onclick=null; // 이제 카드 클릭으로 원문이 열리게 둔다
+    }
+    function viaHls(){
+      loadHlsJs().then(function(Hls){
+        if(!Hls.isSupported()){ fail(); return; }
+        var hls=new Hls();
+        hls.on(Hls.Events.ERROR,function(_,d){ if(d&&d.fatal){ hls.destroy(); fail(); } });
+        hls.loadSource(v.playlist);
+        hls.attachMedia(vid);
+        hls.on(Hls.Events.MANIFEST_PARSED,start);
+      }).catch(fail);
+    }
+    // canPlayType은 믿을 수 없다 — 크롬(안드로이드 UA 포함)은 HLS에 "maybe"라고 답하고
+    // 실제로는 재생에 실패했다(실측). 그래서 기본 재생을 먼저 시도하고, 실패하면 그때
+    // hls.js로 넘어간다. 사파리는 첫 시도로 끝나 hls.js를 받지 않는다.
+    if(vid.canPlayType('application/vnd.apple.mpegurl')){
+      vid.onerror=function(){ vid.onerror=null; vid.removeAttribute('src'); vid.load(); viaHls(); };
+      vid.src=v.playlist; start();
+    } else {
+      viaHls();
+    }
+  };
+  return box;
+}
+
 // ── SNS (Bluesky) ──
 function loadSns(){
   var el=document.getElementById('snsGrid');
@@ -4791,9 +4875,11 @@ function loadSns(){
         var txt=document.createElement('div');txt.className='sns-text';renderSnsText(txt,p);
         body.appendChild(txt);
 
-        // 이미지
+        // 이미지 / 영상
         var imgEl=null;
-        if(p.image){
+        if(p.video&&p.video.playlist){
+          imgEl=buildSnsVideo(p.video);
+        } else if(p.image){
           imgEl=document.createElement('img');
           imgEl.className='sns-image';
           imgEl.src=p.image;
