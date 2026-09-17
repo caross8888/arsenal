@@ -1321,7 +1321,7 @@ function playIntro(){
 <div class="top-header">
   <div class="brand">
     <img class="logo-svg" src="/data/cannon_icon.png" alt="Arsenal FC" width="48" height="20">
-    <span class="header-tab-title" id="headerTabTitle">&#44221;&#44592; &#51068;&#51221;</span>
+    <span class="header-tab-title" id="headerTabTitle"></span>
   </div>
   <div class="header-right">
     <button id="transferWindowBtn" class="transfer-window-btn" style="display:none" onclick="openTransferModal()">
@@ -1333,14 +1333,14 @@ function playIntro(){
   </div>
 </div>
 <div class="page">
-<section id="fixtures" class="section active">
+<section id="fixtures" class="section">
   <div class="dday-card" id="ddayCard" style="display:none"></div>
   <div class="fix-layout" id="fixLayout">
   <div id="fixWrap" class="fix-section-card">
     <div class="fix-section-label" style="display:flex;align-items:center;justify-content:space-between;">
       <button class="today-btn" id="matchTodayBtn" onclick="goToToday()" aria-label="&#50724;&#45720;&#47196; &#46028;&#50500;&#44032;&#44592;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg>&#50724;&#45720;</button>
       <div class="fix-view-toggle" id="fixViewToggle">
-        <button class="fix-view-btn active" data-view="list" onclick="switchFixView('list')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l11 0"/><path d="M9 12l11 0"/><path d="M9 18l11 0"/><path d="M5 6l0 .01"/><path d="M5 12l0 .01"/><path d="M5 18l0 .01"/></svg></button>
+        <button class="fix-view-btn" data-view="list" onclick="switchFixView('list')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l11 0"/><path d="M9 12l11 0"/><path d="M9 18l11 0"/><path d="M5 6l0 .01"/><path d="M5 12l0 .01"/><path d="M5 18l0 .01"/></svg></button>
         <button class="fix-view-btn" data-view="cal" onclick="switchFixView('cal')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg></button>
       </div>
     </div>
@@ -1391,7 +1391,7 @@ function playIntro(){
   <div id="lbListCol">
   <div class="card">
     <div class="lb-tabs" id="lbTabs">
-      <button class="lb-tab active" data-tab="team" onclick="switchLbTab('team',this)">
+      <button class="lb-tab" data-tab="team" onclick="switchLbTab('team',this)">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/></svg>
         &#54016; &#49692;&#50948;
         <span class="lb-tab-badge" id="stdMatchday"></span>
@@ -1407,7 +1407,7 @@ function playIntro(){
     </div>
     <div id="lbPanel-player" style="display:none">
       <div class="rec-subnav" id="lbStatSubnav">
-        <button class="rec-subnav-btn active" data-stat="goals" onclick="switchLbStat('goals',this)">&#46301;&#51216;</button>
+        <button class="rec-subnav-btn" data-stat="goals" onclick="switchLbStat('goals',this)">&#46301;&#51216;</button>
         <button class="rec-subnav-btn" data-stat="assists" onclick="switchLbStat('assists',this)">&#50612;&#49884;&#49828;&#53944;</button>
         <button class="rec-subnav-btn" data-stat="rating" onclick="switchLbStat('rating',this)">&#54217;&#51216;</button>
         <button class="rec-subnav-btn" data-stat="xg" onclick="switchLbStat('xg',this)">xG</button>
@@ -1448,11 +1448,11 @@ function playIntro(){
   <div id="sqListCol">
   <div class="sq-tabs-group">
     <div class="f-btns" style="grid-template-columns:repeat(2,1fr);">
-      <button class="f-btn active" onclick="filterSqLevel('first',this)">1&#44400;</button>
+      <button class="f-btn" onclick="filterSqLevel('first',this)">1&#44400;</button>
       <button class="f-btn" onclick="filterSqLevel('academy',this)">아카데미</button>
     </div>
     <div class="f-btns">
-      <button class="f-btn active" onclick="filterSq('all',this)">&#51204;&#52404;</button>
+      <button class="f-btn" onclick="filterSq('all',this)">&#51204;&#52404;</button>
       <button class="f-btn" onclick="filterSq('GK',this)">GK</button>
       <button class="f-btn" onclick="filterSq('DF',this)">DF</button>
       <button class="f-btn" onclick="filterSq('MF',this)">MF</button>
@@ -1469,7 +1469,7 @@ function playIntro(){
 </section>
 <section id="media" class="section">
  <div class="media-seg" id="mediaSeg">
-    <button class="media-seg-btn active" onclick="switchMedia('news',this)"><svg class="media-seg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg> 뉴스</button>
+    <button class="media-seg-btn" onclick="switchMedia('news',this)"><svg class="media-seg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg> 뉴스</button>
     <button class="media-seg-btn" onclick="switchMedia('sns',this)"><svg class="media-seg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1"/></svg> SNS</button>
     <button class="media-seg-btn" onclick="switchMedia('youtube',this)"><svg class="media-seg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"><path d="M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8z"/><path d="M10 9l5 3l-5 3z"/></svg> YouTube</button>
  </div>
@@ -1517,7 +1517,7 @@ function playIntro(){
 </div>
 
 <nav class="bottom-nav">
-  <button class="nav-btn active" onclick="showSec('fixtures',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg><span>&#51068;&#51221;</span></button>
+  <button class="nav-btn" onclick="showSec('fixtures',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg><span>&#51068;&#51221;</span></button>
   <button class="nav-btn" onclick="showSec('leaderboard',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/></svg><span>&#47532;&#45908;&#48372;&#46300;</span></button>
   <button class="nav-btn" onclick="showSec('squad',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l6 2v5h-3v8a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-8h-3v-5l6 -2a3 3 0 0 0 6 0"/><path d="M10.5 11h2.5l-1.5 5"/></svg><span>&#49440;&#49688;&#45800;</span></button>
   <button class="nav-btn" onclick="showSec('media',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg><span>미디어</span></button>
@@ -6517,23 +6517,27 @@ function showSec(id,btn,fromHistory){
   // (showSec), 모바일에서 당겨서 새로고침하면 맨 위가 아니라 몇 px 내려온 위치가 복원돼 스티키 탭이 헤더로
   // 다가가는 도중 모양(윗면 볼록)으로 멈춘 채 열렸다.
   if('scrollRestoration' in history) history.scrollRestoration='manual';
-  // 초기 해시 복원
+  // 초기 탭 복원.
+  // HTML에는 이제 아무 탭도 active로 박아두지 않는다 — 예전엔 일정 탭이 박혀 있어서,
+  // 이 복원이 돌기 전에 브라우저가 한 프레임이라도 그리면 하단 탭에 "일정"이 빨갛게
+  // 선택된 채 보였다(폰에서 항상 1~2프레임, 사용자 재보고 3회). 본문을 감추는 방식으로는
+  // 그 프레임을 못 막았다. 아예 선택 상태를 마크업에서 빼서, 새더라도 "아무것도 선택 안 됨"
+  // 이 보이게 한다 — 그래서 여기서는 기본값(일정)일 때도 반드시 적용해야 한다.
   var hash = location.hash.replace('#','').trim();
-  // 구 URL 호환 (news/sns → media)
-  if(hash === 'news' || hash === 'sns') hash = 'media';
-  if(hash && VALID_SECS.indexOf(hash) !== -1){
-    var btn = document.querySelector('.nav-btn[onclick*="\''+hash+"'"+'\"]');
-    if(btn) showSec(hash, btn, true);
-  }
+  if(hash === 'news' || hash === 'sns') hash = 'media';   // 구 URL 호환
+  if(VALID_SECS.indexOf(hash) === -1) hash = 'fixtures';
+  var btn = document.querySelector('.nav-btn[onclick*="\''+hash+"'"+'\"]');
+  if(btn) showSec(hash, btn, true);
 
   // 하위 탭 복원 — 각 탭이 실제로 그려지기 전에 상태만 맞춰둔다. 렌더 함수들이
   // 이 값(_sqActiveFilter/_histTab 등)과 버튼의 active 클래스를 보고 그리므로,
   // 데이터가 나중에 도착해도 복원한 하위 탭 그대로 그려진다.
+  // 하위 탭도 마크업에서 active를 뺐으므로 기본값일 때도 반드시 적용한다.
   var fixView = uiRecall('fixView','list',['list','cal']);
+  document.querySelectorAll('.fix-view-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view')===fixView); });
   if(fixView==='cal'){
-    // 이 시점엔 경기 데이터가 없어서 달력을 그릴 수 없다 — 버튼/표시 상태만 바꾸고,
+    // 이 시점엔 경기 데이터가 없어서 달력을 그릴 수 없다 — 표시 상태만 바꾸고,
     // 실제 달력은 loadFixtures가 데이터를 받은 뒤 가장 가까운 경기 달로 그린다.
-    document.querySelectorAll('.fix-view-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view')==='cal'); });
     document.getElementById('matchList').style.display='none';
     document.getElementById('matchNav').style.display='none';
     document.getElementById('upcomingCalView').style.display='';
@@ -6548,24 +6552,18 @@ function showSec(id,btn,fromHistory){
   }
 
   var mediaTab = uiRecall('mediaTab','news',['news','sns','youtube']);
-  if(mediaTab!=='news'){
-    var mBtn = document.querySelector('.media-seg-btn[onclick*="\''+mediaTab+"'"+'\"]');
-    if(mBtn) switchMedia(mediaTab, mBtn);
-  }
+  var mBtn = document.querySelector('.media-seg-btn[onclick*="\''+mediaTab+"'"+'\"]');
+  if(mBtn) switchMedia(mediaTab, mBtn);
 
   var lbTab = uiRecall('lbTab','team',['team','player']);
-  if(lbTab!=='team'){
-    var lBtn = document.querySelector('#lbTabs .lb-tab[onclick*="\''+lbTab+"'"+'\"]');
-    if(lBtn) switchLbTab(lbTab, lBtn);
-  }
+  var lBtn = document.querySelector('#lbTabs .lb-tab[onclick*="\''+lbTab+"'"+'\"]');
+  if(lBtn) switchLbTab(lbTab, lBtn);
 
   // 선수 순위의 기록 종류(득점/어시스트/평점/…)도 같이 — 버튼의 data-stat이 곧 값이다.
   var statBtns = document.querySelectorAll('#lbStatSubnav .rec-subnav-btn');
   var lbStat = uiRecall('lbStat','goals',[].map.call(statBtns,function(b){return b.getAttribute('data-stat');}));
-  if(lbStat!=='goals'){
-    _leadersCat = lbStat;
-    statBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-stat')===lbStat); });
-  }
+  _leadersCat = lbStat;
+  statBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-stat')===lbStat); });
 
   _histTab = uiRecall('histTab', _histTab, HIST_TABS);
 
