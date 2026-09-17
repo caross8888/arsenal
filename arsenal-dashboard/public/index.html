@@ -12,21 +12,25 @@
 <link rel="apple-touch-icon" href="/data/cannon_app_icon_512.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Arsenal FC · The Gunners Hub</title>
+<style id="bootHideCss">html.booting body{visibility:hidden}</style>
 <script>
 // 새로고침 때 "일정 탭이 잠깐 보였다가 원래 탭으로 바뀌는" 깜빡임 방지.
-// HTML에는 #fixtures가 active로 박혀 있고 해시 복원은 파일 한참 아래 스크립트가 하는데,
-// 이 파일이 500KB대라 브라우저가 그 전에 일정 탭을 한 번 그려버린다. 그래서 head에서
-// 해시를 먼저 읽어 CSS로만 목표 탭을 띄워둔다(실제 class 전환은 아래 스크립트가 한다).
+// HTML에는 일정 탭이 활성(섹션 active, 하단 탭 빨간색, 헤더 제목 "경기 일정", 하위 탭도
+// 첫 번째가 active)으로 박혀 있고, 해시·하위 탭 복원은 이 파일 한참 아래 스크립트가 한다.
+// 500KB대 한 파일이라 브라우저가 그 전에 일정 탭 상태를 그려버린다.
+//
+// 처음엔 CSS로 목표 섹션만 바꿔 끼웠는데, 하단 탭·헤더 제목·하위 탭 버튼이 그대로 보여서
+// 소용이 없었다(사용자 재보고). 그래서 요소별로 흉내 내는 대신 복원이 끝날 때까지 본문을
+// 잠깐 감춘다 — body만 가려서 배경색은 그대로 보이고, 흰 화면이 번쩍이지 않는다.
+// 복원 코드가 끝나면 바로 벗기고, 혹시 그 전에 스크립트가 죽어도 화면이 영영 안 보이는 일이
+// 없게 DOMContentLoaded와 1.5초 타임아웃으로 두 겹 안전장치를 둔다.
 (function(){
-  var h=(location.hash||'').replace('#','').trim();
-  if(h==='news'||h==='sns') h='media';                       // 구 URL 호환
-  if(['leaderboard','squad','media','history'].indexOf(h)===-1) return;
-  document.documentElement.setAttribute('data-start-sec',h);
-  var st=document.createElement('style');
-  st.id='startSecCss';
-  st.textContent='html[data-start-sec] #fixtures.section{display:none}'
-    +'html[data-start-sec="'+h+'"] #'+h+'.section{display:block}';
-  document.head.appendChild(st);
+  var el=document.documentElement;
+  el.classList.add('booting');
+  function reveal(){ el.classList.remove('booting'); }
+  window.__revealApp=reveal;
+  document.addEventListener('DOMContentLoaded',reveal);
+  setTimeout(reveal,1500);
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6443,9 +6447,6 @@ var loaded={fixtures:true};
 // fromHistory — 해시 복원이나 뒤로가기로 불린 경우. 이때 pushState를 하면 방문 기록이
 // 하나 더 쌓여서, 뒤로가기를 눌러도 같은 탭에 머무는(한 번 더 눌러야 나가는) 문제가 있었다.
 function showSec(id,btn,fromHistory){
-  // head에서 깜빡임 방지로 걸어둔 임시 CSS는 진짜 class 전환이 시작되면 필요 없다.
-  var startCss=document.getElementById('startSecCss');
-  if(startCss){ startCss.remove(); document.documentElement.removeAttribute('data-start-sec'); }
   document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
   document.getElementById(id).classList.add('active');
@@ -6550,6 +6551,9 @@ function showSec(id,btn,fromHistory){
   }
 
   _histTab = uiRecall('histTab', _histTab, HIST_TABS);
+
+  // 복원 끝 — head에서 감춰둔 본문을 이제 보여준다(깜빡임 방지, 위 bootHideCss 주석 참고).
+  if(window.__revealApp) window.__revealApp();
 })();
 // ── 라이브 카드 확장 ──
 var _liveExpandTimers = {}; // matchId → {timer, progressTimer, startTime}
