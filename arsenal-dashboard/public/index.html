@@ -27,14 +27,20 @@
 (function(){
   var el=document.documentElement;
   el.classList.add('booting');
-  function reveal(){ el.classList.remove('booting'); }
-  window.__revealApp=reveal;
+  // 진단용 기록(?diag=1로 접속하면 화면에 표시) — 깜빡임이 기기에서만 재현돼서,
+  // 어느 경로가 먼저 화면을 열었는지 폰에서 직접 확인하려고 남긴다.
+  window.__boot={build:'2026-09-18a', hash:location.hash, t0:Date.now()};
+  function reveal(by){
+    if(!window.__boot.revealBy){ window.__boot.revealBy=by; window.__boot.revealMs=Date.now()-window.__boot.t0; }
+    el.classList.remove('booting');
+  }
+  window.__revealApp=function(){ reveal('restore'); };
   // DOMContentLoaded는 이 파일의 스크립트가 전부 실행된 뒤에 나므로 복원보다 항상 늦다 —
   // 이게 실질적인 안전장치다. 예전엔 여기에 1.5초 타임아웃도 뒀는데, 폰처럼 느린 기기에서
   // 파싱이 1.5초를 넘으면 복원 전에 화면이 먼저 열려서 일정 탭이 그대로 보였다(사용자 재보고).
   // 타임아웃은 스크립트가 통째로 실패한 경우만 대비해 넉넉히 둔다.
-  document.addEventListener('DOMContentLoaded',reveal);
-  setTimeout(reveal,8000);
+  document.addEventListener('DOMContentLoaded',function(){ reveal('DOMContentLoaded'); });
+  setTimeout(function(){ reveal('timeout'); },8000);
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6564,7 +6570,28 @@ function showSec(id,btn,fromHistory){
   _histTab = uiRecall('histTab', _histTab, HIST_TABS);
 
   // 복원 끝 — head에서 감춰둔 본문을 이제 보여준다(깜빡임 방지, 위 bootHideCss 주석 참고).
+  if(window.__boot){
+    window.__boot.restoreMs = Date.now() - window.__boot.t0;
+    window.__boot.restoredSec = (document.querySelector('section.active')||{}).id;
+  }
   if(window.__revealApp) window.__revealApp();
+
+  // ?diag=1 — 폰에서 깜빡임 원인을 직접 보기 위한 진단 표시(평소엔 아무것도 안 그린다)
+  if(location.search.indexOf('diag=1') !== -1){
+    var b=window.__boot||{};
+    var box=document.createElement('div');
+    box.style.cssText='position:fixed;left:8px;right:8px;top:8px;z-index:99999;background:#000;color:#0f0;'
+      +'font:12px/1.5 monospace;padding:10px;border:1px solid #0f0;border-radius:8px;white-space:pre-wrap;word-break:break-all';
+    box.textContent='build: '+b.build
+      +'\n화면 열린 경로: '+b.revealBy+' ('+b.revealMs+'ms)'
+      +'\n복원 시점: '+b.restoreMs+'ms → '+b.restoredSec
+      +'\n해시: '+(b.hash||'(없음)')
+      +'\nstandalone: '+(window.navigator.standalone===true || (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches))
+      +'\nsession: '+(function(){try{return sessionStorage.getItem(UI_PREFS_KEY)||'(없음)';}catch(e){return 'err';}})()
+      +'\n\n(이 상자를 탭하면 사라집니다)';
+    box.onclick=function(){ box.remove(); };
+    document.body.appendChild(box);
+  }
 })();
 // ── 라이브 카드 확장 ──
 var _liveExpandTimers = {}; // matchId → {timer, progressTimer, startTime}
