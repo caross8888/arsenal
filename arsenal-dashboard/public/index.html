@@ -953,7 +953,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sns-time{font-size:10px;color:var(--text-secondary);flex-shrink:0}
 .sns-body{padding:0 14px 10px}
 .sns-text{font-size:13px;line-height:1.5;color:var(--text);white-space:pre-wrap;word-break:break-word}
-.sns-image{width:100%;max-height:200px;object-fit:cover;display:block;border-top:1px solid var(--border-bright)}
+/* 예전엔 높이 200px + cover라 세로 사진은 위아래가 잘려 선수 머리가 날아갔다. 잘라내지 않고
+   원본 비율로 보여주되, 9:16 같은 아주 긴 사진이 카드를 화면 너머까지 늘리지 않게만 막는다
+   (그 경우만 contain으로 좌우에 여백). 영상(.sns-video)과 같은 원칙. */
+.sns-image{width:100%;height:auto;max-height:560px;object-fit:contain;display:block;background:var(--surface2);border-top:1px solid var(--border-bright)}
 /* 영상은 잘리면 안 돼서(자막·스코어 그래픽) 사진과 달리 contain + 검은 배경. 세로 영상이
    카드를 과하게 늘리지 않게 높이만 제한한다. */
 .sns-video{position:relative;width:100%;max-height:420px;background:#000;border-top:1px solid var(--border-bright);cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center}
