@@ -181,15 +181,22 @@ export default async function handler(req, res) {
   } catch(e) { sourceErrors['ESPN'] = e.message; }
 
   // Guardian Open Platform API
+  // q=arsenal로 검색하면 기본 정렬이 relevance라 최신 기사가 아니라 "관련도 높은"
+  // 옛 라이브블로그·프리뷰가 뽑혔다(실측: 9/15 카라바오컵 입스위치전·9/16 다우먼 기사가
+  // 빠지고 가장 최근이 9/12, 8월 프리뷰까지 섞임). order-by=newest만 붙이면 반대로
+  // 스털링·맨유-브라이튼처럼 아스날이 본문에 한 번 언급된 기사가 섞이므로, 가디언이
+  // 직접 붙이는 아스날 태그(football/arsenal)로 받는다.
   try {
     const gKey = process.env.GUARDIAN_API_KEY || 'test';
     const gRes = await fetch(
-      `https://content.guardianapis.com/search?q=arsenal&section=football&show-fields=thumbnail,trailText&page-size=10&api-key=${gKey}`,
+      `https://content.guardianapis.com/search?tag=football/arsenal&order-by=newest&show-fields=thumbnail,trailText&page-size=15&api-key=${gKey}`,
       { signal: AbortSignal.timeout(6000) }
     );
     if (gRes.ok) {
       const gData = await gRes.json();
-      const gArticles = (gData.response?.results || []).map(a => {
+      // 여자팀 기사도 같은 football/arsenal 태그로 온다(별도 arsenalwomen 태그는 0건) —
+      // RSS 경로와 같은 WOMEN_RE로 거른다.
+      const gArticles = (gData.response?.results || []).filter(a => !WOMEN_RE.test(a.webTitle || '')).map(a => {
         const pub = new Date(a.webPublicationDate || Date.now());
         return {
           // Guardian의 trailText에는 <strong> 같은 태그가 그대로 들어있다 —
