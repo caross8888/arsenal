@@ -12,35 +12,64 @@
 <link rel="apple-touch-icon" href="/data/cannon_app_icon_512.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Arsenal FC · The Gunners Hub</title>
-<style id="bootHideCss">html.booting body{visibility:hidden}</style>
 <script>
-// 새로고침 때 "일정 탭이 잠깐 보였다가 원래 탭으로 바뀌는" 깜빡임 방지.
-// HTML에는 일정 탭이 활성(섹션 active, 하단 탭 빨간색, 헤더 제목 "경기 일정", 하위 탭도
-// 첫 번째가 active)으로 박혀 있고, 해시·하위 탭 복원은 이 파일 한참 아래 스크립트가 한다.
-// 500KB대 한 파일이라 브라우저가 그 전에 일정 탭 상태를 그려버린다.
+// 새로고침 때 "일정 탭이 잠깐 선택돼 보였다가 원래 탭으로 바뀌는" 깜빡임 방지.
+// 해시·하위 탭 복원은 이 파일 한참 아래 스크립트가 하는데, 500KB대 한 파일이라 브라우저가
+// 그 전에 상·하단 바를 그려버린다.
 //
-// 처음엔 CSS로 목표 섹션만 바꿔 끼웠는데, 하단 탭·헤더 제목·하위 탭 버튼이 그대로 보여서
-// 소용이 없었다(사용자 재보고). 그래서 요소별로 흉내 내는 대신 복원이 끝날 때까지 본문을
-// 잠깐 감춘다 — body만 가려서 배경색은 그대로 보이고, 흰 화면이 번쩍이지 않는다.
-// 복원 코드가 끝나면 바로 벗기고, 혹시 그 전에 스크립트가 죽어도 화면이 영영 안 보이는 일이
-// 없게 DOMContentLoaded와 1.5초 타임아웃으로 두 겹 안전장치를 둔다.
+// 앞서 두 번 헛짚었다: (1) CSS로 목표 섹션만 바꿔 끼우기 — 하단 탭·헤더·하위 탭은 그대로
+// 보여서 소용없었다. (2) 복원이 끝날 때까지 body를 감추기 — 기기에서는 그 프레임을 여전히
+// 그렸다(진단 결과 화면을 연 경로는 restore였는데도 깜빡임 지속). 둘 다 걷어냈다.
+// 지금 방식은 아래 두 가지다.
+//   - HTML에서 기본 active 마크업 제거(잘못된 상태가 존재할 수 없게)
+//   - 요소가 DOM에 붙는 즉시 올바른 선택 상태를 입히기(아래 MutationObserver)
 (function(){
-  var el=document.documentElement;
-  el.classList.add('booting');
-  // 진단용 기록(?diag=1로 접속하면 화면에 표시) — 깜빡임이 기기에서만 재현돼서,
-  // 어느 경로가 먼저 화면을 열었는지 폰에서 직접 확인하려고 남긴다.
-  window.__boot={build:'2026-09-18a', hash:location.hash, t0:Date.now()};
-  function reveal(by){
-    if(!window.__boot.revealBy){ window.__boot.revealBy=by; window.__boot.revealMs=Date.now()-window.__boot.t0; }
-    el.classList.remove('booting');
-  }
-  window.__revealApp=function(){ reveal('restore'); };
-  // DOMContentLoaded는 이 파일의 스크립트가 전부 실행된 뒤에 나므로 복원보다 항상 늦다 —
-  // 이게 실질적인 안전장치다. 예전엔 여기에 1.5초 타임아웃도 뒀는데, 폰처럼 느린 기기에서
-  // 파싱이 1.5초를 넘으면 복원 전에 화면이 먼저 열려서 일정 탭이 그대로 보였다(사용자 재보고).
-  // 타임아웃은 스크립트가 통째로 실패한 경우만 대비해 넉넉히 둔다.
-  document.addEventListener('DOMContentLoaded',function(){ reveal('DOMContentLoaded'); });
-  setTimeout(function(){ reveal('timeout'); },8000);
+  // 진단용 기록(?diag=1로 접속하면 화면에 표시) — 깜빡임이 기기에서만 재현돼서 남겨둔다.
+  window.__boot={build:'2026-09-18b', hash:location.hash, t0:Date.now()};
+
+  // ── 첫 그리기 전에 선택 상태 입히기 ──
+  // 마크업에서 기본 active를 뺀 덕에 "일정이 선택된 프레임"은 사라졌지만, 대신 아무것도
+  // 선택되지 않은 프레임이 잠깐 보인다(사용자 확인). 아래쪽 복원 코드는 파일 끝까지 파싱된
+  // 뒤에야 도는데, 브라우저는 그 전에 이미 상단/하단 바를 그린다.
+  // MutationObserver 콜백은 노드가 붙자마자(마이크로태스크) 실행되고, 그 시점은 다음 그리기
+  // 이전이다 — 그래서 요소가 생기는 즉시 여기서 class를 입히면 잘못된/빈 상태가 그려질 틈이 없다.
+  // 아래 복원 코드는 그대로 두고(여기선 화면 상태만, 거기선 데이터 로딩까지) 같은 결과를 다시 쓴다.
+  var TITLES={fixtures:'경기 일정', leaderboard:'리더보드', squad:'선수단', media:'미디어', history:'History'};
+  var SECS=['fixtures','leaderboard','squad','media','history'];
+  var h=(location.hash||'').replace('#','').trim();
+  if(h==='news'||h==='sns') h='media';
+  if(SECS.indexOf(h)===-1) h='fixtures';
+  var prefs={};
+  try{ prefs=JSON.parse(sessionStorage.getItem('uiPrefs_v1'))||{}; }catch(e){}
+  var want=[
+    ['#'+h, 'active'],
+    ['.nav-btn[onclick*="\''+h+'\'"]', 'active'],
+    ['.fix-view-btn[data-view="'+(prefs.fixView==='cal'?'cal':'list')+'"]', 'active'],
+    ['.media-seg-btn[onclick*="\''+(prefs.mediaTab||'news')+'\'"]', 'active'],
+    ['#lbTabs .lb-tab[data-tab="'+(prefs.lbTab||'team')+'"]', 'active'],
+    ['#lbStatSubnav .rec-subnav-btn[data-stat="'+(prefs.lbStat||'goals')+'"]', 'active'],
+    ['#squad .f-btn[onclick*="\''+(prefs.sqLevel||'first')+'\'"]', 'active'],
+    ['#squad .f-btn[onclick*="\''+(prefs.sqFilter||'all')+'\'"]', 'active']
+  ];
+  var mo=new MutationObserver(function(){
+    var left=0;
+    for(var i=0;i<want.length;i++){
+      if(!want[i]) continue;
+      var el=document.querySelector(want[i][0]);
+      if(el){
+        el.classList.add(want[i][1]); want[i]=null;
+        // 진단용: 하단 탭이 붙는 순간을 기록해 둔다(?diag=1에서 표시)
+        if(window.__boot.earlyMs==null && el.classList.contains('nav-btn')){
+          window.__boot.earlyMs=Date.now()-window.__boot.t0; window.__boot.earlySec=h;
+        }
+      } else left++;
+    }
+    var t=document.getElementById('headerTabTitle');
+    if(t && !t.textContent) t.textContent=TITLES[h];
+    if(!left) mo.disconnect();
+  });
+  mo.observe(document.documentElement,{childList:true,subtree:true});
+  document.addEventListener('DOMContentLoaded',function(){ mo.disconnect(); });
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6567,12 +6596,11 @@ function showSec(id,btn,fromHistory){
 
   _histTab = uiRecall('histTab', _histTab, HIST_TABS);
 
-  // 복원 끝 — head에서 감춰둔 본문을 이제 보여준다(깜빡임 방지, 위 bootHideCss 주석 참고).
   if(window.__boot){
     window.__boot.restoreMs = Date.now() - window.__boot.t0;
     window.__boot.restoredSec = (document.querySelector('section.active')||{}).id;
+    window.__boot.earlyApplied = window.__boot.earlyMs!=null;
   }
-  if(window.__revealApp) window.__revealApp();
 
   // ?diag=1 — 폰에서 깜빡임 원인을 직접 보기 위한 진단 표시(평소엔 아무것도 안 그린다)
   if(location.search.indexOf('diag=1') !== -1){
@@ -6581,7 +6609,7 @@ function showSec(id,btn,fromHistory){
     box.style.cssText='position:fixed;left:8px;right:8px;top:8px;z-index:99999;background:#000;color:#0f0;'
       +'font:12px/1.5 monospace;padding:10px;border:1px solid #0f0;border-radius:8px;white-space:pre-wrap;word-break:break-all';
     box.textContent='build: '+b.build
-      +'\n화면 열린 경로: '+b.revealBy+' ('+b.revealMs+'ms)'
+      +'\n선택상태 입힌 시점: '+(b.earlyMs!=null? b.earlyMs+'ms → '+b.earlySec : '실패(못 입힘)')
       +'\n복원 시점: '+b.restoreMs+'ms → '+b.restoredSec
       +'\n해시: '+(b.hash||'(없음)')
       +'\nstandalone: '+(window.navigator.standalone===true || (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches))
