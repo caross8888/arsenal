@@ -53,6 +53,9 @@ suite('이름', applyGlossary, [
   ['Ceadach O’Neill and Elijah Upson', '시아다흐 오닐 and 엘리야 업슨'],
   ['Edwin Quintero and Holger Quintero', '에드윈 퀸테로 and 홀거 퀸테로'],
   ['grilled salmon recipe', 'grilled salmon recipe'],           // Salmon 성 단독은 안 잡음(연어)
+  ['말리 살몬이 센터백으로 선발 출전했다', '말리 새먼이 센터백으로 선발 출전했다'],
+  ['메리노가 살몬과 짧게 대화를 나눴다', '메리노가 새먼과 짧게 대화를 나눴다'],
+  ['훈제살몬 샐러드', '훈제살몬 샐러드'],                           // 단어 중간의 "살몬"은 안 잡음
   // 상대팀
   ['챔피언스 리그 데뷔팀인 사바 FK는 누구이며', '챔피언스 리그 데뷔팀인 사바흐 FK는 누구이며'],
   ['Arsenal vs Sabah FK', '아스날 vs 사바흐 FK'],
