@@ -29,8 +29,12 @@
   el.classList.add('booting');
   function reveal(){ el.classList.remove('booting'); }
   window.__revealApp=reveal;
+  // DOMContentLoaded는 이 파일의 스크립트가 전부 실행된 뒤에 나므로 복원보다 항상 늦다 —
+  // 이게 실질적인 안전장치다. 예전엔 여기에 1.5초 타임아웃도 뒀는데, 폰처럼 느린 기기에서
+  // 파싱이 1.5초를 넘으면 복원 전에 화면이 먼저 열려서 일정 탭이 그대로 보였다(사용자 재보고).
+  // 타임아웃은 스크립트가 통째로 실패한 경우만 대비해 넉넉히 둔다.
   document.addEventListener('DOMContentLoaded',reveal);
-  setTimeout(reveal,1500);
+  setTimeout(reveal,8000);
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6429,12 +6433,19 @@ var VALID_SECS = ['fixtures','leaderboard','squad','media','history'];
 // 선수단 1군/아카데미·포지션, 미디어 뉴스/SNS/유튜브, 리더보드 팀/선수 순위,
 // 히스토리 구역)은 새로고침하면 전부 첫 번째 것으로 돌아갔다. 해시에 넣으면 주소가
 // 길어지고 뒤로가기 기록이 하위 탭까지 쌓여서, 브라우저에만 저장한다.
+//
+// localStorage가 아니라 sessionStorage인 이유: 목적이 "새로고침해도 보던 화면 유지"지
+// "지난번에 보던 화면 복원"이 아니다. localStorage로 두니 앱을 껐다 다시 켜도 달력 모드나
+// SNS 탭이 그대로 떠서 처음 진입 화면이 매번 달라졌다(사용자 지적). sessionStorage는
+// 새로고침엔 살아남고 앱/탭을 닫으면 지워져서 다음 진입은 늘 기본값으로 시작한다.
 var UI_PREFS_KEY='uiPrefs_v1';
 var _uiPrefs={};
-try{ _uiPrefs=JSON.parse(localStorage.getItem(UI_PREFS_KEY))||{}; }catch(e){ _uiPrefs={}; }
+try{ _uiPrefs=JSON.parse(sessionStorage.getItem(UI_PREFS_KEY))||{}; }catch(e){ _uiPrefs={}; }
+// 잠깐 localStorage에 저장하던 시절 값이 남아 있으면 지운다(안 지우면 브라우저에 계속 남는다)
+try{ localStorage.removeItem(UI_PREFS_KEY); }catch(e){}
 function uiRemember(k,v){
   _uiPrefs[k]=v;
-  try{ localStorage.setItem(UI_PREFS_KEY, JSON.stringify(_uiPrefs)); }catch(e){}
+  try{ sessionStorage.setItem(UI_PREFS_KEY, JSON.stringify(_uiPrefs)); }catch(e){}
 }
 function uiRecall(k,def,allowed){
   var v=_uiPrefs[k];
