@@ -478,9 +478,49 @@ function espnRecentForm(raw){
 // seasonseries를 주므로, Fotmob에 없는 쪽만 거기서 채운다. ESPN 조회(스코어보드
 // + summary)가 느려서 결과를 6시간 KV에 둔다(예정 경기 폼은 경기가 끝날 때마다
 // 바뀌니 영구 저장은 안 한다).
+// 예정 경기의 최근 폼을 Fotmob 팀 API로 채운다.
+//
+// 경기 응답(matchDetails)의 teamForm은 경기마다 있을 때도 없을 때도 있다 — 실측: UCL 릴전은
+// 오지만 EFL컵 4라운드 플리트우드전은 null이다. 예전엔 그 자리를 ESPN이 메웠는데, 그 경기는
+// ESPN 스코어보드에도 아예 없었다(그날 115경기 중 아스날 경기는 다른 대회 한 건뿐). 팀 API의
+// overview.teamForm은 하위 리그 팀도 최근 5경기를 그대로 주고, 항목 구조가 경기 응답의
+// teamForm과 같아서 변환 없이 쓴다(팀 상세모달이 이미 쓰는 엔드포인트라 새 소스도 아니다).
+async function formFromFotmobTeams(fm){
+  const teams = [fm.homeTeam, fm.awayTeam];
+  const out = await Promise.all(teams.map(async t => {
+    if(!t || !t.id) return null;
+    try {
+      const r = await fetch(`https://www.fotmob.com/api/data/teams?id=${t.id}`,
+        {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+      if(!r.ok) return null;
+      const j = await r.json();
+      const form = (j.overview?.teamForm || []).slice(-5);
+      if(!form.length) return null;
+      return {
+        teamId: String(t.id),
+        teamName: t.name || '',
+        events: form.map(f => ({
+          date: f.date?.utcTime || null,
+          opponent: {name: (f.home?.isOurTeam ? f.away?.name : f.home?.name) || '', crest: f.imageUrl || null},
+          isHome: f.home?.isOurTeam === true ? true : f.away?.isOurTeam === true ? false : null,
+          score: f.score || '',
+          result: f.resultString || '',
+          competition: f.tournamentName || '',
+        })),
+      };
+    } catch(_){ return null; }
+  }));
+  return out.filter(Boolean);
+}
+
 async function fillUpcomingFromEspn(fm, slug){
   const noH2h = !fm.h2h || !(fm.h2h.events || []).length;
-  const noForm = !(fm.recentForm || []).some(t => (t.events || []).length);
+  let noForm = !(fm.recentForm || []).some(t => (t.events || []).length);
+  // 폼은 같은 소스(Fotmob)에서 먼저 채운다 — ESPN은 상대전적만 남은 뒤 폴백으로 내려간다.
+  if(noForm){
+    const form = await formFromFotmobTeams(fm).catch(() => []);
+    if(form.length){ fm.recentForm = form; noForm = false; }
+  }
   if(!noH2h && !noForm) return fm;
   const key = `espnPre:${fm.eventId}`;
   let pre = await kvGet(key);
