@@ -134,7 +134,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .inj-strip{cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .inj-strip-chevron{margin-left:auto;color:var(--text-dim);}
 .fix-section-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:6px;padding-left:2px}
-.fix-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.fix-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
 /* 예전엔 이 안에 있는 헤더/리스트가 카드 하나로 통째로 둘러싸여 있어서,
    개별 경기 카드(.fix-card, 각자 테두리+둥근모서리 있음)까지 겹쳐서
    "카드 안에 카드"로 보였다 — 바깥 카드 배경/테두리/둥근모서리를 없애고
@@ -178,7 +178,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .totw-name{font-size:9px;font-weight:700;color:var(--white);text-shadow:0 1px 3px rgba(0,0,0,.9);white-space:nowrap;max-width:64px;overflow:hidden;text-overflow:ellipsis;}
 .totw-player.top .totw-photo{border-color:var(--gold);}
 .totw-player.top .totw-rating{background:var(--gold);color:#1a1400;}
-.fix-card{background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:13px 14px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+/* 카드 여백. 좌우는 --fix-px 하나로 관리한다 — 라이브 인라인 펼침(.fix-live-expand)이 이 값만큼
+   음수 마진으로 카드 끝까지 넓히고 그 자식들이 같은 값으로 다시 안쪽 여백을 주기 때문에,
+   숫자를 따로 적어두면 한쪽만 고쳤을 때 탭 바가 카드 밖으로 삐져나온다. */
+.fix-card{--fix-px:14px;background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:9px var(--fix-px);display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;}
 .fix-card.live-match{border-color:var(--green);}
 /* 예정 경기(home/away/neutral-fixture)는 홈/원정/중립을 색으로 구분하지
    않고(카드 하단 텍스트 라벨이 담당 — 종료 경기 승/무/패 테두리 색과 겹쳐서
@@ -199,9 +202,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fix-live-clock{text-align:center;font-size:10px;font-weight:700;letter-spacing:1px;}
 /* 라이브 카드의 주심/시계/경기장 한 줄 — 가운데 시계는 항상 정중앙에
    고정되도록 grid(1fr auto 1fr)로 좌우 텍스트 길이와 무관하게 정렬한다. */
-.fix-live-meta-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:4px 14px 0;}
+.fix-live-meta-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;padding:4px var(--fix-px) 0;}
 .fix-meta-side{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text-secondary);min-width:0;}
-.fix-live-commentary{padding:6px 14px 2px;font-size:10px;color:var(--text-secondary);line-height:1.4;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.fix-live-commentary{padding:6px var(--fix-px) 2px;font-size:10px;color:var(--text-secondary);line-height:1.4;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
 .fix-meta-side svg{flex-shrink:0;}
 .fix-meta-side span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .fix-meta-referee{justify-content:flex-start;}
@@ -214,9 +217,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    .fix-card의 padding:hidden 클리핑 경계(=카드 테두리 안쪽)와 정확히
    맞아떨어져서 가로로 잘릴 일이 없다 — overflow-x만 visible/auto로
    풀었을 때는 스크롤바가 생길 위험이 있어 이 방식으로 바꿈. */
-.fix-live-expand{overflow:hidden;max-height:0;transition:max-height 0.35s ease;margin:0 -14px;}
+.fix-live-expand{overflow:hidden;max-height:0;transition:max-height 0.35s ease;margin:0 calc(-1 * var(--fix-px));}
 .fix-live-expand.open{max-height:2000px;}
-.live-progress-wrap{padding:10px 14px 8px;display:flex;align-items:center;gap:8px;}
+.live-progress-wrap{padding:10px var(--fix-px) 8px;display:flex;align-items:center;gap:8px;}
 .live-progress-bar-bg{flex:1;height:3px;background:var(--overlay-10);border-radius:2px;overflow:hidden;}
 .live-progress-bar{height:100%;background:var(--green);border-radius:2px;transition:width 1s linear;}
 .live-progress-label{font-size:9px;color:var(--green);font-weight:700;min-width:30px;text-align:right;}
@@ -1220,7 +1223,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   #lbListCol .std-fa{font-size:clamp(9px,1.88cqw,12px);}
   #lbListCol .std-pts{font-size:clamp(11px,2.19cqw,14px);}
   .fix-detail-panel .mm-header-top{position:static;}
-  #fixWrap .fix-card{padding:18px 20px;gap:12px;}
+  #fixWrap .fix-card{--fix-px:20px;padding:13px var(--fix-px);gap:12px;}
   /* PC에서는 라이브 경기도 종료/예정 경기와 동일하게 우측 상세패널로
      보여준다(카드 자체 onclick, buildFixCard 참고) — 모바일 전용 인라인
      펼치기 버튼은 필요 없으니 숨긴다. */
