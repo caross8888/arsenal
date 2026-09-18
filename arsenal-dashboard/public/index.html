@@ -3718,6 +3718,7 @@ function renderSq(filter){
 var STATUS_LABEL={'i':'\uBD80\uC0C1','d':'\uCD9C\uC804 \uC758\uC2EC','s':'\uCD9C\uC7A5 \uC815\uC9C0','u':'\uACB0\uC7A5'};
 // ── NEWS ──
 function switchMedia(tab, btn){
+  if(tab!=='sns' && typeof stopSnsVideo==='function') stopSnsVideo();  // SNS 칸을 벗어나면 정지
   uiRemember('mediaTab', tab);
   document.querySelectorAll('.media-seg-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
@@ -4850,6 +4851,11 @@ function loadHlsJs(){
   return _hlsLoader;
 }
 var _snsPlaying=null; // 동시에 하나만 — 다른 영상을 틀면 이전 것은 멈춘다
+// 화면에서 사라지는 순간 멈춘다 — 안 그러면 다른 탭(선수단 등)으로 가도 소리가 계속 났다.
+// 탭을 옮기거나 미디어 하위 탭(뉴스/유튜브)으로 바꿀 때 호출한다.
+function stopSnsVideo(){
+  if(_snsPlaying){ try{ _snsPlaying.pause(); }catch(_){} }
+}
 function buildSnsVideo(v){
   var box=document.createElement('div');
   box.className='sns-video';
@@ -6493,6 +6499,7 @@ var loaded={fixtures:true};
 // fromHistory — 해시 복원이나 뒤로가기로 불린 경우. 이때 pushState를 하면 방문 기록이
 // 하나 더 쌓여서, 뒤로가기를 눌러도 같은 탭에 머무는(한 번 더 눌러야 나가는) 문제가 있었다.
 function showSec(id,btn,fromHistory){
+  if(typeof stopSnsVideo==='function') stopSnsVideo();  // 탭을 옮기면 SNS 영상 정지
   document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
   document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
   document.getElementById(id).classList.add('active');
