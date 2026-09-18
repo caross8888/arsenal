@@ -1211,6 +1211,7 @@ export default async function handler(req, res) {
           team: {
             name:      row.TeamName,
             shortName: row.TeamName,
+            id:        row.TeamId,
             crest:     `https://images.fotmob.com/image_resources/logo/teamlogo/${row.TeamId}.png`,
           },
           photo:     `https://images.fotmob.com/image_resources/playerimages/${row.ParticiantId}.png`,
@@ -1615,8 +1616,37 @@ export default async function handler(req, res) {
       const contractEndRaw = (pd.contractEnd || {}).utcTime || '';
       const contractEnd = contractEndRaw ? contractEndRaw.slice(0,10) : null;
 
+      // 기본 프로필 — 아스날 선수는 players.json이 이름·나이·국적·등번호를 갖고 있어서
+      // 여태 안 실어 보냈지만, 리더보드 선수 순위에서 여는 타팀 선수는 그 출처가 없다.
+      // 같은 playerData 응답에 다 들어있으므로 추가 호출 없이 꺼내 쓴다.
+      const infoOf = t => {
+        const it = (pd.playerInformation || []).find(i => (i.title||'').toLowerCase() === t);
+        const v = it && it.value;
+        return v ? (v.fallback !== undefined ? v.fallback : v.key) : null;
+      };
+      const numFromInfo = t => { const v = infoOf(t); const n = parseInt(String(v||'').replace(/[^\d]/g,''), 10); return isNaN(n) ? null : n; };
+      const pt = pd.primaryTeam || {};
+      const profile = {
+        name:        pd.name || '',
+        age:         numFromInfo('age'),
+        nationality: infoOf('country') || '',
+        shirtNumber: numFromInfo('shirt'),
+        heightCm:    numFromInfo('height'),
+        marketValue: infoOf('market value') || '',
+        position:    pd.positionDescription?.primaryPosition?.label || '',
+        team: pt.teamId ? {
+          id:    pt.teamId,
+          name:  pt.teamName || '',
+          crest: `https://images.fotmob.com/image_resources/logo/teamlogo/${pt.teamId}.png`,
+          // 헤더 색을 여기서 같이 내려주면 팀 API를 따로 부를 필요가 없다.
+          color: pt.teamColors?.color || null,
+        } : null,
+        isArsenal: pt.teamId === ARSENAL_TEAM_ID,
+      };
+
       result = {
         id: Number(playerId),
+        profile,
         preferredFoot,
         contractEnd,
         competitions,

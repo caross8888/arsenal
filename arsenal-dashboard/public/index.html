@@ -3302,6 +3302,19 @@ function renderTeamSquadPanel(t){
   return h+'<div style="height:22px"></div>';
 }
 
+// 선수 순위의 행을 눌렀을 때 — 선수 상세모달을 연다.
+// 아스날 선수는 이미 선수단에 등번호·계약·유스 구분까지 있는 객체가 있으니 그걸 그대로 쓰고
+// (순위 행에 있는 값보다 훨씬 풍부하다), 타팀 선수는 최소 정보만 넘긴다. 나머지(나이·국적·
+// 등번호·계약만료·기록·히트맵 등)는 모달이 여는 즉시 부르는 playerDetail 응답이 채운다.
+function openLeaderPlayer(p){
+  if(!p || !p.id) return;
+  if(p.isArsenal && typeof allPlayers!=='undefined' && allPlayers.length){
+    var mine=allPlayers.find(function(x){ return String(x.fotmobId||x.id)===String(p.id); });
+    if(mine){ openPlayerModal(mine, mine.level||'first'); return; }
+  }
+  openPlayerModal({id:p.id, name:p.name, photo:p.photo, team:p.team}, 'first');
+}
+
 // ── 선수 순위 (EPL 전체, Fotmob 기반) ──
 var _leaders={goals:[],assists:[],cleanSheets:[],rating:[],xg:[],shots:[],shotConv:[],saves:[],saveRate:[],cards:[]};
 var _leadersCat='goals';
@@ -3343,6 +3356,8 @@ function renderLeaders(){
     info.appendChild(nm);info.appendChild(team);
     var vNum=parseFloat(p.value);
     var val=document.createElement('span');val.className='ldr-val'+(vNum===maxVal?' top':'');val.textContent=p.value+(LDR_VAL_SUFFIX[_leadersCat]||'');
+    row.style.cursor='pointer';
+    row.onclick=function(){ openLeaderPlayer(p); };
     row.appendChild(rank);row.appendChild(photo);row.appendChild(info);row.appendChild(val);
     el.appendChild(row);
   });
@@ -7774,8 +7789,14 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
 
   var h = '';
 
-  // ── 헤더 (빨간 배경) ──
-  h += '<div class="pm-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
+  // ── 헤더 (아스날은 빨간 배경, 타팀은 팀 색) ──
+  // 리더보드 선수 순위에서 연 타팀 선수는 헤더를 그 팀 색으로 칠한다 — 팀 상세모달과 같은
+  // 방식으로, 라이트 모드에서도 헤더 글자가 흰색 고정이라 배경은 어두운 색을 깔고 팀 색은
+  // 그 위에 얹는다(팀 색만 깔면 맨시티 하늘색 같은 밝은 팀에서 글자가 안 보인다).
+  var rivalTeam = (!isArsenalTeam(p.team) && p.team && p.team.name) ? p.team : null;
+  var headerStyle = (rivalTeam && rivalTeam.color)
+    ? ' style="background-color:#1a1c22;background-image:linear-gradient(135deg,'+rivalTeam.color+'73,transparent)"' : '';
+  h += '<div class="pm-header"'+headerStyle+'><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
   h += '<div class="pm-header-inner">';
   if(p.photo){
     h += '<img class="pm-photo" src="'+p.photo+'" onerror="this.onerror=null;this.src=\'/data/player_placeholder.png\';this.style.objectFit=\'contain\';this.style.background=\'rgba(0,0,0,.3)\';this.style.padding=\'8px\'">';
@@ -7785,7 +7806,11 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   h += '<div>';
   h += '<div class="pm-name">'+p.name+'</div>';
   h += '<div class="pm-club">';
-  h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> Arsenal FC';
+  if(rivalTeam){
+    h += (rivalTeam.crest ? '<img src="'+rivalTeam.crest+'" style="width:16px;height:16px;border-radius:50%" onerror="this.style.display=\'none\'"> ' : '')+rivalTeam.name;
+  } else {
+    h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> Arsenal FC';
+  }
   h += '</div>';
   var badges = [];
   if(jersey) badges.push('#'+jersey);
@@ -8140,6 +8165,21 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 아래서 화면에 이미 떠 있는지 textContent로 다시 스니핑하면, 계약
       // 만료만 있고 주사용발은 아직 없는 선수처럼 "둘 중 하나라도 있으면
       // 안 채워진 나머지는 영영 안 채워지는" 오탐이 난다.
+      // 타팀 선수는 players.json 같은 출처가 없어서 이름·나이·국적·등번호가 비어 있다 —
+      // 같은 응답의 profile로 채운다(아스날 선수는 이미 더 풍부한 값이 있으니 건드리지 않는다).
+      var profileFilled = false;
+      if(live.profile && !live.profile.isArsenal){
+        var pr = live.profile;
+        if(!p.name && pr.name){ p.name = pr.name; profileFilled = true; }
+        if(p.age==null && pr.age!=null){ p.age = pr.age; profileFilled = true; }
+        if(!p.nationality && pr.nationality){ p.nationality = pr.nationality; profileFilled = true; }
+        if(!p.jersey && pr.shirtNumber!=null){ p.jersey = pr.shirtNumber; profileFilled = true; }
+        // players.json의 height는 "179 cm" 형식이라 표기를 맞춘다(기본정보 그리드에 그대로 출력됨)
+        if(!p.height && pr.heightCm){ p.height = pr.heightCm + ' cm'; profileFilled = true; }
+        if(!p.position && pr.position){ p.position = pr.position; profileFilled = true; }
+        if(!p.team && pr.team){ p.team = pr.team; profileFilled = true; }
+        else if(p.team && pr.team && !p.team.color){ p.team.color = pr.team.color; profileFilled = true; }
+      }
       var hadContractBefore = !!p.contractEnd;
       var hadFootBefore = !!p.preferredFoot;
       // 지금 화면에 그려진 값(=이 콜백이 실행되기 전 p의 값)을 미리 찍어둔다.
@@ -8218,7 +8258,9 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 갖고 있으면(hadXBefore) 매번 재확인할 필요 없다 — 실제로 "새로
       // 생긴" 값일 때만 채운다.
       var basicInfoMissing = (!!live.contractEnd && !hadContractBefore) || (!!live.preferredFoot && !hadFootBefore);
-      if(!otherChanged && !traitsChanged && !traitsBoxMissing && !basicInfoMissing) return;
+      // 타팀 선수는 첫 화면을 이름·사진만으로 그린다(순위 행에 그것뿐) — 방금 profile로
+      // 나이·등번호·팀 색 등을 채웠으면, 기록이 안 바뀌었어도 헤더를 다시 그려야 반영된다.
+      if(!otherChanged && !traitsChanged && !traitsBoxMissing && !basicInfoMissing && !profileFilled) return;
       // fetch가 도는 동안 사용자가 이미 다른 탭(기록/경력)으로 넘어가 있을
       // 수 있다 — 다시 그리면 항상 기본정보 탭이 기본값이라, 그 전에 어느
       // 탭이 활성 상태였는지 기억해뒀다가 다시 그린 뒤 그 탭을 그대로
@@ -8247,8 +8289,10 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 경우 — 실제로 "바뀐" 게 아니라 처음 채워지는 거라 페이드 없이
       // 조용히 탭 패널만 다시 그린다(scopedFade로 #pmTabPanelsWrap만
       // 갈아끼우되, opacity 애니메이션은 생략).
-      if(!otherChanged && !traitsChanged && (traitsBoxMissing || basicInfoMissing)){
-        openPlayerModal(merged, level, true, true, activeTab);
+      // scopedFade(4번째 인자)는 헤더를 그대로 두고 탭 패널만 갈아끼운다. 타팀 선수처럼
+      // 헤더 값(이름·등번호·나이·팀 색)이 이번에 처음 채워진 경우엔 헤더까지 다시 그려야 한다.
+      if(!otherChanged && !traitsChanged && (traitsBoxMissing || basicInfoMissing || profileFilled)){
+        openPlayerModal(merged, level, true, !profileFilled, activeTab);
         if(activeTab && activeTab!=='pmbasic'){
           var quietBtn = content.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');
           if(quietBtn) quietBtn.click();
@@ -8265,7 +8309,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
         tabsWrap.style.opacity = '0.15';
       }
       setTimeout(function(){
-        openPlayerModal(merged, level, true, true);
+        openPlayerModal(merged, level, true, !profileFilled);
         if(activeTab && activeTab!=='pmbasic'){
           var newBtn = content.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');
           if(newBtn) newBtn.click();
