@@ -1253,6 +1253,34 @@ export default async function handler(req, res) {
         ]);
 
         result = { goals, assists, cleanSheets, rating, xg, shots, shotConv, saves, saveRate, cards };
+
+        // 팀 색 채우기 — 순위 행을 눌러 여는 선수 상세모달이 헤더/탭을 팀 색으로 칠하는데,
+        // 선수 응답(playerDetail)에도 색이 있지만 그건 몇백 ms 뒤에 와서 처음엔 색 없이 뜬다.
+        // 여기서 미리 실어 보내면 모달이 열리는 순간부터 팀 색이 적용된다.
+        // Fotmob 순위 API엔 색이 없어서 팀 API로 받아야 하는데, 팀 색은 거의 안 바뀌므로
+        // id→색 맵을 KV에 30일 캐시해두고 빠진 팀만 채운다(보통 0건, 새 팀이 올라오면 몇 건).
+        try {
+          const ids = [...new Set(Object.values(result).flat().map(p => p && p.team && p.team.id).filter(Boolean))];
+          const colorMap = (await kvGetJSON('teamColors')) || {};
+          const missing = ids.filter(id => !colorMap[id]);
+          if(missing.length){
+            await Promise.all(missing.map(async id => {
+              try {
+                const r = await fetch(`https://www.fotmob.com/api/data/teams?id=${id}`,
+                  {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+                if(!r.ok) return;
+                const j = await r.json();
+                // 색은 overview.teamColors.lightMode에 있다(팀 상세모달 type=team이 쓰는 값과 동일)
+                const c = j?.overview?.teamColors?.lightMode || j?.overview?.teamColors?.darkMode;
+                if(c) colorMap[id] = c;
+              } catch(_){}
+            }));
+            await kvSetJSON('teamColors', colorMap, 30 * 24 * 60 * 60);
+          }
+          Object.values(result).flat().forEach(p => {
+            if(p && p.team && colorMap[p.team.id]) p.team.color = colorMap[p.team.id];
+          });
+        } catch(_){ /* 색은 있으면 좋은 값 — 실패해도 순위 자체엔 영향 없다 */ }
       } catch(err) {
         const stale = getStale('leaders');
         if(stale) return res.json(stale);
