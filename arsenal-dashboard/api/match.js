@@ -28,6 +28,15 @@ async function kvGet(key){
     return result ? JSON.parse(result) : null;
   } catch(_){ return null; }
 }
+// 아스날 경기인지 — 보존 기간을 가르는 기준(아래 kvSet 주석 참고).
+// id로 비교하지 않는다: 소스마다 번호 체계가 달라 엉뚱한 팀과 겹칠 수 있다(football.js의
+// isArsenalTeam이 같은 이유로 이름을 쓴다). 동명 클럽(Arsenal de Sarandí, Arsenal Tula)을
+// 거르려고 "Arsenal" 또는 "Arsenal U##"만 우리로 본다.
+function isArsenalMatch(data){
+  const ours = n => /^arsenal(\s+u\d+)?$/i.test(String(n || '').trim());
+  return ours(data?.homeTeam?.name) || ours(data?.awayTeam?.name);
+}
+
 // 경기가 끝나고 하루가 지나면 평점·스탯이 확정된 것으로 보고 불변 취급한다.
 function isSettled(data){
   if(!data || data.status !== 'Full Time' || !data.utcDate) return false;
@@ -557,7 +566,11 @@ export default async function handler(req, res) {
         // 지난 경기만 영구 저장하고, 갓 끝난 경기는 1시간짜리로 둔다.
         if (fm.status === 'Full Time') {
           const settled = isSettled(fm);
-          await kvSet(`match:${eventId}`, fm, settled ? null : 60 * 60);
+          // 보존 기간은 "우리 경기냐"로 갈린다. 아스날 경기는 최근 결과 브라우저에서 과거
+          // 시즌까지 다시 열 수 있으니 영구. 타팀 경기는 리더보드 라운드 패널에서만 닿는데
+          // 그 패널이 이번 시즌만 보여줘서 다음 시즌이면 진입점이 사라진다 — 1년이면 충분하다.
+          await kvSet(`match:${eventId}`, fm,
+            settled ? (isArsenalMatch(fm) ? null : 365 * 24 * 60 * 60) : 60 * 60);
           // 확정 전(종료 24시간 이내)이라도 스코어는 안 바뀌고 평점만 미세
           // 조정되므로, 브라우저엔 10분짜리 캐시를 준다 — 영구 저장은 막되
           // 다시 열 때 스피너는 안 뜨게.

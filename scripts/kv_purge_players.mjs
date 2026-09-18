@@ -10,7 +10,7 @@
 // 같은 모듈(arsenal-dashboard/api/_purge.js)을 쓰므로 둘이 갈라지지 않는다.
 
 import fs from 'fs';
-import { purgePlayerSeasons } from '../arsenal-dashboard/api/_purge.js';
+import { purgePlayerSeasons, expireOtherTeamMatches } from '../arsenal-dashboard/api/_purge.js';
 
 const APPLY = process.argv.includes('--apply');
 
@@ -60,3 +60,11 @@ console.log(`합계 ${(report.bytes / 1048576).toFixed(2)}MB`);
 
 if (APPLY) console.log(`\n${report.deleted}개 삭제 완료 (${(report.bytes / 1048576).toFixed(2)}MB 회수).`);
 else console.log('\n드라이런입니다 — 실제로 지우려면 --apply를 붙여 다시 실행하세요.');
+
+// ── 타팀 경기 상세: 예전에 영구로 저장된 것들에 1년 만료 걸기 ──
+const mr = await expireOtherTeamMatches(kv, { apply: APPLY });
+console.log(`\nmatch 키 ${mr.scanned}개 — 영구 ${mr.permanent}개 중 아스날 ${mr.ours}개 유지 / 타팀 ${mr.targets.length}개 만료 대상 (${(mr.bytes / 1048576).toFixed(2)}MB)`);
+mr.warnings.forEach(w => console.warn(`  ${w}`));
+mr.targets.slice(0, 10).forEach(t => console.log(`  ${t.date}  ${t.home} vs ${t.away}  ${((t.bytes || 0) / 1024).toFixed(0)}KB`));
+if (mr.targets.length > 10) console.log(`  … 외 ${mr.targets.length - 10}개`);
+if (APPLY) console.log(`${mr.expired}개에 1년 만료를 걸었습니다.`);

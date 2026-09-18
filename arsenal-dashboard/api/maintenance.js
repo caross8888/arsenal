@@ -16,7 +16,7 @@
 // CRON_SECRET이 설정돼 있지 않으면 아예 거부한다(fail closed) — 비밀값을 깜빡
 // 설정 안 한 상태가 "누구나 지울 수 있음"이 되면 안 된다.
 
-import { purgePlayerSeasons } from './_purge.js';
+import { purgePlayerSeasons, expireOtherTeamMatches } from './_purge.js';
 
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
@@ -44,12 +44,18 @@ export default async function handler(req, res) {
   const dry = req.query.dry === '1';
   try {
     const report = await purgePlayerSeasons(kv, { apply: !dry });
+    // 예전에 영구로 저장된 타팀 경기에 1년 만료를 걸어준다(지금은 저장 시점에 걸린다).
+    report.matches = await expireOtherTeamMatches(kv, { apply: !dry });
     // 지운 대상은 로그로 남긴다 — 나중에 "왜 이 선수 캐시가 없지"를 추적할 수 있게.
     console.log('[maintenance] purgePlayerSeasons', JSON.stringify({
       dry, ok: report.ok, reason: report.reason, squad: report.squad,
       scanned: report.scanned, kept: report.kept, deleted: report.deleted,
       stale: report.stale.map(s => `${s.key} (${s.name} → ${s.club})`),
       warnings: report.warnings,
+      matches: report.matches && {
+        scanned: report.matches.scanned, permanent: report.matches.permanent,
+        ours: report.matches.ours, targets: report.matches.targets.length, expired: report.matches.expired,
+      },
     }));
     res.setHeader('Cache-Control', 'no-store');
     return res.status(report.ok ? 200 : 409).json(report);

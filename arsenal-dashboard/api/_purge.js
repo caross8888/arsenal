@@ -5,11 +5,16 @@
 // 두 벌로 갈라져 한쪽만 고쳐지는 걸 막으려는 것.
 //
 // 왜 지우나
-//   playerSeason:{선수id}:{시즌}은 "직전 시즌(끝나서 다시 안 바뀌는)" 스탯이라 TTL 없이
-//   영구 저장한다 — 한 번 긁어오면 Fotmob을 다시 안 부른다. 남아 있는 선수는 시즌마다
+//   playerSeason:{선수id}:{시즌}은 "직전 시즌(끝나서 다시 안 바뀌는)" 스탯이라 아스날 선수는
+//   TTL 없이 영구 저장한다 — 한 번 긁어오면 Fotmob을 다시 안 부른다. 남아 있는 선수는 시즌마다
 //   키가 하나씩 붙는 게 의도지만, 이적해서 나간 선수의 키는 아무도 다시 안 읽는다
 //   (이 데이터는 선수 상세모달의 "직전 시즌" 조회에서만 쓰이고, 그 모달은 스쿼드에서 연다).
 //   키 하나가 최대 170KB대라 match: 캐시보다 빨리 커진다.
+//
+// 건드리지 않는 것
+//   타팀 선수 키는 football.js가 5년 TTL로 저장한다(리더보드 선수 순위에서 열어본 선수도
+//   최근 5년 기록은 보이게 하려는 것). 그 키까지 지우면 매년 5월에 그 방침이 무너지므로,
+//   여기서는 만료가 없는 키(=아스날 선수로 저장된 것)만 대상으로 삼는다.
 
 const ARSENAL_TEAM_ID = 9825; // Fotmob 팀 ID (football.js와 같은 값)
 const MIN_SQUAD = 20;         // 이보다 적게 내려오면 명단을 못 믿는다
@@ -71,6 +76,12 @@ export async function purgePlayerSeasons(kv, opts = {}) {
     const m = key.match(/^playerSeason:(\d+):(.+)$/);
     if (!m) { report.warnings.push(`형식이 다른 키 건너뜀: ${key}`); continue; }
     if (squadIds.has(m[1])) { report.kept++; continue; }
+    // 만료가 걸린 키는 타팀 선수다(football.js가 5년 TTL로 저장). 이 정리 작업이 건드리면
+    // "타팀도 최근 5년 기록은 본다"는 방침이 매년 5월에 무너지므로, 영구 저장된 키만 본다.
+    // TTL: -1이면 만료 없음(=아스날 선수로 저장), -2면 키 없음, 그 외는 남은 초.
+    let ttl = -1;
+    try { ttl = await kv('TTL', key); } catch (_) {}
+    if (typeof ttl === 'number' && ttl >= 0) { report.kept++; continue; }
     candidates.push({ key, id: m[1], season: m[2] });
   }
 
@@ -111,6 +122,62 @@ export async function purgePlayerSeasons(kv, opts = {}) {
   }
   report.ok = true;
   return report;
+}
+
+/**
+ * 타팀 경기 상세(match:)에 1년 만료를 걸어준다.
+ *
+ * 아스날 경기는 "최근 결과"에서 과거 시즌까지 다시 열 수 있어 영구 보관하지만, 타팀 경기는
+ * 리더보드 라운드 패널에서만 닿고 그 패널이 이번 시즌만 보여줘서 다음 시즌이면 진입점이
+ * 없어진다. match.js가 이제 저장 시점에 1년 TTL을 걸지만, 그 이전에 영구로 저장된 키가
+ * 남아 있어서(라운드 패널을 붙인 뒤 쌓인 것들) 여기서 한 번 정리한다.
+ *
+ * 지우지 않고 만료만 거는 이유: 되돌릴 수 없는 삭제보다 안전하고, 1년 안에 다시 열면
+ * 그대로 캐시로 쓰인다. 만료가 이미 걸린 키는 건너뛰므로 여러 번 돌려도 안전하다.
+ *
+ * @param {(...args:any[])=>Promise<any>} kv
+ * @param {{apply?:boolean}} opts
+ */
+export async function expireOtherTeamMatches(kv, opts = {}) {
+  const apply = !!opts.apply;
+  const TTL = 365 * 24 * 60 * 60;
+  const report = { scanned: 0, permanent: 0, ours: 0, targets: [], expired: 0, bytes: 0, warnings: [] };
+
+  let cursor = '0';
+  const keys = [];
+  do {
+    const [next, batch] = await kv('SCAN', cursor, 'MATCH', 'match:*', 'COUNT', '500');
+    cursor = next;
+    keys.push(...batch);
+  } while (cursor !== '0');
+  report.scanned = keys.length;
+
+  for (const key of keys) {
+    let ttl = -1;
+    try { ttl = await kv('TTL', key); } catch (_) { continue; }
+    if (typeof ttl === 'number' && ttl >= 0) continue;   // 이미 만료가 걸린 키
+    report.permanent++;
+
+    let data = null;
+    try { const raw = await kv('GET', key); data = raw ? JSON.parse(raw) : null; } catch (_) {}
+    if (!data) { report.warnings.push(`읽기 실패, 건너뜀: ${key}`); continue; }
+    if (isArsenalMatch(data)) { report.ours++; continue; }
+
+    const t = { key, home: data.homeTeam?.name || '', away: data.awayTeam?.name || '', date: (data.utcDate || '').slice(0, 10) };
+    try { const n = await kv('STRLEN', key); if (typeof n === 'number') { t.bytes = n; report.bytes += n; } } catch (_) {}
+    report.targets.push(t);
+  }
+
+  if (apply) {
+    for (const t of report.targets) { await kv('EXPIRE', t.key, String(TTL)); report.expired++; }
+  }
+  return report;
+}
+
+// 아스날 경기 판정 — match.js의 같은 이름 함수와 같은 규칙(동명 클럽 제외).
+function isArsenalMatch(data) {
+  const ours = n => /^arsenal(\s+u\d+)?$/i.test(String(n || '').trim());
+  return ours(data?.homeTeam?.name) || ours(data?.awayTeam?.name);
 }
 
 export { MIN_SQUAD, isOurClub };

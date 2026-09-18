@@ -91,17 +91,26 @@ async function kvGetPlayerSeason(id, seasonName){
     return result ? JSON.parse(result) : null;
   } catch(e){ return null; }
 }
-async function kvSetPlayerSeason(id, seasonName, data){
+// ttlSec을 주면 그만큼 뒤 자동 만료, 안 주면 영구 저장.
+// 아스날 선수는 영구(시즌마다 쌓여서 그 자체가 우리 앱의 기록이 된다), 타팀 선수는 5년 —
+// 리더보드 선수 순위에서 열어본 타팀 선수도 "최근 5년에 뭘 했나"는 볼 수 있게 두되,
+// 무한정 쌓이지는 않게 한다. 키 하나가 130~164KB라 5년 누적이 60MB대(한도 256MB)다.
+async function kvSetPlayerSeason(id, seasonName, data, ttlSec){
   if(!KV_URL || !KV_TOKEN) return;
   try {
+    const key = `playerSeason:${id}:${seasonName}`;
+    const cmd = ttlSec
+      ? ['SET', key, JSON.stringify(data), 'EX', String(ttlSec)]
+      : ['SET', key, JSON.stringify(data)];
     await fetch(KV_URL, {
       method: 'POST',
       headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
-      body: JSON.stringify(['SET', `playerSeason:${id}:${seasonName}`, JSON.stringify(data)]),
+      body: JSON.stringify(cmd),
       signal: AbortSignal.timeout(5000),
     });
   } catch(e){ /* 캐시 저장 실패는 무시 */ }
 }
+const PLAYER_SEASON_TTL_OTHER = 5 * 365 * 24 * 60 * 60; // 타팀 선수 5년
 
 // ── 1군 스쿼드 명단 — 스크래퍼(Playwright) 없이 Fotmob 팀 API로 실시간
 // 조회. players.json처럼 사람이 로컬에서 스크립트를 돌려야 갱신되는
@@ -1668,7 +1677,11 @@ export default async function handler(req, res) {
       // KV에 저장 — 실패해도 이번 응답엔 영향 없게 await는 하되 에러는
       // kvSetPlayer(Player)Season 내부에서 이미 삼킨다. 직전 시즌(완결,
       // 안 바뀜)은 영구 저장, 이번 시즌(계속 바뀜)은 기존처럼 7일 TTL.
-      if(wantPrevSeason) await kvSetPlayerSeason(playerId, prevSeasonName, result);
+      if(wantPrevSeason){
+        // 소속은 Fotmob 선수 응답(primaryTeam)으로 판정한다 — 타팀 선수는 5년 뒤 자동 만료.
+        const isOurs = (pd.primaryTeam || {}).teamId === ARSENAL_TEAM_ID;
+        await kvSetPlayerSeason(playerId, prevSeasonName, result, isOurs ? null : PLAYER_SEASON_TTL_OTHER);
+      }
       else await kvSetPlayer(playerId, result);
     } else if(type === 'transfers'){
       // 이적시장 IN/OUT 요약 — Fotmob 팀 API(이미 스쿼드 라이브 목록에 쓰는
