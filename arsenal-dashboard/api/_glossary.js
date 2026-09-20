@@ -191,7 +191,9 @@ export function applyGlossary(text) {
   const stash = [];
   // 자리표시자는 NUL로 감싼다 — " 3 " 같은 평범한 형태를 쓰면 본문에 원래 있던
   // "승점 3 점"의 숫자가 URL로 잘못 복원된다. NUL은 본문에 나올 수 없다.
-  let out = text.replace(/https?:\/\/\S+|\b[\w.-]+\.(?:com|co\.uk|org|net|social|be|io|app)\S*/gi, (m) => {
+  // @핸들도 같이 들어낸다 — 핸들은 계정 주소라 표기 통일 대상이 아닌데, 안 빼두면
+  // "@Arsenal"이 "@아스날"로 바뀌어 존재하지 않는 계정이 된다(실측).
+  let out = text.replace(/https?:\/\/\S+|\b[\w.-]+\.(?:com|co\.uk|org|net|social|be|io|app)\S*|@[A-Za-z0-9_][A-Za-z0-9_.]*/gi, (m) => {
     stash.push(m);
     return '\u0000' + (stash.length - 1) + '\u0000';
   });

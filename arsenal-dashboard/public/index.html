@@ -2117,10 +2117,7 @@ function formatDate(utcDate, tbd){
   if(tbd==='postponed') return date+' 연기';
   if(tbd==='canceled')  return date+' 취소';
   var time=tbd==='tbd'?'시간미정':d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
-  // KST(UTC+9) 기준 날짜 비교
-  var KST=9*60*60*1000;
-  function kstDay(ts){ return Math.floor((ts+KST)/86400000); }
-  var diff=kstDay(d.getTime())-kstDay(Date.now());
+  var diff=kstDayDiff(d.getTime());   // KST 달력 날짜 차이(공용 헬퍼)
   if(diff===0) return '\uc624\ub298 '+time;
   if(diff===1) return '\ub0b4\uc77c '+time;
   return date+' '+time;
@@ -2161,9 +2158,7 @@ function renderDday(list){
   if(isLive){
     ddayText='LIVE';
   } else {
-    var KST=9*60*60*1000;
-    var kstDay=function(ts){return Math.floor((ts+KST)/86400000);};
-    var diff=kstDay(new Date(next.utcDate).getTime())-kstDay(Date.now());
+    var diff=kstDayDiff(new Date(next.utcDate).getTime());
     ddayText=diff<=0?'D-DAY':'D-'+diff;
   }
 
@@ -2801,6 +2796,13 @@ function loadFixtures(){
 
 // ── 예정 경기 달력 보기 ──
 var _calDate = new Date();
+// D-day와 오늘/내일 표기는 전부 KST 달력 날짜 차이로 센다.
+// 남은 시간(밀리초)을 올림하면 "내일 밤 경기"가 37시간 남았다는 이유로 D-2가 된다 —
+// 팀 상세모달이 그렇게 계산해서 일정 탭(D-1)과 하루 어긋났다(사용자 지적).
+var KST_OFFSET_MS = 9*60*60*1000;
+function kstDayIndex(ts){ return Math.floor((ts + KST_OFFSET_MS) / 86400000); }
+function kstDayDiff(ts, from){ return kstDayIndex(ts) - kstDayIndex(from == null ? Date.now() : from); }
+
 function kstParts(ts){
   var KST=9*60*60*1000;
   var d=new Date(ts+KST);
@@ -3196,7 +3198,7 @@ function renderTeamInfoPanel(t){
   if(t.nextMatch){
     var nd=t.nextMatch.utcDate?new Date(t.nextMatch.utcDate):null;
     var when=nd?((nd.getMonth()+1)+'월 '+nd.getDate()+'일 '+String(nd.getHours()).padStart(2,'0')+':'+String(nd.getMinutes()).padStart(2,'0')):'';
-    var dday=nd?Math.max(0,Math.ceil((nd-new Date())/86400000)):null;
+    var dday=nd?Math.max(0,kstDayDiff(nd.getTime())):null;
     h+='<div class="mm-card-title" style="padding:14px 16px 6px">다음 경기</div>'
       +'<div style="display:flex;align-items:center;gap:10px;margin:0 16px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border-bright);border-radius:12px">'
       +(t.nextMatch.opponentId?'<img src="https://images.fotmob.com/image_resources/logo/teamlogo/'+t.nextMatch.opponentId+'.png" alt="" style="width:26px;height:26px" onerror="this.style.visibility=\'hidden\'">':'')
@@ -3415,9 +3417,7 @@ var _lbRoundMatches={};
 function roundDateLabel(utcDate){
   var d=new Date(utcDate);
   var date=d.toLocaleDateString('ko-KR',{month:'short',day:'numeric',weekday:'short'});
-  var KST=9*60*60*1000;
-  function kstDay(ts){ return Math.floor((ts+KST)/86400000); }
-  var diff=kstDay(d.getTime())-kstDay(Date.now());
+  var diff=kstDayDiff(d.getTime());
   if(diff===0) return '오늘';
   if(diff===1) return '내일';
   if(diff===-1) return '어제';

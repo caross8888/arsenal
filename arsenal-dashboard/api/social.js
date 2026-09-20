@@ -48,7 +48,12 @@ function timeAgo(dateStr) {
 // 채로 안 열리는 링크를 만들게 된다. Buffer로 UTF-8 바이트 기준 슬라이싱
 // 해서 정확한 구간을 잘라낸다.
 function buildSegments(text, facets) {
-  if (!text || !facets || !facets.length) return null;
+  if (!text) return null;
+  // 링크/멘션 facet이 없는 글도 조각 하나짜리로 만들어 둔다 — 번역이 HTML 모드를 타야
+  // 본문에 글자로만 박힌 @핸들을 <span translate="no">로 보호할 수 있다. 평문 모드로
+  // 보내면 구글이 핸들을 번역해버린다(실측: @BHAFC → "버밍엄 시티", 사용자 제보).
+  // X를 그대로 옮겨오는 계정(PL 공식 미러)은 facet이 없어서 전부 이 경우에 해당한다.
+  if (!facets || !facets.length) return [{ type: 'text', text }];
   const bytes = Buffer.from(text, 'utf8');
   const sorted = facets
     .filter(f => f.index && typeof f.index.byteStart === 'number' && typeof f.index.byteEnd === 'number')

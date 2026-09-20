@@ -356,6 +356,17 @@ function unescapeHtml(s) {
     .replace(/&amp;/g, '&'); // &amp;는 반드시 마지막에
 }
 
+// 본문에 그냥 글자로 박힌 @핸들을 번역 대상에서 뺀다.
+//
+// 링크로 인식된 핸들(facets)은 <a translate="no">로 보호되지만, X를 그대로 옮겨오는
+// 계정처럼 facet 없이 글자만 있는 경우엔 구글이 이걸 번역해버린다 — 실측: 프리미어리그
+// 공식 계정 글의 "@BHAFC"(브라이턴)가 "버밍엄 시티"로 나왔다(사용자 제보).
+// htmlToSegments의 pushText가 태그를 전부 벗겨내므로 span은 결과에 남지 않는다.
+function protectHandles(escapedHtml) {
+  return escapedHtml.replace(/(^|[^\w@/])@([A-Za-z0-9_](?:[A-Za-z0-9_.]{0,28}[A-Za-z0-9_])?)/g,
+    (_, pre, handle) => pre + '<span translate="no">@' + handle + '</span>');
+}
+
 function segmentsToHtml(segments) {
   const links = [];
   let html = '';
@@ -364,7 +375,7 @@ function segmentsToHtml(segments) {
       html += '<a data-i="' + links.length + '" translate="no">' + escapeHtml(seg.text || '') + '</a>';
       links.push(seg);
     } else {
-      html += escapeHtml(prepareSource((seg && seg.text) || '')).replace(/\n/g, '<br>');
+      html += protectHandles(escapeHtml(prepareSource((seg && seg.text) || ''))).replace(/\n/g, '<br>');
     }
   }
   return { html, links };
