@@ -107,6 +107,14 @@ suite('원문치환', prepareSource, [
   ['Arsenal are chasing a cup double this season', 'Arsenal are chasing a cup double this season'],
   ['Dowman scored a double in the cup', 'Dowman scored a double in the cup'],
   ['Arsenal did the double over Tottenham', 'Arsenal did the double over Tottenham'],
+  // 줄 하나가 통째로 "Full-time"이면 구글이 "정규직"으로 옮긴다 — 그 경우만 바꾼다
+  ['Full-time', 'Match over'],
+  ['FULL-TIME:', 'Match over'],
+  ['Full-time\n\nArsenal 2-1 Chelsea', 'Match over\n\nArsenal 2-1 Chelsea'],
+  // 같은 줄에 내용이 붙어 있으면 구글이 알아서 "최종 결과"로 옮기므로 건드리지 않는다
+  ['Full-time: Arsenal 2-1 Chelsea', 'Full-time: Arsenal 2-1 Chelsea'],
+  ['Arteta reacts after the full-time whistle', 'Arteta reacts after the full-time whistle'],
+  ['A full-time contract for the academy graduate', 'A full-time contract for the academy graduate'],
   // 다른 뜻의 ruthless는 건드리면 안 된다
   ['Arteta was ruthless in his team selection', 'Arteta was ruthless in his team selection'],
   ['A ruthless tackle left Saka injured', 'A ruthless tackle left Saka injured'],

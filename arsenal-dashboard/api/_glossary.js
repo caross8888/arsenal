@@ -249,6 +249,11 @@ const SOURCE_RULES = [
   // "with ~ Cup double" 형태에서만 바꾼다. 동사가 붙은 "scored a double"류는 구글이
   // 이미 "2골"로 옮기므로 건드리지 않는다.
   [/(?<=\bwith (?:a |his |the )?(?:[A-Z]\w+ )*Cup )double\b/g, 'brace'],
+  // 줄 하나가 통째로 "Full-time"이면 구글이 고용 형태로 읽어 "정규직"이 된다(실측).
+  // 같은 줄에 스코어가 붙어 있으면("Full-time: Arsenal 2-1 Chelsea") 제대로 "최종 결과"로
+  // 옮기므로, 뒤에 아무것도 없는 줄만 바꾼다. 대체어는 "Match over"(→ "경기 종료") —
+  // "Final whistle"은 "경기 종료 휘슬", "The match has ended"는 서술형이라 제목 자리에 길다.
+  [/^[ \t]*full[- ]?time[ \t]*:?[ \t]*$/gim, 'Match over'],
 ];
 
 // 문장 첫머리처럼 대문자로 시작한 표현이면 대체어도 대문자로 시작시킨다.
