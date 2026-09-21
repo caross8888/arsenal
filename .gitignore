@@ -10,4 +10,8 @@ Thumbs.db
 .idea/
 
 # 로그 파일
-*.log.claude/ 
+*.log
+
+# 파이썬 컴파일 캐시 (scripts/scrape_fotmob_local.py 실행 시 생성)
+__pycache__/
+*.pyc
