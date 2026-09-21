@@ -1160,7 +1160,13 @@ export default async function handler(req, res) {
   // 버그가 있었다(로컬에서는 파일 저장마다 함수가 다시 로드돼 안 드러났지만,
   // 실제 배포에서는 같은 인스턴스가 두 요청을 다 받아서 재현됐다).
   const seasonParam = req.query.season || '';
-  const cacheKey = type + (teamParam ? ('_'+teamParam) : '') + (idParam ? ('_'+idParam) : '') + (seasonParam ? ('_'+seasonParam) : '');
+  // predict는 두 팀·대회·킥오프가 요청마다 다르다 — 이걸 키에 안 넣으면 처음 계산된
+  // 한 경기의 예측이 1시간 동안 모든 경기에 그대로 재사용된다(실측: 릴전 예측이
+  // 뮌헨전 카드에 그대로 나왔다. 팀 이름은 모달 쪽 데이터라 뮌헨인데 내용만 릴).
+  const predictKey = type === 'predict'
+    ? ['', req.query.home || '', req.query.away || '', req.query.league || '', req.query.date || ''].join('_')
+    : '';
+  const cacheKey = type + (teamParam ? ('_'+teamParam) : '') + (idParam ? ('_'+idParam) : '') + (seasonParam ? ('_'+seasonParam) : '') + predictKey;
   // playerDetail(이번 시즌)의 changedOther/changedTraits는 "지금 이 순간 KV
   // 기준으로 바뀌었는가"를 매 요청마다 새로 판정해야 하는 값이라, 응답
   // 자체를 1시간짜리 일반 캐시(서버 메모리 + 브라우저 Cache-Control)에
