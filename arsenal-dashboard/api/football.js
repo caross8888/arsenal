@@ -43,7 +43,10 @@ async function kvSetPlayer(id, data){
     await fetch(KV_URL, {
       method: 'POST',
       headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
-      body: JSON.stringify(['SET', `player:${id}`, JSON.stringify(data), 'EX', String(KV_TTL_SEC)]),
+      // cachedAt — 이 스냅샷을 받아온 시각. 상세모달을 열 때 KV 값을 먼저
+      // 즉시 내려주고(아래 playerDetail 분기), 프론트는 이 시각이 오래됐을
+      // 때만 백그라운드로 최신값을 다시 요청한다.
+      body: JSON.stringify(['SET', `player:${id}`, JSON.stringify(Object.assign({}, data, {cachedAt: Date.now()})), 'EX', String(KV_TTL_SEC)]),
       signal: AbortSignal.timeout(5000),
     });
   } catch(e){ /* 캐시 저장 실패는 무시 — 응답 자체엔 영향 없어야 함 */ }
@@ -1485,6 +1488,23 @@ export default async function handler(req, res) {
       if(wantPrevSeason){
         const cached = await kvGetPlayerSeason(playerId, prevSeasonName);
         if(cached) return res.json(cached);
+      }
+      // 이번 시즌도 마지막으로 받아둔 스냅샷(player:{id}, 7일 TTL)이 있으면
+      // 그걸 먼저 즉시 돌려준다 — Fotmob playerData 왕복이 2초 넘게 걸려서,
+      // 타팀 선수(정적 스냅샷이 없어 채울 값이 아예 없는 쪽)는 그 사이
+      // 상세모달이 통째로 로딩 상태로 떠 있었다. 프론트는 cachedAt이
+      // 오래됐을 때만 nocache=1로 한 번 더 불러 조용히 갱신한다.
+      // changed*는 "직전에 보던 값과 달라졌는가"라 캐시본엔 의미가 없다 —
+      // 그대로 내보내면 예전 판정이 되살아나 괜히 페이드된다.
+      if(!wantPrevSeason && !nocache){
+        const cachedLive = await kvGetJSON('player:' + playerId);
+        if(cachedLive && cachedLive.competitions){
+          return res.json(Object.assign({}, cachedLive, {
+            changedOther: false,
+            changedTraits: false,
+            fromCache: true,
+          }));
+        }
       }
 
       const pdRes = await fetch(`https://www.fotmob.com/api/data/playerData?id=${playerId}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});

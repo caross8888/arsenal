@@ -7736,6 +7736,8 @@ function selectPmSeason(targetMode){
 // 이번 세션에 받아둔 선수 상세(type=playerDetail 응답). 모달을 다시 열 때 첫 화면을
 // 완성된 상태로 그리는 용도 — 값은 아래 fetch가 최신으로 덮어쓴다.
 var _playerDetailCache = {};
+// 서버가 준 KV 스냅샷(cachedAt)이 이보다 오래됐을 때만 Fotmob 최신값을 다시 부른다.
+var PLAYER_DETAIL_MAX_AGE_MS = 10 * 60 * 1000;
 // 헤더에 쓰는 기본 프로필만 입힌다(타팀 선수는 players.json 같은 출처가 없어서 비어 있다).
 // 기록·특성 같은 "바뀌었는지 비교"가 걸린 값은 건드리지 않는다 — 라이브 갱신 콜백이
 // 변경 감지를 하기 전에 p를 덮어쓰면 "안 바뀐 것"으로 오판해 화면이 안 갱신된다.
@@ -8225,7 +8227,11 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   // 스냅샷 그대로 남아서 롤백 걱정 없이 안전하다.
   var fotmobId = p.fotmobId||p.id;
   if(!isLiveRefresh && fotmobId){
-    apiFetch(FN+'/football?type=playerDetail&id='+fotmobId).then(function(live){
+    // 서버는 KV에 저장해둔 마지막 스냅샷(fromCache)을 먼저 즉시 내려주고,
+    // 그게 오래됐을 때만 아래에서 nocache=1로 한 번 더 불러 최신값으로 바꾼다
+    // — Fotmob 왕복이 2초 넘어서 그동안 상세모달이 로딩만 떠 있었다.
+    var _pdUrl = FN+'/football?type=playerDetail&id='+fotmobId;
+    var applyLiveDetail = function(live){
       // 실패했는데 화면이 이 응답만 기다리고 있었으면(타팀 선수: 채울 스냅샷이 없음)
       // 스피너가 영영 돌기만 하므로, 실패 표시로 한 번 다시 그린다.
       if(!live || live.error){
@@ -8403,6 +8409,15 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
         }
         if(tabsWrap) tabsWrap.style.opacity = '1';
       }, 160);
+    };
+    apiFetch(_pdUrl).then(function(live){
+      applyLiveDetail(live);
+      // KV 스냅샷을 받은 경우에만, 그리고 충분히 오래됐을 때만 실제 Fotmob을 부른다
+      // — 방금 받아둔 값을 또 긁어오면 Fotmob 호출만 두 배로 늘어난다.
+      if(live && !live.error && live.fromCache && _openPlayerId === fotmobId &&
+         (!live.cachedAt || Date.now() - live.cachedAt > PLAYER_DETAIL_MAX_AGE_MS)){
+        apiFetch(_pdUrl+'&nocache=1').then(applyLiveDetail).catch(function(){});
+      }
     }).catch(function(){});
   }
 }
