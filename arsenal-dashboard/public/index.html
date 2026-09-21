@@ -440,6 +440,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stad-cap{font-size:10px;color:var(--text-muted);margin-top:5px;}
 /* Records — 스크롤 대신 6개가 폭에 맞춰 비율대로 나눠 갖는 방식 */
 .rec-subnav{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border);}
+/* 선수 상세모달 대회 탭만 줄바꿈 — 한 줄 4칸 고정 */
+.pm-comp-subnav{flex-wrap:wrap;}
+.pm-comp-subnav .rec-subnav-btn{flex:0 0 25%;max-width:25%;}
 .rec-subnav-btn{flex:1 1 0;min-width:0;padding:8px 4px;font-size:10px;font-weight:700;letter-spacing:.2px;color:var(--text-dim);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .18s;}
 .rec-subnav-btn.active{color:var(--red);border-bottom-color:var(--red);}
 #lbStatSubnav{display:grid;grid-template-columns:repeat(5,1fr);}
@@ -7688,10 +7691,19 @@ function formatPerfValue(n, format){
 // ── PLAYER MODAL (Fotmob Style) ──
 
 var _openPlayerId = null; // 지금 열려있는(또는 마지막으로 연) 선수 fotmobId — 라이브 fetch 경쟁 상태 방지용
-var _pmSeasonMode = 'current'; // 'current' | 'prev' — 상세모달 시즌 토글 상태(선수 바뀌면 초기화)
-var _pmPrevSeasonCache = {}; // fotmobId -> 직전 시즌 응답(같은 선수 재토글 시 재요청 방지)
+var _pmSeasonMode = 'current'; // 'current' 또는 시즌 이름("2024/2025") — 선수가 바뀌면 초기화
+var _pmSeasonCache = {}; // "fotmobId|시즌" -> 그 시즌 응답(같은 시즌을 다시 고를 때 재요청 방지)
 var _pmLastP = null; // 시즌 토글 시 재사용할, 마지막으로 그린 선수 객체(이름/사진 등 시즌 무관 필드용)
+// 모달을 연 레벨('first'/'academy'). 시즌 토글에서 _sqActiveLevel(선수단 탭의 지금 상태)을
+// 그대로 쓰면, 선수단 탭을 아카데미로 두고 리더보드에서 타팀 선수를 열었을 때 그 선수의
+// 지난 시즌이 유스 대회 기준으로 걸러져 기록 탭이 통째로 비어버린다(실측).
+var _pmLastLevel = 'first';
 var _pmCurrentSeasonSnapshot = null; // {competitions,shotmap,heatmap} — "이번 시즌"으로 되돌아갈 때 쓸 최신 스냅샷
+// "2024/2025" -> "24-25" (칩·메뉴에 쓰는 짧은 표기). 한 해짜리 시즌명("2021")은 그대로.
+function pmSeasonLabel(name){
+  var m = /^(\d{4})\/(\d{4})$/.exec(name||'');
+  return m ? (m[1]%100)+'-'+(m[2]%100) : (name||'');
+}
 function togglePmSeasonMenu(btn){
   var menu = btn.parentElement.querySelector('.pm-season-menu');
   var wasOpen = menu.classList.contains('open');
@@ -7701,13 +7713,14 @@ function togglePmSeasonMenu(btn){
 document.addEventListener('click', function(){
   document.querySelectorAll('.pm-season-menu.open').forEach(function(m){ m.classList.remove('open'); });
 });
-function selectPmSeason(targetMode){
+// targetSeason: 'current' 또는 시즌 이름("2024/2025")
+function selectPmSeason(targetSeason){
   document.querySelectorAll('.pm-season-menu.open').forEach(function(m){ m.classList.remove('open'); });
-  if(!_pmLastP || targetMode===_pmSeasonMode) return;
+  if(!_pmLastP || targetSeason===_pmSeasonMode) return;
   var fotmobId = _pmLastP.fotmobId||_pmLastP.id;
-  var levelSnapshot = _sqActiveLevel;
+  var levelSnapshot = _pmLastLevel;
   function applyMode(seasonData){
-    _pmSeasonMode = targetMode;
+    _pmSeasonMode = targetSeason;
     var merged = Object.assign({}, _pmLastP, {
       competitions: seasonData.competitions||{},
       shotmap: seasonData.shotmap||[],
@@ -7723,15 +7736,27 @@ function selectPmSeason(targetMode){
     var activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : 'pmbasic';
     openPlayerModal(merged, levelSnapshot, true, false, activeTab);
   }
-  if(targetMode==='current'){
+  if(targetSeason==='current'){
     applyMode(_pmCurrentSeasonSnapshot||{competitions:{},shotmap:[],heatmap:[]});
     return;
   }
-  if(_pmPrevSeasonCache[fotmobId]){ applyMode(_pmPrevSeasonCache[fotmobId]); return; }
-  apiFetch(FN+'/football?type=playerDetail&id='+fotmobId+'&season=prev').then(function(data){
-    _pmPrevSeasonCache[fotmobId] = data||{competitions:{},shotmap:[],heatmap:[]};
-    applyMode(_pmPrevSeasonCache[fotmobId]);
-  });
+  var cacheKey = fotmobId+'|'+targetSeason;
+  if(_pmSeasonCache[cacheKey]){ applyMode(_pmSeasonCache[cacheKey]); return; }
+  // 끝난 시즌은 서버가 KV에 영구 저장하므로 두 번째부터는 Fotmob을 안 탄다.
+  // 그래도 첫 조회는 몇 초 걸려서, 기다리는 동안 칩만 바꿔두지 말고 로딩을 띄운다.
+  pmSeasonLoading(targetSeason);
+  apiFetch(FN+'/football?type=playerDetail&id='+fotmobId+'&season='+encodeURIComponent(targetSeason)).then(function(data){
+    if(_openPlayerId !== fotmobId) return;   // 그 사이 다른 선수를 열었으면 버린다
+    _pmSeasonCache[cacheKey] = data||{competitions:{},shotmap:[],heatmap:[]};
+    applyMode(_pmSeasonCache[cacheKey]);
+  }).catch(function(){ applyMode({competitions:{},shotmap:[],heatmap:[]}); });
+}
+// 지난 시즌을 처음 고르면 응답이 올 때까지 몇 초가 비니, 탭 패널만 로딩으로 덮어둔다.
+function pmSeasonLoading(seasonName){
+  var content = isDesktopLayout() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
+  var wrap = content && content.querySelector('#pmTabPanelsWrap');
+  if(!wrap) return;
+  wrap.innerHTML = '<div class="live-tab-panel">'+loadingHtml(pmSeasonLabel(seasonName)+' 시즌 기록 불러오는 중...', 'padding:32px 0')+'</div>';
 }
 // 이번 세션에 받아둔 선수 상세(type=playerDetail 응답). 모달을 다시 열 때 첫 화면을
 // 완성된 상태로 그리는 용도 — 값은 아래 fetch가 최신으로 덮어쓴다.
@@ -7743,6 +7768,8 @@ var PLAYER_DETAIL_MAX_AGE_MS = 10 * 60 * 1000;
 // 변경 감지를 하기 전에 p를 덮어쓰면 "안 바뀐 것"으로 오판해 화면이 안 갱신된다.
 function applyPlayerProfile(p, live){
   if(!p || !live) return;
+  // 시즌 드롭다운 목록 — 선수마다 다르고(뛴 시즌만) 시즌 무관 값이라 항상 최신으로 덮는다.
+  if(live.seasons && live.seasons.length) p.seasons = live.seasons;
   if(live.profile && !live.profile.isArsenal){
     var pr = live.profile;
     if(!p.name && pr.name) p.name = pr.name;
@@ -7769,6 +7796,21 @@ function applyPlayerDetail(p, live){
   if(live.career && live.career.length) p.career = live.career;
 }
 
+// 상세모달 대회 하위탭. 한 줄 4칸이고, 대회가 더 많으면 줄바꿈해서 다음 줄로 넘긴다
+// (시즌 드롭다운이 5년치가 되면서 한 시즌에 대회가 6~7개 나오는 경우가 생겼다).
+// 마지막 줄은 빈칸으로 채워야 남은 버튼이 늘어나 칸 너비가 어긋나지 않는다.
+// 대회 코드엔 이름이 그대로 들어올 수 있어(LaLiga, DFB Pokal) 속성값을 이스케이프한다.
+function compSubnavHTML(keys, labels, id, onclick){
+  var esc = function(v){ return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  var slots = Math.max(4, Math.ceil(keys.length/4)*4);
+  var h = '<div class="rec-subnav pm-comp-subnav" id="'+id+'" style="border-top:1px solid var(--border-bright);">';
+  for(var i=0; i<slots; i++){
+    if(i>=keys.length){ h += '<span class="rec-subnav-btn"></span>'; continue; }
+    var k = keys[i];
+    h += '<button class="rec-subnav-btn'+(i===0?' active':'')+'" data-comp="'+esc(k)+'" onclick="'+onclick+'(this)">'+esc(labels[k]||k)+'</button>';
+  }
+  return h + '</div>';
+}
 function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   initialTab = initialTab || 'pmbasic';
   var desktop = isDesktopLayout();
@@ -7819,6 +7861,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   if(_openPlayerId !== _newPlayerId) _pmSeasonMode = 'current';
   _openPlayerId = _newPlayerId;
   _pmLastP = p;
+  _pmLastLevel = level;   // 시즌을 바꿔 다시 그릴 때 이 모달을 연 레벨을 그대로 쓴다
   if(_pmSeasonMode==='current') _pmCurrentSeasonSnapshot = {competitions:p.competitions, shotmap:p.shotmap, heatmap:p.heatmap, traits:p.traits};
   var pos = p.posGroup; // GK DF MF FW
 
@@ -7836,13 +7879,44 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   // 전용 선수가 1군 출전 기록이 있어도 아카데미 탭엔 안 보임, 의도된
   // 단순화). 0경기인 대회는 스쿼드 등록만 되어있고 실제로 안 뛴 경우라
   // 탭에서 제외.
-  var SENIOR_COMPS=['PL','UCL','FAC','EFL'];
-  var YOUTH_COMPS=['PL2','EFLT','UYL'];
-  var levelCompOrder = level!=='academy' ? SENIOR_COMPS : YOUTH_COMPS;
-  compKeys=levelCompOrder.filter(function(k){var c=competitions[k];return c && (c.appearances||0)>0;});
+  // 시즌 드롭다운이 5년치가 되면서 대회가 고정 4종(PL/UCL/FA컵/리그컵)으로
+  // 안 끝난다 — 이적해 온 선수의 옛 시즌엔 해외 리그와 그 나라 컵대회가,
+  // 아스날 시즌에도 커뮤니티실드·유로파·슈퍼컵이 섞여 나온다. 그래서 목록을
+  // 하드코딩하지 않고, 서버가 준 대회를 출전 경기 수가 많은 순으로 세운다.
+  // 아래 두 배열은 라벨용 코드 목록이자 경기 수가 같을 때의 정렬 기준이다.
+  var SENIOR_COMPS=['PL','UCL','UEL','UECL','FAC','EFL','CS','USC','CWC'];
+  var YOUTH_COMPS=['PL2','PL18','EFLT','NLC','UYL'];
+  // 아카데미 탭에선 유스 대회만, 1군 탭에선 그 외(해외 리그 포함)만 — 기존 분리 그대로.
+  var playedComps = Object.keys(competitions).filter(function(k){
+    var c=competitions[k]; return c && (c.appearances||0)>0;
+  });
+  var isYouthComp = function(k){ return YOUTH_COMPS.indexOf(k)>=0; };
+  compKeys = playedComps.filter(function(k){ return level==='academy' ? isYouthComp(k) : !isYouthComp(k); });
+  // 순서는 출전 경기 수가 많은 대회부터 — 아스날 시즌이면 자연히 EPL·UCL·FA컵 순이고,
+  // 이적해 오기 전 해외 시즌이면 그 나라 리그가 먼저 온다(고정 순서로 두면 8경기짜리
+  // 유로파가 36경기 라리가보다 앞에 왔다). 경기 수가 같으면 자주 보는 대회를 앞에 둔다.
+  compKeys.sort(function(x,y){
+    var d = (competitions[y].appearances||0)-(competitions[x].appearances||0);
+    if(d) return d;
+    var ix = SENIOR_COMPS.concat(YOUTH_COMPS).indexOf(x), iy = SENIOR_COMPS.concat(YOUTH_COMPS).indexOf(y);
+    return (ix<0?99:ix)-(iy<0?99:iy);
+  });
   var scopedCompetitions={};
   compKeys.forEach(function(k){scopedCompetitions[k]=competitions[k];});
-  var compLabels={PL:'EPL',UCL:'UCL',FAC:'FA컵',EFL:'카라바오',PL2:'PL2',EFLT:'EFL트로피',UYL:'유스리그'};
+  // 코드에 없는 대회는 서버가 Fotmob 이름을 그대로 코드로 내려주므로,
+  // 자주 나오는 해외 대회만 한글 라벨을 달아주고 나머지는 원문 그대로 보여준다.
+  var compLabels={
+    PL:'EPL',UCL:'UCL',UEL:'유로파',UECL:'컨퍼런스',FAC:'FA컵',EFL:'카라바오',
+    CS:'실드',USC:'슈퍼컵',CWC:'클럽WC',
+    PL2:'PL2',PL18:'U18',EFLT:'EFL트로피',NLC:'내셔널컵',UYL:'유스리그',
+    'LaLiga':'라리가','Copa del Rey':'코파델레이','Bundesliga':'분데스리가',
+    '2. Bundesliga':'2.분데스','DFB Pokal':'DFB포칼','Serie A':'세리에A',
+    'Coppa Italia':'코파이탈리아','Ligue 1':'리그1','Coupe de France':'쿠프드프랑스',
+    'Eredivisie':'에레디비시','KNVB Beker':'KNVB컵','Liga Portugal':'프리메이라',
+    'League Cup':'리그컵','Championship':'챔피언십',
+    'League One':'리그1부','League Two':'리그2부','Super League':'슈퍼리그',
+    'Primeira Liga':'프리메이라','Jupiler Pro League':'주필러','Super Lig':'쉬페르리그'
+  };
   var traits      = p.traits||null;
   var career      = p.career||[];
   var shotmap     = p.shotmap||[];
@@ -7878,18 +7952,26 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   if(jersey) badges.push('#'+jersey);
   if(pos) badges.push(posShortFor(p));
   if(age) badges.push(age+'\uc138');
-  var _pmNow=new Date(); var _pmCurYr=_pmNow.getMonth()+1>=8?_pmNow.getFullYear():_pmNow.getFullYear()-1;
-  var _pmCurLabel=(_pmCurYr%100)+'-'+((_pmCurYr+1)%100), _pmPrevLabel=((_pmCurYr-1)%100)+'-'+(_pmCurYr%100);
   var _pmFotmobId = p.fotmobId||p.id;
+  // 시즌 목록은 서버(playerDetail 응답 seasons)가 준다 — 이 선수가 클럽 경기를
+  // 뛴 시즌만 최신순 5개다. 아직 응답 전이면 이번 시즌 한 칸만 그려둔다.
+  var _pmNow=new Date(); var _pmCurYr=_pmNow.getMonth()+1>=8?_pmNow.getFullYear():_pmNow.getFullYear()-1;
+  var _pmCurSeasonName = _pmCurYr+'/'+(_pmCurYr+1);
+  var _pmSeasons = (p.seasons && p.seasons.length) ? p.seasons.slice(0,5) : [_pmCurSeasonName];
+  var _pmSelSeason = _pmSeasonMode==='current' ? _pmCurSeasonName : _pmSeasonMode;
   if(badges.length || _pmFotmobId){
     h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
     badges.forEach(function(b){ h += '<span class="pm-badge">'+b+'</span>'; });
     if(_pmFotmobId){
       h += '<span class="pm-season-wrap">';
-      h += '<span class="pm-badge pm-season-chip" onclick="event.stopPropagation();togglePmSeasonMenu(this)">'+(_pmSeasonMode==='current'?_pmCurLabel:_pmPrevLabel)+' <i class="pm-season-chip-arrow">\u25be</i></span>';
+      h += '<span class="pm-badge pm-season-chip" onclick="event.stopPropagation();togglePmSeasonMenu(this)">'+pmSeasonLabel(_pmSelSeason)+' <i class="pm-season-chip-arrow">\u25be</i></span>';
       h += '<span class="pm-season-menu" id="pmSeasonMenu">';
-      h += '<div class="pm-season-menu-item'+(_pmSeasonMode==='current'?' active':'')+'" onclick="event.stopPropagation();selectPmSeason(\'current\')">'+_pmCurLabel+' \uc2dc\uc98c</div>';
-      h += '<div class="pm-season-menu-item'+(_pmSeasonMode==='prev'?' active':'')+'" onclick="event.stopPropagation();selectPmSeason(\'prev\')">'+_pmPrevLabel+' \uc2dc\uc98c</div>';
+      _pmSeasons.forEach(function(sn){
+        // 이번 시즌은 'current'로 골라야 라이브 스냅샷(_pmCurrentSeasonSnapshot)을 그대로 쓴다.
+        var val = sn===_pmCurSeasonName ? 'current' : sn;
+        var on  = (val==='current' && _pmSeasonMode==='current') || val===_pmSeasonMode;
+        h += '<div class="pm-season-menu-item'+(on?' active':'')+'" onclick="event.stopPropagation();selectPmSeason(\''+val+'\')">'+pmSeasonLabel(sn)+' \uc2dc\uc98c</div>';
+      });
       h += '</span>';
       h += '</span>';
     }
@@ -8020,20 +8102,13 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
     // 기본정보 탭의 .detail-info-grid처럼 좌우가 패널 끝까지 닿아야 하니
     // 여백을 따로 주지 않는다(위/좌우 모두 0) — 버튼 자체 내부 패딩과
     // .rec-subnav의 margin-bottom만으로 아래쪽 간격을 만든다.
+    // 한 줄에 4칸. 대회가 5개 이상이면(해외 리그+컵+유럽대항전이 겹치는 시즌)
+    // 다음 줄로 넘기고, 마지막 줄은 빈칸으로 채워 칸 너비를 맞춘다.
     var COMP_TAB_SLOTS = 4;
     // 기본정보 탭(.detail-info-grid)은 상단에 자기 테두리가 있어서 상위
     // 탭(.live-tabs) 바로 아래 선이 보이는데, 기록/경력 탭은 첫 콘텐츠가
     // 표가 아니라서 그 선이 없었다 — 여기도 맞춰서 하나 그어준다.
-    h += '<div class="rec-subnav" id="statCompTabs" style="border-top:1px solid var(--border-bright);">';
-    for(var si=0; si<COMP_TAB_SLOTS; si++){
-      if(si>=compKeys.length){
-        h += '<span class="rec-subnav-btn"></span>';
-        continue;
-      }
-      var k=compKeys[si];
-      h += '<button class="rec-subnav-btn'+(si===0?' active':'')+'" data-comp="'+k+'" onclick="switchPMComp(this)">'+(compLabels[k]||k)+'</button>';
-    }
-    h += '</div>';
+    h += compSubnavHTML(compKeys, compLabels, 'statCompTabs', 'switchPMComp');
     // .mm-card-title 기본 색(var(--overlay-50))은 경기상세모달과
     // 공유하는 값이라 그대로 두고, 이 타이틀만 "슈팅맵"/"터치 히트맵"
     // 타이틀(.pm-comp-subtitle: 흰색 12px)과 톤을 맞춰 인라인으로 덮어쓴다.
@@ -8109,13 +8184,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   if(compKeys.length > 0){
     var perfCompKeys = compKeys.filter(function(k){ return competitions[k] && competitions[k].perfGroups && competitions[k].perfGroups.length; });
     if(perfCompKeys.length > 0){
-      h += '<div class="rec-subnav" id="perfCompTabs" style="border-top:1px solid var(--border-bright);">';
-      for(var pi=0; pi<COMP_TAB_SLOTS; pi++){
-        if(pi>=perfCompKeys.length){ h += '<span class="rec-subnav-btn"></span>'; continue; }
-        var pk=perfCompKeys[pi];
-        h += '<button class="rec-subnav-btn'+(pi===0?' active':'')+'" data-comp="'+pk+'" onclick="switchPMPerfComp(this)">'+(compLabels[pk]||pk)+'</button>';
-      }
-      h += '</div>';
+      h += compSubnavHTML(perfCompKeys, compLabels, 'perfCompTabs', 'switchPMPerfComp');
       h += '<div class="mm-card-title" style="padding:14px 14px 4px;color:var(--text);font-size:12px;display:flex;align-items:center;justify-content:space-between;">';
       h += '<span>시즌 성적</span>';
       h += '<span class="perf-mode-toggle">';
@@ -8270,9 +8339,16 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 같은 응답의 profile로 채운다(아스날 선수는 이미 더 풍부한 값이 있으니 건드리지 않는다).
       // 헤더에 쓰는 값(이름·등번호·나이·키·팀 색)이 이번에 처음 채워졌는지 — 그 경우엔
       // 아래에서 탭 패널만이 아니라 헤더까지 다시 그려야 한다.
-      var beforeHeader = [p.name, p.jersey, p.age, p.height, p.nationality, p.position, p.team && p.team.color].join('|');
+      // 시즌 드롭다운 목록(seasons)도 헤더에 그리는 값이라 같이 본다 — 아스날 선수는
+      // 이름·등번호가 이미 다 있어서 이 값만 새로 채워지는데, 그걸 안 세면 "바뀐 게 없음"
+      // 으로 판정돼 드롭다운이 이번 시즌 한 칸인 채로 남는다(실측).
+      var headerSnapshot = function(){
+        return [p.name, p.jersey, p.age, p.height, p.nationality, p.position,
+                p.team && p.team.color, (p.seasons||[]).join(',')].join('|');
+      };
+      var beforeHeader = headerSnapshot();
       applyPlayerProfile(p, live);
-      var profileFilled = beforeHeader !== [p.name, p.jersey, p.age, p.height, p.nationality, p.position, p.team && p.team.color].join('|');
+      var profileFilled = beforeHeader !== headerSnapshot();
       var hadContractBefore = !!p.contractEnd;
       var hadFootBefore = !!p.preferredFoot;
       // 지금 화면에 그려진 값(=이 콜백이 실행되기 전 p의 값)을 미리 찍어둔다.
@@ -8284,7 +8360,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       var preFetchSnapshot = {competitions:p.competitions, shotmap:p.shotmap, heatmap:p.heatmap, career:p.career};
       if(live.contractEnd) p.contractEnd = live.contractEnd;
       if(live.preferredFoot) p.preferredFoot = live.preferredFoot;
-      if(_pmSeasonMode==='prev'){
+      if(_pmSeasonMode!=='current'){
         var currentSnap = {
           competitions: (live.competitions && Object.keys(live.competitions).length) ? live.competitions : p.competitions,
           shotmap: live.shotmap && live.shotmap.length ? live.shotmap : p.shotmap,

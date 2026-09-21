@@ -32,9 +32,11 @@ const FOTMOB_HEADERS = {
 // 등) 전부 조용히 건너뛰어 기존 동작 그대로 유지한다.
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
-// 직전 시즌 기록(playerSeason:*)의 저장 형식 버전 — 올리면 저장된 값을 무시하고
-// 다시 받아 같은 키에 덮어쓴다. 영구 저장이라 잘못 들어간 값은 이 방법으로만 고쳐진다.
-const PLAYER_SEASON_SCHEMA = 2;
+// 선수 상세 저장 형식 버전(player:* / playerSeason:*) — 올리면 저장된 값을 무시하고
+// 다시 받아 같은 키에 덮어쓴다. playerSeason은 영구 저장이라 잘못 들어간 값이
+// 스스로는 안 고쳐지고, player:*(7일 TTL)도 응답에 필드가 추가되면(예: seasons)
+// 옛 스냅샷을 그대로 내보내는 동안 프론트가 그 필드 없이 그려야 해서 같이 건다.
+const PLAYER_SEASON_SCHEMA = 4;
 const KV_TTL_SEC = 7 * 24 * 60 * 60; // 일주일 지나면 자동 만료 — 안 쓰는 선수 데이터가 무한정 안 쌓이게
 
 async function kvSetPlayer(id, data){
@@ -49,7 +51,7 @@ async function kvSetPlayer(id, data){
       // cachedAt — 이 스냅샷을 받아온 시각. 상세모달을 열 때 KV 값을 먼저
       // 즉시 내려주고(아래 playerDetail 분기), 프론트는 이 시각이 오래됐을
       // 때만 백그라운드로 최신값을 다시 요청한다.
-      body: JSON.stringify(['SET', `player:${id}`, JSON.stringify(Object.assign({}, data, {cachedAt: Date.now()})), 'EX', String(KV_TTL_SEC)]),
+      body: JSON.stringify(['SET', `player:${id}`, JSON.stringify(Object.assign({}, data, {cachedAt: Date.now(), schemaV: PLAYER_SEASON_SCHEMA})), 'EX', String(KV_TTL_SEC)]),
       signal: AbortSignal.timeout(5000),
     });
   } catch(e){ /* 캐시 저장 실패는 무시 — 응답 자체엔 영향 없어야 함 */ }
@@ -1482,18 +1484,27 @@ export default async function handler(req, res) {
       // 렌더링 코드(기록/경력 탭)는 손 안 대고 데이터 출처만 바꾼다.
       const playerId = req.query.id;
       if(!playerId) throw new Error('id 파라미터 필요');
-      // season=prev — 직전 시즌(항상 완결된, 다시 안 바뀌는 데이터) 조회.
-      // 값이 안 변하니 KV에 한 번 저장해두면 이후엔 Fotmob을 다시 안 부른다.
-      const wantPrevSeason = req.query.season === 'prev';
+      // season — 안 주면 이번 시즌. 지난 시즌들은 "YYYY/YYYY"(일부 리그는
+      // "YYYY")로 직접 지정한다. 'prev'는 드롭다운이 두 칸이던 시절의 이름이라
+      // 아직 그 화면을 띄워둔 브라우저를 위해 남겨둔다(= 직전 시즌).
+      // 끝난 시즌은 값이 다시 안 바뀌니 KV에 한 번 저장해두면 Fotmob을 다시 안 부른다.
       const nowForSeason = new Date();
       const curSeasonStartYear = nowForSeason.getMonth() + 1 >= 8 ? nowForSeason.getFullYear() : nowForSeason.getFullYear() - 1;
+      const currentSeasonName = `${curSeasonStartYear}/${curSeasonStartYear + 1}`;
       const prevSeasonName = `${curSeasonStartYear - 1}/${curSeasonStartYear}`;
+      const seasonReq = String(req.query.season || '').trim();
+      const requestedSeasonName = seasonReq === 'prev' ? prevSeasonName
+        : (/^\d{4}(\/\d{4})?$/.test(seasonReq) ? seasonReq : '');
+      const wantPrevSeason = !!requestedSeasonName && requestedSeasonName !== currentSeasonName;
       if(wantPrevSeason){
-        const cached = await kvGetPlayerSeason(playerId, prevSeasonName);
+        const cached = await kvGetPlayerSeason(playerId, requestedSeasonName);
         // 저장 형식이 바뀌면(schemaV) 저장된 값을 버리고 다시 받아 같은 키에
         // 덮어쓴다 — 영구 저장이라 한 번 잘못 들어간 값이 스스로는 안 고쳐진다.
         // v2: GK 출전시간을 pd.mainLeague(항상 현재 시즌)로 보정하던 걸 그
-        // 시즌 자신의 per90 역산(deriveMinutes)으로 바꿨다.
+        //     시즌 자신의 per90 역산(deriveMinutes)으로 바꿨다.
+        // v3: 클럽 대회를 화이트리스트(PL/UCL/FA컵/리그컵)로 거르던 걸 풀고,
+        //     시즌 목록(seasons)을 응답에 같이 담기 시작했다.
+        // v4: 대회별 스탯을 한꺼번에 던져 일부가 조용히 빠진 채 저장된 값 무효화.
         if(cached && cached.schemaV === PLAYER_SEASON_SCHEMA) return res.json(cached);
       }
       // 이번 시즌도 마지막으로 받아둔 스냅샷(player:{id}, 7일 TTL)이 있으면
@@ -1505,7 +1516,7 @@ export default async function handler(req, res) {
       // 그대로 내보내면 예전 판정이 되살아나 괜히 페이드된다.
       if(!wantPrevSeason && !nocache){
         const cachedLive = await kvGetJSON('player:' + playerId);
-        if(cachedLive && cachedLive.competitions){
+        if(cachedLive && cachedLive.competitions && cachedLive.schemaV === PLAYER_SEASON_SCHEMA){
           return res.json(Object.assign({}, cachedLive, {
             changedOther: false,
             changedTraits: false,
@@ -1518,16 +1529,50 @@ export default async function handler(req, res) {
       if(!pdRes.ok) throw new Error('Fotmob playerData 로드 실패');
       const pd = await pdRes.json();
 
-      // Fotmob 대회명 → 우리 코드(SENIOR_COMPS/YOUTH_COMPS) 매핑. 여기 없는
-      // 대회(월드컵, 네이션스리그 등 국가대표 경기 등)는 그냥 무시한다.
-      const COMP_NAME_TO_CODE = {
-        'Premier League': 'PL',
-        'Champions League': 'UCL',
-        'FA Cup': 'FAC',
-        'EFL Cup': 'EFL',
-        'Premier League 2': 'PL2',
-        'EFL Trophy': 'EFLT',
-        'UEFA Youth League': 'UYL',
+      // Fotmob 대회명 → 우리 코드. 자주 나오는 대회만 짧은 코드로 고정하고
+      // (프론트가 'EPL'·'카라바오' 같은 한글 라벨을 이 코드로 붙인다), 나머지는
+      // 대회명을 그대로 코드로 쓴다 — 시즌 드롭다운이 5년치가 되면서 해외 리그
+      // (라리가·분데스리가·에레디비시…)와 컵대회(코파델레이·DFB포칼·슈퍼컵)가
+      // 그대로 나와야 하는데, 예전처럼 화이트리스트로 거르면 이적해 온 선수의
+      // 옛 시즌이 통째로 빈 화면이 된다(실측: 1군 16명 최근 5시즌에 32개 대회).
+      // 이름 뒤에 조별 그룹이 붙는 대회(EFL Trophy Southern Grp. F 등)는
+      // 접두어로 묶어서 같은 코드로 모은다.
+      const COMP_CODE_RULES = [
+        [/^Premier League$/i, 'PL'],
+        [/^Champions League/i, 'UCL'],
+        [/^Europa League/i, 'UEL'],
+        [/^(Europa )?Conference League/i, 'UECL'],
+        [/^FA Cup$/i, 'FAC'],
+        // "League Cup"은 포르투갈(타사 다 리가) 같은 다른 나라 리그컵이라 안 묶는다
+        // — 묶으면 요케레스 24/25 스포르팅 기록이 '카라바오'로 나온다(실측).
+        [/^EFL Cup$/i, 'EFL'],
+        [/^Community Shield$/i, 'CS'],
+        [/^(UEFA )?Super Cup$/i, 'USC'],
+        [/^FIFA Club World Cup$/i, 'CWC'],
+        [/^Premier League 2/i, 'PL2'],
+        [/^Premier League U18/i, 'PL18'],
+        [/^EFL Trophy/i, 'EFLT'],
+        [/^National League Cup/i, 'NLC'],
+        [/^UEFA Youth League/i, 'UYL'],
+      ];
+      // 국가대표 대회는 클럽 기록에 섞이면 안 되니 제외한다(사용자 지정).
+      // "Club World Cup"은 이름에 World Cup이 들어가지만 클럽 대회고,
+      // "Europa"는 \b 덕분에 \beuro\b에 안 걸린다.
+      const isNationalComp = name => {
+        const n = String(name || '');
+        if(/club world cup/i.test(n)) return false;
+        return /\bworld cup\b/i.test(n)
+          || /\beuro\b/i.test(n)
+          || /nations league/i.test(n)
+          || /copa am[eé]rica/i.test(n)
+          || /olympic/i.test(n)
+          || /africa cup|afcon|asian cup|gold cup|confederations cup/i.test(n)
+          || /friendlies/i.test(n)
+          || /^UEFA U\d+ Championship/i.test(n);
+      };
+      const compCodeFor = name => {
+        for(const [re, code] of COMP_CODE_RULES){ if(re.test(name)) return code; }
+        return name;
       };
       // statSeasons[0]이 "이번 시즌"이라고 가정했었는데, 실측 결과 이번 시즌
       // 출전 기록이 아직 없는 선수(예: 백업 GK)는 Fotmob이 애초에 이번
@@ -1539,20 +1584,47 @@ export default async function handler(req, res) {
       // 시즌 기록이 아예 없는 선수) currentSeason을 비워서 이번 시즌
       // 데이터가 없는 상태 그대로(경기/평점 등 미노출) 내려보낸다 — 작년
       // 시즌으로 조용히 폴백하지 않는다.
-      const expectedSeasonName = wantPrevSeason ? prevSeasonName : `${curSeasonStartYear}/${curSeasonStartYear + 1}`;
+      const expectedSeasonName = wantPrevSeason ? requestedSeasonName : currentSeasonName;
       const currentSeason = (pd.statSeasons || []).find(s => s.seasonName === expectedSeasonName);
       const compEntries = {}; // code -> {entryId, name}
       (currentSeason?.tournaments || []).forEach(t => {
-        const code = COMP_NAME_TO_CODE[t.name];
-        if(code) compEntries[code] = {entryId: t.entryId, name: t.name};
+        if(isNationalComp(t.name)) return;
+        const code = compCodeFor(t.name);
+        // 조별 그룹이 나뉘어 같은 코드로 접히는 경우(EFL Trophy)는 먼저 온 것만 쓴다.
+        if(!compEntries[code]) compEntries[code] = {entryId: t.entryId, name: t.name};
       });
+      // 시즌 드롭다운용 목록 — 이 선수가 클럽 경기를 뛴 시즌만, 최신순 5개.
+      // 이번 시즌은 기록이 아직 없어도(백업 GK 등) 돌아올 자리가 있어야 하니 항상 넣는다.
+      const clubSeasonNames = (pd.statSeasons || [])
+        .filter(s => (s.tournaments || []).some(t => !isNationalComp(t.name)))
+        .map(s => s.seasonName);
+      const seasonList = [currentSeasonName]
+        .concat(clubSeasonNames.filter(n => n !== currentSeasonName))
+        .slice(0, 5);
 
       const codes = Object.keys(compEntries);
-      const statsResults = await Promise.all(codes.map(code =>
-        fetch(`https://www.fotmob.com/api/data/playerStats?playerId=${playerId}&seasonId=${compEntries[code].entryId}&isFirstSeason=false`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)})
-          .then(r => r.ok ? r.json() : null)
-          .catch(() => null)
-      ));
+      // 대회 하나당 요청 하나다. 화이트리스트를 풀면서 한 시즌에 7개까지 나올 수
+      // 있게 됐는데, 그걸 한꺼번에 던지면 Fotmob이 일부를 떨군다(실측: 홀란드
+      // 22/23 7개 중 5개가 빈손으로 돌아와 PL·슈퍼컵만 남았다). 3개씩 끊어
+      // 보내고 실패한 건 한 번 더 시도한다.
+      const fetchCompStats = async entryId => {
+        for(let attempt = 0; attempt < 2; attempt++){
+          try {
+            const r = await fetch(`https://www.fotmob.com/api/data/playerStats?playerId=${playerId}&seasonId=${entryId}&isFirstSeason=false`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+            if(r.ok) return await r.json();
+          } catch(e){ /* 타임아웃/네트워크 — 아래에서 재시도 */ }
+          if(attempt === 0) await new Promise(res => setTimeout(res, 400));
+        }
+        return null;
+      };
+      const statsResults = [];
+      for(let i = 0; i < codes.length; i += 3){
+        const part = await Promise.all(codes.slice(i, i + 3).map(code => fetchCompStats(compEntries[code].entryId)));
+        statsResults.push(...part);
+      }
+      // 하나라도 못 받았으면 그 시즌은 KV에 저장하지 않는다 — 끝난 시즌은 영구
+      // 저장이라, 반쪽짜리를 한 번 넣으면 그대로 굳어버린다.
+      const statsComplete = codes.length > 0 && statsResults.every(Boolean);
 
       const numOf = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
       // Fotmob의 traits.value는 0~1 비율로 내려오는데(실측 확인), 프론트
@@ -1720,6 +1792,9 @@ export default async function handler(req, res) {
       result = {
         id: Number(playerId),
         profile,
+        // season — 이 응답이 어느 시즌 기록인지, seasons — 드롭다운에 올릴 최근 5시즌.
+        season: expectedSeasonName,
+        seasons: seasonList,
         preferredFoot,
         contractEnd,
         competitions,
@@ -1781,10 +1856,13 @@ export default async function handler(req, res) {
       // kvSetPlayer(Player)Season 내부에서 이미 삼킨다. 직전 시즌(완결,
       // 안 바뀜)은 영구 저장, 이번 시즌(계속 바뀜)은 기존처럼 7일 TTL.
       if(wantPrevSeason){
-        // 소속은 Fotmob 선수 응답(primaryTeam)으로 판정한다 — 타팀 선수는 5년 뒤 자동 만료.
-        const isOurs = (pd.primaryTeam || {}).teamId === ARSENAL_TEAM_ID;
-        result.schemaV = PLAYER_SEASON_SCHEMA;
-        await kvSetPlayerSeason(playerId, prevSeasonName, result, isOurs ? null : PLAYER_SEASON_TTL_OTHER);
+        if(statsComplete){
+          // 소속은 Fotmob 선수 응답(primaryTeam)으로 판정한다 — 타팀 선수는 5년 뒤 자동 만료.
+          const isOurs = (pd.primaryTeam || {}).teamId === ARSENAL_TEAM_ID;
+          result.schemaV = PLAYER_SEASON_SCHEMA;
+          await kvSetPlayerSeason(playerId, requestedSeasonName, result, isOurs ? null : PLAYER_SEASON_TTL_OTHER);
+        }
+        // 지난 시즌 응답을 player:{id}(이번 시즌 자리)에 넣으면 안 된다 — 여긴 아무것도 안 한다.
       }
       else await kvSetPlayer(playerId, result);
     } else if(type === 'transfers'){
