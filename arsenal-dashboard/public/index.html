@@ -5791,6 +5791,17 @@ function openMatchModal(m, isAuto, opts){
     ? fetch(FN+'/football?type=injuries&team='+encodeURIComponent(oppNameSkel)+'&_='+Date.now()).then(function(r){ return r.json(); }).catch(function(){ return null; })
     : Promise.resolve(null);
 
+  // 경기 예측도 여기서 같이 출발시킨다 — 모달 로딩이 끝난 뒤에 따로 부르면
+  // 스피너가 두 번(상세 → 예측) 도는 꼴이 된다. 필요한 값(양 팀 id·대회·킥오프)이
+  // 전부 일정 목록 항목(m)에 있어서 상세 응답을 기다릴 이유가 없다.
+  var predPromise = Promise.resolve(null);
+  if(!isSettledMatch(m) && m.status!=='FINISHED' && m.homeTeam && m.awayTeam && m.homeTeam.id && m.awayTeam.id){
+    var _pq = FN+'/football?type=predict&home='+encodeURIComponent(m.homeTeam.id)+'&away='+encodeURIComponent(m.awayTeam.id)
+      + (m.leagueId ? '&league='+encodeURIComponent(m.leagueId) : '')
+      + ((m.utcDate||m.date) ? '&date='+encodeURIComponent(m.utcDate||m.date) : '');
+    predPromise = apiFetch(_pq).catch(function(){ return null; });
+  }
+
   // 하루 지난 종료 경기는 데이터가 확정돼서 서버가 immutable로 내려준다 —
   // 캐시버스터를 빼야 브라우저 캐시가 히트해 스피너 없이 열린다. 프리페치도
   // 같은 URL(matchDetailUrl)을 써야 캐시가 맞는다.
@@ -5798,7 +5809,8 @@ function openMatchModal(m, isAuto, opts){
     : FN+'/match?id='+m.id+'&slug='+slug+'&_='+Date.now();
   Promise.all([
     fetch(matchUrl).then(function(r){ return r.json(); }),
-    oppInjPromise
+    oppInjPromise,
+    predPromise
   ])
     .then(function(results){
       var data=results[0];
@@ -5807,6 +5819,7 @@ function openMatchModal(m, isAuto, opts){
       if(data.error) throw new Error(data.error);
       data.oppName=oppNameSkel;
       data.oppInjuries=results[1];
+      data.prediction=results[2];
       withMinLoading(content, _t0, function(){
         if(reqId!==_matchModalReqSeq) return;
         // 응답을 기다리는 사이 closeFixDetailPanel()이 빈 상태 클래스를 다시
@@ -5888,22 +5901,12 @@ function renderH2HCard(data){
 // 리그 순위표에 없는 팀(유럽대항전 상대 등)이면 서버가 available:false를 주고,
 // 그때는 카드를 통째로 지운다 — 근거 없는 예측을 억지로 만들지 않는다.
 function renderPredictCard(data, m){
-  var h=data.homeTeam||{}, a=data.awayTeam||{};
-  if(!h.id||!a.id) return '';
-  var cid='predCard_'+(m.id||'x');
-  // leagueId를 같이 넘겨야 유럽대항전에서 그 대회 순위표를 기준으로 계산한다
-  // (안 넘기면 프리미어리그 기준이라 릴·바이에른 같은 상대는 순위표에 없다).
-  var lgParam = m.leagueId ? '&league='+encodeURIComponent(m.leagueId) : '';
-  // 킥오프 시각 — 서버가 휴식일·최근 2주 경기 수를 계산하는 데 쓴다.
-  var dtParam = (m.utcDate||m.date) ? '&date='+encodeURIComponent(m.utcDate||m.date) : '';
-  apiFetch(FN+'/football?type=predict&home='+encodeURIComponent(h.id)+'&away='+encodeURIComponent(a.id)+lgParam+dtParam).then(function(p){
-    var el=document.getElementById(cid);
-    if(!el) return;
-    if(!p||p.error||!p.available){ el.remove(); return; }
-    el.outerHTML=predictCardHTML(p, data);
-  }).catch(function(){ var el=document.getElementById(cid); if(el) el.remove(); });
-  return '<div class="mm-card" id="'+cid+'"><div class="mm-card-title">경기 예측</div>'+
-    loadingHtml('예측 계산 중...','padding:14px 0 18px')+'</div>';
+  // 예측은 모달 상세와 함께 미리 받아둔다(openMatchModal의 predPromise).
+  // 리그 순위표에 없는 팀(하부리그 컵 상대 등)이면 서버가 available:false를 주고,
+  // 그때는 카드를 아예 그리지 않는다 — 근거 없는 예측을 억지로 만들지 않는다.
+  var p = data.prediction;
+  if(!p || p.error || !p.available) return '';
+  return predictCardHTML(p, data);
 }
 function predictCardHTML(p, data){
   var pct=function(v){ return Math.round(v*100); };

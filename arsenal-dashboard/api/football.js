@@ -1139,11 +1139,6 @@ function predictNarrative(p){
   if(p.crossLeague){
     out.push(`두 팀이 다른 리그라 자국 리그 기록을 리그 수준 보정을 거쳐 비교했고, ${p.competition.name || '대회'} 자체 기록도 경기 수만큼 반영했습니다.`);
   }
-  if(p.sample.played < 10){
-    out.push(p.sample.prior
-      ? `아직 ${p.sample.played}경기 표본이라 지난 시즌 기록을 함께 섞어 계산했습니다.`
-      : `아직 ${p.sample.played}경기 표본이라, 팀 강도를 평균 쪽으로 보정해 계산한 값입니다.`);
-  }
   return out;
 }
 
