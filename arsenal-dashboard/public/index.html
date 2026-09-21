@@ -2049,6 +2049,13 @@ var MIN_LOADING_MS = 400;
 // 프리페치·브라우저 캐시가 붙은 뒤로는 2~30ms에 오는데, 그때도 400ms를
 // 붙잡으면 "안 떠도 될 스피너"를 일부러 보여주는 꼴이 된다.
 var INSTANT_MS = 80;
+// 로딩 표시 — 목록들은 이 스피너 마크업을 인라인으로 들고 있었는데(15곳), 상세모달 몇 곳은
+// 글자만 있는 로딩이라 스피너가 안 돌았다. withMinLoading도 .spinner가 있어야 최소 노출
+// 시간을 지켜주므로, 새로 쓰는 곳은 이 헬퍼를 쓴다.
+var SPINNER_HTML = "<div class=\"spinner\"><svg class=\"spinner-icon\" viewBox=\"0 0 671.5 307.6\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><g><g><path pathLength=\"1\" d=\"M283.2,62c-24.4,3.7-46.5,16.5-61.9,35.7l49.4,28.5c3.6-3.2,7.9-5.6,12.6-7.2L283.2,62z\"/><path pathLength=\"1\" d=\"M221.2,47.6c-27.7,18.9-47.8,47.9-55.7,81.5c-25,0.9-44.4,1.4-57.9,1.4c-14.1,0-26-11-30.7-26.5H64.9 c-3.1,0-7.5-3.7-7.5-14.8c0-11.1,4.4-14.9,7.5-14.9h11.9c4.7-15.5,16.6-26.6,30.7-26.6L221.2,47.6L221.2,47.6z\"/><path pathLength=\"1\" d=\"M298.6,148c-6.7,0-12.1,5.3-12.1,12c0,6.7,5.4,12.2,12.1,12.2c6.7,0,12.1-5.5,12.1-12.2C310.7,153.4,305.3,148,298.6,148z\"/><path pathLength=\"1\" d=\"M255.3,152.9l-49.4-28.3c-8.9,23-8.9,48.4,0.1,71.5l49.3-28.6C254.5,162.6,254.5,157.7,255.3,152.9z\"/><path pathLength=\"1\" d=\"M342.4,162.9c13.9-3.8,28.7-7.5,43.7-10.6c3.5-0.7,7.4-1.6,11.5-2.5c-1-8.7-3-17.3-6.2-25.4l-49.6,28.4 c0.6,2.4,0.7,4.7,0.7,7.1C342.5,161,342.4,162,342.4,162.9z\"/><path pathLength=\"1\" d=\"M375.9,97.7c-15.5-19.2-37.4-32-61.8-35.6l-0.2,57c4.7,1.8,8.8,4,12.5,7.1L375.9,97.7z\"/><path pathLength=\"1\" d=\"M298.6,30.3c-170.5,4.2-171.8,254.8,0,259.6C470.6,285.1,469.3,34.5,298.6,30.3z M307.3,54.3c32.5,2.6,61.1,20,78.8,45.5 l-60.5,35c-4.8-5.2-11.3-9-18.3-10.6V54.3z M290,54.3v69.8c-7.1,1.7-13.3,5.5-18.3,10.6l-60.5-35C228.9,74.2,257.3,56.9,290,54.3z M202.8,205.8c-13.5-28.2-14.2-61.4-0.3-91l60.5,34.8c-2,7-2,14.4,0.1,21.2C256.3,174.7,208.3,202.6,202.8,205.8z M290,266 c-32.7-2.5-60.7-20-78.8-45.4c14.9-8.6,45.9-26.6,60.5-35.1c5,5.1,11.2,8.7,18.2,10.4V266z M279.7,160.1 c0.1-24.6,37.6-24.7,37.7,0C317,185,280.1,185,279.7,160.1z M307.3,265.9V196c7-1.7,13.2-5.4,18.2-10.4 c14.9,8.6,45.4,26.4,60.4,35.1C368.4,245.9,339.8,263.3,307.3,265.9z M396.2,202c-0.5,1.2-1.1,2.4-1.6,3.5 c-1.8-1-57-32.9-60.5-34.8c2.1-7.2,2-14.8,0-21.2l60.5-34.9C409.1,144.8,406.8,177.9,396.2,202z\"/><path pathLength=\"1\" d=\"M646.3,47.6c-1.5,19.1-4,38.1-7.3,56.9l-141.5,9.6c-1.1,6.5-5.6,13.6-16.1,16.1l-47.6,11.3c-5.3-38.9-27.1-72.6-57.8-93.9 L646.3,47.6L646.3,47.6z\"/></g><path pathLength=\"1\" d=\"M186.4,237.8c-37.6,21-76.2,36.7-115.9,46.7H26.9l-5.6-11.3c52.3-10.5,108.3-45.5,142.9-88.2 C167.7,204,175.4,222.3,186.4,237.8z\"/></g></svg></div>";
+function loadingHtml(text, style, cls){
+  return '<div class="loading-state'+(cls?' '+cls:'')+'"'+(style?' style="'+style+'"':'')+'>'+SPINNER_HTML+'<span>'+(text||'불러오는 중...')+'</span></div>';
+}
 function withMinLoading(containerEl, startTime, renderFn){
   var elapsed = Date.now() - startTime;
   if(!containerEl || !containerEl.querySelector('.spinner') || elapsed <= INSTANT_MS){
@@ -3102,7 +3109,7 @@ function openTeamModal(teamId, teamName){
   content.className='modal-sheet-inner';
   content.innerHTML='<div class="pm-header team-header"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>'
     +'<div class="pm-header-inner"><div class="pm-name">'+(teamName||'')+'</div></div></div>'
-    +'<div class="loading-state" style="padding:40px 20px"><span>불러오는 중...</span></div>';
+    +loadingHtml('불러오는 중...','padding:40px 20px');
   modal.classList.add('open');
   document.body.style.overflow='hidden';
   history.pushState({modal:'player'},'',' #player');
@@ -3426,7 +3433,7 @@ function roundDateLabel(utcDate){
 function loadRoundResults(roundNum){
   var panel=document.getElementById('lbRoundContent');
   if(!panel) return;
-  panel.innerHTML='<div class="loading-state" style="padding:24px 12px"><span>불러오는 중...</span></div>';
+  panel.innerHTML=loadingHtml('불러오는 중...','padding:24px 12px');
   var reqId=(_lbRoundReqSeq=(_lbRoundReqSeq||0)+1);
   apiFetch(FN+'/football?type=roundResults'+(roundNum?('&round='+roundNum):'')).then(function(data){
     if(reqId!==_lbRoundReqSeq) return; // 응답 오는 사이 다른 라운드로 넘어갔으면 무시
@@ -3503,7 +3510,7 @@ var _totwRound=null, _totwMinRound=1, _totwMaxRound=38, _totwReqSeq=0;
 function loadTeamOfWeek(roundNum){
   var panel=document.getElementById('lbTotwContent');
   if(!panel) return;
-  panel.innerHTML='<div class="loading-state" style="padding:24px 12px"><span>불러오는 중...</span></div>';
+  panel.innerHTML=loadingHtml('불러오는 중...','padding:24px 12px');
   var reqId=(_totwReqSeq=_totwReqSeq+1);
   apiFetch(FN+'/football?type=teamOfTheWeek'+(roundNum?('&round='+roundNum):'')).then(function(data){
     if(reqId!==_totwReqSeq) return;
@@ -7726,6 +7733,40 @@ function selectPmSeason(targetMode){
     applyMode(_pmPrevSeasonCache[fotmobId]);
   });
 }
+// 이번 세션에 받아둔 선수 상세(type=playerDetail 응답). 모달을 다시 열 때 첫 화면을
+// 완성된 상태로 그리는 용도 — 값은 아래 fetch가 최신으로 덮어쓴다.
+var _playerDetailCache = {};
+// 헤더에 쓰는 기본 프로필만 입힌다(타팀 선수는 players.json 같은 출처가 없어서 비어 있다).
+// 기록·특성 같은 "바뀌었는지 비교"가 걸린 값은 건드리지 않는다 — 라이브 갱신 콜백이
+// 변경 감지를 하기 전에 p를 덮어쓰면 "안 바뀐 것"으로 오판해 화면이 안 갱신된다.
+function applyPlayerProfile(p, live){
+  if(!p || !live) return;
+  if(live.profile && !live.profile.isArsenal){
+    var pr = live.profile;
+    if(!p.name && pr.name) p.name = pr.name;
+    if(p.age==null && pr.age!=null) p.age = pr.age;
+    if(!p.nationality && pr.nationality) p.nationality = pr.nationality;
+    if(!p.jersey && pr.shirtNumber!=null) p.jersey = pr.shirtNumber;
+    if(!p.height && pr.heightCm) p.height = pr.heightCm + ' cm';
+    if(!p.position && pr.position) p.position = pr.position;
+    if(!p.team && pr.team) p.team = pr.team;
+    else if(p.team && pr.team && !p.team.color) p.team.color = pr.team.color;
+  }
+}
+// 모달을 다시 열 때 첫 화면을 완성본으로 그리려고 세션 캐시를 입히는 경로에서만 쓴다.
+// (변경 감지 이전이 아니라 "아직 아무것도 안 그린" 시점이라 기록까지 덮어써도 안전하다)
+function applyPlayerDetail(p, live){
+  if(!p || !live) return;
+  applyPlayerProfile(p, live);
+  if(live.contractEnd) p.contractEnd = live.contractEnd;
+  if(live.preferredFoot) p.preferredFoot = live.preferredFoot;
+  if(live.competitions && Object.keys(live.competitions).length) p.competitions = live.competitions;
+  if(live.traits) p.traits = live.traits;
+  if(live.shotmap && live.shotmap.length) p.shotmap = live.shotmap;
+  if(live.heatmap && live.heatmap.length) p.heatmap = live.heatmap;
+  if(live.career && live.career.length) p.career = live.career;
+}
+
 function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   initialTab = initialTab || 'pmbasic';
   var desktop = isDesktopLayout();
@@ -7753,6 +7794,19 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
     modal = document.getElementById('playerModal');
     content = document.getElementById('modalContent');
     modal.querySelector('.modal-sheet').classList.remove('hist-compact');
+  }
+  // 같은 선수를 다시 열면 이번 세션에서 받아둔 상세를 먼저 입혀 바로 완성된 화면을 그린다.
+  // 서버는 KV 캐시라 빨리 주지만, apiFetch가 캐시버스터를 붙여서 매번 네트워크를 타므로
+  // 두 번째 열 때도 기록/특성이 비어 있다가 뒤늦게 채워지는(=로딩처럼 보이는) 구간이 있었다.
+  // 아래 fetch는 그대로 돌아서 최신 값으로 조용히 갱신한다.
+  // 아래 패널을 그릴 때 "아직 받아오는 중"인지 알아야 빈 화면 대신 로딩 스피너를
+  // 보여줄 수 있다 — 아스날 선수는 정적 스냅샷이 이미 있어서 비지 않지만, 타팀
+  // 선수(리더보드)는 이 응답이 오기 전까진 채울 값이 아예 없다.
+  var _pmPending = false;
+  if(!isLiveRefresh){
+    var _warmId = p.fotmobId||p.id;
+    if(_warmId && _playerDetailCache[_warmId]) applyPlayerDetail(p, _playerDetailCache[_warmId]);
+    else if(_warmId) _pmPending = true;
   }
   // 대회별 기록/경력/특성은 정적 스냅샷(players.json) 대신 그때그때
   // Fotmob에서 라이브로 받아온다 — 아래에서 fetch가 끝나면 이 함수를
@@ -7913,6 +7967,11 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       infoItems.push({val: tot.assists>0?tot.assists:'-', lbl:'어시스트', color: tot.assists>0?'var(--blue)':'var(--text)'});
     }
   }
+  if(!infoItems.length && _pmPending){
+    h += loadingHtml('선수 정보 불러오는 중...', 'padding:32px 0', 'pm-pending');
+  } else if(!infoItems.length && p._detailFailed){
+    h += '<div class="loading-state" style="padding:32px 0"><span>선수 정보를 불러오지 못했습니다</span></div>';
+  }
   if(infoItems.length){
     h += '<div class="detail-info-grid">';
     infoItems.forEach(function(item){
@@ -7939,6 +7998,8 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   h += '<div class="live-tab-panel" id="live-panel-pmrecord" style="'+(initialTab!=='pmrecord'?'display:none;':'')+'padding-top:0;">';
 
   // ── 대회별 기록 카드: 탭 + 스탯 + 슈팅맵 + 터치 히트맵을 하나로 묶음 ──
+  if(!compKeys.length && _pmPending) h += loadingHtml('기록 불러오는 중...', 'padding:32px 0', 'pm-pending');
+  else if(!compKeys.length && p._detailFailed) h += '<div class="loading-state" style="padding:32px 0"><span>기록을 불러오지 못했습니다</span></div>';
   if(compKeys.length > 0){
     window._pmShotmapAll = shotmap;
     window._pmHeatmapAll = heatmap;
@@ -8095,6 +8156,8 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   h += '<div class="live-tab-panel" id="live-panel-pmcareer" style="'+(initialTab!=='pmcareer'?'display:none;':'')+'padding-top:0;">';
 
   // ── 경력 ──
+  if(!(career && career.length) && _pmPending) h += loadingHtml('경력 불러오는 중...', 'padding:32px 0', 'pm-pending');
+  else if(!(career && career.length) && p._detailFailed) h += '<div class="loading-state" style="padding:32px 0"><span>경력을 불러오지 못했습니다</span></div>';
   if(career && career.length){
     // 기록 탭의 하위탭과 동일하게, 상위 탭(.live-tabs) 바로 아래 선을
     // 하나 그어서 기본정보 탭(.detail-info-grid 상단 테두리)과 톤을 맞춘다.
@@ -8163,9 +8226,31 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   var fotmobId = p.fotmobId||p.id;
   if(!isLiveRefresh && fotmobId){
     apiFetch(FN+'/football?type=playerDetail&id='+fotmobId).then(function(live){
-      if(!live || live.error) return;
+      // 실패했는데 화면이 이 응답만 기다리고 있었으면(타팀 선수: 채울 스냅샷이 없음)
+      // 스피너가 영영 돌기만 하므로, 실패 표시로 한 번 다시 그린다.
+      if(!live || live.error){
+        var failContent = isDesktopLayout() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
+        // 실제로 스피너가 떠 있을 때만 — 아스날 선수처럼 정적 스냅샷으로 이미 다 그려진
+        // 화면은 실패해도 건드릴 필요가 없다.
+        if(_pmPending && _openPlayerId === fotmobId && failContent && failContent.querySelector('#pmTabPanelsWrap .spinner')){
+          p._detailFailed = true;
+          var failBtn = failContent.querySelector('.live-tab-btn.active');
+          openPlayerModal(p, level, true, true, failBtn ? failBtn.getAttribute('data-tab') : 'pmbasic');
+        }
+        return;
+      }
+      p._detailFailed = false;
+      _playerDetailCache[fotmobId] = live;   // 다음에 같은 선수를 열 때 첫 화면부터 완성본으로
       // 그 사이 사용자가 다른 선수를 열었으면 이 응답은 버린다.
       if(_openPlayerId !== fotmobId) return;
+      // 응답은 왔지만 값이 비어 있는 칸(예: 아직 출전 기록이 없는 선수의 "기록" 탭)은
+      // 아래 변경 감지에서 "바뀐 게 없음"으로 판정돼 다시 그려지지 않는다 — 그 경우
+      // 로딩 스피너만 영영 남으므로, 다시 그리기 전에 먼저 걷어낸다.
+      (function(){
+        var pendingHolder = isDesktopLayout() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
+        if(!pendingHolder) return;
+        [].forEach.call(pendingHolder.querySelectorAll('.loading-state.pm-pending'), function(el){ el.remove(); });
+      })();
       // 사용자가 그 사이 "지난 시즌"으로 토글해뒀으면 이번 시즌 라이브
       // 데이터로 덮어쓰면 안 된다 — 스냅샷만 갱신해두고 화면은 그대로 둔다.
       // 계약만료/주사용발은 1군 목록(Fotmob 팀 API)엔 아예 없는 값이라
@@ -8177,19 +8262,11 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 안 채워진 나머지는 영영 안 채워지는" 오탐이 난다.
       // 타팀 선수는 players.json 같은 출처가 없어서 이름·나이·국적·등번호가 비어 있다 —
       // 같은 응답의 profile로 채운다(아스날 선수는 이미 더 풍부한 값이 있으니 건드리지 않는다).
-      var profileFilled = false;
-      if(live.profile && !live.profile.isArsenal){
-        var pr = live.profile;
-        if(!p.name && pr.name){ p.name = pr.name; profileFilled = true; }
-        if(p.age==null && pr.age!=null){ p.age = pr.age; profileFilled = true; }
-        if(!p.nationality && pr.nationality){ p.nationality = pr.nationality; profileFilled = true; }
-        if(!p.jersey && pr.shirtNumber!=null){ p.jersey = pr.shirtNumber; profileFilled = true; }
-        // players.json의 height는 "179 cm" 형식이라 표기를 맞춘다(기본정보 그리드에 그대로 출력됨)
-        if(!p.height && pr.heightCm){ p.height = pr.heightCm + ' cm'; profileFilled = true; }
-        if(!p.position && pr.position){ p.position = pr.position; profileFilled = true; }
-        if(!p.team && pr.team){ p.team = pr.team; profileFilled = true; }
-        else if(p.team && pr.team && !p.team.color){ p.team.color = pr.team.color; profileFilled = true; }
-      }
+      // 헤더에 쓰는 값(이름·등번호·나이·키·팀 색)이 이번에 처음 채워졌는지 — 그 경우엔
+      // 아래에서 탭 패널만이 아니라 헤더까지 다시 그려야 한다.
+      var beforeHeader = [p.name, p.jersey, p.age, p.height, p.nationality, p.position, p.team && p.team.color].join('|');
+      applyPlayerProfile(p, live);
+      var profileFilled = beforeHeader !== [p.name, p.jersey, p.age, p.height, p.nationality, p.position, p.team && p.team.color].join('|');
       var hadContractBefore = !!p.contractEnd;
       var hadFootBefore = !!p.preferredFoot;
       // 지금 화면에 그려진 값(=이 콜백이 실행되기 전 p의 값)을 미리 찍어둔다.
