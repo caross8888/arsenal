@@ -1,4 +1,6 @@
 // api/football.js — Vercel Serverless Function
+import { PARAMS, POS_LABEL, scoreProbs, blendRatio, decayedForm,
+         homeEdgeFrom, restFactor, injuryFactors, lambdasFrom } from './_predict.js';
 const FPL_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/';
 const ARSENAL_FPL_ID = 1;
 const ARSENAL_TEAM_ID = 9825; // Fotmob 팀 ID
@@ -669,6 +671,480 @@ function selfOrigin(req){
   const host = h['x-forwarded-host'] || h.host || process.env.VERCEL_PROJECT_PRODUCTION_URL || '';
   const proto = /^(localhost|127\.0\.0\.1)(:|$)/.test(host) ? 'http' : 'https';
   return proto + '://' + host;
+}
+
+// ── 경기 예측(포아송 + 디슨-콜스) ────────────────────────────────────────
+// 계산 자체는 _predict.js에 있다 — scripts/backtest_predict.mjs(검증)와 같은
+// 코드를 써야 백테스트로 고른 계수가 운영에서 그대로 재현된다. 여기서는 Fotmob
+// 응답을 그 함수들이 먹는 모양으로 만들고 캐싱하는 일만 한다.
+//
+// 팀 강도에 들어가는 것: 이번 시즌 xG 집계 + 최근 경기 가중 득점 + 지난 시즌
+// 기록(사전값). 거기에 일정(휴식일·밀집)과 결장(포지션별)을 곱해 λ를 만든다.
+// 유럽대항전은 상대가 다른 리그라 자국 리그 기록을 리그 수준 계수로 환산한 뒤
+// 그 대회 자체 기록과 섞는다.
+const LEAGUE_STRENGTH_TTL_SEC = 6 * 60 * 60;
+const LEAGUE_PRIOR_TTL_SEC = 30 * 24 * 60 * 60;   // 지난 시즌 기록은 안 바뀐다
+const TEAM_CONTEXT_TTL_SEC = 3 * 60 * 60;
+const TEAM_CTX_SCHEMA = 3;        // 저장 형식(일정 추가) — 옛 캐시는 무시하고 다시 받는다
+const LEAGUE_STRENGTH_SCHEMA = 2;
+
+// 유럽대항전에서 자국 리그 기록을 환산할 때 쓰는 리그 수준 계수.
+// 감으로 적은 값이 아니라 **실측값**이다 — UCL·유로파·컨퍼런스 리그페이즈의
+// 교차리그 경기 511개(2024/25~2025/26)로 "자국 리그에서 이만큼 하는 팀이 다른 리그
+// 팀을 만나면 실제로 몇 골 넣나"를 맞추는 배수를 최대우도로 적합했다
+// (scripts/fit_league_coef.mjs). 경기 수가 적은 리그는 잘 적합된 리그들의 중앙값
+// 쪽으로 당겼다.
+//
+// 두 가지 주의:
+//  - 전체에 같은 수를 곱해도 λ에서 상쇄되므로(공격 ×coef, 상대 수비 ÷coef) 절대값이
+//    아니라 **리그 간 비율**만 의미가 있다. EPL이 라리가보다 30% 높다는 게 요점.
+//  - 이 값은 리그의 절대 수준만이 아니라 **리그 내 격차**도 같이 담는다. EPL은 상위·
+//    하위 차이가 작아 강팀의 '리그 평균 대비 배수'가 실력을 과소평가하고, 격차가 큰
+//    리그는 그 반대다. 모형이 필요로 하는 보정이 정확히 이것이라 의도된 성질이다.
+const LEAGUE_COEF = {
+  47:  0.96,  // Premier League   (교차리그 159경기)
+  87:  0.78,  // LaLiga           (120경기)
+  53:  0.78,  // Ligue 1          (104경기)
+  54:  0.77,  // Bundesliga       (108경기)
+  55:  0.74,  // Serie A          (117경기)
+  61:  0.68,  // Liga Portugal    (75경기)
+  196: 0.68,  // Ekstraklasa      (30경기)
+  67:  0.66,  // Allsvenskan      (24경기)
+  59:  0.66,  // Eliteserien      (34경기)
+  71:  0.66,  // Süper Lig        (48경기)
+  57:  0.65,  // Eredivisie       (81경기)
+  252: 0.65,  // HNL              (15경기)
+  212: 0.73,  // Nemzeti Bajnokság I (10경기)
+  173: 0.73,  // Prva Liga        (9경기)
+  // 아래 둘은 유럽대항전에 안 나와서 실측이 안 된다 — 위 눈금에 맞춘 추정값이다.
+  40:  0.68,  // Belgian Pro League (추정)
+  48:  0.60,  // Championship       (추정, 컵대회에서만 만난다)
+};
+// 자국 리그 '평균 대비 배수'를 다른 리그와 견줄 때 log 공간에서 눌러주는 지수.
+// 이게 없으면 약한 리그의 절대 강팀이 과대평가된다 — 바이에른의 분데스리가 배수는
+// 2배가 넘는데, 그건 상대가 약해서 부풀려진 값이라 유럽 무대에서 그대로 통하지 않는다.
+// 실효배수 = 배수^0.55 로 누른다(실측: 교차리그 511경기 포아송 우도가 압축 없음보다
+// 17.2 높다 — 통계적으로 뚜렷한 차이다). 같은 리그끼리 붙는 경기엔 적용하지 않는다.
+const CROSS_LEAGUE_GAMMA = 0.55;
+const LEAGUE_COEF_DEFAULT = 0.65;
+const leagueCoef = id => LEAGUE_COEF[Number(id)] != null ? LEAGUE_COEF[Number(id)] : LEAGUE_COEF_DEFAULT;
+
+function parseScoresStr(str){
+  const m = /^(\d+)\s*-\s*(\d+)$/.exec(String(str || '').trim());
+  return m ? {gf: Number(m[1]), ga: Number(m[2])} : {gf: 0, ga: 0};
+}
+// "2026/2027" -> "2025/2026"
+function seasonBefore(name){
+  const m = /^(\d{4})\/(\d{4})$/.exec(String(name || ''));
+  return m ? `${Number(m[1]) - 1}/${Number(m[2]) - 1}` : null;
+}
+// leagues 응답의 fixtures.allMatches → 종료 경기만 간단한 모양으로
+function finishedMatchesOf(lg){
+  const out = [];
+  for(const m of (((lg.fixtures || {}).allMatches) || [])){
+    const st = m.status || {};
+    if(!st.finished || st.cancelled) continue;
+    const sc = parseScoresStr(st.scoreStr);
+    if(!st.utcTime) continue;
+    out.push({utcTime: st.utcTime,
+      homeId: String((m.home || {}).id), awayId: String((m.away || {}).id),
+      homeGoals: sc.gf, awayGoals: sc.ga});
+  }
+  return out;
+}
+
+// 지난 시즌 팀별 "리그 평균 대비 배수" — 이번 시즌 사전값. 값이 안 바뀌니 길게 캐싱.
+async function fetchLeaguePrior(leagueId, seasonName){
+  if(!seasonName) return null;
+  const key = `leaguePrior:${leagueId}:${seasonName}`;
+  const cached = await kvGetJSON(key);
+  if(cached) return cached;
+  const r = await fetch(`https://www.fotmob.com/api/data/leagues?id=${leagueId}&season=${encodeURIComponent(seasonName)}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+  if(!r.ok) return null;
+  const lg = await r.json();
+  const tb = (((lg.table || [])[0] || {}).data || {}).table || {};
+  const rows = (tb.all || []).map(t => {
+    const s = parseScoresStr(t.scoresStr);
+    return {id: String(t.id || t.teamId), played: t.played || 0, gf: s.gf, ga: s.ga};
+  }).filter(t => t.played > 0);
+  // xG 테이블이 있으면 득점 대신 xG로 — 지난 시즌 사전값도 xG 쪽이 낫다.
+  const xgById = {};
+  (tb.xg || []).forEach(t => { if(t.played) xgById[String(t.id || t.teamId)] = {xg: t.xg, xgc: t.xgConceded, played: t.played}; });
+  if(!rows.length) return null;
+  const teamMatches = rows.reduce((a, t) => a + t.played, 0);
+  const avg = rows.reduce((a, t) => a + t.gf, 0) / teamMatches;
+  const xgAvgSrc = Object.values(xgById);
+  const xgAvg = xgAvgSrc.length ? xgAvgSrc.reduce((a, t) => a + t.xg, 0) / xgAvgSrc.reduce((a, t) => a + t.played, 0) : null;
+  const out = {season: seasonName, avg, teams: {}};
+  rows.forEach(t => {
+    const x = xgById[t.id];
+    out.teams[t.id] = (x && xgAvg)
+      ? {attack: (x.xg / x.played) / xgAvg, defence: (x.xgc / x.played) / xgAvg, played: x.played}
+      : {attack: (t.gf / t.played) / avg, defence: (t.ga / t.played) / avg, played: t.played};
+  });
+  await kvSetJSON(key, out, LEAGUE_PRIOR_TTL_SEC);
+  return out;
+}
+
+// 리그/대회 순위표 한 방(leagues?id=)으로 팀별 xG·홈/원정·전 경기 결과까지 받아
+// 캐싱한다. 지난 시즌 사전값은 별도 키(영구에 가까운 TTL)로 따로 받는다.
+async function fetchLeagueStrength(leagueId){
+  const key = `leagueStrength:${leagueId}`;
+  const cached = await kvGetJSON(key);
+  if(cached && cached.schemaV === LEAGUE_STRENGTH_SCHEMA) return cached;
+
+  const r = await fetch(`https://www.fotmob.com/api/data/leagues?id=${leagueId}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+  if(!r.ok) return null;
+  const lg = await r.json();
+  const tb = (((lg.table || [])[0] || {}).data || {}).table || {};
+
+  const teams = {};
+  const touch = t => {
+    const id = String(t.id || t.teamId || '');
+    if(!id) return null;
+    if(!teams[id]) teams[id] = {id, name: t.name || '', shortName: t.shortName || t.name || ''};
+    return teams[id];
+  };
+  (tb.all || []).forEach(t => {
+    const row = touch(t); if(!row) return;
+    const s = parseScoresStr(t.scoresStr);
+    row.played = t.played || 0; row.gf = s.gf; row.ga = s.ga;
+    row.wins = t.wins || 0; row.draws = t.draws || 0; row.losses = t.losses || 0;
+    row.position = t.idx || null;
+  });
+  const side = (arr, key2) => (arr || []).forEach(t => {
+    const row = touch(t); if(!row) return;
+    const s = parseScoresStr(t.scoresStr);
+    row[key2] = {played: t.played || 0, gf: s.gf, ga: s.ga, wins: t.wins || 0, draws: t.draws || 0, losses: t.losses || 0};
+  });
+  side(tb.home, 'home');
+  side(tb.away, 'away');
+  (tb.xg || []).forEach(t => {
+    const row = touch(t); if(!row) return;
+    row.xg = t.xg || 0; row.xgConceded = t.xgConceded || 0;
+  });
+
+  const list = Object.values(teams).filter(t => (t.played || 0) > 0);
+  if(!list.length) return null;
+  const sum = f => list.reduce((a, t) => a + (f(t) || 0), 0);
+  const totalTeamMatches = sum(t => t.played);
+  const avgGoals = totalTeamMatches ? sum(t => t.gf) / totalTeamMatches : 1.4;
+  const homeMatches = sum(t => (t.home || {}).played);
+  const awayMatches = sum(t => (t.away || {}).played);
+  const homeAvg = homeMatches ? sum(t => (t.home || {}).gf) / homeMatches : avgGoals;
+  const awayAvg = awayMatches ? sum(t => (t.away || {}).gf) / awayMatches : avgGoals;
+  const he = homeEdgeFrom(homeAvg, awayAvg, avgGoals, totalTeamMatches);
+
+  // 최근 경기 가중(시간 감쇠) 득점 — 같은 응답의 전 경기 결과로 계산한다.
+  const decay = decayedForm(finishedMatchesOf(lg), Date.now());
+
+  const perMatch = (total, played) => (played > 0 ? total / played : 0);
+  list.forEach(t => {
+    t.xgFor = perMatch(t.xg != null ? t.xg : t.gf, t.played);
+    t.xgAgainst = perMatch(t.xgConceded != null ? t.xgConceded : t.ga, t.played);
+    const d = decay[t.id];
+    t.decayFor = d ? d.gfPerMatch : null;
+    t.decayAgainst = d ? d.gaPerMatch : null;
+  });
+  [...list].sort((a, b) => b.xgFor - a.xgFor).forEach((t, i) => { t.attackRank = i + 1; });
+  [...list].sort((a, b) => a.xgAgainst - b.xgAgainst).forEach((t, i) => { t.defenceRank = i + 1; });
+
+  // 지난 시즌 사전값(있으면)
+  const seasonName = (((lg.table || [])[0] || {}).data || {}).selectedSeason || ((lg.details || {}).selectedSeason) || '';
+  const prior = await fetchLeaguePrior(leagueId, seasonBefore(seasonName)).catch(() => null);
+
+  const payload = {
+    schemaV: LEAGUE_STRENGTH_SCHEMA,
+    leagueId: Number(leagueId),
+    leagueName: ((lg.details || {}).name) || '',
+    season: seasonName,
+    teamCount: list.length,
+    avgGoals,
+    homeFactor: he.homeFactor,
+    awayFactor: he.awayFactor,
+    homeEdge: he.edge,
+    coef: leagueCoef(leagueId),
+    prior: prior ? {season: prior.season, teams: prior.teams} : null,
+    teams: Object.fromEntries(list.map(t => [t.id, t])),
+    updatedAt: Date.now(),
+  };
+  await kvSetJSON(key, payload, LEAGUE_STRENGTH_TTL_SEC);
+  return payload;
+}
+
+// 팀의 자국 리그 id·결장자·일정 — 전부 teams?id= 한 응답에 들어있다.
+async function fetchTeamContext(teamId){
+  const key = `teamCtx:${teamId}`;
+  const cached = await kvGetJSON(key);
+  if(cached && cached.schemaV === TEAM_CTX_SCHEMA) return cached;
+
+  const r = await fetch(`https://www.fotmob.com/api/data/teams?id=${teamId}`, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+  if(!r.ok) return null;
+  const t = await r.json();
+  const tables = (t.table || []).map(x => x.data || {}).filter(d => d.leagueId);
+  // ccode INT = 유럽대항전. 자국 리그는 그 외 항목.
+  const domestic = tables.find(d => d.ccode && d.ccode !== 'INT') || tables[0] || {};
+  const ls = ((t.overview || {}).lastLineupStats) || {};
+  // 결장자 항목엔 포지션이 있을 때도 없을 때도 있다(실측: 살리바만 있고 벤 화이트·
+  // 모스케라는 없음) — 같은 응답의 스쿼드에서 id로 찾아 메운다.
+  const posById = {};
+  (((t.squad || {}).squad) || []).forEach(g => (g.members || []).forEach(mem => {
+    if(mem.id != null && mem.positionId != null && mem.positionId >= 0 && mem.positionId <= 3) posById[String(mem.id)] = mem.positionId;
+  }));
+  const posOf = pl => {
+    if(pl.usualPlayingPositionId != null && pl.usualPlayingPositionId >= 0 && pl.usualPlayingPositionId <= 3) return pl.usualPlayingPositionId;
+    const byId = posById[String(pl.id)];
+    return byId != null ? byId : 2;   // 끝내 모르면 미드필더로 본다(득점·실점 영향이 중간)
+  };
+  // 일정 — 휴식일·2주 경기 수 계산용. 리그만이 아니라 컵·유럽대항전까지 다 들어있다.
+  // 단 친선경기는 뺀다(사용자 지적): 주전이 25~30분만 뛰고 로테이션 선수에게 출전을
+  // 나눠주는 경기라 피로도가 사실상 없는데, 그대로 세면 프리시즌에 "4일 휴식 + 2주
+  // 4경기"처럼 잡혀 8월 경기 예측이 통째로 깎였다(실측: 아스날·릴 모두 8월 친선 4경기).
+  // Fotmob은 친선을 leagueId 489(Club Friendlies)로 따로 매긴다.
+  // 국가대표 경기(A매치)는 애초에 클럽 일정에 없고, 클럽 경기가 아니니 세지 않는다.
+  const FRIENDLY_LEAGUE_ID = 489;
+  const playedAt = [];
+  for(const f of ((((t.fixtures || {}).allFixtures) || {}).fixtures || [])){
+    const st = f.status || {};
+    if(!st.finished || st.cancelled || !st.utcTime) continue;
+    const tour = f.tournament || {};
+    if(tour.leagueId === FRIENDLY_LEAGUE_ID || /friendl/i.test(tour.name || '')) continue;
+    playedAt.push(new Date(st.utcTime).getTime());
+  }
+  playedAt.sort((a, b) => a - b);
+
+  const ctx = {
+    id: String(teamId),
+    name: ((t.details || {}).name) || '',
+    schemaV: TEAM_CTX_SCHEMA,
+    leagueId: domestic.leagueId || null,
+    leagueName: domestic.leagueName || '',
+    // 결장 비중의 분모가 되는 "직전 경기 선발 11명". Fotmob이 대회를 가리지 않고
+    // 말 그대로 직전 경기를 주므로, 프리시즌에는 이게 친선 로테이션 XI일 수 있다
+    // (그 경우 분모가 작아져 결장 영향이 과대평가된다). 대체할 다른 XI가 응답에
+    // 없어서 그대로 쓰되, 8월 예측을 볼 때 감안할 것.
+    xiValue: ls.totalStarterMarketValue || 0,
+    starters: (ls.starters || []).map(st => ({pos: posOf(st), value: st.marketValue || 0})),
+    out: (ls.unavailable || []).map(u => ({
+      name: u.name || '',
+      pos: posOf(u),
+      value: u.marketValue || 0,
+      type: ((u.unavailability || {}).type) || 'injury',
+      expectedReturn: ((u.unavailability || {}).expectedReturn) || '',
+      doubtful: /doubt/i.test(((u.unavailability || {}).expectedReturn) || ''),
+    })),
+    playedAt,
+    updatedAt: Date.now(),
+  };
+  await kvSetJSON(key, ctx, TEAM_CONTEXT_TTL_SEC);
+  return ctx;
+}
+
+// 킥오프 시각 기준 휴식일·최근 2주 경기 수
+function restFor(ctx, kickoffMs){
+  if(!ctx || !(ctx.playedAt || []).length || !kickoffMs) return null;
+  const before = ctx.playedAt.filter(t => t < kickoffMs);
+  if(!before.length) return null;
+  const last = before[before.length - 1];
+  const win = before.filter(t => kickoffMs - t <= PARAMS.congestionWindowDays * 86400000).length;
+  return restFactor((kickoffMs - last) / 86400000, win);
+}
+
+// 한 팀의 "절대 기대득점/실점"(= 이 대회 평균 상대를 만났을 때의 값).
+// 자국 리그 기록(리그 수준 계수로 환산) + 그 대회 자체 기록을 경기 수로 섞는다.
+function teamAbsStrength(teamId, compStrength, domStrength){
+  const id = String(teamId);
+  const inComp = compStrength && compStrength.teams[id];
+  const inDom  = domStrength  && domStrength.teams[id];
+  if(!inComp && !inDom) return null;
+
+  const ratioOf = (strength, row, usePrior) => {
+    const prior = usePrior && strength.prior ? strength.prior.teams[id] : null;
+    const attack = blendRatio({
+      curXgRate: row.xgFor, curDecayRate: row.decayFor, curPlayed: row.played,
+      prevRatio: prior ? prior.attack : null, leagueAvg: strength.avgGoals, usePrior,
+    });
+    const defence = blendRatio({
+      curXgRate: row.xgAgainst, curDecayRate: row.decayAgainst, curPlayed: row.played,
+      prevRatio: prior ? prior.defence : null, leagueAvg: strength.avgGoals, isDefence: true, usePrior,
+    });
+    return {attack, defence};
+  };
+
+  // 자국 리그: 사전값(지난 시즌) 사용 → 절대값으로 환산(리그 평균 × 리그 수준 계수).
+  // 다른 리그 팀과 붙는 경기에서만 배수를 압축한다(CROSS_LEAGUE_GAMMA 주석 참고) —
+  // 같은 리그 경기는 애초에 같은 상대 풀에서 잰 값이라 누를 이유가 없다.
+  let domAbs = null;
+  if(inDom){
+    const r = ratioOf(domStrength, inDom, true);
+    const coef = domStrength.coef;
+    const cross = !!(compStrength && compStrength.leagueId !== domStrength.leagueId);
+    const squash = x => cross ? Math.pow(Math.max(x, 0.05), CROSS_LEAGUE_GAMMA) : x;
+    domAbs = {att: squash(r.attack) * domStrength.avgGoals * coef,
+              def: squash(r.defence) * domStrength.avgGoals / coef,
+              played: inDom.played};
+  }
+  // 대회 자체: 지난 시즌 사전값이 의미 없어서(조 편성이 매년 다름) 평균 쪽으로만 보정
+  let compAbs = null;
+  if(inComp){
+    const r = ratioOf(compStrength, inComp, false);
+    compAbs = {att: r.attack * compStrength.avgGoals, def: r.defence * compStrength.avgGoals, played: inComp.played};
+  }
+
+  let att, def, played, source;
+  if(compAbs && domAbs){
+    const sameLeague = compStrength.leagueId === domStrength.leagueId;
+    if(sameLeague){ att = domAbs.att; def = domAbs.def; played = domAbs.played; source = 'league'; }
+    else {
+      const w = compAbs.played / (compAbs.played + PARAMS.compBlendK);
+      att = w * compAbs.att + (1 - w) * domAbs.att;
+      def = w * compAbs.def + (1 - w) * domAbs.def;
+      played = compAbs.played + domAbs.played;
+      source = 'blend';
+    }
+  } else if(compAbs){ att = compAbs.att; def = compAbs.def; played = compAbs.played; source = 'comp'; }
+  else { att = domAbs.att; def = domAbs.def; played = domAbs.played; source = 'domestic'; }
+
+  // 화면·서술에 쓰는 수치와 순위는 표본이 큰 자국 리그 쪽으로 통일한다 —
+  // 대회 기록(UCL 1경기)에서 뽑으면 "경기당 기대득점 4.05" 같은 값이 나온다.
+  const info = inDom || inComp;
+  return {att, def, played, source,
+          name: info.name, shortName: info.shortName, position: info.position,
+          xgFor: info.xgFor, xgAgainst: info.xgAgainst,
+          attackRank: info.attackRank, defenceRank: info.defenceRank,
+          hasPrior: !!(inDom && domStrength.prior && domStrength.prior.teams[id]),
+          record: null, leagueName: (inDom ? domStrength : compStrength).leagueName};
+}
+
+function predictMatch(opts){
+  const {compStrength, homeId, awayId, homeDom, awayDom, homeCtx, awayCtx, kickoffMs} = opts;
+  const base = compStrength || homeDom || awayDom;
+  if(!base) return {available: false, reason: '리그 데이터 없음'};
+
+  const H = teamAbsStrength(homeId, compStrength, homeDom);
+  const A = teamAbsStrength(awayId, compStrength, awayDom);
+  if(!H || !A) return {available: false, reason: '순위표에 없는 팀'};
+
+  // 홈/원정 성적은 국내 리그 표에서 가져온다(대회 표는 경기 수가 너무 적다).
+  const homeRow = (homeDom && homeDom.teams[String(homeId)]) || (compStrength && compStrength.teams[String(homeId)]);
+  const awayRow = (awayDom && awayDom.teams[String(awayId)]) || (compStrength && compStrength.teams[String(awayId)]);
+  H.record = homeRow && homeRow.home ? homeRow.home : null;
+  A.record = awayRow && awayRow.away ? awayRow.away : null;
+
+  const avg = base.avgGoals;
+  const injH = injuryFactors(homeCtx), injA = injuryFactors(awayCtx);
+  const restH = restFor(homeCtx, kickoffMs), restA = restFor(awayCtx, kickoffMs);
+  const lam = lambdasFrom({
+    leagueAvg: avg,
+    homeAttack: H.att / avg, homeDefence: H.def / avg,
+    awayAttack: A.att / avg, awayDefence: A.def / avg,
+    homeFactor: base.homeFactor, awayFactor: base.awayFactor,
+    homeRest: restH, awayRest: restA, homeInj: injH, awayInj: injA,
+  });
+  const r = scoreProbs(lam.home, lam.away);
+
+  const side = (T, dom, inj, rest, id) => ({
+    id: String(id),
+    name: T.name, shortName: T.shortName, position: T.position,
+    xgFor: T.xgFor, xgAgainst: T.xgAgainst,
+    attackRank: T.attackRank, defenceRank: T.defenceRank,
+    leagueName: (dom && dom.leagueName) || T.leagueName || '',
+    record: T.record, played: T.played, source: T.source, hasPrior: T.hasPrior,
+    injury: {attackFactor: inj.attackFactor, concedeFactor: inj.concedeFactor,
+             lines: inj.lines, attackImpact: inj.attackImpact, concedeImpact: inj.concedeImpact, out: inj.out},
+    rest: rest ? {days: Math.round(rest.daysRest * 10) / 10, matches14: rest.matches, penalty: rest.penalty} : null,
+  });
+
+  return {
+    available: true,
+    competition: {leagueId: base.leagueId, name: base.leagueName, avgGoals: avg,
+                  homeFactor: base.homeFactor, awayFactor: base.awayFactor,
+                  homeEdge: base.homeEdge, teamCount: base.teamCount},
+    crossLeague: !!(homeDom && awayDom && homeDom.leagueId !== awayDom.leagueId),
+    home: side(H, homeDom, injH, restH, homeId),
+    away: side(A, awayDom, injA, restA, awayId),
+    expected: {home: lam.home, away: lam.away},
+    probs: r.probs,
+    scorelines: r.scorelines.slice(0, 5),
+    over25: r.over25, under25: r.under25, btts: r.btts, bttsNo: r.bttsNo,
+    sample: {played: Math.min(H.played, A.played), priorK: PARAMS.priorK,
+             prior: !!(H.hasPrior && A.hasPrior)},
+  };
+}
+
+// 계산된 숫자만으로 한국어 분석문을 조립한다(LLM 없음, 비용 0, 같은 입력이면
+// 항상 같은 문장). 숫자 자체가 근거라, 여기서 새로운 사실을 지어내지 않는다.
+function predictNarrative(p){
+  if(!p.available) return [];
+  const pct = v => Math.round(v * 100);
+  const two = v => v.toFixed(2);
+  const rec = r => r ? `${r.wins}승 ${r.draws}무 ${r.losses}패` : '';
+  const out = [];
+  const hn = p.home.shortName, an = p.away.shortName;
+  // 다른 리그 팀끼리 붙는 경기(유럽대항전)는 "리그 n위"가 서로 다른 리그 기준이라
+  // 어느 리그인지 같이 적어야 오해가 없다.
+  const at = t => p.crossLeague && t.leagueName ? `${t.leagueName} ` : '리그 ';
+
+  // 팀 이름이 영문이라 "Arsenal은(는)" 같은 조사를 붙이면 어색해서 콜론으로 뗀다.
+  out.push(`${hn}: 경기당 기대득점 ${two(p.home.xgFor)}(${at(p.home)}${p.home.attackRank}위), 기대실점 ${two(p.home.xgAgainst)}(${at(p.home)}${p.home.defenceRank}위).`);
+  out.push(`${an}: 경기당 기대득점 ${two(p.away.xgFor)}(${at(p.away)}${p.away.attackRank}위), 기대실점 ${two(p.away.xgAgainst)}(${at(p.away)}${p.away.defenceRank}위).`);
+
+  if(p.home.record && p.home.record.played) out.push(`${hn} 홈 성적 ${rec(p.home.record)} — ${p.home.record.played}경기 ${p.home.record.gf}득점 ${p.home.record.ga}실점.`);
+  if(p.away.record && p.away.record.played) out.push(`${an} 원정 성적 ${rec(p.away.record)} — ${p.away.record.played}경기 ${p.away.record.gf}득점 ${p.away.record.ga}실점.`);
+
+  // 결장 — 득점/실점 중 하나라도 3% 넘게 움직일 때만 언급한다.
+  const injLine = (t, n) => {
+    const inj = t.injury; if(!inj) return;
+    const dAtk = Math.round((1 - inj.attackFactor) * 100);
+    const dDef = Math.round((inj.concedeFactor - 1) * 100);
+    if(dAtk < 3 && dDef < 3) return;
+    const names = inj.out.map(o => o.name + (o.posLabel ? '(' + o.posLabel + (o.doubtful ? ', 불투명' : '') + ')' : '')).join(', ');
+    const hit = inj.lines.map((sh, p2) => ({label: POS_LABEL[p2], sh})).filter(x => x.sh >= 0.2)
+      .map(x => `${x.label} ${pct(x.sh)}%`).join(' · ');
+    out.push(`${n} 결장 — ${names}.${hit ? ' 선발 기준 ' + hit + ' 이탈로' : ''} 기대득점 −${dAtk}%, 기대실점 +${dDef}% 반영했습니다.`);
+  };
+  injLine(p.home, hn);
+  injLine(p.away, an);
+
+  // 일정 — 휴식이 짧거나 2주에 경기가 몰린 쪽만 짚는다.
+  const restLine = (t, n) => {
+    if(!t.rest || t.rest.penalty < 0.015) return;
+    const bits = [];
+    if(t.rest.days != null && t.rest.days < PARAMS.restRef) bits.push(`직전 경기 후 ${t.rest.days}일 휴식`);
+    if(t.rest.matches14 > PARAMS.congestionRef) bits.push(`최근 2주 ${t.rest.matches14}경기`);
+    if(!bits.length) return;
+    out.push(`${n} 일정 — ${bits.join(', ')}. 기대득점 −${pct(t.rest.penalty)}% 반영했습니다.`);
+  };
+  restLine(p.home, hn);
+  restLine(p.away, an);
+
+  const homeEdge = Math.round((p.competition.homeFactor / p.competition.awayFactor - 1) * 100);
+  if(homeEdge >= 5) out.push(`올 시즌 ${p.competition.name || '이 대회'} 홈팀은 원정팀보다 경기당 ${homeEdge}% 더 득점하고 있습니다.`);
+
+  // 결론 — 확률 차이를 말로 옮기기만 한다(기대 스코어·오버·BTTS는 화면에 따로 있다).
+  const diff = p.probs.home - p.probs.away;
+  const favName = diff >= 0 ? hn : an;
+  const favP = pct(Math.max(p.probs.home, p.probs.away));
+  const underP = pct(Math.min(p.probs.home, p.probs.away));
+  const gap = Math.abs(diff);
+  if(gap >= 0.25)      out.push(`종합하면 ${favName} 우세가 뚜렷합니다(승리 ${favP}% 대 ${underP}%).`);
+  else if(gap >= 0.12) out.push(`종합하면 우세는 ${favName} 쪽이지만(${favP}%) 뒤집힐 여지도 남아 있습니다.`);
+  else                 out.push(`두 팀 전력이 팽팽해 무승부 확률(${pct(p.probs.draw)}%)이 승패 못지않게 높습니다.`);
+
+  const foe = diff >= 0 ? p.away : p.home;
+  const foeName = diff >= 0 ? an : hn;
+  if(foe.attackRank <= 8)       out.push(`다만 ${foeName}의 기대득점이 ${at(foe)}${foe.attackRank}위라, 무실점으로 끝나긴 어려운 상대입니다.`);
+  else if(foe.defenceRank <= 8) out.push(`다만 ${foeName}의 기대실점이 ${at(foe)}${foe.defenceRank}위로 탄탄해, 다득점은 쉽지 않아 보입니다.`);
+
+  if(p.crossLeague){
+    out.push(`두 팀이 다른 리그라 자국 리그 기록을 리그 수준 보정을 거쳐 비교했고, ${p.competition.name || '대회'} 자체 기록도 경기 수만큼 반영했습니다.`);
+  }
+  if(p.sample.played < 10){
+    out.push(p.sample.prior
+      ? `아직 ${p.sample.played}경기 표본이라 지난 시즌 기록을 함께 섞어 계산했습니다.`
+      : `아직 ${p.sample.played}경기 표본이라, 팀 강도를 평균 쪽으로 보정해 계산한 값입니다.`);
+  }
+  return out;
 }
 
 export default async function handler(req, res) {
@@ -1879,6 +2355,38 @@ export default async function handler(req, res) {
         // 지난 시즌 응답을 player:{id}(이번 시즌 자리)에 넣으면 안 된다 — 여긴 아무것도 안 한다.
       }
       else await kvSetPlayer(playerId, result);
+    } else if(type === 'predict'){
+      // 예정 경기 승부 예측 — 프론트(예정 경기 상세모달)가 두 팀의 Fotmob 팀
+      // id와 그 경기 대회의 leagueId를 넘긴다. 리그 강도표(6시간)·팀 문맥(3시간)
+      // 모두 KV 캐시라, 보통은 외부 호출 없이 KV만 읽고 끝난다.
+      const homeId = req.query.home, awayId = req.query.away;
+      if(!homeId || !awayId) throw new Error('home/away 파라미터 필요');
+      const compLeagueId = Number(req.query.league) || PL_LEAGUE_ID;
+      const [homeCtx, awayCtx] = await Promise.all([
+        fetchTeamContext(homeId).catch(() => null),
+        fetchTeamContext(awayId).catch(() => null),
+      ]);
+      // 대회 순위표 + 두 팀의 자국 리그 순위표(같은 리그면 한 번만 받는다).
+      const leagueIds = [...new Set([
+        compLeagueId,
+        (homeCtx || {}).leagueId,
+        (awayCtx || {}).leagueId,
+      ].filter(Boolean))];
+      const tables = {};
+      (await Promise.all(leagueIds.map(id => fetchLeagueStrength(id).catch(() => null))))
+        .forEach((t, i2) => { if(t) tables[leagueIds[i2]] = t; });
+
+      // 킥오프 시각 — 휴식일·최근 2주 경기 수 계산에 쓴다(없으면 일정 변수 생략).
+      const kickoffMs = req.query.date ? new Date(req.query.date).getTime() : null;
+      result = predictMatch({
+        compStrength: tables[compLeagueId] || null,
+        homeId, awayId,
+        homeDom: tables[(homeCtx || {}).leagueId] || null,
+        awayDom: tables[(awayCtx || {}).leagueId] || null,
+        homeCtx, awayCtx,
+        kickoffMs: Number.isFinite(kickoffMs) ? kickoffMs : null,
+      });
+      if(result.available) result.analysis = predictNarrative(result);
     } else if(type === 'transfers'){
       // 이적시장 IN/OUT 요약 — Fotmob 팀 API(이미 스쿼드 라이브 목록에 쓰는
       // 그 엔드포인트)의 transfers 필드를 그대로 재사용한다. 이 필드는

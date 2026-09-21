@@ -5883,6 +5883,83 @@ function renderH2HCard(data){
   html+='</div></div>';
   return html;
 }
+// ── 경기 예측 카드(예정 경기 전용) ───────────────────────────────────────
+// 서버(type=predict)가 리그 xG·홈/원정 성적으로 계산한 확률을 그대로 그린다.
+// 리그 순위표에 없는 팀(유럽대항전 상대 등)이면 서버가 available:false를 주고,
+// 그때는 카드를 통째로 지운다 — 근거 없는 예측을 억지로 만들지 않는다.
+function renderPredictCard(data, m){
+  var h=data.homeTeam||{}, a=data.awayTeam||{};
+  if(!h.id||!a.id) return '';
+  var cid='predCard_'+(m.id||'x');
+  // leagueId를 같이 넘겨야 유럽대항전에서 그 대회 순위표를 기준으로 계산한다
+  // (안 넘기면 프리미어리그 기준이라 릴·바이에른 같은 상대는 순위표에 없다).
+  var lgParam = m.leagueId ? '&league='+encodeURIComponent(m.leagueId) : '';
+  // 킥오프 시각 — 서버가 휴식일·최근 2주 경기 수를 계산하는 데 쓴다.
+  var dtParam = (m.utcDate||m.date) ? '&date='+encodeURIComponent(m.utcDate||m.date) : '';
+  apiFetch(FN+'/football?type=predict&home='+encodeURIComponent(h.id)+'&away='+encodeURIComponent(a.id)+lgParam+dtParam).then(function(p){
+    var el=document.getElementById(cid);
+    if(!el) return;
+    if(!p||p.error||!p.available){ el.remove(); return; }
+    el.outerHTML=predictCardHTML(p, data);
+  }).catch(function(){ var el=document.getElementById(cid); if(el) el.remove(); });
+  return '<div class="mm-card" id="'+cid+'"><div class="mm-card-title">경기 예측</div>'+
+    loadingHtml('예측 계산 중...','padding:14px 0 18px')+'</div>';
+}
+function predictCardHTML(p, data){
+  var pct=function(v){ return Math.round(v*100); };
+  var one=function(v){ return v.toFixed(1); };
+  // 색은 아스날 관점 — 아스날 승 초록, 무승부 앰버, 상대 승 빨강.
+  // (경기 결과 스코어 팔레트와 같은 값)
+  var hIsArs=isArsenalTeam(data.homeTeam), aIsArs=isArsenalTeam(data.awayTeam);
+  var colHome=aIsArs?'var(--loss)':'var(--green)';
+  var colAway=aIsArs?'var(--green)':'var(--loss)';
+  var hName=modalTeamName(data.homeTeam, data), aName=modalTeamName(data.awayTeam, data);
+
+  // 막대 — 확률이 아주 낮은 구간도 보이게 최소 폭을 준다.
+  var seg=function(v,col){ return '<div style="flex:'+Math.max(v,0.06)+' 1 0%;background:'+col+';"></div>'; };
+  var h='<div class="mm-card"><div class="mm-card-title">경기 예측</div><div style="padding:10px 14px 14px;">';
+  h+='<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;">'+
+       seg(p.probs.home,colHome)+seg(p.probs.draw,'var(--amber)')+seg(p.probs.away,colAway)+
+     '</div>';
+  h+='<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;">'+
+       '<span style="color:'+colHome+';font-weight:700;">'+hName+' '+pct(p.probs.home)+'%</span>'+
+       '<span style="color:var(--amber);font-weight:700;">무승부 '+pct(p.probs.draw)+'%</span>'+
+       '<span style="color:'+colAway+';font-weight:700;">'+aName+' '+pct(p.probs.away)+'%</span>'+
+     '</div>';
+
+  // 기대 스코어·유력 스코어
+  h+='<div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-bright);">'+
+       '<span style="font-size:11px;color:var(--text-secondary);width:66px;">기대 스코어</span>'+
+       '<span style="font-family:var(--fm);font-size:15px;font-weight:700;color:var(--text);">'+one(p.expected.home)+' : '+one(p.expected.away)+'</span>'+
+     '</div>';
+  h+='<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;">'+
+       '<span style="font-size:11px;color:var(--text-secondary);width:66px;">유력 스코어</span>';
+  p.scorelines.slice(0,3).forEach(function(s,i){
+    h+='<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;'+
+       'background:'+(i===0?'rgba(200,168,75,.18)':'rgba(255,255,255,.06)')+';'+
+       'color:'+(i===0?'var(--gold)':'var(--text-secondary)')+';">'+s.score+' '+pct(s.p)+'%</span>';
+  });
+  h+='</div>';
+
+  // 합계 골·양 팀 득점
+  h+='<div class="detail-info-grid" style="margin-top:14px;">'+
+       '<div class="detail-info-cell"><div class="detail-info-val">'+pct(p.over25)+'%</div><div class="detail-info-lbl">3골 이상</div></div>'+
+       '<div class="detail-info-cell"><div class="detail-info-val">'+pct(p.btts)+'%</div><div class="detail-info-lbl">양 팀 모두 득점</div></div>'+
+     '</div>';
+
+  // 근거 문장 — 서버가 계산한 숫자만으로 만든 것이라 카드 안 수치와 항상 일치한다.
+  if(p.analysis&&p.analysis.length){
+    h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-bright);display:flex;flex-direction:column;gap:6px;">';
+    p.analysis.forEach(function(line){
+      h+='<div style="font-size:12px;line-height:1.55;color:var(--text-secondary);">· '+line+'</div>';
+    });
+    h+='</div>';
+  }
+  h+='<div style="margin-top:12px;font-size:10px;color:var(--text-secondary);opacity:.8;">'+
+       '프리미어리그 팀별 xG·홈/원정 기록 기반 포아송 모형 · 참고용'+
+     '</div>';
+  return h+'</div></div>';
+}
 function renderFormCard(data){
   if(!data.recentForm||!data.recentForm.length) return '';
   var maxLen=0;
@@ -6003,7 +6080,7 @@ function renderMatchModal(content, m, data, desktop, opts){
 
   // 예정 경기: 상세 이벤트/스탯/라인업 대신 상대전적·최근폼·부상자 미리보기
   if(isUpcomingR){
-    var preview=renderH2HCard(data)+renderFormCard(data);
+    var preview=renderPredictCard(data,m)+renderH2HCard(data)+renderFormCard(data);
     if(m.id===window._nextMatchId) preview+=renderInjuryCards(data);
     // 서버가 Fotmob·ESPN 둘 다에서 못 받은 경우 — 본문이 통째로 비어 보이지
     // 않게 안내 한 줄.
