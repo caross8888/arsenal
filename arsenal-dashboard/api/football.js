@@ -36,7 +36,7 @@ const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 // 다시 받아 같은 키에 덮어쓴다. playerSeason은 영구 저장이라 잘못 들어간 값이
 // 스스로는 안 고쳐지고, player:*(7일 TTL)도 응답에 필드가 추가되면(예: seasons)
 // 옛 스냅샷을 그대로 내보내는 동안 프론트가 그 필드 없이 그려야 해서 같이 건다.
-const PLAYER_SEASON_SCHEMA = 4;
+const PLAYER_SEASON_SCHEMA = 5;
 const KV_TTL_SEC = 7 * 24 * 60 * 60; // 일주일 지나면 자동 만료 — 안 쓰는 선수 데이터가 무한정 안 쌓이게
 
 async function kvSetPlayer(id, data){
@@ -1505,6 +1505,7 @@ export default async function handler(req, res) {
         // v3: 클럽 대회를 화이트리스트(PL/UCL/FA컵/리그컵)로 거르던 걸 풀고,
         //     시즌 목록(seasons)을 응답에 같이 담기 시작했다.
         // v4: 대회별 스탯을 한꺼번에 던져 일부가 조용히 빠진 채 저장된 값 무효화.
+        // v5: seasons가 이름 배열에서 {name,senior,youth} 배열로 바뀌었다.
         if(cached && cached.schemaV === PLAYER_SEASON_SCHEMA) return res.json(cached);
       }
       // 이번 시즌도 마지막으로 받아둔 스냅샷(player:{id}, 7일 TTL)이 있으면
@@ -1593,14 +1594,27 @@ export default async function handler(req, res) {
         // 조별 그룹이 나뉘어 같은 코드로 접히는 경우(EFL Trophy)는 먼저 온 것만 쓴다.
         if(!compEntries[code]) compEntries[code] = {entryId: t.entryId, name: t.name};
       });
-      // 시즌 드롭다운용 목록 — 이 선수가 클럽 경기를 뛴 시즌만, 최신순 5개.
+      // 시즌 드롭다운용 목록 — 이 선수가 클럽 경기를 뛴 시즌만, 최신순.
+      // 시즌마다 1군 기록/유스 기록이 있는지를 같이 표시한다: 상세모달은 연 레벨에
+      // 맞는 대회만 그리므로, 데뷔 전 유스 기록밖에 없는 시즌을 1군 화면의 드롭다운에
+      // 그대로 올리면 골라도 빈 화면이 나온다(루이스-스켈리 23/24는 PL2만, 22/23은
+      // U18만 있어 1군 기준으론 볼 게 없다). 어느 쪽이 유스인지는 프론트의
+      // YOUTH_COMPS와 같은 기준이다 — 한쪽만 고치면 어긋나니 같이 고칠 것.
+      const YOUTH_CODES = new Set(['PL2', 'PL18', 'EFLT', 'NLC', 'UYL']);
+      const pastSeasons = (pd.statSeasons || []).map(s => {
+        const codes = (s.tournaments || []).filter(t => !isNationalComp(t.name)).map(t => compCodeFor(t.name));
+        return {
+          name:   s.seasonName,
+          senior: codes.some(c => !YOUTH_CODES.has(c)),
+          youth:  codes.some(c =>  YOUTH_CODES.has(c)),
+        };
+      }).filter(s => s.senior || s.youth);
       // 이번 시즌은 기록이 아직 없어도(백업 GK 등) 돌아올 자리가 있어야 하니 항상 넣는다.
-      const clubSeasonNames = (pd.statSeasons || [])
-        .filter(s => (s.tournaments || []).some(t => !isNationalComp(t.name)))
-        .map(s => s.seasonName);
-      const seasonList = [currentSeasonName]
-        .concat(clubSeasonNames.filter(n => n !== currentSeasonName))
-        .slice(0, 5);
+      const curSeasonInfo = pastSeasons.find(s => s.name === currentSeasonName)
+        || {name: currentSeasonName, senior: true, youth: true};
+      const seasonList = [curSeasonInfo]
+        .concat(pastSeasons.filter(s => s.name !== currentSeasonName))
+        .slice(0, 8);   // 레벨로 거른 뒤 프론트가 5개로 자른다
 
       const codes = Object.keys(compEntries);
       // 대회 하나당 요청 하나다. 화이트리스트를 풀면서 한 시즌에 7개까지 나올 수

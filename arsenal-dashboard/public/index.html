@@ -7957,7 +7957,17 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   // 뛴 시즌만 최신순 5개다. 아직 응답 전이면 이번 시즌 한 칸만 그려둔다.
   var _pmNow=new Date(); var _pmCurYr=_pmNow.getMonth()+1>=8?_pmNow.getFullYear():_pmNow.getFullYear()-1;
   var _pmCurSeasonName = _pmCurYr+'/'+(_pmCurYr+1);
-  var _pmSeasons = (p.seasons && p.seasons.length) ? p.seasons.slice(0,5) : [_pmCurSeasonName];
+  // 서버가 시즌마다 1군/유스 기록 유무를 같이 준다 — 지금 연 레벨에서 볼 게 없는
+  // 시즌은 빼야 한다(데뷔 전 유스 기록만 있는 시즌을 1군 화면에서 고르면 빈 화면).
+  // 이번 시즌은 기록이 없어도 돌아올 자리로 항상 남긴다. 옛 캐시는 이름 문자열 배열.
+  var _pmSeasons = (p.seasons && p.seasons.length ? p.seasons : [_pmCurSeasonName])
+    .map(function(sn){ return typeof sn==='string' ? {name:sn, senior:true, youth:true} : sn; })
+    .filter(function(si){
+      if(si.name===_pmCurSeasonName) return true;
+      return level==='academy' ? si.youth : si.senior;
+    })
+    .map(function(si){ return si.name; })
+    .slice(0,5);
   var _pmSelSeason = _pmSeasonMode==='current' ? _pmCurSeasonName : _pmSeasonMode;
   if(badges.length || _pmFotmobId){
     h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
@@ -8344,7 +8354,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 으로 판정돼 드롭다운이 이번 시즌 한 칸인 채로 남는다(실측).
       var headerSnapshot = function(){
         return [p.name, p.jersey, p.age, p.height, p.nationality, p.position,
-                p.team && p.team.color, (p.seasons||[]).join(',')].join('|');
+                p.team && p.team.color, JSON.stringify(p.seasons||[])].join('|');
       };
       var beforeHeader = headerSnapshot();
       applyPlayerProfile(p, live);
