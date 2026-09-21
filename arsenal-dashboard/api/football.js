@@ -32,6 +32,9 @@ const FOTMOB_HEADERS = {
 // 등) 전부 조용히 건너뛰어 기존 동작 그대로 유지한다.
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+// 직전 시즌 기록(playerSeason:*)의 저장 형식 버전 — 올리면 저장된 값을 무시하고
+// 다시 받아 같은 키에 덮어쓴다. 영구 저장이라 잘못 들어간 값은 이 방법으로만 고쳐진다.
+const PLAYER_SEASON_SCHEMA = 2;
 const KV_TTL_SEC = 7 * 24 * 60 * 60; // 일주일 지나면 자동 만료 — 안 쓰는 선수 데이터가 무한정 안 쌓이게
 
 async function kvSetPlayer(id, data){
@@ -1487,7 +1490,11 @@ export default async function handler(req, res) {
       const prevSeasonName = `${curSeasonStartYear - 1}/${curSeasonStartYear}`;
       if(wantPrevSeason){
         const cached = await kvGetPlayerSeason(playerId, prevSeasonName);
-        if(cached) return res.json(cached);
+        // 저장 형식이 바뀌면(schemaV) 저장된 값을 버리고 다시 받아 같은 키에
+        // 덮어쓴다 — 영구 저장이라 한 번 잘못 들어간 값이 스스로는 안 고쳐진다.
+        // v2: GK 출전시간을 pd.mainLeague(항상 현재 시즌)로 보정하던 걸 그
+        // 시즌 자신의 per90 역산(deriveMinutes)으로 바꿨다.
+        if(cached && cached.schemaV === PLAYER_SEASON_SCHEMA) return res.json(cached);
       }
       // 이번 시즌도 마지막으로 받아둔 스냅샷(player:{id}, 7일 TTL)이 있으면
       // 그걸 먼저 즉시 돌려준다 — Fotmob playerData 왕복이 2초 넘게 걸려서,
@@ -1559,6 +1566,30 @@ export default async function handler(req, res) {
         });
       };
       const findStat = (items, id) => { const f = (items||[]).find(i => i.localizedTitleId === id); return f ? f.statValue : undefined; };
+      // GK는 topStatCard/statsSection에 minutes_played가 아예 없다(실측 확인).
+      // 대신 statsSection의 모든 항목이 원값(statValue)과 90분당 값(per90)을
+      // 같이 주므로, 출전시간 = statValue / per90 * 90 으로 역산할 수 있다
+      // (실측: 라야 25/26 PL은 어느 항목으로 계산해도 3330분 = 37경기).
+      // 비율 스탯(선방률 등)은 statValue와 per90이 같은 값이라 90분이 나와서
+      // 빼고, 반올림 노이즈(소수 둘째 자리에서 잘린 xA 등)가 섞여도 흔들리지
+      // 않게 중앙값을 쓴다.
+      const deriveMinutes = statsJson => {
+        const items = ((statsJson && statsJson.statsSection && statsJson.statsSection.items) || [])
+          .flatMap(g => g.items || []);
+        const cands = [];
+        for(const it of items){
+          const tid = it.localizedTitleId || '';
+          if(/percent|accuracy|rate/i.test(tid)) continue;
+          const v = parseFloat(it.statValue), per90 = parseFloat(it.per90);
+          if(!(v > 0) || !(per90 > 0)) continue;
+          cands.push(v / per90 * 90);
+        }
+        if(!cands.length) return 0;
+        cands.sort((x, y) => x - y);
+        const mid = Math.floor(cands.length / 2);
+        const median = cands.length % 2 ? cands[mid] : (cands[mid - 1] + cands[mid]) / 2;
+        return Math.round(median);
+      };
       // Fotmob shotmap의 eventType/isBlocked/isOnTarget/isOwnGoal 조합을 우리
       // 프론트(SHOT_EVENT_LABEL 등)가 쓰는 event 문자열로 단순화한다.
       const toShotEvent = s => {
@@ -1598,7 +1629,7 @@ export default async function handler(req, res) {
           assists:      numOf(findStat(combined, 'assists')),
           yellowCards:  numOf(findStat(combined, 'yellow_cards')),
           redCards:     numOf(findStat(combined, 'red_cards')),
-          minutesPlayed:numOf(findStat(combined, 'minutes_played')),
+          minutesPlayed:numOf(findStat(combined, 'minutes_played')) || deriveMinutes(s),
           cleanSheets:  numOf(findStat(combined, 'clean_sheet_title')),
           goalsConceded:numOf(findStat(combined, 'goals_conceded')),
           avgRating:    numOf(findStat(combined, 'rating')) || undefined,
@@ -1636,17 +1667,11 @@ export default async function handler(req, res) {
         ((s.heatmap && s.heatmap.coordinates) || []).forEach(pt => heatmap.push({comp: code, x: pt.x, y: pt.y}));
       });
 
-      // GK는 topStatCard/statsSection에 minutes_played가 아예 없어서(실측 확인)
-      // 0으로 잡힌다 — mainLeague.stats(현재 메인 리그 한정)엔 있으니 그걸로
-      // 메인 리그 항목만 보정한다. 다른 대회는 이 API 응답 자체에 값이 없어
-      // 그대로 '-' 로 보인다(프론트가 0/undefined를 '-'로 렌더링, 기존 동작).
-      const mainLeagueCode = codes.find(c => compEntries[c].entryId.endsWith('-0'));
-      if(mainLeagueCode && competitions[mainLeagueCode] && !competitions[mainLeagueCode].minutesPlayed){
-        // mainLeague.stats는 topStatCard/statsSection과 다르게 값이
-        // statValue가 아니라 value 필드에 들어있다.
-        const mlStat = (pd.mainLeague?.stats || []).find(i => i.localizedTitleId === 'minutes_played');
-        if(mlStat && mlStat.value) competitions[mainLeagueCode].minutesPlayed = numOf(mlStat.value);
-      }
+      // (예전엔 GK 출전시간을 pd.mainLeague.stats로 보정했는데, 그 값은 언제나
+      // "지금 진행 중인 시즌"이라 season=prev 조회에도 현재 시즌 값이 붙었다 —
+      // 그렇게 만들어진 지난 시즌 기록이 KV에 영구 저장돼서 라야 25/26 PL이
+      // "37경기 90분"으로 굳어 있었다. 지금은 위 deriveMinutes가 그 시즌 자신의
+      // per90에서 역산하므로 시즌이 섞이지 않는다.)
 
       const career = (((pd.careerHistory || {}).careerItems || {}).senior || {}).teamEntries || [];
 
@@ -1758,6 +1783,7 @@ export default async function handler(req, res) {
       if(wantPrevSeason){
         // 소속은 Fotmob 선수 응답(primaryTeam)으로 판정한다 — 타팀 선수는 5년 뒤 자동 만료.
         const isOurs = (pd.primaryTeam || {}).teamId === ARSENAL_TEAM_ID;
+        result.schemaV = PLAYER_SEASON_SCHEMA;
         await kvSetPlayerSeason(playerId, prevSeasonName, result, isOurs ? null : PLAYER_SEASON_TTL_OTHER);
       }
       else await kvSetPlayer(playerId, result);
