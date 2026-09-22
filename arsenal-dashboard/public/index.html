@@ -3338,8 +3338,15 @@ function renderTeamSquadPanel(t){
 // 아스날 선수는 이미 선수단에 등번호·계약·유스 구분까지 있는 객체가 있으니 그걸 그대로 쓰고
 // (순위 행에 있는 값보다 훨씬 풍부하다), 타팀 선수는 최소 정보만 넘긴다. 나머지(나이·국적·
 // 등번호·계약만료·기록·히트맵 등)는 모달이 여는 즉시 부르는 playerDetail 응답이 채운다.
+// PC에서 선수 상세는 원래 선수단 탭 우측 패널(#sqDetailPanel)에 그려진다 — 리더보드에서
+// 열면 지금 보고 있지도 않은 탭에 내용이 들어가서 아무것도 안 뜬 것처럼 보였다.
+// 리더보드에서 열 때만 PC에서도 오버레이 모달로 띄운다(경기 상세의 opts.forceOverlay와 같은 이유).
+// 라이브 새로고침·시즌 전환이 openPlayerModal을 다시 부르므로 인자가 아니라 전역으로 둔다.
+var _pmOverlay = false;
+function pmInPanel(){ return isDesktopLayout() && !_pmOverlay; }
 function openLeaderPlayer(p){
   if(!p || !p.id) return;
+  _pmOverlay = true;
   if(p.isArsenal && typeof allPlayers!=='undefined' && allPlayers.length){
     var mine=allPlayers.find(function(x){ return String(x.fotmobId||x.id)===String(p.id); });
     if(mine){ openPlayerModal(mine, mine.level||'first'); return; }
@@ -3699,7 +3706,7 @@ function renderSq(filter){
     card.className='pl-card';
     card.style.outline='2px solid '+(POS_BORDER[p.posGroup]||'var(--overlay-10)');
     card.style.outlineOffset='-1px';
-    card.onclick=function(){openPlayerModal(p,_sqActiveLevel);};
+    card.onclick=function(){ _pmOverlay=false; openPlayerModal(p,_sqActiveLevel); };
 
     // 상단
     var top=document.createElement('div');top.className='pl-top';
@@ -7930,7 +7937,7 @@ function selectPmSeason(targetSeason){
     // — 처음부터 그 탭이 active인 상태로 그려서(openPlayerModal 5번째 인자),
     // "기본정보로 그렸다가 다시 클릭해서 전환"하는 방식에서 생기던 깜빡임
     // 없이 바로 원하는 탭이 보인다.
-    var content = isDesktopLayout() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
+    var content = pmInPanel() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
     var activeBtn = content && content.querySelector('.live-tab-btn.active');
     var activeTab = activeBtn ? activeBtn.getAttribute('data-tab') : 'pmbasic';
     openPlayerModal(merged, levelSnapshot, true, false, activeTab);
@@ -7952,7 +7959,7 @@ function selectPmSeason(targetSeason){
 }
 // 지난 시즌을 처음 고르면 응답이 올 때까지 몇 초가 비니, 탭 패널만 로딩으로 덮어둔다.
 function pmSeasonLoading(seasonName){
-  var content = isDesktopLayout() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
+  var content = pmInPanel() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
   var wrap = content && content.querySelector('#pmTabPanelsWrap');
   if(!wrap) return;
   wrap.innerHTML = '<div class="live-tab-panel">'+loadingHtml(pmSeasonLabel(seasonName)+' 시즌 기록 불러오는 중...', 'padding:32px 0')+'</div>';
@@ -8012,7 +8019,7 @@ function compSubnavHTML(keys, labels, id, onclick){
 }
 function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   initialTab = initialTab || 'pmbasic';
-  var desktop = isDesktopLayout();
+  var desktop = pmInPanel();
   var modal, content;
   // 라이브 데이터가 늦게 도착해 다시 그리는(isLiveRefresh) 사이 사용자가 이미 상세를 닫았으면 되살리지 않는다 —
   // 예전엔 페이드 전에 뒤로가기로 닫아도 곧바로 모달이 다시 열리면서 방문 기록(#player)까지 새로 쌓았는데,
@@ -8513,7 +8520,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 실패했는데 화면이 이 응답만 기다리고 있었으면(타팀 선수: 채울 스냅샷이 없음)
       // 스피너가 영영 돌기만 하므로, 실패 표시로 한 번 다시 그린다.
       if(!live || live.error){
-        var failContent = isDesktopLayout() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
+        var failContent = pmInPanel() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
         // 실제로 스피너가 떠 있을 때만 — 아스날 선수처럼 정적 스냅샷으로 이미 다 그려진
         // 화면은 실패해도 건드릴 필요가 없다.
         if(_pmPending && _openPlayerId === fotmobId && failContent && failContent.querySelector('#pmTabPanelsWrap .spinner')){
@@ -8531,7 +8538,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 아래 변경 감지에서 "바뀐 게 없음"으로 판정돼 다시 그려지지 않는다 — 그 경우
       // 로딩 스피너만 영영 남으므로, 다시 그리기 전에 먼저 걷어낸다.
       (function(){
-        var pendingHolder = isDesktopLayout() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
+        var pendingHolder = pmInPanel() ? document.getElementById('sqDetailContent') : document.getElementById('modalContent');
         if(!pendingHolder) return;
         [].forEach.call(pendingHolder.querySelectorAll('.loading-state.pm-pending'), function(el){ el.remove(); });
       })();
@@ -9198,6 +9205,7 @@ function makeStatBox(val,lbl,sub,color){
 
 function closePlayerModal(fromHash){
   document.getElementById('playerModal').classList.remove('open');
+  _pmOverlay = false;
   document.body.style.overflow='';
   if(!fromHash && location.hash.includes('player')) history.replaceState(null,'',location.href.split('#')[0]);
 }
