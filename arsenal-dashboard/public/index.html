@@ -1079,8 +1079,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* ── PC 반응형: 하단 탭바 → 좌측 사이드바 (모바일 레이아웃은 그대로, 이 폭 이상에서만 전환) ── */
 @media (min-width: 900px) {
   body{padding-bottom:0;}
-  /* 사이드바 폭 — 200 → 160px(사용자 지정: 쓸데없이 넓어 보인다). 이 값을 쓰는 곳은 이 세 줄뿐. */
-  :root{--sidebar-w:160px;}
+  /* 사이드바 폭 — 본문처럼 화면 폭에 비례해 부드럽게 변한다(사용자 지정). 화면의 12.5%,
+     최소 160px(더 좁으면 워드마크가 벽에 붙는다)·최대 200px(초와이드에서 과하게 두꺼워지지 않게).
+     이 값을 쓰는 곳은 아래 세 줄뿐. */
+  :root{--sidebar-w:clamp(160px, 12.5vw, 200px);}
   .top-header{margin-left:var(--sidebar-w);}
   .page{margin-left:var(--sidebar-w);}
   .bottom-nav{top:0;bottom:0;left:0;right:auto;width:var(--sidebar-w);flex-direction:column;border-top:none;border-right:1px solid var(--border-bright);padding-bottom:0;padding-top:16px;align-items:stretch;}
