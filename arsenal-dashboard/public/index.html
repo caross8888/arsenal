@@ -3696,6 +3696,7 @@ function openSqManagerModal(){
   content.innerHTML=renderSqManagerModalContent();
   modal.classList.add('open');
   document.body.style.overflow='hidden';
+  history.pushState({modal:'player'},'',' #player');
   requestAnimationFrame(function(){ content.scrollTop=0; });
 }
 // positionKey(정규화된 p.position) → 포지션 약자 — 선수단 그리드 카드와
@@ -4159,6 +4160,10 @@ function openTimelineModal(enc){
   if(!desktop){
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
+    // 뒤로가기로 닫을 방문 기록 — 이게 없으면 뒤로가기가 모달이 아니라 실제 페이지 기록을
+    // 하나씩 소모해서, 몇 번 열고 닫으면 브라우저 창 자체가 닫혔다(사용자 재현: 3번째에 종료).
+    // 경기장·명장면·선수단 감독 모달도 같은 이유로 같은 줄을 넣었다.
+    history.pushState({modal:'player'},'',' #player');
     requestAnimationFrame(function(){ content.scrollTop = 0; });
   } else {
     var panelEl = document.getElementById('histDetailPanel');
@@ -4232,6 +4237,7 @@ function openStadiumModal(enc){
   if(!desktop){
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
+    history.pushState({modal:'player'},'',' #player');
     requestAnimationFrame(function(){ content.scrollTop = 0; });
   } else {
     var panelEl = document.getElementById('histDetailPanel');
@@ -4293,6 +4299,7 @@ function openMomentModal(enc){
   if(!desktop){
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
+    history.pushState({modal:'player'},'',' #player');
     requestAnimationFrame(function(){ content.scrollTop = 0; });
   } else {
     var panelEl = document.getElementById('histDetailPanel');
