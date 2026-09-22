@@ -701,7 +701,7 @@ function selfOrigin(req){
 const LEAGUE_STRENGTH_TTL_SEC = 6 * 60 * 60;
 const LEAGUE_PRIOR_TTL_SEC = 30 * 24 * 60 * 60;   // 지난 시즌 기록은 안 바뀐다
 const TEAM_CONTEXT_TTL_SEC = 3 * 60 * 60;
-const TEAM_CTX_SCHEMA = 3;        // 저장 형식(일정 추가) — 옛 캐시는 무시하고 다시 받는다
+const TEAM_CTX_SCHEMA = 4;        // 저장 형식(최근 경기·핵심 선수 추가) — 옛 캐시는 무시하고 다시 받는다
 const LEAGUE_STRENGTH_SCHEMA = 2;
 
 // 유럽대항전에서 자국 리그 기록을 환산할 때 쓰는 리그 수준 계수.
@@ -920,14 +920,32 @@ async function fetchTeamContext(teamId){
   // 국가대표 경기(A매치)는 애초에 클럽 일정에 없고, 클럽 경기가 아니니 세지 않는다.
   const FRIENDLY_LEAGUE_ID = 489;
   const playedAt = [];
+  // 최근 공식전 결과 — AI 해설의 "최근 흐름" 재료. 포아송 모형은 시즌 집계만 보고 이건
+  // 안 쓰니, 해설이 모형 수치를 되풀이하는 걸 넘어 맥락을 줄 수 있는 몇 안 되는 정보다.
+  const recent = [];
   for(const f of ((((t.fixtures || {}).allFixtures) || {}).fixtures || [])){
     const st = f.status || {};
     if(!st.finished || st.cancelled || !st.utcTime) continue;
     const tour = f.tournament || {};
     if(tour.leagueId === FRIENDLY_LEAGUE_ID || /friendl/i.test(tour.name || '')) continue;
     playedAt.push(new Date(st.utcTime).getTime());
+    const home = f.home || {}, away = f.away || {};
+    const isHome = String(home.id) === String(teamId);
+    const gf = isHome ? home.score : away.score, ga = isHome ? away.score : home.score;
+    if(gf == null || ga == null) continue;
+    recent.push({
+      at: st.utcTime, venue: isHome ? '홈' : '원정',
+      opp: (isHome ? away.name : home.name) || '', comp: tour.name || '',
+      gf, ga, res: gf > ga ? '승' : gf === ga ? '무' : '패',
+    });
   }
   playedAt.sort((a, b) => a - b);
+  recent.sort((a, b) => new Date(a.at) - new Date(b.at));
+  const topOf = arr => {
+    const x = (Array.isArray(arr) ? arr : (arr && arr.players) || [])[0];
+    return x && x.name ? {name: x.name, value: x.value} : null;
+  };
+  const tp = ((t.overview || {}).topPlayers) || {};
 
   const ctx = {
     id: String(teamId),
@@ -950,6 +968,9 @@ async function fetchTeamContext(teamId){
       doubtful: /doubt/i.test(((u.unavailability || {}).expectedReturn) || ''),
     })),
     playedAt,
+    form: recent.slice(-5),
+    // 팀 내 시즌 득점·도움·평점 1위 (Fotmob 팀 개요)
+    topPlayers: {goals: topOf(tp.byGoals), assists: topOf(tp.byAssists), rating: topOf(tp.byRating)},
     updatedAt: Date.now(),
   };
   await kvSetJSON(key, ctx, TEAM_CONTEXT_TTL_SEC);
@@ -1059,7 +1080,10 @@ function predictMatch(opts){
   });
   const r = scoreProbs(lam.home, lam.away);
 
+  const ctxOf = id => String(id) === String(homeId) ? homeCtx : awayCtx;
   const side = (T, dom, inj, rest, id) => ({
+    form: (ctxOf(id) || {}).form || [],
+    topPlayers: (ctxOf(id) || {}).topPlayers || null,
     id: String(id),
     name: T.name, shortName: T.shortName, position: T.position,
     xgFor: T.xgFor, xgAgainst: T.xgAgainst,

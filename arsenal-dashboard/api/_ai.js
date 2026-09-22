@@ -75,60 +75,88 @@ async function resolveModel(){
 function factsFrom(p){
   const pct = v => Math.round(v * 100);
   const two = v => v.toFixed(2);
-  const lines = [];
-  const side = (t, where) => {
-    const bits = [`${t.shortName} (${where})`];
-    bits.push(`소속 리그: ${t.leagueName || '정보 없음'}`);
-    bits.push(`경기당 기대득점 ${two(t.xgFor)} — 리그 ${t.attackRank}위`);
-    bits.push(`경기당 기대실점 ${two(t.xgAgainst)} — 리그 ${t.defenceRank}위`);
+  const md = iso => { const d = new Date(iso); return isNaN(d) ? '' : `${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일`; };
+  const L = [];
+  const team = (t, where) => {
+    const lines = [];
+    lines.push(`■ ${t.shortName} (${where}, ${t.leagueName || '리그 정보 없음'})`);
+    lines.push(`- 경기당 기대득점 ${two(t.xgFor)} (리그 ${t.attackRank}위), 경기당 기대실점 ${two(t.xgAgainst)} (리그 ${t.defenceRank}위)`);
     if(t.record && t.record.played){
-      bits.push(`${where === '홈' ? '홈' : '원정'} 성적 ${t.record.wins}승 ${t.record.draws}무 ${t.record.losses}패 (${t.record.played}경기 ${t.record.gf}득점 ${t.record.ga}실점)`);
+      lines.push(`- 이번 시즌 ${where === '홈' ? '홈' : '원정'} ${t.record.played}경기 ${t.record.wins}승 ${t.record.draws}무 ${t.record.losses}패, ${t.record.gf}득점 ${t.record.ga}실점`);
     }
+    if((t.form || []).length){
+      const f = t.form.map(x => `${md(x.at)} ${x.venue} ${x.opp} ${x.gf}-${x.ga} ${x.res}`).join(' / ');
+      const w = t.form.filter(x => x.res === '승').length, d = t.form.filter(x => x.res === '무').length, l = t.form.filter(x => x.res === '패').length;
+      lines.push(`- 최근 공식전 ${t.form.length}경기 ${w}승 ${d}무 ${l}패: ${f}`);
+    }
+    const tp = t.topPlayers || {};
+    const tpBits = [];
+    if(tp.goals) tpBits.push(`팀 내 최다 득점 ${tp.goals.name} ${tp.goals.value}골`);
+    if(tp.assists) tpBits.push(`최다 도움 ${tp.assists.name} ${tp.assists.value}개`);
+    if(tp.rating) tpBits.push(`평점 1위 ${tp.rating.name} ${tp.rating.value}`);
+    if(tpBits.length) lines.push(`- ${tpBits.join(', ')}`);
     const inj = t.injury || {};
     const out = (inj.out || []).map(o => `${o.name}(${o.posLabel}${o.doubtful ? ', 출전 불투명' : ''})`);
     if(out.length){
       const dAtk = Math.round((1 - inj.attackFactor) * 100);
       const dDef = Math.round((inj.concedeFactor - 1) * 100);
-      bits.push(`결장: ${out.join(', ')} — 모형에 기대득점 ${dAtk}% 감소, 기대실점 ${dDef}% 증가로 반영`);
+      lines.push(`- 결장: ${out.join(', ')} → 추정 영향: 득점력 ${dAtk}% 하락, 실점 ${dDef}% 증가`);
     } else {
-      bits.push('결장: 없음');
+      lines.push('- 결장자 없음');
     }
     if(t.rest && t.rest.penalty >= 0.015){
-      bits.push(`일정: 직전 경기 후 ${t.rest.days}일 휴식, 최근 2주 ${t.rest.matches14}경기`);
+      lines.push(`- 일정 부담: 직전 경기 후 ${t.rest.days}일 휴식, 최근 2주간 ${t.rest.matches14}경기`);
     }
-    return bits.join(' / ');
+    return lines.join('\n');
   };
-  lines.push(side(p.home, '홈'));
-  lines.push(side(p.away, '원정'));
-  lines.push(`대회: ${p.competition.name || '정보 없음'}`);
-  lines.push(`모형 승부 확률: ${p.home.shortName} ${pct(p.probs.home)}%, 무승부 ${pct(p.probs.draw)}%, ${p.away.shortName} ${pct(p.probs.away)}%`);
-  lines.push(`모형 기대 스코어: ${p.expected.home.toFixed(1)} : ${p.expected.away.toFixed(1)}`);
-  lines.push(`가장 유력한 스코어: ${p.scorelines.slice(0, 3).map(s => s.score).join(', ')}`);
-  lines.push(`두 팀 합계 3골 이상 확률 ${pct(p.over25)}%, 양 팀 모두 득점 확률 ${pct(p.btts)}%`);
-  if(p.crossLeague) lines.push('두 팀이 서로 다른 리그 소속이라, 각자 자국 리그 기록을 리그 수준 보정을 거쳐 비교한 수치다.');
-  return lines.join('\n');
+  L.push(`대회: ${p.competition.name || '정보 없음'}`);
+  L.push(team(p.home, '홈'));
+  L.push(team(p.away, '원정'));
+  if(p.crossLeague) L.push('※ 두 팀은 서로 다른 리그라, 위 리그 순위는 각자 자기 리그 안에서의 순위다.');
+  const h = p.h2h;
+  if(h && h.summary){
+    const [w, d, l] = h.summary;
+    const recent = (h.matches || []).map(m => `${m.year}년 ${m.home} ${m.score} ${m.away}`).join(' / ');
+    L.push(`■ 맞대결: 통산 ${p.home.shortName} 기준 ${w}승 ${d}무 ${l}패${recent ? ` (최근: ${recent})` : ''}`);
+  }
+  L.push(`■ 전망: ${p.home.shortName} 승리 ${pct(p.probs.home)}%, 무승부 ${pct(p.probs.draw)}%, ${p.away.shortName} 승리 ${pct(p.probs.away)}%`);
+  L.push(`- 예상 득점 ${p.home.shortName} ${p.expected.home.toFixed(1)}골, ${p.away.shortName} ${p.expected.away.toFixed(1)}골`);
+  L.push(`- 가장 유력한 스코어: ${p.scorelines.slice(0, 3).map(s => s.score).join(', ')}`);
+  L.push(`- 두 팀 합계 3골 이상 ${pct(p.over25)}%, 양 팀 모두 득점 ${pct(p.btts)}%`);
+  return L.join('\n');
 }
 
-const PROMPT = `너는 아스날 팬 사이트의 경기 프리뷰를 쓰는 축구 기자다.
-아래 [사실]만 근거로, 이 경기를 구체적으로 분석하는 프리뷰를 한국어로 써라.
-독자가 이 글만 읽고도 모형이 왜 이런 확률을 냈는지 이해할 수 있어야 한다.
+const PROMPT = `너는 축구 중계 방송의 해설위원이다. 경기 직전 프리뷰 코너에서 시청자에게 이 경기를
+어떻게 보는지 **말하듯이** 풀어 설명한다. 아래 [사실]이 네가 아는 전부다.
 
-형식:
-- 두 문단, 합계 6~8문장. 문단 사이는 빈 줄 하나. 존댓말, 담백한 기사체.
-- 감탄사·이모지·마크다운·제목·목록·따옴표 강조 금지. 문장만 출력한다.
+어떻게 쓰나:
+- **첫 문장은 이 경기의 핵심 관전 포인트 하나**로 시작해라. ("이번 경기의 관전 포인트는 ~입니다" 식으로)
+  [사실]을 보고 가장 결정적인 것 하나를 골라라 — 결장 공백일 수도, 흐름 차이일 수도, 맞대결 상성일 수도 있다.
+- 그 다음은 그 논지를 뒷받침하는 근거를 **골라서** 이야기한다. 반대로 작용하는 요인도 한 번은 짚는다.
+- 마지막은 "결국 관건은 ~" 식으로 정리하고 승리 확률과 가장 유력한 스코어로 끝낸다.
+- 지표를 전부 훑지 마라. **숫자는 논지를 받칠 때만, 문단당 한두 개**. 나머지는 말로 풀어라.
+- "A는 ○로 리그 ○위, ○로 리그 ○위를 기록하고 있습니다"처럼 지표를 연달아 나열하는 문장은 쓰지 마라.
+  이건 기사가 아니라 해설이다.
 
-내용:
-- 첫 문단 — 전력 비교: 두 팀의 경기당 기대득점·기대실점과 리그 순위를 짚고,
-  홈팀의 홈 성적과 원정팀의 원정 성적을 구체적으로 대비해라.
-- 둘째 문단 — 변수와 결론: 결장 선수를 이름과 포지션으로 짚고 그게 공격·수비 중 어디에
-  얼마나 반영됐는지 설명해라. 일정 정보가 있으면 피로도도 언급해라. 마지막은 모형의 승부
-  확률과 가장 유력한 스코어로 결론을 맺어라.
+말투:
+- 존댓말 구어체 해설. "~입니다", "~죠", "~고요", "~거든요"를 자연스럽게 섞는다.
+- "짠물 수비", "흐름을 탔다", "마음에 걸린다" 같은 해설 표현은 좋다. 단 [사실]을 왜곡하면 안 된다.
+- 세 문단, 합계 6~9문장. 문단 사이는 빈 줄. 마크다운·목록·제목·이모지 금지.
+
+참고 예시(형식만 참고하고, ○ 자리는 반드시 [사실]의 실제 값으로 채운다):
+"이번 경기의 관전 포인트는 홈팀의 수비진 공백이 얼마나 치명적이냐입니다. 홈팀은 경기당 기대실점 ○○로 리그에서
+가장 단단한 수비를 자랑하는데, 하필 그 중심인 수비수가 빠졌습니다. 지금까지의 짠물 수비를 그대로 기대하긴 어렵죠.
+
+그래도 흐름은 홈팀 쪽입니다. 최근 공식전 ○경기에서 ○승을 거뒀고, 이 상대에게는 통산 한 번도 진 적이 없습니다.
+반면 원정팀은 최근 무승부만 거듭하며 좀처럼 이기지 못하고 있고요.
+
+결국 관건은 홈팀이 수비 공백을 공격으로 덮을 수 있느냐입니다. 승리 확률 ○○%, 가장 유력한 스코어는 ○-○입니다."
 
 엄격한 규칙:
-- 숫자는 [사실]에 적힌 값을 **그대로만** 써라. 새로 계산하거나(합·차·평균), 반올림을 바꾸거나,
-  [사실]에 없는 숫자를 만들어내지 마라.
-- [사실]에 없는 정보(선수 폼, 감독 발언, 과거 맞대결, 부상 복귀 시점, 전술 등)는 쓰지 마라.
-- 모형이 우세하다고 본 쪽과 반대되는 결론을 내리지 마라. 우열이 근소하면 근소하다고 써라.
+- 숫자는 [사실]에 적힌 값을 그대로만 써라. 새로 계산하거나 반올림을 바꾸거나 없는 숫자를 만들지 마라.
+- [사실]에 없는 정보(감독 발언, 전술, 부상 복귀 시점, 선수 컨디션 등)는 지어내지 마라.
+- 모형이 우세하다고 본 쪽과 반대되는 결론을 내리지 마라. 우열이 근소하면 근소하다고 말해라.
+- "모형", "보정", "추정 영향", "[사실]" 같은 말은 쓰지 마라.
 
 [사실]
 `;
@@ -154,7 +182,8 @@ export async function generatePreview(prediction){
       // 최신 제미나이는 "생각하는" 모델이라 내부 추론에도 출력 토큰을 쓴다. 400으로
       // 두니 추론에 다 써버려서 본문이 문장 중간에 잘렸다(실측: "…아스날은 리그 최상위"
       // 에서 끊김). 넉넉히 준다 — 실제 비용은 쓴 만큼만 나간다.
-      generationConfig: {temperature: 0.7, maxOutputTokens: 4096},
+      // 해설 말투라 조금 더 자유롭게(0.7 → 0.9). 숫자·사실 검증은 아래에서 따로 한다.
+      generationConfig: {temperature: 0.9, maxOutputTokens: 4096},
     };
     const callOnce = async model => fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
@@ -232,7 +261,7 @@ export async function generatePreview(prediction){
       return {text: null, reason: `근거 없는 숫자(${[...new Set(bad)].slice(0, 5).join(', ')}) — ${model}`};
     }
     // 너무 길거나 짧으면(모델이 형식을 무시한 경우) 버린다.
-    if(text.length > 1100){ console.log('[ai] 길이 초과로 폐기', text.length); return {text: null, reason: `길이 초과(${text.length}자)`}; }
+    if(text.length > 1600){ console.log('[ai] 길이 초과로 폐기', text.length); return {text: null, reason: `길이 초과(${text.length}자)`}; }
     if(text.length < 150){ return {text: null, reason: `너무 짧음(${text.length}자)`}; }
     // 문단 구분(빈 줄)은 살리고, 문단 안의 줄바꿈만 이어붙인다.
     const clean = text.split(/\n\s*\n/).map(pp => pp.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean).join('\n\n');

@@ -40,6 +40,27 @@ async function callFootball(query){
   return payload;
 }
 
+// 맞대결 — 경기 상세(matchDetails)에 통산 전적과 최근 경기가 있다. 예측 계산엔 안 쓰는
+// 값이라 크론에서만 가져와 해설 재료로 붙인다. 실패해도 해설은 맞대결 없이 만든다.
+async function fetchH2H(matchId){
+  try {
+    const r = await fetch(`https://www.fotmob.com/api/data/matchDetails?matchId=${matchId}`,
+      {headers: {'User-Agent': 'Mozilla/5.0'}, signal: AbortSignal.timeout(8000)});
+    if(!r.ok) return null;
+    const h = ((await r.json()).content || {}).h2h || {};
+    if(!Array.isArray(h.summary)) return null;
+    const matches = (h.matches || [])
+      .filter(m => m.status && m.status.scoreStr && m.status.finished !== false)
+      .slice(0, 3)
+      .map(m => ({
+        year: new Date((m.time || {}).utcTime || (m.status || {}).utcTime).getUTCFullYear(),
+        home: (m.home || {}).name || '', away: (m.away || {}).name || '',
+        score: String(m.status.scoreStr).replace(/\s/g, ''),
+      }));
+    return {summary: h.summary, matches};
+  } catch(e){ return null; }
+}
+
 async function kv(...args){
   const r = await fetch(KV_URL, {
     method: 'POST',
@@ -95,6 +116,7 @@ export default async function handler(req, res){
       if(hit){ report.cached++; report.matches.push({id: m.id, key, cached: true}); continue; }
       if(dry){ report.matches.push({id: m.id, key, would: '생성'}); continue; }
 
+      p.h2h = await fetchH2H(m.id);
       const {text, reason, model} = await generatePreview(p);
       if(!text){ report.failed++; report.matches.push({id: m.id, key, failed: reason}); continue; }
       await kv('SET', key, text, 'EX', String(AI_TTL_SEC));

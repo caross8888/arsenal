@@ -249,5 +249,7 @@ export function predictAiKey(p){
   let h = 0x811c9dc5;
   for(let i = 0; i < sig.length; i++){ h ^= sig.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   // v2: 해설 형식(두 문단·구체 수치)이 바뀌어 예전 해설을 재사용하면 안 된다.
-  return `predAI:v2:${p.home.id}:${p.away.id}:${h.toString(36)}`;
+  // v3: 수치+해석 문체, 최근 흐름·맞대결·핵심 선수 추가.
+  // v4: 지표 나열 대신 해설위원 말투(관전 포인트 → 근거 → 결론).
+  return `predAI:v4:${p.home.id}:${p.away.id}:${h.toString(36)}`;
 }
