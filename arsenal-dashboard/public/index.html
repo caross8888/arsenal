@@ -1086,10 +1086,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   /* 사이드바 상단 브랜드 — 오른쪽 헤더와 높이(64px)·아래 구분선을 맞춰 선이 좌우로 한 줄로 이어지게 한다. */
   .bottom-nav{padding-top:0;}
   .top-header{height:64px;box-sizing:border-box;padding-top:0;padding-bottom:0;border-bottom-color:var(--border-bright);}
-  .nav-brand{display:flex;align-items:center;gap:10px;height:64px;box-sizing:border-box;padding:0 18px;border-bottom:1px solid var(--border-bright);flex-shrink:0;}
+  /* 배경은 선택 메뉴(.nav-btn.active)와 같은 빨강 — 사용자 지정(통일성). 빨강 위라 글자는 테마와
+     무관하게 흰색·금색 고정(라이트 모드에서 --text가 검정으로 바뀌면 안 보인다). */
+  .nav-brand{display:flex;align-items:center;gap:10px;height:64px;box-sizing:border-box;padding:0 18px;border-bottom:1px solid var(--border-bright);flex-shrink:0;background:var(--red-dark);}
   .nav-brand img{width:30px;height:30px;object-fit:contain;flex-shrink:0;}
-  .nav-brand-name{font-size:16px;font-weight:700;color:var(--text);letter-spacing:.3px;line-height:1.2;}
-  .nav-brand-sub{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:1.4px;margin-top:2px;}
+  .nav-brand-name{font-family:var(--fd);font-size:24px;color:var(--on-dark-header);letter-spacing:1.5px;line-height:1;}
+  .nav-brand-sub{font-size:9px;font-weight:700;color:var(--on-dark-header-gold);letter-spacing:1.6px;margin-top:3px;}
   .nav-icon{width:18px;height:18px;}
   .nav-live-dot{top:10px;right:auto;left:34px;}
   #squad.section{max-width:none;}
@@ -1568,10 +1570,10 @@ function playIntro(){
 </div>
 
 <nav class="bottom-nav">
-  <!-- PC 사이드바 상단 브랜드(모바일에선 숨김). 한글 표기는 나무위키 기준 "아스날". -->
+  <!-- PC 사이드바 상단 브랜드(모바일에선 숨김). 영문 표기는 사용자 지정(엠블럼 속 글자와 맞춤). -->
   <div class="nav-brand" aria-hidden="true">
     <img src="https://crests.football-data.org/57.png" alt="" width="30" height="30" onerror="this.style.display='none'">
-    <div><div class="nav-brand-name">아스날</div><div class="nav-brand-sub">ARSENAL FC</div></div>
+    <div><div class="nav-brand-name">ARSENAL</div><div class="nav-brand-sub">FOOTBALL CLUB</div></div>
   </div>
   <button class="nav-btn" onclick="showSec('fixtures',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg><span>&#51068;&#51221;</span></button>
   <button class="nav-btn" onclick="showSec('leaderboard',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/></svg><span>&#47532;&#45908;&#48372;&#46300;</span></button>
