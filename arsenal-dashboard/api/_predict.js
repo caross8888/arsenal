@@ -234,3 +234,19 @@ export function lambdasFrom({leagueAvg, homeAttack, homeDefence, awayAttack, awa
     away: leagueAvg * (awayAttack * ar.attack * ai.attackFactor) * (homeDefence * hr.concede * hi.concedeFactor) * awayFactor,
   };
 }
+
+// AI 해설 캐시 키 — 생성에 쓴 수치가 바뀌면 키도 바뀌어야 한다(부상자 추가, 일정
+// 변경 등). 예측 결과에서 문장에 영향을 주는 값만 뽑아 짧은 해시로 만든다.
+export function predictAiKey(p){
+  const r2 = v => Math.round(v * 100);
+  const sideSig = t => [t.id, r2(t.xgFor), r2(t.xgAgainst), t.attackRank, t.defenceRank,
+    r2(t.injury ? t.injury.attackFactor : 1), r2(t.injury ? t.injury.concedeFactor : 1),
+    (t.injury && t.injury.out || []).map(o => o.name).join('+'),
+    t.rest ? Math.round(t.rest.penalty * 100) : 0].join(':');
+  const sig = [p.competition.leagueId, sideSig(p.home), sideSig(p.away),
+    r2(p.probs.home), r2(p.probs.draw), r2(p.probs.away)].join('|');
+  // 짧은 비암호학적 해시(FNV-1a) — 충돌해도 해설 하나가 재사용될 뿐이라 충분하다.
+  let h = 0x811c9dc5;
+  for(let i = 0; i < sig.length; i++){ h ^= sig.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return `predAI:${p.home.id}:${p.away.id}:${h.toString(36)}`;
+}

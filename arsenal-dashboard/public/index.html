@@ -5950,6 +5950,18 @@ function predictCardHTML(p, data){
        '<div class="detail-info-cell"><div class="detail-info-val">'+pct(p.btts)+'%</div><div class="detail-info-lbl">양 팀 모두 득점</div></div>'+
      '</div>';
 
+  // AI 해설 — 크론이 미리 만들어 둔 게 있을 때만 나온다(없으면 아래 근거 문장만).
+  // 숫자는 일부러 안 들어간다(서버 _ai.js에서 숫자 섞인 응답은 폐기) — 확률·스코어는
+  // 바로 위에 이미 있으니, 여기선 그 수치를 말로 풀어주는 역할만 한다.
+  if(p.aiText){
+    h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-bright);">';
+    h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">';
+    h+='<span style="font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--gold);">AI 프리뷰</span>';
+    h+='</div>';
+    h+='<div style="font-size:12.5px;line-height:1.65;color:var(--text-secondary);">'+p.aiText+'</div>';
+    h+='</div>';
+  }
+
   // 근거 문장 — 서버가 계산한 숫자만으로 만든 것이라 카드 안 수치와 항상 일치한다.
   if(p.analysis&&p.analysis.length){
     h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-bright);display:flex;flex-direction:column;gap:6px;">';

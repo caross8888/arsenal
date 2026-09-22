@@ -1,0 +1,80 @@
+// api/preview_ai.js — 다가오는 경기의 AI 해설을 미리 만들어 두는 크론
+//
+// vercel.json의 crons가 하루 한 번 부른다. 모달을 열 때 생성하면 그 경기를 처음 여는
+// 사람이 매번 1~3초를 기다리는데, 이 앱은 사용자가 사실상 한 명이라 "처음 여는 사람"이
+// 늘 본인이다. 그래서 미리 만들어 KV에 넣어두고, 모달은 읽기만 한다.
+//
+// 키(predAI:*)에는 생성에 쓴 수치의 해시가 같이 들어간다 — 부상자나 일정이 바뀌어
+// 예측 숫자가 달라지면 해시가 달라져서 다음 크론 때 자연히 다시 만들어진다.
+//
+// 삭제는 안 하지만 외부 API(Gemini) 할당량을 쓰는 엔드포인트라 maintenance.js와
+// 같은 기준으로 CRON_SECRET을 요구한다(미설정이면 거부).
+
+import { generatePreview, AI_ENABLED } from './_ai.js';
+import { predictAiKey } from './_predict.js';
+
+const KV_URL = process.env.KV_REST_API_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+const AI_TTL_SEC = 14 * 24 * 60 * 60;   // 경기가 지나면 쓸모없다
+// 앞으로 이 기간 안에 열리는 경기만 만든다 — 한 달 뒤 경기는 라인업·부상이 다 바뀐다.
+const HORIZON_DAYS = 10;
+
+async function kv(...args){
+  const r = await fetch(KV_URL, {
+    method: 'POST',
+    headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
+    body: JSON.stringify(args),
+    signal: AbortSignal.timeout(10000),
+  });
+  const j = await r.json();
+  if(j.error) throw new Error(`KV ${args[0]}: ${j.error}`);
+  return j.result;
+}
+
+export default async function handler(req, res){
+  const secret = process.env.CRON_SECRET;
+  if(!secret) return res.status(503).json({error: 'CRON_SECRET 미설정'});
+  if(req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({error: 'unauthorized'});
+  if(!KV_URL || !KV_TOKEN) return res.status(503).json({error: 'KV 자격증명 없음'});
+  if(!AI_ENABLED) return res.status(503).json({error: 'GEMINI_API_KEY 미설정'});
+
+  const dry = !!req.query.dry;
+  const origin = `https://${req.headers.host}`;
+  const report = {checked: 0, generated: 0, cached: 0, failed: 0, matches: []};
+
+  try {
+    const fx = await (await fetch(`${origin}/api/football?type=fixtures`, {signal: AbortSignal.timeout(15000)})).json();
+    const now = Date.now();
+    const horizon = now + HORIZON_DAYS * 24 * 60 * 60 * 1000;
+    const upcoming = (fx.matches || []).filter(m => {
+      if(m.status === 'FINISHED') return false;
+      const t = new Date(m.utcDate || m.date).getTime();
+      return t > now && t < horizon;
+    });
+
+    for(const m of upcoming){
+      const home = (m.homeTeam || {}).id, away = (m.awayTeam || {}).id;
+      if(!home || !away) continue;
+      report.checked++;
+      const q = `type=predict&home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`
+        + (m.leagueId ? `&league=${encodeURIComponent(m.leagueId)}` : '')
+        + (m.utcDate ? `&date=${encodeURIComponent(m.utcDate)}` : '');
+      const p = await (await fetch(`${origin}/api/football?${q}`, {signal: AbortSignal.timeout(20000)})).json();
+      if(!p || !p.available){ report.matches.push({id: m.id, skip: '예측 불가'}); continue; }
+
+      const key = predictAiKey(p);
+      const hit = await kv('GET', key);
+      if(hit){ report.cached++; report.matches.push({id: m.id, key, cached: true}); continue; }
+      if(dry){ report.matches.push({id: m.id, key, would: '생성'}); continue; }
+
+      const text = await generatePreview(p);
+      if(!text){ report.failed++; report.matches.push({id: m.id, key, failed: true}); continue; }
+      await kv('SET', key, text, 'EX', String(AI_TTL_SEC));
+      report.generated++;
+      report.matches.push({id: m.id, key, text});
+    }
+    return res.json(report);
+  } catch(err){
+    return res.status(500).json({error: err.message, report});
+  }
+}

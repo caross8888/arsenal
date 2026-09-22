@@ -1,6 +1,6 @@
 // api/football.js — Vercel Serverless Function
 import { PARAMS, POS_LABEL, scoreProbs, blendRatio, decayedForm,
-         homeEdgeFrom, restFactor, injuryFactors, lambdasFrom } from './_predict.js';
+         homeEdgeFrom, restFactor, injuryFactors, lambdasFrom, predictAiKey } from './_predict.js';
 const FPL_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/';
 const ARSENAL_FPL_ID = 1;
 const ARSENAL_TEAM_ID = 9825; // Fotmob 팀 ID
@@ -2387,7 +2387,15 @@ export default async function handler(req, res) {
         homeCtx, awayCtx,
         kickoffMs: Number.isFinite(kickoffMs) ? kickoffMs : null,
       });
-      if(result.available) result.analysis = predictNarrative(result);
+      if(result.available){
+        result.analysis = predictNarrative(result);
+        // AI 해설은 크론(api/preview_ai.js)이 미리 만들어 KV에 넣어둔다 — 여기선 읽기만
+        // 한다. 없으면 없는 대로 두고, 프론트가 위 analysis(템플릿 문장)를 그대로 쓴다.
+        try {
+          const aiText = await kvGetJSON(predictAiKey(result));
+          if(typeof aiText === 'string' && aiText.trim()) result.aiText = aiText.trim();
+        } catch(e){ /* 해설 없음은 정상 동작 */ }
+      }
     } else if(type === 'transfers'){
       // 이적시장 IN/OUT 요약 — Fotmob 팀 API(이미 스쿼드 라이브 목록에 쓰는
       // 그 엔드포인트)의 transfers 필드를 그대로 재사용한다. 이 필드는
