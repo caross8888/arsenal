@@ -22,6 +22,7 @@ const AI_TTL_SEC = 14 * 24 * 60 * 60;   // 경기가 지나면 쓸모없다
 // 10/10). 기간을 넉넉히 잡고, 그래도 비면 가장 가까운 경기 몇 개는 무조건 포함한다 —
 // 수치가 바뀌면 키가 달라져 어차피 다시 만들어지므로 일찍 만들어두는 손해가 없다.
 const HORIZON_DAYS = 21;
+const RUN_LOG_KEY = 'predAI:_lastrun';
 const MIN_MATCHES = 2;
 
 // football.js를 HTTP로 다시 부르지 않고 함수로 직접 호출한다.
@@ -89,14 +90,20 @@ export default async function handler(req, res){
       if(hit){ report.cached++; report.matches.push({id: m.id, key, cached: true}); continue; }
       if(dry){ report.matches.push({id: m.id, key, would: '생성'}); continue; }
 
-      const text = await generatePreview(p);
-      if(!text){ report.failed++; report.matches.push({id: m.id, key, failed: true}); continue; }
+      const {text, reason} = await generatePreview(p);
+      if(!text){ report.failed++; report.matches.push({id: m.id, key, failed: reason}); continue; }
       await kv('SET', key, text, 'EX', String(AI_TTL_SEC));
       report.generated++;
       report.matches.push({id: m.id, key, text});
     }
+    // 실행 기록을 KV에 남긴다 — 배포 로그를 못 보는 상황에서도 무엇이 왜 실패했는지
+    // KV만 읽어 확인할 수 있게 하려는 것이다(디버깅 왕복을 줄이려고 넣었다).
+    await kv('SET', RUN_LOG_KEY, JSON.stringify({at: new Date().toISOString(), ...report}), 'EX', String(30 * 24 * 60 * 60)).catch(() => {});
     return res.json(report);
   } catch(err){
+    try {
+      await kv('SET', RUN_LOG_KEY, JSON.stringify({at: new Date().toISOString(), error: err.message, ...report}), 'EX', String(30 * 24 * 60 * 60));
+    } catch(_){}
     return res.status(500).json({error: err.message, report});
   }
 }

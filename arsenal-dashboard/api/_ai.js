@@ -79,8 +79,11 @@ function hasNumbers(text){
   return /[0-9０-９%]/.test(text);
 }
 
+// 반환값: {text, reason}. text가 null이면 reason에 왜 실패했는지 들어있다 —
+// 크론이 이걸 KV 실행 기록에 남겨서, 배포 로그를 못 봐도 원인을 알 수 있게 한다.
 export async function generatePreview(prediction){
-  if(!GEMINI_KEY || !prediction || !prediction.available) return null;
+  if(!GEMINI_KEY) return {text: null, reason: 'GEMINI_API_KEY 없음'};
+  if(!prediction || !prediction.available) return {text: null, reason: '예측 없음'};
   try {
     const body = {
       contents: [{parts: [{text: PROMPT + factsFrom(prediction)}]}],
@@ -92,17 +95,23 @@ export async function generatePreview(prediction){
        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS)}
     );
     // 403 본문에는 요청에 쓴 API 키가 그대로 들어있다 — 상태 코드만 남긴다.
-    if(!r.ok){ console.log('[ai] Gemini 응답 실패', r.status); return null; }
+    if(!r.ok){
+      let detail = '';
+      try { const e = await r.json(); detail = ((e.error || {}).message || '').slice(0, 120); } catch(_){}
+      // 403 본문에는 API 키가 그대로 들어있을 수 있어 status와 message만 남긴다.
+      console.log('[ai] Gemini 응답 실패', r.status);
+      return {text: null, reason: `HTTP ${r.status}${detail ? ' — ' + detail : ''}`};
+    }
     const j = await r.json();
     const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
     const text = parts.map(x => x.text || '').join('').trim();
-    if(!text){ console.log('[ai] 빈 응답'); return null; }
-    if(hasNumbers(text)){ console.log('[ai] 숫자가 섞여 폐기'); return null; }
+    if(!text){ console.log('[ai] 빈 응답'); return {text: null, reason: '빈 응답'}; }
+    if(hasNumbers(text)){ console.log('[ai] 숫자가 섞여 폐기'); return {text: null, reason: '숫자 포함으로 폐기'}; }
     // 너무 길면(모델이 규칙을 무시한 경우) 버린다 — 카드가 해설로 도배되면 안 된다.
-    if(text.length > 400){ console.log('[ai] 길이 초과로 폐기', text.length); return null; }
-    return text.replace(/\s*\n\s*/g, ' ');
+    if(text.length > 400){ console.log('[ai] 길이 초과로 폐기', text.length); return {text: null, reason: `길이 초과(${text.length}자)`}; }
+    return {text: text.replace(/\s*\n\s*/g, ' '), reason: 'ok'};
   } catch(e){
     console.log('[ai] 생성 실패', e.name);
-    return null;
+    return {text: null, reason: `예외 ${e.name}`};
   }
 }
