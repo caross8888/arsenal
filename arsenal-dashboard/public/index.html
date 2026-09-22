@@ -8168,7 +8168,12 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   // 리더보드 선수 순위에서 연 타팀 선수는 헤더를 그 팀 색으로 칠한다 — 팀 상세모달과 같은
   // 방식으로, 라이트 모드에서도 헤더 글자가 흰색 고정이라 배경은 어두운 색을 깔고 팀 색은
   // 그 위에 얹는다(팀 색만 깔면 맨시티 하늘색 같은 밝은 팀에서 글자가 안 보인다).
-  var rivalTeam = (!isArsenalTeam(p.team) && p.team && p.team.name) ? p.team : null;
+  // 아스날 유스팀(Arsenal U21/U18)은 타팀이 아니다 — isArsenalTeam은 정확히 "Arsenal"만 인정해서,
+  // 아카데미 선수는 상세 응답이 도착하는 순간 헤더가 타팀 스타일(어두운 바탕+팀색)로 바뀌었다.
+  // 헤더·탭 색은 아스날 그대로 두고, 소속 표기만 실제 소속(Arsenal U21)을 보여준다(사용자 지정).
+  // 기준은 KV 정리(_purge.js)와 같은 ^Arsenal( U##)?$ — Arsenal de Sarandí 같은 다른 팀은 제외된다.
+  var arsYouthTeam = (p.team && /^arsenal u\d\d$/i.test(String(p.team.name||'').trim())) ? p.team : null;
+  var rivalTeam = (!arsYouthTeam && !isArsenalTeam(p.team) && p.team && p.team.name) ? p.team : null;
   var headerStyle = (rivalTeam && rivalTeam.color)
     ? ' style="background-color:#1a1c22;background-image:linear-gradient(135deg,'+rivalTeam.color+'73,transparent)"' : '';
   h += '<div class="pm-header"'+headerStyle+'><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
@@ -8183,6 +8188,8 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   h += '<div class="pm-club">';
   if(rivalTeam){
     h += (rivalTeam.crest ? '<img src="'+rivalTeam.crest+'" style="width:16px;height:16px;border-radius:50%" onerror="this.style.display=\'none\'"> ' : '')+rivalTeam.name;
+  } else if(arsYouthTeam){
+    h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> '+arsYouthTeam.name;
   } else {
     h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> Arsenal FC';
   }
