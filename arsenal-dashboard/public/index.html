@@ -101,6 +101,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--chrome-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border-bright);display:flex;padding-bottom:var(--safe-bottom);}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;gap:4px;background:none;border:none;border-right:1px solid var(--border-bright);color:var(--text-dim);font-family:var(--fb);font-size:9px;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;position:relative;-webkit-tap-highlight-color:transparent;}
 .nav-btn:last-child{border-right:none;}
+.nav-brand{display:none;}
 .nav-btn.active{background:var(--red-dark);color:var(--white)}.nav-btn.active .nav-icon{color:var(--gold)}
 .nav-icon{width:20px;height:20px;color:var(--text-dim);}
 .nav-live-dot{position:absolute;top:8px;right:calc(50% - 16px);width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 2s infinite}
@@ -1082,7 +1083,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   .page{margin-left:200px;}
   .bottom-nav{top:0;bottom:0;left:0;right:auto;width:200px;flex-direction:column;border-top:none;border-right:1px solid var(--border-bright);padding-bottom:0;padding-top:16px;align-items:stretch;}
   .nav-btn{flex:0 0 auto;flex-direction:row;justify-content:flex-start;align-items:center;gap:12px;padding:12px 20px;border-right:none;border-bottom:1px solid var(--border-bright);font-size:13px;letter-spacing:normal;text-transform:none;}
-  .nav-btn:first-child{border-top:1px solid var(--border-bright);}
+  /* 사이드바 상단 브랜드 — 오른쪽 헤더와 높이(64px)·아래 구분선을 맞춰 선이 좌우로 한 줄로 이어지게 한다. */
+  .bottom-nav{padding-top:0;}
+  .top-header{height:64px;box-sizing:border-box;padding-top:0;padding-bottom:0;border-bottom-color:var(--border-bright);}
+  .nav-brand{display:flex;align-items:center;gap:10px;height:64px;box-sizing:border-box;padding:0 18px;border-bottom:1px solid var(--border-bright);flex-shrink:0;}
+  .nav-brand img{width:30px;height:30px;object-fit:contain;flex-shrink:0;}
+  .nav-brand-name{font-size:16px;font-weight:700;color:var(--text);letter-spacing:.3px;line-height:1.2;}
+  .nav-brand-sub{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:1.4px;margin-top:2px;}
   .nav-icon{width:18px;height:18px;}
   .nav-live-dot{top:10px;right:auto;left:34px;}
   #squad.section{max-width:none;}
@@ -1561,6 +1568,11 @@ function playIntro(){
 </div>
 
 <nav class="bottom-nav">
+  <!-- PC 사이드바 상단 브랜드(모바일에선 숨김). 한글 표기는 나무위키 기준 "아스날". -->
+  <div class="nav-brand" aria-hidden="true">
+    <img src="https://crests.football-data.org/57.png" alt="" width="30" height="30" onerror="this.style.display='none'">
+    <div><div class="nav-brand-name">아스날</div><div class="nav-brand-sub">ARSENAL FC</div></div>
+  </div>
   <button class="nav-btn" onclick="showSec('fixtures',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg><span>&#51068;&#51221;</span></button>
   <button class="nav-btn" onclick="showSec('leaderboard',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21l8 0"/><path d="M12 17l0 4"/><path d="M7 4l10 0"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M3 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/><path d="M17 9a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/></svg><span>&#47532;&#45908;&#48372;&#46300;</span></button>
   <button class="nav-btn" onclick="showSec('squad',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4l6 2v5h-3v8a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-8h-3v-5l6 -2a3 3 0 0 0 6 0"/><path d="M10.5 11h2.5l-1.5 5"/></svg><span>&#49440;&#49688;&#45800;</span></button>
