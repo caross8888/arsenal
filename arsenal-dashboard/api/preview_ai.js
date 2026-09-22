@@ -10,7 +10,7 @@
 // 삭제는 안 하지만 외부 API(Gemini) 할당량을 쓰는 엔드포인트라 maintenance.js와
 // 같은 기준으로 CRON_SECRET을 요구한다(미설정이면 거부).
 
-import { generatePreview, AI_ENABLED } from './_ai.js';
+import { generatePreview, AI_ENABLED, aiCandidates } from './_ai.js';
 import { predictAiKey } from './_predict.js';
 import footballHandler from './football.js';
 
@@ -102,6 +102,7 @@ export default async function handler(req, res){
       report.model = model;
       report.matches.push({id: m.id, key, text});
     }
+    report.candidates = aiCandidates();
     // 실행 기록을 KV에 남긴다 — 배포 로그를 못 보는 상황에서도 무엇이 왜 실패했는지
     // KV만 읽어 확인할 수 있게 하려는 것이다(디버깅 왕복을 줄이려고 넣었다).
     await kv('SET', RUN_LOG_KEY, JSON.stringify({at: new Date().toISOString(), ...report}), 'EX', String(30 * 24 * 60 * 60)).catch(() => {});

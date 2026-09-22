@@ -151,6 +151,22 @@ async function kvGetJSON(key){
     return result ? JSON.parse(result) : null;
   } catch(e){ return null; }
 }
+// JSON이 아닌 값(예: AI 해설 문장)을 그대로 읽는다. kvGetJSON으로 읽으면 한글 문장을
+// JSON.parse하다 실패하고, 그 실패를 조용히 null로 삼켜서 해설이 에러도 없이 사라졌다(실측).
+async function kvGetRaw(key){
+  if(!KV_URL || !KV_TOKEN) return null;
+  try {
+    const r = await fetch(KV_URL, {
+      method: 'POST',
+      headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
+      body: JSON.stringify(['GET', key]),
+      signal: AbortSignal.timeout(5000),
+    });
+    if(!r.ok) return null;
+    const { result } = await r.json();
+    return typeof result === 'string' ? result : null;
+  } catch(e){ return null; }
+}
 // ttlSec을 안 주면 만료 없이 영구 저장한다 — 끝난 시즌 결과처럼 두 번 다시
 // 안 바뀌는 데이터용.
 async function kvSetJSON(key, data, ttlSec){
@@ -1176,9 +1192,13 @@ export default async function handler(req, res) {
   // 페이드가 반복되는 버그가 있었다(직전 시즌 조회는 kvGetPlayerSeason으로
   // 별도의 영구 캐시를 쓰므로 영향 없음).
   const isLivePlayerDiff = type === 'playerDetail' && seasonParam !== 'prev';
-  res.setHeader('Cache-Control', isLivePlayerDiff ? 'no-store' : `public, max-age=${Math.floor(getTTL(type)/1000)}`);
+  // predict도 1시간 메모리 캐시에 태우지 않는다 — 크론이 AI 해설을 새로 만들어도, 그 전에
+  // 캐시된 "해설 없는" 응답이 최대 1시간 동안 계속 나간다. 무거운 부분(리그 강도·팀 문맥)은
+  // 이미 KV에 캐시돼 있어서 매번 계산해도 KV 몇 번 읽는 게 전부다.
+  const noMemCache = isLivePlayerDiff || type === 'predict';
+  res.setHeader('Cache-Control', noMemCache ? 'no-store' : `public, max-age=${Math.floor(getTTL(type)/1000)}`);
 
-  if(!nocache && !isLivePlayerDiff){
+  if(!nocache && !noMemCache){
     const hit = getCache(cacheKey);
     if(hit) return res.json(hit);
   }
@@ -2392,7 +2412,7 @@ export default async function handler(req, res) {
         // AI 해설은 크론(api/preview_ai.js)이 미리 만들어 KV에 넣어둔다 — 여기선 읽기만
         // 한다. 없으면 없는 대로 두고, 프론트가 위 analysis(템플릿 문장)를 그대로 쓴다.
         try {
-          const aiText = await kvGetJSON(predictAiKey(result));
+          const aiText = await kvGetRaw(predictAiKey(result));
           if(typeof aiText === 'string' && aiText.trim()) result.aiText = aiText.trim();
         } catch(e){ /* 해설 없음은 정상 동작 */ }
       }
@@ -2529,7 +2549,7 @@ export default async function handler(req, res) {
       };
     }
 
-    if(!nocache && !isLivePlayerDiff) setCache(cacheKey, result);
+    if(!nocache && !noMemCache) setCache(cacheKey, result);
     return res.json(result);
 
   } catch(err){

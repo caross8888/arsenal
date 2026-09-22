@@ -23,6 +23,8 @@ const GEMINI_TIMEOUT_MS = 35000;
 const LIST_TIMEOUT_MS = 12000;
 
 export const AI_ENABLED = !!GEMINI_KEY;
+// 실행 기록용 — 이 계정에서 실제로 고를 수 있었던 flash 후보들.
+export const aiCandidates = () => _candidates.slice();
 
 // 자동 선택 결과를 함수 인스턴스 안에 기억해둔다(요청마다 목록을 다시 받지 않게).
 // 1순위가 과부하(503)일 때 넘어갈 수 있게 점수순 후보 목록도 같이 둔다.
@@ -157,13 +159,16 @@ export async function generatePreview(prediction){
       try { return {res: await callOnce(m)}; }
       catch(e){ return {err: e}; }      // TimeoutError 등
     };
-    const plan = [model, model];
+    // 503은 구글이 "보통 일시적"이라고 명시하는 과부하라, 같은 모델을 간격을 늘려가며
+    // 세 번까지 시도한다. 그 뒤 다른 flash 후보가 있으면 한 번 더.
+    const plan = [model, model, model];
+    const WAITS = [0, 3000, 10000];
     const alt = _candidates.find(n => n !== model);
     if(alt && !GEMINI_MODEL_ENV) plan.push(alt);
 
     let r = null, lastErr = null;
     for(let i = 0; i < plan.length; i++){
-      if(i > 0) await new Promise(res => setTimeout(res, plan[i] === plan[i - 1] ? 3000 : 500));
+      if(i > 0) await new Promise(res => setTimeout(res, WAITS[i] != null ? WAITS[i] : 500));
       model = plan[i];
       const got = await attempt(model);
       if(got.err){ lastErr = got.err; r = null; continue; }
