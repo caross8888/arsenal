@@ -5954,16 +5954,21 @@ function predictCardHTML(p, data){
   // 숫자는 일부러 안 들어간다(서버 _ai.js에서 숫자 섞인 응답은 폐기) — 확률·스코어는
   // 바로 위에 이미 있으니, 여기선 그 수치를 말로 풀어주는 역할만 한다.
   if(p.aiText){
+    // 모델 출력이라 HTML로 그대로 넣지 않는다.
+    var escAi=function(v){ return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
     h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-bright);">';
-    h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">';
+    h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">';
     h+='<span style="font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--gold);">AI 프리뷰</span>';
     h+='</div>';
-    h+='<div style="font-size:12.5px;line-height:1.65;color:var(--text-secondary);">'+p.aiText+'</div>';
+    String(p.aiText).split(/\n\s*\n/).forEach(function(para,i){
+      h+='<p style="margin:'+(i?'10px':'0')+' 0 0;font-size:12.5px;line-height:1.7;color:var(--text-secondary);">'+escAi(para)+'</p>';
+    });
     h+='</div>';
   }
 
-  // 근거 문장 — 서버가 계산한 숫자만으로 만든 것이라 카드 안 수치와 항상 일치한다.
-  if(p.analysis&&p.analysis.length){
+  // 근거 문장 — AI 해설이 없을 때만 보여준다(크론 실패·생성 전 등의 폴백). 해설이 있으면
+  // 같은 내용을 해설이 풀어서 다루므로 겹쳐 보여주면 지저분하다(사용자 지적).
+  if(!p.aiText && p.analysis&&p.analysis.length){
     h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-bright);display:flex;flex-direction:column;gap:6px;">';
     p.analysis.forEach(function(line){
       h+='<div style="font-size:12px;line-height:1.55;color:var(--text-secondary);">· '+line+'</div>';
@@ -5971,7 +5976,7 @@ function predictCardHTML(p, data){
     h+='</div>';
   }
   h+='<div style="margin-top:12px;font-size:10px;color:var(--text-secondary);opacity:.8;">'+
-       '프리미어리그 팀별 xG·홈/원정 기록 기반 포아송 모형 · 참고용'+
+       '팀별 xG·홈/원정·결장 기록 기반 포아송 모형 · 참고용'+
      '</div>';
   return h+'</div></div>';
 }

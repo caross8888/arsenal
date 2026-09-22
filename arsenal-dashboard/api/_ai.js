@@ -4,10 +4,10 @@
 //
 // 설계 원칙 두 가지. 둘 다 번역 파이프라인(_translate.js)에서 쓰던 것과 같다:
 //
-//  1. **숫자는 LLM에게 맡기지 않는다.** 확률·기대 스코어·결장 영향은 이미 카드에
-//     우리 코드로 렌더링된다. 모델에는 "숫자 쓰지 말고 정성적으로만 써라"라고 시키고,
-//     받아온 문장에 숫자가 섞여 있으면 통째로 버린다. 이러면 "57%인데 압도적 우세"
-//     같은 수치 오류가 구조적으로 불가능하다.
+//  1. **숫자를 지어내지 못하게 한다.** 처음엔 "숫자 쓰지 마라"로 막았는데, 그러니 해설이
+//     "우세가 예상됩니다" 수준으로 뭉뚱그려졌다(사용자 지적). 지금은 숫자를 쓰게 하되
+//     **[사실]에 있는 값만** 허용한다 — 해설에 나온 숫자를 전부 입력값과 대조해서, 하나라도
+//     없는 숫자가 있으면 통째로 버린다. 지어낸 수치는 여전히 구조적으로 불가능하다.
 //  2. **실패는 언제나 조용한 폴백.** 키 없음·할당량 초과·타임아웃·검열 차단 — 전부
 //     null을 돌려주고, 호출한 쪽은 기존 템플릿 문장을 그대로 쓴다. 해설이 없다고
 //     예측 카드 자체가 안 뜨는 경로는 없어야 한다.
@@ -110,24 +110,36 @@ function factsFrom(p){
 }
 
 const PROMPT = `너는 아스날 팬 사이트의 경기 프리뷰를 쓰는 축구 기자다.
-아래 [사실]만 근거로 다음 경기 해설을 한국어로 써라.
+아래 [사실]만 근거로, 이 경기를 구체적으로 분석하는 프리뷰를 한국어로 써라.
+독자가 이 글만 읽고도 모형이 왜 이런 확률을 냈는지 이해할 수 있어야 한다.
 
-규칙:
-- 3~4문장. 존댓말. 담백한 기사체(감탄사·이모지·수사 과잉 금지).
-- **숫자를 절대 쓰지 마라.** 확률·골 수·순위·퍼센트는 화면에 따로 표시되므로 문장에는 넣지 않는다.
-  "리그 최상위권", "근소한 우위", "수비가 흔들린 상태" 처럼 말로만 표현해라.
-- [사실]에 없는 정보(선수 폼, 감독 발언, 과거 맞대결, 부상 복귀 시점 등)를 지어내지 마라.
+형식:
+- 두 문단, 합계 6~8문장. 문단 사이는 빈 줄 하나. 존댓말, 담백한 기사체.
+- 감탄사·이모지·마크다운·제목·목록·따옴표 강조 금지. 문장만 출력한다.
+
+내용:
+- 첫 문단 — 전력 비교: 두 팀의 경기당 기대득점·기대실점과 리그 순위를 짚고,
+  홈팀의 홈 성적과 원정팀의 원정 성적을 구체적으로 대비해라.
+- 둘째 문단 — 변수와 결론: 결장 선수를 이름과 포지션으로 짚고 그게 공격·수비 중 어디에
+  얼마나 반영됐는지 설명해라. 일정 정보가 있으면 피로도도 언급해라. 마지막은 모형의 승부
+  확률과 가장 유력한 스코어로 결론을 맺어라.
+
+엄격한 규칙:
+- 숫자는 [사실]에 적힌 값을 **그대로만** 써라. 새로 계산하거나(합·차·평균), 반올림을 바꾸거나,
+  [사실]에 없는 숫자를 만들어내지 마라.
+- [사실]에 없는 정보(선수 폼, 감독 발언, 과거 맞대결, 부상 복귀 시점, 전술 등)는 쓰지 마라.
 - 모형이 우세하다고 본 쪽과 반대되는 결론을 내리지 마라. 우열이 근소하면 근소하다고 써라.
-- 결장 선수가 있으면 그 포지션이 경기에 어떤 영향을 줄지 한 번은 언급해라.
-- 마크다운·제목·목록 없이 문장만 출력해라.
 
 [사실]
 `;
 
-// 숫자가 섞인 문장은 버린다 — 규칙 1의 검증 장치.
-// (전각 숫자·퍼센트 기호도 같이 본다. 한글 수사 "두 팀" 같은 건 허용.)
-function hasNumbers(text){
-  return /[0-9０-９%]/.test(text);
+// 해설에 나온 숫자가 전부 [사실]에 있는 값인지 — 규칙 1의 검증 장치.
+// "1.70"을 "1.7"로 쓰는 식의 표기 차이는 값이 같으면 허용한다. 반환: 근거 없는 숫자 목록.
+function unknownNumbers(text, facts){
+  const toks = s => (String(s).replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .match(/\d+(?:\.\d+)?/g) || []);
+  const allowed = new Set(toks(facts).map(Number));
+  return toks(text).filter(n => !allowed.has(Number(n)));
 }
 
 // 반환값: {text, reason}. text가 null이면 reason에 왜 실패했는지 들어있다 —
@@ -136,8 +148,9 @@ export async function generatePreview(prediction){
   if(!GEMINI_KEY) return {text: null, reason: 'GEMINI_API_KEY 없음'};
   if(!prediction || !prediction.available) return {text: null, reason: '예측 없음'};
   try {
+    const facts = factsFrom(prediction);
     const body = {
-      contents: [{parts: [{text: PROMPT + factsFrom(prediction)}]}],
+      contents: [{parts: [{text: PROMPT + facts}]}],
       // 최신 제미나이는 "생각하는" 모델이라 내부 추론에도 출력 토큰을 쓴다. 400으로
       // 두니 추론에 다 써버려서 본문이 문장 중간에 잘렸다(실측: "…아스날은 리그 최상위"
       // 에서 끊김). 넉넉히 준다 — 실제 비용은 쓴 만큼만 나간다.
@@ -213,10 +226,17 @@ export async function generatePreview(prediction){
     if(!/[.!?。]\s*$/.test(text) && !/[다요]\s*$/.test(text)){
       return {text: null, reason: `문장이 끝나지 않음(${model}): …${text.slice(-20)}`};
     }
-    if(hasNumbers(text)){ console.log('[ai] 숫자가 섞여 폐기'); return {text: null, reason: '숫자 포함으로 폐기'}; }
-    // 너무 길면(모델이 규칙을 무시한 경우) 버린다 — 카드가 해설로 도배되면 안 된다.
-    if(text.length > 400){ console.log('[ai] 길이 초과로 폐기', text.length); return {text: null, reason: `길이 초과(${text.length}자)`}; }
-    return {text: text.replace(/\s*\n\s*/g, ' '), reason: 'ok', model};
+    const bad = unknownNumbers(text, facts);
+    if(bad.length){
+      console.log('[ai] 근거 없는 숫자로 폐기', bad.join(','));
+      return {text: null, reason: `근거 없는 숫자(${[...new Set(bad)].slice(0, 5).join(', ')}) — ${model}`};
+    }
+    // 너무 길거나 짧으면(모델이 형식을 무시한 경우) 버린다.
+    if(text.length > 1100){ console.log('[ai] 길이 초과로 폐기', text.length); return {text: null, reason: `길이 초과(${text.length}자)`}; }
+    if(text.length < 150){ return {text: null, reason: `너무 짧음(${text.length}자)`}; }
+    // 문단 구분(빈 줄)은 살리고, 문단 안의 줄바꿈만 이어붙인다.
+    const clean = text.split(/\n\s*\n/).map(pp => pp.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean).join('\n\n');
+    return {text: clean, reason: 'ok', model};
   } catch(e){
     console.log('[ai] 생성 실패', e.name);
     return {text: null, reason: `예외 ${e.name}`};

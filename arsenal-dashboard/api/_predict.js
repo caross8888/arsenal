@@ -248,5 +248,6 @@ export function predictAiKey(p){
   // 짧은 비암호학적 해시(FNV-1a) — 충돌해도 해설 하나가 재사용될 뿐이라 충분하다.
   let h = 0x811c9dc5;
   for(let i = 0; i < sig.length; i++){ h ^= sig.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
-  return `predAI:${p.home.id}:${p.away.id}:${h.toString(36)}`;
+  // v2: 해설 형식(두 문단·구체 수치)이 바뀌어 예전 해설을 재사용하면 안 된다.
+  return `predAI:v2:${p.home.id}:${p.away.id}:${h.toString(36)}`;
 }
