@@ -13,11 +13,53 @@
 //     예측 카드 자체가 안 뜨는 경로는 없어야 한다.
 
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
-// Flash 계열(빠르고 무료 티어 한도가 넉넉하다). 모델명이 바뀌면 여기만 고치면 된다.
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+// 모델 ID를 코드에 박아두면 구글이 모델을 내릴 때마다 배포를 다시 해야 한다
+// (실측: gemini-2.5-flash가 "no longer available to new users"로 404). 그래서
+// 환경변수로 고정하지 않는 한 **사용 가능한 모델 목록을 받아 직접 고른다.**
+const GEMINI_MODEL_ENV = process.env.GEMINI_MODEL || '';
 const GEMINI_TIMEOUT_MS = 12000;
 
 export const AI_ENABLED = !!GEMINI_KEY;
+
+// 자동 선택 결과를 함수 인스턴스 안에 기억해둔다(요청마다 목록을 다시 받지 않게).
+let _resolvedModel = null;
+
+// 이 용도에 안 맞는 모델을 이름으로 걸러낸다 — 임베딩·음성·이미지 전용이나
+// 실시간(live) 모델은 generateContent를 지원해도 텍스트 프리뷰용이 아니다.
+const MODEL_REJECT = /embedding|aqa|tts|image|vision|live|native-audio|computer-use/i;
+
+async function resolveModel(){
+  if(GEMINI_MODEL_ENV) return GEMINI_MODEL_ENV;      // 수동 지정이 최우선
+  if(_resolvedModel) return _resolvedModel;
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}&pageSize=200`,
+      {signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS)});
+    if(!r.ok){ console.log('[ai] 모델 목록 조회 실패', r.status); return null; }
+    const list = ((await r.json()).models || [])
+      .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+      .map(m => String(m.name || '').replace(/^models\//, ''))
+      .filter(n => n && !MODEL_REJECT.test(n));
+    if(!list.length) return null;
+    // 점수: flash 계열 우선(빠르고 싸다) > 정식판(preview/exp 제외) > 최신 버전 번호
+    const score = n => {
+      let sc = 0;
+      if(/flash/.test(n)) sc += 100;
+      if(/flash-lite/.test(n)) sc -= 20;            // 품질이 아쉬워 동점이면 뒤로
+      if(!/preview|exp|thinking/.test(n)) sc += 50; // 정식 릴리스 우선
+      const ver = parseFloat((n.match(/(\d+(?:\.\d+)?)/) || [])[1] || '0');
+      sc += ver;                                     // 버전이 높을수록
+      if(/-\d{3,}$/.test(n)) sc -= 10;              // 날짜 스냅샷(-001 등)보다 별칭 선호
+      return sc;
+    };
+    list.sort((x, y) => score(y) - score(x));
+    _resolvedModel = list[0];
+    console.log('[ai] 모델 자동 선택:', _resolvedModel, '(후보', list.length + '개)');
+    return _resolvedModel;
+  } catch(e){
+    console.log('[ai] 모델 목록 조회 예외', e.name);
+    return null;
+  }
+}
 
 // 예측 응답(predictMatch 결과) → 모델에 줄 사실 목록.
 // 여기 적은 것 외의 정보는 모델이 알 수 없으므로, 없는 얘기를 지어낼 재료 자체가 없다.
@@ -89,18 +131,26 @@ export async function generatePreview(prediction){
       contents: [{parts: [{text: PROMPT + factsFrom(prediction)}]}],
       generationConfig: {temperature: 0.7, maxOutputTokens: 400},
     };
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+    const callOnce = async model => fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
       {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS)}
     );
-    // 403 본문에는 요청에 쓴 API 키가 그대로 들어있다 — 상태 코드만 남긴다.
+    let model = await resolveModel();
+    if(!model) return {text: null, reason: '쓸 수 있는 모델을 찾지 못함'};
+    let r = await callOnce(model);
+    // 모델이 내려간 경우(404) 목록을 다시 받아 한 번만 재시도한다.
+    if(r.status === 404 && !GEMINI_MODEL_ENV){
+      _resolvedModel = null;
+      const retryModel = await resolveModel();
+      if(retryModel && retryModel !== model){ model = retryModel; r = await callOnce(model); }
+    }
+    // 403 본문에는 요청에 쓴 API 키가 그대로 들어있다 — 상태 코드와 메시지만 남긴다.
     if(!r.ok){
       let detail = '';
-      try { const e = await r.json(); detail = ((e.error || {}).message || '').slice(0, 120); } catch(_){}
-      // 403 본문에는 API 키가 그대로 들어있을 수 있어 status와 message만 남긴다.
-      console.log('[ai] Gemini 응답 실패', r.status);
-      return {text: null, reason: `HTTP ${r.status}${detail ? ' — ' + detail : ''}`};
+      try { const e = await r.json(); detail = ((e.error || {}).message || '').slice(0, 200); } catch(_){}
+      console.log('[ai] Gemini 응답 실패', r.status, model);
+      return {text: null, reason: `HTTP ${r.status} (${model})${detail ? ' — ' + detail : ''}`};
     }
     const j = await r.json();
     const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
@@ -109,7 +159,7 @@ export async function generatePreview(prediction){
     if(hasNumbers(text)){ console.log('[ai] 숫자가 섞여 폐기'); return {text: null, reason: '숫자 포함으로 폐기'}; }
     // 너무 길면(모델이 규칙을 무시한 경우) 버린다 — 카드가 해설로 도배되면 안 된다.
     if(text.length > 400){ console.log('[ai] 길이 초과로 폐기', text.length); return {text: null, reason: `길이 초과(${text.length}자)`}; }
-    return {text: text.replace(/\s*\n\s*/g, ' '), reason: 'ok'};
+    return {text: text.replace(/\s*\n\s*/g, ' '), reason: 'ok', model};
   } catch(e){
     console.log('[ai] 생성 실패', e.name);
     return {text: null, reason: `예외 ${e.name}`};
