@@ -5937,12 +5937,33 @@ function predictCardHTML(p, data){
        '<span style="color:'+colAway+';font-weight:700;">'+aName+' '+pct(p.probs.away)+'%</span>'+
      '</div>';
 
-  // 기대 스코어·유력 스코어
-  h+='<div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border-bright);">'+
-       '<span style="font-size:11px;color:var(--text-secondary);width:66px;">기대 스코어</span>'+
-       '<span style="font-family:var(--fm);font-size:15px;font-weight:700;color:var(--text);">'+one(p.expected.home)+' : '+one(p.expected.away)+'</span>'+
-     '</div>';
-  h+='<div style="display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap;">'+
+  // 팀별 값은 좌우 비교(왼쪽 홈·오른쪽 원정, 가운데 항목) — "휴식 6일"만 적으면 누구
+  // 기준인지 모호하다(사용자 지적). 유리한 쪽은 팀과 상관없이 초록(사용자 지정 —
+  // 골드는 라이트 모드에서 배경 없이 글자로만 쓰면 잘 안 보인다).
+  var restDays=function(t){ return t&&t.rest&&t.rest.days!=null ? Math.floor(t.rest.days) : null; };
+  // minGap: 이 정도는 차이가 나야 "유리"로 친다(휴식 20일 vs 19일을 강조하면 의미 없는 차이가 튄다).
+  var cmpRow=function(label, hv, av, hTxt, aTxt, minGap){
+    var better=(hv!=null&&av!=null&&Math.abs(hv-av)>=(minGap||1)) ? (hv>av?'h':'a') : '';
+    var cell=function(txt, on, right){
+      return '<span style="flex:1;'+(right?'text-align:right;':'')+'font-family:var(--fm);font-size:11px;'+
+             'font-weight:'+(on?'700':'500')+';color:'+(on?'var(--green)':'var(--text-secondary)')+';">'+txt+'</span>';
+    };
+    return '<div style="display:flex;align-items:center;padding:7px 0;border-top:1px solid var(--border-bright);">'+
+             cell(hTxt, better==='h', false)+
+             '<span style="width:84px;text-align:center;font-size:11px;color:var(--text-secondary);">'+label+'</span>'+
+             cell(aTxt, better==='a', true)+
+           '</div>';
+  };
+  var rH=restDays(p.home), rA=restDays(p.away);
+  h+='<div style="margin-top:14px;">';
+  h+=cmpRow('기대 득점', Math.round(p.expected.home*10), Math.round(p.expected.away*10), one(p.expected.home), one(p.expected.away));
+  // 숫자는 모노 폰트, "일"은 본문 폰트로 — 모노 폰트엔 한글이 없어 대체 글꼴로 튄다.
+  var dayTxt=function(d){ return d!=null ? d+'<span style="font-family:var(--fb);font-size:11px;font-weight:500;margin-left:1px;">일</span>' : '-'; };
+  if(rH!=null||rA!=null) h+=cmpRow('휴식', rH, rA, dayTxt(rH), dayTxt(rA), 2);
+  h+='</div>';
+
+  // 경기 단위 값 — 유력 스코어 / 3골 이상 / 양 팀 득점
+  h+='<div style="display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1px solid var(--border-bright);flex-wrap:wrap;">'+
        '<span style="font-size:11px;color:var(--text-secondary);width:66px;">유력 스코어</span>';
   p.scorelines.slice(0,3).forEach(function(s,i){
     h+='<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;'+
@@ -5950,11 +5971,16 @@ function predictCardHTML(p, data){
        'color:'+(i===0?'var(--gold)':'var(--text-secondary)')+';">'+s.score+' '+pct(s.p)+'%</span>';
   });
   h+='</div>';
-
-  // 합계 골·양 팀 득점
-  h+='<div class="detail-info-grid" style="margin-top:14px;">'+
-       '<div class="detail-info-cell"><div class="detail-info-val">'+pct(p.over25)+'%</div><div class="detail-info-lbl">3골 이상</div></div>'+
-       '<div class="detail-info-cell"><div class="detail-info-val">'+pct(p.btts)+'%</div><div class="detail-info-lbl">양 팀 모두 득점</div></div>'+
+  // 골 전망 — 칸 두 개짜리 그리드 대신 위 줄들과 같은 스타일의 한 줄(사용자가 고른 시안 ②).
+  var goalStat=function(label, v){
+    return '<span style="flex:1;font-size:12px;color:var(--text-secondary);">'+label+' '+
+             '<span style="font-family:var(--fm);font-size:14px;font-weight:700;color:var(--text);margin-left:4px;">'+pct(v)+'%</span></span>';
+  };
+  h+='<div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-bright);">'+
+       '<span style="font-size:11px;color:var(--text-secondary);width:66px;">골 전망</span>'+
+       goalStat('3골 이상', p.over25)+
+       '<span style="width:1px;height:14px;background:var(--border-bright);margin:0 8px;"></span>'+
+       goalStat('양 팀 득점', p.btts)+
      '</div>';
 
   // AI 해설 — 크론이 미리 만들어 둔 게 있을 때만 나온다(없으면 아래 근거 문장만).
@@ -5982,7 +6008,8 @@ function predictCardHTML(p, data){
     });
     h+='</div>';
   }
-  h+='<div style="margin-top:12px;font-size:10px;color:var(--text-secondary);opacity:.8;">'+
+  // 주석은 카드 전체에 붙는 설명 — 오른쪽 정렬 + 점선으로 AI 프리뷰 본문과 떼어 놓는다.
+  h+='<div style="margin-top:14px;padding-top:8px;border-top:1px dashed var(--border-bright);text-align:right;font-size:10px;color:var(--text-secondary);opacity:.8;">'+
        '팀별 xG·홈/원정·결장 기록 기반 포아송 모형 · 참고용'+
      '</div>';
   return h+'</div></div>';
