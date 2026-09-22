@@ -978,6 +978,30 @@ async function fetchTeamContext(teamId){
   return ctx;
 }
 
+// 팀 색(라이트/다크 모드별) — Fotmob이 모드마다 따로 준다. 흰색 유니폼 팀은 다크 모드
+// #ffffff / 라이트 모드 #0060AA(리즈)처럼 이미 배경 대비를 고려한 값이라 그대로 쓴다.
+// leaders의 'teamColors' 맵은 한 가지 색만 저장해서 따로 둔다. 팀 색은 거의 안 바뀌므로 30일.
+async function fetchTeamColorsByMode(ids){
+  const KEY = 'teamColorsByMode';
+  const map = (await kvGetJSON(KEY)) || {};
+  const missing = ids.map(String).filter(id => !map[id]);
+  if(missing.length){
+    await Promise.all(missing.map(async id => {
+      try {
+        const r = await fetch(`https://www.fotmob.com/api/data/teams?id=${id}`,
+          {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+        if(!r.ok) return;
+        const c = (await r.json())?.overview?.teamColors;
+        if(c && (c.lightMode || c.darkMode)) map[id] = {light: c.lightMode || c.darkMode, dark: c.darkMode || c.lightMode};
+      } catch(_){}
+    }));
+    await kvSetJSON(KEY, map, 30 * 24 * 60 * 60);
+  }
+  const out = {};
+  ids.map(String).forEach(id => { if(map[id]) out[id] = map[id]; });
+  return out;
+}
+
 // 킥오프 시각 기준 휴식일·최근 2주 경기 수
 function restFor(ctx, kickoffMs){
   if(!ctx || !(ctx.playedAt || []).length || !kickoffMs) return null;
@@ -1107,7 +1131,7 @@ function predictMatch(opts){
     expected: {home: lam.home, away: lam.away},
     probs: r.probs,
     scorelines: r.scorelines.slice(0, 5),
-    over25: r.over25, under25: r.under25, btts: r.btts, bttsNo: r.bttsNo,
+    over25: r.over25, under25: r.under25, overLines: r.overLines, btts: r.btts, bttsNo: r.bttsNo,
     sample: {played: Math.min(H.played, A.played), priorK: PARAMS.priorK,
              prior: !!(H.hasPrior && A.hasPrior)},
   };
@@ -2434,6 +2458,12 @@ export default async function handler(req, res) {
       });
       if(result.available){
         result.analysis = predictNarrative(result);
+        // 확률 막대를 팀색으로 칠하는 데 쓴다 — 실패해도 프론트가 기본색으로 그린다.
+        try {
+          const colors = await fetchTeamColorsByMode([homeId, awayId]);
+          if(colors[String(homeId)]) result.home.colors = colors[String(homeId)];
+          if(colors[String(awayId)]) result.away.colors = colors[String(awayId)];
+        } catch(_){}
         // AI 해설은 크론(api/preview_ai.js)이 미리 만들어 KV에 넣어둔다 — 여기선 읽기만
         // 한다. 없으면 없는 대로 두고, 프론트가 위 analysis(템플릿 문장)를 그대로 쓴다.
         try {

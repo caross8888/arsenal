@@ -90,18 +90,21 @@ export function scoreProbs(lambdaHome, lambdaAway, rho = PARAMS.dcRho, max = 8){
     }
   }
   let home = 0, draw = 0, away = 0, over25 = 0, btts = 0;
+  // 기준선별 오버 확률 — 화면은 이 중 50%에 가장 가까운 선을 골라 보여준다(북메이커 메인 라인과 같은 원리).
+  const overLines = {'1.5': 0, '2.5': 0, '3.5': 0};
   const lines = [];
   for(let x = 0; x <= max; x++){
     for(let y = 0; y <= max; y++){
       const p = grid[x][y] / total;
       if(x > y) home += p; else if(x === y) draw += p; else away += p;
       if(x + y > 2.5) over25 += p;
+      for(const k in overLines) if(x + y > Number(k)) overLines[k] += p;
       if(x > 0 && y > 0) btts += p;
       lines.push({score: x + '-' + y, home: x, away: y, p});
     }
   }
   lines.sort((a, b) => b.p - a.p);
-  return {probs: {home, draw, away}, scorelines: lines, over25, under25: 1 - over25, btts, bttsNo: 1 - btts};
+  return {probs: {home, draw, away}, scorelines: lines, over25, under25: 1 - over25, overLines, btts, bttsNo: 1 - btts};
 }
 
 // 경기 목록에서 팀별 "시간 감쇠 득점/실점"을 만든다.

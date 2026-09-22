@@ -232,6 +232,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tag-ec{background:rgba(74,222,128,.15);color:#4ADE80;border:1px solid rgba(74,222,128,.25)}
 .tag-cs{background:rgba(203,213,225,.15);color:#CBD5E1;border:1px solid rgba(203,213,225,.25)}
 .tag-oth{background:rgba(100,100,100,.15);color:var(--text-muted);border:1px solid var(--border)}
+.pred-seg{background:var(--pc-d)}
+:root[data-theme="light"] .pred-seg{background:var(--pc-l)}
+.pred-tile{background:rgba(255,255,255,.05);border:1px solid transparent;border-radius:10px}
+.pred-tile.top{background:rgba(200,168,75,.14);border-color:var(--gold)}
+.pred-ic{background:rgba(255,255,255,.08)}
+:root[data-theme="light"] .pred-tile{background:rgba(0,0,0,.035)}
+:root[data-theme="light"] .pred-tile.top{background:rgba(200,168,75,.16)}
+:root[data-theme="light"] .pred-ic{background:rgba(0,0,0,.06)}
 :root[data-theme="light"] .tag-pl{background:rgba(250,204,21,.4);color:#92400E;border-color:rgba(250,204,21,.6)}
 :root[data-theme="light"] .tag-fa{background:rgba(248,113,113,.35);color:#B91C1C;border-color:rgba(248,113,113,.55)}
 :root[data-theme="light"] .tag-ec{background:rgba(74,222,128,.4);color:#15803D;border-color:rgba(74,222,128,.6)}
@@ -3899,6 +3907,7 @@ var DETAIL_ICON_PATH = {
   lock:     '<path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"/><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"/><path d="M8 11v-4a4 4 0 1 1 8 0v4"/>',
   link:     '<path d="M9 15l6 -6"/><path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464"/><path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463"/>',
   clock:    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  exchange: '<path d="M7 10h14l-4 -4"/><path d="M17 14h-14l4 4"/>',
   check:    '<path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M9 12l2 2l4 -4"/>',
   card:     '<path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/>',
   injury:   '<path d="M14 12l0 .01"/><path d="M10 12l0 .01"/><path d="M12 10l0 .01"/><path d="M12 14l0 .01"/><path d="M4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8a4.94 4.94 0 0 1 -7 -7"/>'
@@ -5918,23 +5927,62 @@ function renderPredictCard(data, m){
 function predictCardHTML(p, data){
   var pct=function(v){ return Math.round(v*100); };
   var one=function(v){ return v.toFixed(1); };
-  // 색은 아스날 관점 — 아스날 승 초록, 무승부 앰버, 상대 승 빨강.
-  // (경기 결과 스코어 팔레트와 같은 값)
-  var hIsArs=isArsenalTeam(data.homeTeam), aIsArs=isArsenalTeam(data.awayTeam);
-  var colHome=aIsArs?'var(--loss)':'var(--green)';
-  var colAway=aIsArs?'var(--green)':'var(--loss)';
   var hName=modalTeamName(data.homeTeam, data), aName=modalTeamName(data.awayTeam, data);
 
+  // 막대는 팀색(사용자 지정) — "누가 이길 확률"을 보는 막대라 승/무/패 색보다 직관적이다.
+  // 무승부만 예외로 중립 회색(경기 결과 팔레트의 앰버를 쓰면 노랑 팀과 겹치고, 팀색 사이에서
+  // 세 번째 팀처럼 보인다). 색은 서버가 Fotmob 모드별 팀색을 실어 준다(p.home.colors).
+  // 모드마다 결과가 달라서(흰색 팀은 다크에서만 흰색) 두 모드 값을 CSS 변수로 둘 다 싣고
+  // .pred-seg 규칙이 현재 테마 쪽을 고른다 — 모달을 연 채 테마를 바꿔도 맞게 바뀐다.
+  var PRED_BG={dark:'#1A1D27', light:'#FFFFFF'};
+  var PRED_NEUTRAL={dark:'#E8E8E8', light:'#3A3F4B'};   // 대체색(겹치거나 안 보일 때)
+  var PRED_DRAW={dark:'#5A6072', light:'#C7CBD4'};
+  var rgbOf=function(hex){
+    var m=/^#?([0-9a-f]{6})$/i.exec(String(hex||'').trim()); if(!m) return null;
+    var n=parseInt(m[1],16); return [n>>16&255, n>>8&255, n&255];
+  };
+  var dist=function(a,b){ return Math.sqrt(Math.pow(a[0]-b[0],2)+Math.pow(a[1]-b[1],2)+Math.pow(a[2]-b[2],2)); };
+  var lum=function(c){
+    var f=function(v){ v/=255; return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); };
+    return 0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2]);
+  };
+  var contrast=function(a,b){ var x=lum(a), y=lum(b); return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05); };
+  var hIsArs=isArsenalTeam(data.homeTeam);
+  // 바꿔야 하면 아스날이 아닌 쪽을 바꾼다(아스날 팬 앱이라 아스날 빨강은 고정).
+  var teamBarColors=function(mode){
+    var ARS='#EF0107';
+    var raw=function(t, isArs){ return isArs ? ARS : (t&&t.colors&&t.colors[mode]) || null; };
+    var hc=raw(p.home, hIsArs), ac=raw(p.away, !hIsArs);
+    var ok=function(hex, other){
+      var c=rgbOf(hex); if(!c) return false;
+      if(contrast(c, rgbOf(PRED_BG[mode]))<1.6) return false;          // 배경에 묻힘(흰 배경 위 흰색 등)
+      if(other && rgbOf(other) && dist(c, rgbOf(other))<120) return false; // 상대와 겹침(빨강 대 빨강)
+      if(dist(c, rgbOf(PRED_DRAW[mode]))<60) return false;             // 무승부 회색과 겹침
+      return true;
+    };
+    if(hIsArs){ if(!ok(ac, hc)) ac=PRED_NEUTRAL[mode]; }
+    else { if(!ok(hc, ac)) hc=PRED_NEUTRAL[mode]; }
+    return {home:hc, away:ac};
+  };
+  var cD=teamBarColors('dark'), cL=teamBarColors('light');
+
   // 막대 — 확률이 아주 낮은 구간도 보이게 최소 폭을 준다.
-  var seg=function(v,col){ return '<div style="flex:'+Math.max(v,0.06)+' 1 0%;background:'+col+';"></div>'; };
+  var seg=function(v,d,l){ return '<div class="pred-seg" style="flex:'+Math.max(v,0.06)+' 1 0%;--pc-d:'+d+';--pc-l:'+l+';"></div>'; };
+  var crest=function(t){ return t&&t.crest ? '<img src="'+t.crest+'" alt="" style="width:22px;height:22px;object-fit:contain;flex-shrink:0;" onerror="this.style.visibility=\'hidden\'">' : ''; };
   var h='<div class="mm-card"><div class="mm-card-title">경기 예측</div><div style="padding:10px 14px 14px;">';
-  h+='<div style="display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;">'+
-       seg(p.probs.home,colHome)+seg(p.probs.draw,'var(--amber)')+seg(p.probs.away,colAway)+
+  // 엠블럼은 막대 양 끝에 둔다(사용자 지정) — 이름표 줄에 넣으면 팀 이름이 긴 경기에서 자리가 모자란다.
+  h+='<div style="display:flex;align-items:center;gap:8px;">'+crest(data.homeTeam)+
+       '<div style="flex:1;display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;">'+
+         seg(p.probs.home,cD.home,cL.home)+seg(p.probs.draw,PRED_DRAW.dark,PRED_DRAW.light)+seg(p.probs.away,cD.away,cL.away)+
+       '</div>'+crest(data.awayTeam)+
      '</div>';
-  h+='<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;">'+
-       '<span style="color:'+colHome+';font-weight:700;">'+hName+' '+pct(p.probs.home)+'%</span>'+
-       '<span style="color:var(--amber);font-weight:700;">무승부 '+pct(p.probs.draw)+'%</span>'+
-       '<span style="color:'+colAway+';font-weight:700;">'+aName+' '+pct(p.probs.away)+'%</span>'+
+  // 이름표는 좌우 대칭(이름 · % … % · 이름). 글자는 본문색 — 팀색을 글자에 쓰면 흰색·노랑 팀이 안 보인다.
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:12px;">'+
+       '<span style="display:flex;gap:4px;min-width:0;color:var(--text);font-weight:700;">'+
+         '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+hName+'</span><span style="white-space:nowrap;">'+pct(p.probs.home)+'%</span></span>'+
+       '<span style="color:var(--text-secondary);font-weight:700;white-space:nowrap;">무승부 '+pct(p.probs.draw)+'%</span>'+
+       '<span style="display:flex;gap:4px;min-width:0;color:var(--text);font-weight:700;justify-content:flex-end;">'+
+         '<span style="white-space:nowrap;">'+pct(p.probs.away)+'%</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+aName+'</span></span>'+
      '</div>';
 
   // 팀별 값은 좌우 비교(왼쪽 홈·오른쪽 원정, 가운데 항목) — "휴식 6일"만 적으면 누구
@@ -5960,27 +6008,47 @@ function predictCardHTML(p, data){
   // 숫자는 모노 폰트, "일"은 본문 폰트로 — 모노 폰트엔 한글이 없어 대체 글꼴로 튄다.
   var dayTxt=function(d){ return d!=null ? d+'<span style="font-family:var(--fb);font-size:11px;font-weight:500;margin-left:1px;">일</span>' : '-'; };
   if(rH!=null||rA!=null) h+=cmpRow('휴식', rH, rA, dayTxt(rH), dayTxt(rA), 2);
+  // 아래 카드 영역과 경계선(사용자 요청) — 팀 비교 줄들이 여기서 끝난다는 표시.
+  h+='<div style="border-top:1px solid var(--border-bright);"></div>';
   h+='</div>';
 
-  // 경기 단위 값 — 유력 스코어 / 3골 이상 / 양 팀 득점
-  h+='<div style="display:flex;align-items:center;gap:6px;padding-top:10px;border-top:1px solid var(--border-bright);flex-wrap:wrap;">'+
-       '<span style="font-size:11px;color:var(--text-secondary);width:66px;">유력 스코어</span>';
+  // 경기 단위 값은 카드식(사용자가 고른 시안 A) — 위 두 줄(팀 비교)과 모양을 달리해서
+  // "팀별 값 / 경기 전체 값"이 자연스럽게 나뉘어 보이게 한다.
+  var secTitle=function(t){ return '<div style="font-size:11px;color:var(--text-secondary);margin:14px 0 8px;">'+t+'</div>'; };
+  // 유력 스코어 — 카드 3장, 1순위만 금색 테두리+옅은 금색 배경(배경이 있어 라이트 모드에서도 보인다).
+  // 스코어와 확률을 한 줄에 둬서 카드 높이를 낮게 유지한다(사용자 지적: 두 줄이면 너무 높다).
+  h+=secTitle('유력 스코어');
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">';
   p.scorelines.slice(0,3).forEach(function(s,i){
-    h+='<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;'+
-       'background:'+(i===0?'rgba(200,168,75,.18)':'rgba(255,255,255,.06)')+';'+
-       'color:'+(i===0?'var(--gold)':'var(--text-secondary)')+';">'+s.score+' '+pct(s.p)+'%</span>';
+    h+='<div class="pred-tile'+(i===0?' top':'')+'" style="height:38px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:6px;">'+
+         '<span style="font-family:var(--fm);font-size:15px;font-weight:700;color:'+(i===0?'var(--gold)':'var(--text)')+';">'+s.score+'</span>'+
+         '<span style="font-size:11px;color:var(--text-secondary);">'+pct(s.p)+'%</span>'+
+       '</div>';
   });
   h+='</div>';
-  // 골 전망 — 칸 두 개짜리 그리드 대신 위 줄들과 같은 스타일의 한 줄(사용자가 고른 시안 ②).
-  var goalStat=function(label, v){
-    return '<span style="flex:1;font-size:12px;color:var(--text-secondary);">'+label+' '+
-             '<span style="font-family:var(--fm);font-size:14px;font-weight:700;color:var(--text);margin-left:4px;">'+pct(v)+'%</span></span>';
+  // 골 전망 — 아이콘 카드 2장. 라벨과 값을 한 줄에 둬서 스코어 카드와 비슷한 높이로 낮춘다.
+  var goalCard=function(icon, label, v){
+    return '<div class="pred-tile" style="height:38px;box-sizing:border-box;padding:0 10px;display:flex;align-items:center;gap:8px;">'+
+             '<span class="pred-ic" style="width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex-shrink:0;">'+dIcon(icon,14)+'</span>'+
+             '<span style="flex:1;min-width:0;font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+label+'</span>'+
+             '<span style="font-family:var(--fm);font-size:15px;font-weight:700;color:var(--text);">'+pct(v)+'%</span>'+
+           '</div>';
   };
-  h+='<div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-bright);">'+
-       '<span style="font-size:11px;color:var(--text-secondary);width:66px;">골 전망</span>'+
-       goalStat('3골 이상', p.over25)+
-       '<span style="width:1px;height:14px;background:var(--border-bright);margin:0 8px;"></span>'+
-       goalStat('양 팀 득점', p.btts)+
+  // 기준선은 경기마다 확률이 50%에 가장 가까운 선(1.5/2.5/3.5)을 고른다 — 북메이커 메인 라인과
+  // 같은 원리로, "3골 이상 85%"처럼 뻔한 숫자 대신 이 경기가 몇 골 안팎인지를 보여준다.
+  // 동률이면 익숙한 2.5를 우선. 옛 응답(overLines 없음)은 2.5 고정.
+  var overLine={label:'3골 이상', p:p.over25};
+  if(p.overLines){
+    var best=null;
+    ['2.5','1.5','3.5'].forEach(function(k){
+      var v=p.overLines[k]; if(v==null) return;
+      if(!best||Math.abs(v-0.5)<Math.abs(best.p-0.5)-1e-9) best={label:(Math.floor(Number(k))+1)+'골 이상', p:v};
+    });
+    if(best) overLine=best;
+  }
+  h+=secTitle('골 전망');
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
+       goalCard('ball',overLine.label,overLine.p)+goalCard('exchange','양 팀 득점',p.btts)+
      '</div>';
 
   // AI 해설 — 크론이 미리 만들어 둔 게 있을 때만 나온다(없으면 아래 근거 문장만).
