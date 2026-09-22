@@ -162,6 +162,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .lb-round-date{padding:8px 12px 4px;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--text);text-transform:uppercase;}
 .lb-round-row{display:grid;grid-template-columns:22px 1fr 18px 40px 18px 1fr;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--border-bright);font-size:12px;cursor:pointer;transition:background .15s;}
 .lb-round-row:hover{background:var(--surface2);}
+.lb-round-row.no-open{cursor:default;}
+.lb-round-row.no-open:hover{background:none;}
 .lb-round-row:last-child{border-bottom:none;}
 .lb-round-status{color:var(--text-muted);font-size:10px;}
 .lb-round-status.live{color:var(--green);font-weight:700;}
@@ -3526,7 +3528,11 @@ function renderRoundResults(matches){
       var as_=m.score&&m.score.fullTime?m.score.fullTime.away:null;
       var scoreTxt=(hs!=null&&as_!=null)?(hs+'-'+as_):'vs';
       _lbRoundMatches[String(m.id)]=m;
-      h+='<div class="lb-round-row" onclick="openLbRoundMatch(\''+String(m.id).replace(/'/g,'')+'\')">';
+      // 아직 안 한 타팀 경기는 상세를 열지 않는다(사용자 지정) — 보여줄 게 상대전적·최근 경기뿐이고,
+      // 예정 경기 모달은 아스날 기준으로 만들어져 있어 상대전적 요약이 "아스날 열세"처럼 틀리게 나온다.
+      // 아스날 경기는 예정이어도 경기일정 탭과 같은 상세가 열린다.
+      var canOpen=isDone||isLive||isArsenalTeam(m.homeTeam)||isArsenalTeam(m.awayTeam);
+      h+='<div class="lb-round-row'+(canOpen?'':' no-open')+'"'+(canOpen?' onclick="openLbRoundMatch(\''+String(m.id).replace(/'/g,'')+'\')"':'')+'>';
       h+='<span class="lb-round-status'+(isLive?' live':'')+'">'+statusTxt+'</span>';
       h+='<span class="lb-round-team home">'+(m.homeTeam.name||'')+'</span>';
       h+=(m.homeTeam.crest?'<img class="lb-round-crest" src="'+m.homeTeam.crest+'" alt="" onerror="this.style.visibility=\'hidden\'">':'<span class="lb-round-crest"></span>');
