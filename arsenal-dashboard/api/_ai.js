@@ -17,12 +17,17 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY;
 // (실측: gemini-2.5-flash가 "no longer available to new users"로 404). 그래서
 // 환경변수로 고정하지 않는 한 **사용 가능한 모델 목록을 받아 직접 고른다.**
 const GEMINI_MODEL_ENV = process.env.GEMINI_MODEL || '';
-const GEMINI_TIMEOUT_MS = 12000;
+// 생각하는 모델은 한 번에 10~30초가 걸린다 — 12초로 두니 타임아웃이 났다(실측).
+// 크론 함수 한도가 5분이라, 경기 2개 × 최대 3회 호출을 이 안에 맞춘다.
+const GEMINI_TIMEOUT_MS = 35000;
+const LIST_TIMEOUT_MS = 12000;
 
 export const AI_ENABLED = !!GEMINI_KEY;
 
 // 자동 선택 결과를 함수 인스턴스 안에 기억해둔다(요청마다 목록을 다시 받지 않게).
+// 1순위가 과부하(503)일 때 넘어갈 수 있게 점수순 후보 목록도 같이 둔다.
 let _resolvedModel = null;
+let _candidates = [];
 
 // 이 용도에 안 맞는 모델을 이름으로 걸러낸다 — 임베딩·음성·이미지 전용이나
 // 실시간(live) 모델은 generateContent를 지원해도 텍스트 프리뷰용이 아니다.
@@ -33,7 +38,7 @@ async function resolveModel(){
   if(_resolvedModel) return _resolvedModel;
   try {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}&pageSize=200`,
-      {signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS)});
+      {signal: AbortSignal.timeout(LIST_TIMEOUT_MS)});
     if(!r.ok){ console.log('[ai] 모델 목록 조회 실패', r.status); return null; }
     const list = ((await r.json()).models || [])
       .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
@@ -52,6 +57,8 @@ async function resolveModel(){
       return sc;
     };
     list.sort((x, y) => score(y) - score(x));
+    // 대체 후보는 flash 계열만 — pro는 느리고 비싸서 크론 시간 한도에 걸린다.
+    _candidates = list.filter(n => /flash/.test(n)).slice(0, 4);
     _resolvedModel = list[0];
     console.log('[ai] 모델 자동 선택:', _resolvedModel, '(후보', list.length + '개)');
     return _resolvedModel;
@@ -141,13 +148,36 @@ export async function generatePreview(prediction){
     );
     let model = await resolveModel();
     if(!model) return {text: null, reason: '쓸 수 있는 모델을 찾지 못함'};
-    let r = await callOnce(model);
-    // 모델이 내려간 경우(404) 목록을 다시 받아 한 번만 재시도한다.
-    if(r.status === 404 && !GEMINI_MODEL_ENV){
-      _resolvedModel = null;
-      const retryModel = await resolveModel();
-      if(retryModel && retryModel !== model){ model = retryModel; r = await callOnce(model); }
+
+    // 일시적 실패(과부하 503·한도 429·서버 5xx·타임아웃)는 버티고, 영구적 실패(400·403·
+    // 404)는 바로 돌려준다. 순서: 1순위 모델 2회(사이 3초) → 다음 flash 후보 1회.
+    // 실측: gemini-3.8-flash가 "currently experiencing high demand"로 503.
+    const TRANSIENT = new Set([429, 500, 502, 503, 504]);
+    const attempt = async m => {
+      try { return {res: await callOnce(m)}; }
+      catch(e){ return {err: e}; }      // TimeoutError 등
+    };
+    const plan = [model, model];
+    const alt = _candidates.find(n => n !== model);
+    if(alt && !GEMINI_MODEL_ENV) plan.push(alt);
+
+    let r = null, lastErr = null;
+    for(let i = 0; i < plan.length; i++){
+      if(i > 0) await new Promise(res => setTimeout(res, plan[i] === plan[i - 1] ? 3000 : 500));
+      model = plan[i];
+      const got = await attempt(model);
+      if(got.err){ lastErr = got.err; r = null; continue; }
+      r = got.res;
+      // 모델이 내려간 경우(404) 목록을 다시 받아 새 1순위로 한 번 더.
+      if(r.status === 404 && !GEMINI_MODEL_ENV){
+        _resolvedModel = null;
+        const fresh = await resolveModel();
+        if(fresh && fresh !== model){ model = fresh; const g2 = await attempt(model); r = g2.res || null; lastErr = g2.err || null; }
+        break;
+      }
+      if(!TRANSIENT.has(r.status)) break;   // 성공 또는 영구 실패
     }
+    if(!r) return {text: null, reason: `예외 ${lastErr ? lastErr.name : '알 수 없음'} (${model})`};
     // 403 본문에는 요청에 쓴 API 키가 그대로 들어있다 — 상태 코드와 메시지만 남긴다.
     if(!r.ok){
       let detail = '';

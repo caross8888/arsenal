@@ -74,7 +74,12 @@ export default async function handler(req, res){
     report.horizonDays = HORIZON_DAYS;
     report.upcoming = upcoming.length;
 
+    // 함수 실행 한도가 5분이라, 한 경기가 재시도로 오래 걸려도 전체가 잘리지 않게
+    // 4분이 지나면 남은 경기는 다음 크론으로 넘긴다(실행 기록은 남겨야 하므로).
+    const startedAt = Date.now();
+    const BUDGET_MS = 240 * 1000;
     for(const m of upcoming){
+      if(Date.now() - startedAt > BUDGET_MS){ report.matches.push({id: m.id, skip: '시간 예산 초과 — 다음 크론으로'}); continue; }
       const home = (m.homeTeam || {}).id, away = (m.awayTeam || {}).id;
       if(!home || !away) continue;
       report.checked++;
