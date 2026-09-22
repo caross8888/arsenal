@@ -173,6 +173,17 @@ function unknownNumbers(text, facts){
   return toks(text).filter(n => !allowed.has(Number(n)));
 }
 
+// 무료 한도가 모델마다 분당 5회·하루 20회로 작다(AI Studio 실측 화면). 그래서
+// ① 모든 호출 사이를 최소 13초 벌려 분당 5회 안에 들어오게 하고,
+// ② 429(한도 초과)를 받은 모델은 잠시 "소진"으로 표시해 같은 실행에서 다시 부르지 않는다 —
+//    한도가 찬 모델에 재시도하면 성공할 수 없는 호출로 횟수만 깎인다(실측: 하루 24/20).
+//    메시지에 "per day"가 있으면 하루 한도라 길게, 아니면 분당 한도라 짧게 막는다.
+// 서버리스 인스턴스가 살아있는 동안만 유지되는 값이라, 다음 날 크론엔 자연히 초기화된다.
+const MIN_GAP_MS = 13 * 1000;
+let _lastCallAt = 0;
+const _exhaustedUntil = new Map();   // model → 이 시각(ms)까지 호출 안 함
+const isExhausted = m => (_exhaustedUntil.get(m) || 0) > Date.now();
+
 // 반환값: {text, reason}. text가 null이면 reason에 왜 실패했는지 들어있다 —
 // 크론이 이걸 KV 실행 기록에 남겨서, 배포 로그를 못 봐도 원인을 알 수 있게 한다.
 export async function generatePreview(prediction){
@@ -188,7 +199,13 @@ export async function generatePreview(prediction){
       // 격식 있는 문체가 흔들리지 않게 너무 높이지 않는다(0.9에선 구어체로 새는 걸 우려).
       generationConfig: {temperature: 0.8, maxOutputTokens: 4096},
     };
-    const callOnce = async model => fetch(
+    const callOnce = async model => {
+      const wait = _lastCallAt + MIN_GAP_MS - Date.now();
+      if(wait > 0) await new Promise(res => setTimeout(res, wait));
+      _lastCallAt = Date.now();
+      return rawCall(model);
+    };
+    const rawCall = async model => fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
       {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS)}
@@ -208,14 +225,17 @@ export async function generatePreview(prediction){
     // 세 번까지 시도한다. 그 뒤 다른 flash 후보가 있으면 한 번 더.
     // 그래도 안 되면 나머지 flash 후보를 하나씩 — 실측으로 3.8이 과부하일 때 3.7도 같이
     // 과부하인 경우가 있었다(리즈전 두 번 연속 실패). 버전이 다르면 서버 풀도 다를 수 있다.
+    // 한도가 찬(429) 모델은 계획에서 뺀다. 503은 기다리면 풀리는 과부하라 같은 모델을 재시도한다.
     const plan = [model, model, model];
-    const WAITS = [0, 3000, 10000];
+    const WAITS = [0, 3000, 10000];   // 최소 간격(MIN_GAP_MS)이 더 길어 실제로는 그쪽이 적용된다
     if(!GEMINI_MODEL_ENV) _candidates.filter(n => n !== model).forEach(n => plan.push(n));
 
-    let r = null, lastErr = null;
+    let r = null, lastErr = null, tried = 0;
     for(let i = 0; i < plan.length; i++){
-      if(i > 0) await new Promise(res => setTimeout(res, WAITS[i] != null ? WAITS[i] : 500));
+      if(isExhausted(plan[i])) continue;
+      if(tried > 0) await new Promise(res => setTimeout(res, WAITS[i] != null ? WAITS[i] : 500));
       model = plan[i];
+      tried++;
       const got = await attempt(model);
       if(got.err){ lastErr = got.err; r = null; continue; }
       r = got.res;
@@ -226,8 +246,17 @@ export async function generatePreview(prediction){
         if(fresh && fresh !== model){ model = fresh; const g2 = await attempt(model); r = g2.res || null; lastErr = g2.err || null; }
         break;
       }
+      if(r.status === 429){
+        let msg = '';
+        try { msg = JSON.stringify(await r.clone().json()); } catch(_){}
+        const perDay = /per ?day|PerDay/i.test(msg);
+        _exhaustedUntil.set(model, Date.now() + (perDay ? 6 * 3600 * 1000 : 65 * 1000));
+        console.log('[ai] 한도 초과 — 건너뜀', model, perDay ? '(일일)' : '(분당)');
+        continue;
+      }
       if(!TRANSIENT.has(r.status)) break;   // 성공 또는 영구 실패
     }
+    if(!tried) return {text: null, reason: 'HTTP 429 (모든 flash 모델 한도 소진)'};
     if(!r) return {text: null, reason: `예외 ${lastErr ? lastErr.name : '알 수 없음'} (${model})`};
     // 403 본문에는 요청에 쓴 API 키가 그대로 들어있다 — 상태 코드와 메시지만 남긴다.
     if(!r.ok){
