@@ -1999,9 +1999,16 @@ export default async function handler(req, res) {
               heatmap: (live.heatmap && live.heatmap.length) ? live.heatmap : p.heatmap,
               career: (live.career && live.career.length) ? live.career : p.career,
             });
+            // 실제 소속(Arsenal U21/U18) — 스냅샷엔 "아카데미"만 있어서, 상세모달이 처음엔 "Arsenal FC"로
+            // 그렸다가 상세 응답이 오면 "Arsenal U21"로 바뀌었다. 한 번이라도 열린 선수는 KV에 프로필이
+            // 있으니 목록에 실어 보내 처음부터 맞게 그린다. 유스팀 이름일 때만(출전 대회·나이로는
+            // U21/U18이 구분되지 않아 추정은 하지 않는다 — 실측으로 둘 다 PL2·UYL에 17~18세가 섞여 있다).
+            const lt = live.profile && live.profile.team;
+            if(lt && /^Arsenal U\d\d$/.test(String(lt.name || '').trim())) p = Object.assign({}, p, {team: lt});
           }
           return p;
         }).map(p => ({
+          ...(p.team ? {team: p.team} : {}),
           id:          p.id,
           fotmobId:    p.id,
           squadLevel:  p.squadLevel || 'first',
