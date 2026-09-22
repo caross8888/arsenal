@@ -206,10 +206,11 @@ export async function generatePreview(prediction){
     };
     // 503은 구글이 "보통 일시적"이라고 명시하는 과부하라, 같은 모델을 간격을 늘려가며
     // 세 번까지 시도한다. 그 뒤 다른 flash 후보가 있으면 한 번 더.
+    // 그래도 안 되면 나머지 flash 후보를 하나씩 — 실측으로 3.8이 과부하일 때 3.7도 같이
+    // 과부하인 경우가 있었다(리즈전 두 번 연속 실패). 버전이 다르면 서버 풀도 다를 수 있다.
     const plan = [model, model, model];
     const WAITS = [0, 3000, 10000];
-    const alt = _candidates.find(n => n !== model);
-    if(alt && !GEMINI_MODEL_ENV) plan.push(alt);
+    if(!GEMINI_MODEL_ENV) _candidates.filter(n => n !== model).forEach(n => plan.push(n));
 
     let r = null, lastErr = null;
     for(let i = 0; i < plan.length; i++){

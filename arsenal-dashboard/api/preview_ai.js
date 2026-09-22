@@ -99,6 +99,7 @@ export default async function handler(req, res){
     // 4분이 지나면 남은 경기는 다음 크론으로 넘긴다(실행 기록은 남겨야 하므로).
     const startedAt = Date.now();
     const BUDGET_MS = 240 * 1000;
+    const retryLater = [];
     for(const m of upcoming){
       if(Date.now() - startedAt > BUDGET_MS){ report.matches.push({id: m.id, skip: '시간 예산 초과 — 다음 크론으로'}); continue; }
       const home = (m.homeTeam || {}).id, away = (m.awayTeam || {}).id;
@@ -118,11 +119,33 @@ export default async function handler(req, res){
 
       p.h2h = await fetchH2H(m.id);
       const {text, reason, model} = await generatePreview(p);
-      if(!text){ report.failed++; report.matches.push({id: m.id, key, failed: reason}); continue; }
+      if(!text){
+        report.failed++;
+        const row = {id: m.id, key, failed: reason};
+        report.matches.push(row);
+        // 과부하·타임아웃이면 다른 경기를 다 돈 뒤 한 번 더 — 실측으로 첫 경기가 크론 시작
+        // 직후의 과부하에 걸리고, 10여 초 뒤 두 번째 경기는 멀쩡히 성공하는 일이 반복됐다.
+        if(/HTTP 5\d\d|HTTP 429|예외/.test(reason || '')) retryLater.push({p, key, row});
+        continue;
+      }
       await kv('SET', key, text, 'EX', String(AI_TTL_SEC));
       report.generated++;
       report.model = model;
       report.matches.push({id: m.id, key, text});
+    }
+
+    // 두 번째 기회 — 일시적 실패만, 시간 예산 안에서.
+    for(const item of retryLater){
+      if(Date.now() - startedAt > BUDGET_MS) break;
+      await new Promise(res => setTimeout(res, 5000));
+      const {text, reason, model} = await generatePreview(item.p);
+      if(!text){ item.row.failed = reason + ' (재시도도 실패)'; continue; }
+      await kv('SET', item.key, text, 'EX', String(AI_TTL_SEC));
+      report.failed--; report.generated++;
+      report.model = model;
+      delete item.row.failed;
+      item.row.text = text;
+      item.row.retried = true;
     }
     report.candidates = aiCandidates();
     // 실행 기록을 KV에 남긴다 — 배포 로그를 못 보는 상황에서도 무엇이 왜 실패했는지

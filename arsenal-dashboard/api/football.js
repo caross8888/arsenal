@@ -1,4 +1,5 @@
 // api/football.js — Vercel Serverless Function
+import { applyGlossary } from './_glossary.js';
 import { PARAMS, POS_LABEL, scoreProbs, blendRatio, decayedForm,
          homeEdgeFrom, restFactor, injuryFactors, lambdasFrom, predictAiKey } from './_predict.js';
 const FPL_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/';
@@ -2437,7 +2438,10 @@ export default async function handler(req, res) {
         // 한다. 없으면 없는 대로 두고, 프론트가 위 analysis(템플릿 문장)를 그대로 쓴다.
         try {
           const aiText = await kvGetRaw(predictAiKey(result));
-          if(typeof aiText === 'string' && aiText.trim()) result.aiText = aiText.trim();
+          // 표기 통일(아스널→아스날, 외데가르드→외데고르 등)은 번역과 같은 사전을 쓰고,
+          // 저장할 때가 아니라 내보낼 때 적용한다 — 사전을 고치면 이미 만든 해설까지
+          // 재생성 없이 바로 교정된다(번역 파이프라인과 같은 원칙).
+          if(typeof aiText === 'string' && aiText.trim()) result.aiText = applyGlossary(aiText.trim());
         } catch(e){ /* 해설 없음은 정상 동작 */ }
       }
     } else if(type === 'transfers'){
