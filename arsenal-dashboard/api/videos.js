@@ -148,7 +148,8 @@ const TTL = 30 * 60 * 1000;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 'public, max-age=1800');
+  // CDN은 30분 보관, 브라우저는 1분(football.js 주석 참고).
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=1800, stale-while-revalidate=1800');
 
   if (cache.data && Date.now() - cache.ts < TTL) return res.json(cache.data);
 
@@ -166,7 +167,9 @@ export default async function handler(req, res) {
   }
 
   if (!videos || !videos.length) {
-    // 둘 다 실패 — 메모리 캐시(같은 인스턴스) → KV의 마지막 성공 목록 순으로 대체
+    // 둘 다 실패 — 메모리 캐시(같은 인스턴스) → KV의 마지막 성공 목록 순으로 대체.
+    // 대체 응답은 CDN에 1분만 보관한다(30분 보관하면 복구된 뒤에도 옛 목록·빈 목록이 계속 나간다).
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60');
     if (cache.data) return res.json(cache.data);
     const last = await kvGetJSON(LAST_GOOD_KEY);
     if (last && last.videos?.length) {

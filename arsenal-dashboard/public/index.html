@@ -2000,8 +2000,12 @@ function isArsenalTeam(t){
 // immutable:true면 캐시버스터를 안 붙인다 — 서버가 불변으로 표시한 데이터
 // (끝난 시즌 결과, 확정된 경기 상세)는 URL이 매번 같아야 브라우저 HTTP 캐시가
 // 히트해서 두 번째부터는 네트워크 요청 자체가 사라진다.
+// 예전엔 모든 요청에 _=시각 꼬리표를 붙였는데, 주소가 매번 달라져 Vercel CDN 캐시가 한 번도
+// 적중하지 않았다(방문자마다 서버 함수 실행). 신선도는 이제 서버 Cache-Control이 정한다 —
+// 브라우저는 max-age=0/짧게 두고 CDN만 보관하며, "지금 값"이 필요한 호출은 nocache=1을 붙여
+// 서버가 no-store로 답한다. opts.fresh는 그래도 꼬리표가 필요한 예외용으로 남겨 둔다.
 function apiFetch(url, opts){
-  var full = (opts && opts.immutable) ? url : url+(url.indexOf('?')>=0?'&':'?')+'_='+Date.now();
+  var full = (opts && opts.fresh) ? url+(url.indexOf('?')>=0?'&':'?')+'_='+Date.now() : url;
   return fetch(full).then(function(r){
     if(!r.ok) return r.json().then(function(e){throw new Error(e.error||'HTTP '+r.status);});
     return r.json();
@@ -5837,7 +5841,7 @@ function openMatchModal(m, isAuto, opts){
   }, 10000);
 
   var oppInjPromise = oppNameSkel
-    ? fetch(FN+'/football?type=injuries&team='+encodeURIComponent(oppNameSkel)+'&_='+Date.now()).then(function(r){ return r.json(); }).catch(function(){ return null; })
+    ? fetch(FN+'/football?type=injuries&team='+encodeURIComponent(oppNameSkel)).then(function(r){ return r.json(); }).catch(function(){ return null; })
     : Promise.resolve(null);
 
   // 경기 예측도 여기서 같이 출발시킨다 — 모달 로딩이 끝난 뒤에 따로 부르면

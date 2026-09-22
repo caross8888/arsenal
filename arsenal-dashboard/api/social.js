@@ -157,7 +157,8 @@ async function translatePosts(posts) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Cache-Control', 'public, max-age=600');
+  // CDN은 10분 보관, 브라우저는 1분 — 방문자가 몰려도 함수는 10분에 한 번(football.js 주석 참고).
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=600, stale-while-revalidate=600');
 
   try {
     if (_cache && Date.now() - _cacheTs < TTL) {
@@ -202,6 +203,7 @@ export default async function handler(req, res) {
 
     return res.json(payload);
   } catch (err) {
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(500).json({ error: err.message, posts: [] });
   }
 }

@@ -10,8 +10,12 @@ const LOAN_KEYWORDS = /loan|loaned|joined|transferred|released|left the club/i;
 
 const cache = {};
 const TTL = 60 * 60 * 1000;
-// 리더보드는 경기 끝나고 스탯 반영을 더 빨리 보여주기 위해 캐시를 짧게 둔다
-const TTL_OVERRIDES = { leaders: 10 * 60 * 1000 };
+// 리더보드는 경기 끝나고 스탯 반영을 더 빨리 보여주기 위해 캐시를 짧게 둔다.
+// 순위표도 경기 종료 후 순위 반영이 늦지 않게 5분(사용자 지정 — 원래 1시간이라 최대 1시간 늦었다).
+const TTL_OVERRIDES = { leaders: 10 * 60 * 1000, standings: 5 * 60 * 1000 };
+// CDN 보관 시간(초) 예외 — 기본은 min(서버 TTL, 5분). 순위표는 1분(사용자 지정). CDN이 앞에서
+// 막아주므로 방문자가 몰려도 함수 실행은 1분에 한 번 수준이다.
+const CDN_SEC_OVERRIDES = { standings: 60 };
 function getTTL(k){ return TTL_OVERRIDES[k] || TTL; }
 function getCache(k){const c=cache[k];return(c&&Date.now()-c.ts<getTTL(k))?c.data:null;}
 function getStale(k){const c=cache[k];return c?c.data:null;}
@@ -1245,7 +1249,17 @@ export default async function handler(req, res) {
   // 캐시된 "해설 없는" 응답이 최대 1시간 동안 계속 나간다. 무거운 부분(리그 강도·팀 문맥)은
   // 이미 KV에 캐시돼 있어서 매번 계산해도 KV 몇 번 읽는 게 전부다.
   const noMemCache = isLivePlayerDiff || type === 'predict';
-  res.setHeader('Cache-Control', noMemCache ? 'no-store' : `public, max-age=${Math.floor(getTTL(type)/1000)}`);
+  // CDN 캐시 — 같은 응답을 Vercel CDN이 잠깐 보관했다가 방문자들에게 나눠준다(외부 공유로 5분에
+  // 7천 건이 몰렸을 때 /api/football은 전부 캐시 미적중이라 매번 함수가 돌았다). 브라우저는
+  // max-age=0으로 매번 CDN에 확인만 하고(재방문 시 옛 데이터가 브라우저에 눌어붙지 않게),
+  // CDN은 최대 5분(s-maxage) + 만료 뒤 10분은 옛 응답을 주면서 뒤에서 갱신(stale-while-revalidate).
+  // 캐시하면 안 되는 것: nocache=1(라이브 폴링 등 "지금 값"이 필요한 호출), 이번 시즌 playerDetail
+  // (요청마다 "바뀌었나"를 새로 판정). predict는 메모리 캐시는 안 타지만 CDN 5분은 괜찮다 —
+  // 크론이 만든 AI 해설이 늦어도 5분 안에 반영된다.
+  const cdnSec = CDN_SEC_OVERRIDES[type] || Math.min(Math.floor(getTTL(type)/1000), 300);
+  res.setHeader('Cache-Control', (nocache || isLivePlayerDiff)
+    ? 'no-store'
+    : `public, max-age=0, s-maxage=${cdnSec}, stale-while-revalidate=600`);
 
   if(!nocache && !noMemCache){
     const hit = getCache(cacheKey);
@@ -2611,6 +2625,8 @@ export default async function handler(req, res) {
     return res.json(result);
 
   } catch(err){
+    // 에러 응답은 CDN에 보관되면 안 된다(위에서 public 헤더를 먼저 붙여 두었다).
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(500).json({error: err.message});
   }
 }

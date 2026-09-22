@@ -147,7 +147,8 @@ const TTL = 15 * 60 * 1000;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 'public, max-age=900');
+  // CDN은 15분 보관, 브라우저는 1분(football.js 주석 참고).
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=900, stale-while-revalidate=900');
 
   if (cache.data && Date.now() - cache.ts < TTL) return res.json(cache.data);
 
@@ -234,6 +235,8 @@ export default async function handler(req, res) {
   }));
 
   if (!allArticles.length) {
+    // 출처가 전부 실패한 빈 응답은 CDN에 보관하지 않는다 — 15분 동안 모두에게 빈 목록이 나간다.
+    res.setHeader('Cache-Control', 'no-store');
     return res.json({ articles: [], source: 'none' });
   }
 
