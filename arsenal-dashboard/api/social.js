@@ -18,6 +18,10 @@ const JOURNALISTS = [
   // X API를 못 쓰는 대신 여기서 공식 피드(골 영상·사진)를 받는다. 리그 전체 계정이라
   // 아스날 얘기는 10% 안팎 — 키워드 필터를 켠다. 개인 봇이라 언제든 멈출 수 있다.
   { handle: 'premierleaguebot.bsky.social', name: 'Premier League', label: 'Official X mirror' },
+  // 파브리지오 로마노 X 계정 미러 봇(비공식, 운영: @yopro.studio). 하루 25개꼴에 유럽 전체 이적
+  // 소식이라 아스날 얘기는 최근 100개 중 3개(실측) — 키워드 필터를 켠다. 개인 봇이라 언제든 멈출 수 있다.
+  // 30개면 하루치밖에 안 돼 아스날 글이 거의 안 남는다 — 100개(약 4일치)를 훑는다.
+  { handle: 'fabrizioromano.yopro20.com', name: 'Fabrizio Romano', label: 'X mirror', scan: 100 },
 ];
 
 const BSKY = 'https://public.api.bsky.app/xrpc';
@@ -81,10 +85,10 @@ function buildSegments(text, facets) {
   return segments;
 }
 
-// 계정당 최근 30개를 훑는다 — 필터 계정은 아스날 얘기가 드문드문이라 15개로는
-// 한두 개밖에 안 남았다.
+// 계정당 최근 30개를 훑는다(scan으로 계정별 조정) — 필터 계정은 아스날 얘기가 드문드문이라
+// 15개로는 한두 개밖에 안 남았다.
 async function fetchJournalist(j, terms) {
-  const url = BSKY + '/app.bsky.feed.getAuthorFeed?actor=' + encodeURIComponent(j.handle) + '&limit=30&filter=posts_no_replies';
+  const url = BSKY + '/app.bsky.feed.getAuthorFeed?actor=' + encodeURIComponent(j.handle) + '&limit=' + (j.scan || 30) + '&filter=posts_no_replies';
   const r = await fetch(url, { headers: { Accept: 'application/json' } });
   if (!r.ok) return [];
 
