@@ -12,12 +12,28 @@
 
 import { generatePreview, AI_ENABLED } from './_ai.js';
 import { predictAiKey } from './_predict.js';
+import footballHandler from './football.js';
 
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const AI_TTL_SEC = 14 * 24 * 60 * 60;   // 경기가 지나면 쓸모없다
 // 앞으로 이 기간 안에 열리는 경기만 만든다 — 한 달 뒤 경기는 라인업·부상이 다 바뀐다.
 const HORIZON_DAYS = 10;
+
+// football.js를 HTTP로 다시 부르지 않고 함수로 직접 호출한다.
+// 처음엔 `https://${req.headers.host}/api/football`로 자기 자신을 불렀는데, 크론이
+// 배포 URL(arsenal-xxxx.vercel.app)에서 돌면 그 호스트는 Deployment Protection이
+// 걸려 있어서 JSON 대신 로그인 페이지가 돌아온다 → 파싱 실패 → 500(실측).
+// 직접 호출하면 인증도, 네트워크 왕복도, 자기 자신에 대한 부하도 없다.
+async function callFootball(query){
+  let payload = null;
+  const res = {
+    setHeader(){}, status(){ return this; },
+    json(d){ payload = d; return this; },
+  };
+  await footballHandler({query, headers: {}}, res);
+  return payload;
+}
 
 async function kv(...args){
   const r = await fetch(KV_URL, {
@@ -39,11 +55,10 @@ export default async function handler(req, res){
   if(!AI_ENABLED) return res.status(503).json({error: 'GEMINI_API_KEY 미설정'});
 
   const dry = !!req.query.dry;
-  const origin = `https://${req.headers.host}`;
   const report = {checked: 0, generated: 0, cached: 0, failed: 0, matches: []};
 
   try {
-    const fx = await (await fetch(`${origin}/api/football?type=fixtures`, {signal: AbortSignal.timeout(15000)})).json();
+    const fx = await callFootball({type: 'fixtures'});
     const now = Date.now();
     const horizon = now + HORIZON_DAYS * 24 * 60 * 60 * 1000;
     const upcoming = (fx.matches || []).filter(m => {
@@ -56,10 +71,11 @@ export default async function handler(req, res){
       const home = (m.homeTeam || {}).id, away = (m.awayTeam || {}).id;
       if(!home || !away) continue;
       report.checked++;
-      const q = `type=predict&home=${encodeURIComponent(home)}&away=${encodeURIComponent(away)}`
-        + (m.leagueId ? `&league=${encodeURIComponent(m.leagueId)}` : '')
-        + (m.utcDate ? `&date=${encodeURIComponent(m.utcDate)}` : '');
-      const p = await (await fetch(`${origin}/api/football?${q}`, {signal: AbortSignal.timeout(20000)})).json();
+      const p = await callFootball({
+        type: 'predict', home: String(home), away: String(away),
+        league: m.leagueId ? String(m.leagueId) : undefined,
+        date: m.utcDate || undefined,
+      });
       if(!p || !p.available){ report.matches.push({id: m.id, skip: '예측 불가'}); continue; }
 
       const key = predictAiKey(p);
