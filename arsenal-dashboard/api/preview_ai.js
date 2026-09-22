@@ -90,10 +90,11 @@ export default async function handler(req, res){
       if(hit){ report.cached++; report.matches.push({id: m.id, key, cached: true}); continue; }
       if(dry){ report.matches.push({id: m.id, key, would: '생성'}); continue; }
 
-      const {text, reason} = await generatePreview(p);
+      const {text, reason, model} = await generatePreview(p);
       if(!text){ report.failed++; report.matches.push({id: m.id, key, failed: reason}); continue; }
       await kv('SET', key, text, 'EX', String(AI_TTL_SEC));
       report.generated++;
+      report.model = model;
       report.matches.push({id: m.id, key, text});
     }
     // 실행 기록을 KV에 남긴다 — 배포 로그를 못 보는 상황에서도 무엇이 왜 실패했는지

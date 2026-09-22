@@ -129,7 +129,10 @@ export async function generatePreview(prediction){
   try {
     const body = {
       contents: [{parts: [{text: PROMPT + factsFrom(prediction)}]}],
-      generationConfig: {temperature: 0.7, maxOutputTokens: 400},
+      // 최신 제미나이는 "생각하는" 모델이라 내부 추론에도 출력 토큰을 쓴다. 400으로
+      // 두니 추론에 다 써버려서 본문이 문장 중간에 잘렸다(실측: "…아스날은 리그 최상위"
+      // 에서 끊김). 넉넉히 준다 — 실제 비용은 쓴 만큼만 나간다.
+      generationConfig: {temperature: 0.7, maxOutputTokens: 4096},
     };
     const callOnce = async model => fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`,
@@ -153,9 +156,28 @@ export async function generatePreview(prediction){
       return {text: null, reason: `HTTP ${r.status} (${model})${detail ? ' — ' + detail : ''}`};
     }
     const j = await r.json();
-    const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
-    const text = parts.map(x => x.text || '').join('').trim();
-    if(!text){ console.log('[ai] 빈 응답'); return {text: null, reason: '빈 응답'}; }
+    const cand = (j.candidates || [])[0] || {};
+    // 잘린 응답은 버린다 — finishReason이 STOP이 아니면(MAX_TOKENS·SAFETY 등) 문장이
+    // 완결되지 않았다는 뜻이다.
+    if(cand.finishReason && cand.finishReason !== 'STOP'){
+      console.log('[ai] 비정상 종료', cand.finishReason, model);
+      return {text: null, reason: `잘린 응답(${cand.finishReason}, ${model})`};
+    }
+    // 생각하는 모델은 응답 parts에 추론 요약(thought: true)을 섞어 보낸다. 그걸 같이
+    // 이어붙이는 바람에 영어 메모("slight drop). *   Leeds: *   xG")가 해설로 들어갔다.
+    const parts = (cand.content || {}).parts || [];
+    const text = parts.filter(x => !x.thought).map(x => x.text || '').join('').trim();
+    if(!text){ console.log('[ai] 빈 응답'); return {text: null, reason: `빈 응답(${model})`}; }
+    // 한국어 본문인지, 문장으로 끝나는지 확인 — 마크다운 목록이나 영어 메모가 오면 버린다.
+    const letters = text.replace(/[^A-Za-z\uAC00-\uD7A3]/g, '');
+    const hangul = text.replace(/[^\uAC00-\uD7A3]/g, '');
+    if(!letters.length || hangul.length / letters.length < 0.8){
+      return {text: null, reason: `한국어 아님(${model}): ${text.slice(0, 40)}`};
+    }
+    if(/^\s*[-*•#]/m.test(text)) return {text: null, reason: `목록 형식(${model})`};
+    if(!/[.!?。]\s*$/.test(text) && !/[다요]\s*$/.test(text)){
+      return {text: null, reason: `문장이 끝나지 않음(${model}): …${text.slice(-20)}`};
+    }
     if(hasNumbers(text)){ console.log('[ai] 숫자가 섞여 폐기'); return {text: null, reason: '숫자 포함으로 폐기'}; }
     // 너무 길면(모델이 규칙을 무시한 경우) 버린다 — 카드가 해설로 도배되면 안 된다.
     if(text.length > 400){ console.log('[ai] 길이 초과로 폐기', text.length); return {text: null, reason: `길이 초과(${text.length}자)`}; }
