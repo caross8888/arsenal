@@ -2153,6 +2153,12 @@ function renderDday(list){
   var el=document.getElementById('ddayCard');
   if(!el) return;
   var next=(list||[]).find(function(m){return m.tbd!=='postponed'&&m.tbd!=='canceled';});
+  // 경기 예측은 가장 가까운 두 경기에만 띄운다(사용자 지정) — 그 뒤 경기는 그 사이 치를
+  // 경기 결과·부상·일정에 따라 변수가 너무 많아 지금 예측해봐야 의미가 없다. 진행 중이거나
+  // 끝난 경기, 연기·취소된 경기는 세지 않는다. 크론(api/preview_ai.js)도 같은 두 경기만 만든다.
+  window._predictMatchIds=(list||[]).filter(function(m){
+    return m.tbd!=='postponed'&&m.tbd!=='canceled'&&m.status!=='IN_PLAY'&&m.status!=='PAUSED'&&m.status!=='FINISHED';
+  }).slice(0,2).map(function(m){ return String(m.id); });
   if(!next){el.style.display='none';return;}
   window._nextMatchId=next.id;
 
@@ -5795,7 +5801,8 @@ function openMatchModal(m, isAuto, opts){
   // 스피너가 두 번(상세 → 예측) 도는 꼴이 된다. 필요한 값(양 팀 id·대회·킥오프)이
   // 전부 일정 목록 항목(m)에 있어서 상세 응답을 기다릴 이유가 없다.
   var predPromise = Promise.resolve(null);
-  if(!isSettledMatch(m) && m.status!=='FINISHED' && m.homeTeam && m.awayTeam && m.homeTeam.id && m.awayTeam.id){
+  var _isPredictTarget = (window._predictMatchIds||[]).indexOf(String(m.id))>=0;
+  if(_isPredictTarget && !isSettledMatch(m) && m.status!=='FINISHED' && m.homeTeam && m.awayTeam && m.homeTeam.id && m.awayTeam.id){
     var _pq = FN+'/football?type=predict&home='+encodeURIComponent(m.homeTeam.id)+'&away='+encodeURIComponent(m.awayTeam.id)
       + (m.leagueId ? '&league='+encodeURIComponent(m.leagueId) : '')
       + ((m.utcDate||m.date) ? '&date='+encodeURIComponent(m.utcDate||m.date) : '');

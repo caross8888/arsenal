@@ -17,13 +17,12 @@ import footballHandler from './football.js';
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const AI_TTL_SEC = 14 * 24 * 60 * 60;   // 경기가 지나면 쓸모없다
-// 앞으로 이 기간 안에 열리는 경기를 만든다. 처음엔 10일로 뒀다가, A매치 휴식기에
-// 다음 경기가 18일 뒤라 대상이 0건이 되는 걸 겪었다(실측: 2026-09-22 기준 다음 경기
-// 10/10). 기간을 넉넉히 잡고, 그래도 비면 가장 가까운 경기 몇 개는 무조건 포함한다 —
-// 수치가 바뀌면 키가 달라져 어차피 다시 만들어지므로 일찍 만들어두는 손해가 없다.
-const HORIZON_DAYS = 21;
+// 가장 가까운 두 경기만 만든다 — 화면에도 그 두 경기에만 예측 카드가 뜬다(index.html의
+// _predictMatchIds). 그 뒤 경기는 사이에 치를 경기 결과·부상에 따라 변수가 너무 많다
+// (사용자 지정). 날짜 기준(예: 10일 안)이 아니라 개수 기준인 이유: A매치 휴식기엔 다음
+// 경기가 18일 뒤라 날짜로 자르면 대상이 0건이 됐다(실측).
+const PREVIEW_MATCHES = 2;
 const RUN_LOG_KEY = 'predAI:_lastrun';
-const MIN_MATCHES = 2;
 
 // football.js를 HTTP로 다시 부르지 않고 함수로 직접 호출한다.
 // 처음엔 `https://${req.headers.host}/api/football`로 자기 자신을 불렀는데, 크론이
@@ -86,13 +85,12 @@ export default async function handler(req, res){
   try {
     const fx = await callFootball({type: 'fixtures'});
     const now = Date.now();
-    const horizon = now + HORIZON_DAYS * 24 * 60 * 60 * 1000;
+    // 킥오프가 아직 안 온 경기만(진행 중인 경기는 제외). 연기·취소도 뺀다 — 화면 쪽 기준과 같다.
     const future = (fx.matches || [])
-      .filter(m => m.status !== 'FINISHED' && new Date(m.utcDate || m.date).getTime() > now)
+      .filter(m => m.status !== 'FINISHED' && m.tbd !== 'postponed' && m.tbd !== 'canceled'
+        && new Date(m.utcDate || m.date).getTime() > now)
       .sort((a, b) => new Date(a.utcDate || a.date) - new Date(b.utcDate || b.date));
-    const within = future.filter(m => new Date(m.utcDate || m.date).getTime() < horizon);
-    const upcoming = within.length >= MIN_MATCHES ? within : future.slice(0, MIN_MATCHES);
-    report.horizonDays = HORIZON_DAYS;
+    const upcoming = future.slice(0, PREVIEW_MATCHES);
     report.upcoming = upcoming.length;
 
     // 함수 실행 한도가 5분이라, 한 경기가 재시도로 오래 걸려도 전체가 잘리지 않게
