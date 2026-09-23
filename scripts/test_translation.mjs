@@ -119,6 +119,14 @@ suite('원문치환', prepareSource, [
   ['Full-time: Arsenal 2-1 Chelsea', 'Full-time: Arsenal 2-1 Chelsea'],
   ['Arteta reacts after the full-time whistle', 'Arteta reacts after the full-time whistle'],
   ['A full-time contract for the academy graduate', 'A full-time contract for the academy graduate'],
+  // 성만 쓴 Rice는 구글이 "쌀"으로 옮기기도 한다 — 풀네임으로 고정
+  ['Rice in line for new deal', 'Declan Rice in line for new deal'],
+  ['Arsenal are close to a new deal for Rice', 'Arsenal are close to a new deal for Declan Rice'],
+  ['Declan Rice in line for new deal', 'Declan Rice in line for new deal'],
+  // 음식·고유명사는 건드리면 안 된다
+  ['He ate rice and curry', 'He ate rice and curry'],
+  ['Rice University research on football', 'Rice University research on football'],
+  ['A Rice Krispies advert', 'A Rice Krispies advert'],
   // 다른 뜻의 ruthless는 건드리면 안 된다
   ['Arteta was ruthless in his team selection', 'Arteta was ruthless in his team selection'],
   ['A ruthless tackle left Saka injured', 'A ruthless tackle left Saka injured'],

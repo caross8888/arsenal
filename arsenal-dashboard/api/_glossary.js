@@ -263,6 +263,11 @@ const SOURCE_RULES = [
   // 단어 frame 하나를 건드리면 "액자 속 사진" 같은 문장이 망가지므로 구문으로만 잡는다.
   [/\bin the frame for\b/gi, 'in contention for'],
   [/\bin ([A-Z][\w']+) frame\b/g, 'in contention for the $1 job'],
+  // 성만 쓴 "Rice"를 구글이 공기(쪽) "쌀"로 옮기는 경우가 있다(실측: SNS 게시글의
+  // "Rice in line for new deal" → "쌀, 새로운 계약 체결 예정"). 같은 문장이 때따라 "라이스"로
+  // 나오기도 해서 운에 맡길 수 없다 — 풀네임으로 바꿔 고정한다(사전이 "데클란 라이스"로 마무리한다).
+  // 음식 쪽은 소문자라 안 걸리고, Rice University같은 고유명사는 제외한다.
+  [/(?<!Declan )\bRice\b(?! (?:University|Krispies))/g, 'Declan Rice'],
 ];
 
 // 문장 첫머리처럼 대문자로 시작한 표현이면 대체어도 대문자로 시작시킨다.
