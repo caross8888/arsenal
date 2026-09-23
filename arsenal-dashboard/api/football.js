@@ -1557,7 +1557,14 @@ export default async function handler(req, res) {
       // 날짜 범위(YYYYMMDD-YYYYMMDD) 요청을 400으로 막으면서 이 패널이 통째로 안 떴고, Fotmob은
       // 경기마다 라운드 번호를 직접 주므로 순번 세기(연기/재편성 때 어긋날 수 있음)도 필요 없다.
       const roundCacheKey = 'roundResults_season';
-      let seasonData = nocache ? null : getCache(roundCacheKey);
+      // 이 패널은 진행 중 스코어와 LIVE 배지를 그린다. 그런데 시즌 일정을 통째로
+      // 받아 한 키에 담는 구조라 기본 TTL(1시간)을 그대로 쓰면 최대 한 시간 묵은
+      // 스코어가 나간다(끝난 경기가 LIVE로 남아있기도 한다). 라이브가 섞인 응답만
+      // 1분짜리로 두고, 없을 때는(대부분의 시간) 예전대로 1시간이다.
+      const ROUND_TTL_LIVE = 60 * 1000;
+      const roundHit = nocache ? null : cache[roundCacheKey];
+      const roundTtl = roundHit && roundHit.data && roundHit.data.hasLive ? ROUND_TTL_LIVE : getTTL(roundCacheKey);
+      let seasonData = roundHit && Date.now() - roundHit.ts < roundTtl ? roundHit.data : null;
       if(!seasonData){
         const fr = await fetch('https://www.fotmob.com/api/data/leagues?id=47',
           {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(10000)});
@@ -1579,13 +1586,21 @@ export default async function handler(req, res) {
         })
           .filter(m => m.utcDate && m.round)
           .sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate));
-        let maxRound = 0, latestFinishedRound = 0;
+        let maxRound = 0, latestFinishedRound = 0, hasLive = false;
         for(const m of allSeasonMatches){
           if(m.round > maxRound) maxRound = m.round;
           if(m.status === 'FINISHED' && m.round > latestFinishedRound) latestFinishedRound = m.round;
+          if(m.status === 'IN_PLAY') hasLive = true;
         }
-        seasonData = {matches: allSeasonMatches, maxRound: maxRound || 38, latestFinishedRound: latestFinishedRound || 1};
+        seasonData = {matches: allSeasonMatches, maxRound: maxRound || 38, latestFinishedRound: latestFinishedRound || 1, hasLive};
         if(allSeasonMatches.length > 0) setCache(roundCacheKey, seasonData);
+      }
+      // CDN도 같은 기준으로 줌인다 — 서버 TTL만 줄이면 앞에서 CDN이 5분짜리 응답을
+      // 계속 나눠줘서 효과가 없다. stale-while-revalidate도 라이브일 땐 짧게 둔다.
+      if(!nocache){
+        const liveNow = !!seasonData.hasLive;
+        res.setHeader('Cache-Control',
+          `public, max-age=0, s-maxage=${liveNow ? 60 : 300}, stale-while-revalidate=${liveNow ? 30 : 600}`);
       }
       const requestedRound = parseInt(req.query.round, 10) || seasonData.latestFinishedRound;
       const roundMatches = seasonData.matches.filter(m => m.round === requestedRound);
