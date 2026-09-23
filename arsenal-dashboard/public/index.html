@@ -2838,12 +2838,16 @@ function loadFixtures(){
       // 인스턴스가 된다 — 위에서 finished/upcoming에 매긴 round가
       // _allMatchesForCal 쪽 객체엔 반영되지 않으므로 별도로 한 번 더 매긴다.
       assignPlRounds(window._allMatchesForCal);
+      initMatchNav(data);
       // 달력 뷰로 시작한 경우(하위 탭 복원)는 데이터가 이제야 왔으니 여기서 가장 가까운
       // 경기가 있는 달로 맞춘다 — 이미 자리를 잡았으면 그 달 그대로 다시 그린다.
+      // 반드시 initMatchNav 뒤에 둘 것: 달력이 쓰는 getSeasonMatches는 "현재 시즌"이면
+      // _mCurrentSeasonCache(예정+종료 전체)를 돌려주는데, 그 값을 initMatchNav가 채운다.
+      // 앞에 두면 아직 안 채워져서 results(종료 경기만) 쪽으로 빠지고, 예정 경기만 있는 달은
+      // 빈 달력이 그려진 뒤 다시 그려주는 곳이 없다(실측: 달력 뷰로 새로고침하면 빈 칸만).
       if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')){
         if(_calPlaced) renderCalendarMonth(); else { _calPlaced=true; calGoToNearestMatch(); }
       }
-      initMatchNav(data);
       renderDday(upcomingAll);
       // 지난 경기 상세를 유휴 시간에 미리 받아둔다 — 카드를 눌렀을 때 스피너 없이 열리게
       prefetchFinishedMatches(data.finished||[], 8);
