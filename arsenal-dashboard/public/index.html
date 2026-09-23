@@ -3859,7 +3859,7 @@ function loadVideos(){
           embedWrap.classList.add('video-embed-blocked');
           embedWrap.style.cursor='pointer';
           embedWrap.onclick=function(){ window.open(v.url,'_blank','noopener'); };
-          var thumb=document.createElement('img');thumb.src=v.thumbnail;thumb.alt='';thumb.loading='lazy';thumb.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+          var thumb=document.createElement('img');thumb.loading='lazy';thumb.src=v.thumbnail;thumb.alt='';thumb.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
           embedWrap.appendChild(thumb);
           var playBtn=document.createElement('div');playBtn.className='video-play-btn';
           playBtn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="var(--white)"><path d="M8 5v14l11-7z"/></svg>';
@@ -4885,13 +4885,19 @@ function loadNews(){
       var articles=data.articles||[];
       if(!articles.length){el.innerHTML='<div class="loading-state">\uB274\uC2A4 \uC5C6\uC74C</div>';return;}
       el.innerHTML='';
-      articles.forEach(function(a){
+      articles.forEach(function(a, idx){
         var card=document.createElement('a');card.className='news-card';card.href=a.url||'#';card.target='_blank';card.rel='noopener';
         var imgDiv=document.createElement('div');imgDiv.className='news-img';
         var srcBdg=document.createElement('div');srcBdg.className='news-src-badge';srcBdg.textContent=a.source||'RSS';
         var validImg=(a.image||a.urlToImage)&&typeof (a.image||a.urlToImage)==='string'&&(a.image||a.urlToImage).startsWith('http');
         if(validImg){
-          var img=document.createElement('img');img.src=a.image||a.urlToImage;img.alt='';
+          var img=document.createElement('img');
+          // 기사 사진은 평균 237KB, 20장이면 4.7MB다(실측) — 화면 밖 사진은 스크롤해서
+          // 가까워질 때 받는다. 처음부터 보이는 위 2개만 즉시 받아 첫 화면이 늦지 않게 한다.
+          // loading은 반드시 src보다 "먼저" 넣어야 한다 — src를 먼저 넣으면 그 순간 받기
+          // 시작해서 뒤에 lazy를 붙여봐야 소용없다(실측: 20장이 전부 즉시 요청됐다).
+          img.loading = idx < 2 ? 'eager' : 'lazy';
+          img.src=a.image||a.urlToImage;img.alt='';
           img.onerror=function(){var ph=document.createElement('div');ph.className='news-img-ph';ph.textContent='📰';imgDiv.replaceChild(ph,this);imgDiv.appendChild(srcBdg);};
           imgDiv.appendChild(img);
         } else {
@@ -4963,7 +4969,7 @@ function buildSnsVideo(v){
   // 비율만 잡아 레이아웃이 재생 전후로 튀지 않게 한다.
   if(ar&&ar.width&&ar.height) box.style.aspectRatio=ar.width+' / '+ar.height;
   if(v.thumbnail){
-    var th=document.createElement('img');th.className='sns-video-thumb';th.src=v.thumbnail;th.alt='';
+    var th=document.createElement('img');th.className='sns-video-thumb';th.loading='lazy';th.src=v.thumbnail;th.alt='';
     th.onerror=function(){this.style.display='none';};
     box.appendChild(th);
   }
@@ -5023,7 +5029,7 @@ function loadSns(){
       var posts=data.posts||[];
       if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
       el.innerHTML='';
-      posts.forEach(function(p){
+      posts.forEach(function(p, idx){
         var a=document.createElement('div');
         a.className='sns-post';
         a.style.cursor='pointer';
@@ -5061,6 +5067,7 @@ function loadSns(){
         } else if(p.image){
           imgEl=document.createElement('img');
           imgEl.className='sns-image';
+          imgEl.loading = idx < 2 ? 'eager' : 'lazy';   // 뉴스 카드와 같은 이유(src보다 먼저 넣을 것)
           imgEl.src=p.image;
           imgEl.alt='';
           imgEl.onerror=function(){this.style.display='none';};
