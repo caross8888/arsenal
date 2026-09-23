@@ -8178,7 +8178,10 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
     var c=competitions[k]; return c && (c.appearances||0)>0;
   });
   var isYouthComp = function(k){ return YOUTH_COMPS.indexOf(k)>=0; };
-  compKeys = playedComps.filter(function(k){ return level==='academy' ? isYouthComp(k) : !isYouthComp(k); });
+  // 임대 나간 선수는 예외 — 임대 간 팀의 리그는 유스 대회가 아니라서 아카데미 탭에서 통째로
+  // 걸러졌다(실측: 사고 주니어의 알스벤스칸 25경기 4골이 "아직 기록할 경기가 없습니다"로 나옴).
+  var showAllComps = level==='academy' && !!(p.loan && p.loan.team);
+  compKeys = playedComps.filter(function(k){ return showAllComps ? true : (level==='academy' ? isYouthComp(k) : !isYouthComp(k)); });
   // 순서는 출전 경기 수가 많은 대회부터 — 아스날 시즌이면 자연히 EPL·UCL·FA컵 순이고,
   // 이적해 오기 전 해외 시즌이면 그 나라 리그가 먼저 온다(고정 순서로 두면 8경기짜리
   // 유로파가 36경기 라리가보다 앞에 왔다). 경기 수가 같으면 자주 보는 대회를 앞에 둔다.
@@ -8265,15 +8268,30 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   // 서버가 시즌마다 1군/유스 기록 유무를 같이 준다 — 지금 연 레벨에서 볼 게 없는
   // 시즌은 빼야 한다(데뷔 전 유스 기록만 있는 시즌을 1군 화면에서 고르면 빈 화면).
   // 이번 시즌은 기록이 없어도 돌아올 자리로 항상 남긴다. 옛 캐시는 이름 문자열 배열.
+  // 드롭다운은 "기록이 있는 최근 5시즌"이다(사용자 지정) — 기록이 없는 시즌은 넣지 않는다.
+  // 시즌 이름은 Fotmob 표기 그대로라, 단일 연도 리그는 "2026"으로 한 덩어리로 나온다.
   var _pmSeasons = (p.seasons && p.seasons.length ? p.seasons : [_pmCurSeasonName])
     .map(function(sn){ return typeof sn==='string' ? {name:sn, senior:true, youth:true} : sn; })
     .filter(function(si){
-      if(si.name===_pmCurSeasonName) return true;
+      // 임대 나간 선수는 임대 간 팀 리그가 유스 대회가 아니라서 아카데미 탭에서 시즌째로
+      // 걸러졌다(실측: 사고 주니어의 "2026"(알스벤스칸)이 드롭다운에 아예 없었다).
+      if(level==='academy' && onLoanOut) return si.senior || si.youth;
       return level==='academy' ? si.youth : si.senior;
     })
     .map(function(si){ return si.name; })
     .slice(0,5);
-  var _pmSelSeason = _pmSeasonMode==='current' ? _pmCurSeasonName : _pmSeasonMode;
+  if(!_pmSeasons.length) _pmSeasons = [_pmCurSeasonName];
+  // 이번 시즌 기록이 없으면(목록에 그 시즌이 아예 없다) 기록이 있는 가장 최근 시즌을 편다 —
+  // 연도를 추측해 이번 시즌으로 둔갑시키지 않으므로, 화면에 뜨는 시즌 이름과 데이터가 항상
+  // 일치한다. 시즌 목록(p.seasons)은 상세 응답이 온 뒤에야 채워져서 다시 그릴 때도 확인한다.
+  // 되돌이는 없다: 시즌을 고르면 _pmSeasonMode가 그 이름으로 바뀌어 조건이 더는 성립하지 않는다.
+  if(_pmSeasonMode==='current' && _pmSeasons.indexOf(_pmCurSeasonName) < 0 && _pmSeasons.length){
+    var _pmFallback = _pmSeasons[0];
+    setTimeout(function(){ selectPmSeason(_pmFallback); }, 0);
+  }
+  var _pmSelSeason = _pmSeasonMode==='current'
+    ? (_pmSeasons.indexOf(_pmCurSeasonName) >= 0 ? _pmCurSeasonName : _pmSeasons[0])
+    : _pmSeasonMode;
   if(badges.length || _pmFotmobId){
     h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
     badges.forEach(function(b){ h += '<span class="pm-badge">'+b+'</span>'; });

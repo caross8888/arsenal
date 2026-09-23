@@ -2179,12 +2179,10 @@ export default async function handler(req, res) {
           youth:  codes.some(c =>  YOUTH_CODES.has(c)),
         };
       }).filter(s => s.senior || s.youth);
-      // 이번 시즌은 기록이 아직 없어도(백업 GK 등) 돌아올 자리가 있어야 하니 항상 넣는다.
-      const curSeasonInfo = pastSeasons.find(s => s.name === currentSeasonName)
-        || {name: currentSeasonName, senior: true, youth: true};
-      const seasonList = [curSeasonInfo]
-        .concat(pastSeasons.filter(s => s.name !== currentSeasonName))
-        .slice(0, 8);   // 레벨로 거른 뒤 프론트가 5개로 자른다
+      // 기록이 있는 시즌만 최신순으로 내려준다(사용자 지정) — 예전엔 이번 시즌을 기록이 없어도
+      // 항상 끼워 넣었는데, 단일 연도 리그(스웨덴 등)로 임대 간 선수는 그 칸이 영영 비어서
+      // "26-27"만 덩그러니 남았다. 시즌 이름은 Fotmob 표기 그대로다("2026/2027" 또는 "2026").
+      const seasonList = pastSeasons.slice(0, 8);   // 레벨로 거른 뒤 프론트가 5개로 자른다
 
       const codes = Object.keys(compEntries);
       // 대회 하나당 요청 하나다. 화이트리스트를 풀면서 한 시즌에 7개까지 나올 수
