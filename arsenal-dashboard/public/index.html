@@ -2038,10 +2038,10 @@ function apiFetch(url, opts){
 // 사용자가 카드를 눌렀을 때 네트워크를 안 타고 즉시 열린다(스피너 없음).
 // 모달이 만드는 URL과 한 글자도 다르면 캐시가 안 맞으므로 같은 방식으로 만든다.
 // 서버가 확정 경기를 1년짜리 immutable로 내려주므로, 응답 형식이 바뀌면 v를
-// 올려야 브라우저가 옛 응답을 버린다. v2: 승부차기(shootout) 필드 추가.
+// 올려야 브라우저가 옛 응답을 버린다. v2: 승부차기(shootout) 필드 추가. v3: 거리 스탯 한글화·km 환산.
 function matchDetailUrl(m){
   var slug=COMP_SLUG_MAP[m.competition&&m.competition.short]||'eng.1';
-  return FN+'/match?id='+m.id+'&slug='+slug+'&v=2';
+  return FN+'/match?id='+m.id+'&slug='+slug+'&v=3';
 }
 // 팀 이름은 API마다 다르게 온다 — 일정 카드(Fotmob 팀 일정)는 짧은 표시명
 // ("PSG", "Man City"), 경기 상세(matchDetails)는 정식 이름("Paris Saint-Germain",

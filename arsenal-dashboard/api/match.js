@@ -123,7 +123,7 @@ const FM_STAT_LABEL = {
   'Duels won':'경합 승리', 'Ground duels won':'지상 경합', 'Aerial duels won':'공중 경합',
   'Successful dribbles':'드리블 성공', 'xG open play':'xG(오픈플레이)', 'xG set play':'xG(세트피스)',
   'xG non-penalty':'xG(PK 제외)', 'xG on target (xGOT)':'xGOT',
-  'Distance covered':'활동량', 'Running distance':'러닝 거리',
+  'Distance covered':'활동량', 'Walking distance':'걷기 거리', 'Running distance':'러닝 거리',
   'Sprinting distance':'스프린트 거리', 'Number of sprints':'스프린트 횟수',
 };
 const FM_GROUP_LABEL = {
@@ -133,10 +133,13 @@ const FM_GROUP_LABEL = {
 };
 // 값이 낮을수록 좋은 항목(반칙·카드류)만 별도 표기 — 나머지는 높은 쪽이 우세
 const FM_LOWER_IS_BETTER = new Set(['반칙','경고','퇴장','큰 기회 놓침']);
+// 많고 적음으로 우열을 따질 수 없는 항목 — 걷기 거리는 많으면 덜 뛰었다는 뜻도
+// 되고 경기 전개에 따라 달라져서, 어느 쪽도 강조하지 않는다(사용자 지정).
+const FM_NO_WINNER = new Set(['걷기 거리']);
 const FM_POS_BY_ID = {0:'GK', 1:'DF', 2:'MF', 3:'FW'};
 // 거리 항목은 미터로 온다(팀 합계 116576 = 116.6km) — 그대로 두면 숫자가 의미
 // 없으니 km로 환산해서 보여준다.
-const FM_DISTANCE_LABELS = new Set(['활동량','러닝 거리','스프린트 거리']);
+const FM_DISTANCE_LABELS = new Set(['활동량','걷기 거리','러닝 거리','스프린트 거리']);
 const fmFormatStat = (label, v) => FM_DISTANCE_LABELS.has(label) && !isNaN(parseFloat(v))
   ? (parseFloat(v)/1000).toFixed(1)+'km'
   : String(v);
@@ -144,7 +147,7 @@ const fmFormatStat = (label, v) => FM_DISTANCE_LABELS.has(label) && !isNaN(parse
 function fmStatWinner(label, hv, av){
   const num = v => parseFloat(String(v).replace('%','').replace(/[()]/g,' ').trim().split(' ')[0]);
   const h = num(hv), a = num(av);
-  if(isNaN(h) || isNaN(a) || h === a) return null;
+  if(isNaN(h) || isNaN(a) || h === a || FM_NO_WINNER.has(label)) return null;
   return FM_LOWER_IS_BETTER.has(label) ? (h < a ? 'home' : 'away') : (h > a ? 'home' : 'away');
 }
 
@@ -586,12 +589,13 @@ export default async function handler(req, res) {
     // 캐시 미스로 취급해 한 번만 Fotmob에서 다시 받아 같은 키에 덮어쓴다(키를
     // 새로 만들지 않아서 옛 키가 고아로 남지 않는다). ESPN 출처 캐시는 승부차기
     // 데이터가 원래 없으니 그대로 쓴다.
-    // 'Running distance'가 영어 라벨·미터 단위 그대로 굳어있는 캐시도 같은 이유로
-    // 다시 받는다 — FM_STAT_LABEL에 뒤늦게 추가한 항목이라, 이미 저장된 경기는
-    // 영구 캐시에 번역 전 값이 남아있다.
-    const kvRawRunning = kvHit && Array.isArray(kvHit.teamStats)
-      && kvHit.teamStats.some(st => st && st.label === 'Running distance');
-    const kvStale = (kvHit && kvHit.source === 'fotmob' && !('shootout' in kvHit)) || kvRawRunning;
+    // 거리 항목이 영어 라벨·미터 단위 그대로 굳어있는 캐시도 같은 이유로 다시
+    // 받는다 — Running/Walking distance를 FM_STAT_LABEL에 뒤늦게 추가했어서, 그 전에
+    // 저장된 경기는 영구 캐시에 번역 전 값이 남아있다. 다음에 또 새 거리 항목이
+    // 생겨도 같이 걸리도록 라벨 이름을 박지 않고 'distance'로 본다.
+    const kvRawDistance = kvHit && Array.isArray(kvHit.teamStats)
+      && kvHit.teamStats.some(st => st && /distance/i.test(String(st.label)));
+    const kvStale = (kvHit && kvHit.source === 'fotmob' && !('shootout' in kvHit)) || kvRawDistance;
     if (kvHit && !kvStale) {
       cache[cacheKey] = { data: kvHit, ts: Date.now() };
       if (isSettled(kvHit)) setImmutable(res);
