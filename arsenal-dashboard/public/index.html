@@ -3817,6 +3817,10 @@ function switchMedia(tab, btn){
   document.getElementById('mediaNews').style.display = tab==='news' ? '' : 'none';
   document.getElementById('mediaSns').style.display = tab==='sns' ? '' : 'none';
   document.getElementById('mediaYoutube').style.display = tab==='youtube' ? '' : 'none';
+  // 칸을 바꾸면 맨 위로(사용자 지정) — 예전엔 스크롤 위치를 그대로 둬서, 뉴스를 끝까지 내린
+  // 상태로 SNS를 열면 SNS의 마지막 글부터 보였다. 상단 탭 전환(showSec)과 같은 동작이다.
+  // PC는 세 칸이 동시에 보이므로 건드리지 않는다.
+  if(!isDesktopLayout()) window.scrollTo(0, 0);
 }
 
 var _mediaLoaded = false;
@@ -4062,6 +4066,10 @@ function switchHistTab(tab){
     b.classList.toggle('active', b.getAttribute('data-tab') === tab);
   });
   document.getElementById('histSection').innerHTML = renderHistSection(tab);
+  // 하위 탭을 바꾸면 맨 위로(사용자 지정, 미디어 칸 전환과 같은 동작) — 목록을 통째로 갈아끼우는데
+  // 스크롤만 그대로 남아서, 트로피를 끝까지 내린 상태로 레전드를 열면 목록 중간부터 보였다.
+  // 미디어와 달리 PC에서도 하위 탭이 하나씩 전환되는 구조라 폭을 가리지 않고 적용한다.
+  window.scrollTo(0, 0);
 }
 
 // PC 우측 상세패널의 X 버튼 — 트로피/감독/레전드 등 상세를 닫으면 그
