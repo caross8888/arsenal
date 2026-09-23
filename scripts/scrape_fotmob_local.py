@@ -824,6 +824,18 @@ def parse_stats(data, squad_levels=None):
         }
         for e in career_entries[:8]
     ]
+    # 유스 경력(U21/U19/U18) — 시즌별 소속 표기에 쓴다. 1군 경력만 보면 시즌 중간에 잠깐 생긴
+    # 1군 등록 때문에 그 시즌 내내 1군이었던 것처럼 보인다(실측: 오닐의 25-26 시즌).
+    result['youthCareer'] = [
+        {
+            'team':      e.get('team'),
+            'teamId':    e.get('teamId'),
+            'startDate': (e.get('startDate') or '')[:7],
+            'endDate':   (e.get('endDate') or '')[:7] or None,
+            'active':    e.get('active', False),
+        }
+        for e in (_career_entries(data, 'youth') or [])[:8]
+    ]
 
     # squadLevels는 출전 기록이 아니라 순수 스쿼드 "등록" 여부로만 정해진다
     # (main()에서 1군/아카데미 명단 소스별로 태깅) — 아카데미 선수가 로테이션

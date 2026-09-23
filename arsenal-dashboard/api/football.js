@@ -1998,6 +1998,7 @@ export default async function handler(req, res) {
               shotmap: (live.shotmap && live.shotmap.length) ? live.shotmap : p.shotmap,
               heatmap: (live.heatmap && live.heatmap.length) ? live.heatmap : p.heatmap,
               career: (live.career && live.career.length) ? live.career : p.career,
+              youthCareer: (live.youthCareer && live.youthCareer.length) ? live.youthCareer : p.youthCareer,
             });
             // 실제 소속(Arsenal U21/U18) — 스냅샷엔 "아카데미"만 있어서, 상세모달이 처음엔 "Arsenal FC"로
             // 그렸다가 상세 응답이 오면 "Arsenal U21"로 바뀌었다. 한 번이라도 열린 선수는 KV에 프로필이
@@ -2040,6 +2041,9 @@ export default async function handler(req, res) {
           heatmap:     p.heatmap || [],
           competitions: p.competitions || {},
           career:      p.career || [],
+          // 유스 경력 — 시즌별 소속 표기에 쓴다(1군 경력만 보면 시즌 중간의 1군 등록 때문에
+          // 그 시즌 내내 1군이었던 것처럼 보인다).
+          youthCareer: p.youthCareer || [],
           season:      p.season || '',
           // 임대 나간 선수만 값이 있다(스크래퍼가 Fotmob primaryTeam.onLoan으로 판정) —
           // 카드의 "임대" 뱃지와 상세모달 소속 표기에 쓴다.
@@ -2328,6 +2332,10 @@ export default async function handler(req, res) {
       // per90에서 역산하므로 시즌이 섞이지 않는다.)
 
       const career = (((pd.careerHistory || {}).careerItems || {}).senior || {}).teamEntries || [];
+      // 유스 경력(U21/U19/U18) — 시즌별 소속 표기에 쓴다. 아카데미 선수는 1군 등록이 시즌 중간에
+      // 잠깐 생기기도 해서, 1군 경력만 보면 그 시즌 내내 1군이었던 것처럼 보인다(실측: 오닐의
+      // 25-26 시즌 — 실제로는 대부분 U21인데 "Arsenal"로 떴다).
+      const youthCareer = (((pd.careerHistory || {}).careerItems || {}).youth || {}).teamEntries || [];
 
       // 계약만료/주사용발 — 1군 목록(mapLiveSquadMember)은 이 값을 안 주므로
       // (Fotmob 팀 API엔 없음) 여기서 playerData 응답(pd.playerInformation/
@@ -2386,6 +2394,10 @@ export default async function handler(req, res) {
         // 나뉘어 내려오지 않는다(statSeasons 밖) — 시즌 출전 기록 유무와
         // 무관하게 있는 그대로 노출한다(currentSeason으로 게이팅하지 않음).
         traits: normalizeTraits(pd.traits) || null,
+        youthCareer: youthCareer.map(t => ({
+          team: t.team, teamId: t.teamId || null,
+          startDate: t.startDate, endDate: t.endDate, active: !!t.active,
+        })),
         career: career.map(t => ({
           team: t.team,
           // 팀 로고 주소를 만들 수 있게 id도 같이 — 시즌을 바꾸면 헤더 엠블럼도 그 시즌 팀으로 바뀐다.

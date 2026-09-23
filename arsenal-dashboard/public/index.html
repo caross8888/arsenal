@@ -7992,7 +7992,7 @@ var _pmCurrentSeasonSnapshot = null; // {competitions,shotmap,heatmap} — "이�
 //   - 겨울 이적: 나중에 간 팀을 쓴다(그 시즌의 "메인" 소속).
 //   - 임대: 원소속팀을 쓴다(임대 간 팀이 아니라).
 // 반환: {name, loanTeam} — loanTeam이 있으면 그 시즌에 임대로 뛴 팀.
-function pmSeasonClub(career, seasonName){
+function pmSeasonClub(career, seasonName, youthCareer){
   if(!career || !career.length || !seasonName) return null;
   var m = /^(\d{4})\/(\d{4})$/.exec(seasonName);
   // 두 해에 걸치는 시즌은 8월~다음 해 6월, 단일 연도 시즌(스웨덴·MLS 등)은 그 해 1~12월.
@@ -8023,6 +8023,29 @@ function pmSeasonClub(career, seasonName){
   // 겨울 이적 등 — 그 시즌 안에서 가장 늦게 시작한 소속.
   var latest = overlaps.slice().sort(function(a,b){ return ms(b.startDate,0) - ms(a.startDate,0); })[0];
   return {name: latest.team, teamId: latest.teamId, loanTeam: null};
+}
+// 위 함수는 1군 경력만 본다 — 아카데미 선수는 시즌 중간에 1군 등록이 잠깐 생기기도 해서,
+// 그것만 보면 그 시즌 내내 1군이었던 것처럼 보인다(실측: 오닐의 25-26 — 실제로는 대부분 U21).
+// 1군·유스 중 그 시즌을 더 오래 차지한 쪽을 쓴다. 같으면 1군을 우선한다.
+function pmSeasonClubMerged(p, seasonName){
+  var senior = pmSeasonClub(p.career, seasonName);
+  var youth  = pmSeasonClub(p.youthCareer, seasonName);
+  if(!youth) return senior;
+  if(!senior) return youth;
+  var span = function(club, list){
+    var m = /^(\d{4})\/(\d{4})$/.exec(seasonName||'');
+    var from = m ? Date.UTC(+m[1], 7, 1)  : Date.UTC(+seasonName, 0, 1);
+    var to   = m ? Date.UTC(+m[2], 5, 30) : Date.UTC(+seasonName, 11, 31);
+    var ms = function(d, dflt){ var t = d ? Date.parse(String(d).length<=7 ? d+'-01' : d) : NaN; return isNaN(t) ? dflt : t; };
+    var best = 0;
+    (list||[]).forEach(function(c){
+      if(c.team !== club.name) return;
+      var a = Math.max(ms(c.startDate, from), from), b = Math.min(ms(c.endDate, to), to);
+      if(b - a > best) best = b - a;
+    });
+    return best;
+  };
+  return span(youth, p.youthCareer) > span(senior, p.career) ? youth : senior;
 }
 // 그 시즌이 지금 진행 중인지 — 진행 중이면 헤더는 "지금 뛰는 곳"을 보여준다(임대면 "○○ 임대").
 function pmSeasonIsNow(seasonName){
@@ -8126,6 +8149,9 @@ function applyPlayerDetail(p, live){
   if(live.shotmap && live.shotmap.length) p.shotmap = live.shotmap;
   if(live.heatmap && live.heatmap.length) p.heatmap = live.heatmap;
   if(live.career && live.career.length) p.career = live.career;
+  // 유스 경력 — 시즌별 소속 표기(pmSeasonClubMerged)가 쓴다. 선수단 목록엔 없는 값이라
+  // 라이브 상세가 와야 채워진다.
+  if(live.youthCareer && live.youthCareer.length) p.youthCareer = live.youthCareer;
 }
 
 // 상세모달 대회 하위탭. 한 줄 4칸이고, 대회가 더 많으면 줄바꿈해서 다음 줄로 넘긴다
@@ -8292,7 +8318,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   // 아스날 그대로 둔다 — 색까지 바꾸면 그 팀 소속인 것처럼 읽힌다.
   // 진행 중인 시즌을 보고 있으면 지금 소속(임대면 "○○ 임대")을 그대로 쓴다 — 아래 else 분기들.
   var _pmPastSeason = (_pmSeasonMode!=='current' && !pmSeasonIsNow(_pmSeasonMode)) ? _pmSeasonMode : null;
-  var _pmPastClub = _pmPastSeason ? pmSeasonClub(p.career, _pmPastSeason) : null;
+  var _pmPastClub = _pmPastSeason ? pmSeasonClubMerged(p, _pmPastSeason) : null;
   if(_pmPastClub){
     // 임대 시즌은 원소속팀만 적는다(사용자 지정) — 임대 간 팀은 경력 탭에 "임대"로 표시된다.
     // 엠블럼은 그 시즌 팀으로 — 예전엔 아스날일 때만 넣어서 시즌을 넘길 때마다 엠블럼이
@@ -8784,6 +8810,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
         shotmap: live.shotmap && live.shotmap.length ? live.shotmap : p.shotmap,
         heatmap: live.heatmap && live.heatmap.length ? live.heatmap : p.heatmap,
         career: (live.career && live.career.length) ? live.career : p.career,
+        youthCareer: (live.youthCareer && live.youthCareer.length) ? live.youthCareer : p.youthCareer,
       });
       // "바뀌었는지"는 기본적으로 서버가 KV에 저장해둔 "마지막으로 본 값"과
       // 비교해서 내려준 플래그를 믿는다 — p 기준으로만 비교하면 새로고침할
