@@ -38,6 +38,8 @@ const ENTRIES = [
   // ── 클럽 / 경기장 ─────────────────────────────────────
   ['아스날', ['아스널', /\bArsenal\b/g]],
   ['에미레이츠 스타디움', ['에미레이트 스타디움', '에미리트 스타디움']],
+  // 스코틀랜드 히버니언 — 기사에선 별칭 Hibs로만 쓰는데 구글이 그대로 두거나 '히브스'로 음차한다.
+  ['히버니언', ['히브스', /\bHibernian FC\b/g, /\bHibernian\b/g, /\bHibs\b/g]],
 
   // ── 감독 ──────────────────────────────────────────────
   ['미켈 아르테타', [/\bMikel Arteta\b/g]],
@@ -254,6 +256,13 @@ const SOURCE_RULES = [
   // 옮기므로, 뒤에 아무것도 없는 줄만 바꾼다. 대체어는 "Match over"(→ "경기 종료") —
   // "Final whistle"은 "경기 종료 휘슬", "The match has ended"는 서술형이라 제목 자리에 길다.
   [/^[ \t]*full[- ]?time[ \t]*:?[ \t]*$/gim, 'Match over'],
+  // "in the frame" = 후보로 거론된다는 관용구인데, 문장이 짧으면 구글이 그대로 "프레임"으로
+  // 직역한다(실측: "Kniat, Reedijk & Vasara among names in Hibs frame" -> "Hibs 프레임의 이름 중...").
+  // 같은 기사 요약처럼 문장이 길면 제대로 "후보군"으로 옮기므로, 제목에서 주로 터진다.
+  // "in contention"으로 바로 잡면 "후보로 거론"으로 안정적으로 옮겨진다(실측).
+  // 단어 frame 하나를 건드리면 "액자 속 사진" 같은 문장이 망가지므로 구문으로만 잡는다.
+  [/\bin the frame for\b/gi, 'in contention for'],
+  [/\bin ([A-Z][\w']+) frame\b/g, 'in contention for the $1 job'],
 ];
 
 // 문장 첫머리처럼 대문자로 시작한 표현이면 대체어도 대문자로 시작시킨다.
@@ -270,7 +279,8 @@ export function prepareSource(text) {
   let out = text;
   for (const [re, rep] of SOURCE_RULES) {
     re.lastIndex = 0;
-    out = out.replace(re, (m) => matchCase(m, rep));
+    // 대체어의 $1..$9는 캡처 그룹으로 바꿔준다 — 콜백을 쓰면 replace가 대신 해주지 않는다.
+    out = out.replace(re, (m, ...args) => matchCase(m, rep.replace(/\$([1-9])/g, (_, i) => args[Number(i) - 1] || '')));
   }
   return out;
 }
