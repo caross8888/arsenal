@@ -7987,6 +7987,51 @@ var _pmLastP = null; // 시즌 토글 시 재사용할, 마지막으로 그린 �
 var _pmLastLevel = 'first';
 var _pmCurrentSeasonSnapshot = null; // {competitions,shotmap,heatmap} — "이번 시즌"으로 되돌아갈 때 쓸 최신 스냅샷
 // "2024/2025" -> "24-25" (칩·메뉴에 쓰는 짧은 표기). 한 해짜리 시즌명("2021")은 그대로.
+// 선택한 시즌에 이 선수가 어느 팀 소속이었는지 — 경력(기간·이적 형태)으로 판정한다.
+// 한 시즌에 팀이 둘인 경우 규칙(사용자 지정):
+//   - 겨울 이적: 나중에 간 팀을 쓴다(그 시즌의 "메인" 소속).
+//   - 임대: 원소속팀을 쓴다(임대 간 팀이 아니라).
+// 반환: {name, loanTeam} — loanTeam이 있으면 그 시즌에 임대로 뛴 팀.
+function pmSeasonClub(career, seasonName){
+  if(!career || !career.length || !seasonName) return null;
+  var m = /^(\d{4})\/(\d{4})$/.exec(seasonName);
+  // 두 해에 걸치는 시즌은 8월~다음 해 6월, 단일 연도 시즌(스웨덴·MLS 등)은 그 해 1~12월.
+  var from = m ? Date.UTC(+m[1], 7, 1)  : Date.UTC(+seasonName, 0, 1);
+  var to   = m ? Date.UTC(+m[2], 5, 30) : Date.UTC(+seasonName, 11, 31);
+  var ms = function(d, dflt){ var t = d ? Date.parse(String(d).length<=7 ? d+'-01' : d) : NaN; return isNaN(t) ? dflt : t; };
+  var overlaps = career.filter(function(c){
+    return ms(c.startDate, -Infinity) <= to && ms(c.endDate, Infinity) >= from;
+  });
+  if(!overlaps.length) return null;
+  var loanEntry = overlaps.find(function(c){ return c.transfer==='loan' || (c.transfer==null && c.loan); });
+  if(loanEntry){
+    // 풀시즌 임대면 임대팀, 반시즌 임대면 원소속팀(사용자 지정) — 임대가 그 시즌을 얼마나
+    // 덮는지로 가른다. 사고 주니어 예: 2026(칼마르 2월~12월)은 89% → 칼마르,
+    // 25-26(8월~다음 6월 중 2월부터 임대)은 41% → 아스날.
+    var loanStart = Math.max(ms(loanEntry.startDate, from), from);
+    var loanEnd   = Math.min(ms(loanEntry.endDate, to), to);
+    var covered   = (loanEnd - loanStart) / (to - from);
+    if(covered >= 0.8) return {name: loanEntry.team, teamId: loanEntry.teamId, loanTeam: loanEntry.team};
+    // 원소속팀 = 임대 시작 시점 이전의 마지막 "임대가 아닌" 소속.
+    var parents = career.filter(function(c){
+      return c!==loanEntry && c.transfer!=='loan' && !(c.transfer==null && c.loan) && ms(c.startDate, Infinity) <= loanStart;
+    });
+    var parent = parents.sort(function(a,b){ return ms(b.startDate,0) - ms(a.startDate,0); })[0];
+    if(parent) return {name: parent.team, teamId: parent.teamId, loanTeam: loanEntry.team};
+    return {name: loanEntry.team, teamId: loanEntry.teamId, loanTeam: loanEntry.team};
+  }
+  // 겨울 이적 등 — 그 시즌 안에서 가장 늦게 시작한 소속.
+  var latest = overlaps.slice().sort(function(a,b){ return ms(b.startDate,0) - ms(a.startDate,0); })[0];
+  return {name: latest.team, teamId: latest.teamId, loanTeam: null};
+}
+// 그 시즌이 지금 진행 중인지 — 진행 중이면 헤더는 "지금 뛰는 곳"을 보여준다(임대면 "○○ 임대").
+function pmSeasonIsNow(seasonName){
+  var m = /^(\d{4})\/(\d{4})$/.exec(seasonName||'');
+  var now = Date.now();
+  var from = m ? Date.UTC(+m[1], 7, 1)  : Date.UTC(+seasonName, 0, 1);
+  var to   = m ? Date.UTC(+m[2], 5, 30) : Date.UTC(+seasonName, 11, 31);
+  return now >= from && now <= to;
+}
 function pmSeasonLabel(name){
   var m = /^(\d{4})\/(\d{4})$/.exec(name||'');
   return m ? (m[1]%100)+'-'+(m[2]%100) : (name||'');
@@ -8242,7 +8287,23 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   h += '<div class="pm-header-text">';
   h += '<div class="pm-name">'+p.name+'</div>';
   h += '<div class="pm-club">';
-  if(rivalTeam){
+  // 지난 시즌을 보고 있으면 그 시즌의 소속팀을 보여준다(사용자 지정) — 지금 소속을 그대로 두면
+  // "24-25 시즌"을 보면서 현재 팀 이름이 떠 있어 어느 팀 기록인지 헷갈린다. 헤더 색과 엠블럼은
+  // 아스날 그대로 둔다 — 색까지 바꾸면 그 팀 소속인 것처럼 읽힌다.
+  // 진행 중인 시즌을 보고 있으면 지금 소속(임대면 "○○ 임대")을 그대로 쓴다 — 아래 else 분기들.
+  var _pmPastSeason = (_pmSeasonMode!=='current' && !pmSeasonIsNow(_pmSeasonMode)) ? _pmSeasonMode : null;
+  var _pmPastClub = _pmPastSeason ? pmSeasonClub(p.career, _pmPastSeason) : null;
+  if(_pmPastClub){
+    // 임대 시즌은 원소속팀만 적는다(사용자 지정) — 임대 간 팀은 경력 탭에 "임대"로 표시된다.
+    // 엠블럼은 그 시즌 팀으로 — 예전엔 아스날일 때만 넣어서 시즌을 넘길 때마다 엠블럼이
+    // 들어왔다 나갔다 했다(사용자 지적). 팀 id는 경력 데이터에 있다. 없거나 로고가 없는
+    // 하부 리그 팀이면 조용히 숨긴다(자리는 gap만 남아 글자 위치가 흔들리지 않는다).
+    var _pcCrest = isArsenalTeam({name:_pmPastClub.name})
+      ? 'https://crests.football-data.org/57.png'
+      : (_pmPastClub.teamId ? 'https://images.fotmob.com/image_resources/logo/teamlogo/'+_pmPastClub.teamId+'.png' : '');
+    h += (_pcCrest ? '<img src="'+_pcCrest+'" style="width:16px;height:16px;border-radius:50%;object-fit:contain" onerror="this.style.display=\'none\'">' : '')
+       + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_pmPastClub.name+'</span>';
+  } else if(rivalTeam){
     h += (rivalTeam.crest ? '<img src="'+rivalTeam.crest+'" style="width:16px;height:16px;border-radius:50%" onerror="this.style.display=\'none\'"> ' : '')+rivalTeam.name;
   } else if(onLoanOut){
     // 임대 나간 선수 — 소속은 아스날이지만 지금 뛰는 곳을 같이 보여준다(카드 뱃지는 "임대"만).

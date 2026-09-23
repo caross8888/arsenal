@@ -810,6 +810,8 @@ def parse_stats(data, squad_levels=None):
     result['career'] = [
         {
             'team':        e.get('team'),
+            # 팀 로고 주소를 만들 수 있게 id도 같이 저장한다(상세모달 헤더 엠블럼).
+            'teamId':      e.get('teamId'),
             'startDate':   (e.get('startDate') or '')[:7],
             'endDate':     (e.get('endDate') or '')[:7] or None,
             'active':      e.get('active', False),

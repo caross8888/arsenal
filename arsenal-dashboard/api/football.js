@@ -2388,6 +2388,8 @@ export default async function handler(req, res) {
         traits: normalizeTraits(pd.traits) || null,
         career: career.map(t => ({
           team: t.team,
+          // 팀 로고 주소를 만들 수 있게 id도 같이 — 시즌을 바꾸면 헤더 엠블럼도 그 시즌 팀으로 바뀐다.
+          teamId: t.teamId || null,
           startDate: t.startDate,
           endDate: t.endDate,
           active: !!t.active,
