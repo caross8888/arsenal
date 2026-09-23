@@ -3459,6 +3459,8 @@ function switchLbTab(tab,btn){
     playerPlaceholder.style.display='';
     renderLeaders();
   }
+  // 탭을 바꾸면 맨 위로(사용자 지정) — 목록이 통째로 바뀌는데 스크롤만 남아 중간부터 보였다.
+  window.scrollTo(0, 0);
 }
 function switchLbStat(stat,btn){
   uiRemember('lbStat', stat);
@@ -3466,6 +3468,8 @@ function switchLbStat(stat,btn){
   btn.classList.add('active');
   _leadersCat=stat;
   renderLeaders();
+  // 탭을 바꾸면 맨 위로(사용자 지정) — 목록이 통째로 바뀌는데 스크롤만 남아 중간부터 보였다.
+  window.scrollTo(0, 0);
 }
 
 // ── 순위표 옆 라운드별 EPL 전체 결과 (PC, 팀 순위 탭에서만) ──
@@ -7862,6 +7866,8 @@ function filterSq(f,btn){
 function filterSqLevel(level,btn){
   btn.parentElement.querySelectorAll('.f-btn').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');_sqActiveLevel=level;uiRemember('sqLevel',level);renderSq(_sqActiveFilter);
+  // 탭을 바꾸면 맨 위로(사용자 지정) — 목록이 통째로 바뀌는데 스크롤만 남아 중간부터 보였다.
+  window.scrollTo(0, 0);
 }
 
 
