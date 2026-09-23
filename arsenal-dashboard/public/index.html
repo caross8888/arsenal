@@ -349,6 +349,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sq-inj-modal .sq-inj-detail{white-space:normal;}
 .pl-card{background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s;position:relative;-webkit-tap-highlight-color:transparent;}
 .pl-contract-badge{position:absolute;top:6px;right:6px;z-index:2;background:rgba(239,68,68,.92);color:var(--white);font-size:8px;font-weight:800;letter-spacing:.3px;padding:2px 6px;border-radius:10px;display:flex;align-items:center;gap:2px;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.pl-loan-badge{background:rgba(59,130,246,.92);}   /* 임대 — 부상(빨강)·계약만료(빨강)와 구분되는 파랑 */
 .pl-card:active{transform:scale(.98)}
 .pl-top{display:grid;grid-template-columns:70px 1fr;height:90px}
 .pl-left{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
@@ -725,6 +726,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-photo-ph{width:68px;height:68px;border-radius:50%;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;color:var(--white);flex-shrink:0;}
 .pm-name{font-family:var(--fd);font-size:22px;color:var(--white);letter-spacing:1px;line-height:1.1;}
 .pm-club{font-size:12px;color:var(--on-dark-header-secondary);margin-top:3px;display:flex;align-items:center;gap:5px;}
+.pm-header-text{min-width:0;flex:1;padding-right:66px;}
+.pm-header-text .pm-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .pm-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border-radius:20px;padding:2px 8px;font-size:10px;color:rgba(255,255,255,.85);margin-top:5px;}
 .pm-season-chip{background:#C8A84B;color:#3a2e0f;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .pm-season-chip-arrow{font-style:normal;font-size:8px;}
@@ -795,6 +798,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pm-career-row:last-child{border-bottom:1px solid var(--border-bright);}
 .pm-career-team{font-size:13px;color:var(--text);font-weight:600;}
 .pm-career-period{font-size:10px;color:var(--text-secondary);margin-left:8px;}
+.pm-career-loan{display:inline-block;margin-left:5px;padding:1px 5px;border-radius:4px;background:rgba(59,130,246,.18);color:#60A5FA;font-size:9px;font-weight:700;vertical-align:1px;}
+.pm-career-return{background:rgba(255,255,255,.08);color:var(--text-secondary);}
 .pm-career-stat{font-size:11px;font-weight:700;color:var(--text);text-align:right;}
 .pm-career-stat.empty{color:var(--overlay-30);font-weight:400;}
 /* 시즌 성적 프로그레스바 (Fotmob "Season performance" 재현) */
@@ -3792,6 +3797,15 @@ function renderSq(filter){
     // 상태만 짧게 표시한다. 색은 부상 탭 목록(.inj-injury/.inj-doubt/.inj-miss)과
     // 같은 팔레트를 재사용 — 출전 가능성이 낮을수록(0%=확실히 결장) 빨강,
     // 출전할지도 모르면(출전 의심) 노랑으로 구분한다.
+    // 임대 나간 선수는 우상단 뱃지를 임대가 가져간다 — 부상·계약만료보다 먼저 알아야 할 정보다
+    // (사용자 지정). 팀 이름은 넣지 않는다 — 길면 카드에서 잘린다. 팀 이름은 상세모달 헤더에 있다.
+    if(p.loan && p.loan.team){
+      var lBadge=document.createElement('div');lBadge.className='pl-contract-badge pl-loan-badge';
+      lBadge.innerHTML=dIcon('exchange',9)+'임대';
+      card.appendChild(lBadge);
+      el.appendChild(card);
+      return;
+    }
     var injury=findInjuryFor(p);
     var INJ_BADGE_COLOR={i:'var(--loss)', d:'var(--amber)', s:'#6b7280', u:'#6b7280'};
     var INJ_BADGE_TEXT={i:'var(--white)', d:'#1a1400', s:'var(--white)', u:'var(--white)'};
@@ -8207,7 +8221,10 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   // 헤더·탭 색은 아스날 그대로 두고, 소속 표기만 실제 소속(Arsenal U21)을 보여준다(사용자 지정).
   // 기준은 KV 정리(_purge.js)와 같은 ^Arsenal( U##)?$ — Arsenal de Sarandí 같은 다른 팀은 제외된다.
   var arsYouthTeam = (p.team && /^arsenal u\d\d$/i.test(String(p.team.name||'').trim())) ? p.team : null;
-  var rivalTeam = (!arsYouthTeam && !isArsenalTeam(p.team) && p.team && p.team.name) ? p.team : null;
+  // 임대 나간 선수도 타팀이 아니다 — 상세 응답의 소속이 임대 간 팀으로 와서, 그대로 두면
+  // 헤더가 그 팀 색으로 바뀐다(실측: 사고 주니어 → 칼마르 빨강). 아스날 헤더를 유지한다.
+  var onLoanOut = !!(p.loan && p.loan.team);
+  var rivalTeam = (!arsYouthTeam && !onLoanOut && !isArsenalTeam(p.team) && p.team && p.team.name) ? p.team : null;
   var headerStyle = (rivalTeam && rivalTeam.color)
     ? ' style="background-color:#1a1c22;background-image:linear-gradient(135deg,'+rivalTeam.color+'73,transparent)"' : '';
   h += '<div class="pm-header"'+headerStyle+'><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>';
@@ -8217,11 +8234,19 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   } else {
     h += '<div class="pm-photo-ph"><img src="/data/player_placeholder.png" style="width:70%;height:70%;object-fit:contain"></div>';
   }
-  h += '<div>';
+  // 오른쪽 아래 평점 숫자(pmHdrRatingVal, right:16px)와 겹치지 않게 그만큼 자리를 비운다 —
+  // 비우지 않으면 긴 팀 이름("Borussia Mönchengladbach Reserves 임대")이 숫자 밑으로 파고든다.
+  h += '<div class="pm-header-text">';
   h += '<div class="pm-name">'+p.name+'</div>';
   h += '<div class="pm-club">';
   if(rivalTeam){
     h += (rivalTeam.crest ? '<img src="'+rivalTeam.crest+'" style="width:16px;height:16px;border-radius:50%" onerror="this.style.display=\'none\'"> ' : '')+rivalTeam.name;
+  } else if(onLoanOut){
+    // 임대 나간 선수 — 소속은 아스날이지만 지금 뛰는 곳을 같이 보여준다(카드 뱃지는 "임대"만).
+    // 임대 기간은 여기 안 쓴다(사용자 지정) — 소속 줄에 쓸 수 있는 폭이 186px인데 긴 팀 이름
+    // ("Wolverhampton Wanderers 임대 · 27년 6월까지" = 258px)이면 잘린다(실측). 기간은 경력 탭에 있다.
+    h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> '
+       + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+p.loan.team+' 임대</span>';
   } else if(arsYouthTeam){
     h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> '+arsYouthTeam.name;
   } else {
@@ -8532,7 +8557,12 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       if(c.appearances) statStr += c.appearances+'경기';
       if(c.goals) statStr += ' '+c.goals+'골';
       h += '<div class="pm-career-row">';
-      h += '<div><span class="pm-career-team">'+c.team+'</span><span class="pm-career-period">'+period+'</span></div>';
+      // 임대 기간은 원소속 기간과 겹쳐서, 표시가 없으면 완전 이적처럼 읽힌다.
+      // 임대 복귀(back from loan)는 임대가 아니라 돌아온 기간이라 따로 표시한다(사용자 지정).
+      var tKind = c.transfer || (c.loan ? 'loan' : null);
+      var loanTag = tKind==='loan' ? '<span class="pm-career-loan">임대</span>'
+                  : tKind==='return' ? '<span class="pm-career-loan pm-career-return">임대 복귀</span>' : '';
+      h += '<div><span class="pm-career-team">'+c.team+'</span>'+loanTag+'<span class="pm-career-period">'+period+'</span></div>';
       h += '<div class="pm-career-stat'+(statStr?'':' empty')+'">'+(statStr||'-')+'</div>';
       h += '</div>';
     });

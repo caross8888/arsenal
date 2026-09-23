@@ -2041,6 +2041,9 @@ export default async function handler(req, res) {
           competitions: p.competitions || {},
           career:      p.career || [],
           season:      p.season || '',
+          // 임대 나간 선수만 값이 있다(스크래퍼가 Fotmob primaryTeam.onLoan으로 판정) —
+          // 카드의 "임대" 뱃지와 상세모달 소속 표기에 쓴다.
+          loan:        p.loan || null,
         })))
       };
     } else if(type === 'playerDetail'){
@@ -2390,6 +2393,11 @@ export default async function handler(req, res) {
           startDate: t.startDate,
           endDate: t.endDate,
           active: !!t.active,
+          // Fotmob transferType — on_loan(임대) / back_from_loan(임대 복귀) / null(완전 이적).
+          // 둘 다 'loan'이 들어 있어서 문자열만 보면 복귀까지 임대로 잡힌다(실측: 카비아).
+          // 스크래퍼(players.json)와 같은 필드명으로 맞춰서 화면이 한 코드로 그린다.
+          transfer: (function(k){ return /back|return/.test(k) ? 'return' : (/loan/.test(k) ? 'loan' : null); })(
+            String(((t.transferType || {}).localizationKey || (t.transferType || {}).text || '')).toLowerCase()),
           appearances: t.appearances,
           goals: t.goals,
           assists: t.assists,

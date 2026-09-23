@@ -438,6 +438,83 @@ def _collect_comp_stats(recent_matches, season_start):
 
 # ── 메인 파싱 ──────────────────────────────────────
 
+# 현재 소속 판정 — 아카데미 명단에 "지금 아스날 선수가 아닌 사람"이 섞여 들어오는 걸 막는다.
+# 실측으로 43명 중 5명이 문제였다(2026-09):
+#   - Fotmob U21 목록이 늦게 갱신돼 떠난 선수가 남음(무소속 2명)
+#   - 공홈 이름을 Fotmob에서 검색할 때 동명이인이 걸림(1명, 아스날 경력 자체가 없음)
+#   - 임대 나간 선수 2명(공홈 명단에 있는 게 맞음 — 빼지 않고 표시만 붙인다)
+# 판정은 선수 상세(playerData)에 이미 들어있는 primaryTeam/careerHistory로만 하므로 추가 요청이 없다.
+ARSENAL_TEAM_ID = 9825
+ARSENAL_RE = re.compile(r'^Arsenal( U\d\d)?$', re.I)
+# 유스 경력의 팀명은 U21/U19/U18/Under 17/FC U15 등 표기가 제각각이라 넓게 잡는다.
+ARSENAL_YOUTH_RE = re.compile(r'^Arsenal( FC)? (U|Under)\s?\d\d$', re.I)
+
+
+def _career_entries(data, category):
+    items = ((data.get('careerHistory') or {}).get('careerItems') or {}).get(category) or {}
+    return items.get('teamEntries') or []
+
+
+def _transfer_kind(entry):
+    """경력 한 줄의 이적 형태 — 'loan'(임대) | 'return'(임대 복귀) | None(완전 이적).
+
+    Fotmob transferType은 on_loan / back_from_loan 두 가지를 쓴다. 둘 다 'loan'이 들어 있어서
+    문자열만 보면 임대 복귀까지 임대로 잡힌다(실측: 카비아의 아스날 복귀 기간이 임대로 표시됐다).
+    """
+    tt = entry.get('transferType') or {}
+    key = (tt.get('localizationKey') or tt.get('text') or '').lower().replace(' ', '_')
+    if 'back' in key or 'return' in key:
+        return 'return'
+    if 'loan' in key:
+        return 'loan'
+    return None
+
+
+def _is_loan_entry(entry):
+    return _transfer_kind(entry) == 'loan'
+
+
+def squad_membership(data):
+    """(상태, 임대정보) — 상태: 'ours' | 'loan' | 'gone'"""
+    pt = data.get('primaryTeam') or {}
+    team_name = (pt.get('teamName') or '').strip()
+    if ARSENAL_RE.match(team_name):
+        return 'ours', None
+
+    # 현 소속이 비어 있어도 아스날 유스에 아직 등록돼 있으면 우리 선수다 — Fotmob이
+    # 프리시즌에 1군 명단에 잠깐 오른 걸 "일주일짜리 이적"으로 기록하면서 primaryTeam을
+    # 비워버리는 경우가 있다(실측: 코플리·아구스티엔 — 둘 다 U21 경력은 '활동 중'이었다).
+    # 이걸 안 보면 멀쩡한 아카데미 선수가 명단에서 빠진다.
+    youth_active = any(
+        e.get('active') and ARSENAL_YOUTH_RE.match((e.get('team') or '').strip())
+        for e in _career_entries(data, 'youth')
+    )
+    if youth_active and not pt.get('onLoan'):
+        return 'ours', None
+
+    # 임대는 primaryTeam이 임대 간 팀으로 바뀌고 onLoan=true가 된다 — 원소속이 아스날인지
+    # 경력으로 한 번 더 확인한다(다른 팀 임대 선수가 이름만 같아 섞이는 걸 막는다).
+    senior = _career_entries(data, 'senior')
+    from_arsenal = any(
+        e.get('teamId') == ARSENAL_TEAM_ID or ARSENAL_RE.match((e.get('team') or '').strip())
+        for e in senior
+    ) or youth_active
+    # 경력 항목에도 임대 표시가 있다(transferType.localizationKey == 'on_loan') — primaryTeam의
+    # onLoan만 보면 그 값이 빠진 경우를 놓친다. 둘 중 하나라도 임대면 임대로 본다.
+    # 지금 진행 중인 임대 항목에서 종료일도 같이 가져와 "○○까지"를 화면에 보여준다.
+    active_loan = next(
+        (e for e in senior
+         if e.get('active') and _is_loan_entry(e) and (e.get('teamId') == pt.get('teamId') or not pt.get('teamId'))),
+        None,
+    )
+    if from_arsenal and team_name and (pt.get('onLoan') or active_loan):
+        info = {'team': team_name, 'teamId': pt.get('teamId')}
+        if active_loan and active_loan.get('endDate'):
+            info['until'] = active_loan['endDate'][:10]   # YYYY-MM-DD
+        return 'loan', info
+    return 'gone', None
+
+
 def parse_stats(data, squad_levels=None):
     squad_levels = squad_levels or ['first']
     if not data:
@@ -486,6 +563,8 @@ def parse_stats(data, squad_levels=None):
         'shotmap':      [],
         'heatmap':      [],
         'season':       current_season_name,
+        # 임대 나간 선수만 채워진다(없으면 None) — 화면이 "임대" 배지와 임대 팀 표기에 쓴다.
+        'loan':         squad_membership(data)[1],
     }
 
     # ── 기본 정보 ──
@@ -737,6 +816,9 @@ def parse_stats(data, squad_levels=None):
             'appearances': e.get('appearances'),
             'goals':       e.get('goals'),
             'assists':     e.get('assists'),
+            # 이적 형태(Fotmob transferType) — 선수 상세 경력 탭이 "임대"/"임대 복귀"로 표시한다.
+            'transfer':    _transfer_kind(e),
+            'loan':        _is_loan_entry(e),
         }
         for e in career_entries[:8]
     ]
@@ -838,7 +920,15 @@ def main():
                 # 않도록 여기서 잡고 다음 선수로 넘어간다.
                 print(f'파싱 에러: {e}')
                 parsed = None
+            status, loan_info = squad_membership(data)
+            if status == 'gone':
+                # 지금 아스날 선수가 아니다 — 명단에서 뺀다(위 squad_membership 주석 참고).
+                now_at = ((data.get('primaryTeam') or {}).get('teamName') or '무소속')
+                print(f'제외: 현재 소속 {now_at}')
+                parsed = None
             if parsed:
+                if loan_info:
+                    print(f'(임대: {loan_info["team"]}) ', end='')
                 players.append(parsed)
                 if not detected_season:
                     detected_season = parsed.get('season', '')
