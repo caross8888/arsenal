@@ -1780,7 +1780,7 @@ function renderSqManagerModalContent(){
   }
   h+='<div>';
   h+='<div class="pm-name">'+(mgr.name_en||mgr.name||'')+'</div>';
-  h+='<div class="pm-club"><img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> Arsenal FC</div>';
+  h+='<div class="pm-club"><img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> Arsenal</div>';
   h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
   h+='<span class="pm-badge">감독</span>';
   if(age) h+='<span class="pm-badge">'+age+'세</span>';
@@ -8317,7 +8317,9 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   } else if(arsYouthTeam){
     h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> '+arsYouthTeam.name;
   } else {
-    h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> Arsenal FC';
+    // 표기는 Fotmob 기준 "Arsenal"로 통일한다(사용자 지정) — 지난 시즌 줄은 Fotmob 경력의 팀
+    // 이름을 그대로 쓰는데, 여기만 "Arsenal FC"로 박혀 있어 시즌을 넘길 때마다 표기가 달라졌다.
+    h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> Arsenal';
   }
   h += '</div>';
   var badges = [];
