@@ -8306,10 +8306,13 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   } else if(rivalTeam){
     h += (rivalTeam.crest ? '<img src="'+rivalTeam.crest+'" style="width:16px;height:16px;border-radius:50%" onerror="this.style.display=\'none\'"> ' : '')+rivalTeam.name;
   } else if(onLoanOut){
-    // 임대 나간 선수 — 소속은 아스날이지만 지금 뛰는 곳을 같이 보여준다(카드 뱃지는 "임대"만).
+    // 임대 나간 선수 — 지금 뛰는 곳을 보여준다. 엠블럼도 그 팀으로 맞춘다(사용자 지정) —
+    // 예전엔 아스날 엠블럼에 "Kalmar FF 임대"라 글자와 엠블럼이 어긋났다. 원소속이 아스날이라는
+    // 건 "임대"라는 글자와 카드의 임대 뱃지가 알려준다. 지난 시즌 표기 규칙과도 같아진다.
     // 임대 기간은 여기 안 쓴다(사용자 지정) — 소속 줄에 쓸 수 있는 폭이 186px인데 긴 팀 이름
     // ("Wolverhampton Wanderers 임대 · 27년 6월까지" = 258px)이면 잘린다(실측). 기간은 경력 탭에 있다.
-    h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> '
+    var _loanCrest = p.loan.teamId ? 'https://images.fotmob.com/image_resources/logo/teamlogo/'+p.loan.teamId+'.png' : '';
+    h += (_loanCrest ? '<img src="'+_loanCrest+'" style="width:16px;height:16px;border-radius:50%;object-fit:contain" onerror="this.style.display=\'none\'">' : '')
        + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+p.loan.team+' 임대</span>';
   } else if(arsYouthTeam){
     h += '<img src="https://crests.football-data.org/57.png" style="width:16px;height:16px;border-radius:50%"> '+arsYouthTeam.name;
