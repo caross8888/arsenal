@@ -14,7 +14,7 @@ const CHANNEL_ID = 'UCpryVRk_VDudG8SHXgWcG0w'; // Arsenal 공식 채널
 // 채널의 "업로드" 재생목록 id는 채널 id의 앞 UC를 UU로 바꾼 것(추가 조회 불필요)
 const UPLOADS_PLAYLIST = 'UU' + CHANNEL_ID.slice(2);
 const FEED_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
-const LIMIT = 12;
+const LIMIT = 20;   // 12 → 20(사용자 지정) — 뉴스와 같은 규모로 맞춘다.
 const LAST_GOOD_KEY = `videos:last:${CHANNEL_ID}`;
 
 const KV_URL = process.env.KV_REST_API_URL;

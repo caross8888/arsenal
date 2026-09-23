@@ -253,7 +253,8 @@ export default async function handler(req, res) {
   });
 
   const result = {
-    articles: unique.slice(0, 12).map(({ pubDate: _, ...a }) => a),
+    // 12 → 20(사용자 지정). 자른 뒤에 번역하므로, 화면에 안 나올 기사에는 번역 문자 수를 쓰지 않는다.
+    articles: unique.slice(0, 20).map(({ pubDate: _, ...a }) => a),
     source: 'RSS',
     sourceErrors: Object.keys(sourceErrors).length ? sourceErrors : undefined,
   };

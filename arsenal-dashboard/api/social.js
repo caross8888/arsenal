@@ -186,7 +186,9 @@ export default async function handler(req, res) {
     // Collings 메리노 인터뷰가 빠짐). 순수 최신순은 반대로 경기 날 Collings 중계가
     // 12칸 중 10칸을 채워 다른 기자 분석이 사라진다. 보강은 7일 안으로만 해서 한참
     // 조용한 계정(Ornstein 등)의 옛 글이 피드에 눌러앉지 않게 한다.
-    const SHOW = 12, MIN_PER_AUTHOR = 2, BACKFILL_DAYS = 7;
+    // 12 → 16(사용자 지정). 보강까지 더하면 17~21개가 되어 뉴스·유튜브(20개)와 규모가 맞는다.
+    // 계정당 상한은 두지 않는다 — 활발한 계정의 글이 묻히면 안 된다(사용자 지정).
+    const SHOW = 16, MIN_PER_AUTHOR = 2, BACKFILL_DAYS = 7;
     const picked = all.slice(0, SHOW);
     const perAuthor = {};
     for (const p of picked) perAuthor[p.author.handle] = (perAuthor[p.author.handle] || 0) + 1;
