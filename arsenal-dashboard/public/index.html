@@ -678,7 +678,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cal-dow-row span:first-child{color:#F87171;font-weight:900;}
 .cal-dow-row span:last-child{color:var(--blue);font-weight:900;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;container-type:inline-size;}
-.cal-day{aspect-ratio:1/1.75;border-radius:8px;border:2px solid transparent;box-sizing:border-box;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;overflow:hidden;cursor:default;font-size:clamp(11px,2.4cqw,16px);color:var(--text-muted);-webkit-tap-highlight-color:transparent;padding:4px 2px 5px;}
+.cal-day{aspect-ratio:1/1.75;border-radius:8px;border:2px solid var(--overlay-10);box-sizing:border-box;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;position:relative;overflow:hidden;cursor:default;font-size:clamp(11px,2.4cqw,16px);color:var(--text-muted);-webkit-tap-highlight-color:transparent;padding:4px 2px 5px;}
+/* 경기 없는 날도 옅은 테두리를 둔다(사용자 지정) — 칸 배경(--surface2)과 페이지 배경(--navy)의
+   밝기 차이가 작아서 테두리가 없으면 칸 경계가 안 보였다(다크 모드 달력 뷰). 경기 있는 날은
+   아래에서 더 진한 선(--overlay-18)으로 덮어써서 강약은 그대로 유지된다. */
 /* 예정 경기는 홈/원정/중립 상관없이 무채색 — cal-day-win/draw/loss(종료 경기)
    색과 겹쳐서 "종료됐나 예정이나" 구분이 안 되는 걸 막는다(카드 뷰와 동일 이유). */
 .cal-day.has-fixture{border-color:var(--overlay-18);cursor:pointer;}
