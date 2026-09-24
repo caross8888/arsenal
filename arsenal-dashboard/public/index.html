@@ -376,6 +376,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .media-seg-btn.active .media-seg-icon{color:var(--gold);}
 .media-col{min-width:0;}
 .media-col-title{display:none;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+/* 미디어 피드에 새 글이 들어오고 꼬리가 빠질 때 쓰는 칸. 높이를 px로 박지 않고
+   grid 행을 0fr→1fr로 늘려서, 사진이 늦게 로드되거나 웹폰트가 바뀜 카드가 커져도
+   칸이 그대로 따라간다(px로 재면 다 펼쳐진 뒤 한 번 튀다). 카드 배경은 처음부터 보이고
+   내용물만 늦게 뜨게 한다 — 카드까지 투명하면 열리는 자리가 그냥 빈 구멍으로 보인다. */
+.feed-slot{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease, margin-bottom .28s ease;}
+.feed-slot > div{overflow:hidden;min-height:0;}
+.feed-slot.open{grid-template-rows:1fr;}
+.feed-slot > div > * > *{opacity:0;transition:opacity .2s ease;}
+.feed-slot.filled > div > * > *{opacity:1;}
+@media (prefers-reduced-motion: reduce){ .feed-slot{transition:none;} .feed-slot > div > * > *{transition:none;} }
 .video-card{display:block;background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;overflow:hidden;margin-bottom:12px;text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent;}
 .video-embed-wrap{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,var(--surface2),var(--surface3));}
 .video-embed-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
@@ -3849,6 +3859,160 @@ function switchMedia(tab, btn){
 }
 
 var _mediaLoaded = false;
+
+// ── 미디어 자동 갱신 ────────────────────────────────────────────────
+// 보고 있는 동안 새 글이 올라오면 목록 맨 위에 끼워 넣는다. 전체를 다시 그리지 않고
+// 새 카드만 만들어 "펼치며 밀어내는" 식이라, 읽던 위치와 재생 중인 영상이 그대로 남는다.
+// 비용 때문에 가드가 둘 필요하다 — 둘 다 없으면 탭 하나가 종일 열려 있는 것만으로
+// 서버 함수가 하루 4천 번 돌아 Fluid CPU 한도(월 4시간)를 넘긴다:
+//   · 미디어 탭이 실제로 화면에 보일 때만(다른 섹션·백그라운드 탭이면 정지)
+//   · 30분간 아무 조작이 없으면 정지(켜놓고 자리를 뜬 경우)
+var MEDIA_POLL_MS = 5 * 60 * 1000;
+var MEDIA_IDLE_MS = 30 * 60 * 1000;
+var _mediaPollTimer = null, _mediaLastAct = Date.now(), _mediaLastPoll = 0;
+['click','keydown','touchstart','scroll'].forEach(function(ev){
+  window.addEventListener(ev, function(){ _mediaLastAct = Date.now(); }, {passive:true});
+});
+function mediaNewsId(a){ return a.url || a.title || ''; }
+function mediaSnsId(p){ return p.id || p.url || ''; }
+function mediaVideoId(v){ return v.videoId || ''; }
+// 카드에 박혀 있는 "N분 전" 표기를 새 값으로 갈아끼운다 — 캐시로 그린 목록은
+// 저장 시점 기준이라, 새 글만 끼워 넣고 끝내면 나머지 시간이 뒤처진 채 남는다.
+function touchNewsTime(node, a){ var t=node.querySelector('.news-time'); if(t) t.innerHTML=dIcon('clock',11)+(a.timeAgo||''); }
+function touchSnsTime(node, p){ var t=node.querySelector('.sns-time'); if(t) t.textContent=p.timeAgo||''; }
+function touchVideoTime(node, v){ var t=node.querySelector('.video-time'); if(t) t.innerHTML=dIcon('clock',11)+(v.timeAgo||''); }
+var MEDIA_FEEDS = [
+  {name:'news',   path:'/news',   key:'articles', el:'newsGrid',  wrap:'mediaNews',    cacheKey:'news',   id:mediaNewsId,  build:buildNewsCard,  time:touchNewsTime},
+  {name:'sns',    path:'/social', key:'posts',    el:'snsGrid',   wrap:'mediaSns',     cacheKey:'social', id:mediaSnsId,   build:buildSnsCard,   time:touchSnsTime},
+  {name:'videos', path:'/videos', key:'videos',   el:'videoList', wrap:'mediaYoutube', cacheKey:'videos', id:mediaVideoId, build:buildVideoCard, time:touchVideoTime},
+];
+function mediaFeed(name){ return MEDIA_FEEDS.filter(function(f){ return f.name===name; })[0]; }
+// 이미 그려진 목록을 "새 항목만 끼워 넣는" 식으로 갱신한다. 자동 갱신(5분)과
+// 새로고침 직후(캐시 렌더 → 서버 응답) 두 경로가 같은 함수를 쓴다.
+// 못 하는 상황(최초 렌더, 순서가 통째로 바뀜)이면 false를 돌려줘 호출부가 전체를 그리게 한다.
+function applyMediaUpdate(cfg, items){
+  var el = document.getElementById(cfg.el);
+  if(!el || !items.length) return false;
+  if(!el.dataset.ids || !el.children.length) return false;
+  var oldIds = el.dataset.ids.split(',');
+  var newIds = items.map(cfg.id);
+  var cut = newIds.indexOf(oldIds[0]);
+  // 기존 맨 위 글이 새 목록에 아예 없다 = 순서가 뒤집혔거나 통째로 갈렸다는 뜻.
+  // 이럴 때 억지로 끼워 넣으면 목록이 엉키므로 전체 렌더에 맡긴다.
+  if(cut < 0) return false;
+  if(cut > 0){
+    revealNewCards(el, items.slice(0, cut).map(function(it, i){ return cfg.build(it, i); }));
+    el.dataset.ids = newIds.join(',');
+    if(cfg.el === 'videoList') el.dataset.videoIds = newIds.join(',');
+  }
+  // 넘치는 꼬리를 접어 없앤다. 새 글이 들어왔을 때뿐 아니라 응답이 짧아졌을 때도 맞춰야 해서
+  // cut 바깥에 둔다 — SNS는 개수가 고정 16이 아니라 계정별 보강 규칙에 따라 매번 달라진다
+  // (기본 16 + 최근 7일 글이 2개가 안 되는 계정마다 채움, 실측 18). 그래서 기준은 늘 응답 길이다.
+  // 빠지는 중인 칸(.out)은 이미 없는 것으로 치고 센다.
+  var alive = Array.prototype.filter.call(el.children, function(n){ return !n.classList.contains('out'); });
+  if(alive.length > items.length) collapseOldCards(el, alive.slice(items.length));
+  for(var i = cut; i < el.children.length && i < items.length; i++) cfg.time(el.children[i], items[i]);
+  return true;
+}
+// 새 글이 들어오고 꼬리가 빠지는 애니메이션. 카드를 "칸"(.feed-slot)으로 감싸 grid 행을
+// 0fr↔1fr로 여닫는다 — 목표 높이를 미리 재지 않으므로 내용이 도중에 커져도 튀지 않는다.
+// 다 열리면 칸을 벗겨 카드만 목록에 남긴다.
+function feedReduceMotion(){
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+function feedSlotFor(container, card){
+  var gap = parseFloat(getComputedStyle(container).rowGap) || 0;   // flex gap이 넣는 순간 먼저 벌어지는 걸 막는다
+  var slot = document.createElement('div');
+  slot.className = 'feed-slot';
+  slot.style.marginBottom = (-gap) + 'px';
+  slot.dataset.gap = String(gap);
+  var inner = document.createElement('div');
+  inner.appendChild(card);
+  slot.appendChild(inner);
+  return slot;
+}
+// iOS 사파리에는 스크롤 앵커링이 없어서, 보고 있는 위치보다 위에 카드가 끼면 읽던 내용이
+// 그만큼 아래로 밀린다. 크롬·파이어폭스·삼성인터넷은 브라우저가 알아서 보정하므로 건드리지 않는다.
+// 맨 위 근처(100px 이내)에서는 보정하지 않는다 — 그땐 새 글이 들어오는 게 보이는 편이 낫다.
+function feedKeepScroll(slot){
+  if(window.CSS && CSS.supports && CSS.supports('overflow-anchor', 'auto')) return;
+  if(window.scrollY < 100) return;
+  // 칸이 차지하는 자리는 높이 + 아래 여백이다. 여백은 카드 사이 간격(gap)을 상쇄하려고
+  // 음수에서 0으로 함께 변하므로, 높이만 보면 간격만큼(10px) 어긋난다.
+  var outer = function(){
+    return slot.getBoundingClientRect().height + (parseFloat(getComputedStyle(slot).marginBottom) || 0);
+  };
+  var prev = outer(), t0 = performance.now();
+  (function tick(){
+    // 칸이 DOM에서 빠지면(애니메이션이 끝나 카드만 남으면) 높이가 0으로 읽힌다 —
+    // 그걸 줄어든 것으로 보고 보정하면 지금까지 민 만큼 되돌아간다(실측으로 겪음).
+    if(!slot.isConnected) return;
+    var cur = outer();
+    if(cur !== prev){ window.scrollBy(0, cur - prev); prev = cur; }
+    if(performance.now() - t0 < 800) requestAnimationFrame(tick);
+  })();
+}
+function revealNewCards(container, nodes){
+  var reduce = feedReduceMotion();
+  nodes.slice().reverse().forEach(function(card){
+    if(reduce){ container.insertBefore(card, container.firstChild); return; }
+    var slot = feedSlotFor(container, card);
+    container.insertBefore(slot, container.firstChild);
+    slot.getBoundingClientRect();                       // 0fr 상태를 먼저 적용시킨다
+    slot.style.marginBottom = '0px';
+    slot.classList.add('open');
+    feedKeepScroll(slot);
+    setTimeout(function(){ slot.classList.add('filled'); }, 290);   // 판이 열린 뒤 내용이 뜬다
+    setTimeout(function(){ if(slot.parentNode) slot.parentNode.replaceChild(card, slot); }, 560);
+  });
+}
+// 꼬리에서 빠지는 카드 — 들어올 때의 역순(내용이 먼저 사라지고 판이 접힘).
+function collapseOldCards(container, cards){
+  var reduce = feedReduceMotion();
+  cards.forEach(function(card){
+    if(!card.parentNode) return;
+    if(reduce){ card.parentNode.removeChild(card); return; }
+    var next = card.nextSibling;                        // 카드가 칸 안으로 옮겨가므로 원래 자리를 먼저 기억
+    var slot = feedSlotFor(container, card);
+    slot.classList.add('out', 'open', 'filled');
+    slot.style.marginBottom = '0px';
+    container.insertBefore(slot, next);
+    requestAnimationFrame(function(){ slot.classList.remove('filled'); });
+    setTimeout(function(){
+      slot.classList.remove('open');
+      slot.style.marginBottom = (-(parseFloat(slot.dataset.gap) || 0)) + 'px';
+    }, 200);
+    setTimeout(function(){ if(slot.parentNode) slot.parentNode.removeChild(slot); }, 580);
+  });
+}
+function pollMediaFeed(cfg){
+  var el = document.getElementById(cfg.el);
+  if(!el || !el.dataset.ids) return;        // 최초 렌더 전이면 건드리지 않는다
+  apiFetch(FN + cfg.path).then(function(data){
+    var items = (data && data[cfg.key]) || [];
+    // 자동 갱신에서는 목록이 통째로 바뀔어도 다시 그리지 않는다 — 읽던 자리가 튀다.
+    // 그 경우는 다음 새로고침이 처리한다.
+    if(!applyMediaUpdate(cfg, items)) return;
+    try{ localStorage.setItem('cache_' + cfg.cacheKey, JSON.stringify(data)); }catch(e){}
+  }).catch(function(){});
+}
+function pollMediaOnce(){
+  var sec = document.getElementById('media');
+  if(!sec || !sec.classList.contains('active') || document.hidden) return;
+  if(Date.now() - _mediaLastAct > MEDIA_IDLE_MS) return;
+  if(Date.now() - _mediaLastPoll < 60 * 1000) return;   // 탭을 자주 오가도 1분에 한 번까지만
+  _mediaLastPoll = Date.now();
+  MEDIA_FEEDS.forEach(function(cfg){
+    var wrap = document.getElementById(cfg.wrap);
+    if(wrap && wrap.style.display === 'none') return;    // 모바일에서 안 보이는 칸은 건너뛴다
+    pollMediaFeed(cfg);
+  });
+}
+function startMediaPoll(){
+  if(_mediaPollTimer) return;
+  _mediaPollTimer = setInterval(pollMediaOnce, MEDIA_POLL_MS);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) pollMediaOnce(); });
+}
 function loadMedia(){
   if(_mediaLoaded) return;
   _mediaLoaded = true;
@@ -3857,6 +4021,7 @@ function loadMedia(){
   loadNews();
   loadSns();
   loadVideos();
+  startMediaPoll();
 }
 function loadVideos(){
   var el=document.getElementById('videoList');
@@ -3877,9 +4042,18 @@ function loadVideos(){
       // 실제로 바뀌지 않았으면 다시 그리지 않는다.
       var ids = videos.map(function(v){ return v.videoId; }).join(',');
       if(el.dataset.videoIds === ids) return;
+      if(applyMediaUpdate(mediaFeed('videos'), videos)) return;
       el.dataset.videoIds = ids;
+      el.dataset.ids = ids;
       el.innerHTML='';
-      videos.forEach(function(v){
+      videos.forEach(function(v, idx){ el.appendChild(buildVideoCard(v, idx)); });
+    });
+  }, function(){ withMinLoading(el, _t0, function(){ el.innerHTML='<div class="loading-state" style="padding:28px 0;"><span>영상을 불러오지 못했습니다</span></div>'; }); });
+}
+// 카드 한 장을 만드는 부분을 따로 빼둔 이유 — 자동 갱신(pollMediaFeed)이 새 항목만
+// 만들어 맨 위에 끼워 넣는다. 목록 전체를 다시 그리면 재생 중인 영상이 끊기고
+// 스크롤 위치도 틄긴다.
+function buildVideoCard(v, idx){
         var a=document.createElement('div');a.className='video-card';
         var embedWrap=document.createElement('div');embedWrap.className='video-embed-wrap';
         if(v.embeddable===false){
@@ -3908,10 +4082,7 @@ function loadVideos(){
         foot.appendChild(time);foot.appendChild(ytLink);
         body.appendChild(title);body.appendChild(foot);
         a.appendChild(embedWrap);a.appendChild(body);
-        el.appendChild(a);
-      });
-    });
-  }, function(){ withMinLoading(el, _t0, function(){ el.innerHTML='<div class="loading-state" style="padding:28px 0;"><span>영상을 불러오지 못했습니다</span></div>'; }); });
+        return a;
 }
 
 function loadHistory(){
@@ -4917,8 +5088,16 @@ function loadNews(){
     withMinLoading(document.getElementById('newsGrid'), _t0, function(){
       var articles=data.articles||[];
       if(!articles.length){el.innerHTML='<div class="loading-state">\uB274\uC2A4 \uC5C6\uC74C</div>';return;}
+      // 캐시로 이미 그려져 있으면 통째로 다시 그리지 않고 새 기사만 위에 끼운다
+      // (전체 재렌더는 화면이 한 번 깜빡이고 읽던 위치도 잃는다).
+      if(applyMediaUpdate(mediaFeed('news'), articles)) return;
       el.innerHTML='';
-      articles.forEach(function(a, idx){
+      el.dataset.ids = articles.map(mediaNewsId).join(',');
+      articles.forEach(function(a, idx){ el.appendChild(buildNewsCard(a, idx)); });
+    });
+  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); }); });
+}
+function buildNewsCard(a, idx){
         var card=document.createElement('a');card.className='news-card';card.href=a.url||'#';card.target='_blank';card.rel='noopener';
         var imgDiv=document.createElement('div');imgDiv.className='news-img';
         var srcBdg=document.createElement('div');srcBdg.className='news-src-badge';srcBdg.textContent=a.source||'RSS';
@@ -4941,12 +5120,10 @@ function loadNews(){
         var hl=document.createElement('div');hl.className='news-hl';hl.textContent=a.title||'';
         var ex=document.createElement('div');ex.className='news-ex';ex.textContent=a.description||'';
         var ft=document.createElement('div');ft.className='news-foot';
-        ft.innerHTML='<span style="display:inline-flex;align-items:center;gap:4px;">'+dIcon('clock',11)+(a.timeAgo||'')+'</span><span style="color:var(--red);font-weight:700">\uC77D\uAE30 \u2192</span>';
+        ft.innerHTML='<span class="news-time" style="display:inline-flex;align-items:center;gap:4px;">'+dIcon('clock',11)+(a.timeAgo||'')+'</span><span style="color:var(--red);font-weight:700">\uC77D\uAE30 \u2192</span>';
         body.appendChild(hl);body.appendChild(ex);body.appendChild(ft);
-        card.appendChild(imgDiv);card.appendChild(body);el.appendChild(card);
-      });
-    });
-  }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); }); });
+        card.appendChild(imgDiv);card.appendChild(body);
+        return card;
 }
 
 // SNS 포스트 본문에 링크/멘션 렌더링 — 백엔드가 facets 기반으로 잘라준
@@ -5061,8 +5238,18 @@ function loadSns(){
     withMinLoading(document.getElementById('snsGrid'), _t0, function(){
       var posts=data.posts||[];
       if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
+      if(applyMediaUpdate(mediaFeed('sns'), posts)) return;
       el.innerHTML='';
-      posts.forEach(function(p, idx){
+      el.dataset.ids = posts.map(mediaSnsId).join(',');
+      posts.forEach(function(p, idx){ el.appendChild(buildSnsCard(p, idx)); });
+    });
+  }, function(err){
+    withMinLoading(el, _t0, function(){
+      el.innerHTML='<div class="loading-state">오류: '+err.message+'</div>';
+    });
+  });
+}
+function buildSnsCard(p, idx){
         var a=document.createElement('div');
         a.className='sns-post';
         a.style.cursor='pointer';
@@ -5118,14 +5305,7 @@ function loadSns(){
         a.appendChild(body);
         if(imgEl) a.appendChild(imgEl);
         a.appendChild(foot);
-        el.appendChild(a);
-      });
-    });
-  }, function(err){
-    withMinLoading(el, _t0, function(){
-      el.innerHTML='<div class="loading-state">오류: '+err.message+'</div>';
-    });
-  });
+        return a;
 }
 
 // ── 이적시장 IN/OUT 모달 ──
