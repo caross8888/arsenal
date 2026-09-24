@@ -2862,6 +2862,10 @@ function loadFixtures(){
       // _mCurrentSeasonCache(예정+종료 전체)를 돌려주는데, 그 값을 initMatchNav가 채운다.
       // 앞에 두면 아직 안 채워져서 results(종료 경기만) 쪽으로 빠지고, 예정 경기만 있는 달은
       // 빈 달력이 그려진 뒤 다시 그려주는 곳이 없다(실측: 달력 뷰로 새로고침하면 빈 칸만).
+      // 공휴일은 미리 받아둔다 — 달력 아이콘을 누를 때 받기 시작하면 칸이 먼저 뜨고
+      // 빨간 날이 1초쯤 뒤에 붙는다(실측 1,443ms). 응답은 CDN·localStorage에 남아
+      // 다음부터는 즉시 쓴다.
+      getHolidays(new Date().getFullYear());
       if(document.querySelector('.fix-view-btn[data-view="cal"]').classList.contains('active')){
         if(_calPlaced) renderCalendarMonth(); else { _calPlaced=true; calGoToNearestMatch(); }
       }
@@ -2991,12 +2995,29 @@ function calGoToNearestMatch(){
 // 하지 않는다 — 호출하는 쪽(피커 등)이 이미 데이터 있는 달만 골라서 부름.
 // 한국 공휴일 — 달력 뷰에서만 쓴다. 연 단위로 받아 메모리에 둔다(서버는 KV에 보관).
 // 못 받아도 번 객체로 넘어간다 — 공휴일 표시 때문에 달력이 안 뜼면 안 된다.
-var _holidayCache = {};
+var _holidayCache = {};   // year → Promise
+var _holidayData = {};    // year → 값(동기로 바로 쓰기 위한 것)
+// 달력을 그리는 시점에 이미 알고 있는 공휴일. 지난 방문 때 받아둔 게 localStorage에
+// 있으면 그걸 쓴다 — 네트워크를 기다리면 달력이 먼저 뜨고 빨간 날이 1초쯤 뒤에
+// 툭 나타난다(실측: 캐시 없을 때 1,443ms).
+function getHolidaysSync(year){
+  if(_holidayData[year]) return _holidayData[year];
+  try{
+    var raw = localStorage.getItem('cache_holidays_'+year);
+    if(raw){ _holidayData[year] = JSON.parse(raw); return _holidayData[year]; }
+  }catch(e){}
+  return null;
+}
 function getHolidays(year){
   if(_holidayCache[year]) return _holidayCache[year];
   _holidayCache[year] = apiFetch(FN+'/holidays?year='+year)
-    .then(function(d){ return (d && d.holidays) || {}; })
-    .catch(function(){ delete _holidayCache[year]; return {}; });
+    .then(function(d){
+      var h = (d && d.holidays) || {};
+      _holidayData[year] = h;
+      try{ localStorage.setItem('cache_holidays_'+year, JSON.stringify(h)); }catch(e){}
+      return h;
+    })
+    .catch(function(){ delete _holidayCache[year]; return getHolidaysSync(year) || {}; });
   return _holidayCache[year];
 }
 function renderCalendarMonth(){
@@ -3091,8 +3112,9 @@ function renderCalendarGrid(year, month, monthMatches, holidays){
   }
   // 공휴일은 칸을 다 그린 뒤에 얹어준다. 달 이동처럼 holidays를 안 넘겨주는 경로가 있어서,
   // 받은 게 없으면 여기서 직접 불러 칠한다(연 단위로 한 번만 받아 메모리에 둔다).
-  if(holidays) markCalendarHolidays(year, month, holidays);
-  else getHolidays(year).then(function(h){
+  var known = holidays || getHolidaysSync(year);
+  if(known) markCalendarHolidays(year, month, known);   // 아는 값은 칸과 같은 프레임에 칠한다
+  if(!holidays) getHolidays(year).then(function(h){      // 서버 값이 오면 한 번 더 맞춘다(같으면 무변화)
     if(_calDate.getFullYear()===year && _calDate.getMonth()===month) markCalendarHolidays(year, month, h);
   });
   // 달을 그린 뒤 가장 가까운 예정 경기를 골라둔다 — 예전엔 달력을 열면 아래 상세가 비어
@@ -3100,10 +3122,18 @@ function renderCalendarGrid(year, month, monthMatches, holidays){
   autoSelectCalDay();
 }
 // 칸 선택 — 클릭과 자동 선택이 같은 경로를 쓴다(클릭 타이밍에 의존하지 않도록).
-function selectCalDay(cell){
+// 고른 날짜를 기억해두는 이유: 일정 데이터는 캐시로 한 번, 서버 응답으로 또 한 번 와서
+// 달력이 보통 두 번 그려진다. 그리기는 칸을 통째로 새로 만들기 때문에, 기억해두지 않으면
+// 그 사이에 사용자가 누른 날이 두 번째 렌더에서 자동 선택된 날로 튕긴다(실측).
+var _calSelectedKey = null;
+function calDayKey(cell){
+  return cell ? _calDate.getFullYear() + '-' + _calDate.getMonth() + '-' + cell.dataset.day : null;
+}
+function selectCalDay(cell, remember){
   if(!cell) return;
   document.querySelectorAll('#calGrid .cal-day').forEach(function(c){ c.classList.remove('selected'); });
   cell.classList.add('selected');
+  if(remember !== false) _calSelectedKey = calDayKey(cell);
   var detail = document.getElementById('calDetail');
   if(!detail) return;
   detail.innerHTML = '';
@@ -3117,12 +3147,18 @@ function autoSelectCalDay(){
   var cells = Array.prototype.slice.call(grid.querySelectorAll('.cal-day.has-fixture'));
   var detail = document.getElementById('calDetail');
   if(!cells.length){ if(detail) detail.innerHTML = ''; return; }
+  // 사용자가 이 달에서 고른 날이 있으면 그대로 되살린다. 다른 달이면 기억은 무시되고
+  // 아래 규칙대로 자동 선택된다(그 달로 돌아오면 다시 되살아난다).
+  var remembered = _calSelectedKey && cells.filter(function(c){ return calDayKey(c) === _calSelectedKey; })[0];
+  if(remembered){ selectCalDay(remembered); return; }
   var now = Date.now();
   var upcoming = cells.filter(function(c){
     return (c._matches || []).some(function(m){ return m.utcDate && new Date(m.utcDate).getTime() >= now; });
   });
-  selectCalDay(upcoming.length ? upcoming[0] : cells[cells.length-1]);
+  selectCalDay(upcoming.length ? upcoming[0] : cells[cells.length-1], false);
 }
+// 두 번 불릴 수 있다(저장해둔 값으로 한 번, 서버 응답으로 한 번) — 매번 이전 표시를
+// 지우고 새로 칠해서, 중복으로 붙거나 옛 값이 남지 않게 한다.
 function markCalendarHolidays(year, month, holidays){
   if(!holidays) return;
   var grid = document.getElementById('calGrid');
@@ -3130,6 +3166,9 @@ function markCalendarHolidays(year, month, holidays){
   Array.prototype.forEach.call(grid.querySelectorAll('.cal-day[data-day]'), function(cell){
     var key = year + '-' + ('0'+(month+1)).slice(-2) + '-' + ('0'+cell.dataset.day).slice(-2);
     var name = holidays[key];
+    var old = cell.querySelector('.cal-day-holiday-name');
+    if(old) old.parentNode.remove();
+    cell.classList.remove('cal-day-holiday');
     if(!name) return;
     cell.classList.add('cal-day-holiday');
     // 경기가 있는 칸은 엠블럼이 가운데를 쓰므로 날짜만 빨갛게 두고 이름은 넣지 않는다.
