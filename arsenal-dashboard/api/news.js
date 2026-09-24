@@ -14,8 +14,27 @@ import { loadTerms, isArsenalText } from './_arsenalTerms.js';
 const RSS_SOURCES = [
   { url: 'https://feeds.bbci.co.uk/sport/football/rss.xml', name: 'BBC Sport',  filterArsenal: true },
   { url: 'https://www.cbssports.com/rss/headlines/soccer/',  name: 'CBS Sports', filterArsenal: true },
+  // 스카이는 피드가 여럿인데 아스날이 가장 많이 잡히는 건 프리미어리그 피드다
+  // (실측: PL 20건 중 아스날 4건, 축구 전체 피드는 1건). 팀별 속보는 제목만 오고
+  // 요약이 비어 있는 경우가 있다("Arsenal latest: ...").
+  { url: 'https://www.skysports.com/rss/11661',              name: 'Sky Sports', filterArsenal: true },
 ];
 const WOMEN_RE = /\bwomen'?s?\b|\bwsl\b|\blionesses\b/i;
+
+// RSS pubDate 파싱 — 자바스크립트 Date는 대부분의 시간대 약어를 못 읽는다.
+// 스카이가 "Thu, 24 Sep 2026 20:39:00 BST"로 보내는데 new Date()가 Invalid Date를 돌려줘
+// 정렬에서 맨 뒤로 밀려 20개 제한에 잘렸다(실측: 아스날 기사 4건이 통째로 사라짐).
+const TZ_ABBR = { GMT:'+0000', UT:'+0000', UTC:'+0000', BST:'+0100', CET:'+0100', CEST:'+0200',
+  EST:'-0500', EDT:'-0400', CST:'-0600', CDT:'-0500', MST:'-0700', MDT:'-0600', PST:'-0800', PDT:'-0700' };
+function parseRssDate(raw){
+  const str = String(raw || '').trim();
+  if(!str) return null;
+  let d = new Date(str);
+  if(!isNaN(d)) return d;
+  const fixed = str.replace(/\s([A-Z]{2,4})$/, (m, ab) => TZ_ABBR[ab] ? ' ' + TZ_ABBR[ab] : m);
+  d = new Date(fixed);
+  return isNaN(d) ? null : d;
+}
 
 function decodeHtml(str) {
   return (str||'')
@@ -124,7 +143,7 @@ function parseRSS(text, sourceName, filter) {
     ).trim();
 
     const pub = (item.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1] || '').trim();
-    const pubDate = pub ? new Date(pub) : new Date(0);
+    const pubDate = parseRssDate(pub) || new Date(0);
 
     const rawImage = extractImage(item);
     const urlToImage = upgradeImageUrl(rawImage);
@@ -135,7 +154,7 @@ function parseRSS(text, sourceName, filter) {
       description: desc,
       urlToImage,
       pubDate: pubDate.getTime(),
-      timeAgo: pub ? timeAgo(pubDate) : '',
+      timeAgo: pubDate.getTime() ? timeAgo(pubDate) : '',
       source: sourceName,
     });
   }
