@@ -144,12 +144,15 @@ async function fetchViaRss(apiKey) {
 }
 
 const cache = { data: null, ts: 0 };
-const TTL = 30 * 60 * 1000;
+const TTL = 60 * 1000;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  // CDN은 30분 보관, 브라우저는 1분(football.js 주석 참고).
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=1800, stale-while-revalidate=1800');
+  // 새 글이 올라오면 새로고침 한 번에 보이도록 캐시를 짧게 잡는다 — 서버 메모리 1분 +
+  // CDN 1분 + 만료 직후 30초(swr)로 최악 2분 반. 브라우저는 max-age=0으로 두어
+  // 새로고침할 때마다 CDN에 물어보게 한다(CDN 히트라 함수는 안 돌고 응답만 받는다).
+  // 유튜브 API는 호출당 2유닛이라 1분 간격이어도 하루 최대 2,880유닛 — 할당량(10,000)의 3할 이하다.
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
 
   if (cache.data && Date.now() - cache.ts < TTL) return res.json(cache.data);
 

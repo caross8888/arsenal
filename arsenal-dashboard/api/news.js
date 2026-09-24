@@ -143,12 +143,36 @@ function parseRSS(text, sourceName, filter) {
 }
 
 const cache = { data: null, ts: 0 };
-const TTL = 15 * 60 * 1000;
+const TTL = 60 * 1000;
+
+// 가디언 무료 키는 하루 500회·분당 12회 제한이라, 전체 TTL을 1분으로 낮추면
+// 최악 1,440회/일로 한도를 넘긴다. 가디언 결과만 KV에 10분 따로 보관해서(인스턴스가
+// 여러 개여도 합이 아닌 하루 144회 수준으로 억눌린다) 나머지 소스만 1분마다 새로 받는다.
+// 가디언은 속보보다 칼럼·분석이 주라 신선도가 덜 중요하다.
+const GUARDIAN_KEY = 'news:guardian';
+const GUARDIAN_TTL_SEC = 600;
+const KV_URL = process.env.KV_REST_API_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+async function kvCmd(cmd){
+  if(!KV_URL || !KV_TOKEN) return null;
+  try{
+    const r = await fetch(KV_URL, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + KV_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify(cmd),
+      signal: AbortSignal.timeout(3000),
+    });
+    if(!r.ok) return null;
+    return (await r.json()).result;
+  }catch(_){ return null; }
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  // CDN은 15분 보관, 브라우저는 1분(football.js 주석 참고).
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=900, stale-while-revalidate=900');
+  // 새 글이 올라오면 새로고침 한 번에 보이도록 캐시를 짧게 잡는다 — 서버 메모리 1분 +
+  // CDN 1분 + 만료 직후 30초(swr)로 최악 2분 반. 브라우저는 max-age=0으로 두어
+  // 새로고침할 때마다 CDN에 물어보게 한다(CDN 히트라 함수는 안 돌고 응답만 받는다).
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
 
   if (cache.data && Date.now() - cache.ts < TTL) return res.json(cache.data);
 
@@ -188,6 +212,14 @@ export default async function handler(req, res) {
   // 스털링·맨유-브라이튼처럼 아스날이 본문에 한 번 언급된 기사가 섞이므로, 가디언이
   // 직접 붙이는 아스날 태그(football/arsenal)로 받는다.
   try {
+    let gArticlesCached = await kvCmd(['GET', GUARDIAN_KEY]);
+    if (gArticlesCached) {
+      try { gArticlesCached = JSON.parse(gArticlesCached); } catch(_) { gArticlesCached = null; }
+    }
+    if (Array.isArray(gArticlesCached)) {
+      // 캐시된 건 기사 내용이고, "N시간 전" 표기만 지금 기준으로 다시 만든다.
+      allArticles.push(...gArticlesCached.map(a => ({ ...a, timeAgo: timeAgo(new Date(a.pubDate)) })));
+    } else {
     const gKey = process.env.GUARDIAN_API_KEY || 'test';
     const gRes = await fetch(
       `https://content.guardianapis.com/search?tag=football/arsenal&order-by=newest&show-fields=thumbnail,trailText&page-size=15&api-key=${gKey}`,
@@ -213,8 +245,10 @@ export default async function handler(req, res) {
         };
       });
       allArticles.push(...gArticles);
+      if (gArticles.length) await kvCmd(['SET', GUARDIAN_KEY, JSON.stringify(gArticles), 'EX', String(GUARDIAN_TTL_SEC)]);
     } else {
       sourceErrors['Guardian'] = `HTTP ${gRes.status}`;
+    }
     }
   } catch(e) { sourceErrors['Guardian'] = e.message; }
 

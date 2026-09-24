@@ -25,7 +25,7 @@ const JOURNALISTS = [
 ];
 
 const BSKY = 'https://public.api.bsky.app/xrpc';
-const TTL  = 10 * 60 * 1000;
+const TTL  = 60 * 1000;
 
 // 아스날 관련 포스트 판별(선수·감독 이름 키워드)은 뉴스와 같이 쓰는 _arsenalTerms.js에 있다.
 
@@ -161,8 +161,10 @@ async function translatePosts(posts) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
-  // CDN은 10분 보관, 브라우저는 1분 — 방문자가 몰려도 함수는 10분에 한 번(football.js 주석 참고).
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=600, stale-while-revalidate=600');
+  // 새 글이 올라오면 새로고침 한 번에 보이도록 캐시를 짧게 잡는다 — 서버 메모리 1분 +
+  // CDN 1분 + 만료 직후 30초(swr)로 최악 2분 반. 브라우저는 max-age=0으로 두어
+  // 새로고침할 때마다 CDN에 물어보게 한다(CDN 히트라 함수는 안 돌고 응답만 받는다).
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
 
   try {
     if (_cache && Date.now() - _cacheTs < TTL) {
