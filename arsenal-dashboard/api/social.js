@@ -22,6 +22,11 @@ const JOURNALISTS = [
   // 소식이라 아스날 얘기는 최근 100개 중 3개(실측) — 키워드 필터를 켠다. 개인 봇이라 언제든 멈출 수 있다.
   // 30개면 하루치밖에 안 돼 아스날 글이 거의 안 남는다 — 100개(약 4일치)를 훑는다.
   { handle: 'fabrizioromano.yopro20.com', name: 'Fabrizio Romano', label: 'X mirror', scan: 100 },
+  // 국대주간에 피드가 비는 문제로 추가한 둘 — 둘 다 아스날 남자팀 전담 기자다(실측 기준
+  // 캔턴은 아스날 글 비중 97%·대표팀 소식이 후보 중 최다, 와츠는 팔로워 2.3만이지만
+  // 블루스카이 활동은 뜸하다 — 최근 글이 7월). 둘 다 하루 0.5개꼴이라 피드를 잡아먹지 않는다.
+  { handle: 'tomcanton.bsky.social', name: 'Tom Canton', label: 'football.london', filter: false },
+  { handle: 'charleswatts.bsky.social', name: 'Charles Watts', label: '독립 기자' },
 ];
 
 const BSKY = 'https://public.api.bsky.app/xrpc';
