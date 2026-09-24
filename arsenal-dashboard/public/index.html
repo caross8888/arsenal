@@ -3018,7 +3018,6 @@ function renderCalendarMonth(){
   });
 }
 function renderCalendarGrid(year, month, monthMatches, holidays){
-  holidays = holidays || {};
   var byDay = {};
   monthMatches.forEach(function(m){
     if(!m.utcDate) return;
@@ -3044,8 +3043,7 @@ function renderCalendarGrid(year, month, monthMatches, holidays){
     var isToday = (todayParts.y===year && todayParts.m===month && todayParts.d===d);
     if(isToday) cell.classList.add('today');
 
-    var holName = holidays[year+'-'+('0'+(month+1)).slice(-2)+'-'+('0'+d).slice(-2)];
-    if(holName) cell.classList.add('cal-day-holiday');
+    cell.dataset.day = d;
     var dnum = document.createElement('div'); dnum.className='cal-day-num'; dnum.textContent=d;
     cell.appendChild(dnum);
 
@@ -3078,17 +3076,6 @@ function renderCalendarGrid(year, month, monthMatches, holidays){
         timeEl.textContent = dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
       }
       cell.appendChild(timeEl);
-    } else if(holName){
-      // 경기가 없는 날은 엠블뜄 자리가 비어 있다 — 거기에 휴일 이름을 넣는다.
-      var holWrap = document.createElement('div'); holWrap.className='cal-day-crest-wrap';
-      var holEl = document.createElement('div'); holEl.className='cal-day-holiday-name';
-      // 한국어 공휴일 이름은 띄어쓰기가 없어 그대로는 줄바꿈 지점이 없다. 칸 폭만큼 채우면
-      // "부처님오신/날"처럼 둘째 줄에 한 글자만 남아서, 5자 이상은 가운데에 보이지 않는
-      // 줄바꿈 지점(U+200B)을 넣어 반씩 나눈다(부처님/오신날).
-      holEl.textContent = holName.length >= 5
-        ? holName.slice(0, Math.ceil(holName.length/2)) + '\u200B' + holName.slice(Math.ceil(holName.length/2))
-        : holName;
-      holWrap.appendChild(holEl); cell.appendChild(holWrap);
 
       (function(ms){
         cell.onclick = function(){
@@ -3103,6 +3090,35 @@ function renderCalendarGrid(year, month, monthMatches, holidays){
 
     grid.appendChild(cell);
   }
+  // 공휴일은 칸을 다 그린 뒤에 얹어준다. 달 이동처럼 holidays를 안 넘겨주는 경로가 있어서,
+  // 받은 게 없으면 여기서 직접 불러 칠한다(연 단위로 한 번만 받아 메모리에 둔다).
+  if(holidays) markCalendarHolidays(year, month, holidays);
+  else getHolidays(year).then(function(h){
+    if(_calDate.getFullYear()===year && _calDate.getMonth()===month) markCalendarHolidays(year, month, h);
+  });
+}
+function markCalendarHolidays(year, month, holidays){
+  if(!holidays) return;
+  var grid = document.getElementById('calGrid');
+  if(!grid) return;
+  Array.prototype.forEach.call(grid.querySelectorAll('.cal-day[data-day]'), function(cell){
+    var key = year + '-' + ('0'+(month+1)).slice(-2) + '-' + ('0'+cell.dataset.day).slice(-2);
+    var name = holidays[key];
+    if(!name) return;
+    cell.classList.add('cal-day-holiday');
+    // 경기가 있는 칸은 엠블럼이 가운데를 쓰므로 날짜만 빨갛게 두고 이름은 넣지 않는다.
+    if(cell.querySelector('.cal-day-crest-wrap')) return;
+    var wrap = document.createElement('div'); wrap.className = 'cal-day-crest-wrap';
+    var el = document.createElement('div'); el.className = 'cal-day-holiday-name';
+    // 한국어 공휴일 이름은 띄어쓰기가 없어 그대로는 줄바꿈 지점이 없다. 칸 폭만큼 채우면
+    // "부처님오신/날"처럼 둘째 줄에 한 글자만 남아서, 5자 이상은 가운데에 보이지 않는
+    // 줄바꿈 지점(U+200B)을 넣어 반씩 나눈다(부처님/오신날).
+    el.textContent = name.length >= 5
+      ? name.slice(0, Math.ceil(name.length/2)) + '\u200B' + name.slice(Math.ceil(name.length/2))
+      : name;
+    wrap.appendChild(el);
+    cell.appendChild(wrap);
+  });
 }
 
 // ── 달력 뷰: 연/월 선택 모달 — 경기 없는 달은 비활성화 ──
