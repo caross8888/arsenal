@@ -316,12 +316,20 @@ export default async function handler(req, res) {
   // 하이픈만 덩그러니 남는다(실측: "…소문이 돌고 있다 -"). 꼬리표를 떼고 번역한 뒤 다시 붙여
   // 결과를 고정한다 — 구글이 어떻게 옮기든 "- 가십"이 그대로 남는다. BBC가 이 코너를 매일
   // 올려서 한 번 걸리면 계속 걸린다.
+  // BBC는 제목 끝에 "- gossip", 스카이는 앞에 "Papers:"를 붙인다 — 둘 다 신문 가십
+  // 모음 코너라 같은 표기로 묶는다. 꿀표를 달고 번역하면 이상해지므로(실측: "Papers:" →
+  // "보도자료:" 또는 "언론 보도:"로 제각각) 번역 전에 떼고 끝난 뒤 한글 꿀표를 붙인다.
   const GOSSIP_TAG = /\s*[-–—]\s*gossip\s*$/i;
+  const PAPERS_TAG = /^\s*papers:\s*/i;
   const gossipTagged = [];
   for (const a of result.articles) {
-    if (typeof a.title === 'string' && GOSSIP_TAG.test(a.title)) {
+    if (typeof a.title !== 'string') continue;
+    if (GOSSIP_TAG.test(a.title)) {
       a.title = a.title.replace(GOSSIP_TAG, '');
-      gossipTagged.push(a);
+      gossipTagged.push({ article: a, suffix: ' - gossip' });
+    } else if (PAPERS_TAG.test(a.title)) {
+      a.title = a.title.replace(PAPERS_TAG, '');
+      gossipTagged.push({ article: a, prefix: 'Papers: ' });
     }
   }
 
@@ -329,10 +337,11 @@ export default async function handler(req, res) {
   // 기사까지 문자 수를 쓰지 않는다. 실패하면 원문(영어)이 그대로 남는다.
   await translateFields(result.articles, ['title', 'description']);
 
-  for (const a of gossipTagged) {
-    // 꼬리표를 떼고 번역하면 구글이 완결된 문장으로 보고 마침표를 붙인다 — 제목이라 떼고 붙인다.
-    a.title = String(a.title).replace(/[\s.。]*[-–—]?[\s.。]*$/, '') + ' - 가십';
-    if (a.titleEn) a.titleEn += ' - gossip';   // 원문 보기용 값도 원래 형태로 되돌린다
+  for (const { article, suffix, prefix } of gossipTagged) {
+    // 꿀표를 떼고 번역하면 구글이 완결된 문장으로 보고 마침표를 붙인다 — 제목이라 떼고 붙인다.
+    article.title = String(article.title).replace(/[\s.。]*[-–—]?[\s.。]*$/, '') + ' - 가십';
+    // 원문 보기용 값도 원래 형태로 되돌린다
+    if (article.titleEn) article.titleEn = (prefix || '') + article.titleEn + (suffix || '');
   }
 
   cache.data = result;
