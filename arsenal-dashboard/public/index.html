@@ -6477,6 +6477,8 @@ function predictCardHTML(p, data){
     h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-bright);">';
     h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">';
     h+='<span style="font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--gold);">AI 프리뷰</span>';
+    // 결장자가 바뀜 뒤 아직 새 해설이 안 만들어졌을 때 — 본문과 결장 목록이 어그러질 수 있어 표시한다.
+    if(p.aiStale) h+='<span style="font-size:9.5px;color:var(--text-secondary);opacity:.85;">결장 정보 갱신 전 작성</span>';
     h+='</div>';
     String(p.aiText).split(/\n\s*\n/).forEach(function(para,i){
       h+='<p style="margin:'+(i?'10px':'0')+' 0 0;font-size:12.5px;line-height:1.7;color:var(--text-secondary);">'+escAi(para)+'</p>';

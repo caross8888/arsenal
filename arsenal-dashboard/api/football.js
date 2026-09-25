@@ -2602,7 +2602,13 @@ export default async function handler(req, res) {
         // AI 해설은 크론(api/preview_ai.js)이 미리 만들어 KV에 넣어둔다 — 여기선 읽기만
         // 한다. 없으면 없는 대로 두고, 프론트가 위 analysis(템플릿 문장)를 그대로 쓴다.
         try {
-          const aiText = await kvGetRaw(predictAiKey(result));
+          let aiText = await kvGetRaw(predictAiKey(result));
+          // 결장자·확률이 바뀌면 해시가 달라져 새 해설이 생기기 전까지 빈다 — 그 사이는
+          // 직전 해설을 보여준다(포아송 템플릿보다 읽을 거리가 있다). 조금 낡은 값이라 표시만 달아둔다.
+          if(!(typeof aiText === 'string' && aiText.trim())){
+            const last = await kvGetRaw(`predAI:last:${result.home.id}:${result.away.id}`);
+            if(typeof last === 'string' && last.trim()){ aiText = last; result.aiStale = true; }
+          }
           // 표기 통일(아스널→아스날, 외데가르드→외데고르 등)은 번역과 같은 사전을 쓰고,
           // 저장할 때가 아니라 내보낼 때 적용한다 — 사전을 고치면 이미 만든 해설까지
           // 재생성 없이 바로 교정된다(번역 파이프라인과 같은 원칙).

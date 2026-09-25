@@ -27,6 +27,8 @@ const AI_TTL_SEC = 14 * 24 * 60 * 60;   // 경기가 지나면 쓸모없다
 // 경기가 18일 뒤라 날짜로 자르면 대상이 0건이 됐다(실측).
 const PREVIEW_MATCHES = 2;
 const RUN_LOG_KEY = 'predAI:_lastrun';
+// 해시 없는 폴백 키 — 같은 대진의 가장 최근 해설을 한 벌 든다.
+const lastKey = p => `predAI:last:${p.home.id}:${p.away.id}`;
 
 // football.js를 HTTP로 다시 부르지 않고 함수로 직접 호출한다.
 // 처음엔 `https://${req.headers.host}/api/football`로 자기 자신을 불렀는데, 크론이
@@ -131,6 +133,9 @@ export default async function handler(req, res){
         continue;
       }
       await kv('SET', key, text, 'EX', String(AI_TTL_SEC));
+      // 해시 없는 키에도 한 벌 남긴다 — 결장자가 바뀜 새 해설이 아직 없을 때
+      // 포아송 템플릿 문장으로 되돌아가는 대신 이걸 보여준다(본문은 조금 낡을 수 있다).
+      await kv('SET', lastKey(p), text, 'EX', String(AI_TTL_SEC));
       report.generated++;
       report.model = model;
       report.matches.push({id: m.id, key, text});
