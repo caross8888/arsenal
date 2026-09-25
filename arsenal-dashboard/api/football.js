@@ -706,7 +706,7 @@ function selfOrigin(req){
 const LEAGUE_STRENGTH_TTL_SEC = 6 * 60 * 60;
 const LEAGUE_PRIOR_TTL_SEC = 30 * 24 * 60 * 60;   // 지난 시즌 기록은 안 바뀐다
 const TEAM_CONTEXT_TTL_SEC = 3 * 60 * 60;
-const TEAM_CTX_SCHEMA = 4;        // 저장 형식(최근 경기·핵심 선수 추가) — 옛 캐시는 무시하고 다시 받는다
+const TEAM_CTX_SCHEMA = 5;        // 저장 형식(결장자 출처를 FPL/Fotmob squad로 교체) — 옆 캐시는 무시하고 다시 받는다
 const LEAGUE_STRENGTH_SCHEMA = 2;
 
 // 유럽대항전에서 자국 리그 기록을 환산할 때 쓰는 리그 수준 계수.
@@ -893,6 +893,79 @@ async function fetchLeagueStrength(leagueId){
   return payload;
 }
 
+// 결장자 명단 — 출처가 둘이고 서로 놓치는 게 다르다(실측 2026-09-25 아스날):
+//   FPL     : 살리바·화이트·라이스·하베르츠  (팀버·모스케라 없음)
+//   Fotmob  : 살리바·화이트·모스케라·팀버·하베르츠  (라이스 없음)
+// 프리미어리그 팀은 FPL을 쓴다 — 출전 확률(75%/50%/25%)까지 주므로 "출전 불확실"을
+// 반반으로 뭉개지 않고 그대로 가중치에 넣을 수 있다. FPL에 없는 팀(유럽 클럽 등)은
+// Fotmob을 본다.
+//
+// Fotmob 쪽은 lastLineupStats.unavailable이 아니라 squad를 봐야 한다 — 전자는 이름 그대로
+// "직전 경기 시점"이라 그 뒤에 생긴 부상이 안 들어온다(실측: 하베르츠·팀버가 squad에만 있었다).
+const FPL_ELEMENT_POS = {1: 0, 2: 1, 3: 2, 4: 3};          // GK/DF/MF/FW → 0~3
+const SQUAD_GROUP_POS = {keepers: 0, defenders: 1, midfielders: 2, attackers: 3};
+const normName = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const lastName = s => normName(s).split(/\s+/).pop();
+
+// Fotmob 팀 응답에서 부상·결장자를 뽑는다. 시장가치는 squad에 없어서 직전 선발 명단에서
+// 이름으로 찾아 붙인다(없으면 injuryFactors가 평균의 0.6배로 잡는다).
+function fotmobSquadOut(t){
+  const groups = ((t.squad || {}).squad) || ((t.overview || {}).squad) || [];
+  const mvByName = {};
+  (((t.overview || {}).lastLineupStats || {}).starters || []).forEach(st => {
+    if(st.name) mvByName[normName(st.name)] = st.marketValue || 0;
+  });
+  const out = [];
+  for(const g of groups){
+    const gp = SQUAD_GROUP_POS[String(g.title || g.role || '').toLowerCase()];
+    for(const m of (g.members || [])){
+      if(!m.injured && !m.injury) continue;
+      const ret = (m.injury || {}).expectedReturn || '';
+      out.push({
+        name: m.name || '',
+        pos: (m.positionId != null && m.positionId >= 0 && m.positionId <= 3) ? m.positionId : (gp != null ? gp : 2),
+        value: mvByName[normName(m.name)] || 0,
+        type: 'injury',
+        expectedReturn: ret,
+        doubtful: /doubt/i.test(ret),
+      });
+    }
+  }
+  return out;
+}
+
+// FPL 결장자 — chance_of_playing_next_round를 "빠질 확률"로 뒤집어 가중치로 쓴다.
+// 75% 출전 가능 → 0.25만 빠진 것으로 계산. 값이 없으면(상태만 i/s) 통째로 빠진 것.
+async function fplTeamOut(teamName, mvByName){
+  try{
+    const r = await fetch(FPL_URL, {headers: FPL_HEADERS, signal: AbortSignal.timeout(8000)});
+    if(!r.ok) return null;
+    const d = await r.json();
+    const needle = normName(teamName);
+    const team = (d.teams || []).find(t =>
+      normName(t.name) === needle || normName(t.name).includes(needle) || needle.includes(normName(t.name)) ||
+      normName(t.short_name) === needle);
+    if(!team) return null;                       // 프리미어리그 팀이 아니다 → 호출부가 Fotmob으로 간다
+    return (d.elements || [])
+      .filter(p => p.team === team.id)
+      .filter(p => p.chance_of_playing_next_round !== null && p.chance_of_playing_next_round < 100)
+      .filter(p => !LOAN_KEYWORDS.test(p.news || ''))
+      .map(p => {
+        const full = `${p.first_name} ${p.second_name}`;
+        const chance = p.chance_of_playing_next_round;
+        return {
+          name: p.web_name || full,
+          pos: FPL_ELEMENT_POS[p.element_type] != null ? FPL_ELEMENT_POS[p.element_type] : 2,
+          value: mvByName[lastName(p.second_name)] || mvByName[normName(full)] || 0,
+          type: p.status === 's' ? 'suspension' : 'injury',
+          expectedReturn: p.news || '',
+          doubtful: chance != null && chance > 0,
+          missWeight: chance == null ? 1 : Math.min(Math.max(1 - chance / 100, 0), 1),
+        };
+      });
+  }catch(_){ return null; }
+}
+
 // 팀의 자국 리그 id·결장자·일정 — 전부 teams?id= 한 응답에 들어있다.
 async function fetchTeamContext(teamId){
   const key = `teamCtx:${teamId}`;
@@ -952,6 +1025,13 @@ async function fetchTeamContext(teamId){
   };
   const tp = ((t.overview || {}).topPlayers) || {};
 
+  // 결장자: 프리미어리그 팀이면 FPL(출전 확률까지), 아니면 Fotmob squad.
+  const mvByName = {};
+  (ls.starters || []).forEach(st => { if(st.name){ mvByName[normName(st.name)] = st.marketValue || 0; mvByName[lastName(st.name)] = st.marketValue || 0; } });
+  const teamName = ((t.details || {}).name) || '';
+  const fplOut = teamName ? await fplTeamOut(teamName, mvByName) : null;
+  const out = fplOut || fotmobSquadOut(t);
+
   const ctx = {
     id: String(teamId),
     name: ((t.details || {}).name) || '',
@@ -964,14 +1044,7 @@ async function fetchTeamContext(teamId){
     // 없어서 그대로 쓰되, 8월 예측을 볼 때 감안할 것.
     xiValue: ls.totalStarterMarketValue || 0,
     starters: (ls.starters || []).map(st => ({pos: posOf(st), value: st.marketValue || 0})),
-    out: (ls.unavailable || []).map(u => ({
-      name: u.name || '',
-      pos: posOf(u),
-      value: u.marketValue || 0,
-      type: ((u.unavailability || {}).type) || 'injury',
-      expectedReturn: ((u.unavailability || {}).expectedReturn) || '',
-      doubtful: /doubt/i.test(((u.unavailability || {}).expectedReturn) || ''),
-    })),
+    out,
     playedAt,
     form: recent.slice(-5),
     // 팀 내 시즌 득점·도움·평점 1위 (Fotmob 팀 개요)

@@ -212,7 +212,11 @@ export function injuryFactors(ctx, params = PARAMS){
     const mean = size[p] ? valSum[p] / size[p] : xiMean;
     let r = (mean > 0 && o.value > 0) ? o.value / mean : 0.6;
     r = Math.min(Math.max(r, 0.25), 2);
-    lost[p] += r * (o.doubtful ? 0.5 : 1);
+    // 빠질 확률 — FPL은 "출전 가능 75%" 같은 숫자를 주므로 그걸 그대로 쓴다(missWeight).
+    // Fotmob은 "Doubtful" 한 단어뿐이라 반반(0.5)으로 본다.
+    const w = (typeof o.missWeight === 'number' && o.missWeight >= 0 && o.missWeight <= 1)
+      ? o.missWeight : (o.doubtful ? 0.5 : 1);
+    lost[p] += r * w;
   });
   const lines = [0, 1, 2, 3].map(p => (size[p] ? Math.min(lost[p] / size[p], params.injuryLineCap) : 0));
   const attackImpact  = lines.reduce((a, sh, p) => a + sh * ATTACK_WEIGHT[p], 0);
@@ -222,7 +226,8 @@ export function injuryFactors(ctx, params = PARAMS){
     concedeFactor: 1 + params.injuryImpact * concedeImpact,
     lines, attackImpact, concedeImpact,
     out: [...ctx.out].sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, 4)
-      .map(o => ({name: o.name, pos: o.pos, posLabel: POS_LABEL[o.pos] || '', doubtful: !!o.doubtful, type: o.type})),
+      .map(o => ({name: o.name, pos: o.pos, posLabel: POS_LABEL[o.pos] || '', doubtful: !!o.doubtful,
+                  missWeight: (typeof o.missWeight === 'number' ? o.missWeight : (o.doubtful ? 0.5 : 1)), type: o.type})),
   };
 }
 
