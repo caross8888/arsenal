@@ -8,6 +8,7 @@
   ],
   "crons": [
     { "path": "/api/maintenance", "schedule": "0 4 25 5 *" },
-    { "path": "/api/preview_ai", "schedule": "0 21 * * *" }
+    { "path": "/api/preview_ai", "schedule": "0 21 * * *" },
+    { "path": "/api/preview_ai?slot=night", "schedule": "0 14 * * *" }
   ]
 }
