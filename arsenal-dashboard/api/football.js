@@ -656,25 +656,31 @@ async function fetchFotmobTeamInjuries(teamName){
       {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
     if(!tr.ok) return null;
     const td = await tr.json();
-    const unavailable = (td.overview && td.overview.lastLineupStats && td.overview.lastLineupStats.unavailable) || [];
-
-    // Fotmob은 type(injury/suspension)과 expectedReturn 문자열만 준다. FPL의
-    // i/d/s/u 4단계 중 "출전 의심"은 expectedReturn === 'Doubtful'로만 구분된다.
-    const injured = unavailable.map(p => {
-      const u = p.unavailability || {};
-      const ret = u.expectedReturn || '';
-      const status = u.type === 'suspension' ? 's' : (ret === 'Doubtful' ? 'd' : 'i');
-      return {
-        id:       p.id,
-        name:     p.name,
-        fullName: p.name,
-        position: '',
-        photo:    `https://images.fotmob.com/image_resources/playerimages/${p.id}.png`,
-        status,
-        news:     ret,
-        chance:   null,
-      };
-    });
+    // squad를 본다 — lastLineupStats.unavailable은 "직전 경기 시점"이라 그 뒤에 생긴
+    // 부상이 안 들어온다(예측 쪽과 같은 이유로 바꿨다). 선수 id는 사진 주소에 쓴다.
+    const groups = ((td.squad || {}).squad) || ((td.overview || {}).squad) || [];
+    const POS_KO = {0: 'GK', 1: 'DF', 2: 'MF', 3: 'FW'};
+    const injured = [];
+    for(const g of groups){
+      const gp = SQUAD_GROUP_POS[String(g.title || g.role || '').toLowerCase()];
+      for(const m of (g.members || [])){
+        if(!m.injured && !m.injury) continue;
+        const ret = (m.injury || {}).expectedReturn || '';
+        const pos = (m.positionId != null && m.positionId >= 0 && m.positionId <= 3) ? m.positionId : gp;
+        injured.push({
+          id:       m.id,
+          name:     m.name,
+          fullName: m.name,
+          // Fotmob은 type(injury/suspension)과 expectedReturn 문자열만 준다. FPL의
+          // i/d/s/u 4단계 중 "출전 의심"은 expectedReturn === 'Doubtful'로만 구분된다.
+          position: pos != null ? (POS_KO[pos] || '') : '',
+          photo:    `https://images.fotmob.com/image_resources/playerimages/${m.id}.png`,
+          status:   /doubt/i.test(ret) ? 'd' : 'i',
+          news:     ret,
+          chance:   null,
+        });
+      }
+    }
     return injured;
   } catch(_){
     return null;
