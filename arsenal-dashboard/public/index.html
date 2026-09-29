@@ -9885,7 +9885,11 @@ function shotStatsRowHTML(list){
   // 부모(.pm-comp-subsection)가 좌우 14px 패딩을 갖고 있어서 표만 따로
   // 떨어져 보였다 — 다른 표(.detail-info-grid, 선수 스탯 표)처럼 패널
   // 끝까지 닿게, 딱 그 패딩만큼 음수 마진으로 밀어내(bleed) 좌우로 채운다.
-  return '<div class="fotmob-stat-grid shot-stat-grid" style="margin:12px -14px 0;">'+
+  //
+  // 아래 여백(12px)은 위(제목→표)와 같은 값이다. 예전엔 0이었는데, 슈팅맵 SVG의
+  // viewBox 위쪽에 남아 있던 투명한 띠(약 1.3px)가 간격 노릇을 하고 있었다.
+  // 잔디를 SVG 맨 위까지 채우면서 그게 사라져 표와 피치가 맞붙었다.
+  return '<div class="fotmob-stat-grid shot-stat-grid" style="margin:12px -14px 12px;">'+
          makeFMStat(list.length,'슛','')+makeFMStat(goals,'득점','var(--green)')+makeFMStat(xgSum.toFixed(2),'xG','')+makeFMStat(pct+'%','유효','')+
          '</div>';
 }
