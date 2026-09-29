@@ -18,6 +18,12 @@ const RSS_SOURCES = [
   // (실측: PL 20건 중 아스날 4건, 축구 전체 피드는 1건). 팀별 속보는 제목만 오고
   // 요약이 비어 있는 경우가 있다("Arsenal latest: ...").
   { url: 'https://www.skysports.com/rss/11661',              name: 'Sky Sports', filterArsenal: true },
+  // 미러는 아스날 전용 피드가 있다(Reach 계열은 /all-about/ 경로다 — /sport/football/teams/는 404).
+  // 하루 4.2건으로 스카이와 비슷한 무게라 20칸 균형을 안 깨고, 이미지·요약이 25/25 다 들어있다.
+  // 타블로이드라 가슭이 많을 거라 짐작했는데 실측은 반대였다 — 제목의 가슭성 표현 비율이
+  // 미러 16%, 지금 쓰는 스카이가 25%였다(BBC 4%). football.london도 아스날 전용 피드가 있지만
+  // 하루 10.5건이라 소스당 상한 없이는 목록을 잡아먹어 빼둔다.
+  { url: 'https://www.mirror.co.uk/all-about/arsenal-fc/?service=rss', name: 'Mirror', filterArsenal: true },
 ];
 const WOMEN_RE = /\bwomen'?s?\b|\bwsl\b|\blionesses\b/i;
 
