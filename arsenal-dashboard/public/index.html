@@ -9498,15 +9498,19 @@ function renderShotmapSVG(shots){
       }
       var endX2=Math.min(VW,Math.max(0,cx+ux*drawDist));
       var endY2=Math.min(VH,cy+uy*drawDist);
-      var seg='<line x1="'+startX.toFixed(2)+'" y1="'+startY.toFixed(2)+'" x2="'+endX2.toFixed(2)+'" y2="'+endY2.toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.5"/>';
+      // 막힌 슛은 선이 허공에서 뚝 끊겨 보인다 — 끝에 진행 방향과 직각인 막대를 그어
+      // "여기서 막혔다"를 표시한다(T자). 방향 벡터 (ux,uy)의 법선은 (-uy,ux)다.
+      //
+      // 막대를 별도 <line>으로 그리면 안 된다. 블록·빗나감의 선 색이 반투명
+      // rgba(255,255,255,.55)라, 획이 두 번 칠해지는 교차점만 알파가 쌓여 진해진다.
+      // 하위 경로 두 개를 가진 path 하나로 그리면 획이 한 번만 칠해져 겹쳐도 균일하다.
+      var d='M '+startX.toFixed(2)+' '+startY.toFixed(2)+' L '+endX2.toFixed(2)+' '+endY2.toFixed(2);
       if(s.event==='blocked'){
-        // 막힌 슛은 선이 허공에서 뚝 끊겨 보인다 — 끝에 진행 방향과 직각인 막대를 그어
-        // "여기서 막혔다"를 표시한다(T자). 방향 벡터 (ux,uy)의 법선은 (-uy,ux)다.
         var bx=-uy, by=ux, bHalf=1.1;
-        seg+='<line x1="'+(endX2-bx*bHalf).toFixed(2)+'" y1="'+(endY2-by*bHalf).toFixed(2)+'" x2="'+(endX2+bx*bHalf).toFixed(2)+'" y2="'+(endY2+by*bHalf).toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.55" stroke-linecap="round"/>';
+        d+=' M '+(endX2-bx*bHalf).toFixed(2)+' '+(endY2-by*bHalf).toFixed(2)
+          +' L '+(endX2+bx*bHalf).toFixed(2)+' '+(endY2+by*bHalf).toFixed(2);
       }
-      // 선과 막대가 같이 켜지고 꺼져야 해서 <g>로 묶는다(toggleShotLine이 이 id에 .active를 준다).
-      lines+='<g id="shotline_'+i+'" class="shot-line">'+seg+'</g>';
+      lines+='<path id="shotline_'+i+'" class="shot-line" d="'+d+'" fill="none" stroke="'+strokeColor+'" stroke-width="0.5" stroke-linecap="round"/>';
     }
     var title='<title>'+(s.min!=null?s.min+"'":'')+' · xG '+(s.xg||0).toFixed(2)+'</title>';
     // fill="none"인 원(빗나감)은 가운데 빈 공간이 기본적으로 클릭 안 되므로
