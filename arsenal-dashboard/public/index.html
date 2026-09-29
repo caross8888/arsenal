@@ -9131,14 +9131,22 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
   }
   if(!isLiveRefresh) requestAnimationFrame(function(){ content.scrollTop = 0; });
 
-  // 레이더 차트
+  // 레이더 차트 — 동기로 그린다. 위에서 innerHTML을 이미 넣었으니 캔버스는 DOM에 있고,
+  // 그리기 자체가 실측 중앙값 0.1ms(최대 1.5ms)라 첫 페인트를 늦추지 않는다. 캔버스 크기는
+  // width/height 속성값이고 색은 data-theme만 보므로 레이아웃에 의존하지 않는다
+  // (getComputedStyle·offsetWidth 안 씀) — 미룰 이유가 없다.
+  //
+  // 예전엔 아래 setTimeout(60) 안에 있었다. 그 60ms 때문에 모달을 열 때마다 캔버스가
+  // 96ms 동안 빈 채로 있다가 나타났다(실측). 스탯이 실제로 바뀌어 다시 그릴 때도 마찬가지라
+  // 열 때마다 깜빡이는 것처럼 보였다.
+  if(traits && traits.items && traits.items.length){
+    var translatedTraits = traits.items.map(function(item){
+      return {key: item.key, title: TRAIT_LABELS[item.key]||item.title, value: item.value};
+    });
+    drawFotmobRadar('radar_traits', translatedTraits);
+  }
+  // 히트맵은 점이 수백~수천 개라 레이더와 달리 무거울 수 있어 그대로 미룬다.
   setTimeout(function(){
-    if(traits && traits.items && traits.items.length){
-      var translated = traits.items.map(function(item){
-        return {key: item.key, title: TRAIT_LABELS[item.key]||item.title, value: item.value};
-      });
-      drawFotmobRadar('radar_traits', translated);
-    }
     if(typeof initHeats!=='undefined' && initHeats && initHeats.length){
       drawHeatmapCanvas('heatmap_canvas', initHeats);
     }
