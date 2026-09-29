@@ -247,10 +247,15 @@ export function lambdasFrom({leagueAvg, homeAttack, homeDefence, awayAttack, awa
 // 변경 등). 예측 결과에서 문장에 영향을 주는 값만 뽑아 짧은 해시로 만든다.
 export function predictAiKey(p){
   const r2 = v => Math.round(v * 100);
+  // 해설이 직접 인용하는 값은 전부 여기 들어와야 한다 — 안 그러면 그 값만 바뀌었을 때
+  // 옆 수치와 어긋나는 문장이 그대로 남는다(최근 5경기 폼, 팀 내 득점·도움·평점 1위).
+  const formSig = t => (t.form || []).map(g => `${g.res || ''}${g.gf}-${g.ga}`).join(',');
+  const topSig = t => ['goals', 'assists', 'rating'].map(k => ((t.topPlayers || {})[k] || {}).name || '').join('+');
   const sideSig = t => [t.id, r2(t.xgFor), r2(t.xgAgainst), t.attackRank, t.defenceRank,
     r2(t.injury ? t.injury.attackFactor : 1), r2(t.injury ? t.injury.concedeFactor : 1),
     (t.injury && t.injury.out || []).map(o => o.name).join('+'),
-    t.rest ? Math.round(t.rest.penalty * 100) : 0].join(':');
+    t.rest ? Math.round(t.rest.penalty * 100) : 0,
+    formSig(t), topSig(t)].join(':');
   const sig = [p.competition.leagueId, sideSig(p.home), sideSig(p.away),
     r2(p.probs.home), r2(p.probs.draw), r2(p.probs.away)].join('|');
   // 짧은 비암호학적 해시(FNV-1a) — 충돌해도 해설 하나가 재사용될 뿐이라 충분하다.
@@ -260,5 +265,6 @@ export function predictAiKey(p){
   // v3: 수치+해석 문체, 최근 흐름·맞대결·핵심 선수 추가.
   // v4: 지표 나열 대신 해설위원 말투(관전 포인트 → 근거 → 결론).
   // v5: 격식 있는 문체(구어 어미·속어 금지).
-  return `predAI:v5:${p.home.id}:${p.away.id}:${h.toString(36)}`;
+  // v6: 해시 재료에 최근 5경기 폼·팀 내 1위 선수 추가(본문이 인용하는 값이다).
+  return `predAI:v6:${p.home.id}:${p.away.id}:${h.toString(36)}`;
 }
