@@ -3,6 +3,7 @@
 
 import { translateFields, translateSegments } from './_translate.js';
 import { loadTerms, isArsenalText } from './_arsenalTerms.js';
+import { pageLimit } from './_paging.js';
 
 // filter:false — 아스날 전담 계정이라 키워드 필터 없이 전부 띄운다.
 const JOURNALISTS = [
@@ -30,12 +31,21 @@ const JOURNALISTS = [
 ];
 
 const BSKY = 'https://public.api.bsky.app/xrpc';
+
+// 기본 20건, "더보기" 한 번에 20건씩, 상한 40건(사용자 지정).
+// SNS는 신선도가 생명이라 뉴스(60)보다 얕게 잡았다 — 실측으로 40번째 글이 12일 전이고,
+// 그보다 오래된 트윗은 볼 이유가 없다. 훑는 범위(계정당 scan) 안의 아스날 통과분은
+// 119건이라 40은 풀의 3분의 1이다.
+const PAGE = 20, CAP = 40;
 const TTL  = 60 * 1000;
 
 // 아스날 관련 포스트 판별(선수·감독 이름 키워드)은 뉴스와 같이 쓰는 _arsenalTerms.js에 있다.
 
-let _cache = null;
-let _cacheTs = 0;
+// 번역 전 목록은 한 번만 조립해 limit별로 나눠 쓴다 — 더보기를 눌러도 블루스카이를
+// 다시 훑지 않는다. 응답 캐시는 limit마다 따로 둔다(번역 결과가 달라서).
+let _feed = null;
+let _feedTs = 0;
+const _outCache = new Map();
 
 function timeAgo(dateStr) {
   try {
@@ -163,6 +173,24 @@ async function translatePosts(posts) {
   return posts;
 }
 
+// 조립이 끝난 목록(_feed)을 요청한 limit만큼 잘라 번역해 내보낸다.
+// 자른 뒤에 번역하므로, 더보기를 누르지 않은 사람 때문에 뒷부분 본문에 번역 문자 수를
+// 쓰는 일이 없다. SNS 본문은 HTML 모드라 항목당 비용이 셋 중 가장 크다.
+async function respond(req, res, feed) {
+  const limit = pageLimit(req.query.limit, PAGE, feed.length);
+  const hit = _outCache.get(limit);
+  if (hit && Date.now() - hit.ts < TTL) return res.json(hit.data);
+
+  // 얕은 복사로 충분하다 — translateSegments/translateFields는 segments 배열을 제자리에서
+  // 고치지 않고 통째로 갈아끼운다(it.segments = rebuilt). 원본 feed는 영어 그대로 남는다.
+  const posts = feed.slice(0, limit).map(p => ({ ...p }));
+  await translatePosts(posts);
+
+  const payload = { posts, count: feed.length, hasMore: feed.length > limit };
+  _outCache.set(limit, { data: payload, ts: Date.now() });
+  return res.json(payload);
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
@@ -172,8 +200,8 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
 
   try {
-    if (_cache && Date.now() - _cacheTs < TTL) {
-      return res.json(_cache);
+    if (_feed && Date.now() - _feedTs < TTL) {
+      return respond(req, res, _feed);
     }
 
     const terms = await loadTerms();
@@ -193,28 +221,34 @@ export default async function handler(req, res) {
     // Collings 메리노 인터뷰가 빠짐). 순수 최신순은 반대로 경기 날 Collings 중계가
     // 12칸 중 10칸을 채워 다른 기자 분석이 사라진다. 보강은 7일 안으로만 해서 한참
     // 조용한 계정(Ornstein 등)의 옛 글이 피드에 눌러앉지 않게 한다.
-    // 12 → 16(사용자 지정). 보강까지 더하면 17~21개가 되어 뉴스·유튜브(20개)와 규모가 맞는다.
-    // 계정당 상한은 두지 않는다 — 활발한 계정의 글이 묻히면 안 된다(사용자 지정).
-    const SHOW = 16, MIN_PER_AUTHOR = 2, BACKFILL_DAYS = 7;
-    const picked = all.slice(0, SHOW);
+    // 판정 기준이 16 → CAP(40)으로 옮겨졌다(더보기 도입). 기준이 16일 때는 7일치 글이
+    // 16칸에 다 안 들어가서 조용한 기자가 통째로 사라졌지만, 40칸은 실측 12일치를 덮어서
+    // 7일 안의 글(실측 19건)이 전부 들어온다 — 그래서 평소엔 보강이 한 건도 안 걸린다.
+    // 그래도 남겨두는 이유는 경기 주간이다. 중계 글이 쏟아져 7일치가 40건을 넘으면
+    // 그때 다시 되살아나 조용한 기자를 한 명도 빼놓지 않는다.
+    // 계정당 상한은 두지 않는다 — 최신순이 원칙이고, 많이 쓴 계정의 글이 많이 보이는 건
+    // 정상이다(사용자 지정). 상한을 걸면 그 자리를 조용한 계정의 옛 글이 메운다
+    // (실측: 계정당 4로 묶으면 141일 전 글까지 끌려 올라온다).
+    const MIN_PER_AUTHOR = 2, BACKFILL_DAYS = 7;
+    const picked = all.slice(0, CAP);
     const perAuthor = {};
     for (const p of picked) perAuthor[p.author.handle] = (perAuthor[p.author.handle] || 0) + 1;
     const cutoff = Date.now() - BACKFILL_DAYS * 24 * 60 * 60 * 1000;
-    for (const p of all.slice(SHOW)) {
+    for (const p of all.slice(CAP)) {
       const k = p.author.handle;
       if ((perAuthor[k] || 0) >= MIN_PER_AUTHOR) continue;
       if (new Date(p.createdAt).getTime() < cutoff) continue;
       picked.push(p);
       perAuthor[k] = (perAuthor[k] || 0) + 1;
     }
+    // 보강분은 원래 더 오래된 글이라, 시간순으로 다시 세우면 알아서 맨 뒤(마지막 페이지)로 간다.
     picked.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
 
-    const payload = { posts: picked, count: all.length };
-    await translatePosts(payload.posts);
-    _cache   = payload;
-    _cacheTs = Date.now();
+    _feed   = picked;
+    _feedTs = Date.now();
+    _outCache.clear();          // 목록이 바뀌었으니 limit별 응답도 같이 버린다
 
-    return res.json(payload);
+    return respond(req, res, _feed);
   } catch (err) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(500).json({ error: err.message, posts: [] });

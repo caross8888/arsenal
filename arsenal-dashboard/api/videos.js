@@ -9,12 +9,17 @@
 // 30분 메모리 캐시가 있어 실제 사용량은 하루 수백 단위 수준.
 
 import { translateFields } from './_translate.js';
+import { pageLimit } from './_paging.js';
 
 const CHANNEL_ID = 'UCpryVRk_VDudG8SHXgWcG0w'; // Arsenal 공식 채널
 // 채널의 "업로드" 재생목록 id는 채널 id의 앞 UC를 UU로 바꾼 것(추가 조회 불필요)
 const UPLOADS_PLAYLIST = 'UU' + CHANNEL_ID.slice(2);
 const FEED_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
-const LIMIT = 20;   // 12 → 20(사용자 지정) — 뉴스와 같은 규모로 맞춘다.
+// 기본 20건, "더보기" 한 번에 20건씩, 상한 50건(사용자 지정).
+// 50인 이유는 API 한 번에 받을 수 있는 최대치라서다 — playlistItems·videos 둘 다
+// maxResults/id 상한이 50이고, 20을 받든 50을 받든 비용은 똑같이 2유닛이다.
+// 51번째부터는 페이지 토큰으로 한 번 더 받아야 해서 유닛이 늘어난다.
+const PAGE = 20, CAP = 50;
 const LAST_GOOD_KEY = `videos:last:${CHANNEL_ID}`;
 
 const KV_URL = process.env.KV_REST_API_URL;
@@ -73,7 +78,9 @@ async function ytApi(path, apiKey) {
 
 // ── 1순위: Data API ──
 async function fetchViaApi(apiKey) {
-  const pl = await ytApi(`playlistItems?part=contentDetails&maxResults=${LIMIT + 4}&playlistId=${UPLOADS_PLAYLIST}`, apiKey);
+  // 50은 이 엔드포인트의 최대치다. 아래 videos 조회도 id를 50개까지 한 번에 받으므로
+  // 20개를 받을 때와 유닛이 같다 — 더보기용 여유분을 처음부터 다 받아둔다.
+  const pl = await ytApi(`playlistItems?part=contentDetails&maxResults=${CAP}&playlistId=${UPLOADS_PLAYLIST}`, apiKey);
   const ids = (pl.items || []).map((i) => i.contentDetails?.videoId).filter(Boolean);
   if (!ids.length) throw new Error('YouTube API: 업로드 목록 비어 있음');
   const vd = await ytApi(`videos?part=snippet,status&id=${ids.join(',')}`, apiKey);
@@ -138,12 +145,18 @@ async function fetchViaRss(apiKey) {
     } catch (e) { lastErr = e; if (attempt < 2) await new Promise((res) => setTimeout(res, 400)); }
   }
   if (text === undefined) throw lastErr;
-  const videos = parseFeed(text).sort((a, b) => b.pubDate - a.pubDate).slice(0, LIMIT);
+  // 유튜브 RSS는 보통 15개 안팎만 주므로 CAP을 다 못 채우는 게 정상이다(hasMore가 false가 된다).
+  const videos = parseFeed(text).sort((a, b) => b.pubDate - a.pubDate).slice(0, CAP);
   const embedMap = await fetchEmbeddableMap(videos.map((v) => v.videoId), apiKey);
   return videos.map((v) => ({ ...v, embeddable: embedMap[v.videoId] !== undefined ? embedMap[v.videoId] : true }));
 }
 
-const cache = { data: null, ts: 0 };
+// 번역 전 목록은 한 번만 받아 limit별로 나눠 쓴다 — 더보기를 눌러도 유튜브 API를
+// 다시 부르지 않는다(유닛도 그대로). 응답 캐시는 limit마다 따로 둔다(번역 결과가 다르므로).
+const feedCache = { list: null, source: null, ts: 0 };
+const outCache = new Map();
+// 목록 소스가 통째로 죽었을 때 돌려줄 마지막 성공 응답(기본 20건짜리만 보관한다)
+let lastGood = null;
 const TTL = 60 * 1000;
 
 export default async function handler(req, res) {
@@ -154,53 +167,66 @@ export default async function handler(req, res) {
   // 유튜브 API는 호출당 2유닛이라 1분 간격이어도 하루 최대 2,880유닛 — 할당량(10,000)의 3할 이하다.
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
 
-  if (cache.data && Date.now() - cache.ts < TTL) return res.json(cache.data);
-
-  const apiKey = process.env.YOUTUBE_API_KEY;
-  const errors = [];
-  let videos = null, source = null;
-
-  if (apiKey) {
-    try { videos = await fetchViaApi(apiKey); source = 'YouTube API'; }
-    catch (e) { errors.push(e.message); }
-  }
-  if (!videos || !videos.length) {
-    try { videos = await fetchViaRss(apiKey); source = 'YouTube RSS'; }
-    catch (e) { errors.push(e.message); }
+  let feed = null, source = null;
+  if (feedCache.list && Date.now() - feedCache.ts < TTL) {
+    feed = feedCache.list; source = feedCache.source;
   }
 
-  if (!videos || !videos.length) {
-    // 둘 다 실패 — 메모리 캐시(같은 인스턴스) → KV의 마지막 성공 목록 순으로 대체.
-    // 대체 응답은 CDN에 1분만 보관한다(30분 보관하면 복구된 뒤에도 옛 목록·빈 목록이 계속 나간다).
-    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60');
-    if (cache.data) return res.json(cache.data);
-    const last = await kvGetJSON(LAST_GOOD_KEY);
-    if (last && last.videos?.length) {
-      // 저장 당시의 "N분 전"은 낡았으니 저장해 둔 게시 시각으로 다시 계산
-      last.videos = last.videos.map((v) => ({ ...v, timeAgo: v.publishedAt ? timeAgo(v.publishedAt) : v.timeAgo }));
-      return res.json({ ...last, stale: true, error: errors.join(' / ') });
+  if (!feed) {
+    const apiKey = process.env.YOUTUBE_API_KEY;
+    const errors = [];
+    let videos = null;
+
+    if (apiKey) {
+      try { videos = await fetchViaApi(apiKey); source = 'YouTube API'; }
+      catch (e) { errors.push(e.message); }
     }
-    return res.json({ videos: [], source: 'none', error: errors.join(' / ') });
+    if (!videos || !videos.length) {
+      try { videos = await fetchViaRss(apiKey); source = 'YouTube RSS'; }
+      catch (e) { errors.push(e.message); }
+    }
+
+    if (!videos || !videos.length) {
+      // 둘 다 실패 — 메모리 캐시(같은 인스턴스) → KV의 마지막 성공 목록 순으로 대체.
+      // 대체 응답은 CDN에 1분만 보관한다(30분 보관하면 복구된 뒤에도 옛 목록·빈 목록이 계속 나간다).
+      // 대체 목록에는 더보기를 붙이지 않는다(hasMore:false) — 뒷부분을 받아올 데가 없다.
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60');
+      if (lastGood) return res.json(lastGood);
+      const last = await kvGetJSON(LAST_GOOD_KEY);
+      if (last && last.videos?.length) {
+        // 저장 당시의 "N분 전"은 낡았으니 저장해 둔 게시 시각으로 다시 계산
+        last.videos = last.videos.map((v) => ({ ...v, timeAgo: v.publishedAt ? timeAgo(v.publishedAt) : v.timeAgo }));
+        return res.json({ ...last, hasMore: false, stale: true, error: errors.join(' / ') });
+      }
+      return res.json({ videos: [], source: 'none', hasMore: false, error: errors.join(' / ') });
+    }
+
+    feed = videos.sort((a, b) => b.pubDate - a.pubDate).slice(0, CAP);
+    feedCache.list = feed; feedCache.source = source; feedCache.ts = Date.now();
   }
+
+  const limit = pageLimit(req.query.limit, PAGE, feed.length);
+  const hit = outCache.get(limit);
+  if (hit && Date.now() - hit.ts < TTL) return res.json(hit.data);
 
   const result = {
-    videos: videos
-      .sort((a, b) => b.pubDate - a.pubDate)
-      .slice(0, LIMIT)
-      .map(({ pubDate, ...v }) => ({
-        ...v,
-        url: `https://www.youtube.com/watch?v=${v.videoId}`,
-        timeAgo: pubDate ? timeAgo(pubDate) : '',
-        publishedAt: pubDate,
-      })),
+    // map이 매번 새 객체를 만든다 — feed(번역 전 원본)가 번역으로 더럽혀지지 않는다.
+    videos: feed.slice(0, limit).map(({ pubDate, ...v }) => ({
+      ...v,
+      url: `https://www.youtube.com/watch?v=${v.videoId}`,
+      timeAgo: pubDate ? timeAgo(pubDate) : '',
+      publishedAt: pubDate,
+    })),
     source,
+    hasMore: feed.length > limit,
   };
 
-  // 영상 제목 한글화 (실패 시 원문 유지)
+  // 영상 제목 한글화 (실패 시 원문 유지). 자른 뒤에 번역하므로, 더보기를 누르지 않은
+  // 사람 때문에 21번째 이후 제목에 번역 문자 수를 쓰는 일이 없다.
   await translateFields(result.videos, ['title']);
 
-  cache.data = result;
-  cache.ts = Date.now();
-  await kvSetJSON(LAST_GOOD_KEY, result);
+  outCache.set(limit, { data: result, ts: Date.now() });
+  // 장애 대비 보관은 기본 목록만 — 더보기 응답까지 덮어쓰면 대체 화면이 들쭉날쭉해진다.
+  if (limit === PAGE) { lastGood = result; await kvSetJSON(LAST_GOOD_KEY, result); }
   return res.json(result);
 }

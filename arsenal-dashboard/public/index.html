@@ -386,6 +386,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .feed-slot > div > * > *{opacity:0;transition:opacity .2s ease;}
 .feed-slot.filled > div > * > *{opacity:1;}
 @media (prefers-reduced-motion: reduce){ .feed-slot{transition:none;} .feed-slot > div > * > *{transition:none;} }
+/* 목록 맨 아래 "더보기" — 목록(.news-list 등) 안이 아니라 바로 다음 형제로 붙인다.
+   목록 안에 넣으면 el.children을 카드 수로 세는 applyMediaUpdate가 버튼을 카드로 친다.
+   새로 붙는 카드에는 애니메이션을 주지 않는다 — 버튼이 화면 맨 아래에 있어서 실제로
+   보이는 건 한두 장뿐이고, 나머지는 화면 밖에서 끝난다(사용자 확인). */
+.feed-more{margin-top:12px}
+.feed-more:empty{display:none}
+.feed-more button{width:100%;background:var(--surface2);border:1px solid var(--border-bright);color:var(--text);
+  border-radius:10px;padding:13px 10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background .15s}
+.feed-more button:active{background:var(--surface3)}
+.feed-more button:disabled{color:var(--text-dim);cursor:default}
 .video-card{display:block;background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;overflow:hidden;margin-bottom:12px;text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent;}
 /* 탭을 넘길 때 새 패널이 밀린 방향 반대쪽에서 짧게 들어온다.
    나가는 패널은 건드리지 않는다 — 둘을 동시에 움직이려면 패널마다 독립 스크롤이 필요하고,
@@ -4105,15 +4116,89 @@ function collapseOldCards(container, cards){
     setTimeout(function(){ if(slot.parentNode) slot.parentNode.removeChild(slot); }, 580);
   });
 }
+// ── 더보기 ──────────────────────────────────────────────────────────
+// 서버는 기본 20건을 주고, ?limit=을 올려 보내면 그만큼 더 준다. 상한은 서버가 쥐고 있어
+// (뉴스 60 / SNS 40 / 유튜브 50) 다 받으면 hasMore가 false로 와서 버튼이 사라진다.
+// 주소창으로 큰 값을 넣어도 서버가 상한에서 자른다.
+//
+// 확장 상태는 이 세션 안에서만 산다 — 새로고침하면 다시 20건이다. localStorage에
+// 넣어두면 더보기를 한 번 누른 사람은 그 뒤로 영영 무거운 첫 화면을 받게 된다.
+var MEDIA_PAGE = 20;   // 서버 쪽 PAGE와 같아야 한다
+
+function mediaLimitOf(el){ return parseInt(el && el.dataset.limit, 10) || MEDIA_PAGE; }
+function mediaPath(cfg, limit){
+  if(limit <= MEDIA_PAGE) return cfg.path;
+  return cfg.path + (cfg.path.indexOf('?') < 0 ? '?' : '&') + 'limit=' + limit;
+}
+// 버튼은 목록의 형제로 둔다(목록 안에 넣으면 applyMediaUpdate가 카드로 센다).
+function renderMediaMore(cfg, hasMore){
+  var el = document.getElementById(cfg.el);
+  if(!el) return;
+  var box = document.getElementById(cfg.el + 'More');
+  if(!box){
+    box = document.createElement('div');
+    box.className = 'feed-more';
+    box.id = cfg.el + 'More';
+    el.insertAdjacentElement('afterend', box);
+  }
+  box.innerHTML = '';
+  if(!hasMore) return;
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = '더보기';
+  btn.onclick = function(){ loadMoreMedia(cfg, btn); };
+  box.appendChild(btn);
+}
+function loadMoreMedia(cfg, btn){
+  var el = document.getElementById(cfg.el);
+  if(!el || !el.dataset.ids) return;
+  var have = el.dataset.ids.split(',');
+  var next = mediaLimitOf(el) + MEDIA_PAGE;
+  btn.disabled = true;
+  btn.textContent = '불러오는 중...';
+  apiFetch(FN + mediaPath(cfg, next)).then(function(data){
+    var items = (data && data[cfg.key]) || [];
+    var ids = items.map(cfg.id);
+    // 지금 맨 아래 글이 새 목록의 어디인지 찾아 그 "뒤"만 붙인다. 단순히 "이미 있는 id 빼기"로
+    // 하면, 받는 사이에 올라온 새 글이 맨 아래에 붙어 시간순이 깨진다(새 글은 폴링이 위에 넣는다).
+    var at = ids.indexOf(have[have.length - 1]);
+    if(at < 0){
+      // 목록이 통째로 갈렸다 — 끼워 넣지 말고 새로 그린다(applyMediaUpdate와 같은 판단).
+      el.innerHTML = '';
+      el.dataset.ids = ids.join(',');
+      items.forEach(function(it, i){ el.appendChild(cfg.build(it, i)); });
+    } else {
+      var added = items.slice(at + 1);
+      if(!added.length && data.hasMore){ btn.disabled = false; btn.textContent = '더보기'; return; }
+      added.forEach(function(it, i){ el.appendChild(cfg.build(it, have.length + i)); });
+      el.dataset.ids = have.concat(added.map(cfg.id)).join(',');
+    }
+    if(cfg.el === 'videoList') el.dataset.videoIds = el.dataset.ids;
+    // 상한에 닿아 next보다 적게 왔으면 받은 만큼으로 기록한다 — 그래야 다음 폴링이
+    // 있지도 않은 길이를 요청하지 않는다(유튜브는 상한 50이라 40 다음이 60이 아니라 50이다).
+    el.dataset.limit = String(data.hasMore ? next : Math.max(MEDIA_PAGE, items.length));
+    renderMediaMore(cfg, !!data.hasMore);
+  }).catch(function(){
+    btn.disabled = false;
+    btn.textContent = '다시 시도';
+  });
+}
+
 function pollMediaFeed(cfg){
   var el = document.getElementById(cfg.el);
   if(!el || !el.dataset.ids) return;        // 최초 렌더 전이면 건드리지 않는다
-  apiFetch(FN + cfg.path).then(function(data){
+  // 더보기로 펼쳐둔 상태면 그 길이로 물어본다 — 20건짜리 응답을 받으면
+  // applyMediaUpdate가 "목록이 짧아졌다"고 보고 펼친 뒷부분을 접어 없앤다.
+  var limit = mediaLimitOf(el);
+  apiFetch(FN + mediaPath(cfg, limit)).then(function(data){
     var items = (data && data[cfg.key]) || [];
     // 자동 갱신에서는 목록이 통째로 바뀔어도 다시 그리지 않는다 — 읽던 자리가 튀다.
     // 그 경우는 다음 새로고침이 처리한다.
     if(!applyMediaUpdate(cfg, items)) return;
-    try{ localStorage.setItem('cache_' + cfg.cacheKey, JSON.stringify(data)); }catch(e){}
+    renderMediaMore(cfg, !!data.hasMore);
+    if(limit <= MEDIA_PAGE){
+      try{ localStorage.setItem('cache_' + cfg.cacheKey, JSON.stringify(data)); }catch(e){}
+    }
   }).catch(function(){});
 }
 function pollMediaOnce(){
@@ -4124,7 +4209,11 @@ function pollMediaOnce(){
   _mediaLastPoll = Date.now();
   MEDIA_FEEDS.forEach(function(cfg){
     var wrap = document.getElementById(cfg.wrap);
-    if(wrap && wrap.style.display === 'none') return;    // 모바일에서 안 보이는 칸은 건너뛴다
+    // 모바일에서 안 보이는 칸은 건너뛴다. 인라인 style이 아니라 실제로 그려졌는지를 본다 —
+    // SNS·유튜브 칸은 HTML에 style="display:none"이 박혀 있고 PC에서는 CSS의
+    // `.media-cols .media-col{display:block!important}`가 그걸 덮는다. 인라인만 보면
+    // PC에서 두 칸이 멀쩡히 보이는데도 자동 갱신에서 빠졌다.
+    if(wrap && !wrap.offsetParent && getComputedStyle(wrap).position !== 'fixed') return;
     pollMediaFeed(cfg);
   });
 }
@@ -4161,12 +4250,14 @@ function loadVideos(){
       // 첫 탭이 씹히고 한 번 더 눌러야 재생되는 현상이 생긴다 — 목록 내용이
       // 실제로 바뀌지 않았으면 다시 그리지 않는다.
       var ids = videos.map(function(v){ return v.videoId; }).join(',');
-      if(el.dataset.videoIds === ids) return;
-      if(applyMediaUpdate(mediaFeed('videos'), videos)) return;
+      if(el.dataset.videoIds === ids){ renderMediaMore(mediaFeed('videos'), !!data.hasMore); return; }
+      if(applyMediaUpdate(mediaFeed('videos'), videos)){ renderMediaMore(mediaFeed('videos'), !!data.hasMore); return; }
       el.dataset.videoIds = ids;
       el.dataset.ids = ids;
+      el.dataset.limit = String(MEDIA_PAGE);
       el.innerHTML='';
       videos.forEach(function(v, idx){ el.appendChild(buildVideoCard(v, idx)); });
+      renderMediaMore(mediaFeed('videos'), !!data.hasMore);
     });
   }, function(){ withMinLoading(el, _t0, function(){ el.innerHTML='<div class="loading-state" style="padding:28px 0;"><span>영상을 불러오지 못했습니다</span></div>'; }); });
 }
@@ -5234,10 +5325,12 @@ function loadNews(){
       if(!articles.length){el.innerHTML='<div class="loading-state">\uB274\uC2A4 \uC5C6\uC74C</div>';return;}
       // 캐시로 이미 그려져 있으면 통째로 다시 그리지 않고 새 기사만 위에 끼운다
       // (전체 재렌더는 화면이 한 번 깜빡이고 읽던 위치도 잃는다).
-      if(applyMediaUpdate(mediaFeed('news'), articles)) return;
+      if(applyMediaUpdate(mediaFeed('news'), articles)){ renderMediaMore(mediaFeed('news'), !!data.hasMore); return; }
       el.innerHTML='';
       el.dataset.ids = articles.map(mediaNewsId).join(',');
+      el.dataset.limit = String(MEDIA_PAGE);
       articles.forEach(function(a, idx){ el.appendChild(buildNewsCard(a, idx)); });
+      renderMediaMore(mediaFeed('news'), !!data.hasMore);
     });
   }, function(err){ withMinLoading(el, _t0, function(){ showErr(el,err.message); }); });
 }
@@ -5382,10 +5475,12 @@ function loadSns(){
     withMinLoading(document.getElementById('snsGrid'), _t0, function(){
       var posts=data.posts||[];
       if(!posts.length){el.innerHTML='<div class="loading-state">포스트 없음</div>';return;}
-      if(applyMediaUpdate(mediaFeed('sns'), posts)) return;
+      if(applyMediaUpdate(mediaFeed('sns'), posts)){ renderMediaMore(mediaFeed('sns'), !!data.hasMore); return; }
       el.innerHTML='';
       el.dataset.ids = posts.map(mediaSnsId).join(',');
+      el.dataset.limit = String(MEDIA_PAGE);
       posts.forEach(function(p, idx){ el.appendChild(buildSnsCard(p, idx)); });
+      renderMediaMore(mediaFeed('sns'), !!data.hasMore);
     });
   }, function(err){
     withMinLoading(el, _t0, function(){

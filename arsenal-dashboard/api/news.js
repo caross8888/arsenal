@@ -4,6 +4,7 @@
 
 import { translateFields } from './_translate.js';
 import { loadTerms, isArsenalText } from './_arsenalTerms.js';
+import { pageLimit } from './_paging.js';
 
 // BBC·CBS는 축구 전체 피드라 아스날 기사만 골라야 한다(ESPN·Guardian은 요청 자체가
 // 아스날 한정). 예전엔 헤드라인에 "arsenal"이 있어야만 통과해서 "Madueke a target
@@ -167,7 +168,15 @@ function parseRSS(text, sourceName, filter) {
   return items;
 }
 
-const cache = { data: null, ts: 0 };
+// 기본 20건, "더보기" 한 번에 20건씩, 상한 60건(사용자 지정).
+// 60의 근거는 공급량이다 — ESPN 20 + 가디언 25 + RSS 아스날 통과분 34를 중복 제거하면
+// 실측 77건이고, 60번째 기사가 9~10일 전이다. 그보다 깊이 파도 읽을 만한 게 안 남는다.
+const PAGE = 20, CAP = 60;
+
+// 번역 전 목록(풀)은 한 번만 받아 limit별로 나눠 쓴다 — 더보기를 눌렀다고 RSS를 다시
+// 긁지 않는다. 응답 캐시는 limit마다 따로 둔다(번역 결과가 달라서).
+const poolCache = { list: null, errors: null, ts: 0 };
+const outCache = new Map();
 const TTL = 60 * 1000;
 
 // 가디언 무료 키는 하루 500회·분당 12회 제한이라, 전체 TTL을 1분으로 낮추면
@@ -192,22 +201,17 @@ async function kvCmd(cmd){
   }catch(_){ return null; }
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  // 새 글이 올라오면 새로고침 한 번에 보이도록 캐시를 짧게 잡는다 — 서버 메모리 1분 +
-  // CDN 1분 + 만료 직후 30초(swr)로 최악 2분 반. 브라우저는 max-age=0으로 두어
-  // 새로고침할 때마다 CDN에 물어보게 한다(CDN 히트라 함수는 안 돌고 응답만 받는다).
-  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
-
-  if (cache.data && Date.now() - cache.ts < TTL) return res.json(cache.data);
-
+// 모든 소스에서 기사를 받아 최신순·중복 제거까지 끝낸 "번역 전 목록"을 돌려준다.
+// 응답 만들기(자르기·번역)는 핸들러가 한다 — 같은 풀을 limit마다 다르게 잘라 쓰기 위해서다.
+async function buildPool() {
   const allArticles = [];
   const sourceErrors = {};
 
   // ESPN API (아스날 뉴스, 고화질 이미지 포함)
   try {
     const espnRes = await fetch(
-      'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news?team=359&limit=10',
+      // limit 10 → 20. 더보기 상한(60건)을 채우려면 풀이 더 커야 한다 — 요청 수는 그대로다.
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news?team=359&limit=20',
       { signal: AbortSignal.timeout(6000) }
     );
     if (espnRes.ok) {
@@ -247,7 +251,8 @@ export default async function handler(req, res) {
     } else {
     const gKey = process.env.GUARDIAN_API_KEY || 'test';
     const gRes = await fetch(
-      `https://content.guardianapis.com/search?tag=football/arsenal&order-by=newest&show-fields=thumbnail,trailText&page-size=15&api-key=${gKey}`,
+      // page-size 15 → 25. 하루 500회 제한은 호출 수 기준이라 한 번에 더 받아도 비용이 같다.
+      `https://content.guardianapis.com/search?tag=football/arsenal&order-by=newest&show-fields=thumbnail,trailText&page-size=25&api-key=${gKey}`,
       { signal: AbortSignal.timeout(6000) }
     );
     if (gRes.ok) {
@@ -293,12 +298,6 @@ export default async function handler(req, res) {
     } catch (e) { sourceErrors[src.name] = e.message; }
   }));
 
-  if (!allArticles.length) {
-    // 출처가 전부 실패한 빈 응답은 CDN에 보관하지 않는다 — 15분 동안 모두에게 빈 목록이 나간다.
-    res.setHeader('Cache-Control', 'no-store');
-    return res.json({ articles: [], source: 'none' });
-  }
-
   // 최신순 정렬
   allArticles.sort((a, b) => b.pubDate - a.pubDate);
 
@@ -311,10 +310,41 @@ export default async function handler(req, res) {
     return true;
   });
 
+  return { list: unique.slice(0, CAP), errors: sourceErrors };
+}
+
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  // 새 글이 올라오면 새로고침 한 번에 보이도록 캐시를 짧게 잡는다 — 서버 메모리 1분 +
+  // CDN 1분 + 만료 직후 30초(swr)로 최악 2분 반. 브라우저는 max-age=0으로 두어
+  // 새로고침할 때마다 CDN에 물어보게 한다(CDN 히트라 함수는 안 돌고 응답만 받는다).
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
+
+  let pool = null, sourceErrors = null;
+  if (poolCache.list && Date.now() - poolCache.ts < TTL) {
+    pool = poolCache.list; sourceErrors = poolCache.errors;
+  } else {
+    const built = await buildPool();
+    pool = built.list; sourceErrors = built.errors;
+    if (pool.length) { poolCache.list = pool; poolCache.errors = sourceErrors; poolCache.ts = Date.now(); }
+  }
+
+  if (!pool.length) {
+    // 출처가 전부 실패한 빈 응답은 CDN에 보관하지 않는다 — 1분 동안 모두에게 빈 목록이 나간다.
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json({ articles: [], source: 'none', hasMore: false });
+  }
+
+  const limit = pageLimit(req.query.limit, PAGE, pool.length);
+  const hit = outCache.get(limit);
+  if (hit && Date.now() - hit.ts < TTL) return res.json(hit.data);
+
   const result = {
-    // 12 → 20(사용자 지정). 자른 뒤에 번역하므로, 화면에 안 나올 기사에는 번역 문자 수를 쓰지 않는다.
-    articles: unique.slice(0, 20).map(({ pubDate: _, ...a }) => a),
+    // map이 매번 새 객체를 만든다 — pool(번역 전 원본)이 번역으로 더럽혀지지 않는다.
+    // 자른 뒤에 번역하므로, 화면에 안 나올 기사에는 번역 문자 수를 쓰지 않는다.
+    articles: pool.slice(0, limit).map(({ pubDate: _, ...a }) => a),
     source: 'RSS',
+    hasMore: pool.length > limit,
     sourceErrors: Object.keys(sourceErrors).length ? sourceErrors : undefined,
   };
 
@@ -350,7 +380,6 @@ export default async function handler(req, res) {
     if (article.titleEn) article.titleEn = (prefix || '') + article.titleEn + (suffix || '');
   }
 
-  cache.data = result;
-  cache.ts = Date.now();
+  outCache.set(limit, { data: result, ts: Date.now() });
   return res.json(result);
 }
