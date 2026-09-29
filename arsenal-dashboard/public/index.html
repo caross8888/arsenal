@@ -9465,29 +9465,48 @@ function renderShotmapSVG(shots){
       // 골라인에서 멈추지 않고 네트 쪽으로 좀 더 뻗어나가게 그린다.
       var minLen=(parseFloat(hlR)+4);
       var drawDist=Math.max(dist, minLen);
-      if(s.event!=='blocked') drawDist+=3;
       var startX=cx+ux*parseFloat(hlR);
       var startY=cy+uy*parseFloat(hlR);
       // 어디까지 뻗을지는 좌표가 아니라 "길이"를 잘라서 정한다 — x와 y를 따로 클램프하면
       // 한쪽만 걸렸을 때 선의 각도가 틀어진다. 경계까지 갈 수 있는 거리를 구해 최솟값을 쓴다.
       var travel=function(p0, u, bound){ return u===0 ? Infinity : (bound-p0)/u; };
-      var lim=drawDist;
-      // 네트 뒤판 — 크로스바 두께만큼 남겨 선 끝이 프레임 위에 겹치지 않게 한다.
-      // 예전엔 -3이 박혀 있었는데 그건 골대 깊이 2.6에 맞춘 값이었다.
-      if(uy<0) lim=Math.min(lim, travel(cy, uy, -(SM_GOAL_DEPTH-SM_POST)));
-      // 도착점이 골문 안이면(유효슈팅·골) 좌우도 포스트 안쪽으로 가둔다. 연장 3유닛 때문에
-      // 비스듬히 들어간 골이 포스트를 넘어가 "골대 옆으로 들어간" 그림이 됐다(실측: 사카 골 3개 중 2개).
-      // 빗나간 슛은 실제로 포스트 밖으로 지나가므로 건드리지 않는다.
       var gmA=toSX(34-3.66), gmB=toSX(34+3.66);
       var gmL=Math.min(gmA,gmB)+SM_POST/2, gmR=Math.max(gmA,gmB)-SM_POST/2;
-      if(ex>=gmL && ex<=gmR){
+      var lim;
+      if(s.event==='blocked'){
+        // 막힌 자리에서 실제로 멈춘다 — 연장 없음
+      } else if(s.event==='goal' || s.event==='onTarget' || s.event==='ownGoal'){
+        // 골문 안으로 들어간 슛 — 네트 쪽으로 조금 더 뻗되 프레임을 넘지 않는다.
+        // 네트 뒤판은 크로스바 두께만큼 남겨 선 끝이 프레임 위에 겹치지 않게 한다.
+        // 좌우를 안 막으면 연장분 때문에 비스듬히 들어간 골이 포스트를 넘어가
+        // "골대 옆으로 들어간" 그림이 된다(실측: 사카 골 3개 중 2개).
+        drawDist+=3;
+        lim=drawDist;
+        if(uy<0)      lim=Math.min(lim, travel(cy, uy, -(SM_GOAL_DEPTH-SM_POST)));
         if(ux>0)      lim=Math.min(lim, travel(cx, ux, gmR));
         else if(ux<0) lim=Math.min(lim, travel(cx, ux, gmL));
+        drawDist=Math.max(0, Math.min(drawDist, lim));
+      } else {
+        // 빗나간 슛 — 골라인을 지나 실제로 경기장 밖으로 나간 공이다. 도착점에서 몇 유닛만
+        // 더 가고 끊으면 골대 옆에 토막 난 선이 남으므로, 그림 가장자리까지 뻗게 한다.
+        // 선은 탭한 하나만 보이므로(.shot-line{opacity:0}) 길어도 화면이 지저분해지지 않는다.
+        lim=Infinity;
+        if(uy<0)      lim=Math.min(lim, travel(cy, uy, -(SM_GOAL_DEPTH+SM_TOP_PAD)));
+        if(ux>0)      lim=Math.min(lim, travel(cx, ux, VW));
+        else if(ux<0) lim=Math.min(lim, travel(cx, ux, 0));
+        if(isFinite(lim)) drawDist=Math.max(0, lim);
       }
-      drawDist=Math.max(0, Math.min(drawDist, lim));
       var endX2=Math.min(VW,Math.max(0,cx+ux*drawDist));
       var endY2=Math.min(VH,cy+uy*drawDist);
-      lines+='<line id="shotline_'+i+'" class="shot-line" x1="'+startX.toFixed(2)+'" y1="'+startY.toFixed(2)+'" x2="'+endX2.toFixed(2)+'" y2="'+endY2.toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.5"/>';
+      var seg='<line x1="'+startX.toFixed(2)+'" y1="'+startY.toFixed(2)+'" x2="'+endX2.toFixed(2)+'" y2="'+endY2.toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.5"/>';
+      if(s.event==='blocked'){
+        // 막힌 슛은 선이 허공에서 뚝 끊겨 보인다 — 끝에 진행 방향과 직각인 막대를 그어
+        // "여기서 막혔다"를 표시한다(T자). 방향 벡터 (ux,uy)의 법선은 (-uy,ux)다.
+        var bx=-uy, by=ux, bHalf=1.1;
+        seg+='<line x1="'+(endX2-bx*bHalf).toFixed(2)+'" y1="'+(endY2-by*bHalf).toFixed(2)+'" x2="'+(endX2+bx*bHalf).toFixed(2)+'" y2="'+(endY2+by*bHalf).toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.55" stroke-linecap="round"/>';
+      }
+      // 선과 막대가 같이 켜지고 꺼져야 해서 <g>로 묶는다(toggleShotLine이 이 id에 .active를 준다).
+      lines+='<g id="shotline_'+i+'" class="shot-line">'+seg+'</g>';
     }
     var title='<title>'+(s.min!=null?s.min+"'":'')+' · xG '+(s.xg||0).toFixed(2)+'</title>';
     // fill="none"인 원(빗나감)은 가운데 빈 공간이 기본적으로 클릭 안 되므로
