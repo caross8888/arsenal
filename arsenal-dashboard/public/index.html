@@ -5655,7 +5655,7 @@ function openTransferModal(){
 function closeTransferModal(fromHash){
   document.getElementById('transferModal').classList.remove('open');
   document.body.style.overflow='';
-  if(!fromHash && location.hash.includes('transfer-modal')) history.replaceState(null,'',location.href.split('#')[0]);
+  if(!fromHash && location.hash.includes('transfer-modal')) clearModalHash();
 }
 
 // ── MATCH DETAIL MODAL ──
@@ -7137,7 +7137,7 @@ function closeMatchModal(e){
   overlay.classList.remove('open');
   document.body.style.overflow='';
   var h = location.hash;
-  if(h.includes('match') || h.includes('hist-modal')) window.history.replaceState(null,'',location.href.split('#')[0]);
+  if(h.includes('match') || h.includes('hist-modal')) clearModalHash();
 }
 
 // ── 바텀시트 스와이프-다운 닫기 ──
@@ -7212,6 +7212,17 @@ enableSheetSwipeClose(document.getElementById('transferModalSheet'), '.pm-header
 
 // ── NAV ──
 var VALID_SECS = ['fixtures','leaderboard','squad','media','history'];
+
+// 모달을 닫을 때 주소에서 모달 해시를 걷어낸다.
+// 예전엔 해시를 통째로 지웠는데(location.href.split('#')[0]), 그 상태로 새로고침하면
+// 해시가 비어 초기 복원이 기본값으로 떨어졌다 — 선수단에서 선수 모달을 X로 닫고
+// 새로고침하면 일정 탭으로 튀었다(사용자 제보). 지금 보고 있는 섹션으로 되돌려 둔다.
+function clearModalHash(){
+  var sec = document.querySelector('.section.active');
+  var id = sec && sec.id;
+  if(id && VALID_SECS.indexOf(id) !== -1) history.replaceState(null, '', '#' + id);
+  else history.replaceState(null, '', location.href.split('#')[0]);
+}
 
 // ── 하위 탭 기억 ──
 // 상단 탭은 주소 해시로 복원되지만(showSec), 탭 안의 하위 선택(일정 리스트/달력,
@@ -10011,7 +10022,7 @@ function closePlayerModal(fromHash){
   document.getElementById('playerModal').classList.remove('open');
   _pmOverlay = false;
   document.body.style.overflow='';
-  if(!fromHash && location.hash.includes('player')) history.replaceState(null,'',location.href.split('#')[0]);
+  if(!fromHash && location.hash.includes('player')) clearModalHash();
 }
 function closeModal(e){
   if(e.target===document.getElementById('playerModal'))closePlayerModal();
