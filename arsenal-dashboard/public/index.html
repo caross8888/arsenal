@@ -9360,39 +9360,62 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
 // Fotmob 좌표는 0~100 정규화가 아니라 실제 피치 크기(미터) 기준으로 내려온다
 var PITCH_LEN=105, PITCH_WID=68;
 
+// ── 슈팅맵 피치 치수 ──────────────────────────────────────────────
+// 배경(boxSVGBackground)과 슛 선(renderShotmapSVG)이 같은 값을 봐야 한다 — 예전엔 골대 깊이 2.6에
+// 맞춘 매직 넘버 -3이 viewBox와 선 클램프에 따로 박혀 있어서, 골대 크기를 바꾸면 선이 네트에
+// 못 닿거나 넘쳐 나갔다.
+//
+// 이 그림의 축척은 가로 56m를 100유닛에 담으므로 1유닛 = 0.56m다(세로도 같은 축척).
+// 규정값(IFAB): 골포스트 안쪽 간격 7.32m, 포스트·크로스바 두께 12cm 이하. 골대 "깊이"는
+// 규정에 없고, 성인용 네트의 바닥 런백이 2.0m라 그 값을 쓴다.
+var SM_GOAL_DEPTH = 3.6;   // 2.02m — 위에서 내려다본 네트의 바닥 깊이
+var SM_TOP_PAD    = 1.5;   // 골대 위 잔디 여백. 없으면 골대 테두리가 SVG 경계에서 잘리고,
+                           // 라이트 모드에선 흰 카드에 묻혀 아예 안 보인다.
+var SM_POST       = 0.30;  // ≈17cm. 규정 12cm는 0.21유닛 = 화면 0.7px이라 안 보여서 조금 키웠다.
+var SM_LINE       = 0.50;  // 피치 라인. 실제로 골라인도 같은 12cm라 골문 구간도 같은 값을 쓴다
+                           // (예전엔 골문 구간만 0.9로 굵어 혼자 튀었다).
+
 // 페널티박스 중심으로 확대한 세로형(골대가 위) 슈팅맵 배경
 function boxSVGBackground(VW, VH, xMin, xMax, yMin, yMax){
   var lc='rgba(255,255,255,.5)';
   var toSX=function(y){ return (y-yMin)/(yMax-yMin)*VW; };
   var toSY=function(x){ return (xMax-x)/(xMax-xMin)*VH; };
-  var goalDepth=2.6;
-  var s='<rect x="0" y="'+(-goalDepth)+'" width="'+VW+'" height="'+(VH+goalDepth)+'" fill="#1d5c33" rx="3"/>';
-  // 잔디결 줄무늬 (은은하게)
-  var stripes=7;
-  for(var i=0;i<stripes;i++){
-    if(i%2===0) continue;
-    var sy=VH/stripes*i;
-    s+='<rect x="0" y="'+sy.toFixed(2)+'" width="'+VW+'" height="'+(VH/stripes).toFixed(2)+'" fill="rgba(255,255,255,0.025)"/>';
+  var goalDepth=SM_GOAL_DEPTH, top=-(goalDepth+SM_TOP_PAD);
+  var s='<rect x="0" y="'+top.toFixed(2)+'" width="'+VW+'" height="'+(VH-top).toFixed(2)+'" fill="#1d5c33" rx="3"/>';
+  // 잔디결 줄무늬 (은은하게). 세로형 시야라 가로 줄무늬가 맞다. 골문 뒤 잔디까지 이어 그린다 —
+  // 예전엔 y=0 아래만 칠해서 골라인 뒤가 단색으로 끊겼다.
+  var stripes=7, band=VH/stripes;
+  for(var i=-2;i<stripes;i++){
+    if(((i%2)+2)%2===0) continue;
+    var y0=Math.max(band*i, top), y1=band*(i+1);
+    if(y1>y0) s+='<rect x="0" y="'+y0.toFixed(2)+'" width="'+VW+'" height="'+(y1-y0).toFixed(2)+'" fill="rgba(255,255,255,0.025)"/>';
   }
-  // 페널티 박스 (16.5m x 40.32m) — 골(y=0)에 붙어 아래로 뻗는 형태
-  // depth(x)는 toSY, 폭(y)은 toSX
+  // 페널티 박스(16.5m x 40.32m) · 골에어리어(5.5m x 18.32m) — 골라인(y=0)에 붙어 아래로 뻗는다.
+  // rect로 그리면 윗변이 골라인 위에 한 겹 더 얹혀 두 줄로 보이므로, 골라인에 닿는 변은 빼고
+  // ㄷ자 path로 그린다. depth(x)는 toSY, 폭(y)은 toSX.
   var pbY1=toSY(105-16.5), pbX1=toSX(34-20.16), pbX2=toSX(34+20.16);
-  s+='<rect x="'+pbX1.toFixed(2)+'" y="0" width="'+(pbX2-pbX1).toFixed(2)+'" height="'+pbY1.toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
-  // 골에어리어 (5.5m x 18.32m)
+  s+='<path d="M '+pbX1.toFixed(2)+' 0 L '+pbX1.toFixed(2)+' '+pbY1.toFixed(2)+' L '+pbX2.toFixed(2)+' '+pbY1.toFixed(2)+' L '+pbX2.toFixed(2)+' 0" fill="none" stroke="'+lc+'" stroke-width="'+SM_LINE+'"/>';
   var gbY1=toSY(105-5.5), gbX1=toSX(34-9.16), gbX2=toSX(34+9.16);
-  s+='<rect x="'+gbX1.toFixed(2)+'" y="0" width="'+(gbX2-gbX1).toFixed(2)+'" height="'+gbY1.toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
+  s+='<path d="M '+gbX1.toFixed(2)+' 0 L '+gbX1.toFixed(2)+' '+gbY1.toFixed(2)+' L '+gbX2.toFixed(2)+' '+gbY1.toFixed(2)+' L '+gbX2.toFixed(2)+' 0" fill="none" stroke="'+lc+'" stroke-width="'+SM_LINE+'"/>';
   // 아크 (박스 바깥쪽으로 볼록: 페널티 스팟 중심 원이 박스 선과 만나는 두 점 사이만 그림,
   // 반원이 아니라 박스 선까지 잘린 활 모양이 실제 규격과 맞음)
   var spotDepth=105-11, boxEdgeDepth=105-16.5, arcRadiusM=9.15;
   var halfChordM=Math.sqrt(arcRadiusM*arcRadiusM-(spotDepth-boxEdgeDepth)*(spotDepth-boxEdgeDepth));
   var arcP1x=toSX(34-halfChordM), arcP2x=toSX(34+halfChordM), arcY=toSY(boxEdgeDepth);
   var arcR=arcRadiusM*(VW/(yMax-yMin));
-  s+='<path d="M '+arcP1x.toFixed(2)+' '+arcY.toFixed(2)+' A '+arcR.toFixed(2)+' '+arcR.toFixed(2)+' 0 0 0 '+arcP2x.toFixed(2)+' '+arcY.toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="0.5"/>';
-  // 골문 (골라인 뒤 네트 프레임)
+  s+='<path d="M '+arcP1x.toFixed(2)+' '+arcY.toFixed(2)+' A '+arcR.toFixed(2)+' '+arcR.toFixed(2)+' 0 0 0 '+arcP2x.toFixed(2)+' '+arcY.toFixed(2)+'" fill="none" stroke="'+lc+'" stroke-width="'+SM_LINE+'"/>';
+  // 페널티 스팟 (11m)
+  s+='<circle cx="'+toSX(34).toFixed(2)+'" cy="'+toSY(spotDepth).toFixed(2)+'" r="0.5" fill="rgba(255,255,255,.6)"/>';
+  // 골문 — 안쪽은 어둡게 깔고 그물 격자를 얹은 뒤, 포스트·크로스바를 ㄷ자로 두른다.
   var goalW=7.32;
   var gx1=toSX(34-goalW/2), gx2=toSX(34+goalW/2);
-  s+='<rect x="'+gx1.toFixed(2)+'" y="'+(-goalDepth).toFixed(2)+'" width="'+(gx2-gx1).toFixed(2)+'" height="'+goalDepth.toFixed(2)+'" fill="rgba(255,255,255,0.07)" stroke="'+lc+'" stroke-width="0.6"/>';
-  s+='<line x1="'+gx1.toFixed(2)+'" y1="0" x2="'+gx2.toFixed(2)+'" y2="0" stroke="var(--white)" stroke-width="0.9"/>';
+  s+='<rect x="'+gx1.toFixed(2)+'" y="'+(-goalDepth).toFixed(2)+'" width="'+(gx2-gx1).toFixed(2)+'" height="'+goalDepth.toFixed(2)+'" fill="rgba(0,0,0,.28)"/>';
+  s+='<defs><pattern id="smNet" width="2" height="2" patternUnits="userSpaceOnUse"><path d="M 2 0 L 0 0 0 2" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="0.14"/></pattern></defs>';
+  s+='<rect x="'+gx1.toFixed(2)+'" y="'+(-goalDepth).toFixed(2)+'" width="'+(gx2-gx1).toFixed(2)+'" height="'+goalDepth.toFixed(2)+'" fill="url(#smNet)"/>';
+  s+='<path d="M '+gx1.toFixed(2)+' 0 L '+gx1.toFixed(2)+' '+(-goalDepth).toFixed(2)+' L '+gx2.toFixed(2)+' '+(-goalDepth).toFixed(2)+' L '+gx2.toFixed(2)+' 0" fill="none" stroke="var(--white)" stroke-width="'+SM_POST+'" stroke-linejoin="round"/>';
+  // 골라인 — 골문 구간만 순백, 나머지는 다른 라인과 같은 톤. 굵기는 셋 다 같다.
+  s+='<line x1="0" y1="0" x2="'+VW+'" y2="0" stroke="'+lc+'" stroke-width="'+SM_LINE+'"/>';
+  s+='<line x1="'+gx1.toFixed(2)+'" y1="0" x2="'+gx2.toFixed(2)+'" y2="0" stroke="var(--white)" stroke-width="'+SM_LINE+'"/>';
   return s;
 }
 
@@ -9446,7 +9469,10 @@ function renderShotmapSVG(shots){
       var startX=cx+ux*parseFloat(hlR);
       var startY=cy+uy*parseFloat(hlR);
       var endX2=Math.min(VW,Math.max(0,cx+ux*drawDist));
-      var endY2=Math.min(VH,Math.max(-3,cy+uy*drawDist));
+      // 선이 멈추는 한계는 골대 깊이에 묶는다. 예전엔 -3이 박혀 있었는데, 그건 그때의
+      // 골대 깊이(2.6)에 맞춘 값이라 깊이를 바꾸면 선이 네트에 못 닿거나 뒤로 삐져나갔다.
+      // 크로스바 두께만큼 남겨 선 끝이 프레임 위에 겹치지 않게 한다.
+      var endY2=Math.min(VH,Math.max(-(SM_GOAL_DEPTH-SM_POST),cy+uy*drawDist));
       lines+='<line id="shotline_'+i+'" class="shot-line" x1="'+startX.toFixed(2)+'" y1="'+startY.toFixed(2)+'" x2="'+endX2.toFixed(2)+'" y2="'+endY2.toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.5"/>';
     }
     var title='<title>'+(s.min!=null?s.min+"'":'')+' · xG '+(s.xg||0).toFixed(2)+'</title>';
@@ -9463,7 +9489,9 @@ function renderShotmapSVG(shots){
     // 탭해서 선택한 슛을 표시하는 하이라이트 링 (기본은 투명, 슈팅라인과 동일한 굵기)
     dots+='<circle id="shothl_'+i+'" class="shot-highlight" cx="'+cx.toFixed(2)+'" cy="'+cy.toFixed(2)+'" r="'+ringR+'" fill="none" stroke="var(--white)" stroke-width="0.5"/>';
   });
-  return '<svg viewBox="0 -3 '+VW+' '+(VH+3)+'" style="width:100%;height:auto;display:block;border-radius:8px;">'+boxSVGBackground(VW,VH,xMin,xMax,yMin,yMax)+lines+dots+'</svg>';
+  // viewBox 위쪽도 골대 깊이 + 잔디 여백에 맞춘다(예전 -3 고정값과 같은 이유).
+  var vbTop = SM_GOAL_DEPTH + SM_TOP_PAD;
+  return '<svg viewBox="0 '+(-vbTop)+' '+VW+' '+(VH+vbTop)+'" style="width:100%;height:auto;display:block;border-radius:8px;">'+boxSVGBackground(VW,VH,xMin,xMax,yMin,yMax)+lines+dots+'</svg>';
 }
 
 function toggleShotLine(idx){
@@ -9480,6 +9508,49 @@ function toggleShotLine(idx){
 }
 
 // ── 터치 히트맵 (캔버스 기반 부드러운 열분포) ──
+// 피치 라인은 캔버스 가장자리가 아니라 안쪽으로 들여 그린다. 예전엔 strokeRect(1,1,W-2,H-2)로
+// 끝에 딱 붙여 그렸는데, 라이트 모드에서 흰 카드 ↔ 초록 피치 경계가 너무 세서 그 자리의
+// 흰 선(35%)이 통째로 묻혔다(사용자 제보). 네 모서리도 캔버스의 border-radius:8px에 잘려
+// 테두리가 닫히지 않았고, 페널티박스는 x=0이라 세로선 절반이 캔버스 밖에 있었다.
+// 잔디 여백을 주면 셋 다 해결되고 실제 경기장 모습에도 가깝다.
+//
+// 여백은 세로(HEAT_PAD)만 정하고 가로는 실제 경기장 비율(105:68)을 지키도록 계산한다 —
+// 상하좌우에 같은 px을 주면 안쪽 사각형 비율이 어긋나 히트맵 좌표가 미세하게 늘어난다.
+var HEAT_PAD = 7;
+// 공격 방향 글리프 높이. 폭은 원본 viewBox가 28×14라 항상 이 값의 2배다.
+var HEAT_GLYPH_H = 12;
+// Fotmob 글리프 — 오른쪽에 선명한 셰브론 + 왼쪽으로 흐려지며 사라지는 꼬리.
+// path 좌표는 Fotmob SVG(28×14) 그대로다. Path2D가 없는 환경에선 글리프만 생략된다.
+var HEAT_GLYPH = (typeof Path2D !== 'undefined') ? {
+  tail: new Path2D('M1.60705 13.7535C1.69269 13.9014 1.82115 14 1.99243 14H14.5222C14.6507 14 14.7791 13.9507 14.8648 13.8028L19.4037 7.29577C19.5321 7.09859 19.5321 6.85211 19.4037 6.65493L14.8219 0.197183C14.7363 0.0985914 14.6079 0 14.4794 0L1.94961 0C1.77833 0 1.64987 0.0985915 1.56423 0.246479C1.47859 0.394366 1.47859 0.591549 1.56423 0.739437L4.5616 7L1.56423 13.2606C1.52141 13.4084 1.52141 13.6056 1.60705 13.7535Z'),
+  main: new Path2D('M21.4464 0C21.5756 0 21.7046 0.0989072 21.7908 0.197464L26.403 6.65496C26.5323 6.85215 26.5323 7.09849 26.403 7.29567L21.8339 13.8025C21.7477 13.9504 21.6188 14 21.4895 14H17.5432C17.6725 14 17.8014 13.9504 17.8876 13.8025L22.4567 7.29567C22.586 7.09849 22.586 6.85215 22.4567 6.65496L17.8444 0.197464C17.7582 0.0989072 17.6293 0 17.5 0H21.4464Z')
+} : null;
+
+// 라인이 놓일 안쪽 사각형(= 실제 피치). 히트맵 점도 이 사각형에 매핑한다.
+function heatInnerRect(W, H){
+  var ih = H - 2*HEAT_PAD, iw = ih * (PITCH_LEN/PITCH_WID);
+  if(iw > W-2){ iw = W-2; ih = iw * (PITCH_WID/PITCH_LEN); }
+  return { x:(W-iw)/2, y:(H-ih)/2, w:iw, h:ih };
+}
+
+// 공격 방향 글리프. 색은 흰색 고정이다 — 피치가 테마와 무관하게 늘 초록이라
+// 그 위의 전경도 고정이어야 한다(모달 헤더의 --on-dark-header와 같은 규칙).
+// 캔버스는 어차피 var()를 못 읽기도 한다.
+function drawAttackGlyph(ctx, cx, cy, h){
+  if(!HEAT_GLYPH) return;
+  var s = h/14;
+  ctx.save();
+  ctx.translate(cx - 14*s, cy - 7*s);
+  ctx.scale(s, s);
+  // 원본 SVG의 linearGradient와 같은 축(x 26.5 → -7.5)
+  var g = ctx.createLinearGradient(26.5, 7, -7.5, 7);
+  g.addColorStop(0, 'rgba(255,255,255,0.9)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;                        ctx.fill(HEAT_GLYPH.tail);
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';  ctx.fill(HEAT_GLYPH.main);
+  ctx.restore();
+}
+
 function drawPitchLinesOnCanvas(ctx, W, H){
   ctx.fillStyle='#1d5c33';
   ctx.fillRect(0,0,W,H);
@@ -9489,15 +9560,30 @@ function drawPitchLinesOnCanvas(ctx, W, H){
     if(psi%2===0) continue;
     ctx.fillRect(W/pitchStripes*psi,0,W/pitchStripes,H);
   }
+  var r = heatInnerRect(W, H), cx = r.x + r.w/2;
+  // 글리프가 들어갈 구멍. 알약 배경이 없으니 라인을 직접 비워서 자리를 만든다 —
+  // 가로는 글리프 폭 + 좌우 4px, 세로는 글리프 아래쪽 절반 + 3px. 하프라인까지 끊지 않으면
+  // 세로선이 글리프 한가운데를 관통한다.
+  var gapW = HEAT_GLYPH ? HEAT_GLYPH_H*2 + 8 : 0;
+  var gapV = HEAT_GLYPH ? HEAT_GLYPH_H/2 + 3 : 0;
   var lc='rgba(255,255,255,0.35)';
   ctx.strokeStyle=lc; ctx.lineWidth=1;
-  ctx.strokeRect(1,1,W-2,H-2);
-  ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();
-  ctx.beginPath();ctx.arc(W/2,H/2,H*0.15,0,Math.PI*2);ctx.stroke();
-  var bw=W*0.16, bh=H*0.6, by=(H-bh)/2;
-  ctx.strokeRect(0,by,bw,bh); ctx.strokeRect(W-bw,by,bw,bh);
-  var bw2=W*0.055, bh2=H*0.28, by2=(H-bh2)/2;
-  ctx.strokeRect(0,by2,bw2,bh2); ctx.strokeRect(W-bw2,by2,bw2,bh2);
+  if(gapW){
+    // 배경을 덧칠해 지우면 그 자리의 잔디 줄무늬까지 같이 사라진다 — 애초에 비운 채 한 붓에 그린다.
+    ctx.beginPath();
+    ctx.moveTo(cx-gapW/2, r.y); ctx.lineTo(r.x, r.y); ctx.lineTo(r.x, r.y+r.h);
+    ctx.lineTo(r.x+r.w, r.y+r.h); ctx.lineTo(r.x+r.w, r.y); ctx.lineTo(cx+gapW/2, r.y);
+    ctx.stroke();
+  } else {
+    ctx.strokeRect(r.x, r.y, r.w, r.h);
+  }
+  ctx.beginPath();ctx.moveTo(cx, r.y+gapV);ctx.lineTo(cx, r.y+r.h);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx, r.y+r.h/2, r.h*0.15, 0, Math.PI*2);ctx.stroke();
+  var bw=r.w*0.16, bh=r.h*0.6, by=r.y+(r.h-bh)/2;
+  ctx.strokeRect(r.x,by,bw,bh); ctx.strokeRect(r.x+r.w-bw,by,bw,bh);
+  var bw2=r.w*0.055, bh2=r.h*0.28, by2=r.y+(r.h-bh2)/2;
+  ctx.strokeRect(r.x,by2,bw2,bh2); ctx.strokeRect(r.x+r.w-bw2,by2,bw2,bh2);
+  return r;
 }
 
 function drawHeatmapCanvas(canvasId, points){
@@ -9506,7 +9592,7 @@ function drawHeatmapCanvas(canvasId, points){
   var W=canvas.width, H=canvas.height;
   var ctx=canvas.getContext('2d');
   ctx.clearRect(0,0,W,H);
-  drawPitchLinesOnCanvas(ctx, W, H);
+  var rect = drawPitchLinesOnCanvas(ctx, W, H);
 
   // 점마다 부드러운 방사형 그라디언트를 가산 합성해 밀도(alpha)를 누적
   var heat=document.createElement('canvas');
@@ -9519,8 +9605,10 @@ function drawHeatmapCanvas(canvasId, points){
   // 점 개수에 반비례해 점당 알파를 낮춰 포화를 방지한다.
   var perPointAlpha=Math.max(0.02, Math.min(0.12, 60/Math.max(1,points.length)));
   points.forEach(function(p){
-    var x=Math.min(PITCH_LEN,Math.max(0,p.x||0))/PITCH_LEN*W;
-    var y=Math.min(PITCH_WID,Math.max(0,p.y||0))/PITCH_WID*H;
+    // 라인을 안으로 들였으니 점도 같은 사각형에 매핑한다 — 캔버스 전체 기준으로 두면
+    // 터치가 터치라인 밖으로 새어 나간다.
+    var x=rect.x+Math.min(PITCH_LEN,Math.max(0,p.x||0))/PITCH_LEN*rect.w;
+    var y=rect.y+Math.min(PITCH_WID,Math.max(0,p.y||0))/PITCH_WID*rect.h;
     var grad=hctx.createRadialGradient(x,y,0,x,y,radius);
     grad.addColorStop(0,'rgba(255,255,255,'+perPointAlpha+')');
     grad.addColorStop(1,'rgba(255,255,255,0)');
@@ -9559,6 +9647,8 @@ function drawHeatmapCanvas(canvasId, points){
   }
   hctx.putImageData(img,0,0);
   ctx.drawImage(heat,0,0);
+  // 글리프는 열분포 위에 — 히트맵이 진한 구간에서도 묻히지 않게.
+  drawAttackGlyph(ctx, rect.x+rect.w/2, rect.y, HEAT_GLYPH_H);
 }
 
 // ── Fotmob 스타일 6각형 레이더 ──
