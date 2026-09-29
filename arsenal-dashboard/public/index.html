@@ -9254,11 +9254,31 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 고쳐진다. 그래서 KV 플래그에 더해 "지금 화면에 그려진 값 자체가
       // 방금 받아온 값과 실제로 다른가"도 같이 확인한다.
       var CHANGE_FIELDS_CLIENT = ['competitions','shotmap','heatmap','career'];
+      // "비어 있던 자리가 채워지는 것"은 값이 바뀐 게 아니다. 스쿼드 목록은 이 네 필드를
+      // 아예 안 담고 있어서, 어떤 선수든 첫 오픈은 늘 "빈 값 → 실제 값"이 된다. 그걸
+      // 변경으로 치는 바람에 탭 패널 전체(#pmTabPanelsWrap)가 페이드돼 모달을 열 때마다
+      // 깜빡였다(실측: 첫 오픈은 3번 다시 그려지고 마지막에 페이드, 같은 선수 두 번째
+      // 오픈은 1번에 끝나고 페이드 없음 — p를 아래에서 갱신해두기 때문).
+      var isEmptyVal = function(v){
+        if(v==null) return true;
+        if(Array.isArray(v)) return !v.length;
+        if(typeof v === 'object') return !Object.keys(v).length;
+        return false;
+      };
       var clientSideMismatch = CHANGE_FIELDS_CLIENT.some(function(k){
+        if(isEmptyVal(preFetchSnapshot[k])) return false;   // 처음 채우는 중 — 아래 firstFill이 받는다
         return JSON.stringify(preFetchSnapshot[k]) !== JSON.stringify(merged[k]);
       });
+      // 처음 채워지는 값이 하나라도 있으면 화면은 다시 그려야 한다. 다만 "바뀐 것"이
+      // 아니므로 페이드 없이 조용히 — traitsBoxMissing·basicInfoMissing과 같은 경로를 탄다.
+      var firstFill = CHANGE_FIELDS_CLIENT.some(function(k){
+        return isEmptyVal(preFetchSnapshot[k]) && !isEmptyVal(merged[k]);
+      });
       var otherChanged = !!live.changedOther || clientSideMismatch;
-      var traitsChanged = !!live.changedTraits || JSON.stringify(p.traits) !== JSON.stringify(merged.traits);
+      // traits도 같은 사정 — 목록에 없던 값이 처음 들어오는 것이라면 변경이 아니다.
+      var traitsWereEmpty = !(p.traits && p.traits.items && p.traits.items.length);
+      var traitsChanged = !!live.changedTraits
+        || (!traitsWereEmpty && JSON.stringify(p.traits) !== JSON.stringify(merged.traits));
       // p는 allPlayers 배열 안의 그 객체와 동일 참조라서, 여기서 갱신해둬야
       // 다음에 같은 선수를 다시 열었을 때도 이번에 받은 라이브 값을 기준으로
       // 비교한다 — 안 하면 1군 라이브 목록은 competitions/shotmap/career가
@@ -9288,7 +9308,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       var basicInfoMissing = (!!live.contractEnd && !hadContractBefore) || (!!live.preferredFoot && !hadFootBefore);
       // 타팀 선수는 첫 화면을 이름·사진만으로 그린다(순위 행에 그것뿐) — 방금 profile로
       // 나이·등번호·팀 색 등을 채웠으면, 기록이 안 바뀌었어도 헤더를 다시 그려야 반영된다.
-      if(!otherChanged && !traitsChanged && !traitsBoxMissing && !basicInfoMissing && !profileFilled) return;
+      if(!otherChanged && !traitsChanged && !traitsBoxMissing && !basicInfoMissing && !profileFilled && !firstFill) return;
       // fetch가 도는 동안 사용자가 이미 다른 탭(기록/경력)으로 넘어가 있을
       // 수 있다 — 다시 그리면 항상 기본정보 탭이 기본값이라, 그 전에 어느
       // 탭이 활성 상태였는지 기억해뒀다가 다시 그린 뒤 그 탭을 그대로
@@ -9301,7 +9321,9 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 패널 전체(#pmTabPanelsWrap)를 페이드시키면 너무 자주 깜빡인다. traits만
       // 바뀌고 다른 필드는 그대로면, 그 값을 실제로 쓰는 .pm-traits
       // 영역만 페이드+재도색한다.
-      if(!otherChanged && traitsChanged && traitsBoxPre && hasNewTraits){
+      // firstFill이면 이번이 모달을 연 뒤 값이 처음 채워지는 순간이라, traits가 1~2점
+      // 달라졌더라도 "바뀐 것"으로 보여줄 게 아니다 — 아래 조용한 경로로 흘려보낸다.
+      if(!otherChanged && traitsChanged && !firstFill && traitsBoxPre && hasNewTraits){
         traitsBoxPre.style.transition = 'opacity .16s ease';
         traitsBoxPre.style.opacity = '0.15';
         setTimeout(function(){
@@ -9319,7 +9341,7 @@ function openPlayerModal(p, level, isLiveRefresh, scopedFade, initialTab) {
       // 갈아끼우되, opacity 애니메이션은 생략).
       // scopedFade(4번째 인자)는 헤더를 그대로 두고 탭 패널만 갈아끼운다. 타팀 선수처럼
       // 헤더 값(이름·등번호·나이·팀 색)이 이번에 처음 채워진 경우엔 헤더까지 다시 그려야 한다.
-      if(!otherChanged && !traitsChanged && (traitsBoxMissing || basicInfoMissing || profileFilled)){
+      if(!otherChanged && (firstFill || (!traitsChanged && (traitsBoxMissing || basicInfoMissing || profileFilled)))){
         openPlayerModal(merged, level, true, !profileFilled, activeTab);
         if(activeTab && activeTab!=='pmbasic'){
           var quietBtn = content.querySelector('.live-tab-btn[data-tab="'+activeTab+'"]');
