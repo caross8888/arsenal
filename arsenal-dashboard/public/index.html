@@ -9468,11 +9468,25 @@ function renderShotmapSVG(shots){
       if(s.event!=='blocked') drawDist+=3;
       var startX=cx+ux*parseFloat(hlR);
       var startY=cy+uy*parseFloat(hlR);
+      // 어디까지 뻗을지는 좌표가 아니라 "길이"를 잘라서 정한다 — x와 y를 따로 클램프하면
+      // 한쪽만 걸렸을 때 선의 각도가 틀어진다. 경계까지 갈 수 있는 거리를 구해 최솟값을 쓴다.
+      var travel=function(p0, u, bound){ return u===0 ? Infinity : (bound-p0)/u; };
+      var lim=drawDist;
+      // 네트 뒤판 — 크로스바 두께만큼 남겨 선 끝이 프레임 위에 겹치지 않게 한다.
+      // 예전엔 -3이 박혀 있었는데 그건 골대 깊이 2.6에 맞춘 값이었다.
+      if(uy<0) lim=Math.min(lim, travel(cy, uy, -(SM_GOAL_DEPTH-SM_POST)));
+      // 도착점이 골문 안이면(유효슈팅·골) 좌우도 포스트 안쪽으로 가둔다. 연장 3유닛 때문에
+      // 비스듬히 들어간 골이 포스트를 넘어가 "골대 옆으로 들어간" 그림이 됐다(실측: 사카 골 3개 중 2개).
+      // 빗나간 슛은 실제로 포스트 밖으로 지나가므로 건드리지 않는다.
+      var gmA=toSX(34-3.66), gmB=toSX(34+3.66);
+      var gmL=Math.min(gmA,gmB)+SM_POST/2, gmR=Math.max(gmA,gmB)-SM_POST/2;
+      if(ex>=gmL && ex<=gmR){
+        if(ux>0)      lim=Math.min(lim, travel(cx, ux, gmR));
+        else if(ux<0) lim=Math.min(lim, travel(cx, ux, gmL));
+      }
+      drawDist=Math.max(0, Math.min(drawDist, lim));
       var endX2=Math.min(VW,Math.max(0,cx+ux*drawDist));
-      // 선이 멈추는 한계는 골대 깊이에 묶는다. 예전엔 -3이 박혀 있었는데, 그건 그때의
-      // 골대 깊이(2.6)에 맞춘 값이라 깊이를 바꾸면 선이 네트에 못 닿거나 뒤로 삐져나갔다.
-      // 크로스바 두께만큼 남겨 선 끝이 프레임 위에 겹치지 않게 한다.
-      var endY2=Math.min(VH,Math.max(-(SM_GOAL_DEPTH-SM_POST),cy+uy*drawDist));
+      var endY2=Math.min(VH,cy+uy*drawDist);
       lines+='<line id="shotline_'+i+'" class="shot-line" x1="'+startX.toFixed(2)+'" y1="'+startY.toFixed(2)+'" x2="'+endX2.toFixed(2)+'" y2="'+endY2.toFixed(2)+'" stroke="'+strokeColor+'" stroke-width="0.5"/>';
     }
     var title='<title>'+(s.min!=null?s.min+"'":'')+' · xG '+(s.xg||0).toFixed(2)+'</title>';
