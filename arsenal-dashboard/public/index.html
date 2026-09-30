@@ -10297,5 +10297,11 @@ loadTransferWindow();
 })();
 
 </script>
+<!-- Vercel Web Analytics — 방문자/페이지뷰. 빌드 없는 정적 HTML이라 자동 주입이 안 돼서
+     직접 넣는다. 이 앱은 탭 전환·모달을 해시(#fixtures, #match…)로만 바꾸고 경로는 계속
+     "/"인데, 이 스크립트는 pathname이 달라질 때만 전송하므로 "페이지 로드 1번 = 1건"이다
+     (탭 전환·모달 열기·뒤로가기는 집계되지 않는다). 로컬 dev에서는 이 경로가 없어 404가
+     뜨지만 defer라 페이지 동작엔 영향이 없다. -->
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
