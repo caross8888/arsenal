@@ -1306,7 +1306,7 @@ function predictNarrative(p){
 const PREDXI_WINDOW = 3;              // 최근 몇 경기를 볼지
 const PREDXI_TTL_SEC = 2 * 60 * 60;   // 아래 UNAVAIL_TTL_SEC과 같은 값으로 유지할 것 —
                                       // 한쪽만 먼저 만료되면 예상 XI와 부상자 명단이 다시 어긋난다
-const PREDXI_SCHEMA = 2;              // 응답 모양이 바뀌면 올릴 것(옛 KV 자동 무시)
+// 캐시 키에 버전을 박아두는 건 predxiHist:v1 쪽이다 — 선발 이력의 모양이 바뀌면 v2로 올릴 것.
 
 async function fotmobJSON(url, ms){
   const r = await fetch(url, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(ms || 8000)});
@@ -1473,6 +1473,20 @@ async function recentStarterXIs(teamId, n){
   return out.filter(h => h.starters.length >= 10);
 }
 
+// 캐시는 "비싼 것"에만 건다 — 팀별 최근 선발 이력이 팀당 Fotmob 4회로 전체 비용의 거의
+// 전부다. 예상 XI 결과 자체를 캐시하면 결장자가 갱신돼도 옛 XI가 그대로 나간다(실측: unavail
+// 캐시에 새 정지 선수를 넣었더니 부상자 명단에는 반영됐는데 피치에는 그 선수가 계속 선발로
+// 섰다). 이력만 캐시하고 XI는 매번 현재 결장자로 다시 계산하면 그 어긋남이 구조적으로 불가능해진다.
+async function recentStarterXIsCached(teamId, n){
+  const key = `predxiHist:v1:${teamId}:${n}`;
+  const hit = await kvGetJSON(key);
+  if(hit) return hit;
+  const hist = await recentStarterXIs(teamId, n).catch(() => []);
+  // 못 받은 경우도 짧게 캐시한다 — 라인업이 없는 하위 대회 상대를 열 때마다 다시 두드리지 않게.
+  await kvSetJSON(key, hist, hist.length ? PREDXI_TTL_SEC : 30 * 60);
+  return hist;
+}
+
 function predictXIFor(history, outIds){
   if(!history.length) return null;
   // 포메이션 최빈값 — 동률이면 더 최근 것(i가 클수록 최근).
@@ -1506,12 +1520,8 @@ function predictXIFor(history, outIds){
 }
 
 async function buildPredictedXI(matchId){
-  const key = `predxi:v${PREDXI_SCHEMA}:${matchId}`;
-  const hit = await kvGetJSON(key);
-  if(hit) return hit;
-
-  // 결장자는 부상자 카드·승부 예측과 같은 캐시(unavail:v1)를 본다 — 세 화면이
-  // 같은 명단을 보게 하려는 것이고, TTL도 같아서 시간차로 어긋나지 않는다.
+  // 결장자는 부상자 카드·승부 예측과 같은 캐시(unavail:v1)를 본다 — 세 화면이 같은 명단을
+  // 보게 하려는 것이다. 매 요청마다 여기서 다시 읽으므로, 결장자가 갱신되면 피치도 같이 바뀐다.
   const unavail = await fetchMatchUnavailable(matchId);
   const sides = [
     {side: 'home', id: unavail.home.id, name: unavail.home.name, out: unavail.home.out},
@@ -1521,7 +1531,7 @@ async function buildPredictedXI(matchId){
   const teams = await Promise.all(sides.map(async s => {
     if(!s.id) return null;
     const out = s.out || [];
-    const hist = await recentStarterXIs(s.id, PREDXI_WINDOW).catch(() => []);
+    const hist = await recentStarterXIsCached(s.id, PREDXI_WINDOW);
     const pred = predictXIFor(hist, out.map(o => o.id));
     if(!pred) return null;
     return {
@@ -1541,13 +1551,9 @@ async function buildPredictedXI(matchId){
   }));
 
   const ok = teams.filter(Boolean);
-  const result = ok.length === 2
+  return ok.length === 2
     ? {available: true, window: PREDXI_WINDOW, teams: ok}
     : {available: false, reason: '최근 선발 라인업을 확보하지 못했습니다'};
-  // 못 뽑은 경우도 캐시한다(짧게) — 라인업이 없는 하위 대회 상대를 열 때마다
-  // 9번씩 Fotmob을 다시 두드리지 않게.
-  await kvSetJSON(key, result, result.available ? PREDXI_TTL_SEC : 30 * 60);
-  return result;
 }
 
 export default async function handler(req, res) {
@@ -1589,7 +1595,12 @@ export default async function handler(req, res) {
   // predict도 1시간 메모리 캐시에 태우지 않는다 — 크론이 AI 해설을 새로 만들어도, 그 전에
   // 캐시된 "해설 없는" 응답이 최대 1시간 동안 계속 나간다. 무거운 부분(리그 강도·팀 문맥)은
   // 이미 KV에 캐시돼 있어서 매번 계산해도 KV 몇 번 읽는 게 전부다.
-  const noMemCache = isLivePlayerDiff || type === 'predict';
+  // predxi와 "경기별" 부상자 조회도 1시간 메모리 캐시에 태우지 않는다 — 한쪽만 캐시에 눌어붙으면
+  // 결장자가 갱신됐을 때 피치와 부상자 명단이 최대 1시간 어긋난다. 무거운 부분(팀별 선발 이력)은
+  // 이미 KV에 있어서 매번 계산해도 KV 몇 번 읽는 게 전부다. 선수단 탭이 쓰는 경기 없는 조회는
+  // 특정 경기와 무관하므로 기존대로 캐시한다.
+  const noMemCache = isLivePlayerDiff || type === 'predict' || type === 'predxi'
+    || (type === 'injuries' && !!matchParam);
   // CDN 캐시 — 같은 응답을 Vercel CDN이 잠깐 보관했다가 방문자들에게 나눠준다(외부 공유로 5분에
   // 7천 건이 몰렸을 때 /api/football은 전부 캐시 미적중이라 매번 함수가 돌았다). 브라우저는
   // max-age=0으로 매번 CDN에 확인만 하고(재방문 시 옛 데이터가 브라우저에 눌어붙지 않게),
