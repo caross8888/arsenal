@@ -1545,6 +1545,9 @@ async function buildPredictedXI(matchId){
       replacedCount: pred.xi.filter(p => p.replaced).length,
       xi: pred.xi.map(p => ({
         id: p.id, name: p.name, num: p.num, layout: p.layout,
+        // Fotmob의 usualPlayingPositionId(0=GK). 프론트가 골키퍼만 회색 점으로
+        // 그리는 데 쓴다 — 종료 경기 선발 피치(renderPitch)와 같은 규칙.
+        pos: p.usual != null ? p.usual : null,
         replaced: !!p.replaced, replacedFor: p.replacedFor || null,
       })),
     };

@@ -6706,7 +6706,7 @@ function renderInjuryListCard(title, injuries){
 // homeTeam.color/awayTeam.color, 없으면 같은 폴백(빨강/네이비). 예정 경기에도 이 값이 온다.
 // 등번호 글자색도 renderPitch와 같은 밝기 기준(0.55)으로 뒤집는다 — 리즈·릴처럼 흰색으로
 // 오는 팀은 흰 글씨를 얹으면 안 보인다.
-var XI_FALLBACK_H='#C8102E', XI_FALLBACK_A='#1a3a6c';
+var XI_FALLBACK_H='#C8102E', XI_FALLBACK_A='#1a3a6c', XI_GK_COLOR='#888888';
 function xiJerseyTextColor(fill){
   var h=(fill||'').replace('#','');
   if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
@@ -6742,8 +6742,11 @@ function xiPitchSVG(home, away, arsSide, hCol, aCol){
       var cx = isHome ? XI_PX + p.layout.x*(iw/2) : (W-XI_PX) - p.layout.x*(iw/2);
       var cy = isHome ? XI_PT + p.layout.y*ih     : (H-XI_PB) - p.layout.y*ih;
       var r=9.4;
-      out+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+r+'" fill="'+col+'" stroke="rgba(255,255,255,.85)" stroke-width="1"/>';
-      out+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" font-size="8.5" font-weight="700" fill="'+numCol+'" text-anchor="middle" dominant-baseline="central">'+(p.num==null?'':p.num)+'</text>';
+      // 골키퍼는 회색 — 종료 경기 선발 피치(renderPitch)와 같은 규칙.
+      var isGK = (p.pos===0);
+      var fill = isGK ? XI_GK_COLOR : col;
+      out+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="rgba(255,255,255,.85)" stroke-width="1"/>';
+      out+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" font-size="8.5" font-weight="700" fill="'+(isGK?'var(--white)':numCol)+'" text-anchor="middle" dominant-baseline="central">'+(p.num==null?'':p.num)+'</text>';
       // 라벨은 성만 쓴다. 긴 이름은 축약(Gudmunds.)하면 누군지 알아보기 어려워서,
       // 하이픈이 있으면 거기서 두 줄로 끊는다(Calvert-/Lewin).
       var last=(p.name||'').split(' ').slice(-1)[0];
