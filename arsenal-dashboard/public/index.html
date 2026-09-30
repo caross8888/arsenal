@@ -947,8 +947,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .xi-f{font-size:10px;color:var(--text-secondary);font-weight:400;flex-shrink:0;}
 .xi-pitch{padding:0 10px 12px;}
 .xi-svg{width:100%;height:auto;display:block;border-radius:8px;}
-.xi-note{font-size:10.5px;line-height:1.75;color:var(--text-secondary);padding:0 14px 13px;margin:0;}
-.xi-note b{color:var(--text);}
+/* 카드 전체에 붙는 주석 — 경기 예측 카드의 "포아송 모형 · 참고용" 주석과 같은 규격
+   (오른쪽 정렬 + 점선으로 본문과 분리). 두 카드가 나란히 붙어 있어서 어긋나면 눈에 띈다. */
+.xi-note{margin:2px 14px 12px;padding-top:8px;border-top:1px dashed var(--border-bright);
+  text-align:right;font-size:10px;line-height:1.6;color:var(--text-secondary);opacity:.8;}
 /* 승부차기 카드(renderShootoutCard) — 한 줄 = 한 라운드. 바깥쪽에 키커 이름,
    안쪽에 성공/실패 아이콘(원 테두리 안 골대 + 체크/X), 가운데 라운드 번호.
    가운데 결과 원 두 열이 세로로 나란히 서서 스코어보드 역할도 겸한다.
