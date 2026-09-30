@@ -947,6 +947,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    "Borussia Monchengladbach"처럼 길면 짧은 "Arsenal"까지 "Arse…"로 잘렸다(실측:
    42px 필요한데 28px만 배정). 말줄임은 긴 쪽이 다 받아내는 게 맞다. */
 .xi-t.xi-keep{flex-shrink:0;}
+/* 헤더의 팀 표시 점 — 유니폼 색을 그대로 쓴다. 흰색으로 오는 팀(리즈·릴)이 라이트 모드
+   배경에서 사라지므로 1px 띠를 두른다. 엠블럼(.t-crest)이 쓰는 drop-shadow는 여기선
+   안 먹혔다 — 엠블럼은 안쪽에 모양이 있어 은은한 후광으로 충분하지만, 9px짜리 단색 원은
+   경계선이 있어야 읽힌다(실측 비교). --overlay-60은 다크에선 흰색, 라이트에선 검정이라
+   어두운 유니폼이든 흰 유니폼이든 어느 테마에서도 윤곽이 남는다. */
+.xi-hdot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0;
+  box-shadow:0 0 0 1px var(--overlay-60),0 1px 2px rgba(0,0,0,.25);}
 .xi-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .xi-f{font-size:10px;color:var(--text-secondary);font-weight:400;flex-shrink:0;}
 .xi-pitch{padding:0 10px 12px;}
@@ -6695,14 +6702,23 @@ function renderInjuryListCard(title, injuries){
 // 좌표는 Fotmob의 horizontalLayout(0~1)을 그대로 쓴다: 홈은 x·y 그대로,
 // 원정은 같은 좌표계를 180도 돌린 것이라 x·y를 둘 다 반전시킨다.
 // 결장자 명단은 일부러 안 넣는다 — 바로 아래 부상자 카드와 내용이 겹친다.
-// 피치는 테마와 무관하게 늘 초록이라 점 색도 고정값을 쓴다(라이트 모드에서
-// --red가 밝아지면 잔디 위에서 대비가 떨어진다).
-var XI_COL_ARS='#EF0107', XI_COL_OPP='#3B6FD4';
+// 점 색은 종료 경기 선발 피치(renderPitch)와 같은 규칙을 쓴다 — 경기 상세의
+// homeTeam.color/awayTeam.color, 없으면 같은 폴백(빨강/네이비). 예정 경기에도 이 값이 온다.
+// 등번호 글자색도 renderPitch와 같은 밝기 기준(0.55)으로 뒤집는다 — 리즈·릴처럼 흰색으로
+// 오는 팀은 흰 글씨를 얹으면 안 보인다.
+var XI_FALLBACK_H='#C8102E', XI_FALLBACK_A='#1a3a6c';
+function xiJerseyTextColor(fill){
+  var h=(fill||'').replace('#','');
+  if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  if(h.length!==6) return 'var(--white)';
+  var r=parseInt(h.slice(0,2),16)/255, g=parseInt(h.slice(2,4),16)/255, b=parseInt(h.slice(4,6),16)/255;
+  return (0.299*r+0.587*g+0.114*b)>0.55 ? '#111' : 'var(--white)';
+}
 // 잔디 여백(터치라인 바깥). 하단만 넓은 건 라벨이 점 아래에 붙기 때문이다 — 맨 아랫줄
 // 선수(layout.y 최대 0.89)의 2줄 라벨이 끝나는 지점이 여백 6에서 213.6으로 SVG 높이(214)에
 // 겨우 들어간다. 여기를 3으로 줄이면 216.3이 되어 둘째 줄이 잘린다(실측, 선수 88명 기준).
 var XI_W=340, XI_H=214, XI_PX=3, XI_PT=3, XI_PB=6;
-function xiPitchSVG(home, away, arsSide){
+function xiPitchSVG(home, away, arsSide, hCol, aCol){
   var W=XI_W, H=XI_H, P=XI_PX, iw=W-XI_PX*2, ih=H-XI_PT-XI_PB;
   var s='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#1d5c33" rx="4"/>';
   for(var i=0;i<8;i++){ if(i%2===0) continue;
@@ -6719,7 +6735,7 @@ function xiPitchSVG(home, away, arsSide){
   s+='<rect x="'+(W-P-gw).toFixed(1)+'" y="'+gy.toFixed(1)+'" width="'+gw.toFixed(1)+'" height="'+gh.toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
 
   function dots(team, isHome){
-    var col = (team.side===arsSide) ? XI_COL_ARS : XI_COL_OPP;
+    var col = isHome ? hCol : aCol, numCol = xiJerseyTextColor(col);
     var out='', labels=[];
     (team.xi||[]).forEach(function(p){
       if(!p.layout) return;
@@ -6727,7 +6743,7 @@ function xiPitchSVG(home, away, arsSide){
       var cy = isHome ? XI_PT + p.layout.y*ih     : (H-XI_PB) - p.layout.y*ih;
       var r=9.4;
       out+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+r+'" fill="'+col+'" stroke="rgba(255,255,255,.85)" stroke-width="1"/>';
-      out+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" font-size="8.5" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">'+(p.num==null?'':p.num)+'</text>';
+      out+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" font-size="8.5" font-weight="700" fill="'+numCol+'" text-anchor="middle" dominant-baseline="central">'+(p.num==null?'':p.num)+'</text>';
       // 라벨은 성만 쓴다. 긴 이름은 축약(Gudmunds.)하면 누군지 알아보기 어려워서,
       // 하이픈이 있으면 거기서 두 줄로 끊는다(Calvert-/Lewin).
       var last=(p.name||'').split(' ').slice(-1)[0];
@@ -6785,15 +6801,16 @@ function renderPredictedXICard(data){
    // 8px(flex gap)까지 붙어 한 덩어리로 읽혔다. 짧은 이름이면 그 상황 자체가 잘 안 생긴다.
   var hName=modalTeamName(data.homeTeam, data)||home.name||'';
   var aName=modalTeamName(data.awayTeam, data)||away.name||'';
-  var dot=function(c){ return '<span style="width:9px;height:9px;border-radius:50%;background:'+c+';display:inline-block;flex-shrink:0"></span>'; };
-  var hCol=(arsSide==='home')?XI_COL_ARS:XI_COL_OPP, aCol=(arsSide==='away')?XI_COL_ARS:XI_COL_OPP;
+  var hCol=(data.homeTeam&&data.homeTeam.color)||XI_FALLBACK_H;
+  var aCol=(data.awayTeam&&data.awayTeam.color)||XI_FALLBACK_A;
+  var dot=function(c){ return '<span class="xi-hdot" style="background:'+c+'"></span>'; };
   var h='<div class="mm-card">'
     +'<div class="mm-card-title">예상 선발 <span class="xi-sub">최근 '+p.window+'경기 기준 · 결장자 제외</span></div>'
     +'<div class="xi-head">'
       +'<div class="xi-t'+(arsSide==='home'?' xi-keep':'')+'">'+dot(hCol)+'<span class="xi-n">'+hName+'</span> <span class="xi-f">'+(home.formation||'')+'</span></div>'
       +'<div class="xi-t xi-r'+(arsSide==='away'?' xi-keep':'')+'"><span class="xi-f">'+(away.formation||'')+'</span> <span class="xi-n">'+aName+'</span>'+dot(aCol)+'</div>'
     +'</div>'
-    +'<div class="xi-pitch">'+xiPitchSVG(home,away,arsSide)+'</div>';
+    +'<div class="xi-pitch">'+xiPitchSVG(home,away,arsSide,hCol,aCol)+'</div>';
   h+='<p class="xi-note">실제 선발은 다를 수 있습니다.</p></div>';
   return h;
 }
