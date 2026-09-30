@@ -6887,18 +6887,19 @@ function renderMatchModal(content, m, data, desktop, opts){
 
   // 예정 경기: 상세 이벤트/스탯/라인업 대신 상대전적·최근폼·부상자 미리보기
   if(isUpcomingR){
-    // 순서는 "이 경기의 사실 → 그 사실의 근거 → 그래서 전망 → 배경 통계"다.
-    // 예측(+AI 프리뷰)을 맨 위에 두면 결론이 근거보다 먼저 나와서, 프리뷰가 언급한
-    // 결장자를 확인하려면 한참 아래로 스크롤해야 했다. 예상 선발과 부상자 명단이
-    // 붙어 있어야 "명단엔 출전 의심인데 피치엔 선발"인 선수(콘사 사례)도 모순이 아니라
-    // "의심이지만 나올 것"으로 읽힌다.
-    // 예상 선발도 두 경기 모두에 붙는다. 아스날 XI는 두 경기가 같게 나올 수 있지만
-    // (그 사이 치를 경기가 없어 산출 근거인 최근 3경기가 같다) 피치의 나머지 절반은
+    // 순서는 "요약 → 상세 → 배경"이다(사용자 지정). AI 프리뷰 카드가 이미 관전 포인트·
+    // 근거·승률·유력 스코어까지 담은 완결된 요약본이라 그게 첫 화면에 오고, 예상 선발과
+    // 부상자 명단이 그 요약을 뒷받침하는 상세로 뒤따른다.
+    // 예상 선발과 부상자 명단은 반드시 붙여 둔다 — 떨어뜨리면 "명단엔 출전 의심인데
+    // 피치엔 선발"인 선수(콘사 사례)가 모순처럼 보이고, 붙어 있으면 "의심이지만 나올 것"
+    // 으로 자연스럽게 읽힌다.
+    // 예상 선발도 예측이 뜨는 두 경기 모두에 붙는다. 아스날 XI는 두 경기가 같게 나올 수
+    // 있지만(그 사이 치를 경기가 없어 산출 근거인 최근 3경기가 같다) 피치의 나머지 절반은
     // 상대팀이라 경기마다 완전히 다르다 — 중복이 아니다.
-    var preview='';
+    var preview=renderPredictCard(data,m);
     if((window._predictMatchIds||[]).indexOf(String(m.id))>=0)
       preview+=renderPredictedXICard(data)+renderInjuryCards(data);
-    preview+=renderPredictCard(data,m)+renderH2HCard(data)+renderFormCard(data);
+    preview+=renderH2HCard(data)+renderFormCard(data);
     // 서버가 Fotmob·ESPN 둘 다에서 못 받은 경우 — 본문이 통째로 비어 보이지
     // 않게 안내 한 줄.
     html+=preview||'<div class="mm-card"><div style="padding:18px 14px;font-size:12px;color:var(--text-secondary);text-align:center;">아직 상대전적·최근 폼 정보가 없습니다</div></div>';
