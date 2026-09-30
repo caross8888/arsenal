@@ -937,6 +937,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .mm-section-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;font-weight:700;}
 .mm-card{margin:14px 16px;background:rgba(255,255,255,.03);border:1px solid var(--border-bright);border-radius:16px;overflow:hidden;}
 .mm-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--text);padding:14px 14px 0;}
+/* 예상 선발 카드(renderPredictedXICard) — 가로 피치 한 장에 양 팀을 하프라인
+   기준으로 마주 세운다. 피치 SVG는 viewBox 비율대로 폭에 맞춰 늘어난다. */
+.xi-sub{font-weight:400;letter-spacing:0;color:var(--text-secondary);margin-left:6px;}
+.xi-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 14px 9px;font-size:11px;}
+.xi-t{display:flex;align-items:center;gap:6px;font-weight:700;min-width:0;}
+.xi-t.xi-r{justify-content:flex-end;}
+.xi-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.xi-f{font-size:10px;color:var(--text-secondary);font-weight:400;flex-shrink:0;}
+.xi-pitch{padding:0 10px 12px;}
+.xi-svg{width:100%;height:auto;display:block;border-radius:8px;}
+.xi-note{font-size:10.5px;line-height:1.75;color:var(--text-secondary);padding:0 14px 13px;margin:0;}
+.xi-note b{color:var(--text);}
 /* 승부차기 카드(renderShootoutCard) — 한 줄 = 한 라운드. 바깥쪽에 키커 이름,
    안쪽에 성공/실패 아이콘(원 테두리 안 골대 + 체크/X), 가운데 라운드 번호.
    가운데 결과 원 두 열이 세로로 나란히 서서 스코어보드 역할도 겸한다.
@@ -1648,20 +1660,24 @@ var allStandings=[];
 var allPlayers=[];
 var allInjuries=[];
 var _sqInjAvailable=0;
+// 선수단 탭은 "지금 팀의 부상 상태"를 보는 화면이라 출장정지는 빼고 본다(사용자 지정).
+// 정지는 특정 경기에 매인 정보라 경기 상세모달(부상자 카드·예상 선발 XI)에서만 다룬다.
+function squadInjuries(){ return allInjuries.filter(function(p){ return p.status!=='s'; }); }
 // 부상 데이터(FPL 소스)랑 스쿼드 데이터(Fotmob 소스)는 서로 다른 ID 체계라
 // 이름으로만 매칭 가능하다 — 성(마지막 단어) 일치를 기본으로 하고, 전체
 // 이름이 완전히 같으면 그것도 인정한다(같은 성을 쓰는 선수가 둘 이상이면
 // 성 매칭만으론 오매칭 위험이 있어 그 경우엔 전체 이름 일치까지 확인).
 function findInjuryFor(player){
-  if(!allInjuries.length) return null;
+  var pool=squadInjuries();
+  if(!pool.length) return null;
   var pLast=(player.name||'').trim().split(' ').pop().toLowerCase();
   var pFull=(player.fullName||player.name||'').trim().toLowerCase();
-  var lastMatches=allInjuries.filter(function(inj){
+  var lastMatches=pool.filter(function(inj){
     var iLast=(inj.fullName||inj.name||'').trim().split(' ').pop().toLowerCase();
     return iLast && iLast===pLast;
   });
   if(lastMatches.length===1) return lastMatches[0];
-  var fullMatch=allInjuries.find(function(inj){
+  var fullMatch=pool.find(function(inj){
     return (inj.fullName||inj.name||'').trim().toLowerCase()===pFull;
   });
   return fullMatch || (lastMatches.length?lastMatches[0]:null);
@@ -1892,21 +1908,22 @@ function renderSqInjuryHtml(){
 }
 // 부상자 현황 본문(집계 4칸 + 선수 목록) — PC 우측 패널 카드와 모바일 상세모달이 같이 쓴다.
 function renderSqInjuryBody(){
-  var injCnt=allInjuries.filter(function(p){return p.status==='i';}).length;
-  var dbtCnt=allInjuries.filter(function(p){return p.status==='d';}).length;
-  var outCnt=allInjuries.filter(function(p){return p.status==='s'||p.status==='u';}).length;
+  var sqInj=squadInjuries();
+  var injCnt=sqInj.filter(function(p){return p.status==='i';}).length;
+  var dbtCnt=sqInj.filter(function(p){return p.status==='d';}).length;
+  var outCnt=sqInj.filter(function(p){return p.status==='u';}).length;
   var html='<div class="detail-info-grid">';
   html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:var(--loss)">'+injCnt+'</div><div class="detail-info-lbl">부상</div></div>';
   html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:var(--amber)">'+dbtCnt+'</div><div class="detail-info-lbl">출전 의심</div></div>';
   html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:var(--text-secondary)">'+outCnt+'</div><div class="detail-info-lbl">결장</div></div>';
   html+='<div class="detail-info-cell"><div class="detail-info-val" style="color:var(--green)">'+(_sqInjAvailable||'-')+'</div><div class="detail-info-lbl">출전 가능</div></div>';
   html+='</div>';
-  if(!allInjuries.length){
+  if(!sqInj.length){
     html+='<div class="sq-inj-empty">'+dIcon('check',20)+'<span>현재 부상/결장 선수 없음</span></div>';
   } else {
     var STATUS_BADGE_COLOR={'i':'var(--loss)','d':'var(--amber)','s':'var(--text-muted)','u':'var(--text-muted)'};
     html+='<div class="sq-inj-list">';
-    allInjuries.forEach(function(p){
+    sqInj.forEach(function(p){
       html+='<div class="sq-inj-row">';
       // 사진은 선수단 카드와 같은 Fotmob 사진을 먼저 쓴다 — 부상 데이터(FPL)의 PL 사진은
       // 새로 영입된 선수가 한동안 비어 있다(실측: 모스케라 p500040.png → 403). PL 사진은 대체용.
@@ -6260,12 +6277,13 @@ function openMatchModal(m, isAuto, opts){
   if(!allInjuries.length){
     apiFetchCached(FN+'/football?type=injuries', 'injuries', function(data){ allInjuries=data.injured||[]; }, function(){});
   }
-  // 부상자 데이터는 "다음 경기"(D-day에 뜨는 그 경기)일 때만 의미가 있다 —
-  // FPL의 부상 데이터 자체가 "다음 라운드 출전 가능성" 기준이라, 몇 주 뒤
-  // 예정경기엔 지금 시점 부상자를 보여줘봐야 그때는 다 나았을 수도 있어서
-  // 무관한 정보가 된다. 먼 예정경기는 상대팀 부상자 조회 자체를 생략한다.
+  // 부상자는 예측 카드가 뜨는 두 경기에 똑같이 붙인다 — AI 프리뷰가 "주축 자원들의
+  // 결장 공백"을 관전 포인트로 쓰면서 정작 누가 빠지는지는 안 보여주면 근거 없는 글이
+  // 된다(실측: 릴전 프리뷰 첫 문장이 결장 얘기인데 화면엔 명단이 없었다). 그 뒤 경기는
+  // 여전히 생략한다 — 사이에 치를 경기 결과·부상에 따라 변수가 너무 많다.
+  var _predTargetSkel = (window._predictMatchIds||[]).indexOf(String(m.id))>=0;
   var oppNameSkel='';
-  if(!isPlayedSkel && m.id===window._nextMatchId){
+  if(!isPlayedSkel && _predTargetSkel){
     var oppTeamSkel=isArsHomeSkel?m.awayTeam:m.homeTeam;
     oppNameSkel=(oppTeamSkel&&(oppTeamSkel.shortName||oppTeamSkel.name))||'';
   }
@@ -6314,19 +6332,33 @@ function openMatchModal(m, isAuto, opts){
     if(sp) sp.parentElement.innerHTML='<div class="error-state">&#9888;&#65039; 응답 없음 — 잠시 후 다시 시도해주세요</div>';
   }, 10000);
 
+  // 예상 선발 XI도 여기서 같이 출발시킨다(예측 카드와 같은 이유 — 모달이 다 뜬 뒤에
+  // 따로 부르면 스피너가 두 번 돈다). 예측·부상자와 같은 두 경기에 붙인다.
+  var predXIPromise = (!isPlayedSkel && _predTargetSkel)
+    ? apiFetch(FN+'/football?type=predxi&match='+encodeURIComponent(m.id)).catch(function(){ return null; })
+    : Promise.resolve(null);
+
+  // 부상자 조회에 경기 id를 같이 넘긴다 — 서버가 그 경기 기준 결장자(출장정지 포함)를
+  // 얹어서 내려준다. 예상 선발 XI·승부 예측이 보는 명단과 같은 캐시라 세 카드가 어긋나지 않는다.
+  var _injMatchQ = _predTargetSkel ? ('&match='+encodeURIComponent(m.id)) : '';
   var oppInjPromise = oppNameSkel
-    ? fetch(FN+'/football?type=injuries&team='+encodeURIComponent(oppNameSkel)).then(function(r){ return r.json(); }).catch(function(){ return null; })
+    ? fetch(FN+'/football?type=injuries&team='+encodeURIComponent(oppNameSkel)+_injMatchQ).then(function(r){ return r.json(); }).catch(function(){ return null; })
+    : Promise.resolve(null);
+  // 아스날 쪽도 같은 이유로 모달 전용 목록을 따로 받는다 — 전역 allInjuries(선수단 탭 공용)는
+  // 특정 경기와 무관한 "지금 팀 상태"라 경기 기준 값으로 덮어쓰면 안 된다.
+  var arsInjPromise = _injMatchQ
+    ? fetch(FN+'/football?type=injuries'+_injMatchQ).then(function(r){ return r.json(); }).catch(function(){ return null; })
     : Promise.resolve(null);
 
   // 경기 예측도 여기서 같이 출발시킨다 — 모달 로딩이 끝난 뒤에 따로 부르면
   // 스피너가 두 번(상세 → 예측) 도는 꼴이 된다. 필요한 값(양 팀 id·대회·킥오프)이
   // 전부 일정 목록 항목(m)에 있어서 상세 응답을 기다릴 이유가 없다.
   var predPromise = Promise.resolve(null);
-  var _isPredictTarget = (window._predictMatchIds||[]).indexOf(String(m.id))>=0;
-  if(_isPredictTarget && !isSettledMatch(m) && m.status!=='FINISHED' && m.homeTeam && m.awayTeam && m.homeTeam.id && m.awayTeam.id){
+  if(_predTargetSkel && !isSettledMatch(m) && m.status!=='FINISHED' && m.homeTeam && m.awayTeam && m.homeTeam.id && m.awayTeam.id){
     var _pq = FN+'/football?type=predict&home='+encodeURIComponent(m.homeTeam.id)+'&away='+encodeURIComponent(m.awayTeam.id)
       + (m.leagueId ? '&league='+encodeURIComponent(m.leagueId) : '')
-      + ((m.utcDate||m.date) ? '&date='+encodeURIComponent(m.utcDate||m.date) : '');
+      + ((m.utcDate||m.date) ? '&date='+encodeURIComponent(m.utcDate||m.date) : '')
+      + (_predTargetSkel ? '&match='+encodeURIComponent(m.id) : '');
     predPromise = apiFetch(_pq).catch(function(){ return null; });
   }
 
@@ -6338,7 +6370,9 @@ function openMatchModal(m, isAuto, opts){
   Promise.all([
     fetch(matchUrl).then(function(r){ return r.json(); }),
     oppInjPromise,
-    predPromise
+    predPromise,
+    predXIPromise,
+    arsInjPromise
   ])
     .then(function(results){
       var data=results[0];
@@ -6348,6 +6382,8 @@ function openMatchModal(m, isAuto, opts){
       data.oppName=oppNameSkel;
       data.oppInjuries=results[1];
       data.prediction=results[2];
+      data.predictedXI=results[3];
+      data.arsInjuries=(results[4]&&results[4].injured)||null;
       withMinLoading(content, _t0, function(){
         if(reqId!==_matchModalReqSeq) return;
         // 응답을 기다리는 사이 closeFixDetailPanel()이 빈 상태 클래스를 다시
@@ -6647,11 +6683,111 @@ function renderInjuryListCard(title, injuries){
   html+='</div></div>';
   return html;
 }
+// ── 예상 선발 XI 카드(가장 가까운 예정 경기 전용) ─────────────────────────
+// 서버(type=predxi)가 양 팀의 최근 3경기 선발에서 뽑아준 XI를 가로 피치에
+// 그린다 — 홈은 왼쪽 절반, 원정은 오른쪽 절반(하프라인 기준 맞대결 배치).
+// 좌표는 Fotmob의 horizontalLayout(0~1)을 그대로 쓴다: 홈은 x·y 그대로,
+// 원정은 같은 좌표계를 180도 돌린 것이라 x·y를 둘 다 반전시킨다.
+// 결장자 명단은 일부러 안 넣는다 — 바로 아래 부상자 카드와 내용이 겹친다.
+// 피치는 테마와 무관하게 늘 초록이라 점 색도 고정값을 쓴다(라이트 모드에서
+// --red가 밝아지면 잔디 위에서 대비가 떨어진다).
+var XI_COL_ARS='#EF0107', XI_COL_OPP='#3B6FD4';
+var XI_W=340, XI_H=214, XI_P=6;   // P: 잔디 여백(터치라인 안쪽)
+function xiPitchSVG(home, away, arsSide){
+  var W=XI_W, H=XI_H, P=XI_P, iw=W-P*2, ih=H-P*2;
+  var s='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#1d5c33" rx="4"/>';
+  for(var i=0;i<8;i++){ if(i%2===0) continue;
+    s+='<rect x="'+(W/8*i).toFixed(1)+'" y="0" width="'+(W/8).toFixed(1)+'" height="'+H+'" fill="rgba(255,255,255,.022)"/>'; }
+  var lc='rgba(255,255,255,.34)', lw=0.9;
+  s+='<rect x="'+P+'" y="'+P+'" width="'+iw+'" height="'+ih+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
+  s+='<line x1="'+(W/2)+'" y1="'+P+'" x2="'+(W/2)+'" y2="'+(H-P)+'" stroke="'+lc+'" stroke-width="'+lw+'"/>';
+  s+='<circle cx="'+(W/2)+'" cy="'+(H/2)+'" r="'+(ih*0.16).toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
+  var bw=iw*0.157, bh=ih*0.593, by=P+(ih-bh)/2;
+  s+='<rect x="'+P+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
+  s+='<rect x="'+(W-P-bw).toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
+  var gw=iw*0.052, gh=ih*0.269, gy=P+(ih-gh)/2;
+  s+='<rect x="'+P+'" y="'+gy.toFixed(1)+'" width="'+gw.toFixed(1)+'" height="'+gh.toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
+  s+='<rect x="'+(W-P-gw).toFixed(1)+'" y="'+gy.toFixed(1)+'" width="'+gw.toFixed(1)+'" height="'+gh.toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
+
+  function dots(team, isHome){
+    var col = (team.side===arsSide) ? XI_COL_ARS : XI_COL_OPP;
+    var out='', labels=[];
+    (team.xi||[]).forEach(function(p){
+      if(!p.layout) return;
+      var cx = isHome ? P + p.layout.x*(iw/2) : (W-P) - p.layout.x*(iw/2);
+      var cy = isHome ? P + p.layout.y*ih     : (H-P) - p.layout.y*ih;
+      var r=9.4;
+      out+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+r+'" fill="'+col+'" stroke="rgba(255,255,255,.85)" stroke-width="1"/>';
+      out+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" font-size="8.5" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">'+(p.num==null?'':p.num)+'</text>';
+      // 라벨은 성만 쓴다. 긴 이름은 축약(Gudmunds.)하면 누군지 알아보기 어려워서,
+      // 하이픈이 있으면 거기서 두 줄로 끊는다(Calvert-/Lewin).
+      var last=(p.name||'').split(' ').slice(-1)[0];
+      var fs=7.4, lines=[last], shrink=fs;
+      if(last.length>9){
+        var hy=last.lastIndexOf('-');
+        if(hy>0 && hy<last.length-1) lines=[last.slice(0,hy+1), last.slice(hy+1)];
+        else shrink=Math.max(5.9, fs*9/last.length);   // 한 단어로 긴 이름은 끊을 자리가 없다
+      }
+      labels.push({lines:lines, x:cx, cx:cx, y:cy+r+8, fs:shrink, gap:shrink*1.45});
+    });
+    // 라벨이 피치 밖으로 나가지 않게 x를 가두고,
+    var clampX=function(L){
+      var half=Math.max.apply(null, L.lines.map(function(t){return t.length;}))*L.fs*0.29;
+      L.x=Math.min(W-P-half, Math.max(P+half, L.cx));
+    };
+    labels.forEach(clampX);
+    // 그러고도 겹치는 라벨만 한 단계씩 줄인다. 두 줄로 못 푸는 건 전부
+    // "한 단어로 긴 이름"(Gudmundsson처럼 끊을 자리가 없는 것)이 옆 점의 라벨과
+    // 가로로 부딪히는 경우라, 줄바꿈이 아니라 폭을 줄여야 풀린다(5-4-1에서 실측).
+    var boxOf=function(L){
+      var w=Math.max.apply(null, L.lines.map(function(t){return t.length;}))*L.fs*0.58;
+      return {x1:L.x-w/2, x2:L.x+w/2, y1:L.y-L.fs, y2:L.y-L.fs+L.lines.length*L.gap};
+    };
+    for(var pass=0; pass<4; pass++){
+      var hit=false;
+      for(var a=0;a<labels.length;a++) for(var b=a+1;b<labels.length;b++){
+        var A=boxOf(labels[a]), B=boxOf(labels[b]);
+        if(A.x1<B.x2 && B.x1<A.x2 && A.y1<B.y2 && B.y1<A.y2){
+          hit=true;
+          [labels[a],labels[b]].forEach(function(L){ L.fs=Math.max(5.5,L.fs*0.88); L.gap=L.fs*1.45; clampX(L); });
+        }
+      }
+      if(!hit) break;
+    }
+    labels.forEach(function(L){
+      L.lines.forEach(function(t,li){
+        out+='<text x="'+L.x.toFixed(1)+'" y="'+(L.y+li*L.gap).toFixed(1)+'" font-size="'+L.fs.toFixed(1)+'" fill="rgba(255,255,255,.92)" text-anchor="middle" style="paint-order:stroke;stroke:rgba(0,0,0,.55);stroke-width:2.2">'+t+'</text>';
+      });
+    });
+    return out;
+  }
+  return '<svg class="xi-svg" viewBox="0 0 '+W+' '+H+'">'+s+dots(home,true)+dots(away,false)+'</svg>';
+}
+function renderPredictedXICard(data){
+  var p = data.predictedXI;
+  if(!p || p.error || !p.available || !p.teams || p.teams.length!==2) return '';
+  var home=p.teams[0].side==='home'?p.teams[0]:p.teams[1];
+  var away=home===p.teams[0]?p.teams[1]:p.teams[0];
+  // 아스날이 안 낀 경기(다른 팀 경기 모달)면 홈을 빨강으로 둔다.
+  var arsSide = isArsenalTeam(home) ? 'home' : (isArsenalTeam(away) ? 'away' : 'home');
+  var dot=function(c){ return '<span style="width:9px;height:9px;border-radius:50%;background:'+c+';display:inline-block;flex-shrink:0"></span>'; };
+  var hCol=(arsSide==='home')?XI_COL_ARS:XI_COL_OPP, aCol=(arsSide==='away')?XI_COL_ARS:XI_COL_OPP;
+  var h='<div class="mm-card">'
+    +'<div class="mm-card-title">예상 선발 <span class="xi-sub">최근 '+p.window+'경기 기준 · 결장자 제외</span></div>'
+    +'<div class="xi-head">'
+      +'<div class="xi-t">'+dot(hCol)+'<span class="xi-n">'+(home.name||'')+'</span> <span class="xi-f">'+(home.formation||'')+'</span></div>'
+      +'<div class="xi-t xi-r"><span class="xi-f">'+(away.formation||'')+'</span> <span class="xi-n">'+(away.name||'')+'</span>'+dot(aCol)+'</div>'
+    +'</div>'
+    +'<div class="xi-pitch">'+xiPitchSVG(home,away,arsSide)+'</div>';
+  h+='<p class="xi-note">실제 선발은 다를 수 있습니다.</p></div>';
+  return h;
+}
 // 아스날 부상자 카드 + (예정 경기일 때) 상대팀 부상자 카드. 상대가 프리미어리그
 // 소속이면 FPL, 아니면 Fotmob으로 폴백한다(api/football.js) — 둘 다 실패했을 때만
 // teamFound:false로 내려온다.
 function renderInjuryCards(data){
-  var html=renderInjuryListCard('Arsenal 부상자 명단', allInjuries);
+  // 경기 기준 목록(출장정지 포함)이 있으면 그걸 쓰고, 못 받았으면 전역 목록으로 떨어진다.
+  var html=renderInjuryListCard('Arsenal 부상자 명단', (data&&data.arsInjuries)||allInjuries);
   if(data&&data.oppName){
     if(data.oppInjuries&&data.oppInjuries.teamFound===false){
       html+='<div class="mm-card"><div class="mm-card-title">'+data.oppName+' 부상자 명단</div><div style="padding:10px 14px 14px;font-size:12px;color:var(--text-secondary);">부상 정보를 확인할 수 없습니다</div></div>';
@@ -6716,8 +6852,18 @@ function renderMatchModal(content, m, data, desktop, opts){
 
   // 예정 경기: 상세 이벤트/스탯/라인업 대신 상대전적·최근폼·부상자 미리보기
   if(isUpcomingR){
-    var preview=renderPredictCard(data,m)+renderH2HCard(data)+renderFormCard(data);
-    if(m.id===window._nextMatchId) preview+=renderInjuryCards(data);
+    // 순서는 "이 경기의 사실 → 그 사실의 근거 → 그래서 전망 → 배경 통계"다.
+    // 예측(+AI 프리뷰)을 맨 위에 두면 결론이 근거보다 먼저 나와서, 프리뷰가 언급한
+    // 결장자를 확인하려면 한참 아래로 스크롤해야 했다. 예상 선발과 부상자 명단이
+    // 붙어 있어야 "명단엔 출전 의심인데 피치엔 선발"인 선수(콘사 사례)도 모순이 아니라
+    // "의심이지만 나올 것"으로 읽힌다.
+    // 예상 선발도 두 경기 모두에 붙는다. 아스날 XI는 두 경기가 같게 나올 수 있지만
+    // (그 사이 치를 경기가 없어 산출 근거인 최근 3경기가 같다) 피치의 나머지 절반은
+    // 상대팀이라 경기마다 완전히 다르다 — 중복이 아니다.
+    var preview='';
+    if((window._predictMatchIds||[]).indexOf(String(m.id))>=0)
+      preview+=renderPredictedXICard(data)+renderInjuryCards(data);
+    preview+=renderPredictCard(data,m)+renderH2HCard(data)+renderFormCard(data);
     // 서버가 Fotmob·ESPN 둘 다에서 못 받은 경우 — 본문이 통째로 비어 보이지
     // 않게 안내 한 줄.
     html+=preview||'<div class="mm-card"><div style="padding:18px 14px;font-size:12px;color:var(--text-secondary);text-align:center;">아직 상대전적·최근 폼 정보가 없습니다</div></div>';

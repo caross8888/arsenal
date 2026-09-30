@@ -633,29 +633,11 @@ function mapFotmobFixture(m){
   };
 }
 
-// 프리미어리그 밖 상대(챔피언스리그 등)는 FPL에 아예 없어서 부상 정보를 못 준다.
-// Fotmob 팀 API의 overview.lastLineupStats.unavailable이 리그를 안 가리고 결장자를
-// 주므로 그걸 폴백으로 쓴다 — 이적/로스터 조회에 이미 쓰는 엔드포인트라 새로 붙는
-// 의존성은 없다. 실패하면 null을 돌려서 호출부가 기존 "정보 없음" 처리를 하게 둔다.
-async function fetchFotmobTeamInjuries(teamName){
-  try {
-    const sr = await fetch(`https://apigw.fotmob.com/searchapi/suggest?term=${encodeURIComponent(teamName)}&lang=en`,
-      {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
-    if(!sr.ok) return null;
-    const sd = await sr.json();
-    let teamId = null;
-    for(const block of (sd.teamSuggest || [])){
-      for(const opt of (block.options || [])){
-        if(opt.payload && opt.payload.id){ teamId = opt.payload.id; break; }
-      }
-      if(teamId) break;
-    }
-    if(!teamId) return null;
-
-    const tr = await fetch(`https://www.fotmob.com/api/data/teams?id=${teamId}`,
-      {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
-    if(!tr.ok) return null;
-    const td = await tr.json();
+// Fotmob 팀 페이로드(teams?id=)의 스쿼드에서 부상자를 뽑는다. 상대팀 폴백과 아스날이
+// 같은 함수를 쓴다 — 아스날은 지금까지 FPL만 봤는데, FPL은 구단 공식 발표가 나야
+// 붙는 구조라 A매치 기간엔 며칠 뒤처진다(실측: 외데고르·모스케라·콘사 3명이 Fotmob에만
+// 잡혔고 FPL은 셋 다 '정상'이었다).
+function fotmobInjuredFromPayload(td){
     // squad를 본다 — lastLineupStats.unavailable은 "직전 경기 시점"이라 그 뒤에 생긴
     // 부상이 안 들어온다(예측 쪽과 같은 이유로 바꿨다). 선수 id는 사진 주소에 쓴다.
     const groups = ((td.squad || {}).squad) || ((td.overview || {}).squad) || [];
@@ -676,12 +658,36 @@ async function fetchFotmobTeamInjuries(teamName){
           position: pos != null ? (POS_KO[pos] || '') : '',
           photo:    `https://images.fotmob.com/image_resources/playerimages/${m.id}.png`,
           status:   /doubt/i.test(ret) ? 'd' : 'i',
-          news:     ret,
+          // "Doubtful"은 옆에 붙는 상태 배지("출전 의심")와 같은 말이라 상세줄에 그대로
+          // 내보내면 같은 정보가 두 번 보인다 — 복귀 예상일이 들어있을 때만 남긴다.
+          news:     /doubt/i.test(ret) ? '' : ret,
           chance:   null,
         });
       }
     }
-    return injured;
+  return injured;
+}
+// 프리미어리그 밖 상대(챔피언스리그 등)는 FPL에 아예 없어서 부상 정보를 못 준다.
+// Fotmob 팀 API의 overview.lastLineupStats.unavailable이 리그를 안 가리고 결장자를
+// 주므로 그걸 폴백으로 쓴다 — 이적/로스터 조회에 이미 쓰는 엔드포인트라 새로 붙는
+// 의존성은 없다. 실패하면 null을 돌려서 호출부가 기존 "정보 없음" 처리를 하게 둔다.
+async function fetchFotmobTeamInjuries(teamName){
+  try {
+    const sr = await fetch(`https://apigw.fotmob.com/searchapi/suggest?term=${encodeURIComponent(teamName)}&lang=en`,
+      {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(8000)});
+    if(!sr.ok) return null;
+    const sd = await sr.json();
+    let teamId = null;
+    for(const block of (sd.teamSuggest || [])){
+      for(const opt of (block.options || [])){
+        if(opt.payload && opt.payload.id){ teamId = opt.payload.id; break; }
+      }
+      if(teamId) break;
+    }
+    if(!teamId) return null;
+
+    const td = await fetchTeamPayload(teamId);
+    return fotmobInjuredFromPayload(td);
   } catch(_){
     return null;
   }
@@ -1290,6 +1296,260 @@ function predictNarrative(p){
   return out;
 }
 
+// ── 예상 선발 XI (예정 경기 전용) ──────────────────────────────────────────
+// 양 팀의 최근 N경기 선발을 받아 "가장 많이 쓴 포메이션 + 그 포메이션을 쓴 가장
+// 최근 경기의 자리 배치"를 틀로 삼고, 결장자(부상·출장정지)가 있는 자리만 같은
+// 포지션의 최다 선발 선수로 갈아끼운다. 좌표는 Fotmob이 선발 명단에 같이 주는
+// horizontalLayout(x,y 모두 0~1)을 그대로 쓴다 — 포메이션 문자열("4-3-3")을
+// 좌표로 바꾸는 표를 직접 들고 있을 필요가 없고, 5백/3백처럼 같은 문자열이라도
+// 팀마다 다르게 세우는 배치까지 Fotmob이 준 그대로 나온다.
+const PREDXI_WINDOW = 3;              // 최근 몇 경기를 볼지
+const PREDXI_TTL_SEC = 2 * 60 * 60;   // 아래 UNAVAIL_TTL_SEC과 같은 값으로 유지할 것 —
+                                      // 한쪽만 먼저 만료되면 예상 XI와 부상자 명단이 다시 어긋난다
+const PREDXI_SCHEMA = 2;              // 응답 모양이 바뀌면 올릴 것(옛 KV 자동 무시)
+
+async function fotmobJSON(url, ms){
+  const r = await fetch(url, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(ms || 8000)});
+  if(!r.ok) throw new Error(`Fotmob ${r.status}`);
+  return r.json();
+}
+
+// 한 경기의 결장자 — 부상뿐 아니라 경고누적·퇴장에 따른 출장정지(type:'suspension')까지
+// 대회를 가리지 않고 들어있는 유일한 소스다. FPL은 프리미어리그만 모델링해서 챔스 정지를
+// 구조적으로 못 잡고, Fotmob 팀 squad는 정지 선수를 injury:null로 줘서 아예 빠진다
+// (실측: 맨시티 포든 — squad에선 injury:null, 여기선 type:'suspension').
+// 예상 선발 XI·부상자 카드·승부 예측 세 곳이 이 캐시 하나를 같이 본다 —
+// 같은 모달 안에서 "예상 XI엔 빠졌는데 부상자 명단엔 없는" 불일치를 막기 위해서다.
+const UNAVAIL_TTL_SEC = 2 * 60 * 60;
+async function fetchMatchUnavailable(matchId){
+  const key = `unavail:v1:${matchId}`;
+  const hit = await kvGetJSON(key);
+  if(hit) return hit;
+  const md = await fotmobJSON(`https://www.fotmob.com/api/data/matchDetails?matchId=${matchId}`);
+  const L = (md.content || {}).lineup || {};
+  const g = md.general || {};
+  const pick = (t, gt) => ({
+    id: String(((t || {}).id ?? (gt || {}).id) || ''),
+    name: ((t || {}).name) || ((gt || {}).name) || '',
+    out: (((t || {}).unavailable) || []).map(p => ({
+      id: String(p.id),
+      name: p.name || '',
+      // 정지 항목엔 expectedReturn이 아예 없다({"type":"suspension"}이 전부) —
+      // 몇 경기 정지인지는 Fotmob이 안 주므로 "출장 정지"까지만 알 수 있다.
+      type: (p.unavailability || {}).type || 'injury',
+      expectedReturn: (p.unavailability || {}).expectedReturn || '',
+    })),
+  });
+  const out = {home: pick(L.homeTeam, g.homeTeam), away: pick(L.awayTeam, g.awayTeam)};
+  await kvSetJSON(key, out, UNAVAIL_TTL_SEC);
+  return out;
+}
+// 팀 이름으로 어느 쪽인지 고른다 — 프론트가 홈/원정을 따로 안 넘겨도 되게.
+function unavailSideFor(unavail, teamName){
+  if(!unavail) return null;
+  const n = normName(teamName || '');
+  if(!n) return null;
+  for(const side of ['home', 'away']){
+    const t = unavail[side];
+    if(!t) continue;
+    const tn = normName(t.name || '');
+    if(tn === n || tn.includes(n) || n.includes(tn)) return t;
+  }
+  return null;
+}
+const lastNameKey = s => String(s || '').trim().split(' ').pop().toLowerCase();
+const normNm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+// 두 소스의 선수를 같은 사람으로 볼지 판정한다. id 체계가 서로 달라 이름으로만 맞출 수 있다.
+// candNames에는 그 선수를 부를 수 있는 이름을 다 넣는다(FPL은 표시 이름과 전체 이름이 다르다).
+function isSamePerson(candNames, uName){
+  const u = normNm(uName);
+  if(!u) return false;
+  const uLast = lastNameKey(u);
+  for(const c of candNames){
+    const n = normNm(c);
+    if(!n) continue;
+    if(n === u) return true;
+    if(uLast && lastNameKey(n) === uLast) return true;
+    // 성을 둘 이상 쓰는 선수는 소스마다 다르게 적힌다 — FPL은 "Mateo Joseph"(표시) /
+    // "Mateo Joseph Fernández-Regatillo"(전체)인데 Fotmob은 "Mateo Joseph"이라, 성 비교가
+    // 빗나가 같은 선수가 목록에 두 번 실렸다(실측). 짧은 쪽이 긴 쪽의 앞부분이면 같게 본다.
+    // 두 단어 이상일 때만 적용한다 — "Gabriel" 한 단어로는 마갈량이스·제주스·마르티넬리를
+    // 구분할 수 없어서 엉뚱한 선수에게 붙는다.
+    const short = n.length <= u.length ? n : u;
+    const long  = n.length <= u.length ? u : n;
+    if(short.split(' ').length >= 2 && long.startsWith(short + ' ')) return true;
+  }
+  return false;
+}
+// 부상자 목록(FPL 또는 Fotmob squad)에 경기 기준 결장자를 얹는다.
+// 규칙은 "명단은 합집합, 상태 판정은 경기 기준 우선" — 이미 있는 선수는 정지일 때만
+// 상태를 덮어쓰고(부상은 FPL의 출전 확률·의심 판정이 더 자세해서 그대로 둔다),
+// 목록에 없던 선수는 새로 넣는다. 이래야 지금 보이던 부상자가 사라지지 않는다
+// (실측: 아스날 기준 squad 7명 / 경기 기준 6명 — 콘사가 경기 쪽에만 빠져 있다).
+function mergeMatchUnavailable(list, outArr){
+  const merged = (list || []).slice();
+  for(const u of (outArr || [])){
+    const i = merged.findIndex(p => isSamePerson([p.fullName, p.name], u.name));
+    if(i >= 0){
+      if(u.type === 'suspension') merged[i] = Object.assign({}, merged[i], {status: 's', chance: null});
+      continue;
+    }
+    merged.push({
+      id: 'fm' + u.id,
+      name: u.name,
+      fullName: u.name,
+      position: '',
+      photo: `https://images.fotmob.com/image_resources/playerimages/${u.id}.png`,
+      status: u.type === 'suspension' ? 's' : (/doubt/i.test(u.expectedReturn) ? 'd' : 'i'),
+      news: u.expectedReturn || '',
+      chance: null,
+    });
+  }
+  return merged;
+}
+// 부상자 목록 두 개를 합집합한다. 같은 선수면 primary(FPL) 쪽 판정을 남긴다 —
+// FPL만 출전 확률 %와 부상 부위를 주고, 다음 라운드 기준으로 갱신되기 때문이다
+// (실측 충돌: 하베르츠 — FPL "75% 출전 가능" vs Fotmob "10월 말 복귀". 사용자 지정으로
+// FPL의 '출전 의심'을 쓴다). extra에만 있는 선수는 그대로 덧붙인다.
+function mergeInjuryLists(primary, extra){
+  const merged = (primary || []).slice();
+  let added = 0;
+  for(const e of (extra || [])){
+    if(merged.some(p => isSamePerson([p.fullName, p.name], e.fullName || e.name))) continue;
+    merged.push(e);
+    added++;
+  }
+  return {list: merged, added};
+}
+// 승부 예측용 — 팀 문맥(fetchTeamContext)의 결장자 목록에 같은 규칙으로 얹는다.
+// ctx 자체는 팀 단위로 KV 캐시되므로(경기와 무관) 원본은 건드리지 않고 사본을 만든다.
+function ctxWithMatchUnavailable(ctx, outArr){
+  if(!ctx || !(outArr || []).length) return ctx;
+  const list = (ctx.out || []).slice();
+  for(const u of outArr){
+    const i = list.findIndex(p => isSamePerson([p.name], u.name));
+    if(i >= 0){
+      if(u.type === 'suspension') list[i] = Object.assign({}, list[i], {type: 'suspension', doubtful: false, missWeight: 1});
+      continue;
+    }
+    // 포지션을 안 줘서 미드필더(2)로 둔다 — injuryFactors가 모르는 포지션에 쓰는 기본값과 같다.
+    // 시장가치도 없어서 r=0.6(평균 대비 보수적 추정)으로 계산된다.
+    list.push({
+      name: u.name, pos: 2, value: 0, type: u.type || 'injury',
+      expectedReturn: u.expectedReturn || '',
+      doubtful: /doubt/i.test(u.expectedReturn),
+      missWeight: /doubt/i.test(u.expectedReturn) ? 0.5 : 1,
+    });
+  }
+  return Object.assign({}, ctx, {out: list});
+}
+
+// 한 팀의 최근 n경기 선발 — 오래된 것부터.
+async function recentStarterXIs(teamId, n){
+  const td = await fotmobJSON(`https://www.fotmob.com/api/data/teams?id=${teamId}`);
+  const all = ((td.fixtures || {}).allFixtures || {}).fixtures || [];
+  const done = all.filter(m => m.status && m.status.finished).slice(-n);
+  const mds = await Promise.all(done.map(f =>
+    fotmobJSON(`https://www.fotmob.com/api/data/matchDetails?matchId=${f.id}`).catch(() => null)));
+  const out = [];
+  mds.forEach((md, i) => {
+    if(!md) return;
+    const L = (md.content || {}).lineup || {};
+    // 이 경기에서 우리가 홈이었는지 원정이었는지 — id로 판정한다(이름은 표기가 흔들린다).
+    const t = (L.homeTeam && String(L.homeTeam.id) === String(teamId)) ? L.homeTeam : L.awayTeam;
+    if(!t || !Array.isArray(t.starters) || !t.starters.length) return;
+    out.push({
+      opponent: (done[i].opponent || {}).name || null,
+      formation: t.formation || null,
+      starters: t.starters.map(p => ({
+        id: String(p.id),
+        name: p.name || '',
+        num: p.shirtNumber ?? null,
+        usual: p.usualPlayingPositionId ?? null,
+        layout: p.horizontalLayout || null,
+      })).filter(p => p.layout),
+    });
+  });
+  return out.filter(h => h.starters.length >= 10);
+}
+
+function predictXIFor(history, outIds){
+  if(!history.length) return null;
+  // 포메이션 최빈값 — 동률이면 더 최근 것(i가 클수록 최근).
+  const fc = {};
+  history.forEach((h, i) => { if(h.formation) fc[h.formation] = (fc[h.formation] || 0) + 1 + i * 0.01; });
+  const top = Object.entries(fc).sort((a, b) => b[1] - a[1])[0];
+  const formation = top ? top[0] : null;
+  // 그 포메이션을 쓴 가장 최근 경기의 자리 배치를 틀로 쓴다.
+  const base = (formation ? history.filter(h => h.formation === formation) : history).slice(-1)[0];
+  if(!base) return null;
+  const freq = {};
+  history.forEach((h, i) => h.starters.forEach(p => {
+    if(!freq[p.id]) freq[p.id] = {p, n: 0};
+    freq[p.id].n += 1 + i * 0.1;   // 최근 경기에 가중
+  }));
+  const banned = new Set((outIds || []).map(String));
+  // 자리를 지키는 선수를 먼저 전부 예약해둔다 — 안 그러면 뒤쪽 슬롯의 주인이
+  // 앞쪽 빈자리의 대체 후보로 먼저 뽑혀서 같은 선수가 XI에 두 번 들어간다
+  // (실측: 브루노 기마랑이스가 미드필드 두 자리에 동시에 나왔다).
+  const used = new Set(base.starters.filter(p => !banned.has(p.id)).map(p => p.id));
+  const xi = base.starters.map(slot => {
+    if(!banned.has(slot.id)) return {...slot, replaced: false};
+    const pool = Object.values(freq).filter(f => !banned.has(f.p.id) && !used.has(f.p.id));
+    const cand = pool.filter(f => f.p.usual === slot.usual).sort((a, b) => b.n - a.n)[0]
+              || pool.sort((a, b) => b.n - a.n)[0];
+    if(!cand) return {...slot, replaced: false};
+    used.add(cand.p.id);
+    return {...cand.p, layout: slot.layout, replaced: true, replacedFor: slot.name};
+  });
+  return {formation, xi};
+}
+
+async function buildPredictedXI(matchId){
+  const key = `predxi:v${PREDXI_SCHEMA}:${matchId}`;
+  const hit = await kvGetJSON(key);
+  if(hit) return hit;
+
+  // 결장자는 부상자 카드·승부 예측과 같은 캐시(unavail:v1)를 본다 — 세 화면이
+  // 같은 명단을 보게 하려는 것이고, TTL도 같아서 시간차로 어긋나지 않는다.
+  const unavail = await fetchMatchUnavailable(matchId);
+  const sides = [
+    {side: 'home', id: unavail.home.id, name: unavail.home.name, out: unavail.home.out},
+    {side: 'away', id: unavail.away.id, name: unavail.away.name, out: unavail.away.out},
+  ];
+
+  const teams = await Promise.all(sides.map(async s => {
+    if(!s.id) return null;
+    const out = s.out || [];
+    const hist = await recentStarterXIs(s.id, PREDXI_WINDOW).catch(() => []);
+    const pred = predictXIFor(hist, out.map(o => o.id));
+    if(!pred) return null;
+    return {
+      side: s.side,
+      id: String(s.id),
+      name: s.name,
+      formation: pred.formation,
+      basis: hist.map(h => h.formation).filter(Boolean),
+      outCount: out.length,
+      suspendedCount: out.filter(o => o.type === 'suspension').length,
+      replacedCount: pred.xi.filter(p => p.replaced).length,
+      xi: pred.xi.map(p => ({
+        id: p.id, name: p.name, num: p.num, layout: p.layout,
+        replaced: !!p.replaced, replacedFor: p.replacedFor || null,
+      })),
+    };
+  }));
+
+  const ok = teams.filter(Boolean);
+  const result = ok.length === 2
+    ? {available: true, window: PREDXI_WINDOW, teams: ok}
+    : {available: false, reason: '최근 선발 라인업을 확보하지 못했습니다'};
+  // 못 뽑은 경우도 캐시한다(짧게) — 라인업이 없는 하위 대회 상대를 열 때마다
+  // 9번씩 Fotmob을 다시 두드리지 않게.
+  await kvSetJSON(key, result, result.available ? PREDXI_TTL_SEC : 30 * 60);
+  return result;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin','*');
 
@@ -1308,13 +1568,15 @@ export default async function handler(req, res) {
   // 버그가 있었다(로컬에서는 파일 저장마다 함수가 다시 로드돼 안 드러났지만,
   // 실제 배포에서는 같은 인스턴스가 두 요청을 다 받아서 재현됐다).
   const seasonParam = req.query.season || '';
+  // predxi는 경기마다 응답이 다르다 — id 파라미터를 안 쓰는 타입이라 따로 섞는다.
+  const matchParam = req.query.match || '';
   // predict는 두 팀·대회·킥오프가 요청마다 다르다 — 이걸 키에 안 넣으면 처음 계산된
   // 한 경기의 예측이 1시간 동안 모든 경기에 그대로 재사용된다(실측: 릴전 예측이
   // 뮌헨전 카드에 그대로 나왔다. 팀 이름은 모달 쪽 데이터라 뮌헨인데 내용만 릴).
   const predictKey = type === 'predict'
-    ? ['', req.query.home || '', req.query.away || '', req.query.league || '', req.query.date || ''].join('_')
+    ? ['', req.query.home || '', req.query.away || '', req.query.league || '', req.query.date || '', req.query.match || ''].join('_')
     : '';
-  const cacheKey = type + (teamParam ? ('_'+teamParam) : '') + (idParam ? ('_'+idParam) : '') + (seasonParam ? ('_'+seasonParam) : '') + predictKey;
+  const cacheKey = type + (teamParam ? ('_'+teamParam) : '') + (idParam ? ('_'+idParam) : '') + (seasonParam ? ('_'+seasonParam) : '') + (matchParam ? ('_m'+matchParam) : '') + predictKey;
   // playerDetail(이번 시즌)의 changedOther/changedTraits는 "지금 이 순간 KV
   // 기준으로 바뀌었는가"를 매 요청마다 새로 판정해야 하는 값이라, 응답
   // 자체를 1시간짜리 일반 캐시(서버 메모리 + 브라우저 Cache-Control)에
@@ -2009,12 +2271,30 @@ export default async function handler(req, res) {
         targetFplId = match ? match.id : null;
       }
 
+      // match(Fotmob 경기 id)가 오면 그 경기 기준 결장자를 얹는다 — FPL도 Fotmob squad도
+      // 못 잡는 출장정지(특히 챔스 경고누적)가 여기서만 들어온다. 예상 선발 XI·승부
+      // 예측과 같은 캐시를 보므로 한 모달 안에서 세 카드의 명단이 항상 같다.
+      const matchOut = matchParam ? await fetchMatchUnavailable(matchParam)
+        .then(u => {
+          const side = unavailSideFor(u, isOpponentTeam ? teamParam : 'Arsenal');
+          return side ? side.out : [];
+        }).catch(() => []) : [];
+
+      // Fotmob 스쿼드 결장자 — FPL이 놓치는 선수를 메운다. 아스날은 팀 id로 바로 받고
+      // (fetchTeamPayload가 60초 메모리 캐시), 상대는 이름으로 찾는다.
+      const fmSquadOut = await (isOpponentTeam
+        ? fetchFotmobTeamInjuries(teamParam).then(v => v || [])
+        : fetchTeamPayload(FIRST_TEAM_ID).then(fotmobInjuredFromPayload)
+      ).catch(() => []);
+
       if(targetFplId === null){
         // 프리미어리그 소속이 아닌 상대 — FPL에 데이터 자체가 없어 Fotmob으로 폴백
         const fotmobInjured = isOpponentTeam ? await fetchFotmobTeamInjuries(teamParam) : null;
         result = fotmobInjured
-          ? { injured: fotmobInjured, availableCount: 0, teamFound: true, source: 'fotmob' }
-          : { injured: [], availableCount: 0, teamFound: false };
+          ? { injured: mergeMatchUnavailable(fotmobInjured, matchOut), availableCount: 0, teamFound: true, source: 'fotmob' }
+          : (matchOut.length
+              ? { injured: mergeMatchUnavailable([], matchOut), availableCount: 0, teamFound: true, source: 'match' }
+              : { injured: [], availableCount: 0, teamFound: false });
       } else {
         const teamPlayers = (fplData.elements || []).filter(p => p.team === targetFplId);
         const squadFilter = (p) => {
@@ -2039,7 +2319,11 @@ export default async function handler(req, res) {
             news:     p.news || '',
             chance:   p.chance_of_playing_next_round,
           }));
-        result = { injured, availableCount, teamFound: true };
+        const fm = mergeInjuryLists(injured, fmSquadOut);
+        // Fotmob에서만 온 선수는 FPL이 "출전 가능"으로 세고 있던 사람이다 — 그만큼 빼야
+        // 집계 4칸(부상/의심/결장/출전 가능)의 합이 스쿼드 인원과 맞는다.
+        result = { injured: mergeMatchUnavailable(fm.list, matchOut),
+                   availableCount: Math.max(0, availableCount - fm.added), teamFound: true };
       }
 
     } else if(type === 'squad'){
@@ -2583,12 +2867,23 @@ export default async function handler(req, res) {
 
       // 킥오프 시각 — 휴식일·최근 2주 경기 수 계산에 쓴다(없으면 일정 변수 생략).
       const kickoffMs = req.query.date ? new Date(req.query.date).getTime() : null;
+      // 결장자는 예상 선발 XI·부상자 카드와 같은 캐시를 본다 — 세 카드가 같은 모달에
+      // 나란히 뜨는데 명단이 다르면 사용자가 어느 쪽을 믿어야 할지 알 수 없다.
+      // 팀 문맥(ctx)은 팀 단위로 KV 캐시되므로 원본은 두고 사본에만 얹는다.
+      let homeCtx2 = homeCtx, awayCtx2 = awayCtx;
+      if(req.query.match){
+        try {
+          const u = await fetchMatchUnavailable(String(req.query.match).replace(/\D/g, ''));
+          homeCtx2 = ctxWithMatchUnavailable(homeCtx, (u.home || {}).out);
+          awayCtx2 = ctxWithMatchUnavailable(awayCtx, (u.away || {}).out);
+        } catch(_){ /* 못 받으면 기존 FPL/Fotmob 결장자만으로 계산한다 */ }
+      }
       result = predictMatch({
         compStrength: tables[compLeagueId] || null,
         homeId, awayId,
         homeDom: tables[(homeCtx || {}).leagueId] || null,
         awayDom: tables[(awayCtx || {}).leagueId] || null,
-        homeCtx, awayCtx,
+        homeCtx: homeCtx2, awayCtx: awayCtx2,
         kickoffMs: Number.isFinite(kickoffMs) ? kickoffMs : null,
       });
       if(result.available){
@@ -2615,6 +2910,12 @@ export default async function handler(req, res) {
           if(typeof aiText === 'string' && aiText.trim()) result.aiText = applyGlossary(aiText.trim());
         } catch(e){ /* 해설 없음은 정상 동작 */ }
       }
+    } else if(type === 'predxi'){
+      // 예상 선발 XI — 프론트(가장 가까운 예정 경기 상세모달)가 Fotmob 경기 id를 넘긴다.
+      // 무거운 계산(9번의 Fotmob 호출)은 KV에 6시간 보관하므로 보통은 KV 읽기 한 번으로 끝난다.
+      const predxiMatch = String(req.query.match || '').replace(/\D/g, '');
+      if(!predxiMatch) throw new Error('match 파라미터 필요');
+      result = await buildPredictedXI(predxiMatch);
     } else if(type === 'transfers'){
       // 이적시장 IN/OUT 요약 — Fotmob 팀 API(이미 스쿼드 라이브 목록에 쓰는
       // 그 엔드포인트)의 transfers 필드를 그대로 재사용한다. 이 필드는
