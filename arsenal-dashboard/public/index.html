@@ -6743,7 +6743,7 @@ function xiPitchSVG(home, away, arsSide, hCol, aCol){
       var cy = isHome ? XI_PT + p.layout.y*ih     : (H-XI_PB) - p.layout.y*ih;
       var r=9.4;
       // 골키퍼는 회색 — 종료 경기 선발 피치(renderPitch)와 같은 규칙.
-      var isGK = (p.pos===0);
+      var isGK = (p.pos==='GK');
       var fill = isGK ? XI_GK_COLOR : col;
       out+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+r+'" fill="'+fill+'" stroke="rgba(255,255,255,.85)" stroke-width="1"/>';
       out+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" font-size="8.5" font-weight="700" fill="'+(isGK?'var(--white)':numCol)+'" text-anchor="middle" dominant-baseline="central">'+(p.num==null?'':p.num)+'</text>';

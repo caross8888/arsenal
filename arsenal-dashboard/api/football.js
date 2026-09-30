@@ -641,7 +641,6 @@ function fotmobInjuredFromPayload(td){
     // squad를 본다 — lastLineupStats.unavailable은 "직전 경기 시점"이라 그 뒤에 생긴
     // 부상이 안 들어온다(예측 쪽과 같은 이유로 바꿨다). 선수 id는 사진 주소에 쓴다.
     const groups = ((td.squad || {}).squad) || ((td.overview || {}).squad) || [];
-    const POS_KO = {0: 'GK', 1: 'DF', 2: 'MF', 3: 'FW'};
     const injured = [];
     for(const g of groups){
       const gp = SQUAD_GROUP_POS[String(g.title || g.role || '').toLowerCase()];
@@ -655,7 +654,7 @@ function fotmobInjuredFromPayload(td){
           fullName: m.name,
           // Fotmob은 type(injury/suspension)과 expectedReturn 문자열만 준다. FPL의
           // i/d/s/u 4단계 중 "출전 의심"은 expectedReturn === 'Doubtful'로만 구분된다.
-          position: pos != null ? (POS_KO[pos] || '') : '',
+          position: pos != null ? (FM_POS_BY_ID[pos] || '') : '',
           photo:    `https://images.fotmob.com/image_resources/playerimages/${m.id}.png`,
           status:   /doubt/i.test(ret) ? 'd' : 'i',
           // "Doubtful"은 옆에 붙는 상태 배지("출전 의심")와 같은 말이라 상세줄에 그대로
@@ -1303,6 +1302,10 @@ function predictNarrative(p){
 // horizontalLayout(x,y 모두 0~1)을 그대로 쓴다 — 포메이션 문자열("4-3-3")을
 // 좌표로 바꾸는 표를 직접 들고 있을 필요가 없고, 5백/3백처럼 같은 문자열이라도
 // 팀마다 다르게 세우는 배치까지 Fotmob이 준 그대로 나온다.
+// Fotmob의 usualPlayingPositionId를 앱 공용 포지션 문자열로 바꾼다. api/match.js에
+// 같은 이름·같은 값의 표가 있다 — 서버가 숫자를 정규화해서 내보내는 게 이 앱의 규칙이라,
+// 프론트는 어느 엔드포인트에서 오든 'GK'/'DF'/'MF'/'FW' 하나만 보면 된다.
+const FM_POS_BY_ID = {0: 'GK', 1: 'DF', 2: 'MF', 3: 'FW'};
 const PREDXI_WINDOW = 3;              // 최근 몇 경기를 볼지
 const PREDXI_TTL_SEC = 2 * 60 * 60;   // 아래 UNAVAIL_TTL_SEC과 같은 값으로 유지할 것 —
                                       // 한쪽만 먼저 만료되면 예상 XI와 부상자 명단이 다시 어긋난다
@@ -1545,9 +1548,9 @@ async function buildPredictedXI(matchId){
       replacedCount: pred.xi.filter(p => p.replaced).length,
       xi: pred.xi.map(p => ({
         id: p.id, name: p.name, num: p.num, layout: p.layout,
-        // Fotmob의 usualPlayingPositionId(0=GK). 프론트가 골키퍼만 회색 점으로
-        // 그리는 데 쓴다 — 종료 경기 선발 피치(renderPitch)와 같은 규칙.
-        pos: p.usual != null ? p.usual : null,
+        // 프론트가 골키퍼만 회색 점으로 그리는 데 쓴다 — 종료 경기 선발 피치(renderPitch)와
+        // 같은 규칙이고, 값의 형식도 그쪽(api/match.js)과 같은 문자열로 맞춘다.
+        pos: FM_POS_BY_ID[p.usual] || '',
         replaced: !!p.replaced, replacedFor: p.replacedFor || null,
       })),
     };
