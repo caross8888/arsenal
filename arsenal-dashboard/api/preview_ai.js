@@ -109,10 +109,15 @@ export default async function handler(req, res){
       const home = (m.homeTeam || {}).id, away = (m.awayTeam || {}).id;
       if(!home || !away) continue;
       report.checked++;
+      // match를 꼭 같이 넘긴다 — 화면(프론트)도 이 파라미터로 예측을 부른다. 빠뜨리면
+      // 경기 기준 결장자(출장정지 포함)가 반영되지 않아 확률이 달라지고, 해설을 저장하는
+      // 키(predictAiKey)까지 달라져서 크론이 만든 해설을 화면이 영영 못 찾는다
+      // (실측: 크론 62%/키 ...1dq7fwp vs 화면 60%/키 ...npx2vg → 매번 옛 해설로 폴백).
       const p = await callFootball({
         type: 'predict', home: String(home), away: String(away),
         league: m.leagueId ? String(m.leagueId) : undefined,
         date: m.utcDate || undefined,
+        match: String(m.id),
       });
       if(!p || !p.available){ report.matches.push({id: m.id, skip: '예측 불가'}); continue; }
 

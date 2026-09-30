@@ -243,6 +243,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .tag-ec{background:rgba(74,222,128,.15);color:#4ADE80;border:1px solid rgba(74,222,128,.25)}
 .tag-cs{background:rgba(203,213,225,.15);color:#CBD5E1;border:1px solid rgba(203,213,225,.25)}
 .tag-oth{background:rgba(100,100,100,.15);color:var(--text-muted);border:1px solid var(--border)}
+/* AI 해설이 최신 기록 반영 전일 때 본문 위에 붙는 알림 줄. 앰버는 이 앱에서 "출전 의심"
+   같은 주의 표시에 쓰는 색이라 경고 강도가 과하지 않다. */
+.pred-stale{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--amber);
+  background:color-mix(in srgb,var(--amber) 10%,transparent);border-radius:8px;padding:7px 10px;margin:0 0 10px}
 .pred-seg{background:var(--pc-d)}
 :root[data-theme="light"] .pred-seg{background:var(--pc-l)}
 .pred-tile{background:rgba(255,255,255,.05);border:1px solid transparent;border-radius:10px}
@@ -6621,9 +6625,11 @@ function predictCardHTML(p, data){
     h+='<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border-bright);">';
     h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">';
     h+='<span style="font-size:10px;font-weight:700;letter-spacing:.3px;color:var(--gold);">AI 프리뷰</span>';
-    // 결장자·폼·순위 등이 바뀜 뒤 아직 새 해설이 안 만들어졌을 때 — 본문과 옆 수치가 어그러질 수 있어 표시한다.
-    if(p.aiStale) h+='<span style="font-size:9.5px;color:var(--text-secondary);opacity:.85;">최신 기록 반영 전 작성</span>';
     h+='</div>';
+    // 결장자·폼·순위 등이 바뀐 뒤 아직 새 해설이 안 만들어졌을 때 — 본문이 옆 수치와
+    // 어긋나 있을 수 있어 본문 바로 위에 한 줄로 알린다(사용자 지정). 제목 옆 작은 회색
+    // 글씨로는 읽히지 않았다. 크론이 다음 정각에 새 해설을 만들면 저절로 사라진다.
+    if(p.aiStale) h+='<div class="pred-stale">이 해설은 최신 기록 반영 전에 작성됐습니다</div>';
     String(p.aiText).split(/\n\s*\n/).forEach(function(para,i){
       h+='<p style="margin:'+(i?'10px':'0')+' 0 0;font-size:12.5px;line-height:1.7;color:var(--text-secondary);">'+escAi(para)+'</p>';
     });
