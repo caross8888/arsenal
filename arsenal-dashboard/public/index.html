@@ -943,6 +943,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .xi-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 14px 9px;font-size:11px;}
 .xi-t{display:flex;align-items:center;gap:6px;font-weight:700;min-width:0;}
 .xi-t.xi-r{justify-content:flex-end;}
+/* 아스날 쪽은 줄이지 않는다 — flex는 양쪽을 같이 줄여서, 320px 화면에서 상대가
+   "Borussia Monchengladbach"처럼 길면 짧은 "Arsenal"까지 "Arse…"로 잘렸다(실측:
+   42px 필요한데 28px만 배정). 말줄임은 긴 쪽이 다 받아내는 게 맞다. */
+.xi-t.xi-keep{flex-shrink:0;}
 .xi-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .xi-f{font-size:10px;color:var(--text-secondary);font-weight:400;flex-shrink:0;}
 .xi-pitch{padding:0 10px 12px;}
@@ -6694,20 +6698,23 @@ function renderInjuryListCard(title, injuries){
 // 피치는 테마와 무관하게 늘 초록이라 점 색도 고정값을 쓴다(라이트 모드에서
 // --red가 밝아지면 잔디 위에서 대비가 떨어진다).
 var XI_COL_ARS='#EF0107', XI_COL_OPP='#3B6FD4';
-var XI_W=340, XI_H=214, XI_P=6;   // P: 잔디 여백(터치라인 안쪽)
+// 잔디 여백(터치라인 바깥). 하단만 넓은 건 라벨이 점 아래에 붙기 때문이다 — 맨 아랫줄
+// 선수(layout.y 최대 0.89)의 2줄 라벨이 끝나는 지점이 여백 6에서 213.6으로 SVG 높이(214)에
+// 겨우 들어간다. 여기를 3으로 줄이면 216.3이 되어 둘째 줄이 잘린다(실측, 선수 88명 기준).
+var XI_W=340, XI_H=214, XI_PX=3, XI_PT=3, XI_PB=6;
 function xiPitchSVG(home, away, arsSide){
-  var W=XI_W, H=XI_H, P=XI_P, iw=W-P*2, ih=H-P*2;
+  var W=XI_W, H=XI_H, P=XI_PX, iw=W-XI_PX*2, ih=H-XI_PT-XI_PB;
   var s='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#1d5c33" rx="4"/>';
   for(var i=0;i<8;i++){ if(i%2===0) continue;
     s+='<rect x="'+(W/8*i).toFixed(1)+'" y="0" width="'+(W/8).toFixed(1)+'" height="'+H+'" fill="rgba(255,255,255,.022)"/>'; }
   var lc='rgba(255,255,255,.34)', lw=0.9;
-  s+='<rect x="'+P+'" y="'+P+'" width="'+iw+'" height="'+ih+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
-  s+='<line x1="'+(W/2)+'" y1="'+P+'" x2="'+(W/2)+'" y2="'+(H-P)+'" stroke="'+lc+'" stroke-width="'+lw+'"/>';
-  s+='<circle cx="'+(W/2)+'" cy="'+(H/2)+'" r="'+(ih*0.16).toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
-  var bw=iw*0.157, bh=ih*0.593, by=P+(ih-bh)/2;
+  s+='<rect x="'+XI_PX+'" y="'+XI_PT+'" width="'+iw+'" height="'+ih+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
+  s+='<line x1="'+(W/2)+'" y1="'+XI_PT+'" x2="'+(W/2)+'" y2="'+(H-XI_PB)+'" stroke="'+lc+'" stroke-width="'+lw+'"/>';
+  s+='<circle cx="'+(W/2)+'" cy="'+(XI_PT+ih/2).toFixed(1)+'" r="'+(ih*0.16).toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
+  var bw=iw*0.157, bh=ih*0.593, by=XI_PT+(ih-bh)/2;
   s+='<rect x="'+P+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
   s+='<rect x="'+(W-P-bw).toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
-  var gw=iw*0.052, gh=ih*0.269, gy=P+(ih-gh)/2;
+  var gw=iw*0.052, gh=ih*0.269, gy=XI_PT+(ih-gh)/2;
   s+='<rect x="'+P+'" y="'+gy.toFixed(1)+'" width="'+gw.toFixed(1)+'" height="'+gh.toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
   s+='<rect x="'+(W-P-gw).toFixed(1)+'" y="'+gy.toFixed(1)+'" width="'+gw.toFixed(1)+'" height="'+gh.toFixed(1)+'" fill="none" stroke="'+lc+'" stroke-width="'+lw+'"/>';
 
@@ -6716,8 +6723,8 @@ function xiPitchSVG(home, away, arsSide){
     var out='', labels=[];
     (team.xi||[]).forEach(function(p){
       if(!p.layout) return;
-      var cx = isHome ? P + p.layout.x*(iw/2) : (W-P) - p.layout.x*(iw/2);
-      var cy = isHome ? P + p.layout.y*ih     : (H-P) - p.layout.y*ih;
+      var cx = isHome ? XI_PX + p.layout.x*(iw/2) : (W-XI_PX) - p.layout.x*(iw/2);
+      var cy = isHome ? XI_PT + p.layout.y*ih     : (H-XI_PB) - p.layout.y*ih;
       var r=9.4;
       out+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+r+'" fill="'+col+'" stroke="rgba(255,255,255,.85)" stroke-width="1"/>';
       out+='<text x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" font-size="8.5" font-weight="700" fill="#fff" text-anchor="middle" dominant-baseline="central">'+(p.num==null?'':p.num)+'</text>';
@@ -6772,13 +6779,19 @@ function renderPredictedXICard(data){
   var away=home===p.teams[0]?p.teams[1]:p.teams[0];
   // 아스날이 안 낀 경기(다른 팀 경기 모달)면 홈을 빨강으로 둔다.
   var arsSide = isArsenalTeam(home) ? 'home' : (isArsenalTeam(away) ? 'away' : 'home');
+  // 팀명은 모달 헤더·경기 예측 카드와 같은 표기를 쓴다(applyCardTeamNames가 일정 쪽
+   // 짧은 이름을 displayName에 넣어둔다) — 여기만 Fotmob 라인업의 풀네임을 쓰고 있어서
+   // "Leeds United"·"Borussia Monchengladbach"처럼 길어지면 양쪽 포메이션이 가운데서
+   // 8px(flex gap)까지 붙어 한 덩어리로 읽혔다. 짧은 이름이면 그 상황 자체가 잘 안 생긴다.
+  var hName=modalTeamName(data.homeTeam, data)||home.name||'';
+  var aName=modalTeamName(data.awayTeam, data)||away.name||'';
   var dot=function(c){ return '<span style="width:9px;height:9px;border-radius:50%;background:'+c+';display:inline-block;flex-shrink:0"></span>'; };
   var hCol=(arsSide==='home')?XI_COL_ARS:XI_COL_OPP, aCol=(arsSide==='away')?XI_COL_ARS:XI_COL_OPP;
   var h='<div class="mm-card">'
     +'<div class="mm-card-title">예상 선발 <span class="xi-sub">최근 '+p.window+'경기 기준 · 결장자 제외</span></div>'
     +'<div class="xi-head">'
-      +'<div class="xi-t">'+dot(hCol)+'<span class="xi-n">'+(home.name||'')+'</span> <span class="xi-f">'+(home.formation||'')+'</span></div>'
-      +'<div class="xi-t xi-r"><span class="xi-f">'+(away.formation||'')+'</span> <span class="xi-n">'+(away.name||'')+'</span>'+dot(aCol)+'</div>'
+      +'<div class="xi-t'+(arsSide==='home'?' xi-keep':'')+'">'+dot(hCol)+'<span class="xi-n">'+hName+'</span> <span class="xi-f">'+(home.formation||'')+'</span></div>'
+      +'<div class="xi-t xi-r'+(arsSide==='away'?' xi-keep':'')+'"><span class="xi-f">'+(away.formation||'')+'</span> <span class="xi-n">'+aName+'</span>'+dot(aCol)+'</div>'
     +'</div>'
     +'<div class="xi-pitch">'+xiPitchSVG(home,away,arsSide)+'</div>';
   h+='<p class="xi-note">실제 선발은 다를 수 있습니다.</p></div>';
