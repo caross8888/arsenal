@@ -988,9 +988,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    낮은 해상도로 래스터된 채 그려지는 경우가 있다. */
 .xiz-stage.anim{transition:transform .34s cubic-bezier(.32,.72,0,1);will-change:transform;}
 .xiz-rot{transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center;}
+/* 팀 이름 줄은 HTML이라 피치(SVG)처럼 저절로 커지지 않는다 — 확대 비율에 맞춰 키우되
+   상한을 둔다. 안 그러면 카드에선 팀 이름(11px)이 선수 라벨(6.2px)보다 컸는데 확대하면
+   선수 라벨(20.5px)에 역전당한다(실측, 1024px 창). --xizf는 openPitchZoom이 계산해 넣는다. */
 .xiz-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:0 4px 7px;color:var(--white);font-size:11px;}
-.xiz-head .xi-f{color:rgba(255,255,255,.7);}
+  padding:0 4px 7px;color:var(--white);font-size:var(--xizf,11px);}
+.xiz-head .xi-hdot{width:calc(var(--xizf,11px) * 0.82);height:calc(var(--xizf,11px) * 0.82);}
+.xiz-head .xi-f{color:rgba(255,255,255,.7);font-size:calc(var(--xizf,11px) * 0.91);}
 /* 닫기 버튼은 회전 래퍼 "안"에 둔다 — 딤 영역에 있으면 피치를 보다가 손이 안 가고,
    안에 있으면 회전을 같이 먹어서 사용자가 보는 기준으로 항상 우측 상단이다. */
 .xiz-close{position:absolute;right:8px;top:8px;width:30px;height:30px;border-radius:50%;
@@ -6924,6 +6928,7 @@ function openPitchZoom(){
       +'</div></div>';
   }
   ov.classList.add('open');
+  _xizScaleHead(svgEl);
   // 경기 상세모달이 이미 'hidden'으로 잠가둔 상태다 — 그대로 복구하려고 기억해둔다.
   // 무조건 ''로 되돌리면 확대를 닫은 뒤 모달 뒤 배경이 스크롤된다(실측).
   _xizPrevOverflow = document.body.style.overflow;
@@ -6933,6 +6938,19 @@ function openPitchZoom(){
   ov.classList.add('shown');
   // 뒤로가기·안드로이드 백버튼으로 닫히게 — 경기 상세모달과 같은 방식.
   if(!_xizPushed){ history.pushState({xizoom:1}, '', '#pitch'); _xizPushed = true; }
+}
+// 확대 피치 폭 ÷ 카드 피치 폭만큼 팀 이름 줄을 키운다. 13~20px로 가둬서 작은 창에서
+// 너무 작아지지도, 큰 창에서 제목처럼 커지지도 않게 한다.
+function _xizScaleHead(cardSvg){
+  var zoomSvg = document.querySelector('#xizStage .xi-svg');
+  var head = document.querySelector('#xizStage .xiz-head');
+  if(!cardSvg || !zoomSvg || !head) return;
+  var cw = cardSvg.getBoundingClientRect().width;
+  // 확대 쪽은 아직 FLIP transform이 걸려 있어 실측이 작게 나온다 — CSS가 정한 최종 폭을 쓴다.
+  var zw = zoomSvg.offsetWidth || zoomSvg.getBoundingClientRect().width;
+  if(!cw || !zw) return;
+  var px = Math.max(13, Math.min(20, 11 * (zw / cw)));
+  head.style.setProperty('--xizf', px.toFixed(1) + 'px');
 }
 function _xizFlip(src){
   var stage = document.getElementById('xizStage');
