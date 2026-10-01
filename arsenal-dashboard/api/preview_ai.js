@@ -79,11 +79,21 @@ async function kv(...args){
 }
 
 export default async function handler(req, res){
+  // on=1은 화면이 "해설이 낡았다"를 발견했을 때 던지는 즉시 생성 요청이다. 크론은 한 시간에
+  // 한 번뿐이라 그 사이 결장자가 바뀌면 최대 한 시간 동안 옛 해설이 걸려 있었다.
+  // 비밀키를 안 받지만 안전하다 — (1) 생성 대상은 크론과 똑같이 "가장 가까운 두 경기"뿐이고,
+  // (2) 그 경기의 현재 해시에 해설이 이미 있으면 아무것도 안 하며, (3) 키마다 잠금을 걸어
+  // 동시에 여러 명이 열어도 제미나이는 한 번만 부른다. 즉 어차피 일어날 생성 한 번을
+  // 앞당기는 것 외에는 아무것도 못 한다.
+  const onDemand = req.query.on === '1';
   const secret = process.env.CRON_SECRET;
-  if(!secret) return res.status(503).json({error: 'CRON_SECRET 미설정'});
-  if(req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({error: 'unauthorized'});
+  if(!onDemand){
+    if(!secret) return res.status(503).json({error: 'CRON_SECRET 미설정'});
+    if(req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({error: 'unauthorized'});
+  }
   if(!KV_URL || !KV_TOKEN) return res.status(503).json({error: 'KV 자격증명 없음'});
   if(!AI_ENABLED) return res.status(503).json({error: 'GEMINI_API_KEY 미설정'});
+  res.setHeader('Cache-Control', 'no-store');
 
   const dry = !!req.query.dry;
   const report = {checked: 0, generated: 0, cached: 0, failed: 0, matches: []};
@@ -125,6 +135,13 @@ export default async function handler(req, res){
       const hit = await kv('GET', key);
       if(hit){ report.cached++; report.matches.push({id: m.id, key, cached: true}); continue; }
       if(dry){ report.matches.push({id: m.id, key, would: '생성'}); continue; }
+      // 같은 키를 동시에 두 번 만들지 않는다. SET NX가 실패하면 누군가 이미 만들고 있다.
+      // TTL은 생성에 걸리는 시간(실측 89초, 모델 폴백을 더 타면 더 길어진다)보다 넉넉해야
+      // 한다 — 짧으면 잠금이 먼저 풀려서 중복 생성이 난다. 크론이 잡아둔 예산(240초)에 맞춘다.
+      if(onDemand){
+        const got = await kv('SET', key + ':lock', '1', 'NX', 'EX', '300');
+        if(!got){ report.matches.push({id: m.id, key, skip: '이미 생성 중'}); continue; }
+      }
 
       p.h2h = await fetchH2H(m.id);
       const {text, reason, model} = await generatePreview(p);
@@ -135,6 +152,8 @@ export default async function handler(req, res){
         // 과부하·타임아웃이면 다른 경기를 다 돈 뒤 한 번 더 — 실측으로 첫 경기가 크론 시작
         // 직후의 과부하에 걸리고, 10여 초 뒤 두 번째 경기는 멀쩡히 성공하는 일이 반복됐다.
         if(/HTTP 5\d\d|HTTP 429|예외/.test(reason || '')) retryLater.push({p, key, row});
+        // 재시도 대기열에 넣은 건 그 단계에서 잠금을 정리한다 — 여기선 재시도 안 할 것만 푼다.
+        else if(onDemand) await kv('DEL', key + ':lock').catch(() => {});
         continue;
       }
       await kv('SET', key, text, 'EX', String(AI_TTL_SEC));
@@ -151,7 +170,12 @@ export default async function handler(req, res){
       if(Date.now() - startedAt > BUDGET_MS) break;
       await new Promise(res => setTimeout(res, 5000));
       const {text, reason, model} = await generatePreview(item.p);
-      if(!text){ item.row.failed = reason + ' (재시도도 실패)'; continue; }
+      if(!text){
+        item.row.failed = reason + ' (재시도도 실패)';
+        // 실패한 채 잠금을 남겨두면 TTL 동안 재시도가 막힌다 — 바로 푼다.
+        if(onDemand) await kv('DEL', item.key + ':lock').catch(() => {});
+        continue;
+      }
       await kv('SET', item.key, text, 'EX', String(AI_TTL_SEC));
       report.failed--; report.generated++;
       report.model = model;

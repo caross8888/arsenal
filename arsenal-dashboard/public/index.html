@@ -1002,13 +1002,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   -webkit-tap-highlight-color:transparent;}
 .xiz-close:active{background:rgba(0,0,0,.7);}
-@media (min-width:900px){
-  /* 폭만 제한하면 창 높이가 낮을 때 피치가 세로로 넘쳐서 위쪽 팀 이름 줄이 잘린다.
-     높이 쪽 상한도 같이 건다 — 쓸 수 있는 높이에서 팀 이름 줄(34px)을 뺀 뒤
-     피치 비율(340/214 = 1.5888)을 곱하면 그 높이에 맞는 최대 폭이 나온다. */
-  .xiz-stage{width:min(1100px, 92vw, calc((88vh - 34px) * 1.5888));}
-  .xiz-rot{transform:none;position:static !important;width:100% !important;height:auto !important;}
-}
+/* 회전할지와 폭은 _xizMode()가 화면 비율을 보고 정한 뒤 인라인으로 심는다 — 미디어쿼리로
+   가르면 가로로 돌린 폰에서도 회전해버린다. 회전을 안 할 때는 이 클래스를 안 붙인다. */
 /* 승부차기 카드(renderShootoutCard) — 한 줄 = 한 라운드. 바깥쪽에 키커 이름,
    안쪽에 성공/실패 아이콘(원 테두리 안 골대 + 체크/X), 가운데 라운드 번호.
    가운데 결과 원 두 열이 세로로 나란히 서서 스코어보드 역할도 겸한다.
@@ -6537,6 +6532,19 @@ function renderPredictCard(data, m){
   if(!p || p.error || !p.available) return '';
   return predictCardHTML(p, data);
 }
+// 해설이 낡은 걸 발견하면 서버에 생성을 "던지기만" 한다 — 응답은 기다리지 않는다.
+// 생성에 1분 이상 걸려서(실측 88초) 화면을 붙잡아둘 수 없고, 다음에 모달을 열면 새 글이 있다.
+// 크론이 한 시간에 한 번 도는 사이의 공백을 메우는 용도다. 중복 호출 방지(잠금)는 서버가 한다.
+// 같은 경기에 대해서는 한 번만 던진다 — 모달을 여닫을 때마다 쌓이지 않게. 전역 플래그
+// 하나로 두면 리즈전에서 던진 뒤 릴전이 낡아 있어도 영영 안 던진다(이 앱은 SPA라 새로고침이
+// 드물다). 서버도 잠금으로 중복을 막지만, 쓸데없는 호출은 여기서 먼저 줄인다.
+var _aiRefreshFired = {};
+function requestAiRefresh(matchKey){
+  var k = matchKey || 'default';
+  if(_aiRefreshFired[k]) return;
+  _aiRefreshFired[k] = true;
+  fetch(FN+'/preview_ai?on=1').catch(function(){});
+}
 function predictCardHTML(p, data){
   var pct=function(v){ return Math.round(v*100); };
   var one=function(v){ return v.toFixed(1); };
@@ -6677,7 +6685,10 @@ function predictCardHTML(p, data){
     // 결장자·폼·순위 등이 바뀐 뒤 아직 새 해설이 안 만들어졌을 때 — 본문이 옆 수치와
     // 어긋나 있을 수 있어 본문 바로 위에 한 줄로 알린다(사용자 지정). 제목 옆 작은 회색
     // 글씨로는 읽히지 않았다. 크론이 다음 정각에 새 해설을 만들면 저절로 사라진다.
-    if(p.aiStale) h+='<div class="pred-stale">이 해설은 최신 정보 반영 전에 작성됐습니다</div>';
+    if(p.aiStale){
+      h+='<div class="pred-stale">이 해설은 최신 정보 반영 전에 작성됐습니다</div>';
+      requestAiRefresh((p.home&&p.home.id)+'-'+(p.away&&p.away.id));
+    }
     String(p.aiText).split(/\n\s*\n/).forEach(function(para,i){
       h+='<p style="margin:'+(i?'10px':'0')+' 0 0;font-size:12.5px;line-height:1.7;color:var(--text-secondary);">'+escAi(para)+'</p>';
     });
@@ -6900,33 +6911,54 @@ function _xizFlipTransform(src){
   if(!src || !dst) return null;
   var d = dst.getBoundingClientRect();
   if(!d.width || !d.height) return null;
-  var rot = window.innerWidth < 900;
+  var rot = _xizMode().rot;
   var k  = src.width / (rot ? d.height : d.width);
   var dx = (src.left + src.width/2) - (d.left + d.width/2);
   var dy = (src.top + src.height/2) - (d.top + d.height/2);
   return 'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale('+k.toFixed(4)+') rotate('+(rot?-90:0)+'deg)';
 }
-function openPitchZoom(){
+// 돌리는 게 이득인지 계산해서 정한다. 폭 900px로 가르면 가로로 돌린 폰(812×375)에서도
+// 회전해버려서 피치가 오히려 작아진다(실측: 회전 236px vs 그냥 750px).
+// 두 경우의 피치 폭을 다 구해서 큰 쪽을 쓴다 — 세로 화면이면 자연히 회전이 이긴다.
+function _xizMode(){
+  var vw = window.innerWidth, vh = window.innerHeight, R = XI_W / XI_H;   // 340/214
+  // 그냥 놓기: 폭과 (높이 - 팀 이름 줄) 양쪽에 맞춘다
+  var plain = Math.min(vw * 0.92, (vh * 0.88 - XIZ_HEAD_H - 8) * R, 1100);
+  // 90도 돌리기: 화면의 세로가 피치의 가로를 받고, 화면의 가로가 피치의 세로를 받는다
+  var rotW  = Math.min(vh * 0.98, vw * 0.98 * R);
+  var rotH  = rotW / R + XIZ_HEAD_H;
+  if(rotH > vw * 0.98){ rotW *= (vw * 0.98) / rotH; }
+  return rotW > plain ? {rot: true, w: rotW} : {rot: false, w: plain};
+}
+// 지금 화면 크기에 맞춰 오버레이 내용을 만든다. 열 때와 창 크기가 바뀔 때 같이 쓴다.
+function _xizBuildStage(){
   var svgEl = document.querySelector('.xi-pitch .xi-svg');
   var headEl = document.querySelector('.xi-head');
-  if(!svgEl) return;
-  var stage = document.getElementById('xizStage'), ov = document.getElementById('xizOverlay');
-  if(!stage || !ov) return;
+  var stage = document.getElementById('xizStage');
+  if(!svgEl || !stage) return false;
   var head = headEl ? '<div class="xiz-head">'+headEl.innerHTML+'</div>' : '';
   var svg  = svgEl.outerHTML;
-  if(window.innerWidth >= 900){
+  var mode = _xizMode();
+  var w = mode.w, h = w * XI_H / XI_W + XIZ_HEAD_H;
+  stage.style.width = w.toFixed(0) + 'px';
+  if(!mode.rot){
     stage.innerHTML = '<div style="width:100%">'+head+'<div style="position:relative">'+svg+_xizCloseBtn()+'</div></div>';
   } else {
-    // 회전 뒤 화면을 꽉 채우도록 "회전 전" 폭/높이를 계산한다. rotate()는 보이는 모습만
-    // 돌리고 차지하는 공간은 그대로라, 바깥 래퍼를 회전 뒤 크기로 잡아야 가운데가 맞는다.
-    var vw = window.innerWidth, vh = window.innerHeight;
-    var w = Math.min(vh, vw * XI_W / XI_H), h = w * XI_H / XI_W + XIZ_HEAD_H;
-    if(h > vw){ var k = vw / h; w *= k; h *= k; }
+    // rotate()는 보이는 모습만 돌리고 차지하는 공간은 그대로다 — 바깥 래퍼를 "회전 뒤 크기"로
+    // 잡고 안쪽만 돌려야 가운데 정렬이 맞고 잘리지 않는다.
+    stage.style.width = h.toFixed(0) + 'px';
     stage.innerHTML = '<div style="position:relative;width:'+h.toFixed(0)+'px;height:'+w.toFixed(0)+'px">'
       +'<div class="xiz-rot" style="position:absolute;left:50%;top:50%;width:'+w.toFixed(0)+'px;height:'+h.toFixed(0)+'px">'
         +head+'<div style="position:relative">'+svg+_xizCloseBtn()+'</div>'
       +'</div></div>';
   }
+  return true;
+}
+function openPitchZoom(){
+  var svgEl = document.querySelector('.xi-pitch .xi-svg');
+  var stage = document.getElementById('xizStage'), ov = document.getElementById('xizOverlay');
+  if(!svgEl || !stage || !ov) return;
+  if(!_xizBuildStage()) return;
   ov.classList.add('open');
   _xizScaleHead(svgEl);
   // 경기 상세모달이 이미 'hidden'으로 잠가둔 상태다 — 그대로 복구하려고 기억해둔다.
@@ -6995,6 +7027,29 @@ document.addEventListener('keydown', function(e){
     if(ov && ov.classList.contains('open')) closePitchZoom();
   }
 });
+// 확대를 열어둔 채 폰을 돌리거나 창 크기를 바꾸면 크기를 다시 잡는다 — 열 때 한 번만
+// 계산하면 세로로 연 뒤 가로로 돌렸을 때 세로 기준 크기가 그대로 남아 화면을 벗어난다.
+// 900px 경계를 넘나들면 회전 모드와 PC 모드가 서로 안 맞는 상태로도 남는다.
+var _xizResizeTimer = null;
+window.addEventListener('resize', function(){
+  var ov = document.getElementById('xizOverlay');
+  if(!ov || !ov.classList.contains('open') || _xizClosing) return;
+  clearTimeout(_xizResizeTimer);
+  // 회전 중에는 resize가 연달아 오므로 잦은 재계산을 피한다.
+  _xizResizeTimer = setTimeout(function(){
+    var ov2 = document.getElementById('xizOverlay');
+    if(!ov2 || !ov2.classList.contains('open') || _xizClosing) return;
+    _xizRebuild();
+  }, 120);
+});
+// 애니메이션 없이 지금 화면 크기에 맞춰 다시 그린다(이미 떠 있는 상태라 FLIP이 필요 없다).
+function _xizRebuild(){
+  var stage = document.getElementById('xizStage');
+  stage.classList.remove('anim');
+  stage.style.transform = 'none';
+  _xizBuildStage();
+  _xizScaleHead(document.querySelector('.xi-pitch .xi-svg'));
+}
 // 아스날 부상자 카드 + (예정 경기일 때) 상대팀 부상자 카드. 상대가 프리미어리그
 // 소속이면 FPL, 아니면 Fotmob으로 폴백한다(api/football.js) — 둘 다 실패했을 때만
 // teamFound:false로 내려온다.
