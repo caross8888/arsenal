@@ -664,7 +664,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .news-card{background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;overflow:hidden;text-decoration:none;display:block;color:inherit;-webkit-tap-highlight-color:transparent}
 .news-card:active{opacity:.85}
-.news-img{height:160px;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface2),var(--surface3))}
+/* 높이를 고정(160px)하면 폴더블을 펼친 가로모드처럼 카드 폭만 크게
+   늘어나는 화면에서 사진이 극단적으로 납작한 띠가 되어 위아래가 잘린다 —
+   폭 기준 비율로 잡아 폭이 늘면 높이도 같이 늘게 한다. 2:1은 일반 폰
+   폭(카드 ~330px)에서 기존 160px과 거의 같은 높이가 나오는 값. */
+.news-img{aspect-ratio:2/1;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--surface2),var(--surface3))}
 .news-img img{width:100%;height:100%;object-fit:cover;display:block}
 .news-img-ph{height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;color:rgba(239,1,7,.15)}
 .news-src-badge{position:absolute;top:10px;left:10px;font-size:8px;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--red);color:var(--white);font-weight:700}
