@@ -22,7 +22,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { PARAMS, predictXI, posInfoFromPlayerData } from '../arsenal-dashboard/api/_lineup.js';
+import { PARAMS, predictXI, posInfoFromPlayerData, isCupMatch } from '../arsenal-dashboard/api/_lineup.js';
 
 const args = process.argv.slice(2);
 const argVal = name => {
@@ -133,7 +133,8 @@ function grade(pred, actual){
   return {inXI, inSpot};
 }
 
-const total = {legacy: {n: 0, xi: 0, spot: 0}, now: {n: 0, xi: 0, spot: 0}};
+const blank = () => ({legacy: {n: 0, xi: 0, spot: 0}, now: {n: 0, xi: 0, spot: 0}});
+const total = blank(), cupTotal = blank();
 for(const teamId of TEAMS){
   const {name, recs} = await teamHistory(teamId);
   const ids = [...new Set(recs.flatMap(r => [...r.starters, ...r.bench].map(p => p.id)))];
@@ -141,13 +142,16 @@ for(const teamId of TEAMS){
   console.log(`\n== ${name} (${recs.length}경기) ==`);
   for(let k = MIN_HISTORY; k < recs.length; k++){
     const hist = recs.slice(0, k), actual = recs[k];
-    const a = legacyPredict(hist, actual.out), b = predictXI(hist, actual.out, posInfo);
+    // 컵 경기는 운영과 같이 컵대회 모드로 예측한다(로테이션 반영).
+    const cup = isCupMatch(actual);
+    const a = legacyPredict(hist, actual.out), b = predictXI(hist, actual.out, posInfo, {cup});
     if(!a || !b) continue;
     const ga = grade(a, actual), gb = grade(b, actual);
-    total.legacy.n++; total.legacy.xi += ga.inXI; total.legacy.spot += ga.inSpot;
-    total.now.n++;    total.now.xi += gb.inXI;    total.now.spot += gb.inSpot;
-    const cup = /cup|shield/i.test(actual.tournament) ? ' (컵)' : '';
-    console.log(`${(actual.at || '').slice(0, 10)} ${actual.opponent}${cup}`.padEnd(40)
+    for(const t of cup ? [total, cupTotal] : [total]){
+      t.legacy.n++; t.legacy.xi += ga.inXI; t.legacy.spot += ga.inSpot;
+      t.now.n++;    t.now.xi += gb.inXI;    t.now.spot += gb.inSpot;
+    }
+    console.log(`${(actual.at || '').slice(0, 10)} ${actual.opponent}${cup ? ' (컵)' : ''}`.padEnd(40)
       + ` 예전 ${ga.inXI}/11·자리 ${ga.inSpot}   새 ${gb.inXI}/11·자리 ${gb.inSpot}`);
   }
 }
@@ -155,3 +159,8 @@ const avg = (t, k) => t.n ? (t[k] / t.n).toFixed(2) : '-';
 console.log(`\n합계 ${total.now.n}경기`);
 console.log(`  예전 방식: 선발 일치 ${avg(total.legacy, 'xi')}/11, 자리 일치 ${avg(total.legacy, 'spot')}`);
 console.log(`  새 방식:   선발 일치 ${avg(total.now, 'xi')}/11, 자리 일치 ${avg(total.now, 'spot')}`);
+if(cupTotal.now.n){
+  console.log(`그중 컵대회 ${cupTotal.now.n}경기`);
+  console.log(`  예전 방식: 선발 일치 ${avg(cupTotal.legacy, 'xi')}/11, 자리 일치 ${avg(cupTotal.legacy, 'spot')}`);
+  console.log(`  새 방식:   선발 일치 ${avg(cupTotal.now, 'xi')}/11, 자리 일치 ${avg(cupTotal.now, 'spot')}`);
+}

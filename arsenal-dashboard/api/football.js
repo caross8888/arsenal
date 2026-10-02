@@ -1,6 +1,6 @@
 // api/football.js — Vercel Serverless Function
 import { applyGlossary } from './_glossary.js';
-import { predictXI, posInfoFromPlayerData } from './_lineup.js';
+import { predictXI, posInfoFromPlayerData, isCupMatch } from './_lineup.js';
 import { PARAMS, POS_LABEL, scoreProbs, blendRatio, decayedForm,
          homeEdgeFrom, restFactor, injuryFactors, lambdasFrom, predictAiKey } from './_predict.js';
 const FPL_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/';
@@ -1467,28 +1467,35 @@ function predxiSeasonStart(now = new Date()){
   return Date.UTC(y, 6, 1);
 }
 
+// 반환: {done: 이번 시즌 끝난 공식전(오래된 것부터), upcoming: 예정 경기의 대회 정보}.
+// upcoming은 예측할 경기가 컵대회인지 알아내는 데 쓴다 — 같은 응답에 이미 들어있다.
 async function predxiFixtures(teamId){
-  const key = `predxiFix:v1:${teamId}`;
+  const key = `predxiFix:v2:${teamId}`;
   const hit = await kvGetJSON(key);
   if(hit) return hit;
   const td = await fotmobJSON(`https://www.fotmob.com/api/data/teams?id=${teamId}`);
   const all = ((td.fixtures || {}).allFixtures || {}).fixtures || [];
-  const done = all.filter(f => {
+  const official = all.filter(f => {
     const st = f.status || {}, tour = f.tournament || {};
-    if(!st.finished || st.cancelled) return false;
+    if(st.cancelled) return false;
     return tour.leagueId !== FRIENDLY_LEAGUE && !/friendl/i.test(tour.name || '');
   }).map(f => ({
     id: String(f.id),
     at: (f.status || {}).utcTime || null,
     leagueId: (f.tournament || {}).leagueId ?? null,
     tournament: (f.tournament || {}).name || '',
+    finished: !!(f.status || {}).finished,
   }));
+  const done = official.filter(f => f.finished);
+  const upcoming = official.filter(f => !f.finished)
+    .map(f => ({id: f.id, leagueId: f.leagueId, tournament: f.tournament}));
   const start = predxiSeasonStart();
   let use = done.filter(f => f.at && new Date(f.at).getTime() >= start);
   if(use.length < PREDXI_MIN_MATCHES) use = done.slice(-PREDXI_MIN_MATCHES);
   use = use.slice(-PREDXI_MAX_MATCHES);
-  await kvSetJSON(key, use, use.length ? PREDXI_TTL_SEC : 30 * 60);
-  return use;
+  const out = {done: use, upcoming};
+  await kvSetJSON(key, out, use.length ? PREDXI_TTL_SEC : 30 * 60);
+  return out;
 }
 
 // 한 경기에서 한 팀의 선발(좌표 포함)·벤치·결장자. 끝난 경기라 영구 캐시.
@@ -1536,8 +1543,8 @@ async function predxiPosInfo(playerId){
   return info;
 }
 
-async function predxiTeam(teamId, outIds){
-  const fixtures = await predxiFixtures(teamId);
+async function predxiTeam(teamId, outIds, matchId){
+  const {done: fixtures, upcoming} = await predxiFixtures(teamId);
   const recs = (await Promise.all(fixtures.map(fx => predxiMatchRecord(fx, teamId).catch(() => null))))
     .filter(Boolean);
   if(!recs.length) return null;
@@ -1553,8 +1560,11 @@ async function predxiTeam(teamId, outIds){
     .sort((a, b) => b[1] - a[1]).slice(0, 22).map(([id]) => id);
   const infos = await Promise.all(ids.map(id => predxiPosInfo(id).catch(() => [])));
   const posInfo = Object.fromEntries(ids.map((id, i) => [id, infos[i]]));
-  const pred = predictXI(recs, outIds, posInfo);
-  return pred ? {pred, recs} : null;
+  // 예측할 경기가 국내 컵대회면 로테이션 모드. 일정에서 못 찾으면(다른 팀 경기 등) 평소대로.
+  const target = (upcoming || []).find(f => f.id === String(matchId));
+  const cup = !!(target && isCupMatch(target));
+  const pred = predictXI(recs, outIds, posInfo, {cup});
+  return pred ? {pred, recs, cup} : null;
 }
 
 async function buildPredictedXI(matchId){
@@ -1569,15 +1579,16 @@ async function buildPredictedXI(matchId){
   const teams = await Promise.all(sides.map(async s => {
     if(!s.id) return null;
     const out = s.out || [];
-    const got = await predxiTeam(s.id, out.map(o => o.id)).catch(() => null);
+    const got = await predxiTeam(s.id, out.map(o => o.id), matchId).catch(() => null);
     if(!got) return null;
-    const {pred, recs} = got;
+    const {pred, recs, cup} = got;
     return {
       side: s.side,
       id: String(s.id),
       name: s.name,
       formation: pred.formation,
       matches: recs.length,
+      cup,
       basis: recs.slice(-5).map(h => h.formation).filter(Boolean),
       outCount: out.length,
       suspendedCount: out.filter(o => o.type === 'suspension').length,
@@ -1596,7 +1607,7 @@ async function buildPredictedXI(matchId){
   const ok = teams.filter(Boolean);
   return ok.length === 2
     // window는 프론트 카드 부제("이번 시즌 N경기 기준")용 — 두 팀 중 적은 쪽을 쓴다.
-    ? {available: true, window: Math.min(...ok.map(t => t.matches)), teams: ok}
+    ? {available: true, window: Math.min(...ok.map(t => t.matches)), cup: ok.some(t => t.cup), teams: ok}
     : {available: false, reason: '최근 선발 라인업을 확보하지 못했습니다'};
 }
 
