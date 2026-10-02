@@ -6877,7 +6877,7 @@ function renderPredictedXICard(data){
   var aCol=(data.awayTeam&&data.awayTeam.color)||XI_FALLBACK_A;
   var dot=function(c){ return '<span class="xi-hdot" style="background:'+c+'"></span>'; };
   var h='<div class="mm-card">'
-    +'<div class="mm-card-title">예상 선발 <span class="xi-sub">이번 시즌 '+p.window+'경기 기준 · 결장자 제외</span></div>'
+    +'<div class="mm-card-title">예상 선발 <span class="xi-sub">이번 시즌 '+p.window+'경기 기준'+(p.cup?' · 컵대회 로테이션 반영':'')+' · 결장자 제외</span></div>'
     +'<div class="xi-head">'
       +'<div class="xi-t'+(arsSide==='home'?' xi-keep':'')+'">'+dot(hCol)+'<span class="xi-n">'+hName+'</span> <span class="xi-f">'+(home.formation||'')+'</span></div>'
       +'<div class="xi-t xi-r'+(arsSide==='away'?' xi-keep':'')+'"><span class="xi-f">'+(away.formation||'')+'</span> <span class="xi-n">'+aName+'</span>'+dot(aCol)+'</div>'

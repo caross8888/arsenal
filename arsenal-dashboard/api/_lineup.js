@@ -15,6 +15,7 @@
 //       적합도를 따로 매기고, 11자리를 한 번에 최적 배정(헝가리안)한다.
 //  3) 로테이션 경기 — 리그컵 2군 라인업이 틀이 되기도 했다.
 //     → 컵대회 경기는 가중치를 낮추고, 포메이션·틀은 주력 대회 경기에서 고른다.
+//     반대로 예측할 경기가 컵대회면 이번 시즌 컵 경기의 로테이션 성향을 따른다(cupRates).
 //
 // "주전인가"는 이번 시즌만 본다(지난 시즌을 섞으면 이번 여름 영입생이 불리해진다).
 // 지난 시즌 기록은 "어디에 설 수 있나"(선수 프로필의 포지션 목록)로만 들어온다.
@@ -28,6 +29,9 @@ export const PARAMS = {
   roleWeight: 0.8,      // 프로필 포지션 적합도의 상한(실제로 선 좌표보다는 약한 근거)
   secondaryWeight: 0.8, // 프로필의 부 포지션은 주 포지션 대비 이 비율
   usualWeight: 0.35,    // 좌표도 프로필도 없을 때 usual(4갈래)만으로 주는 적합도
+  // 예측할 경기가 컵대회일 때: 컵 경기 선발률을 리그 선발률 쪽으로 당기는 무게(경기 수 환산).
+  // 1이면 이번 시즌 컵 경기 한 번만 있어도 그 경기의 로테이션이 리그 기록과 반반으로 섞인다.
+  cupPriorN: 1,
 };
 
 // Fotmob 리그 id — 국내 컵대회(로테이션 경기). 다른 나라 컵은 이름으로도 잡는다.
@@ -165,18 +169,28 @@ export function hungarian(cost){
 //    bench:[{id,name,num,usual}]}
 // outIds: 이번 경기 결장자 id 목록
 // posInfo: {선수id: [{role, main, share}]} — 선수 프로필 포지션(없어도 된다)
-export function predictXI(history, outIds, posInfo = {}, P = PARAMS){
+// opts.cup: 예측할 경기가 국내 컵대회인가 — 그러면 로테이션을 반영한다(아래 "컵대회 모드").
+export function predictXI(history, outIds, posInfo = {}, opts = {}, P = PARAMS){
   if(!history || !history.length) return null;
   const w = matchWeights(history, P);
   const banned = new Set((outIds || []).map(String));
+  const cupMode = !!opts.cup;
+  // 대회 구분 없이 최근성만 반영한 가중치 — 컵대회 모드에서 컵 경기끼리 비교할 때 쓴다.
+  const last = history.length - 1;
+  const wd = history.map((h, i) => Math.pow(0.5, (last - i) / P.halfLifeMatches));
 
-  // 포메이션: 주력 대회 경기만으로 가중 최빈값(컵만 있으면 전부).
-  const core = history.map((h, i) => i).filter(i => !isCupMatch(history[i]) && history[i].formation);
-  const pool = core.length ? core : history.map((h, i) => i).filter(i => history[i].formation);
+  // 포메이션: 주력 대회 경기만으로 가중 최빈값(컵만 있으면 전부). 컵대회 모드면 이번
+  // 시즌 컵 경기에서 고른다 — 로테이션 경기엔 포메이션도 바꾸는 팀이 있다. 컵 경기가
+  // 아직 없으면 평소대로.
+  const withF = history.map((h, i) => i).filter(i => history[i].formation);
+  const core = withF.filter(i => !isCupMatch(history[i]));
+  const cups = withF.filter(i => isCupMatch(history[i]));
+  const pool = (cupMode && cups.length) ? cups : (core.length ? core : withF);
+  const pw = (cupMode && cups.length) ? wd : w;
   const fc = {};
-  pool.forEach(i => { fc[history[i].formation] = (fc[history[i].formation] || 0) + w[i]; });
+  pool.forEach(i => { fc[history[i].formation] = (fc[history[i].formation] || 0) + pw[i]; });
   const formation = Object.entries(fc).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
-  // 틀: 그 포메이션을 쓴 가장 최근 주력 대회 경기의 자리 배치.
+  // 틀: 그 포메이션을 쓴 가장 최근 경기(위에서 고른 대회 묶음 안에서)의 자리 배치.
   const baseIdx = [...pool].reverse().find(i => history[i].formation === formation)
     ?? history.length - 1;
   const base = history[baseIdx];
@@ -198,7 +212,12 @@ export function predictXI(history, outIds, posInfo = {}, P = PARAMS){
   });
   const cands = Object.values(stat).filter(s => !banned.has(String(s.p.id)));
   if(cands.length < 11) return null;
-  cands.forEach(s => { s.rate = (s.S + P.priorRate * P.priorN) / (s.N + P.priorN); });
+  if(!cupMode){
+    cands.forEach(s => { s.rate = (s.S + P.priorRate * P.priorN) / (s.N + P.priorN); });
+  } else {
+    cupRates(history, stat, wd, P);
+    cands.forEach(s => { s.rate = s.cupRate; });
+  }
 
   const fitOf = (s, slot, role) => {
     const isGK = s.p.usual === 0;
@@ -241,6 +260,49 @@ export function predictXI(history, outIds, posInfo = {}, P = PARAMS){
     };
   });
   return {formation, xi, baseIndex: baseIdx};
+}
+
+// ── 컵대회 모드 ─────────────────────────────────────────────────────────
+// 컵 경기 선발률을 리그 선발률 쪽으로 당겨 섞는다: (컵 선발 + k×리그 선발률) / (컵 분모 + k).
+// 리그 선발률은 리그·유럽대항전 경기만으로 따로 낸다(평소 선발률엔 컵 경기가 약하게 섞여 있다).
+//
+// 컵 분모는 평소와 다르다 — "그 경기 명단에 들었나"가 아니라 "그 경기에 뛸 수 있었나"로 센다.
+// 로테이션의 가장 강한 신호는 주전이 아예 명단에서 빠지는 것인데, 명단 기준으로 세면 그 경기가
+// 분모에서 통째로 사라져 신호가 안 남는다. 그래서 그 경기 전에 한 번이라도 명단에 들었고
+// 그 경기 결장자 명단에 없는 선수는 전부 분모에 넣는다 — 쉬느라 빠진 주전은 0/1이 된다.
+// 이번 시즌 컵 경기가 아직 없으면 리그 선발률 그대로라 평소 예측과 같다(팀 성향을 알 근거가 없다).
+// 컵 경기의 최근성은 컵 경기끼리만 센다 — 컵 경기는 몇 주에 한 번이라, 사이에 낀 리그
+// 경기 수로 깎으면 직전 컵 경기의 로테이션조차 리그 기록에 밀린다(실측: 컵 1경기 뒤 리그
+// 3경기를 치르자 0.52 대 0.50으로 주전이 이겼다).
+function cupRates(history, stat, wd, P){
+  const cupIdx = history.map((h, i) => i).filter(i => isCupMatch(history[i]));
+  const wc = {};
+  cupIdx.forEach((i, k) => { wc[i] = Math.pow(0.5, (cupIdx.length - 1 - k) / P.halfLifeMatches); });
+  const first = {};
+  history.forEach((h, i) => [...h.starters, ...(h.bench || [])].forEach(p => {
+    if(first[p.id] === undefined) first[p.id] = i;
+  }));
+  const acc = {};
+  for(const id of Object.keys(stat)) acc[id] = {SL: 0, NL: 0, SC: 0, NC: 0};
+  history.forEach((h, i) => {
+    const started = new Set(h.starters.map(p => String(p.id)));
+    if(!isCupMatch(h)){
+      const inSquad = new Set([...h.starters, ...(h.bench || [])].map(p => String(p.id)));
+      for(const id of inSquad){ if(!acc[id]) continue; acc[id].NL += wd[i]; if(started.has(id)) acc[id].SL += wd[i]; }
+      return;
+    }
+    const out = new Set((h.out || []).map(String));
+    for(const id of Object.keys(acc)){
+      if(first[id] > i || out.has(id)) continue;
+      acc[id].NC += wc[i];
+      if(started.has(id)) acc[id].SC += wc[i];
+    }
+  });
+  for(const [id, s] of Object.entries(stat)){
+    const a = acc[id];
+    const league = (a.SL + P.priorRate * P.priorN) / (a.NL + P.priorN);
+    s.cupRate = (a.SC + P.cupPriorN * league) / (a.NC + P.cupPriorN);
+  }
 }
 
 // 선수 프로필(playerData) → posInfo 한 명분. 응답 구조가 바뀌어도 죽지 않게 방어적으로 읽는다.
