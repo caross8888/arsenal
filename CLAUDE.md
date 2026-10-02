@@ -42,6 +42,12 @@ The only automated test is for the Korean translation dictionary (no dependencie
 node scripts/test_translation.mjs
 ```
 
+예상 선발 XI(`api/_lineup.js`)를 고친 뒤에는 지난 경기들로 예전 방식과 비교하는 백테스트를 돌린다(Fotmob 호출, 응답은 OS 임시 폴더에 캐시):
+
+```bash
+node scripts/backtest_xi.mjs --teams 9825,8456,10260   # Fotmob 팀 id 목록, 기본은 아스날만
+```
+
 To refresh the scraped squad data (`public/data/players.json`), run `fotmob_auto_push.bat` (Windows) — it does `git pull`, runs `scripts/scrape_fotmob_local.py` (requires `requests`, and a GitHub token pasted into the script's `GITHUB_TOKEN` constant), then commits and pushes the regenerated file. Player photos aren't downloaded/stored locally — `players.json` just stores a live Fotmob CDN URL (`images.fotmob.com/image_resources/playerimages/{id}.png`) per player, hotlinked directly by the frontend. This is a manual, locally-triggered job, not CI.
 
 ### KV 캐시 정리 (연 1회)

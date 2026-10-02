@@ -6766,7 +6766,7 @@ function renderInjuryListCard(title, injuries){
   return html;
 }
 // ── 예상 선발 XI 카드(가장 가까운 예정 경기 전용) ─────────────────────────
-// 서버(type=predxi)가 양 팀의 최근 3경기 선발에서 뽑아준 XI를 가로 피치에
+// 서버(type=predxi)가 양 팀의 이번 시즌 선발률·실제 자리로 뽑아준 XI를 가로 피치에
 // 그린다 — 홈은 왼쪽 절반, 원정은 오른쪽 절반(하프라인 기준 맞대결 배치).
 // 좌표는 Fotmob의 horizontalLayout(0~1)을 그대로 쓴다: 홈은 x·y 그대로,
 // 원정은 같은 좌표계를 180도 돌린 것이라 x·y를 둘 다 반전시킨다.
@@ -6877,7 +6877,7 @@ function renderPredictedXICard(data){
   var aCol=(data.awayTeam&&data.awayTeam.color)||XI_FALLBACK_A;
   var dot=function(c){ return '<span class="xi-hdot" style="background:'+c+'"></span>'; };
   var h='<div class="mm-card">'
-    +'<div class="mm-card-title">예상 선발 <span class="xi-sub">최근 '+p.window+'경기 기준 · 결장자 제외</span></div>'
+    +'<div class="mm-card-title">예상 선발 <span class="xi-sub">이번 시즌 '+p.window+'경기 기준 · 결장자 제외</span></div>'
     +'<div class="xi-head">'
       +'<div class="xi-t'+(arsSide==='home'?' xi-keep':'')+'">'+dot(hCol)+'<span class="xi-n">'+hName+'</span> <span class="xi-f">'+(home.formation||'')+'</span></div>'
       +'<div class="xi-t xi-r'+(arsSide==='away'?' xi-keep':'')+'"><span class="xi-f">'+(away.formation||'')+'</span> <span class="xi-n">'+aName+'</span>'+dot(aCol)+'</div>'

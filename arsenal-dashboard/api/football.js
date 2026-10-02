@@ -1,5 +1,6 @@
 // api/football.js — Vercel Serverless Function
 import { applyGlossary } from './_glossary.js';
+import { predictXI, posInfoFromPlayerData } from './_lineup.js';
 import { PARAMS, POS_LABEL, scoreProbs, blendRatio, decayedForm,
          homeEdgeFrom, restFactor, injuryFactors, lambdasFrom, predictAiKey } from './_predict.js';
 const FPL_URL = 'https://fantasy.premierleague.com/api/bootstrap-static/';
@@ -1296,20 +1297,19 @@ function predictNarrative(p){
 }
 
 // ── 예상 선발 XI (예정 경기 전용) ──────────────────────────────────────────
-// 양 팀의 최근 N경기 선발을 받아 "가장 많이 쓴 포메이션 + 그 포메이션을 쓴 가장
-// 최근 경기의 자리 배치"를 틀로 삼고, 결장자(부상·출장정지)가 있는 자리만 같은
-// 포지션의 최다 선발 선수로 갈아끼운다. 좌표는 Fotmob이 선발 명단에 같이 주는
-// horizontalLayout(x,y 모두 0~1)을 그대로 쓴다 — 포메이션 문자열("4-3-3")을
-// 좌표로 바꾸는 표를 직접 들고 있을 필요가 없고, 5백/3백처럼 같은 문자열이라도
-// 팀마다 다르게 세우는 배치까지 Fotmob이 준 그대로 나온다.
+// 이번 시즌 경기 기록으로 선수별 선발률·실제로 선 자리를 집계하고, 가장 많이 쓴 포메이션의
+// 가장 최근 경기 좌표를 틀로 11자리를 한 번에 최적 배정한다. 계산 규칙과 그렇게 짠 이유는
+// _lineup.js 머리말에 있다. 좌표는 Fotmob이 선발 명단에 같이 주는 horizontalLayout(x,y
+// 모두 0~1)을 그대로 쓴다 — 포메이션 문자열을 좌표로 바꾸는 표를 들고 있을 필요가 없고,
+// 같은 "4-3-3"이라도 팀마다 다르게 세우는 배치까지 Fotmob이 준 그대로 나온다.
 // Fotmob의 usualPlayingPositionId를 앱 공용 포지션 문자열로 바꾼다. api/match.js에
 // 같은 이름·같은 값의 표가 있다 — 서버가 숫자를 정규화해서 내보내는 게 이 앱의 규칙이라,
 // 프론트는 어느 엔드포인트에서 오든 'GK'/'DF'/'MF'/'FW' 하나만 보면 된다.
 const FM_POS_BY_ID = {0: 'GK', 1: 'DF', 2: 'MF', 3: 'FW'};
-const PREDXI_WINDOW = 3;              // 최근 몇 경기를 볼지
 const PREDXI_TTL_SEC = 2 * 60 * 60;   // 아래 UNAVAIL_TTL_SEC과 같은 값으로 유지할 것 —
                                       // 한쪽만 먼저 만료되면 예상 XI와 부상자 명단이 다시 어긋난다
-// 캐시 키에 버전을 박아두는 건 predxiHist:v1 쪽이다 — 선발 이력의 모양이 바뀌면 v2로 올릴 것.
+// 캐시 키에 버전을 박아두는 건 predxiFix/predxiRec/predxiPos 쪽이다 — 저장하는 모양이
+// 바뀌면 v2로 올릴 것(특히 predxiRec는 TTL이 없어 안 올리면 옛 모양이 영원히 남는다).
 
 async function fotmobJSON(url, ms){
   const r = await fetch(url, {headers: FOTMOB_HEADERS, signal: AbortSignal.timeout(ms || 8000)});
@@ -1447,122 +1447,114 @@ function ctxWithMatchUnavailable(ctx, outArr){
   return Object.assign({}, ctx, {out: list});
 }
 
-// 한 팀의 최근 n경기 선발 — 오래된 것부터.
-async function recentStarterXIs(teamId, n){
-  const td = await fotmobJSON(`https://www.fotmob.com/api/data/teams?id=${teamId}`);
-  const all = ((td.fixtures || {}).allFixtures || {}).fixtures || [];
-  const done = all.filter(m => m.status && m.status.finished).slice(-n);
-  const mds = await Promise.all(done.map(f =>
-    fotmobJSON(`https://www.fotmob.com/api/data/matchDetails?matchId=${f.id}`).catch(() => null)));
-  const out = [];
-  mds.forEach((md, i) => {
-    if(!md) return;
-    const L = (md.content || {}).lineup || {};
-    // 이 경기에서 우리가 홈이었는지 원정이었는지 — id로 판정한다(이름은 표기가 흔들린다).
-    const t = (L.homeTeam && String(L.homeTeam.id) === String(teamId)) ? L.homeTeam : L.awayTeam;
-    if(!t || !Array.isArray(t.starters) || !t.starters.length) return;
-    out.push({
-      opponent: (done[i].opponent || {}).name || null,
-      formation: t.formation || null,
-      starters: t.starters.map(p => ({
-        id: String(p.id),
-        name: p.name || '',
-        num: p.shirtNumber ?? null,
-        usual: p.usualPlayingPositionId ?? null,
-        layout: p.horizontalLayout || null,
-      })).filter(p => p.layout),
-    });
-  });
-  return out.filter(h => h.starters.length >= 10);
+// ── 예상 XI 재료 수집 ────────────────────────────────────────────────────
+// 계산은 _lineup.js(백테스트와 공용)가 하고, 여기는 Fotmob에서 재료만 모은다.
+//
+// 캐시는 셋으로 나눈다:
+//  - 팀 일정(어느 경기를 볼지) — 새 경기가 끝나면 바뀌므로 PREDXI_TTL_SEC
+//  - 경기별 라인업 기록 — 끝난 경기는 안 바뀌므로 영구. 시즌 내내 경기당 한 번만 받는다
+//  - 선수 프로필 포지션 — 거의 안 바뀌므로 7일
+// 예상 XI 결과 자체는 캐시하지 않는다 — 결장자가 갱신돼도 옛 XI가 그대로 나가던 문제
+// (부상자 명단엔 반영됐는데 피치엔 정지 선수가 선발로 서 있었다)를 구조적으로 막는다.
+const FRIENDLY_LEAGUE = 489;
+const PREDXI_MIN_MATCHES = 3;     // 이번 시즌 경기가 이보다 적으면(8월) 지난 시즌 끝 경기로 채운다
+const PREDXI_MAX_MATCHES = 20;    // 한 시즌 앞부분은 반감기 6경기로 어차피 거의 안 쓰인다
+const PREDXI_POS_TTL_SEC = 7 * 24 * 60 * 60;
+
+// 이번 시즌 시작(7월 1일) — 프리시즌 친선은 따로 빼므로 7월 공식전(예선 등)부터 센다.
+function predxiSeasonStart(now = new Date()){
+  const y = now.getUTCMonth() >= 6 ? now.getUTCFullYear() : now.getUTCFullYear() - 1;
+  return Date.UTC(y, 6, 1);
 }
 
-// 캐시는 "비싼 것"에만 건다 — 팀별 최근 선발 이력이 팀당 Fotmob 4회로 전체 비용의 거의
-// 전부다. 예상 XI 결과 자체를 캐시하면 결장자가 갱신돼도 옛 XI가 그대로 나간다(실측: unavail
-// 캐시에 새 정지 선수를 넣었더니 부상자 명단에는 반영됐는데 피치에는 그 선수가 계속 선발로
-// 섰다). 이력만 캐시하고 XI는 매번 현재 결장자로 다시 계산하면 그 어긋남이 구조적으로 불가능해진다.
-async function recentStarterXIsCached(teamId, n){
-  const key = `predxiHist:v1:${teamId}:${n}`;
+async function predxiFixtures(teamId){
+  const key = `predxiFix:v1:${teamId}`;
   const hit = await kvGetJSON(key);
   if(hit) return hit;
-  const hist = await recentStarterXIs(teamId, n).catch(() => []);
-  // 못 받은 경우도 짧게 캐시한다 — 라인업이 없는 하위 대회 상대를 열 때마다 다시 두드리지 않게.
-  await kvSetJSON(key, hist, hist.length ? PREDXI_TTL_SEC : 30 * 60);
-  return hist;
-}
-
-function predictXIFor(history, outIds){
-  if(!history.length) return null;
-  // 포메이션 최빈값 — 동률이면 더 최근 것(i가 클수록 최근).
-  const fc = {};
-  history.forEach((h, i) => { if(h.formation) fc[h.formation] = (fc[h.formation] || 0) + 1 + i * 0.01; });
-  const top = Object.entries(fc).sort((a, b) => b[1] - a[1])[0];
-  const formation = top ? top[0] : null;
-  // 그 포메이션을 쓴 가장 최근 경기의 자리 배치를 틀로 쓴다.
-  const base = (formation ? history.filter(h => h.formation === formation) : history).slice(-1)[0];
-  if(!base) return null;
-  const freq = {};
-  history.forEach((h, i) => h.starters.forEach(p => {
-    if(!freq[p.id]) freq[p.id] = {p, n: 0, spots: []};
-    freq[p.id].n += 1 + i * 0.1;   // 최근 경기에 가중
-    freq[p.id].spots.push(p.layout);   // 실제로 섰던 자리들 — 대체 선수 배치에 쓴다
+  const td = await fotmobJSON(`https://www.fotmob.com/api/data/teams?id=${teamId}`);
+  const all = ((td.fixtures || {}).allFixtures || {}).fixtures || [];
+  const done = all.filter(f => {
+    const st = f.status || {}, tour = f.tournament || {};
+    if(!st.finished || st.cancelled) return false;
+    return tour.leagueId !== FRIENDLY_LEAGUE && !/friendl/i.test(tour.name || '');
+  }).map(f => ({
+    id: String(f.id),
+    at: (f.status || {}).utcTime || null,
+    leagueId: (f.tournament || {}).leagueId ?? null,
+    tournament: (f.tournament || {}).name || '',
   }));
-  const banned = new Set((outIds || []).map(String));
-  // 자리를 지키는 선수를 먼저 전부 예약해둔다 — 안 그러면 뒤쪽 슬롯의 주인이
-  // 앞쪽 빈자리의 대체 후보로 먼저 뽑혀서 같은 선수가 XI에 두 번 들어간다
-  // (실측: 브루노 기마랑이스가 미드필드 두 자리에 동시에 나왔다).
-  const used = new Set(base.starters.filter(p => !banned.has(p.id)).map(p => p.id));
-  const xi = base.starters.map(slot => {
-    if(!banned.has(slot.id)) return {...slot, replaced: false};
-    const pool = Object.values(freq).filter(f => !banned.has(f.p.id) && !used.has(f.p.id));
-    const cand = pool.filter(f => f.p.usual === slot.usual).sort((a, b) => b.n - a.n)[0]
-              || pool.sort((a, b) => b.n - a.n)[0];
-    if(!cand) return {...slot, replaced: false};
-    used.add(cand.p.id);
-    return {...cand.p, layout: slot.layout, replaced: true, replacedFor: slot.name};
-  });
-  // 위에서는 "누가 들어오나"만 정한 것이고, 들어온 선수끼리 "어느 빈자리에 서나"는
-  // 여기서 다시 맞춘다. usual은 GK/DF/MF/FW 네 갈래뿐이라 윙과 스트라이커를 못 가른다 —
-  // 공격 두 자리가 함께 비면 슬롯 순서대로 빈도 높은 선수부터 채워져서 스트라이커가
-  // 윙에, 윙어가 최전방에 섰다(사용자 제보: 요케레스·마두에케 자리가 뒤바뀜). 대체로
-  // 들어온 선수들의 자리만 서로 바꿔 보며, 각자 최근 경기에서 섰던 자리와의 거리 합이
-  // 가장 작은 배치를 고른다.
-  reassignReplacedSlots(xi, freq);
-  return {formation, xi};
+  const start = predxiSeasonStart();
+  let use = done.filter(f => f.at && new Date(f.at).getTime() >= start);
+  if(use.length < PREDXI_MIN_MATCHES) use = done.slice(-PREDXI_MIN_MATCHES);
+  use = use.slice(-PREDXI_MAX_MATCHES);
+  await kvSetJSON(key, use, use.length ? PREDXI_TTL_SEC : 30 * 60);
+  return use;
 }
 
-// 대체 선수 k명을 k개 빈자리에 배치하는 모든 경우를 본다. 결장자는 많아야 대여섯이라
-// 순열 수(6! = 720)가 작다. 그보다 많으면 원래 배치를 그대로 둔다.
-function reassignReplacedSlots(xi, freq){
-  const idx = xi.map((p, i) => p.replaced ? i : -1).filter(i => i >= 0);
-  if(idx.length < 2 || idx.length > 6) return;
-  const slots   = idx.map(i => xi[i].layout);
-  const players = idx.map(i => xi[i]);
-  // 그 선수가 섰던 자리들 중 가장 가까운 곳과의 거리 — 평균을 쓰면 두 포지션을 오가는
-  // 선수(왼쪽·오른쪽 윙 겸용)가 가운데 자리에 가장 가까운 것처럼 계산된다.
-  const cost = (p, s) => {
-    const spots = ((freq[p.id] || {}).spots || []).filter(Boolean);
-    if(!spots.length || !s) return 0;
-    return Math.min(...spots.map(t => Math.hypot(t.x - s.x, t.y - s.y)));
-  };
-  const c = players.map(p => slots.map(s => cost(p, s)));
-  let best = null, bestSum = Infinity;
-  const perm = [], taken = new Array(slots.length).fill(false);
-  (function walk(k, sum){
-    if(sum >= bestSum) return;
-    if(k === players.length){ best = perm.slice(); bestSum = sum; return; }
-    for(let j = 0; j < slots.length; j++){
-      if(taken[j]) continue;
-      taken[j] = true; perm.push(j);
-      walk(k + 1, sum + c[k][j]);
-      perm.pop(); taken[j] = false;
-    }
-  })(0, 0);
-  if(!best) return;
-  // replacedFor(누구 대신인지)는 자리를 따라간다 — 그 자리의 원래 주인이 기준이다.
-  const owners = idx.map(i => xi[i].replacedFor);
-  best.forEach((j, k) => {
-    xi[idx[j]] = {...players[k], layout: slots[j], replacedFor: owners[j]};
+// 한 경기에서 한 팀의 선발(좌표 포함)·벤치·결장자. 끝난 경기라 영구 캐시.
+async function predxiMatchRecord(fx, teamId){
+  const key = `predxiRec:v1:${fx.id}:${teamId}`;
+  const hit = await kvGetJSON(key);
+  if(hit) return hit.none ? null : hit;
+  const md = await fotmobJSON(`https://www.fotmob.com/api/data/matchDetails?matchId=${fx.id}`).catch(() => null);
+  if(!md) return null;   // 네트워크 실패는 캐시하지 않는다 — 다음 요청에서 다시 시도
+  const L = (md.content || {}).lineup || {};
+  // 홈/원정은 id로 판정한다(이름은 표기가 흔들린다).
+  const t = (L.homeTeam && String(L.homeTeam.id) === String(teamId)) ? L.homeTeam : L.awayTeam;
+  const mp = p => ({
+    id: String(p.id), name: p.name || '', num: p.shirtNumber ?? null,
+    usual: p.usualPlayingPositionId ?? null,
   });
+  const starters = ((t && t.starters) || []).filter(p => p.horizontalLayout)
+    .map(p => ({...mp(p), layout: {x: p.horizontalLayout.x, y: p.horizontalLayout.y}}));
+  if(starters.length < 10){
+    // 라인업을 안 주는 하위 대회 경기 — "없음"도 영구 캐시해서 다시 두드리지 않는다.
+    await kvSetJSON(key, {none: true});
+    return null;
+  }
+  const rec = {
+    id: fx.id, at: fx.at, leagueId: fx.leagueId, tournament: fx.tournament,
+    formation: t.formation || null,
+    starters,
+    bench: (t.subs || []).map(mp),
+    out: (t.unavailable || []).map(p => String(p.id)),
+  };
+  await kvSetJSON(key, rec);
+  return rec;
+}
+
+// 선수 프로필의 포지션 목록(주/부) — 겸업 판단용. 지난 시즌까지 포함한 기록이라
+// "주전인가"에는 안 쓰고 "어디에 설 수 있나"에만 쓴다.
+async function predxiPosInfo(playerId){
+  const key = `predxiPos:v1:${playerId}`;
+  const hit = await kvGetJSON(key);
+  if(hit) return hit;
+  const pd = await fotmobJSON(`https://www.fotmob.com/api/data/playerData?id=${playerId}`).catch(() => null);
+  if(!pd) return [];
+  const info = posInfoFromPlayerData(pd);
+  await kvSetJSON(key, info, PREDXI_POS_TTL_SEC);
+  return info;
+}
+
+async function predxiTeam(teamId, outIds){
+  const fixtures = await predxiFixtures(teamId);
+  const recs = (await Promise.all(fixtures.map(fx => predxiMatchRecord(fx, teamId).catch(() => null))))
+    .filter(Boolean);
+  if(!recs.length) return null;
+  // 프로필은 선발 후보가 될 만한 선수만 받는다 — 명단에 한 번이라도 든 선수 중 결장자 제외,
+  // 이번 시즌 선발 경험이 있거나 벤치에 자주 든 선수. 팀당 많아야 20명 남짓.
+  const banned = new Set((outIds || []).map(String));
+  const seen = {};
+  recs.forEach(r => {
+    r.starters.forEach(p => { seen[p.id] = (seen[p.id] || 0) + 2; });
+    r.bench.forEach(p => { seen[p.id] = (seen[p.id] || 0) + 1; });
+  });
+  const ids = Object.entries(seen).filter(([id]) => !banned.has(id))
+    .sort((a, b) => b[1] - a[1]).slice(0, 22).map(([id]) => id);
+  const infos = await Promise.all(ids.map(id => predxiPosInfo(id).catch(() => [])));
+  const posInfo = Object.fromEntries(ids.map((id, i) => [id, infos[i]]));
+  const pred = predictXI(recs, outIds, posInfo);
+  return pred ? {pred, recs} : null;
 }
 
 async function buildPredictedXI(matchId){
@@ -1577,15 +1569,16 @@ async function buildPredictedXI(matchId){
   const teams = await Promise.all(sides.map(async s => {
     if(!s.id) return null;
     const out = s.out || [];
-    const hist = await recentStarterXIsCached(s.id, PREDXI_WINDOW);
-    const pred = predictXIFor(hist, out.map(o => o.id));
-    if(!pred) return null;
+    const got = await predxiTeam(s.id, out.map(o => o.id)).catch(() => null);
+    if(!got) return null;
+    const {pred, recs} = got;
     return {
       side: s.side,
       id: String(s.id),
       name: s.name,
       formation: pred.formation,
-      basis: hist.map(h => h.formation).filter(Boolean),
+      matches: recs.length,
+      basis: recs.slice(-5).map(h => h.formation).filter(Boolean),
       outCount: out.length,
       suspendedCount: out.filter(o => o.type === 'suspension').length,
       replacedCount: pred.xi.filter(p => p.replaced).length,
@@ -1594,6 +1587,7 @@ async function buildPredictedXI(matchId){
         // 프론트가 골키퍼만 회색 점으로 그리는 데 쓴다 — 종료 경기 선발 피치(renderPitch)와
         // 같은 규칙이고, 값의 형식도 그쪽(api/match.js)과 같은 문자열로 맞춘다.
         pos: FM_POS_BY_ID[p.usual] || '',
+        role: p.role, rate: p.rate,
         replaced: !!p.replaced, replacedFor: p.replacedFor || null,
       })),
     };
@@ -1601,7 +1595,8 @@ async function buildPredictedXI(matchId){
 
   const ok = teams.filter(Boolean);
   return ok.length === 2
-    ? {available: true, window: PREDXI_WINDOW, teams: ok}
+    // window는 프론트 카드 부제("이번 시즌 N경기 기준")용 — 두 팀 중 적은 쪽을 쓴다.
+    ? {available: true, window: Math.min(...ok.map(t => t.matches)), teams: ok}
     : {available: false, reason: '최근 선발 라인업을 확보하지 못했습니다'};
 }
 
