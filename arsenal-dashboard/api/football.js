@@ -1502,8 +1502,9 @@ function predictXIFor(history, outIds){
   if(!base) return null;
   const freq = {};
   history.forEach((h, i) => h.starters.forEach(p => {
-    if(!freq[p.id]) freq[p.id] = {p, n: 0};
+    if(!freq[p.id]) freq[p.id] = {p, n: 0, spots: []};
     freq[p.id].n += 1 + i * 0.1;   // 최근 경기에 가중
+    freq[p.id].spots.push(p.layout);   // 실제로 섰던 자리들 — 대체 선수 배치에 쓴다
   }));
   const banned = new Set((outIds || []).map(String));
   // 자리를 지키는 선수를 먼저 전부 예약해둔다 — 안 그러면 뒤쪽 슬롯의 주인이
@@ -1519,7 +1520,49 @@ function predictXIFor(history, outIds){
     used.add(cand.p.id);
     return {...cand.p, layout: slot.layout, replaced: true, replacedFor: slot.name};
   });
+  // 위에서는 "누가 들어오나"만 정한 것이고, 들어온 선수끼리 "어느 빈자리에 서나"는
+  // 여기서 다시 맞춘다. usual은 GK/DF/MF/FW 네 갈래뿐이라 윙과 스트라이커를 못 가른다 —
+  // 공격 두 자리가 함께 비면 슬롯 순서대로 빈도 높은 선수부터 채워져서 스트라이커가
+  // 윙에, 윙어가 최전방에 섰다(사용자 제보: 요케레스·마두에케 자리가 뒤바뀜). 대체로
+  // 들어온 선수들의 자리만 서로 바꿔 보며, 각자 최근 경기에서 섰던 자리와의 거리 합이
+  // 가장 작은 배치를 고른다.
+  reassignReplacedSlots(xi, freq);
   return {formation, xi};
+}
+
+// 대체 선수 k명을 k개 빈자리에 배치하는 모든 경우를 본다. 결장자는 많아야 대여섯이라
+// 순열 수(6! = 720)가 작다. 그보다 많으면 원래 배치를 그대로 둔다.
+function reassignReplacedSlots(xi, freq){
+  const idx = xi.map((p, i) => p.replaced ? i : -1).filter(i => i >= 0);
+  if(idx.length < 2 || idx.length > 6) return;
+  const slots   = idx.map(i => xi[i].layout);
+  const players = idx.map(i => xi[i]);
+  // 그 선수가 섰던 자리들 중 가장 가까운 곳과의 거리 — 평균을 쓰면 두 포지션을 오가는
+  // 선수(왼쪽·오른쪽 윙 겸용)가 가운데 자리에 가장 가까운 것처럼 계산된다.
+  const cost = (p, s) => {
+    const spots = ((freq[p.id] || {}).spots || []).filter(Boolean);
+    if(!spots.length || !s) return 0;
+    return Math.min(...spots.map(t => Math.hypot(t.x - s.x, t.y - s.y)));
+  };
+  const c = players.map(p => slots.map(s => cost(p, s)));
+  let best = null, bestSum = Infinity;
+  const perm = [], taken = new Array(slots.length).fill(false);
+  (function walk(k, sum){
+    if(sum >= bestSum) return;
+    if(k === players.length){ best = perm.slice(); bestSum = sum; return; }
+    for(let j = 0; j < slots.length; j++){
+      if(taken[j]) continue;
+      taken[j] = true; perm.push(j);
+      walk(k + 1, sum + c[k][j]);
+      perm.pop(); taken[j] = false;
+    }
+  })(0, 0);
+  if(!best) return;
+  // replacedFor(누구 대신인지)는 자리를 따라간다 — 그 자리의 원래 주인이 기준이다.
+  const owners = idx.map(i => xi[i].replacedFor);
+  best.forEach((j, k) => {
+    xi[idx[j]] = {...players[k], layout: slots[j], replacedFor: owners[j]};
+  });
 }
 
 async function buildPredictedXI(matchId){
