@@ -93,8 +93,9 @@ const ENTRIES = [
   ['트로사르', [/\bTrossard\b/g]],
   ['크리스티안 모스케라', ['크리스찬 모스케라', /\bCristhian Mosquera\b/g]],
   ['모스케라', [/\bMosquera\b/g]],
-  ['피에로 잉카피에', ['피에로 인카피에', /\bPiero Hincapi(é|e)(?![A-Za-zé])/g]],
-  ['잉카피에', ['인카피에', /\bHincapi(é|e)(?![A-Za-zé])/g]],
+  // 구글은 Hincapié의 H를 살려 "힌카피에"로도 음차한다(사용자 제보).
+  ['피에로 잉카피에', ['피에로 힌카피에', '피에로 인카피에', /\bPiero Hincapi(é|e)(?![A-Za-zé])/g]],
+  ['잉카피에', ['힌카피에', '인카피에', /\bHincapi(é|e)(?![A-Za-zé])/g]],
   ['케파 아리사발라가', ['케파 아리자발라가', /\bKepa Arrizabalaga\b/g]],
   ['크리스티안 뇌르고르', ['크리스티안 노르가르드', '크리스티안 뇌르가르드', /\bChristian N(ø|o)rgaard\b/g]],
   ['뇌르고르', ['노르가르드', '뇌르가르드', /(?<![A-Za-zØø])N(ø|o)rgaard\b/g]],
