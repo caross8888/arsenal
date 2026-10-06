@@ -207,12 +207,26 @@ export function rejectReason(career, row){
   return null;
 }
 
+// 현역/은퇴 판정. Fotmob의 status 필드만으로는 못 믿는다 — 은퇴한 시먼·월콧도 "active"로 오고,
+// 감독이 된 선수(앙리·비에라)도 "active"다(감독으로서). 그래서 커리어로 판단한다:
+//  - 지금 뛰는 클럽(active 항목)이 있으면 현역
+//  - Fotmob이 retired/dead로 주거나, 감독이 됐거나, 마지막 클럽을 떠난 지 2년이 넘었으면 은퇴
+//  - 그 밖(최근 1~2년 안에 클럽을 떠남)은 은퇴인지 무적 신분인지 알 수 없어 "소속팀 없음"
+//    (실측 22명: 카솔라·파비안스키처럼 은퇴한 선수와 스털링·진첸코처럼 무적인 선수가 섞여 있다)
+export function playerStatus(career, pd){
+  if(career.some(e => e.active)) return 'active';
+  const st = String((pd || {}).status || '');
+  if(st === 'retired' || st === 'dead' || (pd || {}).isCoach) return 'retired';
+  const lastEnd = Math.max(0, ...career.map(e => e.to || e.from || 0));
+  return lastEnd <= new Date().getUTCFullYear() - 2 ? 'retired' : 'free';
+}
+
 // 선수 한 명 → 문제 한 개.
 export function toQuestion(row, fm, koName){
   const career = normalizeCareer(fm.pd);
   const reason = rejectReason(career, row);
   const pd = fm.pd || {};
-  const retired = !career.some(e => e.active);
+  const status = playerStatus(career, pd);
   return {
     reason,
     q: reason ? null : {
@@ -224,7 +238,7 @@ export function toQuestion(row, fm, koName){
       pos: row.pos,
       arsenal: row.arsenalYears,
       apps: row.apps,
-      retired,
+      status,   // 'active' 현역 · 'retired' 은퇴 · 'free' 소속팀 없음(은퇴 여부 불확실)
       career: career.map(e => ({t: e.teamId, n: e.team, f: e.from, u: e.to, l: e.loan ? 1 : 0})),
     },
   };

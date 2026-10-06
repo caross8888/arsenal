@@ -58,10 +58,13 @@ for(const row of rows){
 
 bank.sort((a, b) => b.apps - a.apps);
 console.log(`\n문제로 쓸 수 있는 선수: ${bank.length}명 (한국어 이름 ${bank.filter(q => q.ko).length}명)`);
+const byStatus = s => bank.filter(q => q.status === s);
+console.log(`  현역 ${byStatus('active').length} · 은퇴 ${byStatus('retired').length} · 소속팀 없음 ${byStatus('free').length}`
+  + ` (${byStatus('free').map(q => q.name).join(', ')})`);
 for(const [why, names] of Object.entries(rejected)){
   console.log(`  제외 — ${why}: ${names.length}명 (예: ${names.slice(0, opts_all ? 999 : 6).join(', ')})`);
 }
-const show = q => `${q.ko || q.name} [${q.retired ? '은퇴' : '현역'}, 아스날 ${q.apps}경기]\n    `
+const show = q => `${q.ko || q.name} [${{active: '현역', retired: '은퇴', free: '소속팀 없음'}[q.status]}, 아스날 ${q.apps}경기]\n    `
   + q.career.map(c => `${c.n} ${c.f}–${c.u ?? ''}${c.l ? '(임대)' : ''}`).join(' → ');
 console.log('\n샘플:');
 for(const n of ['Andrey Arshavin', 'Thierry Henry', 'Bukayo Saka', 'Cesc Fàbregas']){
