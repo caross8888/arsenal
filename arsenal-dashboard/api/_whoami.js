@@ -37,12 +37,14 @@ export function parseWikiList(wikitext){
     const m = /\{\{sortname\|([^|}]*)\|([^|}]*)((?:\|[^}]*)?)\}\}/.exec(blk);
     if(!m) continue;
     const first = m[1].trim(), last = m[2].trim();
-    // 세 번째 위치 인자가 있으면 그게 문서 제목이다(동명이인 구분용 "(footballer)" 등).
-    const extra = (m[3] || '').split('|').map(s => s.trim()).filter(Boolean);
-    const linkArg = extra.find(s => !s.includes('='));
+    // 세 번째 위치 인자가 있으면 그게 문서 제목이다(동명이인 구분용 "(footballer)" 등). 네 번째는
+    // 정렬 키라 문서 제목으로 쓰면 안 된다({{sortname|Mesut|Özil||Ozil, Mesut}} — 세 번째가 비어 있다).
+    const extra = (m[3] || '').split('|').slice(1).map(s => s.trim());
+    const linkArg = extra[0] && !extra[0].includes('=') ? extra[0] : null;
     const nolink = extra.some(s => /^nolink\s*=/.test(s));
     const nat = /\{\{fba\|([^}|]*)/.exec(blk);
-    const line = blk.split('\n').find(l => l.includes('||'));
+    // sortname 줄 자체에도 '||'가 있을 수 있다({{sortname|Cesc|Fàbregas||Fabregas, Cesc}} — 빈 인자).
+    const line = blk.split('\n').find(l => l.includes('||') && !l.includes('sortname'));
     if(!line) continue;
     const cells = line.replace(/^\|/, '').split('||').map(c => c.trim());
     const years = cells[1] ? cells[1].replace(/<[^>]*>|\{\{[^}]*\}\}/g, '') : '';
@@ -110,9 +112,13 @@ const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
 // 감독이 된 선수(앙리·파브레가스·아담스)는 검색에서 isCoach:true로 오지만 선수 커리어도
 // 그대로 있어서 거르지 않는다. 풀네임으로 안 나오면(실측: Paul Merson은 0건) 성만으로 다시 찾는다.
 export async function resolveFotmob(fetchJSON, row){
-  const last = fold(row.name).split(' ').slice(-1)[0];
+  const last = fold(row.article ? row.article.replace(/\s*\([^)]*\)\s*$/, '') : row.name).split(' ').slice(-1)[0];
   const tried = new Set();
-  for(const term of [row.name, fold(row.name), last]){
+  // 위키백과 표 이름이 한 단어인 선수(Gabriel = 가브리엘 파울리스타)는 문서 제목으로도 찾는다.
+  const article = row.article ? row.article.replace(/\s*\([^)]*\)\s*$/, '') : null;
+  // 마지막으로 이름 첫 단어 — Fotmob엔 "Gabriel" 한 단어로만 있어 풀네임·성으로는 안 나온다.
+  const firstWord = fold(row.name).split(' ')[0];
+  for(const term of [row.name, article, fold(row.name), last, firstWord]){
     if(!term || tried.has(term)) continue;
     tried.add(term);
     const sug = await fetchJSON(`https://www.fotmob.com/api/data/search/suggest?term=${encodeURIComponent(term)}`);
@@ -123,9 +129,15 @@ export async function resolveFotmob(fetchJSON, row){
     // 성이 같은 후보를 앞으로 — 검색은 비슷한 이름(Rico Henry ↔ Thierry Henry)도 섞어 준다.
     const hit = c => fold(c.name).split(' ').includes(last) ? 1 : 0;
     cands.sort((a, b) => hit(b) - hit(a));
-    for(const c of cands.filter(hit).slice(0, 4)){
+    // 아스날 경력이 있고, 그 시작 연도가 위키백과와 맞는 후보만 본인으로 본다 — 성만으로 찾으면
+    // 같은 성의 다른 아스날 선수가 먼저 걸린다(실측: Lee Dixon → Jaden Dixon, Gabriel(파울리스타)
+    // → 가브리엘 마갈량이스, Alan Smith → Emile Smith Rowe).
+    // 성이 안 맞는 후보도 본다 — Fotmob엔 한 단어 이름으로만 있는 선수가 있다(가브리엘 마갈량이스 =
+    // "Gabriel"). 엉뚱한 사람은 아래 아스날 기간 대조가 걸러낸다.
+    for(const c of cands.slice(0, 6)){
       const pd = await fetchJSON(`https://www.fotmob.com/api/data/playerData?id=${c.id}`);
-      if(careerEntries(pd).some(e => Number(e.teamId) === ARSENAL_ID)) return {id: String(c.id), pd};
+      if(!careerEntries(pd).some(e => Number(e.teamId) === ARSENAL_ID)) continue;
+      if(arsenalStartMatches(normalizeCareer(pd), row)) return {id: String(c.id), pd};
     }
   }
   return null;
@@ -139,7 +151,8 @@ function careerEntries(pd){
 const yearOf = d => (d ? Number(String(d).slice(0, 4)) : null);
 // 2군·유스·올스타 팀은 경로에서 뺀다 — 1군 경로를 흐리기만 한다(Hamburger SV II, St. Johnstone B,
 // MLS All-Stars). 아스날 자신은 이름이 "Arsenal"이라 걸리지 않는다.
-const SIDE_TEAM_RE = /(\s(II|III|B|C)|\sU-?\d{2}|\sReserves?|\sYouth|\sAcademy)$|All[- ]?Stars?/i;
+// 이름에 B·II가 안 붙는 2군도 있다(Barça Atlètic, Real Madrid Castilla, Jong Ajax, Juventus Next Gen).
+const SIDE_TEAM_RE = /(\s(II|III|B|C)|\sU-?\d{2}|\sReserves?|\sYouth|\sAcademy|\sPrimavera|\sNext Gen)$|All[- ]?Stars?|Atl[eè]tic$|Castilla$|^Jong\s|Sub-?\d{2}/i;
 
 // 화면에 그대로 쓸 경로: 오래된 것부터, 같은 팀이 연달아 나오면 한 칸으로 합친다.
 export function normalizeCareer(pd){
@@ -155,7 +168,9 @@ export function normalizeCareer(pd){
       active: !!e.active,
       start: e.startDate,
     }))
-    .sort((a, b) => String(a.start).localeCompare(String(b.start)));
+    .sort((a, b) => String(a.start).localeCompare(String(b.start)))
+    // 아직 시작 안 한 계약(임대 복귀 예정 등)은 뺀다(실측: 맷 터너 "→ Lyon 2027–").
+    .filter(e => e.start <= new Date().toISOString());
   const out = [];
   for(const e of raw){
     const prev = out[out.length - 1];
@@ -170,11 +185,23 @@ export function normalizeCareer(pd){
 
 // ── 3) 검사 ─────────────────────────────────────────────────────────────
 // 문제로 못 쓰는 이유를 돌려준다(쓸 수 있으면 null).
-export function rejectReason(career){
+function arsenalStartMatches(career, row){
+  if(!row || !row.start) return true;
+  const ars = career.filter(e => e.teamId === ARSENAL_ID && !e.loan);
+  return !ars.length || ars.some(e => Math.abs(e.from - row.start) <= 3);
+}
+
+// row(위키백과의 아스날 기간)와 대조해 엉뚱한 사람이 걸렸거나 데이터가 깨진 경우를 거른다
+// (실측: Steve Bould의 Fotmob 커리어가 "Arsenal 1341–1561 → Lommel 1688–1736"으로 깨져 있다).
+export function rejectReason(career, row){
   if(!career.length) return 'Fotmob 커리어 없음';
   if(!career.some(e => e.teamId === ARSENAL_ID)) return '커리어에 아스날 없음';
-  const clubs = new Set(career.map(e => e.teamId));
-  if(clubs.size < 2) return '클럽이 1곳뿐';
+  const now = new Date().getUTCFullYear();
+  if(career.some(e => e.from < 1950 || e.from > now + 1 || (e.to != null && (e.to < e.from || e.to > now + 1)))){
+    return '연도가 비정상';
+  }
+  if(!arsenalStartMatches(career, row)) return '위키백과 아스날 기간과 불일치';
+  // 아스날 한 곳뿐인 원클럽맨(사카 등)도 문제로 쓴다 — 사용자 지정. 연도가 단서가 된다.
   if(career.some(e => !e.from)) return '연도 빠짐';
   if(career.length > 20) return '경로가 너무 김';
   return null;
@@ -183,14 +210,15 @@ export function rejectReason(career){
 // 선수 한 명 → 문제 한 개.
 export function toQuestion(row, fm, koName){
   const career = normalizeCareer(fm.pd);
-  const reason = rejectReason(career);
+  const reason = rejectReason(career, row);
   const pd = fm.pd || {};
   const retired = !career.some(e => e.active);
   return {
     reason,
     q: reason ? null : {
       id: fm.id,
-      name: pd.name || row.name,
+      // 위키백과 표기를 우선한다 — Fotmob엔 "Gabriel"처럼 한 단어로만 있는 선수가 있다.
+      name: row.name || pd.name,
       ko: koName || null,
       nationality: row.nationality,
       pos: row.pos,

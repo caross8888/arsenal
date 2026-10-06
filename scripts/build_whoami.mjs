@@ -14,6 +14,7 @@ import { WIKI_UA, fetchWikiPlayers, fetchKoNames, isModern, resolveFotmob, toQue
 
 const args = process.argv.slice(2);
 const outFile = args.includes('--out') ? args[args.indexOf('--out') + 1] : null;
+const opts_all = args.includes('--all');
 
 const CACHE_DIR = path.join(os.tmpdir(), 'arsenal-whoami-cache');
 fs.mkdirSync(CACHE_DIR, {recursive: true});
@@ -58,7 +59,7 @@ for(const row of rows){
 bank.sort((a, b) => b.apps - a.apps);
 console.log(`\n문제로 쓸 수 있는 선수: ${bank.length}명 (한국어 이름 ${bank.filter(q => q.ko).length}명)`);
 for(const [why, names] of Object.entries(rejected)){
-  console.log(`  제외 — ${why}: ${names.length}명 (예: ${names.slice(0, 6).join(', ')})`);
+  console.log(`  제외 — ${why}: ${names.length}명 (예: ${names.slice(0, opts_all ? 999 : 6).join(', ')})`);
 }
 const show = q => `${q.ko || q.name} [${q.retired ? '은퇴' : '현역'}, 아스날 ${q.apps}경기]\n    `
   + q.career.map(c => `${c.n} ${c.f}–${c.u ?? ''}${c.l ? '(임대)' : ''}`).join(' → ');
