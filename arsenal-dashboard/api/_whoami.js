@@ -253,6 +253,13 @@ export const KO_NAME_FIXES = {
   'Johan Djourou': '요한 주루', 'Takehiro Tomiyasu': '토미야스 타케히로', 'Mathew Ryan': '매튜 라이언',
   'Matthew Connolly': '매튜 코널리', 'Willian': '윌리안', 'Neto': '네투',
   'Carl Jenkinson': '칼 젠킨슨',
+  'Patrick Vieira': '파트리크 비에이라',
+  'Santi Cazorla': '산티 카솔라',
+  'Tomáš Rosický': '토마스 로시츠키',
+  'Emmanuel Adebayor': '엠마누엘 아데바요르', 'Emmanuel Eboué': '엠마누엘 에부에', 'Nicklas Bendtner': '니클라스 벤트너',
+  'Per Mertesacker': '페어 메르테사커', 'Mathieu Flamini': '마티유 플라미니', 'Mathieu Debuchy': '마티유 드뷔시',
+  'Henrikh Mkhitaryan': '헨리크 미키타리안', 'Alexandre Lacazette': '알렉산드르 라카제트', 'Emmanuel Frimpong': '엠마누엘 프림퐁',
+  'Robin van Persie': '로빈 반 페르시', 'Giovanni van Bronckhorst': '지오바니 반 브롱크호스트',
   'Cédric Soares': '세드릭 소아레스', 'Nuno Tavares': '누누 타바레스', 'Júlio Baptista': '줄리우 밥티스타',
   'Karl Hein': '칼 헤인',
 };
