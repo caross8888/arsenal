@@ -1511,6 +1511,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @keyframes gmPop{0%{transform:scale(1)}40%{transform:scale(1.045)}100%{transform:scale(1)}}
 @keyframes gmRing{to{box-shadow:0 0 0 12px rgba(34,197,94,0)}}
 @keyframes gmShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+/* 상단 HUD: 정답이면 점수가 올라가며 톡 커지고, 오답이면 잃은 하트가 부풀었다 기울며 꺼진다. */
+.gm-score{display:inline-block;transform-origin:right center}
+.gm-score.bump{animation:gmScoreBump .55s ease-out}
+.gm-lives span{display:inline-flex}
+.gm-lives .lose{animation:gmHeartLose .7s ease-out}
+@keyframes gmScoreBump{0%{transform:scale(1)}30%{transform:scale(1.3);color:var(--green)}100%{transform:scale(1)}}
+@keyframes gmHeartLose{0%{color:var(--red);transform:scale(1)}30%{color:var(--red);transform:scale(1.5)}65%{color:var(--red);transform:scale(.75) rotate(-15deg)}100%{transform:scale(1) rotate(0)}}
 @keyframes gmGainUp{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
 .gm-note{font-size:12px;color:var(--text-secondary);text-align:center;min-height:18px}
 .gm-big{font-family:var(--fd);font-size:56px;color:var(--gold);line-height:1;text-align:center;font-variant-numeric:tabular-nums}
@@ -1524,7 +1531,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .gm-row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gm-row .pt{font-family:var(--fd);font-size:18px;color:var(--gold)}
 .gm-empty{color:var(--text-secondary);text-align:center;font-size:13px;padding:20px 0}
-@media (prefers-reduced-motion: reduce){.gm-timer i{transition:none!important}.gm-choice.right,.gm-choice.wrong,.gm-gain,.gm-choice.right::after{animation:none}}
+@media (prefers-reduced-motion: reduce){.gm-timer i{transition:none!important}.gm-choice.right,.gm-choice.wrong,.gm-gain,.gm-choice.right::after,.gm-score.bump,.gm-lives .lose{animation:none}}
 </style>
 </head>
 <body>
@@ -7897,9 +7904,23 @@ function gameToast(msg){
   var n=document.getElementById('gmNote');
   if(n) n.textContent=msg; else { var r=gmRoot(); r.insertAdjacentHTML('beforeend','<div class="gm-note">'+gmEsc(msg)+'</div>'); }
 }
-function gmLives(n){
-  var h=''; for(var k=0;k<GAME_LIVES;k++) h+='<span class="'+(k<n?'':'off')+'">'+GAME_HEART+'</span>';
+// lost: 방금 잃은 하트의 자리 — 그 하트만 꺼지는 애니메이션을 탄다.
+function gmLives(n, lost){
+  var h=''; for(var k=0;k<GAME_LIVES;k++) h+='<span class="'+(k<n?'':'off')+(k===lost?' lose':'')+'">'+GAME_HEART+'</span>';
   return h;
+}
+// 점수를 이전 값에서 새 값까지 0.5초 동안 세어 올린다(움직임 줄이기 설정이면 바로 바꾼다).
+function gmAnimateScore(el, from, to){
+  if(!el) return;
+  var reduce=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce || to<=from){ el.textContent=to; return; }
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  var t0=performance.now(), dur=500;
+  (function step(now){
+    var k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3);
+    el.textContent=Math.round(from+(to-from)*e);
+    if(k<1) requestAnimationFrame(step);
+  })(t0);
 }
 function gmCrest(c){
   var url='https://images.fotmob.com/image_resources/logo/teamlogo/'+c.t+'.png';
@@ -7944,8 +7965,10 @@ function gamePick(id){
     // 오답일 땐 정답을 알려주지 않는다 — 토큰 재사용으로 다시 푸는 걸 어렵게 하려는 것(api/game.js 머리말).
     var mine=id===null?null:document.querySelector('.gm-choice[data-id="'+id.replace(/"/g,'')+'"]');
     if(mine){ mine.classList.add(d.ok?'right':'wrong'); if(d.ok) mine.insertAdjacentHTML('beforeend','<span class="gm-gain">+'+d.gain+'</span>'); }
-    var sc=document.getElementById('gmScore'); if(sc) sc.textContent=d.score;
-    var lv=document.getElementById('gmLives'); if(lv) lv.innerHTML=gmLives(d.lives);
+    var sc=document.getElementById('gmScore');
+    if(sc) gmAnimateScore(sc, +sc.textContent||0, d.score);
+    var lv=document.getElementById('gmLives');
+    if(lv){ lv.innerHTML=gmLives(d.lives, d.ok?null:d.lives); lv.setAttribute('aria-label','목숨 '+d.lives+'개'); }
     var note=document.getElementById('gmNote');
     if(note && !d.ok) note.textContent = d.timeout ? '시간 초과' : '오답';
     GAME.token=d.token;
