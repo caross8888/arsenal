@@ -253,6 +253,7 @@ export const KO_NAME_FIXES = {
   'Johan Djourou': '요한 주루', 'Takehiro Tomiyasu': '토미야스 타케히로', 'Mathew Ryan': '매튜 라이언',
   'Matthew Connolly': '매튜 코널리', 'Willian': '윌리안', 'Neto': '네투',
   'Carl Jenkinson': '칼 젠킨슨',
+  'Patrick Vieira': '파트리크 비에이라',
   'Cédric Soares': '세드릭 소아레스', 'Nuno Tavares': '누누 타바레스', 'Júlio Baptista': '줄리우 밥티스타',
   'Karl Hein': '칼 헤인',
 };
