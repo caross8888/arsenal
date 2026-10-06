@@ -252,6 +252,7 @@ export const KO_NAME_FIXES = {
   'Alex Iwobi': '알렉스 이워비', 'Emile Smith Rowe': '에밀 스미스 로우', 'Mohamed Elneny': '모하메드 엘네니',
   'Johan Djourou': '요한 주루', 'Takehiro Tomiyasu': '토미야스 타케히로', 'Mathew Ryan': '매튜 라이언',
   'Matthew Connolly': '매튜 코널리', 'Willian': '윌리안', 'Neto': '네투',
+  'Carl Jenkinson': '칼 젠킨슨',
 };
 
 // 선수 한 명 → 문제 한 개.
