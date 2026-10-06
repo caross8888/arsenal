@@ -181,6 +181,30 @@ export default async function handler(req, res){
   res.setHeader('Content-Type', 'application/json');
   const a = String(req.query.a || '');
   try {
+    // 관리자: 랭킹 닉네임 수정(오타 등). Vercel 크론과 같은 CRON_SECRET으로만 열린다 — 미설정이면 거부(fail closed).
+    // GitHub Actions의 "랭킹 닉네임 수정" 워크플로가 부른다. 점수·게임 id는 그대로 두고 닉네임만 바꾼다.
+    //   POST ?a=rename  {rank: 1, to: "새 닉네임", from?: "지금 닉네임(확인용)"}
+    if(a === 'rename'){
+      const secret = process.env.CRON_SECRET;
+      if(!secret) return res.status(503).json({error: 'CRON_SECRET 미설정'});
+      if(req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({error: 'unauthorized'});
+      if(!KV_URL || !KV_TOKEN) return res.status(503).json({error: 'KV 자격증명 없음'});
+      const body = await readBody(req);
+      const rank = Number(body.rank);
+      if(!Number.isInteger(rank) || rank < 1 || rank > BOARD_KEEP) return res.status(400).json({error: 'rank는 1~1000'});
+      const {nick, error} = cleanNick(body.to);
+      if(error) return res.status(400).json({error});
+      const hit = await kv('ZRANGE', BOARD_KEY, rank - 1, rank - 1, 'REV', 'WITHSCORES') || [];
+      if(!hit.length) return res.status(404).json({error: `${rank}위 기록이 없어요.`});
+      const [member, score] = [String(hit[0]), Number(hit[1])];
+      const [oldNick, gid] = member.split('\u0001');
+      if(body.from && String(body.from).trim() !== oldNick) return res.status(409).json({error: `${rank}위 닉네임이 "${oldNick}"라서 바꾸지 않았어요.`});
+      await kv('ZREM', BOARD_KEY, member);
+      await kv('ZADD', BOARD_KEY, score, `${nick}\u0001${gid}`);
+      _board = null;
+      return res.json({rank, score, from: oldNick, to: nick});
+    }
+
     if(a === 'board'){
       if(!KV_URL || !KV_TOKEN) return res.json({top: [], cut: null});
       // 30초 CDN 캐시 — 여러 명이 동시에 봐도 KV 읽기는 30초에 한 번 꼴이다.
