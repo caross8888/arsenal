@@ -57,7 +57,7 @@ function getBank(){
     id: String(q.id),
     // 한국어 이름은 한국어 위키백과 표기라 사이트 표기와 다를 수 있다(가브리에우 → 가브리엘 등).
     // 뉴스 번역과 같은 사전으로 맞춘다.
-    display: q.ko ? applyGlossary(q.ko) : q.name,
+    display: applyGlossary(q.ko || q.name),
     group: posGroup(q.pos),
   }));
   _bank = {list, byId: new Map(list.map(q => [q.id, q]))};

@@ -223,6 +223,26 @@ export function playerStatus(career, pd){
   return lastEnd <= new Date().getUTCFullYear() - 2 ? 'retired' : 'free';
 }
 
+// 한국어 위키백과 문서가 없는 선수의 한국어 표기(사용자 요청 — 영어 이름이 섞여 나왔다).
+// 뉴스 번역 사전(_glossary.js)에 이미 있는 선수는 그 표기와 맞췄다(은와네리·다우먼·새먼·셋퍼드).
+// 겹성은 사이트 표기(루이스-스켈리)처럼 하이픈으로 잇는다.
+export const KO_NAME_OVERRIDES = {
+  'Jérémie Aliadière': '제레미 알리아디에르', 'Ethan Nwaneri': '에단 은와네리', 'Luís Boa Morte': '루이스 보아 모르트',
+  'Stuart Taylor': '스튜어트 테일러', 'Quincy Owusu-Abeyie': '퀸시 오우수-아베이에', 'Kaba Diawara': '카바 디아와라',
+  'Max Dowman': '맥스 다우먼', 'Mark Randall': '마크 랜들', 'Henri Lansbury': '헨리 랜즈버리', 'Graham Stack': '그레이엄 스택',
+  'Jay Emmanuel-Thomas': '제이 이매뉴얼-토머스', 'Marli Salmon': '말리 새먼', 'Sebastian Svärd': '세바스티안 스베르드',
+  'Gavin Hoyte': '개빈 호이트', 'Gedion Zelalem': '게디온 젤라렘', 'Jerome Thomas': '제롬 토머스', 'Nacer Barazite': '나세르 바라지테',
+  'Jay Simpson': '제이 심프슨', 'Josh Dasilva': '조시 다실바', 'Zech Medley': '제크 메들리', 'Martin Angha': '마르틴 앙하',
+  'Thomas Eisfeld': '토마스 아이스펠트', 'Jernade Meade': '저네이드 미드', 'Chris Willock': '크리스 윌록',
+  'Marcus McGuane': '마커스 맥과이언', 'Ben Sheaf': '벤 시프', 'Charlie Gilmour': '찰리 길모어', 'Tommy Setford': '토미 셋퍼드',
+  'Nathan Butler-Oyedeji': '네이선 버틀러-오예데지', 'Andre Harriman-Annous': '안드레 해리먼-애너스', 'Ife Ibrahim': '이페 이브라힘',
+  'Michal Papadopulos': '미할 파파도풀로스', 'Anthony Stokes': '앤서니 스톡스', 'Rui Fonte': '후이 폰트', 'Paul Rodgers': '폴 로저스',
+  'Conor Henderson': '코너 헨더슨', 'Chuks Aneke': '척스 아네케', "Stefan O'Connor": '스테판 오코너',
+  'Julio Pleguezuelo': '훌리오 플레게수엘로', 'Ben Cottrell': '벤 코트럴', 'Miguel Azeez': '미겔 아지즈', 'Jack Porter': '잭 포터',
+  'Josh Nichols': '조시 니컬스', 'Maldini Kacurri': '말디니 카추리', 'Ismeal Kabia': '이스메일 카비아',
+  'Brando Bailey-Joseph': '브랜도 베일리-조지프', 'Jaden Dixon': '제이든 딕슨', 'Theo Julienne': '테오 줄리앤',
+};
+
 // 선수 한 명 → 문제 한 개.
 export function toQuestion(row, fm, koName){
   const career = normalizeCareer(fm.pd);
@@ -235,7 +255,7 @@ export function toQuestion(row, fm, koName){
       id: fm.id,
       // 위키백과 표기를 우선한다 — Fotmob엔 "Gabriel"처럼 한 단어로만 있는 선수가 있다.
       name: row.name || pd.name,
-      ko: koName || null,
+      ko: koName || KO_NAME_OVERRIDES[row.name] || null,
       nationality: row.nationality,
       pos: row.pos,
       arsenal: row.arsenalYears,
