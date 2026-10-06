@@ -34,6 +34,7 @@ const BOARD_KEEP = 1000;       // 랭킹은 상위 1,000개만 남긴다(사용�
 const BOARD_SHOW = 100;
 const MONTHLY_REG_CAP = 50000; // 한 달 등록 상한 — 넘으면 그달은 등록만 막는다(무료 한도 보호)
 const ALL_CLEAR_BONUS = 1000;
+const MAX_PER_Q = 200;         // 정답 100 + 시간 보너스 최대 100
 
 async function kv(...args){
   const r = await fetch(KV_URL, {
@@ -226,6 +227,9 @@ export default async function handler(req, res){
     if(a === 'submit'){
       const st = open(body.token);
       if(!st || !st.over) return res.status(400).json({error: '끝난 게임만 등록할 수 있어요.'});
+      // 점수 컷: 이론상 최대(전 문제 0.4초 안에 정답 + 클리어 보너스 = 214×200+1000 = 43,800)를 넘으면 거부.
+      // 점수는 서버만 계산하고 토큰은 암호화돼 있어 정상 경로로는 못 넘지만, 버그·키 유출에 대비한 마지막 안전장치다.
+      if(st.s > getBank().list.length * MAX_PER_Q + ALL_CLEAR_BONUS) return res.status(400).json({error: '등록할 수 없는 기록이에요.'});
       const {nick, error} = cleanNick(body.nick);
       if(error) return res.status(400).json({error});
       if(!KV_URL || !KV_TOKEN) return res.status(503).json({error: '랭킹 저장소에 연결할 수 없어요.'});
