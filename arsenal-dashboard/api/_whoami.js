@@ -243,6 +243,17 @@ export const KO_NAME_OVERRIDES = {
   'Brando Bailey-Joseph': '브랜도 베일리-조지프', 'Jaden Dixon': '제이든 딕슨', 'Theo Julienne': '테오 줄리앤',
 };
 
+// 한국어 위키백과 표기가 국내에서 흔히 쓰는 표기와 다른 선수 — 사용자가 고른 표기로 바꾼다.
+// 퀴즈 보기 이름에만 쓴다(뉴스 번역 사전 _glossary.js는 나무위키 기준이라 따로 대조 후에 넣을 것).
+export const KO_NAME_FIXES = {
+  'Theo Walcott': '시오 월콧', 'Aaron Ramsey': '애런 램지', 'Aaron Ramsdale': '애런 램스데일',
+  'Alexander Hleb': '알렉산드르 흘렙', 'Gilberto Silva': '질베르투 실바', 'Thomas Partey': '토마스 파티',
+  'Pierre-Emerick Aubameyang': '피에르에메릭 오바메양', 'Alex Oxlade-Chamberlain': '알렉스 옥슬레이드체임벌린',
+  'Alex Iwobi': '알렉스 이워비', 'Emile Smith Rowe': '에밀 스미스 로우', 'Mohamed Elneny': '모하메드 엘네니',
+  'Johan Djourou': '요한 주루', 'Takehiro Tomiyasu': '토미야스 타케히로', 'Mathew Ryan': '매튜 라이언',
+  'Matthew Connolly': '매튜 코널리', 'Willian': '윌리안', 'Neto': '네투',
+};
+
 // 선수 한 명 → 문제 한 개.
 export function toQuestion(row, fm, koName){
   const career = normalizeCareer(fm.pd);
@@ -255,7 +266,7 @@ export function toQuestion(row, fm, koName){
       id: fm.id,
       // 위키백과 표기를 우선한다 — Fotmob엔 "Gabriel"처럼 한 단어로만 있는 선수가 있다.
       name: row.name || pd.name,
-      ko: koName || KO_NAME_OVERRIDES[row.name] || null,
+      ko: KO_NAME_FIXES[row.name] || koName || KO_NAME_OVERRIDES[row.name] || null,
       nationality: row.nationality,
       pos: row.pos,
       arsenal: row.arsenalYears,
