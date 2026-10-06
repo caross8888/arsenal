@@ -260,7 +260,7 @@ export const KO_NAME_FIXES = {
   // 214명 전체 점검(사용자 요청 — "전부 보편적인 이름으로"). 뉴스 번역 사전에 정식 표기가 있는 선수는 그 표기를 따른다(촐리스).
   'Tony Adams': '토니 아담스', 'Kieran Gibbs': '키어런 깁스', 'Thomas Vermaelen': '토마스 베르마엘렌',
   'William Gallas': '윌리엄 갈라스', 'Calum Chambers': '칼럼 체임버스', 'Philippe Senderos': '필리페 센데로스',
-  'Reiss Nelson': '라이스 넬슨', 'Łukasz Fabiański': '루카시 파비안스키', 'Jakub Kiwior': '야쿠브 키비오르',
+  'Łukasz Fabiański': '루카시 파비안스키',
   'Marouane Chamakh': '마루앙 샤막', 'Gabriel': '가브리엘 파울리스타', 'Sébastien Squillaci': '세바스티앙 스킬라치',
   'Folarin Balogun': '폴라린 발로건', 'Jeff Reine-Adélaïde': '제프 레인아델라이드', 'Christos Tzolis': '크리스토스 촐리스',
   'Ismaël Bennacer': '이스마엘 베나세르',
