@@ -105,6 +105,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;flex-shrink:0}
 .transfer-window-btn{display:flex;align-items:center;gap:4px;background:rgba(200,168,75,.15);border:1px solid rgba(200,168,75,.4);color:var(--gold);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .transfer-window-btn svg{width:11px;height:11px;}
+/* 헤더가 좁아지면 글자가 두 줄로 찌그러지지 않게(실측: 360px에서 이적시장 버튼이 뜨면 제목·버튼·시즌 표시가
+   전부 두 줄로 접혀 헤더가 두꺼워졌다 — 게임 버튼이 들어오며 더 심해짐). 줄바꿈 대신 덜 중요한 것부터 줄인다:
+   430px 이하 → 이적시장 버튼은 아이콘만, 340px 이하 → 시즌 표시도 숨김. */
+.header-tab-title,.transfer-window-btn,#seasonLabel{white-space:nowrap}
+@media (max-width:430px){
+  .header-right{gap:7px}
+  .transfer-window-btn .tw-label{display:none}
+  .transfer-window-btn{padding:4px 7px}
+  .transfer-window-btn svg{width:14px;height:14px}
+}
+@media (max-width:340px){ #seasonLabel,.header-right .live-dot{display:none} }
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--chrome-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border-bright);display:flex;padding-bottom:var(--safe-bottom);}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;gap:4px;background:none;border:none;border-right:1px solid var(--border-bright);color:var(--text-dim);font-family:var(--fb);font-size:9px;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;position:relative;-webkit-tap-highlight-color:transparent;}
@@ -1576,9 +1587,9 @@ function playIntro(){
     <span class="header-tab-title" id="headerTabTitle"></span>
   </div>
   <div class="header-right">
-    <button id="transferWindowBtn" class="transfer-window-btn" style="display:none" onclick="openTransferModal()">
+    <button id="transferWindowBtn" class="transfer-window-btn" style="display:none" onclick="openTransferModal()" aria-label="이적시장">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l4 -4l4 4"/><path d="M7 3l0 12"/><path d="M21 17l-4 4l-4 -4"/><path d="M17 21l0 -12"/></svg>
-      이적시장
+      <span class="tw-label">이적시장</span>
     </button>
     <button id="gameToggleBtn" class="theme-toggle-btn" onclick="toggleGameMode()" aria-label="게임"></button>
     <button id="themeToggleBtn" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="테마 전환"></button>
