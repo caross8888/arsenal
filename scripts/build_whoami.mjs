@@ -2,6 +2,7 @@
 //
 //   NODE_USE_ENV_PROXY=1 node scripts/build_whoami.mjs           # 프록시 환경(클라우드 세션)
 //   node scripts/build_whoami.mjs --out whoami.json               # 결과 파일로 저장
+//   node scripts/build_whoami.mjs --module                        # 운영 기본 문제 은행(api/_whoami_bank.js) 갱신
 //
 // 운영과 같은 arsenal-dashboard/api/_whoami.js를 쓴다. 응답은 OS 임시 폴더(arsenal-whoami-cache)에
 // 캐시하므로 두 번째부터는 네트워크를 거의 안 탄다. 새로 받으려면 그 폴더를 지울 것.
@@ -57,6 +58,11 @@ for(const row of rows){
 }
 
 bank.sort((a, b) => b.apps - a.apps);
+// 같은 Fotmob 선수가 두 행에 붙었으면 출전 수가 많은 쪽만 남긴다(위 정렬 덕에 먼저 나온 쪽).
+const seenId = new Set();
+const dedup = bank.filter(q => !seenId.has(q.id) && seenId.add(q.id));
+if(dedup.length !== bank.length) console.log(`  중복 제거: ${bank.length - dedup.length}명`);
+bank.length = 0; bank.push(...dedup);
 console.log(`\n문제로 쓸 수 있는 선수: ${bank.length}명 (한국어 이름 ${bank.filter(q => q.ko).length}명)`);
 const byStatus = s => bank.filter(q => q.status === s);
 console.log(`  현역 ${byStatus('active').length} · 은퇴 ${byStatus('retired').length} · 소속팀 없음 ${byStatus('free').length}`
@@ -73,3 +79,14 @@ for(const n of ['Andrey Arshavin', 'Thierry Henry', 'Bukayo Saka', 'Cesc Fàbreg
 }
 for(const q of bank.filter((_, k) => k % 40 === 7).slice(0, 5)) console.log('  ' + show(q));
 if(outFile){ fs.writeFileSync(outFile, JSON.stringify(bank)); console.log(`\n저장: ${outFile}`); }
+// --module: 운영 기본 문제 은행(api/_whoami_bank.js)을 이 결과로 다시 쓴다.
+if(args.includes('--module')){
+  const file = path.join(path.dirname(new URL(import.meta.url).pathname), '../arsenal-dashboard/api/_whoami_bank.js');
+  fs.writeFileSync(file,
+    '// api/_whoami_bank.js — Who Am I 기본 문제 은행(자동 생성 파일, 직접 고치지 말 것)\n//\n'
+    + '// scripts/build_whoami.mjs --module 로 만든다. api/game.js가 이 목록을 그대로 문제 은행으로 쓴다\n'
+    + '// (자동 갱신 없음 — 사용자 지정으로 한 번 만들고 더 늘리지 않는다).\n'
+    + `// 생성: ${new Date().toISOString().slice(0, 10)} · ${bank.length}명\n`
+    + 'export default ' + JSON.stringify(bank) + ';\n');
+  console.log(`기본 문제 은행 갱신: ${file}`);
+}

@@ -1,7 +1,7 @@
 // api/_whoami.js — "Who Am I?"(커리어 경로 퀴즈) 문제 은행 만들기
 //
-// `_` 접두어라 Vercel 함수로 배포되지 않고 import 전용이다. 운영(크론)과 로컬 스크립트
-// (scripts/build_whoami.mjs)가 같은 코드로 문제 은행을 만들게 하려고 분리했다.
+// `_` 접두어라 Vercel 함수로 배포되지 않고 import 전용이다. 운영 중에는 쓰지 않고, 로컬 스크립트
+// (scripts/build_whoami.mjs --module)가 고정 문제 은행(_whoami_bank.js)을 만들 때만 쓴다.
 //
 // 흐름:
 //  1) 위키백과 "List of Arsenal F.C. players" 3개 문서(100경기+ / 25–99 / 1–24)의 표에서
@@ -11,8 +11,7 @@
 //  3) 문제로 쓸 수 없는 선수(클럽 1개뿐, 날짜 빠짐 등)는 이유와 함께 걸러낸다.
 // 한국어 이름은 영문 위키백과 문서의 한국어판 링크(langlinks)에서 가져오고, 없으면 영문 그대로.
 //
-// 네트워크 함수는 전부 fetchJSON(url, opts)을 인자로 받는다 — 운영은 타임아웃 붙은 fetch,
-// 로컬 스크립트는 파일 캐시 붙은 fetch를 넘긴다.
+// 네트워크 함수는 전부 fetchJSON(url, opts)을 인자로 받는다(스크립트가 파일 캐시 붙은 fetch를 넘긴다).
 
 export const ARSENAL_ID = 9825;
 export const WIKI_PAGES = [
@@ -137,6 +136,9 @@ export async function resolveFotmob(fetchJSON, row){
     for(const c of cands.slice(0, 6)){
       const pd = await fetchJSON(`https://www.fotmob.com/api/data/playerData?id=${c.id}`);
       if(!careerEntries(pd).some(e => Number(e.teamId) === ARSENAL_ID)) continue;
+      // 위키백과 표에 연도가 비어 있으면 대조할 근거가 없으니 이름이 똑같을 때만 인정한다
+      // (실측: 연도 없는 "David Howat" 행이 성 검색으로 David Raya에 붙었다).
+      if(!row.start && fold(c.name) !== fold(row.name)) continue;
       if(arsenalStartMatches(normalizeCareer(pd), row)) return {id: String(c.id), pd};
     }
   }
@@ -237,6 +239,7 @@ export function toQuestion(row, fm, koName){
       nationality: row.nationality,
       pos: row.pos,
       arsenal: row.arsenalYears,
+      since: row.start,   // 아스날 입단 연도 — 오답 보기를 비슷한 시대 선수로 뽑는 데 쓴다
       apps: row.apps,
       status,   // 'active' 현역 · 'retired' 은퇴 · 'free' 소속팀 없음(은퇴 여부 불확실)
       career: career.map(e => ({t: e.teamId, n: e.team, f: e.from, u: e.to, l: e.loan ? 1 : 0})),
