@@ -256,6 +256,7 @@ export const KO_NAME_FIXES = {
   'Patrick Vieira': '파트리크 비에이라',
   'Santi Cazorla': '산티 카솔라',
   'Tomáš Rosický': '토마스 로시츠키',
+  'Matteo Guendouzi': '마테오 귀엥두지',
   'Emmanuel Adebayor': '엠마누엘 아데바요르', 'Emmanuel Eboué': '엠마누엘 에부에', 'Nicklas Bendtner': '니클라스 벤트너',
   'Per Mertesacker': '페어 메르테사커', 'Mathieu Flamini': '마티유 플라미니', 'Mathieu Debuchy': '마티유 드뷔시',
   'Henrikh Mkhitaryan': '헨리크 미키타리안', 'Alexandre Lacazette': '알렉산드르 라카제트', 'Emmanuel Frimpong': '엠마누엘 프림퐁',
