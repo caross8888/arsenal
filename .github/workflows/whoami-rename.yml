@@ -1,0 +1,48 @@
+# Who Am I 랭킹 닉네임 수정 — 수동 실행 전용
+#
+# 오타 난 닉네임을 바꿀 때 깃허브 화면(또는 Claude)에서 Run workflow로 쓴다. 점수·순위는 그대로 두고
+# 닉네임만 바꾼다(api/game.js?a=rename). 준비물은 preview-ai.yml과 같다: 저장소 Settings → Secrets and
+# variables → Actions의 CRON_SECRET(값은 Vercel 프로젝트의 CRON_SECRET과 같아야 한다).
+
+name: whoami rename
+
+on:
+  workflow_dispatch:
+    inputs:
+      rank:
+        description: '바꿀 순위(1 = 1등)'
+        required: true
+        default: '1'
+      to:
+        description: '새 닉네임(최대 12자)'
+        required: true
+      from:
+        description: '지금 닉네임(적으면 일치할 때만 바꾼다, 비워도 됨)'
+        required: false
+        default: ''
+
+permissions: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: 닉네임 수정 요청
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          RANK: ${{ inputs.rank }}
+          TO: ${{ inputs.to }}
+          FROM: ${{ inputs.from }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET 시크릿이 없습니다. 저장소 Settings → Secrets and variables → Actions에 등록하세요."
+            exit 1
+          fi
+          body=$(node -e 'console.log(JSON.stringify({rank:Number(process.env.RANK),to:process.env.TO,from:process.env.FROM||undefined}))')
+          code=$(curl -sS -o res.json -w '%{http_code}' --max-time 30 \
+            -X POST -H "Authorization: Bearer $CRON_SECRET" -H 'Content-Type: application/json' \
+            --data "$body" "https://coyg.vercel.app/api/game?a=rename")
+          echo "HTTP $code"; cat res.json; echo
+          cat res.json >> "$GITHUB_STEP_SUMMARY"
+          [ "$code" = "200" ] || { echo "::error::닉네임 수정 실패 (HTTP $code)"; exit 1; }
