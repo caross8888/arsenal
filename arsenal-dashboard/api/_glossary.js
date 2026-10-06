@@ -78,7 +78,7 @@ const ENTRIES = [
   ['카이 하베르츠', ['카이 하버츠', /\bKai Havertz\b/g]],
   ['하베르츠', ['하버츠', /\bHavertz\b/g]],
   ['미켈 메리노', [/\bMikel Merino\b/g]],
-  ['위리엔 팀버', ['위리엔 팀버르', '유리엔 팀버르', '유리엔 팀버', '유리앤 팀버', /\bJurri(ë|e)n Timber\b/g]],
+  ['위리엔 팀버', ['위리엔 팀버르', '유리엔 팀버르', '유리언 팀버르', '유리엔 팀버', '유리언 팀버', '유리앤 팀버', /\bJurri(ë|e)n Timber\b/g]],
   ['팀버', ['팀버르', /\bTimber\b/g]],
   ['리카르도 칼라피오리', [/\bRiccardo Calafiori\b/g]],
   ['칼라피오리', [/\bCalafiori\b/g]],
