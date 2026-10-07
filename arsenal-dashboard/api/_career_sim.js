@@ -13,7 +13,7 @@ import { NATIONS, CLUBS, NAMES, STATS, CARDS } from './_career_data.js';
 export { NATIONS, CLUBS, NAMES, STATS, CARDS };
 
 // ── 상수 ──────────────────────────────────────────────────────────────
-export const BASE = 40, POOL = 50, MAXADD = 20, YOUTH_GAP = 30;
+export const BASE = 40, POOL = 50, MAXADD = 20, YOUTH_GAP = 30, START_OVR = 54;
 const AGE_BASE = {15:4,16:4,17:4,18:4.5,19:4.5,20:4.5,21:4,22:4,23:3.5,24:3,25:2.5,26:2,27:1.5,28:0.5,29:-0.5,30:-1,31:-1.5,32:-2,33:-2.5,34:-3,35:-3.5,36:-4,37:-4.5};
 const DECLINE = {'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5,'빌드업':0.5};
 const NAT_BAR = {ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
@@ -27,6 +27,11 @@ const BALLON_PTS = [[/챔피언스리그 우승/,25],[/월드컵 우승/,25],[/(
   [/골든볼/,10],[/리그 올해의 (선수|미드필더|수비수)/,10],[/챔스 올해의 선수/,10],[/골든슈/,8],[/리그 득점왕/,8],[/챔스 득점왕|대회 득점왕|월드컵 득점왕/,6],[/도움왕/,5],[/챔스 올해의 (공격수|미드필더|수비수)/,5]];
 // 포지션별 기여 점수 — 미드필더·수비수는 골·도움 가중치를 높이고 수비수는 클린시트를 더한다
 const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.5}, DF:{g:8,a:5,cs:3.5}};
+// 카드별 기여 보정(사용자 지정): 같은 포지션 안에서도 카드마다 골·도움·클린시트 기대치가 달라
+// (포처는 골, 펄스나인·수비형은 적게) 기여 점수 평균이 같아지게 곱한다. 순서는 CARDS와 같음.
+// scripts/sim_career.mjs와 같은 전략으로 카드당 3,000 커리어를 돌려 잰 값 — 카드·출력 공식을 바꾸면 다시 잴 것.
+// 득점왕 같은 수상은 보정하지 않는다(포처가 득점왕을 더 받는 건 자연스럽다).
+const CARD_CONTRIB = {FW:[1.21,0.95,0.91,0.93,1.05], MF:[1.16,0.81,0.93,0.92,1.35], DF:[1.06,1.03,0.98,1.01,0.92,1]};
 const TALENT = {gen:2.05, wonder:1.58, prospect:1.18};   // 숨은 재능 배율(18세에 정해짐)
 const K_GROW = 0.6, DAMP = [0.6, 30], PLAY_C = [0.3, 1.1], CLUB_C = [1.35, 1.18, 1.05, 0.92, 0.8], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
@@ -54,7 +59,11 @@ export function startStats(pos, card){
   const add = adj.map(x => Math.min(MAXADD, Math.floor(POOL*x/tot)));
   const order = w.map((x,j)=>j).sort((a,b)=>w[b]-w[a]);
   for(let i=0; add.reduce((a,b)=>a+b,0)<POOL && i<200; i++){ const k=order[i%5]; if(add[k]<MAXADD) add[k]++; }
-  return add.map(a => BASE+a);
+  // 모든 카드의 시작 오버롤을 START_OVR로 맞춘다(모양은 그대로, 전체를 위아래로만 이동).
+  // 맞추지 않으면 강점이 한두 개에 몰린 카드(포처 56)가 고른 카드(메짤라·풀백 52)보다 높게 시작해
+  // 명성 → 구단 → 출전 → 성장으로 불어나 정점이 5 가까이 벌어졌다(사용자 지적).
+  const st = add.map(a => BASE+a), o = ovrOf(st, w);
+  return st.map(v => v - o + START_OVR);
 }
 // 오버롤 = 카드 가중치의 세제곱으로 가중 평균(핵심 스탯이 오버롤을 거의 결정한다)
 export function ovrOf(st, w){ let t=0, sw=0; for(let i=0;i<5;i++){ const w3=w[i]**3; t+=st[i]*w3; sw+=w3; } return Math.round(t/sw); }
@@ -64,7 +73,7 @@ const growLv = r => Math.max(1, Math.min(5, Math.round((r-40)/11)));
 
 // 첫 구단: 자국 구단 3곳 — 도전 / 적정 / 안정. 리그 구단이 16개 이상이면 3칸 간격.
 export function firstClubs(nation, pos, card){
-  const myRep = ovrOf(startStats(pos, card), CARDS[pos][card].w) + 5, me = myRep + YOUTH_GAP;
+  const myRep = START_OVR + 5, me = myRep + YOUTH_GAP;
   const home = (CLUBS[nation]||[]).map(c => clubByName(c[0])).sort((a,b) => b.r-a.r);
   let mid = 0; home.forEach((c,i) => { if(Math.abs(c.r-me) < Math.abs(home[mid].r-me)) mid = i; });
   const step = home.length >= 16 ? 3 : 1;
@@ -461,7 +470,7 @@ export function retire(state){
 }
 // 통산 수상 목록 — 시즌 줄의 hon을 이어 붙인 것(토큰에 따로 두지 않는다)
 export const honorsOf = state => state.hist.flatMap(r => r.hon);
-export function contribScore(state){ const w = CONTRIB[state.pos], t = state.tot; return t.goals*w.g + t.ast*w.a + (t.cs||0)*w.cs; }
+export function contribScore(state){ const w = CONTRIB[state.pos], t = state.tot; return (t.goals*w.g + t.ast*w.a + (t.cs||0)*w.cs) * ((CARD_CONTRIB[state.pos]||[])[state.card] || 1); }
 export function careerScore(state){
   const hp = honorsOf(state).reduce((t,h) => t + ((HONOR_TIER[h.tier]||{p:0}).p)*(+(String(h.n).split('×')[1])||1), 0);
   return Math.round(state.tot.apps + contribScore(state) + state.tot.caps*2 + state.peak*10 + hp);
