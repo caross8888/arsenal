@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>커리어 모드 목업</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--red:#EF0107;--red-dark:#b50004;--gold:#C8A84B;--navy:#0B0D12;--surface:#111318;--surface2:#181B22;--surface3:#1F2330;
+--border-bright:rgba(255,255,255,.15);--border-accent:rgba(200,168,75,.3);--text:#F0F2F7;--text-secondary:rgba(255,255,255,.75);--text-dim:#4A5070;
+--green:#22C55E;--amber:#F59E0B;--loss:#EF4444;--fd:'Bebas Neue',sans-serif;--fb:'Noto Sans KR',sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--navy);color:var(--text);font-family:var(--fb);-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:600px;margin:0 auto;padding:16px 16px 120px;display:flex;flex-direction:column;gap:14px}
+.top{display:flex;align-items:center;justify-content:space-between}
+.back{background:none;border:0;color:var(--text-secondary);font:inherit;font-size:13px;cursor:pointer;padding:2px 0}
+.steps{display:flex;gap:6px}
+.steps i{width:22px;height:4px;border-radius:2px;background:var(--surface3)}
+.steps i.on{background:var(--red)}
+h1{font-family:var(--fd);font-size:34px;letter-spacing:1px;margin:0;line-height:1}
+h1 span{color:var(--red)}
+.sub{font-size:13px;color:var(--text-secondary);margin:-6px 0 0}
+.panel{background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.lbl{font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between;align-items:center}
+.lbl b{color:var(--text);font-weight:700;font-size:14px}
+input[type=text],input[type=number],select{font:inherit;font-size:16px;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:10px;padding:11px;width:100%}
+.row{display:flex;gap:8px}
+.row>input{flex:1;min-width:0}
+.chip{font:inherit;font-size:13px;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:999px;padding:8px 12px;cursor:pointer;white-space:nowrap;user-select:none}
+.chip[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.seg{display:grid;grid-template-columns:repeat(var(--n,2),1fr);gap:6px}
+.seg .chip{border-radius:10px;padding:11px;text-align:center}
+.age{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--text-secondary)}
+.age b{font-family:var(--fd);font-size:26px;color:var(--gold);font-weight:400;line-height:1}
+.nums{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.nums button{font-family:var(--fd);font-size:17px;color:var(--text);background:var(--surface2);border:1px solid transparent;border-radius:7px;padding:6px 0;cursor:pointer}
+.nums button[aria-pressed=true]{background:var(--red);color:#fff}
+.btn{font:inherit;font-weight:700;font-size:16px;color:#fff;background:var(--red);border:0;border-radius:12px;padding:15px;width:100%;cursor:pointer}
+.btn:disabled{background:var(--surface3);color:var(--text-dim);cursor:default}
+.dock{position:fixed;left:0;right:0;bottom:0;background:rgba(11,13,18,.96);border-top:1px solid var(--border-bright);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.dock .in{max-width:600px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.dock .sum{flex:none;font-size:12px;color:var(--text-secondary);line-height:1.3}
+.dock .sum b{display:block;font-family:var(--fd);font-size:24px;color:var(--gold);font-weight:400;line-height:1}
+.note{font-size:11.5px;color:var(--text-secondary);line-height:1.6;margin:0}
+.mock{font-size:11px;color:var(--amber);border:1px dashed rgba(245,158,11,.5);border-radius:8px;padding:6px 10px;line-height:1.5}
+
+/* 2페이지 카드 */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card{font:inherit;text-align:left;color:var(--text);background:var(--surface2);border:1.5px solid var(--border-bright);border-radius:14px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,transform .15s}
+.card:active{transform:scale(.98)}
+.card[aria-pressed=true]{border-color:var(--gold);background:rgba(200,168,75,.1)}
+.card .t{font-weight:700;font-size:15px}
+.card .d{font-size:11.5px;color:var(--text-secondary);line-height:1.45;min-height:33px}
+.wbar{display:grid;grid-template-columns:42px 1fr 30px;align-items:center;gap:6px;font-size:10.5px;color:var(--text-secondary)}
+.wbar i{height:5px;border-radius:3px;background:var(--surface3);position:relative;overflow:hidden}
+.wbar i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--c,var(--gold));border-radius:3px}
+.wbar span{text-align:right;font-variant-numeric:tabular-nums}
+.stat{display:grid;grid-template-columns:76px 1fr 40px;align-items:center;gap:8px}
+.stat .n{font-size:13px;font-weight:700}
+.stat .n small{display:block;font-weight:400;font-size:10.5px;color:var(--gold)}
+.stat .bar{height:8px;border-radius:4px;background:var(--surface3);position:relative;overflow:hidden}
+.stat .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--text-secondary);border-radius:4px}
+.stat .bar i.add{background:var(--gold)}
+.stat button{font:inherit;font-size:18px;line-height:1;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:8px;height:32px;cursor:pointer}
+.stat button:disabled{color:var(--text-dim);cursor:default}
+.stat .v{font-family:var(--fd);font-size:22px;text-align:right}
+.ovr{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:12px;padding:10px 14px}
+.ovr .big{font-family:var(--fd);font-size:44px;color:var(--gold);line-height:1}
+.pts{font-size:13px;color:var(--text-secondary)}
+.pts b{color:var(--text);font-size:16px}
+
+/* 3페이지 구단 */
+.me{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;background:var(--surface);border:1px solid var(--border-bright);border-radius:14px;padding:12px}
+.me .v{font-family:var(--fd);font-size:28px;color:var(--gold);line-height:1.1}
+.me .l{font-size:11px;color:var(--text-secondary)}
+.club{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1.5px solid var(--border-bright);border-radius:14px;padding:12px;cursor:pointer;width:100%}
+.club[aria-pressed=true]{border-color:var(--gold);background:rgba(200,168,75,.08)}
+.crest{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:18px;color:#fff}
+.club .nm{font-weight:700;font-size:15px}
+.club .meta{font-size:11.5px;color:var(--text-secondary);margin-top:2px}
+.club .tag{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.5px}
+.rep{text-align:right}
+.rep .r{font-family:var(--fd);font-size:24px;line-height:1}
+.chance{font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;display:inline-block;margin-top:3px}
+.chance.low{color:var(--loss);background:rgba(239,68,68,.14)}
+.chance.mid{color:var(--amber);background:rgba(245,158,11,.14)}
+.chance.high{color:var(--green);background:rgba(34,197,94,.14)}
+.grow{display:flex;gap:4px;margin-top:6px;align-items:center;font-size:10.5px;color:var(--text-secondary)}
+.grow i{width:10px;height:5px;border-radius:2px;background:var(--surface3)}
+.grow i.on{background:var(--green)}
+.list{display:flex;flex-direction:column;gap:8px}
+.season-no{font-family:var(--fd);font-size:20px;letter-spacing:1px;color:var(--text-secondary)}
+.hc{background:linear-gradient(135deg,#c40004 0%,#3a0102 100%);border-radius:16px;padding:14px;color:#fff;display:flex;flex-direction:column;gap:12px}
+.hc-top{display:flex;align-items:center;gap:12px}
+.hc-n{font-size:19px;font-weight:700;line-height:1.2}
+.hc-n span{font-family:var(--fd);font-weight:400;color:var(--gold);font-size:20px}
+.hc-s{font-size:12px;color:rgba(255,255,255,.75);margin-top:2px}
+.hc-o{text-align:center;line-height:1}
+.hc-o b{display:block;font-family:var(--fd);font-size:44px;font-weight:400;color:var(--gold)}
+.hc-o span{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.75)}
+.hc-st{display:grid;gap:5px}
+.hc-st>div{display:grid;grid-template-columns:62px 1fr 26px;align-items:center;gap:8px;font-size:11.5px}
+.hc-st span{color:rgba(255,255,255,.8)}
+.hc-st i{height:5px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden}
+.hc-st em{display:block;height:100%;background:#fff;border-radius:3px;transition:width .5s}
+.hc-st b{text-align:right;font-variant-numeric:tabular-nums}
+.loanc{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px}
+.rs{display:grid;grid-template-columns:repeat(5,1fr);text-align:center}
+.rs b{display:block;font-family:var(--fd);font-size:26px;font-weight:400;line-height:1.1}
+.rs span{font-size:11px;color:var(--text-secondary)}
+.dovr{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--text-secondary)}
+.dovr b{font-family:var(--fd);font-size:24px;font-weight:400;color:var(--text);flex:1}
+.dovr em{font-style:normal;font-family:var(--fd);font-size:26px}
+.dovr.up em{color:var(--green)} .dovr.down em{color:var(--loss)}
+.dst{display:flex;flex-wrap:wrap;gap:6px}
+.dst span{font-size:12px;border-radius:999px;padding:4px 10px;background:var(--surface2);color:var(--text-secondary)}
+.dst span.up{color:var(--green);background:rgba(34,197,94,.12)} .dst span.down{color:var(--loss);background:rgba(239,68,68,.12)}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badges span{font-size:12.5px;font-weight:700;border-radius:999px;padding:5px 11px;background:rgba(200,168,75,.15);color:var(--gold)}
+.badges span.nt{background:rgba(34,197,94,.13);color:var(--green)}
+.badges span.s{outline:1.5px solid var(--gold)}
+.badges span.aw{background:rgba(96,165,250,.15);color:#60A5FA}
+.notes{margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:var(--text-secondary)}
+.hist summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none;font-size:14px}
+.hist summary span{font-size:12px;color:var(--text-secondary)}
+.hist summary::-webkit-details-marker{display:none}
+.hrow{display:grid;grid-template-columns:34px 1fr 36px 30px 34px 34px;gap:6px;font-size:12.5px;padding:6px 2px;border-top:1px solid rgba(255,255,255,.06);font-variant-numeric:tabular-nums}
+.hrow span:not(:nth-child(2)){text-align:right} .hrow span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow.h{color:var(--text-secondary);font-size:11px;border-top:0}
+.mockbtn{align-self:center;border-style:dashed;color:var(--amber);border-color:rgba(245,158,11,.5);background:none}
+.btn.ghost2{background:var(--surface2);border:1px solid var(--border-bright);color:var(--text);flex:0 0 32%}
+.done2{text-align:center}
+.score{margin-top:6px;background:rgba(0,0,0,.25);border-radius:12px;padding:10px;display:flex;justify-content:space-between;align-items:center}
+.score span{font-size:12px;color:rgba(255,255,255,.8)} .score b{font-family:var(--fd);font-size:34px;font-weight:400;color:var(--gold)}
+.lg{display:grid;grid-template-columns:100px 1fr 46px;gap:8px;align-items:center;font-size:12.5px}
+.lg i{height:6px;border-radius:3px;background:var(--surface3);overflow:hidden} .lg em{display:block;height:100%;background:var(--red)}
+.lg b{text-align:right;color:var(--text-secondary);font-weight:400}
+.hidden{display:none!important}
+.done{text-align:center}
+.done .big{font-family:var(--fd);font-size:40px;color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="dock"><div class="in" id="dock"></div></div>
+
+<script>
+// ── 목업 데이터 ─────────────────────────────────────────────────────────
+var NATIONS=[
+ {id:'ENG',n:'잉글랜드',f:'🏴'},{id:'ESP',n:'스페인',f:'🇪🇸'},{id:'GER',n:'독일',f:'🇩🇪'},{id:'ITA',n:'이탈리아',f:'🇮🇹'},
+ {id:'FRA',n:'프랑스',f:'🇫🇷'},{id:'POR',n:'포르투갈',f:'🇵🇹'},{id:'NED',n:'네덜란드',f:'🇳🇱'},{id:'BEL',n:'벨기에',f:'🇧🇪'},
+ {id:'BRA',n:'브라질',f:'🇧🇷'},{id:'ARG',n:'아르헨티나',f:'🇦🇷'},{id:'NOR',n:'노르웨이',f:'🇳🇴'},{id:'KOR',n:'대한민국',f:'🇰🇷'},
+ {id:'JPN',n:'일본',f:'🇯🇵'},{id:'USA',n:'미국',f:'🇺🇸'},{id:'NGA',n:'나이지리아',f:'🇳🇬'}];
+// 구단 명성(1~100) — 실제 구현 때는 국가별 6~10개로 늘린다. c: 엠블럼 대신 쓰는 색
+var CLUBS={
+ ENG:[['맨체스터 시티',95,'#6CABDD'],['아스날',92,'#EF0107'],['리버풀',92,'#C8102E'],['첼시',86,'#034694'],['토트넘',84,'#132257'],['뉴캐슬',82,'#241F20'],['애스턴 빌라',80,'#670E36'],['브라이튼',76,'#0057B8'],['풀럼',70,'#222'],['리즈',64,'#1D428A'],['선덜랜드',60,'#EB172B'],['코번트리',52,'#59A9E2']],
+ ESP:[['레알 마드리드',96,'#FEBE10'],['바르셀로나',93,'#A50044'],['아틀레티코',88,'#CB3524'],['아틀레틱 빌바오',78,'#EE2523'],['레알 소시에다드',76,'#0067B1'],['비야레알',75,'#FFE667'],['베티스',73,'#0BB363'],['셀타',66,'#8AC3EE'],['라스 팔마스',55,'#FFE400']],
+ GER:[['바이에른 뮌헨',95,'#DC052D'],['레버쿠젠',87,'#E32221'],['도르트문트',86,'#FDE100'],['라이프치히',83,'#DD0741'],['프랑크푸르트',77,'#E1000F'],['프라이부르크',72,'#000'],['볼프스부르크',70,'#65B32E'],['함부르크',58,'#0A3F86']],
+ ITA:[['인터 밀란',91,'#0068A8'],['유벤투스',88,'#000'],['AC 밀란',87,'#FB090B'],['나폴리',87,'#12A0D7'],['아탈란타',82,'#1E71B8'],['로마',80,'#8E1F2F'],['라치오',77,'#87D8F7'],['볼로냐',73,'#1A2F48'],['파르마',60,'#FFDD00']],
+ FRA:[['파리 생제르맹',94,'#004170'],['마르세유',80,'#2FAEE0'],['모나코',79,'#E7292A'],['릴',76,'#E01E13'],['리옹',75,'#14387F'],['랑스',72,'#FFD500'],['렌',70,'#E13327'],['낭트',62,'#FCD405']],
+ POR:[['벤피카',84,'#E83030'],['포르투',84,'#003F87'],['스포르팅',83,'#008057'],['브라가',74,'#DB0B19'],['비토리아',64,'#111']],
+ NED:[['PSV',82,'#ED1C24'],['아약스',82,'#D2122E'],['페예노르트',81,'#E30613'],['AZ',72,'#DB0021'],['트벤테',68,'#E11F26'],['위트레흐트',63,'#ED1C24']],
+ BEL:[['브뤼헤',78,'#0076C0'],['안데를레흐트',73,'#4C2A84'],['헹크',72,'#004F9F'],['헨트',68,'#00539C'],['스탕다르',62,'#E30613']],
+ BRA:[['플라멩구',80,'#C52613'],['파우메이라스',79,'#006437'],['상파울루',73,'#E30613'],['보타포구',73,'#111'],['산투스',66,'#111'],['그레미우',68,'#0D80BF']],
+ ARG:[['리버 플레이트',79,'#E30613'],['보카 주니어스',78,'#103F79'],['라싱',70,'#7FB2E5'],['인데펜디엔테',66,'#E30613'],['벨레스',64,'#1A4D9C']],
+ NOR:[['보되/글림트',72,'#FFDD00'],['몰데',66,'#1E4A8D'],['로센보리',64,'#111'],['브란',60,'#E30613']],
+ KOR:[['울산 HD',62,'#1D4E9E'],['전북 현대',62,'#0F6E3D'],['포항',58,'#E30613'],['FC 서울',58,'#C41230'],['수원 삼성',50,'#1D3F8F']],
+ JPN:[['비셀 고베',62,'#A50034'],['가와사키',61,'#0076C0'],['요코하마 FM',61,'#004097'],['가시마',60,'#B71C24'],['우라와',60,'#E60012']],
+ USA:[['LA 갤럭시',64,'#00245D'],['인터 마이애미',66,'#F7B5CD'],['LAFC',63,'#111'],['시애틀',60,'#5D9741'],['뉴욕 레드불스',58,'#ED1E36']],
+ NGA:[['에님바',48,'#111'],['리버스 유나이티드',47,'#0B5394'],['로비 스타스',45,'#1B7F3A']]};
+var NAMES={
+ ENG:[['해리','잭','올리버','찰리','조지','메이슨'],['스미스','워커','브라운','테일러','라이트','홀']],
+ ESP:[['파블로','알바로','하비','마르크','이케르','세르히오'],['가르시아','로페스','마르티네스','페르난데스','루이스','모레노']],
+ GER:[['루카스','요나스','레온','팀','파울','니코'],['뮐러','슈미트','베버','바그너','호프만','콜러']],
+ ITA:[['로렌초','마테오','페데리코','안드레아','니콜로','다비데'],['로시','비안키','콜롬보','리치','마리니','갈로']],
+ FRA:[['위고','루카','테오','마티스','킬리안','노아'],['마르탱','베르나르','뒤부아','르루아','모로','지라르']],
+ POR:[['주앙','디오구','곤사우','후벵','티아구','페드루'],['실바','산투스','페헤이라','코스타','멘드스','올리베이라']],
+ NED:[['다안','셈','루크','팀','밀랑','예스퍼'],['더용','얀선','더프리스','바커','피서르','스밋']],
+ BEL:[['아르튀르','루이','빅토르','쥘','로망','막심'],['페터르스','얀선스','마스','클라스','빌렘스','고센스']],
+ BRA:[['가브리엘','루카스','마테우스','이고르','비니시우스','엔드릭'],['산투스','올리베이라','소자','페헤이라','리마','아우베스']],
+ ARG:[['산티아고','마테오','훌리안','니콜라스','토마스','엔소'],['곤살레스','로드리게스','페레스','디아스','소사','알바레스']],
+ NOR:[['올레','마그누스','시구르','에밀','토르','라스'],['한센','요한센','올센','라르센','베르그','할보르센']],
+ KOR:[['민준','서준','도윤','지호','현우','태오'],['김','이','박','최','정','강']],
+ JPN:[['하루토','소타','렌','유토','다이키','카이토'],['사토','스즈키','다카하시','다나카','이토','와타나베']],
+ USA:[['타일러','제이든','라이언','오웬','콜','브랜든'],['존슨','윌리엄스','밀러','데이비스','앤더슨','클라크']],
+ NGA:[['치디','에메카','빅터','사무엘','이페아니','오비'],['오코예','은와추쿠','아데예미','오볼라','에제','오니에카']]};
+var ACCOUNT_NICK='강예슬';   // 목업: 로그인한 계정명이라고 가정
+
+// 포지션별 주요 스탯 5개
+var STATS={
+ FW:['결정력','드리블','스피드','오프더볼','패스'],
+ MF:['패스','시야','볼키핑','체력','태클'],
+ DF:['태클','대인마크','공중볼','스피드','빌드업']};
+var POS=[{id:'FW',n:'공격수',d:'골과 찬스를 만든다'},{id:'MF',n:'미드필더',d:'경기를 조율한다'},{id:'DF',n:'수비수',d:'골문을 지킨다'}];
+// 카드: 스탯별 성장 가중치(×) — 순서는 STATS와 같음
+var CARDS={
+ FW:[
+  {n:'윙어',d:'측면을 파고드는 속도형',w:[1.0,1.4,1.5,0.8,0.8]},
+  {n:'인사이드 포워드',d:'안쪽으로 접고 들어와 마무리',w:[1.4,1.3,1.1,1.0,0.7]},
+  {n:'포처',d:'박스 안 한 방',w:[1.6,0.8,1.0,1.4,0.6]},
+  {n:'타깃맨',d:'버티고 떨궈 주는 최전방',w:[1.3,0.7,0.7,1.3,1.1]},
+  {n:'펄스나인',d:'내려와서 판을 짜는 9번',w:[1.1,1.2,0.8,0.9,1.5]}],
+ MF:[
+  {n:'박스투박스',d:'공수 양쪽을 오가는 엔진',w:[1.0,0.8,1.0,1.6,1.2]},
+  {n:'공격형 미드필더',d:'마지막 패스를 찌르는 10번',w:[1.3,1.5,1.2,0.8,0.6]},
+  {n:'메짤라',d:'하프스페이스로 침투하는 8번',w:[1.2,1.1,1.3,1.2,0.8]},
+  {n:'딥라잉 플레이메이커',d:'뒤에서 템포를 잡는 레지스타',w:[1.5,1.4,1.1,0.8,0.9]},
+  {n:'수비형 미드필더',d:'포백 앞을 지키는 앵커',w:[1.1,0.8,0.9,1.2,1.6]}],
+ DF:[
+  {n:'센터백',d:'몸으로 막는 전통적 수비수',w:[1.4,1.4,1.4,0.8,0.7]},
+  {n:'볼플레잉 센터백',d:'후방 빌드업의 시작점',w:[1.1,1.2,1.0,0.9,1.6]},
+  {n:'스위퍼',d:'뒷공간을 커버하는 리베로',w:[1.2,1.0,0.9,1.3,1.3]},
+  {n:'풀백',d:'측면 수비가 우선',w:[1.3,1.4,0.9,1.2,0.9]},
+  {n:'윙백',d:'측면을 끝까지 오르내린다',w:[0.9,0.9,0.8,1.6,1.2]},
+  {n:'인버티드 풀백',d:'안쪽으로 들어와 미드필더처럼',w:[1.0,1.0,0.8,1.1,1.6]}]};
+
+var BASE=40, POOL=50, MAXADD=20;
+var S={step:1, name:'', nation:null, foot:null, pos:null, num:null, dream:null, card:null, add:[0,0,0,0,0], club:null};
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function randName(){
+  var nm=NAMES[S.nation||'ENG'];
+  return S.nation==='KOR' ? pick(nm[1])+pick(nm[0]) : S.nation==='JPN' ? pick(nm[1])+' '+pick(nm[0]) : pick(nm[0])+' '+pick(nm[1]);
+}
+// 오버롤 = 카드 성장 가중치의 세제곱으로 가중 평균(핵심 스탯이 오버롤을 거의 결정한다 — 윙어는 스피드·드리블, 포처는 결정력·오프더볼).
+function ovrW(w){ return w.map(function(x){ return x*x*x; }); }
+function ovrOf(st,w){ var w3=ovrW(w), t=0, sw=0; for(var i=0;i<5;i++){ t+=st[i]*w3[i]; sw+=w3[i]; } return Math.round(t/sw); }
+function ovr(){ if(S.card==null) return 50; return ovrOf(S.add.map(function(a){ return BASE+a; }), CARDS[S.pos][S.card].w); }
+function used(){ return S.add.reduce(function(a,b){return a+b;},0); }
+function stepsHtml(){ return '<div class="steps">'+[1,2,3].map(function(k){return '<i class="'+(k<=S.step?'on':'')+'"></i>';}).join('')+'</div>'; }
+function topHtml(back){ return '<div class="top">'+(back?'<button class="back" onclick="go('+(S.step-1)+')">← 이전</button>':'<button class="back">← 게임 목록</button>')+stepsHtml()+'</div>'; }
+
+function go(n){ if(n<3){ S._offers=null; S.club=null; } S.step=n; render(); window.scrollTo(0,0); }
+function render(){ [null,page1,page2,page3,page4][S.step](); }
+
+// ── 1페이지: 기본 정보 ────────────────────────────────────────────────
+function page1(){
+  var allClubs=[]; NATIONS.forEach(function(n){ (CLUBS[n.id]||[]).forEach(function(c){ allClubs.push([n.n,c[0],c[1]]); }); });
+  document.getElementById('app').innerHTML=topHtml(false)
+   +'<h1>CAREER <span>MODE</span></h1><p class="sub">1 / 3 · 선수 만들기</p>'
+   +'<div class="mock">목업이에요. 선택·계산은 화면 확인용이고 저장되지 않아요.</div>'
+   +'<div class="panel"><div class="age"><b>15</b>세에 시작해요 · 유스팀부터 은퇴까지</div>'
+   +'<div class="lbl"><b>이름</b><span>최대 12자</span></div>'
+   +'<div class="row"><input type="text" id="nm" maxlength="12" placeholder="선수 이름" value="'+esc(S.name)+'" oninput="S.name=this.value;dock1()">'
+   +'<button class="chip" onclick="S.name=randName();page1()">🎲 랜덤</button><button class="chip" onclick="S.name=ACCOUNT_NICK;page1()">내 계정명</button></div>'
+   +'<p class="note">랜덤 이름은 고른 국적에 맞는 이름으로 나와요.</p></div>'
+   +'<div class="panel"><div class="lbl"><b>국적</b><span>대표팀 경쟁 난이도가 달라요</span></div>'
+   +'<select onchange="S.nation=this.value||null;dock1()"><option value="">국적 선택</option>'
+   +NATIONS.map(function(n){ return '<option value="'+n.id+'"'+(S.nation===n.id?' selected':'')+'>'+n.f+' '+n.n+'</option>'; }).join('')+'</select></div>'
+   +'<div class="panel"><div class="lbl"><b>주발</b></div><div class="seg">'
+   +['오른발','왼발'].map(function(f){ return '<button class="chip" aria-pressed="'+(S.foot===f)+'" onclick="S.foot=\''+f+'\';page1()">'+f+'</button>'; }).join('')+'</div></div>'
+   +'<div class="panel"><div class="lbl"><b>포지션</b></div><div class="seg" style="--n:3">'
+   +POS.map(function(p){ return '<button class="chip" aria-pressed="'+(S.pos===p.id)+'" onclick="if(S.pos!==\''+p.id+'\'){S.card=null;S.add=[0,0,0,0,0];}S.pos=\''+p.id+'\';page1()">'+p.n+'</button>'; }).join('')+'</div>'
+   +(S.pos?'<p class="note">'+POS.filter(function(p){return p.id===S.pos;})[0].d+' · 주요 스탯: '+STATS[S.pos].join(' / ')+'</p>':'')+'</div>'
+   +'<div class="panel"><div class="lbl"><b>희망 등번호</b><span>1~99</span></div>'
+   +'<input type="text" inputmode="numeric" maxlength="2" placeholder="예: 7" value="'+(S.num||'')+'" oninput="this.value=this.value.replace(/\\D/g,\'\');var n=+this.value;S.num=n>=1&&n<=99?n:null;dock1()">'
+   +'<p class="note">1군에 올라갈 때 그 번호가 비어 있으면 받아요. 주인이 있으면 다른 번호로 뛰다가 비면 다시 노릴 수 있어요.</p></div>'
+   +'<div class="panel"><div class="lbl"><b>꿈의 구단</b><span>커리어 중 이 팀 제안엔 보너스</span></div>'
+   +'<select onchange="S.dream=this.value||null;dock1()"><option value="">고르지 않음</option>'
+   +allClubs.map(function(c){ return '<option'+(S.dream===c[1]?' selected':'')+' value="'+esc(c[1])+'">'+esc(c[0]+' · '+c[1])+'</option>'; }).join('')+'</select></div>';
+  dock1();
+}
+function dock1(){
+  var ok=S.name.trim() && S.nation && S.foot && S.pos && S.num;
+  var miss=[!S.name.trim()&&'이름',!S.nation&&'국적',!S.foot&&'주발',!S.pos&&'포지션',!S.num&&'등번호'].filter(Boolean);
+  document.getElementById('dock').innerHTML='<div class="sum">'+(ok?'준비 완료':'남은 항목')+'<br>'+(ok?'':miss.join(' · '))+'</div><button class="btn" '+(ok?'':'disabled')+' onclick="go(2)">다음 · 선수 유형</button>';
+}
+
+// ── 2페이지: 선수 유형 카드 + 스탯 배분 ────────────────────────────────
+function page2(){
+  var st=STATS[S.pos], cards=CARDS[S.pos];
+  var h=topHtml(true)+'<h1>PLAYER <span>TYPE</span></h1><p class="sub">2 / 3 · 카드마다 시작 스탯과 성장 속도가 달라요</p>'
+   +'<div class="cards">'+cards.map(function(c,k){
+     return '<button class="card" aria-pressed="'+(S.card===k)+'" onclick="S.card='+k+';autoPts()"><div class="t">'+c.n+'</div><div class="d">'+c.d+'</div>'
+      +c.w.map(function(w,i){ return '<div class="wbar"><span style="text-align:left">'+st[i]+'</span><i style="--w:'+Math.round((w-0.5)/1.1*100)+'%;--c:'+(w>=1.3?'var(--gold)':w<=0.8?'var(--text-dim)':'var(--text-secondary)')+'"></i><span>×'+w.toFixed(1)+'</span></div>'; }).join('')
+      +'</button>'; }).join('')+'</div>';
+  if(S.card!=null){
+    var w=cards[S.card].w;
+    h+='<div class="panel"><div class="lbl"><b>'+cards[S.card].n+' 시작 스탯</b><span>카드에 따라 자동으로 정해져요</span></div>'
+     +st.map(function(n,i){
+       var v=BASE+S.add[i];
+       return '<div class="stat"><div class="n">'+n+'<small>성장 ×'+w[i].toFixed(1)+'</small></div>'
+        +'<div class="bar"><i style="width:'+BASE+'%"></i><i class="add" style="left:'+BASE+'%;width:'+S.add[i]+'%"></i></div>'
+        +'<div class="v">'+v+'</div></div>'; }).join('')
+     +'<p class="note">시작 스탯도 성장 속도도 카드의 강점(금색)을 따라가요. 같은 카드면 누구나 같은 스탯으로 시작해요.</p>'
+     +'<div class="ovr"><div><div style="font-size:12px;color:var(--text-secondary)">시작 오버롤</div><div style="font-size:12px;color:var(--text-secondary)">최대 99까지 성장</div></div><div class="big">'+ovr()+'</div></div></div>';
+  }
+  document.getElementById('app').innerHTML=h;
+  var ok=S.card!=null;
+  document.getElementById('dock').innerHTML='<div class="sum">오버롤<b>'+(ok?ovr():'—')+'</b></div><button class="btn" '+(ok?'':'disabled')+' onclick="go(3)">'+(ok?'다음 · 첫 구단':'카드를 골라 주세요')+'</button>';
+}
+function autoPts(){
+  // 카드의 성장 가중치에 비례해 보너스 50을 나눈다(강점과 약점이 확실히 갈리도록 가중치에서 0.7을 뺀 값 기준).
+  var w=CARDS[S.pos][S.card].w, adj=w.map(function(x){ return Math.max(0.05,x-0.7); }), tot=adj.reduce(function(a,b){return a+b;},0);
+  S.add=adj.map(function(x){ return Math.min(MAXADD,Math.floor(POOL*x/tot)); });
+  var order=w.map(function(x,j){return j;}).sort(function(a,b){return w[b]-w[a];}), i=0;
+  while(used()<POOL && i<200){ var k=order[i%5]; if(S.add[k]<MAXADD) S.add[k]++; i++; }
+  page2();
+}
+
+// ── 3페이지: 첫 구단(유스) 선택 ───────────────────────────────────────
+// 내 명성 = 오버롤 기반(+활약 보너스는 시즌이 지나며 붙는다). 15세는 유스 기준이라 구단 명성에서 30을 빼고 비교한다.
+var YOUTH_GAP=30;
+function myRep(){ return ovr()+5; }
+function chanceOf(clubRep){
+  var gap=(clubRep-YOUTH_GAP)-myRep();
+  var p=1/(1+Math.exp(gap/7));   // 0 차이 ≈ 50%, +20 ≈ 5%, -20 ≈ 95%
+  return {p:p, k:p<0.3?'low':p<0.65?'mid':'high', t:p<0.3?'출전 기회 낮음':p<0.65?'출전 기회 보통':'출전 기회 높음'};
+}
+// 첫 구단은 자국 구단 3곳: 도전(명성 높음) / 적정(내 명성과 비슷) / 안정(명성 낮음)
+function offers(){
+  if(S._offers) return S._offers;
+  var me=myRep()+YOUTH_GAP;
+  var home=(CLUBS[S.nation]||[]).slice().sort(function(a,b){ return b[1]-a[1]; });   // 명성 높은 순
+  var mid=0; home.forEach(function(c,i){ if(Math.abs(c[1]-me)<Math.abs(home[mid][1]-me)) mid=i; });
+  // 가운데를 기준으로 위·아래 한 칸씩. 끝에 걸리면 반대쪽으로 밀어서 늘 세 곳을 채운다.
+  mid=Math.max(1,Math.min(home.length-2,mid));
+  var out=[{c:home[mid-1],kind:'도전'},{c:home[mid],kind:'적정'},{c:home[mid+1],kind:'안정'}].filter(function(o){ return o.c; });
+  out.forEach(function(o){ o.nation=S.nation; });
+  return (S._offers=out);
+}
+function page3(){
+  var list=offers(), nat={}; NATIONS.forEach(function(n){ nat[n.id]=n; });
+  document.getElementById('app').innerHTML=topHtml(true)
+   +'<h1>FIRST <span>CLUB</span></h1><p class="sub">3 / 3 · '+nat[S.nation].n+' 유스팀 세 곳에서 제안이 왔어요</p>'
+   +'<div class="me"><div><div class="v">'+ovr()+'</div><div class="l">오버롤</div></div><div><div class="v" style="font-family:var(--fb);font-size:15px;font-weight:700;line-height:1.9">'+CARDS[S.pos][S.card].n+'</div><div class="l">유형</div></div><div><div class="v">15</div><div class="l">나이</div></div></div>'
+   +'<p class="note">큰 구단일수록 출전 기회는 적지만, 뛰기만 하면 훨씬 크게 성장해요. 작은 구단은 자주 뛰는 대신 성장 폭이 작아요. 명성 수치는 공개하지 않아요.</p>'
+   +'<div class="list">'+list.map(function(o,k){
+     var c=o.c, ch=chanceOf(c[1]), lvl=Math.max(1,Math.min(5,Math.round((c[1]-40)/11))), dream=S.dream===c[0];
+     var g=''; for(var i=1;i<=5;i++) g+='<i class="'+(i<=lvl?'on':'')+'"></i>';
+     return '<button class="club" aria-pressed="'+(S.club===k)+'" onclick="S.club='+k+';page3()">'
+      +'<div class="crest" style="background:'+c[2]+'">'+esc(c[0].replace(/^(FC|AC) /,'').slice(0,1))+'</div>'
+      +'<div><div class="tag">'+o.kind+(dream?' · ♥ 꿈의 구단':'')+'</div>'
+      +'<div class="nm">'+esc(c[0])+' U-16</div><div class="meta">'+nat[o.nation].f+' '+nat[o.nation].n+'</div>'
+      +'<div class="grow">성장 보너스 '+g+'</div></div>'
+      +'<div class="rep"><span class="chance '+ch.k+'">'+ch.t+'</span></div></button>'; }).join('')+'</div>'
+   +'<p class="note">실제로는 출전 확률을 그대로 숫자로 보여 주지 않고 낮음·보통·높음으로만 보여 줄 생각이에요. 시드를 커리어 시작 때 정해 두어서, 되돌려 같은 선택을 하면 같은 결과가 나와요.</p>';
+  document.getElementById('dock').innerHTML='<div class="sum">선택<br>'+(S.club!=null?esc(list[S.club].c[0]):'—')+'</div><button class="btn" '+(S.club!=null?'':'disabled')+' onclick="go(4)">입단 · 커리어 시작</button>';
+}
+// ── 4페이지: 시즌 진행 ────────────────────────────────────────────────
+// 목업용 시뮬레이션. 실제로는 서버가 계산하고 상태는 암호화 토큰으로 주고받는다.
+var AGE_BASE={15:4,16:4,17:4,18:4.5,19:4.5,20:4.5,21:4,22:4,23:3.5,24:3,25:2.5,26:2,27:1.5,28:0.5,29:-0.5,30:-1,31:-1.5,32:-2,33:-2.5,34:-3,35:-3.5,36:-4,37:-4.5};
+var DECLINE={'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5,'빌드업':0.5};
+var NAT_BAR={ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
+// 수상 등급: f 명성, g 다음 시즌 성장 배율, p 커리어 점수
+var HONOR_TIER={S:{f:5,g:1.08,p:200}, A:{f:3,g:1.05,p:80}, B:{f:2,g:1.03,p:50}, C:{f:1,g:1,p:15}};
+// 국가 대표 대회: 월드컵 우승 확률(국가 강도), 대륙컵 이름과 배율
+var NAT_STR={BRA:.18,FRA:.18,ESP:.16,ARG:.16,ENG:.14,GER:.12,POR:.10,NED:.08,ITA:.08,BEL:.06,NOR:.03,JPN:.03,USA:.02,KOR:.02,NGA:.02};
+var CONT_CUP={ENG:'유로',ESP:'유로',GER:'유로',ITA:'유로',FRA:'유로',POR:'유로',NED:'유로',BEL:'유로',NOR:'유로',BRA:'코파 아메리카',ARG:'코파 아메리카',KOR:'아시안컵',JPN:'아시안컵',USA:'골드컵',NGA:'아프리카 네이션스컵'};
+var CONT_MUL={ENG:1.3,ESP:1.4,GER:1.4,ITA:1.4,FRA:1.4,POR:1.4,NED:1.5,BEL:1.6,NOR:2,BRA:2.2,ARG:2.2,KOR:6,JPN:6,USA:12,NGA:6};
+var ALL=[]; Object.keys(CLUBS).forEach(function(k){ CLUBS[k].forEach(function(c){ ALL.push({n:c[0],r:c[1],col:c[2],nat:k}); }); });
+var C=null;   // 커리어 상태
+
+// 시드 고정 난수 — 같은 시즌에 같은 선택이면 같은 결과(되돌려 다시 굴려도 소용없음)
+function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function hashStr(s){ var h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function seasonRng(extra){ return mulberry(C.seed ^ hashStr(C.age+'|'+extra)); }
+function natInfo(id){ return NATIONS.filter(function(n){return n.id===id;})[0]; }
+function clubCoef(r){ return r>=91?1.3:r>=86?1.15:r>=76?1.05:r>=61?0.95:0.85; }
+function cOvr(){ return Math.round(C.ovr); }
+// 스탯 = 오버롤 + 카드 모양(오프셋). 오버롤이 "얼마나 잘하나", 오프셋이 "어떤 선수인가"를 정한다.
+function syncSt(){ C.st=C.off.map(function(o){ return Math.max(20,Math.min(99,C.ovr+o)); }); }
+function cRep(){ return cOvr()+3+C.fame; }
+function youth(){ return C.age<18; }
+function teamName(club){ return club.n+(C.age<16?' U-16':C.age<18?' U-18':''); }
+function pStart(club, opt){
+  var gap=youth() ? (club.r-YOUTH_GAP)-cRep() : club.r-cRep();
+  var p=1/(1+Math.exp(gap/7));
+  return Math.max(0.02,Math.min(0.97,p+(opt||0)));
+}
+function chanceTag(p){ return p<0.3?['low','출전 기회 낮음']:p<0.65?['mid','출전 기회 보통']:['high','출전 기회 높음']; }
+function crest(club,size){ size=size||44; return '<div class="crest" style="width:'+size+'px;height:'+size+'px;background:'+club.col+'">'+esc(club.n.replace(/^(FC|AC) /,'').slice(0,1))+'</div>'; }
+
+function careerStart(){
+  var o=offers()[S.club];
+  var st=STATS[S.pos].map(function(_,i){ return BASE+S.add[i]; });
+  C={seed:hashStr(S.name+Date.now()), name:S.name, nation:S.nation, pos:S.pos, card:S.card, foot:S.foot, want:S.num, num:null, dream:S.dream,
+     st:st, age:15, club:{n:o.c[0],r:o.c[1],col:o.c[2],nat:S.nation}, fame:0, wf:2, phase:'prep', train:'균형', ev:null, evPick:null,
+     hist:[], tot:{apps:0,goals:0,ast:0,caps:0,cg:0}, trophies:[], awards:[], honors:[], boost:1, inUCL:false, peak:cOvrOf(st), clubs:[o.c[0]], arsenal:{apps:0,goals:0}, last:null, offers:null};
+  // 숨은 재능은 18세(1군 데뷔 시즌)에 깨어난다 — 처음부터 정해 두면 첫 시즌 성장 속도만 보고 리셋하게 된다.
+  // 유스 시절엔 모두 ×1.0, 유스에서 성실했던 만큼(youthPts) 상위 등급 확률이 조금 오른다.
+  C.talent=1.0; C.youthPts=0; C.awoken=false;
+  C.ovr=ovrOf(C.st, CARDS[C.pos][C.card].w);
+  C.off=C.st.map(function(v){ return v-C.ovr; });
+  newEvent();
+}
+function cOvrOf(st){ return ovrOf(st, CARDS[S.pos][S.card].w); }
+
+// 시즌 이벤트(시즌마다 하나)
+var EVENTS=[
+  {id:'talk', t:'감독 면담', d:'출전 시간이 부족하다고 느껴요. 어떻게 할까요?', a:['출전 시간을 요구한다','훈련으로 증명한다'], ok:function(){ return !youth(); }},
+  {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑)','지금은 괜찮다'], ok:function(){ return true; }},
+  {id:'tour', t:'프리시즌 투어', d:'감독이 투어 전 경기 출전을 원해요. 컨디션이 걱정돼요.', a:['모두 뛴다 (눈도장)','컨디션 관리'], ok:function(){ return !youth(); }},
+  {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 넘치게','겸손하게'], ok:function(){ return C.age>=17; }},
+  {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:function(){ return C.age>=17&&C.age<=22&&C.last&&C.last.starts/Math.max(1,C.last.games)<0.35; }},
+  {id:'weak', t:'약발 훈련', d:'', a:['약발 집중 훈련','주발 강점 살리기'], ok:function(){ return false; }},   // newEvent가 가끔 따로 띄운다
+  {id:'extra', t:'유스 특별 훈련', d:'유스 코치가 방과 후 특별 훈련을 제안했어요.', a:['참가한다 (성장 ↑)','쉬면서 회복'], ok:function(){ return youth(); }}];
+function stars(n,plain){ var t=''; for(var i=1;i<=5;i++) t+=i<=n?'★':'☆'; if(plain) return t; return '<span style="color:var(--gold);letter-spacing:1px">'+t+'</span>'; }
+function newEvent(){
+  var r=mulberry(C.seed ^ hashStr('ev'+C.age))(), pool=EVENTS.filter(function(e){ return e.ok(); });
+  var loan=pool.filter(function(e){return e.id==='loan';})[0];
+  C.ev = loan || pool[Math.floor(r*pool.length)];
+  // 약발 훈련: 공격수·미드필더, 20세까지, 시즌당 30% 확률로 가끔 뜬다
+  var r2=mulberry(C.seed ^ hashStr('wf'+C.age))();
+  if(!loan && (C.pos==='FW'||C.pos==='MF') && C.age<=20 && C.wf<5 && r2<0.3) C.ev=EVENTS.filter(function(e){return e.id==='weak';})[0];
+  C.evPick=null; C.train=C.train||'균형'; C.loanClub=null;
+  if(C.ev.id==='loan'){
+    var cands=ALL.filter(function(c){ return c.nat===C.club.nat && c.r<=C.club.r-10 && c.r>=C.club.r-22; });
+    if(!cands.length) cands=ALL.filter(function(c){ return c.r<C.club.r-8; });
+    C.loanClub=cands[Math.floor(r*cands.length)]||null;
+    if(!C.loanClub){ C.ev=EVENTS[1]; }
+  }
+}
+
+function page4(){
+  if(!C) careerStart();
+  ({prep:pPrep, result:pResult, retired:pRetired})[C.phase]();
+  window.scrollTo(0,0);
+}
+function headCard(){
+  var o=cOvr(), st=STATS[C.pos], card=CARDS[C.pos][C.card];
+  return '<div class="hc">'
+   +'<div class="hc-top">'+crest(C.club,40)+'<div style="flex:1;min-width:0"><div class="hc-n">'+esc(C.name)+(C.num?' <span>#'+C.num+'</span>':'')+'</div>'
+   +'<div class="hc-s">'+C.age+'세 · '+esc(teamName(C.club))+' · '+card.n+'</div>'
+   +'<div class="hc-s">'+C.foot+(C.pos!=='DF'?' · 약발 '+stars(C.wf):'')+'</div></div>'
+   +'<div class="hc-o"><b>'+o+'</b><span>OVR</span></div></div>'
+   +'<div class="hc-st">'+st.map(function(n,i){ var v=Math.round(C.st[i]); return '<div><span>'+n+'</span><i><em style="width:'+v+'%"></em></i><b>'+v+'</b></div>'; }).join('')+'</div></div>';
+}
+function goalText(){
+  if(C.age<16) return '유스 무대에 적응하기';
+  if(C.age<18) return cOvr()>=C.club.r-22 ? '1군 데뷔 노리기' : 'U-18 주전 자리 잡기';
+  var p=pStart(C.club);
+  return p<0.3?'1군에서 출전 기회 잡기':p<0.65?'로테이션 멤버로 자리 잡기':'팀의 핵심으로 활약하기';
+}
+function pPrep(){
+  var ev=C.ev;
+  if(ev.id==='weak') ev.d='코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. 양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요. 대신 이번 시즌 다른 훈련 시간이 줄어요.'
+    +'<div class="note" style="margin-top:6px">지금 약발 '+stars(C.wf)+'</div>';
+  document.getElementById('app').innerHTML=
+    '<div class="top"><button class="back">← 게임 목록</button><div class="season-no">시즌 '+(C.hist.length+1)+'</div></div>'
+   +headCard()
+   +'<div class="panel"><div class="lbl"><b>이번 시즌 목표</b></div><div style="font-size:15px">'+goalText()+'</div>'
+   +'<div class="note">'+(youth()?'유스 시즌이라 출전 기회는 유스팀 기준이에요.':'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
+   +'<div class="panel"><div class="lbl"><b>훈련 방향</b><span>오른 만큼이 스탯에 나뉘는 방식</span></div><div class="seg" style="--n:3">'
+   +['강점 강화','균형','약점 보완'].map(function(t){ return '<button class="chip" aria-pressed="'+(C.train===t)+'" onclick="C.train=\''+t+'\';pPrep()">'+t+'</button>'; }).join('')+'</div></div>'
+   +'<div class="panel"><div class="lbl"><b>'+ev.t+'</b><span>이벤트</span></div><div style="font-size:14px;line-height:1.5">'+ev.d
+   +(ev.id==='loan'&&C.loanClub?'<div class="loanc">'+crest(C.loanClub,30)+'<div><b>'+esc(C.loanClub.n)+'</b><div class="note">'+natInfo(C.loanClub.nat).f+' '+natInfo(C.loanClub.nat).n+' · 1시즌 임대</div></div><span class="chance '+chanceTag(pStart(C.loanClub))[0]+'">'+chanceTag(pStart(C.loanClub))[1]+'</span></div>':'')
+   +'</div><div class="seg">'+ev.a.map(function(t,k){ return '<button class="chip" aria-pressed="'+(C.evPick===k)+'" onclick="C.evPick='+k+';pPrep()">'+t+'</button>'; }).join('')+'</div></div>'
+   +histHtml()
+   +'<button class="chip mockbtn" onclick="autoRun(5)">목업용 · 5시즌 자동 진행</button>';
+  var ok=C.evPick!=null;
+  document.getElementById('dock').innerHTML='<div class="sum">'+C.age+'세<b>'+cOvr()+'</b></div><button class="btn" '+(ok?'':'disabled')+' onclick="playSeason()">'+(ok?'시즌 시작':'이벤트를 골라 주세요')+'</button>';
+}
+
+function playSeason(){
+  var rng=seasonRng(C.train+'|'+C.ev.id+'|'+C.evPick+'|'+C.club.n);
+  var ev=C.ev, pick=C.evPick, card=CARDS[C.pos][C.card], notes=[];
+  var club=C.club, onLoan=false, startAdj=0, growMul=1, injRisk=0.13;
+  if(ev.id==='loan' && pick===0 && C.loanClub){ club=C.loanClub; onLoan=true; notes.push(C.loanClub.n+'로 1시즌 임대를 떠났어요.'); }
+  if(ev.id==='talk'){ if(pick===0){ if(rng()<0.75){ startAdj+=0.12; notes.push('면담 후 출전 시간이 늘었어요.'); } else { startAdj-=0.1; notes.push('감독이 불쾌해해서 한동안 벤치였어요.'); } } else growMul*=1.05; }
+  if(ev.id==='coach' && pick===0){ growMul*=1.08; notes.push('개인 트레이너와 훈련한 효과가 있었어요.'); }
+  if(ev.id==='extra' && pick===0){ growMul*=1.08; }
+  if(ev.id==='weak'){
+    if(pick===0){ growMul*=0.92; if(rng()<0.75){ C.wf++; notes.push('약발 훈련 성과! 약발이 '+stars(C.wf,true)+'이 됐어요.'); } else notes.push('약발 훈련을 했지만 아직 몸에 익지 않았어요.'); }
+    else growMul*=1.03;
+  }
+  if(ev.id==='tour'){ if(pick===0){ startAdj+=0.06; injRisk+=0.07; } else injRisk-=0.05; }
+  if(ev.id==='media'){ if(pick===0){ C.fame+=1; } }
+
+  var row0Youth=youth()&&!onLoan;
+  var games=row0Youth?26:42;
+  var p=pStart(club,startAdj);
+  if(youth()&&!onLoan&&C.age===17&&cOvr()>=club.r-22){ notes.push('1군 데뷔 기회를 받았어요!'); }
+  var injured=rng()<injRisk ? Math.round(5+rng()*12) : 0;
+  if(injured) notes.push('부상으로 '+injured+'경기를 결장했어요.');
+  var avail=games-injured;
+  var starts=Math.max(0,Math.min(avail,Math.round(avail*p*(0.8+rng()*0.4))));
+  var subs=Math.min(avail-starts,Math.round((avail-starts)*(0.25+rng()*0.35)));
+  var apps=starts+subs;
+  var o=cOvr();
+  // 골·도움은 오버롤이 아니라 관련 스탯으로 계산한다(스탯 순서는 STATS와 같음).
+  //  공격수 [결정력,드리블,스피드,오프더볼,패스] / 미드 [패스,시야,볼키핑,체력,태클] / 수비 [태클,대인마크,공중볼,스피드,빌드업]
+  var FX={FW:{g:[.5,.2,0,.3,0], a:[0,.3,.2,0,.5]},
+          MF:{g:[0,.3,.4,.3,0],  a:[.5,.5,0,0,0]},
+          DF:{g:[0,0,.7,.3,0],   a:[0,0,0,.4,.6]}}[C.pos];
+  var effG=FX.g.reduce(function(t,w,i){return t+w*C.st[i];},0), effA=FX.a.reduce(function(t,w,i){return t+w*C.st[i];},0);
+  // 팀 계수: 강팀일수록 찬스가 많다(구단 명성 50 → ×0.8, 95 → ×1.2)
+  var teamF=Math.max(0.8,Math.min(1.2,0.8+0.4*(club.r-50)/45));
+  // 카드 보정은 스탯 차이와 겹치지 않게 제곱근으로 줄여서 쓴다
+  var cardG=Math.sqrt({'포처':1.35,'타깃맨':1.15,'윙어':0.8,'펄스나인':0.85,'공격형 미드필더':1.4,'메짤라':1.2,'수비형 미드필더':0.5,'윙백':1.3,'인버티드 풀백':1.2}[card.n]||1);
+  var cardA=Math.sqrt({'윙어':1.5,'펄스나인':1.5,'공격형 미드필더':1.4,'딥라잉 플레이메이커':1.2,'윙백':1.6,'풀백':1.3,'포처':0.6}[card.n]||1);
+  // 약발: ★2가 기준, 한 칸마다 골·도움 +4%(★5면 +12%). 공격수·미드필더만.
+  var wfF=(C.pos==='FW'||C.pos==='MF') ? 1+0.04*(C.wf-2) : 1;
+  var gRate=wfF*{FW:0.42,MF:0.13,DF:0.035}[C.pos]*Math.pow(effG/75,2)*cardG*teamF;
+  var aRate=wfF*{FW:0.18,MF:0.17,DF:0.06}[C.pos]*Math.pow(effA/75,2)*cardA*teamF;
+  var minsEq=starts+subs*0.3;
+  // 커리어 하이 시즌: 1군 시즌에 2% 확률로 골·도움 ×1.6
+  var hot=!row0Youth && starts>=15 && rng()<0.02;
+  var goals=Math.round(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.6:1)), ast=Math.round(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.6:1));
+  if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
+  // 평점: 내 실력(오버롤) 기준 + 팀 안에서의 위치(구단보다 잘하면 +) + 골·도움 + 운
+  var clubLv=club.r-(youth()&&!onLoan?YOUTH_GAP:0);
+  var rating=apps?Math.max(5.6,Math.min(8.9,6.45+(o-70)/17+(o-clubLv)/40+(goals+ast*0.6)/Math.max(apps,1)*0.6+(rng()-0.5)*0.5)):0;
+
+  // 성장 / 하락
+  var base=(window.__AB||AGE_BASE)[Math.min(37,C.age)], ratio=starts/Math.max(1,games), luck=0.8+rng()*0.4;
+  if(row0Youth){ if(ev.id==='extra'&&pick===0) C.youthPts++; if(ratio>=0.6) C.youthPts++; }
+  if(C.age>=18 && !C.awoken){
+    var tr=mulberry(C.seed ^ hashStr('talent'))(), b=Math.min(6,C.youthPts);
+    var pG=0.02+b*0.0017, pW=pG+0.08+b*0.005, pP=pW+0.20;   // 세대급 2~3% / 원더키드 8~11% / 유망주 20%
+    var TM=window.__TM||[1.6,1.3,1.12]; C.talent = tr<pG?TM[0] : tr<pW?TM[1] : tr<pP?TM[2] : 1.0;
+    C.awoken=true;
+  }
+  // 성장 포인트(스탯 합계 기준) = 나이 기본값×5 × 출전 × 구단 × 운 × 이벤트 × 0.75
+  // 스탯마다 따로 감쇠(99에 가까울수록 덜 오르지만 최소 50%는 오름 — 그래서 99에 닿을 수 있다).
+  // 99에 막힌 스탯 몫은 나머지 스탯으로 넘겨서 성장분이 버려지지 않게 한다.
+  var st=STATS[C.pos], w=card.w, before=C.st.slice();
+  if(base>0){
+    // 오버롤 성장: 나이 기본값 × 출전 × 구단 × 운 × 이벤트 × 숨은 재능 × K × 감쇠(99에 가까울수록 느려지지만 최소 절반 속도)
+    var DP=window.__D||[0.6,30]; var dmp=Math.min(1,Math.max(DP[0],(99-C.ovr)/DP[1]));
+    C.ovr=Math.min(99,C.ovr+C.boost*base*(0.4+0.9*ratio)*clubCoef(club.r)*luck*growMul*C.talent*(window.__K||0.74)*dmp);
+  } else {
+    // 하락기: 지난 시즌 수상 보너스가 하락폭을 줄인다(×1.10 → 하락 ×0.8)
+    C.ovr=Math.max(30,C.ovr+base*Math.max(0.5,1-(C.boost-1)*2));
+    // 하락기: 스피드·체력은 더 빨리, 패스·시야·빌드업은 더 천천히
+    C.off=C.off.map(function(o,i){ var m=DECLINE[st[i]]||1; return o+base*(m-1); });
+  }
+  // 훈련 방향은 오버롤이 아니라 "모양"을 바꾼다
+  if(C.train==='강점 강화') C.off=C.off.map(function(o,i){ return Math.min(15,o+(w[i]>=1.2?1:w[i]<=0.9?-0.5:0)); });
+  if(C.train==='약점 보완') C.off=C.off.map(function(o,i){ return Math.max(-25,o+(w[i]>=1.2?-0.5:w[i]<=0.9?1.5:0.5)); });
+  syncSt();
+  var deltas=C.st.map(function(v,i){ return Math.round(v)-Math.round(before[i]); });
+
+  // 팀 성적·우승·개인 수상 — 등급(S/A/B/C)마다 명성·다음 시즌 성장·커리어 점수가 붙는다(HONOR_TIER)
+  var top=Math.max.apply(null,ALL.filter(function(c){return c.nat===club.nat;}).map(function(c){return c.r;}));
+  // 리그 우승: 같은 리그 구단들 명성으로 나눈 확률(강팀이 여럿이면 나눠 먹는다). 못 하면 순위는 명성 차이로
+  // 표에 없는 나머지 리그 구단(약 12곳)도 분모에 넣는다 — 안 그러면 상위 구단 몇 개가 우승을 나눠 갖는다
+  var lg=ALL.filter(function(c){return c.nat===club.nat;}), lo=Math.min.apply(null,lg.map(function(c){return c.r;}))-4;
+  var z=lg.reduce(function(t,c){ return t+Math.exp(c.r/3.5); },0)+Math.max(0,20-lg.length)*Math.exp(lo/3.5);
+  var champ=rng()<Math.exp(club.r/3.5)/z;
+  var rank=champ?1:Math.max(2,Math.min(20,Math.round(1.5+(top-club.r)/2.2+(rng()-0.3)*4)));
+  var hon=[], senior=!row0Youth, natN=natInfo(club.nat).n, ov=cOvr();
+  var add=function(n,tier,kind){ hon.push({n:n,tier:tier,kind:kind||'ind'}); };
+  // 챔스: 이번 시즌 출전 여부(최상위 구단은 늘, 상위 구단은 지난 시즌 4위 안이었으면)
+  var inUCL=senior && (club.r>=86 || (club.r>=78 && C.uclNext===club.n));
+  var uG=inUCL?Math.round(goals*0.24*(0.8+rng()*0.4)):0, uA=inUCL?Math.round(ast*0.24*(0.8+rng()*0.4)):0;
+  if(senior){
+    if(rank===1 && apps>=8) add(natN+' 리그 우승','B','team');
+    if(apps>=8 && rng()<0.12*Math.pow(club.r/90,3)) add('컵 대회 우승','C','team');
+    var uclWin=inUCL && apps>=8 && rng()<0.06*Math.pow(club.r/90,4);
+    if(uclWin) add('챔피언스리그 우승','A','team');
+    if(apps>=20){
+      var gT={ENG:22,ESP:22,GER:20,ITA:20,FRA:20}[club.nat]||18, aT=gT>=20?12:10;
+      var gk=goals>=gT && rng()<Math.min(0.95,0.4+(goals-gT)*0.1), ak=ast>=aT && rng()<Math.min(0.95,0.4+(ast-aT)*0.12);
+      if(gk) add(natN+' 리그 득점왕','B'); if(ak) add(natN+' 리그 도움왕','B');
+      var poty=rating>=7.7 && rank<=3 && rng()<(gk?0.5:0.3);
+      if(poty) add(natN+' 리그 올해의 선수','A');
+      if(C.age<=23 && rating>=7.1 && rng()<0.5) add(natN+' 리그 영플레이어','C');
+      if(rating>=7.5 ? rng()<0.7 : rating>=7.3 && rng()<0.3) add(natN+' 리그 베스트 11','B');
+      var motm=0; for(var mi=0;mi<3;mi++) if(rng()<Math.max(0,rating-7.0)*0.25) motm++;
+      if(motm) add('이달의 선수'+(motm>1?' ×'+motm:''),'C');
+      if(rating>=7.3 && apps>=25 && rng()<0.4) add('구단 올해의 선수','C');
+      if(goals>=30 && rng()<0.6) add('유러피언 골든슈','A');
+    }
+    if(inUCL){
+      if(uG>=9) add('챔스 득점왕','B'); if(uA>=6) add('챔스 도움왕','B');
+      if(uclWin && rating>=7.5 && rng()<0.5) add('챔스 올해의 선수','A');
+      if(rating>=7.6 && rng()<0.2) add('챔스 올해의 '+{FW:'공격수',MF:'미드필더',DF:'수비수'}[C.pos],'B');
+    }
+    var big=hon.some(function(h){ return /리그 우승|챔피언스리그 우승|득점왕|올해의 선수/.test(h.n); });
+    if(ov>=92 && rating>=7.9 && big){
+      var bd=rng()<0.25+(ov-92)*0.08; if(bd) add('발롱도르','S');
+      if(rng()<(bd?0.7:0.15)) add('FIFA 올해의 선수','S');
+    }
+    if(ov>=89 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
+    if(C.age<=21 && ov>=80 && rating>=7.1 && rng()<0.5) add('골든보이','B');
+    if(rng()<(C.pos==='FW'?0.008:0.004)) add('올해의 골','C');
+  } else if(rng()<0.25) add('유스 리그 우승','-','team');
+  // 다음 시즌 챔스: 상위 구단이 리그 4위 안이면
+  C.uclNext = rank<=4 && club.r>=78 ? club.n : null;
+
+  // 대표팀·국제 대회(시즌이 끝난 여름: 2030년부터 4년마다 월드컵, 그 사이 2년마다 대륙컵)
+  var caps=0, cg=0, year=2026+(C.age-15)+1;
+  if(C.age>=18 && ov>=NAT_BAR[C.nation]-2){
+    caps=Math.round(4+rng()*6); cg=C.pos==='FW'?Math.round(caps*0.3*rng()):0;
+    notes.push(natInfo(C.nation).n+' 대표팀에 뽑혔어요.');
+    if(ov>=NAT_BAR[C.nation]+6 && rating>=7.0 && rng()<0.35) add(natInfo(C.nation).n+' 올해의 선수','C','nat');
+    var wc=year%4===2, cont=year%4===0;
+    if(wc||cont){
+      var cup=wc?'월드컵':CONT_CUP[C.nation], str=Math.min(0.4,NAT_STR[C.nation]*0.55*(wc?1:CONT_MUL[C.nation]));
+      caps+=Math.round(3+rng()*4);
+      if(rng()<str){ add(cup+' 우승',wc?'S':'A','nat'); if(rng()<0.3) add(cup+' 골든볼',wc?'A':'B','nat'); }
+      if(C.pos!=='DF' && rng()<0.08*Math.pow(ov/85,3)) add(cup+' 득점왕','B','nat');
+      notes.push(year+' '+cup+'에 출전했어요.');
+    }
+  }
+  else if(C.age>=16 && C.age<18 && ov>=NAT_BAR[C.nation]-22) notes.push(natInfo(C.nation).n+' 연령별 대표팀에 뽑혔어요.');
+
+  // 수상 효과: 명성·다음 시즌 성장(최대 ×1.15)
+  var boost=1, fameAdd=0;
+  hon.forEach(function(h){ var t=HONOR_TIER[h.tier]; if(!t) return; boost*=t.g; fameAdd+=t.f; });
+  C.boost=Math.min(1.15,boost);
+  var counted=hon.filter(function(h){ return h.kind!=='ind'; }).map(function(h){ return h.n; });
+  var awards=hon.filter(function(h){ return h.kind==='ind'; }).map(function(h){ return h.n; });
+  if(C.boost>1) notes.push('수상 효과로 다음 시즌 성장 ×'+C.boost.toFixed(2)+(C.age>=28?'(하락 완화)':''));
+  if(inUCL) notes.push('챔스 '+uG+'골 '+uA+'도움');
+
+  // 명성: 1군 활약 보너스(−5~+8). 유스 경기 평점으로는 쌓이지 않고, 매 시즌 0 쪽으로 1씩 줄어든다(활약을 이어가야 유지).
+  var fg=row0Youth ? 0 : (rating>=7.3?2:rating>=6.9?1:rating<6.3&&apps>5?-1:0)+fameAdd;
+  C.fame=Math.max(-5,Math.min(12,C.fame-Math.sign(C.fame)+fg));
+
+  // 1군 승격 때 등번호
+  if(!C.num && C.age>=17 && (!youth()||onLoan||apps>0&&C.age===17&&cOvr()>=club.r-22)){
+    if(rng()<0.6){ C.num=C.want; notes.push('원하던 '+C.want+'번을 받았어요.'); }
+    else { C.num=[28,31,35,41,44,47][Math.floor(rng()*6)]; notes.push(C.want+'번은 주인이 있어서 '+C.num+'번을 받았어요.'); }
+  }
+
+  // 숨은 재능 힌트: 19·20세 시즌이 끝날 때(이미 성장 속도로 티가 나는 시점) 코치·스카우트 한마디
+  if(C.age===19||C.age===20){
+    var hint={1.5:['감독: "이런 재능은 10년에 한 번 나와요."','유럽 빅클럽 스카우트들이 훈련장을 찾아오기 시작했어요.'],
+              1.25:['감독: "또래 중에선 단연 눈에 띄어요."','스카우트 리포트에 이름이 올랐어요.'],
+              1.12:['감독: "성장 속도가 좋아요. 꾸준히만 하면 돼요."','코치진이 성장세를 좋게 보고 있어요.']}[C.talent];
+    if(hint) notes.push(hint[C.age===19?0:1]);
+  }
+  var row={age:C.age, club:club.n, loan:onLoan, team:teamName(club), games:games, starts:starts, apps:apps, goals:goals, ast:ast, rating:rating, rank:rank, youth:youth()&&!onLoan,
+           ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas:deltas, trophies:counted, awards:awards, hon:hon, caps:caps, notes:notes, injured:injured};
+  C.hist.push(row); C.last=row;
+  C.tot.apps+=apps; C.tot.goals+=goals; C.tot.ast+=ast; C.tot.caps+=caps; C.tot.cg+=cg;
+  C.trophies=C.trophies.concat(counted); C.awards=C.awards.concat(awards); C.honors=C.honors.concat(hon);
+  if(/아스날/.test(club.n) && !row.youth){ C.arsenal.apps+=apps; C.arsenal.goals+=goals; }
+  C.peak=Math.max(C.peak,cOvr());
+  C.offers=makeOffers(rng, row);
+  C.phase='result'; page4();
+}
+
+function makeOffers(rng,row){
+  if(C.age<17) return [];
+  var n=row.rating>=7.2?3:row.rating>=6.8?2:row.apps>5?1:0;
+  if(rng()<0.25) n=Math.max(0,n-1);
+  // 제안은 내 명성과 비슷한 구단(±8)에서만 온다. 유스 보정(YOUTH_GAP)은 출전 확률 계산에만 쓰고 여기엔 넣지 않는다.
+  var me=cRep(), out=[];
+  var pool=ALL.filter(function(c){ return c.n!==C.club.n && c.r>=me-8 && c.r<=me+8; });
+  var kinds=[['도전',function(c){return c.r>me+3;}],['적정',function(c){return Math.abs(c.r-me)<=3;}],['안정',function(c){return c.r<me-3;}]];
+  kinds.forEach(function(k){ if(out.length>=n) return; var c=pool.filter(k[1]).filter(function(c){return out.every(function(o){return o.c.n!==c.n;});}); if(c.length){ out.push({c:c[Math.floor(rng()*c.length)], kind:k[0]}); } });
+  // 꿈의 구단은 명성이 닿을 만하면 따로 한 번 더 노크
+  var dream=ALL.filter(function(c){return c.n===C.dream;})[0];
+  if(dream && dream.n!==C.club.n && dream.r<=me+10 && out.every(function(o){return o.c.n!==dream.n;}) && rng()<0.5) out.push({c:dream, kind:dream.r>me+3?'도전':'적정', dream:true});
+  return out;
+}
+
+function pResult(){
+  var r=C.last, st=STATS[C.pos], canRetire=C.age>=29, forced=C.age>=37;
+  var dCls=r.dOvr>0?'up':r.dOvr<0?'down':'';
+  var h='<div class="top"><button class="back">← 게임 목록</button><div class="season-no">시즌 '+C.hist.length+' 결과</div></div>'
+   +headCard()
+   +'<div class="panel"><div class="lbl"><b>'+r.age+'세 시즌 · '+esc(r.team)+(r.loan?' (임대)':'')+'</b><span>'+(r.youth?'유스 리그':natInfo(ALL.filter(function(c){return c.n===r.club;})[0].nat).n+' 리그')+' '+r.rank+'위</span></div>'
+   +'<div class="rs">'+[[r.apps,'경기'],[r.starts,'선발'],[r.goals,'골'],[r.ast,'도움'],[r.apps?r.rating.toFixed(2):'—','평점']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
+   +'<div class="dovr '+dCls+'"><span>오버롤</span><b>'+r.ovrBefore+' → '+r.ovr+'</b><em>'+(r.dOvr>0?'+':'')+r.dOvr+'</em></div>'
+   +'<div class="dst">'+st.map(function(n,i){ var d=r.deltas[i]; return '<span class="'+(d>0?'up':d<0?'down':'')+'">'+n+' '+(d>0?'+':'')+d+'</span>'; }).join('')+'</div>'
+   +(r.hon.length?'<div class="badges">'+r.hon.map(function(h){ return honBadge(h); }).join('')+'</div>':'')
+   +(r.notes.length?'<ul class="notes">'+r.notes.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul>':'')
+   +'</div>';
+  if(!forced){
+    h+='<div class="panel"><div class="lbl"><b>이적시장</b><span>'+(C.offers.length?'제안 '+C.offers.length+'개':'제안 없음')+'</span></div>';
+    if(C.age<17) h+='<div class="note">17세부터 다른 구단 제안을 받을 수 있어요.</div>';
+    h+='<div class="list">'
+     +'<button class="club" aria-pressed="'+(C.pick==null)+'" onclick="C.pick=null;pResult()">'+crest(C.club)+'<div><div class="tag">잔류</div><div class="nm">'+esc(C.club.n)+'</div><div class="meta">'+natInfo(C.club.nat).f+' '+natInfo(C.club.nat).n+'</div></div>'
+     +'<div class="rep"><span class="chance '+chanceTag(pStart(C.club))[0]+'">'+chanceTag(pStart(C.club))[1]+'</span></div></button>'
+     +C.offers.map(function(o,k){ var c=o.c, ch=chanceTag(pStart(c)), lvl=Math.max(1,Math.min(5,Math.round((c.r-40)/11))), g='';
+        for(var i=1;i<=5;i++) g+='<i class="'+(i<=lvl?'on':'')+'"></i>';
+        return '<button class="club" aria-pressed="'+(C.pick===k)+'" onclick="C.pick='+k+';pResult()">'+crest(c)+'<div><div class="tag">'+o.kind+(o.dream?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+esc(c.n)+'</div>'
+          +'<div class="meta">'+natInfo(c.nat).f+' '+natInfo(c.nat).n+(c.nat!==C.nation?' · 해외':'')+'</div><div class="grow">성장 보너스 '+g+'</div></div>'
+          +'<div class="rep"><span class="chance '+ch[0]+'">'+ch[1]+'</span></div></button>'; }).join('')
+     +'</div></div>';
+  }
+  h+=histHtml();
+  document.getElementById('app').innerHTML=h;
+  document.getElementById('dock').innerHTML=forced
+    ? '<button class="btn" onclick="retire()">은퇴 · 커리어 마무리</button>'
+    : (canRetire?'<button class="btn ghost2" onclick="retire()">은퇴</button>':'')+'<button class="btn" onclick="nextSeason()">'+(C.pick!=null?C.offers[C.pick].c.n+' 이적':'다음 시즌')+'</button>';
+}
+function nextSeason(){
+  if(C.pick!=null){ var c=C.offers[C.pick].c; C.club=c; if(C.clubs.indexOf(c.n)<0) C.clubs.push(c.n); }
+  C.pick=null; C.age++; C.phase='prep'; newEvent(); page4();
+}
+function histHtml(){
+  if(!C.hist.length) return '';
+  return '<details class="panel hist"><summary><b>커리어 기록</b><span>'+C.hist.length+'시즌 · '+C.tot.apps+'경기 '+C.tot.goals+'골</span></summary><div class="hrow h">'
+   +'<span>나이</span><span>팀</span><span>경기</span><span>골</span><span>도움</span><span>OVR</span></div>'
+   +C.hist.slice().reverse().map(function(r){ return '<div class="hrow"><span>'+r.age+'</span><span>'+esc(r.team)+(r.loan?' (임대)':'')+'</span><span>'+r.apps+'</span><span>'+r.goals+'</span><span>'+r.ast+'</span><span>'+r.ovr+'</span></div>'; }).join('')+'</details>';
+}
+
+// 은퇴 · 커리어 요약
+var LEGENDS=[['티에리 앙리',377,228],['이안 라이트',288,185],['데니스 베르캄프',423,120],['로빈 판 페르시',278,132],['부카요 사카',300,80]];
+function honBadge(h,cnt){
+  var ic=h.kind==='team'?'🏆':h.kind==='nat'?'🌍':'⭐';
+  return '<span class="'+(h.kind==='ind'?'aw':h.kind==='nat'?'nt':'')+(h.tier==='S'?' s':'')+'">'+ic+' '+esc(h.n)+(cnt>1?' ×'+cnt:'')+'</span>';
+}
+// 커리어 점수 = 출전·골·도움·A매치 + 정점 오버롤 + 수상 등급 점수
+function careerScore(){
+  var hp=C.honors.reduce(function(t,h){ return t+((HONOR_TIER[h.tier]||{p:0}).p)*(+(String(h.n).split('×')[1])||1); },0);
+  return Math.round(C.tot.apps*1+C.tot.goals*3+C.tot.ast*2+C.tot.caps*2+C.peak*10+hp);
+}
+function retire(){ C.phase='retired'; page4(); }
+function pRetired(){
+  var t=C.tot, ars=C.arsenal.apps>0, grade=C.peak>=90?'월드 클래스':C.peak>=84?'스타':C.peak>=76?'주전급':C.peak>=68?'프로':'저니맨';
+  // 같은 상은 모아서 ×N (이달의 선수 ×2 같은 건 이름에서 횟수를 뗀다)
+  var grp={}, order=[]; C.honors.filter(function(h){return h.tier!=='-';}).forEach(function(h){ var nm=String(h.n).split(' ×')[0], k=h.kind+'|'+nm;
+    var n=+(String(h.n).split('×')[1])||1; if(!grp[k]){ grp[k]={h:{n:nm,kind:h.kind,tier:h.tier},c:0}; order.push(k); } grp[k].c+=n; });
+  order.sort(function(a,b){ return 'SABC'.indexOf(grp[a].h.tier)-'SABC'.indexOf(grp[b].h.tier); });
+  var nTro=C.honors.filter(function(h){return h.kind!=='ind'&&h.tier!=='-'&&/우승/.test(h.n);}).length;
+  var h='<div class="hc done2"><div style="font-size:12px;opacity:.8">'+C.age+'세 은퇴 · '+grade+'</div><div class="hc-n" style="font-size:26px;margin:4px 0">'+esc(C.name)+'</div>'
+   +'<div class="hc-s">'+natInfo(C.nation).f+' '+natInfo(C.nation).n+' · '+CARDS[C.pos][C.card].n+' · 최고 오버롤 '+C.peak+'</div>'
+   +'<div class="score"><span>커리어 점수</span><b>'+careerScore().toLocaleString()+'</b></div></div>'
+   +'<div class="rs" style="background:var(--surface);border:1px solid var(--border-bright);border-radius:14px;padding:12px">'
+   +[[t.apps,'경기'],[t.goals,'골'],[t.ast,'도움'],[t.caps,'A매치'],[nTro,'우승']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
+   +(order.length?'<div class="panel"><div class="lbl"><b>트로피 · 수상</b><span>🏆 팀 · ⭐ 개인 · 🌍 대표팀</span></div><div class="badges">'
+     +order.map(function(k){ return honBadge(grp[k].h,grp[k].c); }).join('')+'</div></div>':'')
+   +'<div class="panel"><div class="lbl"><b>거쳐 간 구단</b></div><div style="font-size:14px;line-height:1.6">'+C.clubs.map(esc).join(' → ')+'</div></div>';
+  if(ars){
+    h+='<div class="panel"><div class="lbl"><b>아스날 레전드와 비교</b><span>아스날 '+C.arsenal.apps+'경기 '+C.arsenal.goals+'골</span></div>'
+     +LEGENDS.map(function(l){ var p=Math.min(100,Math.round(C.arsenal.goals/l[2]*100)); return '<div class="lg"><span>'+l[0]+'</span><i><em style="width:'+p+'%"></em></i><b>'+l[2]+'골</b></div>'; }).join('')+'</div>';
+  } else {
+    h+='<div class="note" style="text-align:center">아스날에서 뛰면 은퇴할 때 아스날 레전드와 비교해 줘요.</div>';
+  }
+  h+=histHtml();
+  document.getElementById('app').innerHTML=h;
+  document.getElementById('dock').innerHTML='<button class="btn ghost2" onclick="C=null;S={step:1,name:\'\',nation:null,foot:null,pos:null,num:null,dream:null,card:null,add:[0,0,0,0,0],club:null};go(1)">새 커리어</button><button class="btn" onclick="alert(\'목업이라 실제 등록은 안 돼요\')">랭킹 등록</button>';
+}
+
+// 목업 확인용: 이벤트는 첫 번째 선택, 잔류로 n시즌 자동 진행
+function autoRun(n){
+  for(var i=0;i<n && C.age<37;i++){
+    if(C.phase==='prep'){ C.evPick=0; playSeason(); }
+    if(C.phase==='result' && i<n-1){ C.pick=null; nextSeason(); }
+  }
+}
+
+render();
+</script>
+</body>
+</html>
