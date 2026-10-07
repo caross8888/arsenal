@@ -139,6 +139,7 @@ input[type=text],input[type=number],select{font:inherit;font-size:16px;color:var
 .rc-head{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:stretch}
 .rc-ovr{background:linear-gradient(160deg,#E9C766,#B8892E);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#3a2a06;min-width:78px}
 .rc-ovr.elite{background:linear-gradient(160deg,#FFE7A0,#D9A93E 60%,#B8892E);box-shadow:0 0 18px rgba(233,199,102,.35)}
+.rc-ovr.purple{background:linear-gradient(160deg,#EBD9FF,#A877F0 55%,#6E3FC4);color:#1d0b3d;box-shadow:0 0 18px rgba(168,119,240,.45)}
 .rc-ovr span{font-size:10px;font-weight:700;letter-spacing:.5px;opacity:.75}
 .rc-ovr b{font-family:var(--fd);font-size:52px;font-weight:400;line-height:.95}
 .rc-id{background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:10px 12px;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px}
@@ -169,6 +170,7 @@ input[type=text],input[type=number],select{font:inherit;font-size:16px;color:var
 .rc-row .ic i.ucl,.rc-tro .i.ucl{filter:drop-shadow(0 0 3px rgba(96,165,250,.9))}
 .rc-row .ovr{display:inline-flex;justify-content:center;height:22px;align-items:center;border-radius:6px;font-family:var(--fd);font-size:17px;color:#3a2a06;background:#D9B24C}
 .rc-row .ovr.e{background:linear-gradient(160deg,#C9E6FF,#7DB7F2);color:#0b2440}
+.rc-row .ovr.p,.rk-ovr.p{background:linear-gradient(160deg,#E2C8FF,#9B6BEA);color:#24104a}
 .rc-row .ovr.n{background:var(--surface3);color:var(--text)}
 .rc-row .ovr.y{background:none;color:var(--text-secondary)}
 .rc-end{background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px}
@@ -974,7 +976,7 @@ function pRetired(viewOnly){
   var posKo={FW:'FW',MF:'MF',DF:'DF'}[C.pos];
   // 머리: 오버롤 타일 + 국적·포지션·번호 + 마지막 구단 + 은퇴 나이·최고 가치
   var h=(viewOnly?'<div class="top"><button class="back" onclick="boardBack()">← 랭킹</button><div class="season-no">'+esc(C._nick||'')+'</div></div>':'')+'<div class="rc-head">'
-   +'<div class="rc-ovr'+(C.peak>=90?' elite':'')+'"><span>최고 OVR</span><b>'+C.peak+'</b></div>'
+   +'<div class="rc-ovr'+(C.peak>=95?' purple':C.peak>=90?' elite':'')+'"><span>최고 OVR</span><b>'+C.peak+'</b></div>'
    +'<div class="rc-id"><div class="rc-chips"><span class="rc-chip">'+natInfo(C.nation).f+' '+natInfo(C.nation).n+'</span><span class="rc-chip gold">'+(C.num?'#'+C.num+' ':'')+posKo+'</span>'
    +(C.oneClub?'<span class="rc-chip" style="color:var(--gold)">🛡 원클럽맨</span>':'')
    +(C.farewell?'<span class="rc-chip" style="color:var(--gold)">👏 레전드 고별전</span>':'')
@@ -989,7 +991,7 @@ function pRetired(viewOnly){
     var ars=/아스날/.test(r.club)&&!r.youth;
     var hs=(r.hon||[]).filter(function(x){return x.tier&&x.tier!=='C'&&x.tier!=='-'&&x.kind!=='nat';}).sort(function(a,b){ return 'SAB'.indexOf(a.tier)-'SAB'.indexOf(b.tier); });
     var icons=hs.slice(0,3).map(function(x){ return trophySvg(x.n,20); }).join('')+(hs.length>3?'<b>+'+(hs.length-3)+'</b>':'');
-    var oc=r.youth?'y':r.ovr>=90?'e':r.ovr>=80?'g':'n';
+    var oc=r.youth?'y':r.ovr>=95?'p':r.ovr>=90?'e':r.ovr>=80?'g':'n';
     h+='<div class="rc-row'+(r.youth?' youth':'')+(ars?' ars':'')+'">'
      +'<span class="age">'+r.age+'</span>'
      +'<span class="rcc">'+crest(club,24)+'<em>'+esc(r.team)+(r.loan?' <small>임대</small>':'')+'</em>'+(icons?'<span class="ic">'+icons+'</span>':'')+'</span>'
@@ -1073,7 +1075,7 @@ function showBoard(scrollMe){
        +'<span class="rk-n">'+(i+1)+'</span>'
        +'<span class="rk-main"><b>'+nat.f+' '+esc(c.name)+'</b><em>'+esc(c._nick)+' · '+CARDS[c.pos][c.card].n+'</em></span>'
        +'<span class="rk-hon">'+hon.map(function(x){ return '<i>'+trophySvg(x[0],18)+(x[1]>1?'<small>'+x[1]+'</small>':'')+'</i>'; }).join('')+'</span>'
-       +'<span class="rk-ovr'+(c.peak>=90?' e':'')+'">'+c.peak+'</span>'
+       +'<span class="rk-ovr'+(c.peak>=95?' p':c.peak>=90?' e':'')+'">'+c.peak+'</span>'
        +'<span class="rk-sc">'+r.sc.toLocaleString()+'</span></button>'; }).join('')+'</div>';
   if(MY && !rows.some(function(r){return r.c===MY;})) h+='<div class="note" style="text-align:center">내 커리어는 TOP 100 밖이에요.</div>';
   document.getElementById('app').innerHTML=h;
