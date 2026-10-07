@@ -503,16 +503,14 @@ export function playSeason(state, choice){
     if(rng()<0.6){ C.num = C.want; notes.push('원하던 '+C.want+'번을 받았어요.'); }
     else { C.num = [28,31,35,41,44,47][Math.floor(rng()*6)]; notes.push(C.want+'번은 주인이 있어서 '+C.num+'번을 받았어요.'); }
   }
-  // 숨은 재능 힌트(19·20세 시즌 끝)
-  if(C.age===19 || C.age===20){
-    const lv = {gen:0, wonder:1, prospect:2}[C.tier] ?? -1;
-    const hint = [['감독: "이런 재능은 10년에 한 번 나와요."','유럽 빅클럽 스카우트들이 훈련장을 찾아오기 시작했어요.'],
-                  ['감독: "또래 중에선 단연 눈에 띄어요."','스카우트 리포트에 이름이 올랐어요.'],
-                  ['감독: "성장 속도가 좋아요. 꾸준히만 하면 돼요."','코치진이 성장세를 좋게 보고 있어요.']][lv];
-    if(hint) notes.push(hint[C.age===19?0:1]);
-  }
+  // 코치 평가(재능이 정해지는 18세 시즌 끝, 한 번): 3구간 — 세대급·원더키드를 한 구간으로 묶는다.
+  // 4구간으로 알려 주면 18세마다 최상위 코멘트가 뜰 때까지 다시 시작하게 된다(사용자 지정). 19·20세 힌트는 없앴다.
+  let coach = null;
+  if(C.age===18) coach = ['gen','wonder'].includes(C.tier) ? '이런 재능은 쉽게 나오지 않아요. 큰 무대를 노려 봐도 돼요.'
+    : C.tier==='prospect' ? '성장 속도가 좋아요. 꾸준히만 하면 1군 주전감이에요.'
+    : '아직은 평범해요. 출전 시간과 노력으로 메워야 해요.';
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club), games, starts, apps, goals, ast, cs, rating:Math.round(rating*100)/100, rank,
-               youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured};
+               youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(coach ? {coach} : {})};
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg;
   C.peak = Math.max(C.peak, cOvr());
@@ -615,7 +613,7 @@ export function nextSeason(state, pick, traitPick){
     C.club = o.c; if(!C.clubs.includes(o.c.n)) C.clubs.push(o.c.n);
   }
   // 지난 시즌 줄에서 결과 화면에만 쓰는 값은 버린다(토큰 크기 — 은퇴 카드엔 필요 없다)
-  const r = C.hist[C.hist.length-1]; delete r.notes; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
+  const r = C.hist[C.hist.length-1]; delete r.notes; delete r.coach; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
   C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
   newEvent();
   return C;
