@@ -31,7 +31,7 @@ const BALLON_PTS = [[/챔피언스리그 우승/,25],[/월드컵 우승/,25],[/(
 // 포지션별 기여 점수 — 미드필더·수비수는 골·도움 가중치를 높이고 수비수는 클린시트를 더한다
 // 경기당 골·도움 기본 비율. 공격수는 시작 오버롤을 54로 통일하면서(예전 카드 평균 54.8) 줄어든 골·도움을 되돌린 값(0.42·0.18에서)
 const NEW_SIGNING = [0.08, -0.04];   // 선발 확률: [이적 첫 시즌 +, 같은 팀 2시즌째부터 −] — 평균이 0 근처가 되게(전체 성장이 빨라지지 않게)
-const AW_PRESTIGE = [0.2, 85];   // 수상용 평점의 구단 수준 보정: [15 차이마다 ±, 기준 명성(1군 시즌 평균 구단 명성 근처)]
+const AW_PRESTIGE = [0.2, 93];   // 수상용 평점의 구단 수준 보정: [15 차이마다 ±, 기준 명성(1군 시즌 평균 구단 명성 근처)]
 const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련)
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 const G_RATE = {FW:0.446, MF:0.13, DF:0.035}, A_RATE = {FW:0.19, MF:0.17, DF:0.06};
@@ -43,10 +43,14 @@ const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.5}, DF:{g:8,a:5,cs:3.5}};
 // scripts/sim_career.mjs와 같은 전략으로 카드당 3,000 커리어를 돌려 잰 값 — 카드·출력 공식을 바꾸면 다시 잴 것.
 // 득점왕 같은 수상은 보정하지 않는다(포처가 득점왕을 더 받는 건 자연스럽다).
 const CARD_CONTRIB = {FW:[1.37,1.07,1.03,1.05,1.19], MF:[1.16,0.81,0.93,0.92,1.35], DF:[1.16,1.12,1.07,1.1,1.0,1.1]};
-const TALENT = {gen:2.05, wonder:1.58, prospect:1.18};   // 숨은 재능 배율(18세에 정해짐)
-const K_GROW = 0.49, DAMP = [0.6, 30], PLAY_C = [0.7, 0.6], CLUB_C = [1.6, 1.33, 1.1, 0.88, 0.7], LEAGUE_T = 3.5;
+// 숨은 재능(18세에 정해짐): 등급을 뽑은 뒤 등급 안에서 배율을 연속으로 뽑는다(평균은 예전 고정값 1.0/1.18/1.58/2.05 근처).
+// 고정값 넷이면 분포가 등급별 덩어리로 끊기고 사이가 비었다(사용자 지적). 등급 이름은 힌트·통계용으로 C.tier에 남긴다.
+const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[0.85,1.15]};
+// 발전 운: 커리어마다 하나, 성장에 곱한다(같은 재능이라도 선수마다 다르게 — 사용자 지적: "재능이 결과를 다 정한다")
+const DEV = [0.8, 1.2];
+const K_GROW = 0.505, DAMP = [0.4, 30], PLAY_C = [0.75, 0.45], CLUB_C = [1.6, 1.33, 1.1, 0.88, 0.7], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:116, sd:14, pos:{FW:1.03, MF:0.9, DF:0.73}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
+const BALLON = {mu:128, sd:14, pos:{FW:1.03, MF:0.86, DF:0.75}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
 
@@ -61,6 +65,8 @@ export function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Ma
 export function hashStr(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 
 let C = null;   // 지금 계산 중인 커리어
+// 발전 운(시드로 고정, 토큰에 따로 두지 않는다)
+const devOf = () => DEV[0] + (DEV[1]-DEV[0])*mulberry(C.seed ^ hashStr('dev'))();
 const seasonRng = extra => mulberry(C.seed ^ hashStr(C.age+'|'+extra));
 
 // ── 선수 만들기 ────────────────────────────────────────────────────────
@@ -112,7 +118,9 @@ const cRep = () => cOvr() + 3 + C.fame;
 const youth = () => C.age < 18;
 const teamName = club => club.n + (C.age<16 ? ' U-16' : C.age<18 ? ' U-18' : '');
 const clubCoef = r => r>=91 ? CLUB_C[0] : r>=86 ? CLUB_C[1] : r>=76 ? CLUB_C[2] : r>=61 ? CLUB_C[3] : CLUB_C[4];
-const playCoef = ratio => PLAY_C[0] + PLAY_C[1]*ratio;
+// 출전 계수: 21세까지는 벤치여도 큰 구단 훈련으로 크고(바닥 높음), 22세부터는 뛰어야 큰다(바닥 낮음 — 벤치에 머물면 정체).
+// "어릴 땐 큰 구단, 그 뒤엔 뛸 곳"(사용자 지정)과 "출전 못 하면 망하는 커리어도 있게"를 같이 만족시키려는 것. 선발 100%면 둘 다 1.3.
+const playCoef = ratio => { const f = C.age <= 21 ? PLAY_C[0] : PLAY_C[1]; return f + (1.3 - f)*ratio; };
 function syncSt(){ C.st = C.off.map(o => Math.max(20, Math.min(99, C.ovr+o))); }
 function pStart(club, opt){
   const gap = youth() ? (club.r-YOUTH_GAP)-cRep() : club.r-cRep();
@@ -304,13 +312,15 @@ export function playSeason(state, choice){
   if(C.age>=18 && !C.awoken){
     const tr = mulberry(C.seed ^ hashStr('talent'))(), b = Math.min(6, C.youthPts);
     const pG = 0.02+b*0.0017, pW = pG+0.11+b*0.005, pP = pW+0.25;   // 세대급 2~3% / 원더키드 11~14% / 유망주 25% / 보통 62~58%(사용자 지정 — 처음 8~11% / 20% / 70~66%)
-    C.talent = tr<pG ? TALENT.gen : tr<pW ? TALENT.wonder : tr<pP ? TALENT.prospect : 1;
+    C.tier = tr<pG ? 'gen' : tr<pW ? 'wonder' : tr<pP ? 'prospect' : 'normal';
+    const [a, b2] = TALENT[C.tier], u = mulberry(C.seed ^ hashStr('talent2'))();
+    C.talent = a + (b2-a)*u;
     C.awoken = true;
   }
   const st = STATS[C.pos], w = card.w, before = C.st.slice();
   if(base > 0){
     const dmp = Math.min(1, Math.max(DAMP[0], (99-C.ovr)/DAMP[1]));
-    C.ovr = Math.min(99, C.ovr + C.boost*base*playCoef(ratio)*clubCoef(club.r)*luck*growMul*C.talent*K_GROW*dmp);
+    C.ovr = Math.min(99, C.ovr + C.boost*base*playCoef(ratio)*clubCoef(club.r)*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
     C.off = C.off.map((o2,i) => o2 + base*declMul*((DECLINE[st[i]]||1)-1));
@@ -339,7 +349,7 @@ export function playSeason(state, choice){
       // 리그 개인상은 "수상용 평점"으로 뽑는다: 평점 + 구단 수준 보정. 평점에는 약팀 에이스가 높게 나오는 항목이 있어서,
       // 그대로 쓰면 약한 팀에 남는 게 개인상을 쓸어 가 "항상 잔류"가 정답이었다(전략 검사). 실제처럼 큰 팀일수록 유리하게.
       const awR = rating + AW_PRESTIGE[0]*(club.r-AW_PRESTIGE[1])/15;
-      const gT = {ENG:22,ESP:22,GER:20,ITA:20,FRA:20}[club.nat]||18, aT = gT>=20 ? 12 : 10;
+      const gT = {ENG:24,ESP:24,GER:22,ITA:22,FRA:22}[club.nat]||20, aT = gT>=22 ? 13 : 11;
       const gk = goals>=gT && rng()<Math.min(0.95,0.4+(goals-gT)*0.1), ak = ast>=aT && rng()<Math.min(0.95,0.4+(ast-aT)*0.12);
       if(gk) add(natN+' 리그 득점왕','B'); if(ak) add(natN+' 리그 도움왕','B');
       if(awR>=7.7 && rank<=3 && rng()<(gk?0.5:0.3)) add(natN+' 리그 올해의 선수','A');
@@ -347,7 +357,7 @@ export function playSeason(state, choice){
       if(awR>=7.5 ? rng()<0.7 : awR>=7.3 && rng()<0.3) add(natN+' 리그 베스트 11','B');
       let motm = 0; for(let mi=0; mi<3; mi++) if(rng()<Math.max(0,awR-7.0)*0.25) motm++;
       if(motm) add('이달의 선수'+(motm>1?' ×'+motm:''),'C');
-      if(rating>=7.3 && apps>=25 && rng()<0.4) add('구단 올해의 선수','C');
+      if(rating>=7.4 && apps>=25 && rng()<0.4) add('구단 올해의 선수','C');
       if(C.pos!=='FW' && awR>=7.3 && rng()<0.6) add(natN+' 리그 올해의 '+(C.pos==='MF'?'미드필더':'수비수'),'B');
       if(goals>=30 && rng()<0.6) add('유러피언 골든슈','B');
     }
@@ -356,7 +366,7 @@ export function playSeason(state, choice){
       if(uclWin && rating>=7.5 && rng()<0.5) add('챔스 올해의 선수','A');
       if(rating>=7.6 && rng()<0.2) add('챔스 올해의 '+{FW:'공격수',MF:'미드필더',DF:'수비수'}[C.pos],'B');
     }
-    if(ov>=89 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
+    if(ov>=90 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
     if(C.age<=21 && ov>=80 && rating>=7.1 && rng()<0.5) add('골든보이','B');
     if(rng()<(C.pos==='FW'?0.008:0.004)) add('올해의 골','C');
   } else if(rng()<0.25) add('유스 리그 우승','-','team');
@@ -367,7 +377,7 @@ export function playSeason(state, choice){
   if(C.age>=18 && ov>=NAT_BAR[C.nation]-2){
     caps = Math.round(4+rng()*6); cg = C.pos==='FW' ? Math.round(caps*0.3*rng()) : 0;
     notes.push(natInfo(C.nation).n+' 대표팀에 뽑혔어요.');
-    if(ov>=NAT_BAR[C.nation]+4 && rating>=7.0 && rng()<0.35) add(natInfo(C.nation).n+' 올해의 선수','C','nat');
+    if(ov>=NAT_BAR[C.nation]+6 && rating>=7.0 && rng()<0.35) add(natInfo(C.nation).n+' 올해의 선수','C','nat');
     const wc = year%4===2, cont = year%4===0;
     if(wc || cont){
       const cup = wc ? '월드컵' : CONT_CUP[C.nation], str = Math.min(0.4, NAT_STR[C.nation]*0.55*(wc?1:CONT_MUL[C.nation]));
@@ -411,7 +421,7 @@ export function playSeason(state, choice){
   }
   // 숨은 재능 힌트(19·20세 시즌 끝)
   if(C.age===19 || C.age===20){
-    const lv = C.talent===TALENT.gen ? 0 : C.talent===TALENT.wonder ? 1 : C.talent===TALENT.prospect ? 2 : -1;
+    const lv = {gen:0, wonder:1, prospect:2}[C.tier] ?? -1;
     const hint = [['감독: "이런 재능은 10년에 한 번 나와요."','유럽 빅클럽 스카우트들이 훈련장을 찾아오기 시작했어요.'],
                   ['감독: "또래 중에선 단연 눈에 띄어요."','스카우트 리포트에 이름이 올랐어요.'],
                   ['감독: "성장 속도가 좋아요. 꾸준히만 하면 돼요."','코치진이 성장세를 좋게 보고 있어요.']][lv];

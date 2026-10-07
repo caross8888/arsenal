@@ -13,7 +13,7 @@ const argN = process.argv.indexOf('--n');
 const N = argN > 0 ? +process.argv[argN+1] : 4500;
 const NATS = ['ENG','ESP','GER','FRA','BRA','KOR'];
 const LV = ['보통','유망주','원더키드','세대급'];
-const lvOf = t => t>=2 ? 3 : t>=1.5 ? 2 : t>=1.15 ? 1 : 0;
+const lvOf = tier => ({normal:0, prospect:1, wonder:2, gen:3})[tier] ?? 0;
 const norm = n => String(n).split(' ×')[0]
   .replace(/^(잉글랜드|스페인|독일|프랑스|브라질|대한민국|이탈리아|포르투갈|네덜란드|벨기에|아르헨티나|노르웨이|일본|미국|나이지리아) (리그|올해의)/,'(국가) $2')
   .replace(/^(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) /,'대륙컵 ');
@@ -38,7 +38,7 @@ for(let t=0; t<N; t++){
     if(C.phase === 'retired') break;
   }
   tokenBytes = Math.max(tokenBytes, JSON.stringify(C).length);
-  const lv = lvOf(C.talent);
+  const lv = lvOf(C.tier);
   peaks[lv].push(C.peak); scores.push(C.score); byPos[C.pos].push(C.score);
   retireAge.push(C.age);
   if(C.majorInj) majorInj++; if(C.glass) glass++;
