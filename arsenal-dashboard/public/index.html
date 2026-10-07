@@ -9123,7 +9123,7 @@ function crResult(){
   // 공통 특성(17세, 반드시 하나)과 포지션 특성 모두 카드 3장 오버레이로 고른다. 고른 뒤엔 결과 화면에 작게 남고 다시 고를 수 있다.
   if(TO){
     var tCommon=!!TO[0].common, tImg=function(t){ return '<img src="/img/traits/'+t.id+'.svg" alt="'+gmEsc(t.n)+'">'; },
-        tDesc=function(t){ return gmEsc(t.d)+(t.stat?'<br>'+gmEsc(t.stat)+' '+t.min+' 이상':''); };
+        tDesc=function(t){ return (t.common?gmEsc(t.d).replace(' · ','<br>'):gmEsc(t.d))+(t.stat?'<br>'+gmEsc(t.stat)+' '+t.min+' 이상':''); };
     if(CR.traitPick==null) crTovSet('<div class="cr-tov" role="dialog" aria-modal="true"><span class="tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성 선택')+'</span>'
       +'<h3>'+(tCommon?'어떤 재능을 타고났나요?':'새 플레이 스타일을 익혔어요')+'</h3>'
       +'<p>'+(tCommon?'하나를 고르면 그 능력이 커리어 내내 더 잘 자라요.':'하나를 골라 주세요. 특성은 최대 3개까지예요.')+'</p>'

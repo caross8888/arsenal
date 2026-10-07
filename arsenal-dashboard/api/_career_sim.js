@@ -46,6 +46,11 @@ const CT_BONUS = {
   FW:{'스피드':{g:.01, a:.01}, '패스':{g:.007, a:.013}, '드리블':{g:.007}, '오프더볼':{g:.006}},
   MF:{'태클':{cs:.012, r:.008}, '체력':{g:.003, a:.006}},
   DF:{'태클':{cs:.01, r:.004}, '대인마크':{cs:.01, r:.004}, '스피드':{cs:.005, r:.003}, '빌드업':{a:.005, r:.007}, '공중볼':{r:.007}}};
+// 선택 카드에 보여 줄 "무엇이 좋아지나"(스탯이 들어가는 골·도움 계산 + CT_BONUS)
+const CT_LABEL = {
+  FW:{'결정력':'골','드리블':'골·도움','스피드':'골·도움','오프더볼':'골','패스':'골·도움'},
+  MF:{'패스':'도움','시야':'골·도움','볼키핑':'골','체력':'골·도움','태클':'클린시트·평점'},
+  DF:{'태클':'클린시트·평점','대인마크':'클린시트·평점','공중볼':'골·평점','스피드':'도움·클린시트','빌드업':'도움·평점'}};
 function ctBonus(){
   const t = commonOf(), b = t && (CT_BONUS[C.pos]||{})[t.s[C.pos]], n = C.ctg||0;
   return {g:1+(b&&b.g||0)*n, a:1+(b&&b.a||0)*n, cs:1+(b&&b.cs||0)*n, r:(b&&b.r||0)*n};
@@ -499,7 +504,7 @@ function rollTraits(){
   return out;
 }
 export const traitView = (id, pos) => { const t = TRAIT_BY_ID.get(id); if(!t) return null;
-  return t.pos==='공통' ? {id:t.id, n:t.n, d:t.s[pos]+' 성장 ↑', common:true} : {id:t.id, n:t.n, d:t.d, stat:t.stat, min:t.min}; };
+  return t.pos==='공통' ? {id:t.id, n:t.n, d:t.s[pos]+' 성장 ↑ · '+((CT_LABEL[pos]||{})[t.s[pos]]||'')+' ↑', common:true} : {id:t.id, n:t.n, d:t.d, stat:t.stat, min:t.min}; };
 
 // ── 이적 · 방출 ────────────────────────────────────────────────────────
 // 방출: 31세 이후 오버롤 66 미만이거나 소속팀 선발 확률 15% 미만이면 재계약 불가(잔류 불가) → 낮은 구단의 말년 제안만.
