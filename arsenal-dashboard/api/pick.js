@@ -22,13 +22,13 @@
 //  - 채점은 크론 없이, 경기가 끝난 뒤 누군가 랭킹·라운드를 처음 볼 때 한 번 한다.
 
 import crypto from 'crypto';
+import { normNick, signToken, readToken, renew, accountReady } from './_account.js';
 
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 const FOTMOB_HEADERS = {'User-Agent': 'Mozilla/5.0'};
 const PL_LEAGUE = 47;
 
-const TOKEN_DAYS = 365;
 const PW_MIN = 4, PW_MAX = 20, NICK_MAX = 12;
 const FAIL_LIMIT = 5, FAIL_LOCK_SEC = 10 * 60;
 const SIGNUP_PER_IP_DAY = 3;
@@ -127,8 +127,6 @@ const isOpen = m => !m.started && !m.cancelled && Date.parse(m.kickoff) > Date.n
 const kstMonth = iso => new Date(Date.parse(iso) + 9 * 3600000).toISOString().slice(0, 7);
 
 // ── 계정 ───────────────────────────────────────────────────────────────
-// 같은 닉네임 판정: 대소문자·공백·전각/반각 차이는 같은 닉네임으로 본다.
-const normNick = s => String(s || '').normalize('NFKC').replace(/\s+/g, '').toLowerCase();
 const BAD_WORDS = /(시발|씨발|ㅅㅂ|병신|ㅂㅅ|좆|존나|개새|새끼|fuck|shit|bitch|nigg)/i;
 function checkNick(s){
   const n = String(s || '').replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim();
@@ -146,29 +144,6 @@ function checkPw(pw, nick){
 function hashPw(pw, salt){
   return new Promise((ok, no) => crypto.scrypt(String(pw), salt, 32, {N: 16384, r: 8, p: 1}, (e, k) => e ? no(e) : ok(k.toString('hex'))));
 }
-function secretKey(){
-  const base = process.env.PICK_SECRET || KV_TOKEN || process.env.CRON_SECRET;
-  return base ? crypto.createHash('sha256').update('pick-token-v1:' + base).digest() : null;
-}
-function signToken(key, nick){
-  const body = Buffer.from(JSON.stringify({k: key, n: nick, e: Date.now() + TOKEN_DAYS * 86400000})).toString('base64url');
-  const sig = crypto.createHmac('sha256', secretKey()).update(body).digest('base64url');
-  return body + '.' + sig;
-}
-function readToken(req){
-  const m = /^Bearer\s+(.+)$/.exec(String(req.headers.authorization || ''));
-  if(!m || !secretKey()) return null;
-  const [body, sig] = m[1].split('.');
-  if(!body || !sig) return null;
-  const want = crypto.createHmac('sha256', secretKey()).update(body).digest('base64url');
-  if(sig.length !== want.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(want))) return null;
-  try {
-    const t = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
-    return t.e > Date.now() ? t : null;
-  } catch(_){ return null; }
-}
-// 쓸 때마다 유효기간을 늘려준다(1년 → 사실상 다시 로그인할 일이 없게). 넉 달 이상 지난 토큰만 새로 준다.
-const renew = t => (t.e - Date.now() < (TOKEN_DAYS - 120) * 86400000 ? signToken(t.k, t.n) : undefined);
 
 function clientIp(req){
   return String(req.headers['x-real-ip'] || String(req.headers['x-forwarded-for'] || '').split(',')[0] || 'unknown').trim();
@@ -290,7 +265,7 @@ export default async function handler(req, res){
   res.setHeader('Content-Type', 'application/json');
   const a = String(req.query.a || '');
   try {
-    if(!KV_URL || !KV_TOKEN || !secretKey()) return res.status(503).json({error: '승부예측 서버 설정이 아직 안 됐어요.'});
+    if(!KV_URL || !KV_TOKEN || !accountReady()) return res.status(503).json({error: '승부예측 서버 설정이 아직 안 됐어요.'});
 
     if(a === 'round'){
       const fx = await getFixtures();
