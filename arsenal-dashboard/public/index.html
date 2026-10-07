@@ -1472,6 +1472,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .gm-btn:disabled{opacity:.5;cursor:default}
 .gm-btn:focus-visible,.gm-choice:focus-visible,.gm-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .gm-back{align-self:flex-start;background:none;border:0;color:var(--text-secondary);font:inherit;font-size:13px;cursor:pointer;padding:2px 0}
+.gm-back.confirm{color:var(--gold)}
 .gm-hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
 .gm-hud>:last-child{justify-self:end}
 .gm-lives{display:flex;gap:3px;color:var(--red)}
@@ -8234,7 +8235,8 @@ function gameRenderQ(q, st){
       +'<div class="gm-yrs">'+gmYears(c)+(c.l?'<div class="gm-loan">임대</div>':'')+'</div></div></div>';
   }).join('');
   gmRoot().innerHTML =
-    '<div class="gm-hud"><div class="gm-lives" id="gmLives" aria-label="목숨 '+st.lives+'개">'+gmLives(st.lives)+'</div>'
+    '<button class="gm-back" id="gmQuit" onclick="gameQuit()">← 그만하기</button>'
+    +'<div class="gm-hud"><div class="gm-lives" id="gmLives" aria-label="목숨 '+st.lives+'개">'+gmLives(st.lives)+'</div>'
     +'<div class="gm-qno">문제 '+st.n+'</div><div class="gm-score" id="gmScore">'+st.score+'</div></div>'
     +'<div class="gm-timer" id="gmTimer"><i id="gmBar"></i></div>'
     +'<div class="gm-panel gm-q"><div class="gm-q-t">WHO AM I?</div><div class="gm-path">'+path+'</div>'
@@ -8251,6 +8253,23 @@ function gameRenderQ(q, st){
     tm.className='gm-timer'+(left<3?' crit':left<6?' warn':'');
     if(left<=0) gamePick(null);
   }, 100);
+}
+// 퀴즈 중 그만두기 — 실수로 누르는 걸 막으려고 한 번 더 눌러야 끝난다(타이머는 계속 간다).
+function gameQuit(){
+  var b=document.getElementById('gmQuit'); if(!b || GAME.busy) return;
+  if(!b.classList.contains('confirm')){
+    b.classList.add('confirm'); b.textContent='한 번 더 누르면 종료 · 지금 점수는 등록할 수 있어요';
+    clearTimeout(GAME.quitT); GAME.quitT=setTimeout(function(){ if(b.isConnected){ b.classList.remove('confirm'); b.textContent='← 그만하기'; } }, 3000);
+    return;
+  }
+  GAME.busy=true; gameStopTimer();
+  gmPost('quit', {token:GAME.token}).then(function(d){
+    GAME.busy=false; GAME.token=d.token; gameOver(d);
+  }).catch(function(e){
+    GAME.busy=false;
+    var note=document.getElementById('gmNote');
+    if(note) note.innerHTML=gmEsc(e.message)+' <button class="gm-back" onclick="gameIntro()">처음으로</button>';
+  });
 }
 function gamePick(id){
   if(GAME.busy) return;
@@ -8284,8 +8303,9 @@ function gameOver(d){
   GAME.last=d;
   var best=gmBest(d.score);
   gmRoot().innerHTML =
-    '<div class="gm-panel" style="text-align:center">'
-    +'<div class="gm-qno">'+(d.clear?'전부 클리어!':'GAME OVER')+'</div>'
+    '<button class="gm-back" onclick="gameIntro()">← Who Am I?</button>'
+    +'<div class="gm-panel" style="text-align:center">'
+    +'<div class="gm-qno">'+(d.clear?'전부 클리어!':d.quit?'게임 종료':'GAME OVER')+'</div>'
     +'<div class="gm-big">'+d.score+'</div>'
     +'<div class="gm-best">'+d.correct+'문제 정답'+(d.score>=best&&d.score>0?' · 내 최고 기록':'')+'</div>'
     +(d.score>0 && !d.registered
