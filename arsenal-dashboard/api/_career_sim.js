@@ -535,8 +535,14 @@ export const traitView = (id, pos) => { const t = TRAIT_BY_ID.get(id); if(!t) re
 const relBar = () => 66 + Math.max(0, C.age-33)*2;
 const isReleased = () => C.age>=31 && (cOvr()<relBar() || pStart(C.club)<0.15);
 // 몸의 한계: 35세부터 시즌 끝에 은퇴할 수밖에 없는 확률 — 나이와 몸의 소모(부상 이력)가 클수록 높다.
-const BODY_END = [0.06, 0.05];   // [나이 1살당(34세 넘는 만큼), 소모 1년당]
-const bodyEnd = () => C.age>=35 && mulberry(C.seed ^ hashStr('body|'+C.age))() < BODY_END[0]*(C.age-34) + BODY_END[1]*(C.wear||0);
+// 단, 기량이 정점에서 꺾인 만큼만 적용한다(정점 −3까지 0, −13이면 전부). 몸 관리로 기량을 지킨 선수는 나이만으로 은퇴시키지 않는다
+// (사용자 지적: 정점 91, 35세 85인데 은퇴).
+const BODY_END = [0.06, 0.05, 3, 10, 12];   // [나이 1살당(34세 넘는 만큼), 소모 1년당, 하락 여유, 하락 폭, 문턱 위 안전 여유]
+const bodyEnd = () => {
+  if(C.age < 35 || cOvr() >= relBar() + BODY_END[4]) return false;   // 재계약 문턱보다 한참 위(35세 82+, 37세 86+)면 아직 은퇴할 몸이 아니다
+  const drop = Math.min(1, Math.max(0, (C.peak - cOvr() - BODY_END[2]) / BODY_END[3]));
+  return mulberry(C.seed ^ hashStr('body|'+C.age))() < (BODY_END[0]*(C.age-34) + BODY_END[1]*(C.wear||0)) * drop;
+};
 function makeOffers(rng, row){
   if(C.age < 17) return [];
   C.released = isReleased();
