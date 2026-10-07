@@ -8818,15 +8818,16 @@ function crPage1(){
   crRender('<div class="cr-top"><button class="gm-back" onclick="crIntro()">← 커리어 모드</button>'+crSteps(1)+'</div>'
    +'<h1 class="cr-h1">CAREER <span>MODE</span></h1><p class="cr-sub">1 / 3 · 선수 만들기</p>'
    +'<div class="cr-panel"><div class="cr-age"><b>15</b>세에 시작해요 · 유스팀부터 은퇴까지</div>'
-   +'<div class="cr-lbl"><b>이름</b><span>최대 12자</span></div>'
-   +'<div class="cr-row"><input type="text" id="crName" maxlength="12" placeholder="선수 이름" value="'+gmEsc(S.name)+'" oninput="CR.S.name=this.value;crDock1()">'
-   +'<button class="cr-chip" onclick="CR.S.name=crRandName();crPage1()">🎲 랜덤</button>'
-   +(PK.tok&&PK.nick?'<button class="cr-chip" onclick="CR.S.name=PK.nick;crPage1()">내 계정명</button>':'')+'</div>'
-   +'<p class="cr-note">랜덤 이름은 고른 국적에 맞는 이름으로 나와요.</p></div>'
-   +'<div class="cr-panel"><div class="cr-lbl"><b>국적</b><span>대표팀 경쟁 난이도가 달라요</span></div>'
-   +'<select onchange="CR.S.nation=this.value||null;crDock1()"><option value="">국적 선택</option>'
+   +'<div class="cr-lbl"><b>국적</b><span>대표팀 경쟁 난이도가 달라요</span></div>'
+   +'<select onchange="CR.S.nation=this.value||null;crPage1()"><option value="">국적 선택</option>'
    +m.nations.map(function(n){ return '<option value="'+n.id+'"'+(S.nation===n.id?' selected':'')+'>'+n.f+' '+n.n+'</option>'; }).join('')+'</select>'
    +'<p class="cr-note">첫 구단은 국적의 리그에서 정해져요.</p></div>'
+   // 이름은 국적을 고른 뒤에(랜덤 이름이 국적에 맞춰 나오므로)
+   +'<div class="cr-panel"'+(S.nation?'':' style="opacity:.5"')+'><div class="cr-lbl"><b>이름</b><span>'+(S.nation?'최대 12자':'국적을 먼저 골라 주세요')+'</span></div>'
+   +'<div class="cr-row"><input type="text" id="crName" maxlength="12" placeholder="선수 이름" value="'+gmEsc(S.name)+'" oninput="CR.S.name=this.value;crDock1()"'+(S.nation?'':' disabled')+'>'
+   +'<button class="cr-chip" onclick="CR.S.name=crRandName();crPage1()"'+(S.nation?'':' disabled')+'>🎲 랜덤</button>'
+   +(PK.tok&&PK.nick?'<button class="cr-chip" onclick="CR.S.name=PK.nick;crPage1()"'+(S.nation?'':' disabled')+'>내 계정명</button>':'')+'</div>'
+   +'<p class="cr-note">랜덤 이름은 고른 국적에 맞는 이름으로 나와요.</p></div>'
    +'<div class="cr-panel"><div class="cr-lbl"><b>주발</b></div><div class="cr-seg">'
    +['오른발','왼발'].map(function(f){ return '<button class="cr-chip" aria-pressed="'+(S.foot===f)+'" onclick="crSet(\'foot\',\''+f+'\')">'+f+'</button>'; }).join('')+'</div></div>'
    +'<div class="cr-panel"><div class="cr-lbl"><b>포지션</b></div><div class="cr-seg" style="--n:3">'
@@ -8841,7 +8842,7 @@ function crPage1(){
 }
 function crDock1(){
   var S=CR.S, ok=S.name.trim() && S.nation && S.foot && S.pos && S.num;
-  var miss=[!S.name.trim()&&'이름',!S.nation&&'국적',!S.foot&&'주발',!S.pos&&'포지션',!S.num&&'등번호'].filter(Boolean);
+  var miss=[!S.nation&&'국적',!S.name.trim()&&'이름',!S.foot&&'주발',!S.pos&&'포지션',!S.num&&'등번호'].filter(Boolean);
   crDock('<div class="sum">'+(ok?'준비 완료':'남은 항목')+'<br>'+(ok?'':miss.join(' · '))+'</div><button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage2()">다음 · 선수 유형</button>');
 }
 
