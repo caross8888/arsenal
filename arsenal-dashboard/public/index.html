@@ -8869,9 +8869,9 @@ function crPage2(){
   if(S.card!=null){
     var c=cards[S.card];
     h+='<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(c.n)+' 시작 스탯</b><span>카드에 따라 정해져요</span></div>'
-     +st.map(function(n,i){ var add=c.st[i]-40;
+     +st.map(function(n,i){ var v=c.st[i], base=Math.min(40,v), add=Math.max(0,v-40);   // 시작 오버롤을 맞추느라 약점 스탯이 40 아래일 수 있다
        return '<div class="cr-stat"><div class="n">'+n+'<small>성장 ×'+c.w[i].toFixed(1)+'</small></div>'
-        +'<div class="bar"><i style="width:40%"></i><i class="add" style="left:40%;width:'+add+'%"></i></div><div class="v">'+c.st[i]+'</div></div>'; }).join('')
+        +'<div class="bar"><i style="width:'+base+'%"></i><i class="add" style="left:'+base+'%;width:'+add+'%"></i></div><div class="v">'+v+'</div></div>'; }).join('')
      +'<p class="cr-note">시작 스탯도 성장 속도도 카드의 강점(금색)을 따라가요. 같은 카드면 누구나 같은 스탯으로 시작해요.</p>'
      +'<div class="cr-ovr"><div class="cr-note">시작 오버롤<br>최대 99까지 성장</div><div class="big">'+c.ovr+'</div></div></div>';
   }
