@@ -1848,7 +1848,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-goal-tag{align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:var(--gold);border-radius:999px;padding:3px 9px}
 .cr-goal-t{font-size:17px;font-weight:700}
 .cr-tsel{display:flex;align-items:center;gap:12px;margin-top:4px}
-.cr-tsel img{width:56px;height:56px;border-radius:10px;flex-shrink:0}
+.cr-tsel img{width:56px;height:56px;flex-shrink:0}
 .cr-tsel div{flex:1;min-width:0;display:flex;flex-direction:column} .cr-tsel b{font-size:14px} .cr-tsel span{font-size:12.5px;color:var(--text-secondary)}
 .cr-tsel button{font:inherit;font-size:12px;color:var(--text-secondary);background:none;border:1px solid var(--border-bright);border-radius:999px;padding:5px 10px;cursor:pointer;flex-shrink:0}
 .cr-tov{position:fixed;inset:0;z-index:10000;background:rgba(5,6,10,.86);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;animation:crTovIn .25s ease-out}
@@ -1858,7 +1858,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tcards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:540px}
 .cr-tc{font:inherit;color:#F0F2F7;background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;animation:crTcIn .45s cubic-bezier(.2,.8,.3,1.2) both;-webkit-tap-highlight-color:transparent}
 .cr-tc:nth-child(2){animation-delay:.08s} .cr-tc:nth-child(3){animation-delay:.16s}
-.cr-tc img{width:100%;aspect-ratio:1;display:block;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.45);transition:transform .15s}
+/* 모서리 라운드는 SVG 자체 모양을 쓴다 — img에 border-radius를 주면 작은 화면에서 카드 테두리 모서리가 잘려 각져 보였다 */
+.cr-tc img{width:100%;aspect-ratio:1;display:block;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));transition:transform .15s}
 .cr-tc:hover img,.cr-tc:focus-visible img{transform:translateY(-4px) scale(1.03)}
 .cr-tc span{font-size:12px;line-height:1.4;color:rgba(255,255,255,.75);text-align:center}
 @keyframes crTovIn{from{opacity:0}to{opacity:1}}

@@ -41,7 +41,7 @@ const AW_PRESTIGE = [0.2, 105];   // 수상용 평점의 구단 수준 보정: [
 // 이벤트 성장 효과(선택 차이를 키움 — 사용자 지정). 성장 쪽을 고르면 부상 위험도 같이 커진다.
 const EV_GROW = {coach:1.15, coachInj:0.05, coachStart:0.10, extra:1.15, extraInj:0.07, talk:1.1};
 // 특성: 18세부터 시즌 끝에 조건 스탯을 넘은 특성이 있으면 이 확률로 제안(최대 3개 제시, 하나 고름), 선수당 최대 TRAIT_MAX개
-const TRAIT_P = 0.3, TRAIT_MAX = 3;
+const TRAIT_P = 0.3, TRAIT_MAX = 3, POS_TRAITS_ON = false;
 const TRAIT_BY_ID = new Map([...TRAITS, ...CTRAITS.map(t => ({...t, pos:'공통'}))].map(t => [t.id, t]));
 // 공통 특성: 17세 시즌 끝에 3개 제시(반드시 하나). 무조건 이득만(사용자 지정 — 다른 스탯을 깎지 않는다):
 // 성장하는 시즌마다 대상 스탯 +CT_SHIFT(누적 CT_CAP까지, C.ctg). 오버롤은 그대로.
@@ -88,7 +88,7 @@ function traitMods(){
 const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련)
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 // 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
-const G_RATE = {FW:0.395, MF:0.121, DF:0.03}, A_RATE = {FW:0.172, MF:0.159, DF:0.049};
+const G_RATE = {FW:0.41, MF:0.126, DF:0.031}, A_RATE = {FW:0.181, MF:0.168, DF:0.052};
 // 클린시트를 출전 경기 전체로 세면서(약 1.5배) cs 점수는 그만큼 낮췄다(예전 MF 0.5 · DF 3.5 — DF는 포지션 점수 중앙을 맞추느라 조금 더 낮춤).
 const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.33}, DF:{g:8,a:5,cs:2.2}};
 // 카드별 기여 보정(사용자 지정): 같은 포지션 안에서도 카드마다 골·도움·클린시트 기대치가 달라
@@ -369,7 +369,7 @@ export function playSeason(state, choice){
   // 평점: 실력 + 팀 안 위치 + 포지션별 활약 + 운. 기본값 6.42(예전 6.45 — 정체기를 29~30세로 늘려 상위 시즌이 많아진 만큼 내림)
   const clubLv = club.r - (youth()&&!onLoan ? YOUTH_GAP : 0), ap = Math.max(apps,1);
   const perfBonus = {FW:(goals+ast*0.6)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.6, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.6}[C.pos];
-  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.42+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+DF_.r+(rng()-0.5)*0.5)) : 0;
+  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+DF_.r+(rng()-0.5)*0.5)) : 0;
 
   // 성장 / 하락
   const base = ageBase(), ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
@@ -426,7 +426,7 @@ export function playSeason(state, choice){
       // 리그 개인상은 "수상용 평점"으로 뽑는다: 평점 + 구단 수준 보정. 평점에는 약팀 에이스가 높게 나오는 항목이 있어서,
       // 그대로 쓰면 약한 팀에 남는 게 개인상을 쓸어 가 "항상 잔류"가 정답이었다(전략 검사). 실제처럼 큰 팀일수록 유리하게.
       const awR = rating + AW_PRESTIGE[0]*(club.r-AW_PRESTIGE[1])/15;
-      const gT = {ENG:27,ESP:27,GER:25,ITA:25,FRA:25}[club.nat]||23, aT = gT>=25 ? 16 : 14;
+      const gT = {ENG:26,ESP:26,GER:24,ITA:24,FRA:24}[club.nat]||22, aT = gT>=24 ? 15 : 13;
       const gk = goals>=gT && rng()<Math.min(0.95,0.4+(goals-gT)*0.1), ak = ast>=aT && rng()<Math.min(0.95,0.4+(ast-aT)*0.12);
       if(gk) add(natN+' 리그 득점왕','B'); if(ak) add(natN+' 리그 도움왕','B');
       if(awR>=7.8 && rank<=3 && rng()<(gk?0.5:0.3)) add(natN+' 리그 올해의 선수','A');
@@ -436,16 +436,16 @@ export function playSeason(state, choice){
       if(motm) add('이달의 선수'+(motm>1?' ×'+motm:''),'C');
       if(rating>=7.6 && apps>=25 && rng()<0.4) add('구단 올해의 선수','C');
       if(C.pos!=='FW' && awR>=7.3 && rng()<0.6) add(natN+' 리그 올해의 '+(C.pos==='MF'?'미드필더':'수비수'),'B');
-      if(goals>=30 && rng()<0.6) add('유러피언 골든슈','B');
+      if(goals>=29 && rng()<0.6) add('유러피언 골든슈','B');
     }
     if(inUCL){
-      if(uG>=9) add('챔스 득점왕','B'); if(uA>=6) add('챔스 도움왕','B');
+      if(uG>=8) add('챔스 득점왕','B'); if(uA>=6) add('챔스 도움왕','B');
       if(uclWin && rating>=7.5 && rng()<0.5) add('챔스 올해의 선수','A');
       if(rating>=7.6 && rng()<0.2) add('챔스 올해의 '+{FW:'공격수',MF:'미드필더',DF:'수비수'}[C.pos],'B');
     }
     if(ov>=92 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
     if(C.age<=21 && ov>=80 && rating>=7.1 && rng()<0.5) add('골든보이','B');
-    if(rng()<(C.pos==='FW'?0.008:0.004)*TM.goty) add('올해의 골','C');
+    if(rng()<(C.pos==='FW'?0.0095:0.0048)*TM.goty) add('올해의 골','C');
   } else if(rng()<0.25) add('유스 리그 우승','-','team');
   C.uclNext = rank<=4 && club.r>=78 ? club.n : null;
 
@@ -532,6 +532,8 @@ function rollTraits(){
       if(out.every(id => TRAIT_BY_ID.get(id).s[C.pos] !== t.s[C.pos])) out.push(t.id); }
     return out;
   }
+  // 포지션 특성은 당분간 제안하지 않는다(사용자 지정 — 공통 특성만). 데이터·효과 코드는 남겨 둔다(이미 받은 커리어용).
+  if(!POS_TRAITS_ON) return null;
   const own = (C.traits||[]).filter(id => (TRAIT_BY_ID.get(id)||{}).pos !== '공통');
   if(C.age < 18 || own.length >= TRAIT_MAX) return null;
   const r = mulberry(C.seed ^ hashStr('trait|'+C.age));
