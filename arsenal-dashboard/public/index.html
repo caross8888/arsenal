@@ -34,8 +34,10 @@
   // MutationObserver 콜백은 노드가 붙자마자(마이크로태스크) 실행되고, 그 시점은 다음 그리기
   // 이전이다 — 그래서 요소가 생기는 즉시 여기서 class를 입히면 잘못된/빈 상태가 그려질 틈이 없다.
   // 아래 복원 코드는 그대로 두고(여기선 화면 상태만, 거기선 데이터 로딩까지) 같은 결과를 다시 쓴다.
-  var TITLES={fixtures:'경기 일정', leaderboard:'리더보드', squad:'선수단', media:'미디어', history:'History'};
-  var SECS=['fixtures','leaderboard','squad','media','history'];
+  // 게임(#games)은 하단 탭이 없는 섹션이다 — 여기서 빠뜨리면 일정으로 떨어져서, 게임 화면에서
+  // 새로고침할 때 일정 탭이 선택된 프레임이 잠깐 보였다(사용자 재보고).
+  var TITLES={fixtures:'경기 일정', leaderboard:'리더보드', squad:'선수단', media:'미디어', history:'History', games:'게임'};
+  var SECS=['fixtures','leaderboard','squad','media','history','games'];
   var h=(location.hash||'').replace('#','').trim();
   if(h==='news'||h==='sns') h='media';
   if(SECS.indexOf(h)===-1) h='fixtures';
@@ -43,7 +45,7 @@
   try{ prefs=JSON.parse(sessionStorage.getItem('uiPrefs_v1'))||{}; }catch(e){}
   var want=[
     ['#'+h, 'active'],
-    ['.nav-btn[onclick*="\''+h+'\'"]', 'active'],
+    h==='games' ? null : ['.nav-btn[onclick*="\''+h+'\'"]', 'active'],
     ['.fix-view-btn[data-view="'+(prefs.fixView==='cal'?'cal':'list')+'"]', 'active'],
     ['.media-seg-btn[onclick*="\''+(prefs.mediaTab||'news')+'\'"]', 'active'],
     ['#lbTabs .lb-tab[data-tab="'+(prefs.lbTab||'team')+'"]', 'active'],
