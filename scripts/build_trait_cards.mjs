@@ -1,7 +1,8 @@
 // 커리어 모드 특성 카드(정사각 SVG) 생성기.
 //   node scripts/build_trait_cards.mjs
 // → arsenal-dashboard/public/img/traits/{id}.svg + docs/career-mode/traits.html(미리보기 시트)
-// 아이콘은 100×100 좌표에 흰 선으로 직접 그린 것. 포지션 특성 이름·설명·조건은 api/_career_data.js의 TRAITS에서 읽는다.
+// 아이콘은 100×100 좌표에 흰 선으로 직접 그린 것. 카드엔 아이콘과 이름만 넣는다 — 효과·조건은 수치가 바뀌니 UI가 HTML로 얹는다.
+// 포지션 특성 이름은 api/_career_data.js의 TRAITS에서 읽는다.
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { TRAITS } from '../arsenal-dashboard/api/_career_data.js';
@@ -89,7 +90,7 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const fit = (len, max, room) => Math.min(max, Math.floor(room / Math.max(1, len)));
 
 function card({id, tag, n, d, sub}){
-  const a = ACC[tag], nameSize = fit(n.length, 28, 250);
+  const a = ACC[tag], nameSize = fit(n.length, 32, 264);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22273A"/><stop offset="1" stop-color="#11131B"/></linearGradient>
@@ -99,14 +100,10 @@ function card({id, tag, n, d, sub}){
 <rect width="300" height="300" rx="26" fill="url(#bg)"/>
 <rect width="300" height="300" rx="26" fill="url(#glow)"/>
 <rect x="1.5" y="1.5" width="297" height="297" rx="24.5" fill="none" stroke="${a}" stroke-opacity=".55" stroke-width="3"/>
-<rect x="18" y="18" width="${tag.length*14+22}" height="26" rx="13" fill="${a}" fill-opacity=".18" stroke="${a}" stroke-opacity=".7"/>
-<text x="${18 + (tag.length*14+22)/2}" y="36" text-anchor="middle" font-family="${FONT}" font-size="13" font-weight="700" fill="${a}">${tag}</text>
-<circle cx="150" cy="116" r="64" fill="url(#badge)"/>
-<circle cx="150" cy="116" r="64" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="2"/>
-<g transform="translate(112 78) scale(.76)" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">${ICON[id]}</g>
-<text x="150" y="222" text-anchor="middle" font-family="${FONT}" font-size="${nameSize}" font-weight="800" fill="#F0F2F7">${esc(n)}</text>
-<text x="150" y="252" text-anchor="middle" font-family="${FONT}" font-size="${fit(d.length, 16, 300)}" font-weight="600" fill="#fff" fill-opacity=".75">${esc(d)}</text>
-<text x="150" y="276" text-anchor="middle" font-family="${FONT}" font-size="${fit(sub.length, 12.5, 470)}" fill="#fff" fill-opacity=".5">${esc(sub)}</text>
+<circle cx="150" cy="124" r="78" fill="url(#badge)"/>
+<circle cx="150" cy="124" r="78" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="2"/>
+<g transform="translate(103 77) scale(.94)" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">${ICON[id]}</g>
+<text x="150" y="258" text-anchor="middle" font-family="${FONT}" font-size="${nameSize}" font-weight="800" fill="#F0F2F7">${esc(n)}</text>
 </svg>
 `;
 }
