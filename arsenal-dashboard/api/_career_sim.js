@@ -428,7 +428,7 @@ export function playSeason(state, choice){
   // 대표팀·국제 대회(2030년부터 4년마다 월드컵, 그 사이 2년마다 대륙컵)
   let caps = 0, cg = 0; const year = 2026+(C.age-15)+1;
   if(C.age>=18 && ov>=NAT_BAR[C.nation]-2){
-    caps = Math.round(4+rng()*6); cg = C.pos==='FW' ? Math.round(caps*0.3*rng()) : 0;
+    caps = Math.round(4+rng()*6);
     notes.push(natInfo(C.nation).n+' 대표팀에 뽑혔어요.');
     if(ov>=NAT_BAR[C.nation]+7 && rating>=7.0 && rng()<0.35) add(natInfo(C.nation).n+' 올해의 선수','C','nat');
     const wc = year%4===2, cont = year%4===0;
@@ -439,6 +439,11 @@ export function playSeason(state, choice){
       if(C.pos!=='DF' && rng()<0.08*Math.pow(ov/85,3)) add(cup+' 득점왕','B','nat');
       notes.push(year+' '+cup+'에 출전했어요.');
     }
+    // 대표팀 골: 그 시즌 소속팀 경기당 골의 80%(대표팀은 상대가 더 다양하고 출전 시간이 짧다). 예전엔 공격수만 경기당 평균 0.15골이라
+    // 포처 86이 125경기 17골이었다(사용자 지적). 소속팀 출전이 거의 없는 시즌은 포지션 기본값.
+    const gpa = apps >= 5 ? goals/apps : {FW:0.3, MF:0.1, DF:0.03}[C.pos];
+    const xg = caps*Math.min(0.9, gpa*0.8)*(0.6+rng()*0.8);
+    cg = Math.floor(xg) + (rng() < xg-Math.floor(xg) ? 1 : 0);   // 확률 반올림 — 수비수처럼 기대값이 1 미만인 시즌이 늘 0이 되지 않게
   } else if(C.age>=16 && C.age<18 && ov>=NAT_BAR[C.nation]-22) notes.push(natInfo(C.nation).n+' 연령별 대표팀에 뽑혔어요.');
 
   // 발롱도르·FIFA 올해의 선수: 시즌 활약 점수 vs 그해 세계 경쟁자
