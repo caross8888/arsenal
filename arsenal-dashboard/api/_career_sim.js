@@ -60,6 +60,8 @@ const DEF_FX = {
 const DEF_K = {cs:0.012, r:0.012};
 // 강점 스탯(카드 가중치 1.2 이상)이 모두 99 — 강점 강화를 해도 더 오를 데가 없다(훈련 선택지에 표시)
 const keyMax = () => CARDS[C.pos][C.card].w.every((x,i) => x < 1.2 || C.ovr+C.off[i] >= 99 || C.off[i] >= 15);
+// 이미 막힌 강점 스탯 이름(훈련 화면 안내용)
+const keyCapped = () => CARDS[C.pos][C.card].w.map((x,i) => x >= 1.2 && (C.ovr+C.off[i] >= 99 || C.off[i] >= 15) ? STATS[C.pos][i] : null).filter(Boolean);
 function defFx(){
   const fx = DEF_FX[C.pos]; if(!fx) return {cs:1, r:0};
   const st = STATS[C.pos], o0 = startStats(C.pos, C.card).map(v => v - START_OVR);
@@ -252,7 +254,7 @@ export function prepView(state){
   else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 완화)' : ' (감독 신뢰 ↑)')];
-  return {goal, youth: youth(), keyMax: keyMax(), event:{id:ev.id, t:ev.t, d, a},
+  return {goal, youth: youth(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
     loanClub: C.ev==='loan' && C.loanClub ? {...pub(C.loanClub), chance: chanceOf(pStart(C.loanClub))} : null};
 }
 
@@ -394,11 +396,13 @@ export function playSeason(state, choice){
   // 훈련 방향: 강점·약점 모두 "더한 만큼 다른 쪽에서 뺀다"(합 0). 예전엔 둘 다 스탯 합이 늘어 "균형"이 늘 손해였다(전략 검사).
   const ct = base > 0 && commonOf(), ci = ct ? st.indexOf(ct.s[C.pos]) : -1;
   if(ci >= 0 && (C.ctg||0) < CT_CAP){ const g = Math.min(CT_SHIFT, CT_CAP-(C.ctg||0)); C.off[ci] += g; C.ctg = (C.ctg||0) + g; }
-  // 강점 강화: 이미 99인 강점 스탯 몫은 99가 아닌 다른 강점 스탯으로 넘긴다. 다 99면 약점도 깎지 않는다(훈련할 게 없음).
-  // 예전엔 99에 막힌 스탯에도 +0.5가 들어가 버려지고 약점 −0.7만 남아, 99 이후 강점 강화가 손해였다(사용자 지적).
+  // 강점 강화: 이미 99(또는 +15 상한)인 강점 스탯 몫은 절반만 다른 강점 스탯으로 넘어간다. 다 막혔으면 약점도 깎지 않는다.
+  // 예전엔 99에 막힌 몫이 통째로 버려져 손해였고(사용자 지적), 통째로 넘기면 99 이후에도 강점 강화가 늘 정답이었다.
+  // 절반만 넘기니 "강점 스탯이 정점 무렵(28세 안팎)에 딱 99에 닿게" 강점 강화 → 균형으로 갈아타는 게 이득(사용자 지정).
   if(C.train==='강점 강화'){
     const keys = w.map((x,i) => i).filter(i => w[i]>=1.2), open = keys.filter(i => C.ovr+C.off[i] < 99 && C.off[i] < 15);
-    if(open.length){ const each = 0.5*keys.length/open.length; C.off = C.off.map((o2,i) => open.includes(i) ? Math.min(15, o2+each) : w[i]<=0.9 ? o2-0.7 : o2); }
+    if(open.length){ const each = 0.5*(open.length + (keys.length-open.length)*0.5)/open.length;
+      C.off = C.off.map((o2,i) => open.includes(i) ? Math.min(15, o2+each) : w[i]<=0.9 ? o2-0.7 : o2); }
   }
   if(C.train==='약점 보완') C.off = C.off.map((o2,i) => Math.max(-25, o2+(w[i]>=1.2?-0.5:w[i]<=0.9?1:0)));
   syncSt();

@@ -8987,7 +8987,8 @@ function crPrep(){
    +'<div class="cr-note">'+(pr.youth?'유스 시즌이라 출전 기회는 유스팀 기준이에요.':'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
    +'<div class="cr-panel"><div class="cr-lbl"><b>훈련 방향</b><span>오른 만큼이 스탯에 나뉘는 방식</span></div><div class="cr-seg" style="--n:3">'
    +['강점 강화','균형','약점 보완'].map(function(t){ return '<button class="cr-chip" aria-pressed="'+(CR.train===t)+'" onclick="CR.train=\''+t+'\';crPrep()">'+t+'</button>'; }).join('')+'</div>'
-   +(pr.keyMax?'<div class="cr-note" style="margin-top:6px">주요 능력이 이미 최고치예요. 강점 강화로는 더 오를 데가 없어요.</div>':'')+'</div>'
+   +(pr.keyMax?'<div class="cr-note" style="margin-top:6px">주요 능력이 모두 최고치예요. 강점 강화로는 더 오를 데가 없어요.</div>'
+     :pr.keyCapped&&pr.keyCapped.length?'<div class="cr-note" style="margin-top:6px">'+gmEsc(pr.keyCapped.join('·'))+'은(는) 이미 최고치라 강점 강화 효율이 절반으로 떨어져요.</div>':'')+'</div>'
    +'<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(ev.t)+'</b><span>이벤트</span></div><div style="font-size:14px;line-height:1.5">'+d
    +(lc?'<div class="cr-loanc">'+crCrest(lc,30)+'<div><b>'+gmEsc(lc.n)+'</b><div class="cr-note">'+crNat(lc.nat).f+' '+crNat(lc.nat).n+' · 1시즌 임대</div></div>'+crChance(lc.chance)+'</div>':'')
    +'</div><div class="cr-seg">'+ev.a.map(function(t,k){
