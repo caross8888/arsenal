@@ -50,13 +50,27 @@ const TRAIT_BY_ID = new Map([...TRAITS, ...CTRAITS.map(t => ({...t, pos:'공통'
 const CT_AGE = 17, CT_SHIFT = 0.8, CT_CAP = 10;
 const CT_BONUS = {
   FW:{'스피드':{g:.01, a:.01}, '패스':{g:.007, a:.013}, '드리블':{g:.007}, '오프더볼':{g:.006}},
-  MF:{'태클':{cs:.012, r:.008}, '체력':{g:.003, a:.006}, '볼키핑':{g:.002, r:.004}},
-  DF:{'태클':{cs:.01, r:.004}, '대인마크':{cs:.01, r:.004}, '스피드':{cs:.005, r:.003}, '빌드업':{a:.005, r:.007}, '공중볼':{r:.007}}};
+  MF:{'태클':{r:.005}, '체력':{g:.002, a:.003}, '볼키핑':{g:.002, r:.004}},
+  DF:{'스피드':{r:.003}, '빌드업':{a:.005, r:.007}, '공중볼':{r:.007}}};   // 태클·대인마크의 클린시트·평점은 이제 DEF_FX가 모든 선수에게 준다
+// 수비 스탯 효과(사용자 지정 — 모든 스탯이 어딘가에 쓰이게): 시작 모양보다 오버롤 대비 얼마나 올랐는지(1점당)로 클린시트 배율·평점을 더한다.
+// 시작 모양을 기준으로 삼아 카드끼리의 기본값은 그대로(같은 카드·같은 오버롤이면 평균 0), 훈련·특성·하락으로 바뀐 몫만 효과가 난다.
+const DEF_FX = {
+  MF:{cs:{'태클':1}, r:{'태클':0.6, '체력':0.4}},
+  DF:{cs:{'태클':0.35, '대인마크':0.35, '공중볼':0.15, '스피드':0.15}, r:{'태클':0.5, '대인마크':0.5}}};
+const DEF_K = {cs:0.012, r:0.012};
+// 강점 스탯(카드 가중치 1.2 이상)이 모두 99 — 강점 강화를 해도 더 오를 데가 없다(훈련 선택지에 표시)
+const keyMax = () => CARDS[C.pos][C.card].w.every((x,i) => x < 1.2 || C.ovr+C.off[i] >= 99 || C.off[i] >= 15);
+function defFx(){
+  const fx = DEF_FX[C.pos]; if(!fx) return {cs:1, r:0};
+  const st = STATS[C.pos], o0 = startStats(C.pos, C.card).map(v => v - START_OVR);
+  const d = map => Object.entries(map).reduce((t,[n,w]) => { const i = st.indexOf(n); return t + w*((C.st[i]-C.ovr) - o0[i]); }, 0);
+  return {cs: Math.max(0.7, 1 + DEF_K.cs*d(fx.cs)), r: Math.max(-0.25, Math.min(0.25, DEF_K.r*d(fx.r)))};
+}
 // 선택 카드에 보여 줄 "무엇이 좋아지나"(스탯이 들어가는 골·도움 계산 + CT_BONUS)
 const CT_LABEL = {
   FW:{'결정력':'골','드리블':'골·도움','스피드':'골·도움','오프더볼':'골','패스':'골·도움'},
-  MF:{'패스':'도움','시야':'골·도움','볼키핑':'골·평점','체력':'골·도움','태클':'클린시트·평점'},
-  DF:{'태클':'클린시트·평점','대인마크':'클린시트·평점','공중볼':'골·평점','스피드':'도움·클린시트','빌드업':'도움·평점'}};
+  MF:{'패스':'도움','시야':'골·도움','볼키핑':'골·평점','체력':'골·도움·평점','태클':'클린시트·평점'},
+  DF:{'태클':'클린시트·평점','대인마크':'클린시트·평점','공중볼':'골·클린시트·평점','스피드':'도움·클린시트','빌드업':'도움·평점'}};
 function ctBonus(){
   const t = commonOf(), b = t && (CT_BONUS[C.pos]||{})[t.s[C.pos]], n = C.ctg||0;
   return {g:1+(b&&b.g||0)*n, a:1+(b&&b.a||0)*n, cs:1+(b&&b.cs||0)*n, r:(b&&b.r||0)*n};
@@ -238,7 +252,7 @@ export function prepView(state){
   else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 완화)' : ' (감독 신뢰 ↑)')];
-  return {goal, youth: youth(), event:{id:ev.id, t:ev.t, d, a},
+  return {goal, youth: youth(), keyMax: keyMax(), event:{id:ev.id, t:ev.t, d, a},
     loanClub: C.ev==='loan' && C.loanClub ? {...pub(C.loanClub), chance: chanceOf(pStart(C.loanClub))} : null};
 }
 
@@ -345,14 +359,15 @@ export function playSeason(state, choice){
   // 커리어 하이 ×1.3(예전 ×1.6 — 88 오버롤로 79골이 나왔다), 골 45·도움 25를 넘는 몫은 절반만(60골 넘는 시즌은 전설급에서만 드물게).
   const soft = (x, k) => x <= k ? x : k + (x-k)*0.5;
   const goals = Math.round(soft(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.3:1), 45)), ast = Math.round(soft(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.3:1), 25));
-  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*CB.cs));
+  const DF_ = defFx();
+  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*CB.cs*DF_.cs));
   // 클린시트는 출전 경기 전체로 센다(교체 출전 포함). 예전엔 선발만 세서 출전 대비 25%로 너무 적게 보였다(사용자 지적).
   const cs = row0Youth ? Math.round(apps*pCS*0.8) : Math.round(apps*pCS*(0.85+rng()*0.3));
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
   // 평점: 실력 + 팀 안 위치 + 포지션별 활약 + 운. 기본값 6.42(예전 6.45 — 정체기를 29~30세로 늘려 상위 시즌이 많아진 만큼 내림)
   const clubLv = club.r - (youth()&&!onLoan ? YOUTH_GAP : 0), ap = Math.max(apps,1);
   const perfBonus = {FW:(goals+ast*0.6)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.6, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.6}[C.pos];
-  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.42+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+(rng()-0.5)*0.5)) : 0;
+  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.42+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+DF_.r+(rng()-0.5)*0.5)) : 0;
 
   // 성장 / 하락
   const base = ageBase(), ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
@@ -379,7 +394,12 @@ export function playSeason(state, choice){
   // 훈련 방향: 강점·약점 모두 "더한 만큼 다른 쪽에서 뺀다"(합 0). 예전엔 둘 다 스탯 합이 늘어 "균형"이 늘 손해였다(전략 검사).
   const ct = base > 0 && commonOf(), ci = ct ? st.indexOf(ct.s[C.pos]) : -1;
   if(ci >= 0 && (C.ctg||0) < CT_CAP){ const g = Math.min(CT_SHIFT, CT_CAP-(C.ctg||0)); C.off[ci] += g; C.ctg = (C.ctg||0) + g; }
-  if(C.train==='강점 강화') C.off = C.off.map((o2,i) => Math.min(15, o2+(w[i]>=1.2?0.5:w[i]<=0.9?-0.7:0)));
+  // 강점 강화: 이미 99인 강점 스탯 몫은 99가 아닌 다른 강점 스탯으로 넘긴다. 다 99면 약점도 깎지 않는다(훈련할 게 없음).
+  // 예전엔 99에 막힌 스탯에도 +0.5가 들어가 버려지고 약점 −0.7만 남아, 99 이후 강점 강화가 손해였다(사용자 지적).
+  if(C.train==='강점 강화'){
+    const keys = w.map((x,i) => i).filter(i => w[i]>=1.2), open = keys.filter(i => C.ovr+C.off[i] < 99 && C.off[i] < 15);
+    if(open.length){ const each = 0.5*keys.length/open.length; C.off = C.off.map((o2,i) => open.includes(i) ? Math.min(15, o2+each) : w[i]<=0.9 ? o2-0.7 : o2); }
+  }
   if(C.train==='약점 보완') C.off = C.off.map((o2,i) => Math.max(-25, o2+(w[i]>=1.2?-0.5:w[i]<=0.9?1:0)));
   syncSt();
   const deltas = C.st.map((v,i) => Math.round(v)-Math.round(before[i]));
