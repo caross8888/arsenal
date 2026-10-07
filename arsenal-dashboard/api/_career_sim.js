@@ -31,7 +31,7 @@ const BALLON_PTS = [[/챔피언스리그 우승/,25],[/월드컵 우승/,25],[/(
 // 포지션별 기여 점수 — 미드필더·수비수는 골·도움 가중치를 높이고 수비수는 클린시트를 더한다
 // 경기당 골·도움 기본 비율. 공격수는 시작 오버롤을 54로 통일하면서(예전 카드 평균 54.8) 줄어든 골·도움을 되돌린 값(0.42·0.18에서)
 const NEW_SIGNING = [0.08, -0.04];   // 선발 확률: [이적 첫 시즌 +, 같은 팀 2시즌째부터 −] — 평균이 0 근처가 되게(전체 성장이 빨라지지 않게)
-const AW_PRESTIGE = [0.2, 93];   // 수상용 평점의 구단 수준 보정: [15 차이마다 ±, 기준 명성(1군 시즌 평균 구단 명성 근처)]
+const AW_PRESTIGE = [0.2, 97];   // 수상용 평점의 구단 수준 보정: [15 차이마다 ±, 기준 명성(1군 시즌 평균 구단 명성 근처)]
 const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련)
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 const G_RATE = {FW:0.446, MF:0.13, DF:0.035}, A_RATE = {FW:0.19, MF:0.17, DF:0.06};
@@ -42,15 +42,15 @@ const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.5}, DF:{g:8,a:5,cs:3.5}};
 // 결과 포지션별 점수 중앙 공격 2,160 · 미드 2,121 · 수비 2,113(공격수가 약간 높은 건 득점왕 같은 공격수 전용 상 몫).
 // scripts/sim_career.mjs와 같은 전략으로 카드당 3,000 커리어를 돌려 잰 값 — 카드·출력 공식을 바꾸면 다시 잴 것.
 // 득점왕 같은 수상은 보정하지 않는다(포처가 득점왕을 더 받는 건 자연스럽다).
-const CARD_CONTRIB = {FW:[1.37,1.07,1.03,1.05,1.19], MF:[1.16,0.81,0.93,0.92,1.35], DF:[1.16,1.12,1.07,1.1,1.0,1.1]};
+const CARD_CONTRIB = {FW:[1.25,0.97,0.94,0.96,1.08], MF:[1.15,0.8,0.92,0.91,1.34], DF:[1.23,1.19,1.13,1.17,1.06,1.17]};
 // 숨은 재능(18세에 정해짐): 등급을 뽑은 뒤 등급 안에서 배율을 연속으로 뽑는다(평균은 예전 고정값 1.0/1.18/1.58/2.05 근처).
 // 고정값 넷이면 분포가 등급별 덩어리로 끊기고 사이가 비었다(사용자 지적). 등급 이름은 힌트·통계용으로 C.tier에 남긴다.
 const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[0.85,1.15]};
 // 발전 운: 커리어마다 하나, 성장에 곱한다(같은 재능이라도 선수마다 다르게 — 사용자 지적: "재능이 결과를 다 정한다")
 const DEV = [0.8, 1.2];
-const K_GROW = 0.505, DAMP = [0.4, 30], PLAY_C = [0.75, 0.45], CLUB_C = [1.6, 1.33, 1.1, 0.88, 0.7], LEAGUE_T = 3.5;
+const K_GROW = 0.48, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.6, 1.33, 1.1, 0.88, 0.7], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:128, sd:14, pos:{FW:1.03, MF:0.86, DF:0.75}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
+const BALLON = {mu:127, sd:14, pos:{FW:1.03, MF:0.93, DF:0.82}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
 
@@ -319,7 +319,8 @@ export function playSeason(state, choice){
   }
   const st = STATS[C.pos], w = card.w, before = C.st.slice();
   if(base > 0){
-    const dmp = Math.min(1, Math.max(DAMP[0], (99-C.ovr)/DAMP[1]));
+    // 99 근처 감속: 최소값 없이 99.6에 다가갈수록 0에 가깝게 줄어든다. 예전엔 최소 40%라 상위권이 계속 커서 99 상한에 부딪혀 쌓였다(사용자 지적).
+    const dmp = Math.min(1, Math.max(DAMP[0], (99.6-C.ovr)/DAMP[1]));
     C.ovr = Math.min(99, C.ovr + C.boost*base*playCoef(ratio)*clubCoef(club.r)*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
@@ -352,12 +353,12 @@ export function playSeason(state, choice){
       const gT = {ENG:24,ESP:24,GER:22,ITA:22,FRA:22}[club.nat]||20, aT = gT>=22 ? 13 : 11;
       const gk = goals>=gT && rng()<Math.min(0.95,0.4+(goals-gT)*0.1), ak = ast>=aT && rng()<Math.min(0.95,0.4+(ast-aT)*0.12);
       if(gk) add(natN+' 리그 득점왕','B'); if(ak) add(natN+' 리그 도움왕','B');
-      if(awR>=7.7 && rank<=3 && rng()<(gk?0.5:0.3)) add(natN+' 리그 올해의 선수','A');
+      if(awR>=7.8 && rank<=3 && rng()<(gk?0.5:0.3)) add(natN+' 리그 올해의 선수','A');
       if(C.age<=23 && awR>=7.1 && rng()<0.5) add(natN+' 리그 영플레이어','C');
-      if(awR>=7.5 ? rng()<0.7 : awR>=7.3 && rng()<0.3) add(natN+' 리그 베스트 11','B');
+      if(awR>=7.6 ? rng()<0.7 : awR>=7.4 && rng()<0.3) add(natN+' 리그 베스트 11','B');
       let motm = 0; for(let mi=0; mi<3; mi++) if(rng()<Math.max(0,awR-7.0)*0.25) motm++;
       if(motm) add('이달의 선수'+(motm>1?' ×'+motm:''),'C');
-      if(rating>=7.4 && apps>=25 && rng()<0.4) add('구단 올해의 선수','C');
+      if(rating>=7.5 && apps>=25 && rng()<0.4) add('구단 올해의 선수','C');
       if(C.pos!=='FW' && awR>=7.3 && rng()<0.6) add(natN+' 리그 올해의 '+(C.pos==='MF'?'미드필더':'수비수'),'B');
       if(goals>=30 && rng()<0.6) add('유러피언 골든슈','B');
     }
@@ -366,7 +367,7 @@ export function playSeason(state, choice){
       if(uclWin && rating>=7.5 && rng()<0.5) add('챔스 올해의 선수','A');
       if(rating>=7.6 && rng()<0.2) add('챔스 올해의 '+{FW:'공격수',MF:'미드필더',DF:'수비수'}[C.pos],'B');
     }
-    if(ov>=90 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
+    if(ov>=91 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
     if(C.age<=21 && ov>=80 && rating>=7.1 && rng()<0.5) add('골든보이','B');
     if(rng()<(C.pos==='FW'?0.008:0.004)) add('올해의 골','C');
   } else if(rng()<0.25) add('유스 리그 우승','-','team');
