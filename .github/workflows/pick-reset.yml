@@ -1,0 +1,38 @@
+# 승부예측 비밀번호 초기화 — 수동 실행 전용
+#
+# 비밀번호를 잊은 사용자의 비밀번호를 새 값으로 바꾼다(api/pick.js?a=reset). 기록·순위는 그대로다.
+# 비밀번호는 서버에 해시로만 저장돼 원래 값을 알려줄 수는 없다. 준비물: 저장소 시크릿 CRON_SECRET.
+
+name: pick password reset
+
+on:
+  workflow_dispatch:
+    inputs:
+      nick:
+        description: '닉네임'
+        required: true
+      pw:
+        description: '새 비밀번호(4~20자) — 사용자에게 알려주고 바꾸라고 안내'
+        required: true
+
+permissions: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: 비밀번호 초기화 요청
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          NICK: ${{ inputs.nick }}
+          PW: ${{ inputs.pw }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "::error::CRON_SECRET 시크릿이 없습니다."; exit 1; fi
+          echo "::add-mask::$PW"
+          body=$(node -e 'console.log(JSON.stringify({nick:process.env.NICK,pw:process.env.PW}))')
+          code=$(curl -sS -o res.json -w '%{http_code}' --max-time 30 \
+            -X POST -H "Authorization: Bearer $CRON_SECRET" -H 'Content-Type: application/json' \
+            --data "$body" "https://coyg.vercel.app/api/pick?a=reset")
+          echo "HTTP $code"; cat res.json; echo
+          [ "$code" = "200" ] || { echo "::error::초기화 실패 (HTTP $code)"; exit 1; }

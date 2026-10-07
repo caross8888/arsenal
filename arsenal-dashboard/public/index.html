@@ -1531,6 +1531,88 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .gm-row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gm-row .pt{font-family:var(--fd);font-size:18px;color:var(--gold)}
 .gm-empty{color:var(--text-secondary);text-align:center;font-size:13px;padding:20px 0}
+/* ── 승부예측(#games 안) — 색은 전부 테마 변수, 라이트는 아래 [data-theme="light"]에서 막대·강조만 다시 정한다 ── */
+.pk-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-secondary);gap:8px}
+.pk-top b{color:var(--text)}
+.pk-top button{background:none;border:0;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;padding:0}
+.pk-tabs{display:flex;gap:6px}
+.pk-tabs button{flex:1;font:inherit;font-size:13px;font-weight:600;padding:9px 6px;border-radius:10px;border:1px solid var(--border-bright);background:transparent;color:var(--text-secondary);cursor:pointer}
+.pk-tabs button[aria-pressed="true"]{background:var(--red-dark);border-color:var(--red-dark);color:#fff}
+.pk-rnav{display:grid;grid-template-columns:34px 1fr 34px;align-items:center}
+.pk-rnav button{background:none;border:1px solid var(--border-bright);color:var(--text);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:15px}
+.pk-rnav button:disabled{opacity:.3;cursor:default}
+.pk-rt{text-align:center}
+.pk-rt .r{font-family:var(--fd);font-size:24px;letter-spacing:1px;line-height:1.1}
+.pk-rt .d{font-size:11px;color:var(--text-secondary)}
+.pk-list{display:flex;flex-direction:column;gap:8px}
+.pk-m{background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:10px 10px 9px;display:flex;flex-direction:column;gap:8px}
+.pk-m.ars{border-color:rgba(239,1,7,.5)}
+.pk-m.r-hit{border-color:rgba(34,197,94,.6);background:rgba(34,197,94,.09)}
+.pk-m.r-miss{border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.08)}
+.pk-m.r-none{opacity:.6}
+.pk-mt{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-secondary);font-variant-numeric:tabular-nums;gap:6px}
+.pk-mt .lock{color:var(--gold)}
+.pk-picks{display:grid;grid-template-columns:1fr auto 1fr;gap:6px}
+.pk-pick{font:inherit;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:9px;padding:7px 6px;cursor:pointer;display:flex;align-items:center;gap:7px;min-width:0;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.pk-pick.home{justify-content:flex-start}
+/* row-reverse에선 주축이 뒤집혀 flex-start가 오른쪽 끝이다 */
+.pk-pick.away{justify-content:flex-start;flex-direction:row-reverse}
+.pk-pick.draw{padding:7px 12px;justify-content:center}
+.pk-pick:disabled{cursor:default}
+.pk-pick.sel{border-color:var(--gold);background:rgba(200,168,75,.16)}
+/* 고를 때 반응은 짧게만(사용자 지정): 누르는 순간 살짝 눌림, 선택 색은 부드럽게, 비율 막대는 저장 직후 한 번만 차오름. */
+.pk-pick{transition:border-color .15s ease,background-color .15s ease,transform .1s ease}
+.pk-pick:not(:disabled):active{transform:scale(.97)}
+.pk-pick .bar.grow{transform-origin:left center;animation:pkGrow .4s ease-out both}
+.pk-pick.away .bar.grow{transform-origin:right center}
+@keyframes pkGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion: reduce){.pk-pick{transition:none}.pk-pick:not(:disabled):active{transform:none}.pk-pick .bar.grow{animation:none}}
+.pk-pick .bar{position:absolute;left:0;top:0;bottom:0;background:var(--overlay-10)}
+.pk-pick.away .bar{left:auto;right:0}
+.pk-pick .bar.top{background:var(--overlay-18)}
+.pk-pick.sel .bar{background:rgba(200,168,75,.38)}
+.pk-pick .tx{display:flex;flex-direction:column;min-width:0;position:relative;line-height:1.25}
+.pk-pick.away .tx{align-items:flex-end;text-align:right}
+.pk-pick.draw .tx{align-items:center}
+.pk-pick .nm{font-size:13px;font-weight:600;overflow-wrap:anywhere}
+.pk-pick.draw .nm{color:var(--text-secondary)}
+.pk-pick.sel.draw .nm{color:var(--gold)}
+.pk-pick .pc{font-size:10.5px;color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.pk-crest{width:24px;height:24px;object-fit:contain;flex-shrink:0;position:relative}
+.pk-crest-ph{width:24px;height:24px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:9px;font-weight:700;color:var(--text-secondary);flex-shrink:0;position:relative}
+.pk-res{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;font-size:12px}
+.pk-res>:last-child{justify-self:end}
+.pk-res .tm{display:flex;align-items:center;gap:6px;min-width:0}
+.pk-res .sc{font-family:var(--fd);font-size:18px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.pk-badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px}
+.pk-badge.hit{background:var(--green);color:#06210f}
+.pk-badge.miss{background:var(--loss);color:#fff}
+.pk-badge.none{background:var(--surface3);color:var(--text-secondary);font-weight:600}
+.pk-mypick{font-size:12px;color:var(--text-secondary)}
+.pk-mypick b{color:var(--text);font-weight:600}
+.pk-sum{background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:12px;display:grid;grid-template-columns:repeat(3,1fr);text-align:center}
+.pk-sum .v{font-family:var(--fd);font-size:26px;color:var(--gold);line-height:1.1}
+.pk-sum .l{font-size:11px;color:var(--text-secondary)}
+.pk-save{display:flex;flex-direction:column;gap:6px}
+.pk-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto auto;gap:10px;padding:9px 8px;border-radius:8px;align-items:center;font-variant-numeric:tabular-nums}
+.pk-row:nth-child(odd){background:var(--surface2)}
+.pk-row.me{background:rgba(200,168,75,.16);outline:1px solid var(--border-accent)}
+.pk-row .rk{color:var(--text-secondary);font-size:13px;text-align:center}
+.pk-row .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk-row .ac{font-size:11px;color:var(--text-secondary)}
+.pk-row .pt{font-family:var(--fd);font-size:18px;color:var(--gold);min-width:28px;text-align:right}
+.pk-prev{font-size:12px;color:var(--text-secondary)}
+.pk-prev b{color:var(--gold);font-weight:600}
+.pk-field{display:flex;flex-direction:column;gap:6px}
+.pk-field label{font-size:12px;color:var(--text-secondary)}
+.pk-field input{font:inherit;font-size:16px;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:10px;padding:11px}
+.pk-err{font-size:12px;color:var(--loss);min-height:16px}
+.pk-help{font-size:11.5px;color:var(--text-secondary);line-height:1.6;margin:0}
+:root[data-theme="light"] .pk-m.r-hit{border-color:rgba(22,163,74,.55);background:rgba(22,163,74,.08)}
+:root[data-theme="light"] .pk-m.r-miss{border-color:rgba(220,38,38,.5);background:rgba(220,38,38,.06)}
+:root[data-theme="light"] .pk-pick.sel{background:rgba(184,146,58,.14)}
+:root[data-theme="light"] .pk-pick.sel .bar{background:rgba(184,146,58,.32)}
+
 @media (prefers-reduced-motion: reduce){.gm-timer i{transition:none!important}.gm-choice.right,.gm-choice.wrong,.gm-gain,.gm-choice.right::after,.gm-score.bump,.gm-lives .lose{animation:none}}
 </style>
 </head>
@@ -7863,12 +7945,201 @@ function gmPost(a, body){
     .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error||'잠시 후 다시 시도해 주세요.'); return j; }); });
 }
 
+// ── 승부예측(api/pick.js) ───────────────────────────────────────────────
+// 프리미어리그 현재 라운드 10경기를 승·무·패로 예측한다. 로그인은 서버가 서명한 토큰을 이 기기에
+// 저장해 두는 방식이라, 한 번 로그인하면 다음부터는 자동이다(비밀번호는 기기에도 저장하지 않는다).
+var PK = {tok:null, nick:null, view:'predict', board:'month', data:null, picks:{}, saved:{}, savedAt:null, dirty:false, busy:false};
+try{ PK.tok=localStorage.getItem('pickToken'); PK.nick=localStorage.getItem('pickNick'); }catch(e){}
+function pkSetAuth(tok, nick){
+  PK.tok=tok; PK.nick=nick;
+  try{ if(tok){ localStorage.setItem('pickToken',tok); localStorage.setItem('pickNick',nick||''); } else { localStorage.removeItem('pickToken'); localStorage.removeItem('pickNick'); } }catch(e){}
+}
+function pkApi(a, q, body){
+  var url=FN+'/pick?a='+a+(q?'&'+q:'');
+  var o={method: body?'POST':'GET', headers:{}};
+  if(body){ o.headers['Content-Type']='application/json'; o.body=JSON.stringify(body); }
+  if(PK.tok) o.headers.Authorization='Bearer '+PK.tok;
+  return fetch(url,o).then(function(r){ return r.json().then(function(j){
+    if(j && j.token) pkSetAuth(j.token, PK.nick);   // 서버가 유효기간을 늘린 새 토큰을 주면 바꿔 둔다
+    if(!r.ok){ var e=new Error(j.error||'잠시 후 다시 시도해 주세요.'); e.login=!!j.login; throw e; }
+    return j;
+  }); });
+}
+function pkOpen(){
+  gameStopTimer();
+  if(!PK.tok) return pkAuth('join');
+  PK.view='predict'; pkLoad();
+}
+function pkAuth(mode){
+  var join=mode==='join';
+  gmRoot().innerHTML='<button class="gm-back" onclick="gameList()">← 게임 목록</button>'
+    +'<div class="pk-tabs" role="group" aria-label="가입 또는 로그인"><button type="button" aria-pressed="'+join+'" onclick="pkAuth(\'join\')">가입</button><button type="button" aria-pressed="'+(!join)+'" onclick="pkAuth(\'login\')">로그인</button></div>'
+    +'<form class="gm-panel" id="pkForm">'
+    +'<div style="font-weight:700;font-size:17px">'+(join?'승부예측 가입':'로그인')+'</div>'
+    +'<p class="pk-help">'+(join?'닉네임이 아이디예요. 랭킹에 이 이름으로 나와요.':'다른 기기에서 쓰던 닉네임으로 이어서 할 수 있어요.')+'</p>'
+    +'<div class="pk-field"><label for="pkNick">닉네임 (최대 12자)</label><input id="pkNick" maxlength="12" autocomplete="username"></div>'
+    +'<div class="pk-field"><label for="pkPw">비밀번호 (4~20자)</label><input id="pkPw" type="password" maxlength="20" autocomplete="'+(join?'new-password':'current-password')+'"></div>'
+    +(join?'<div class="pk-field"><label for="pkPw2">비밀번호 확인</label><input id="pkPw2" type="password" maxlength="20" autocomplete="new-password"></div>':'')
+    +'<div class="pk-err" id="pkErr"></div>'
+    +'<button class="gm-btn" type="submit" id="pkGo">'+(join?'가입하고 시작':'로그인')+'</button>'
+    +(join?'<p class="pk-help">다른 사이트와 같은 비밀번호는 쓰지 마세요. 비밀번호 찾기는 없고, 잊으면 관리자에게 초기화를 요청해야 해요.</p>':'')
+    +'</form>';
+  document.getElementById('pkForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var n=document.getElementById('pkNick').value.trim(), pw=document.getElementById('pkPw').value, err=document.getElementById('pkErr');
+    if(!n){ err.textContent='닉네임을 입력해 주세요.'; return; }
+    if(pw.length<4||pw.length>20){ err.textContent='비밀번호는 4~20자로 정해 주세요.'; return; }
+    if(join && pw!==document.getElementById('pkPw2').value){ err.textContent='비밀번호 확인이 달라요.'; return; }
+    var btn=document.getElementById('pkGo'); btn.disabled=true;
+    pkApi(join?'signup':'login', '', {nick:n, pw:pw}).then(function(d){
+      pkSetAuth(d.token, d.nick); PK.view='predict'; pkLoad();
+    }).catch(function(e2){ btn.disabled=false; err.textContent=e2.message; });
+  });
+}
+function pkLogout(){ pkSetAuth(null,null); PK.data=null; pkAuth('login'); }
+function pkLoad(r){
+  gmRoot().innerHTML='<div class="gm-empty">불러오는 중...</div>';
+  var q=r?'r='+r:'';
+  pkApi('round', q).then(function(d){
+    PK.data=d;
+    return pkApi('mine','r='+d.round).then(function(m){
+      PK.saved=m.picks||{}; PK.picks=Object.assign({},PK.saved); PK.savedAt=m.savedAt; PK.dirty=false; pkRender();
+    });
+  }).catch(function(e){
+    if(e.login){ pkSetAuth(null,null); return pkAuth('login'); }
+    gmRoot().innerHTML='<button class="gm-back" onclick="gameList()">← 게임 목록</button><div class="gm-empty">'+gmEsc(e.message)+'</div>';
+  });
+}
+function pkCrest(t){
+  var short=gmEsc(String(t.name||'').slice(0,2));
+  return '<img class="pk-crest" src="https://images.fotmob.com/image_resources/logo/teamlogo/'+gmEsc(t.id)+'.png" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;pk-crest-ph&quot;>'+short+'</span>\'">';
+}
+function pkWhen(iso){
+  var d=new Date(iso), w='일월화수목금토'[d.getDay()], p=function(n){return (n<10?'0':'')+n;};
+  return (d.getMonth()+1)+'.'+p(d.getDate())+' ('+w+') '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function pkHeader(){
+  return '<button class="gm-back" onclick="gameList()">← 게임 목록</button>'
+    +'<div class="pk-tabs" role="group" aria-label="승부예측 화면"><button type="button" aria-pressed="'+(PK.view==='predict')+'" onclick="PK.view=\'predict\';pkRender()">예측</button><button type="button" aria-pressed="'+(PK.view==='rank')+'" onclick="PK.view=\'rank\';pkRender()">랭킹</button></div>'
+    +'<div class="pk-top"><span>닉네임 <b>'+gmEsc(PK.nick||'')+'</b></span><span id="pkMe"></span><button type="button" onclick="pkLogout()">로그아웃</button></div>';
+}
+function pkMe(){
+  pkApi('me').then(function(m){
+    var el=document.getElementById('pkMe'); if(!el) return;
+    var parts=[];
+    if(m.monthly) parts.push('이번 달 '+m.monthly.rank+'위 · '+m.monthly.points+'점');
+    if(m.season) parts.push('시즌 '+m.season.rank+'위');
+    el.textContent=parts.join(' · ');
+  }).catch(function(){});
+}
+function pkLabel(m, side){ return side==='H'?m.home.name+' 승':side==='A'?m.away.name+' 승':'무'; }
+function pkRender(){
+  if(PK.view==='rank') return pkRank();
+  var d=PK.data; if(!d) return pkLoad();
+  var cur=d.round===d.current, first=d.matches[0], last=d.matches[d.matches.length-1];
+  var h=pkHeader()
+    +'<div class="pk-rnav"><button type="button" aria-label="이전 라운드" '+(d.round<=d.first?'disabled':'')+' onclick="pkLoad('+(d.round-1)+')">‹</button>'
+    +'<div class="pk-rt"><div class="r">'+d.round+'라운드</div><div class="d">'+pkWhen(first.kickoff).split(' (')[0]+' – '+pkWhen(last.kickoff).split(' (')[0]+(cur?'':' · 지난 라운드')+'</div></div>'
+    +'<button type="button" aria-label="다음 라운드" '+(cur?'disabled':'')+' onclick="pkLoad('+(d.round+1)+')">›</button></div>';
+  var hasSaved=!!PK.savedAt;
+  // 지난 라운드: 결과 카드(적중/미적중을 카드 색으로)
+  if(!cur){
+    var hit=0, done=0;
+    var cards=d.matches.map(function(m){
+      var mine=PK.saved[m.id];
+      if(m.state!=='done') return '<div class="pk-m"><div class="pk-mt"><span>'+pkWhen(m.kickoff)+'</span><span class="lock">'+(m.state==='cancelled'?'취소·연기':m.state==='open'?'연기된 경기 · 킥오프 전까지 예측 가능':'진행 중')+'</span></div>'
+        +'<div class="pk-res"><span class="tm">'+pkCrest(m.home)+gmEsc(m.home.name)+'</span><span class="sc">vs</span><span class="tm">'+gmEsc(m.away.name)+pkCrest(m.away)+'</span></div></div>';
+      done++;
+      var kind=!mine?'none':mine===m.result?'hit':'miss'; if(kind==='hit') hit++;
+      return '<div class="pk-m r-'+kind+'"><div class="pk-res"><span class="tm">'+pkCrest(m.home)+gmEsc(m.home.name)+'</span><span class="sc">'+gmEsc(m.score)+'</span><span class="tm">'+gmEsc(m.away.name)+pkCrest(m.away)+'</span></div>'
+        +'<div class="pk-mt"><span class="pk-mypick">내 예측 <b>'+(mine?gmEsc(pkLabel(m,mine)):'—')+'</b></span><span class="pk-badge '+kind+'">'+{hit:'✓ 적중',miss:'✗ 미적중',none:'예측 안 함'}[kind]+'</span></div></div>';
+    }).join('');
+    var bonus=done===d.matches.filter(function(m){return m.state!=='cancelled';}).length && hit===done && done>0 ? 3 : 0;
+    h+='<div class="pk-sum"><div><div class="v">'+hit+'/'+done+'</div><div class="l">적중</div></div><div><div class="v">+'+(hit+bonus)+'</div><div class="l">점수'+(bonus?' (보너스 +3)':'')+'</div></div><div><div class="v">'+(d.players||0)+'</div><div class="l">참여자</div></div></div>'
+      +'<div class="pk-list">'+cards+'</div>';
+    gmRoot().innerHTML=h; pkMe(); return;
+  }
+  // 현재 라운드: 예측
+  h+='<div class="pk-list">'+d.matches.map(function(m){
+    var open=m.state==='open', ars=(m.home.id==='9825'||m.away.id==='9825');
+    var show=m.pct && (hasSaved || !open);
+    var top=m.pct?Math.max(m.pct.H,m.pct.D,m.pct.A):-1;
+    var btn=function(side){
+      var sel=PK.picks[m.id]===side, cls=side==='H'?'home':side==='D'?'draw':'away', t=side==='H'?m.home:side==='A'?m.away:null;
+      var p=show?m.pct[side]:null;
+      return '<button type="button" class="pk-pick '+cls+(sel?' sel':'')+'" data-mid="'+m.id+'" data-side="'+side+'" '+(open?'onclick="pkPick(\''+m.id+'\',\''+side+'\')"':'disabled')+' aria-pressed="'+sel+'">'
+        +(p!=null?'<span class="bar'+(p===top?' top':'')+(PK.grow?' grow':'')+'" style="width:'+p+'%"></span>':'')
+        +(t?pkCrest(t):'')+'<span class="tx"><span class="nm">'+(t?gmEsc(t.name):'무')+'</span>'+(p!=null?'<span class="pc">'+p+'%</span>':'')+'</span></button>';
+    };
+    var stTxt=m.state==='open'?'킥오프 전까지 수정 가능':m.state==='done'?'종료 '+gmEsc(m.score):m.state==='cancelled'?'취소·연기':'🔒 경기 시작 · 수정 불가';
+    return '<div class="pk-m'+(ars?' ars':'')+'"><div class="pk-mt"><span>'+pkWhen(m.kickoff)+'</span><span'+(open?'':' class="lock"')+'>'+stTxt+'</span></div>'
+      +'<div class="pk-picks">'+btn('H')+btn('D')+btn('A')+'</div></div>';
+  }).join('')+'</div>';
+  var openN=d.matches.filter(function(m){return m.state==='open';}).length;
+  var pickedN=d.matches.filter(function(m){return m.state==='open'&&PK.picks[m.id];}).length;
+  h+='<div class="pk-save"><button class="gm-btn" id="pkSave" onclick="pkSave()" '+(openN?'':'disabled')+'>'+(hasSaved?'다시 저장':'예측 저장')+' ('+pickedN+'/'+openN+')</button>'
+    +'<div class="gm-note" id="pkNote">'+(PK.dirty?'저장하지 않은 변경이 있어요':hasSaved?'저장했어요 · '+pkWhen(new Date(PK.savedAt).toISOString()).split(' ').slice(-1)[0]+' · 경기 시작 전까지 고칠 수 있어요':'저장하면 경기별 참여자 비율이 보여요')+'</div></div>';
+  gmRoot().innerHTML=h; PK.grow=false; pkMe();
+}
+// 고른 경기의 버튼 셋만 바꾼다 — 화면 전체를 다시 그리면 색 전환이 안 먹고 깜빡인다.
+function pkPick(id, side){
+  PK.picks[id]= PK.picks[id]===side ? null : side;
+  PK.dirty=true;
+  document.querySelectorAll('.pk-pick[data-mid="'+id+'"]').forEach(function(b){
+    var on=PK.picks[id]===b.getAttribute('data-side');
+    b.classList.toggle('sel', on); b.setAttribute('aria-pressed', String(on));
+  });
+  var d=PK.data, openN=0, pickedN=0;
+  d.matches.forEach(function(m){ if(m.state==='open'){ openN++; if(PK.picks[m.id]) pickedN++; } });
+  var btn=document.getElementById('pkSave'); if(btn) btn.textContent=(PK.savedAt?'다시 저장':'예측 저장')+' ('+pickedN+'/'+openN+')';
+  var n=document.getElementById('pkNote'); if(n) n.textContent='저장하지 않은 변경이 있어요';
+}
+function pkSave(){
+  if(PK.busy) return; PK.busy=true;
+  var b=document.getElementById('pkSave'); if(b) b.disabled=true;
+  var send={}; PK.data.matches.forEach(function(m){ if(m.state==='open') send[m.id]=PK.picks[m.id]||null; });
+  pkApi('save','',{round:PK.data.round, picks:send}).then(function(r){
+    PK.busy=false; PK.saved=r.picks; PK.picks=Object.assign({},r.picks); PK.savedAt=r.savedAt; PK.dirty=false;
+    // 비율은 서버가 1분 단위로 다시 센다 — 방금 저장한 내 표가 바로 안 보일 수 있어 다시 받아 온다.
+    return pkApi('round','r='+PK.data.round).then(function(d){ PK.data=d; PK.grow=true; pkRender();
+      var n=document.getElementById('pkNote'); if(n && r.rejected) n.textContent='저장했어요 · 그사이 시작한 경기 '+r.rejected+'개는 바뀌지 않았어요';
+    });
+  }).catch(function(e){
+    PK.busy=false; if(e.login){ pkSetAuth(null,null); return pkAuth('login'); }
+    var n=document.getElementById('pkNote'); if(n) n.textContent=e.message; if(b) b.disabled=false;
+  });
+}
+function pkMonth(off){ var d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+(off||0)); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2); }
+function pkRank(){
+  var mon=pkMonth(0), prev=pkMonth(-1);
+  gmRoot().innerHTML=pkHeader()
+    +'<div class="pk-tabs" role="group" aria-label="랭킹 기간"><button type="button" aria-pressed="'+(PK.board==='month')+'" onclick="PK.board=\'month\';pkRank()">이번 달 ('+(+mon.slice(5))+'월)</button><button type="button" aria-pressed="'+(PK.board==='season')+'" onclick="PK.board=\'season\';pkRank()">시즌</button></div>'
+    +(PK.board==='month'?'<div class="pk-prev" id="pkPrev"></div>':'')
+    +'<div id="pkBoard"><div class="gm-empty">불러오는 중...</div></div>'
+    +'<p class="pk-help">맞히면 1점, 라운드 전 경기를 맞히면 +3점. 동점이면 적중률 → 먼저 저장한 순. 이번 달 순위는 경기 킥오프 날짜 기준이에요.</p>';
+  pkMe();
+  pkApi('board', 'm='+(PK.board==='month'?mon:'season')).then(function(d){
+    var el=document.getElementById('pkBoard'); if(!el) return;
+    if(!d.rows.length){ el.innerHTML='<div class="gm-empty">아직 채점된 경기가 없어요. 경기가 끝나면 순위가 생겨요.</div>'; return; }
+    el.innerHTML=d.rows.map(function(r){
+      var me=r.name===PK.nick;
+      return '<div class="pk-row'+(me?' me':'')+'"><span class="rk">'+r.rank+'</span><span class="nm">'+gmEsc(r.name)+'</span><span class="ac">'+(r.total?'적중률 '+Math.round(r.hit/r.total*100)+'%':'')+'</span><span class="pt">'+r.points+'</span></div>';
+    }).join('');
+  }).catch(function(e){ var el=document.getElementById('pkBoard'); if(el) el.innerHTML='<div class="gm-empty">'+gmEsc(e.message)+'</div>'; });
+  if(PK.board==='month') pkApi('board','m='+prev).then(function(d){
+    var el=document.getElementById('pkPrev'); if(!el || !d.rows.length) return;
+    el.innerHTML='지난달('+(+prev.slice(5))+'월) '+d.rows.slice(0,3).map(function(r){ return r.rank===1?'<b>1위 '+gmEsc(r.name)+'</b>':r.rank+'위 '+gmEsc(r.name); }).join(' · ');
+  }).catch(function(){});
+}
+
 function gameList(){
   gameStopTimer();
   gmRoot().innerHTML =
     '<div class="gm-h">게임 목록</div>'
     +'<button class="gm-card" onclick="gameIntro()"><span class="gm-card-ic">?</span>'
-    +'<span><div class="gm-card-t">Who Am I?</div><div class="gm-card-d">커리어 경로를 보고 어떤 아스날 선수인지 맞히기</div></span></button>';
+    +'<span><div class="gm-card-t">Who Am I?</div><div class="gm-card-d">커리어 경로를 보고 어떤 아스날 선수인지 맞히기</div></span></button>'
+    +'<button class="gm-card" onclick="pkOpen()"><span class="gm-card-ic" style="font-size:20px">VS</span>'
+    +'<span><div class="gm-card-t">승부예측</div><div class="gm-card-d">프리미어리그 이번 라운드 10경기 승·무·패 맞히기, 월간·시즌 랭킹</div></span></button>';
 }
 function gameIntro(){
   gameStopTimer();
