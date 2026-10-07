@@ -105,7 +105,7 @@ const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[
 const DEV = [0.8, 1.2];
 const K_GROW = 0.47, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:134, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.25, DF:1.0}, top:4, inc:3, fat:5};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점(예전 10), fat 받은 횟수당 감점(한 선수 독식 방지 — 예전 최다 12회)
+const BALLON = {mu:137, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.2, DF:1.05}, top:4, inc:10};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
 
@@ -474,12 +474,12 @@ export function playSeason(state, choice){
   if(senior && apps>=20){
     const rec = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos];
     let hp2 = 0; hon.forEach(x => { const m = BALLON_PTS.find(r => r[0].test(x.n)); if(m) hp2 += m[1]; });
-    const star = Math.max(0,ov-85)*2 + Math.max(0,ov-94)*BALLON.top + (C.lastBallon===C.age-1 ? BALLON.inc : 0) - (C.ballonN||0)*BALLON.fat;   // fat: 이미 받은 횟수만큼 감점(표 피로 — 한 선수 독식 방지)
+    const star = Math.max(0,ov-85)*2 + Math.max(0,ov-94)*BALLON.top + (C.lastBallon===C.age-1 ? BALLON.inc : 0);
     // 압도적 시즌(공격 포인트가 아주 많은 시즌)은 따로 더 친다 — 62골을 넣고도 "후보 30인"에 그치던 문제(사용자 지적)
     const standout = Math.max(0, rec-BALLON.big)*BALLON.bigW;
     const bp = (rec + Math.max(0,rating-7.0)*20 + hp2 + star + standout)*BALLON.pos[C.pos];
     const rival = BALLON.mu + BALLON.sd*((rng()+rng()+rng()+rng()-2)*1.73), gap = bp-rival;
-    if(gap > 0){ add('발롱도르','S'); C.lastBallon = C.age; C.ballonN = (C.ballonN||0) + 1; if(rng()<0.75) add('FIFA 올해의 선수','S'); }
+    if(gap > 0){ add('발롱도르','S'); C.lastBallon = C.age; if(rng()<0.75) add('FIFA 올해의 선수','S'); }
     else {
       if(gap > -12) notes.push('발롱도르 투표 2위');
       else if(gap > -25) notes.push('발롱도르 투표 3위');
@@ -638,8 +638,17 @@ export function retire(state){
 // 통산 수상 목록 — 시즌 줄의 hon을 이어 붙인 것(토큰에 따로 두지 않는다)
 export const honorsOf = state => state.hist.flatMap(r => r.hon);
 export function contribScore(state){ const w = CONTRIB[state.pos], t = state.tot; return (t.goals*w.g + t.ast*w.a + (t.cs||0)*w.cs) * ((CARD_CONTRIB[state.pos]||[])[state.card] || 1); }
+// 발롱도르·FIFA 올해의 선수는 받을수록 한 번의 점수가 줄어든다(n번째: 200 × REPEAT_PTS[n−1], 마지막 값 이후 고정).
+// 수상 자체는 그대로 두고 점수만 관리한다(사용자 지정 — 연속 수상 12회면 S 등급만 2,400점이 쌓여 점수가 튀었다).
+const REPEAT_PTS = [1, 0.8, 0.65, 0.5, 0.4, 0.35], REPEAT_AW = /^(발롱도르|FIFA 올해의 선수)$/;
 export function careerScore(state){
-  const hp = honorsOf(state).reduce((t,h) => t + ((HONOR_TIER[h.tier]||{p:0}).p)*(+(String(h.n).split('×')[1])||1), 0);
+  const seen = {};
+  const hp = honorsOf(state).reduce((t,h) => {
+    const base = (HONOR_TIER[h.tier]||{p:0}).p, n = +(String(h.n).split('×')[1])||1;
+    if(!REPEAT_AW.test(h.n)) return t + base*n;
+    const k = seen[h.n] = (seen[h.n]||0) + 1;
+    return t + base*REPEAT_PTS[Math.min(k, REPEAT_PTS.length)-1];
+  }, 0);
   return Math.round(state.tot.apps + contribScore(state) + state.tot.caps*2 + state.peak*10 + hp);
 }
 
