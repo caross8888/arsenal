@@ -1560,6 +1560,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pk-pick.draw{padding:7px 12px;justify-content:center}
 .pk-pick:disabled{cursor:default}
 .pk-pick.sel{border-color:var(--gold);background:rgba(200,168,75,.16)}
+/* 고를 때 반응은 짧게만(사용자 지정): 누르는 순간 살짝 눌림, 선택 색은 부드럽게, 비율 막대는 저장 직후 한 번만 차오름. */
+.pk-pick{transition:border-color .15s ease,background-color .15s ease,transform .1s ease}
+.pk-pick:not(:disabled):active{transform:scale(.97)}
+.pk-pick .bar.grow{transform-origin:left center;animation:pkGrow .4s ease-out both}
+.pk-pick.away .bar.grow{transform-origin:right center}
+@keyframes pkGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion: reduce){.pk-pick{transition:none}.pk-pick:not(:disabled):active{transform:none}.pk-pick .bar.grow{animation:none}}
 .pk-pick .bar{position:absolute;left:0;top:0;bottom:0;background:var(--overlay-10)}
 .pk-pick.away .bar{left:auto;right:0}
 .pk-pick .bar.top{background:var(--overlay-18)}
@@ -8060,8 +8067,8 @@ function pkRender(){
     var btn=function(side){
       var sel=PK.picks[m.id]===side, cls=side==='H'?'home':side==='D'?'draw':'away', t=side==='H'?m.home:side==='A'?m.away:null;
       var p=show?m.pct[side]:null;
-      return '<button type="button" class="pk-pick '+cls+(sel?' sel':'')+'" '+(open?'onclick="pkPick(\''+m.id+'\',\''+side+'\')"':'disabled')+' aria-pressed="'+sel+'">'
-        +(p!=null?'<span class="bar'+(p===top?' top':'')+'" style="width:'+p+'%"></span>':'')
+      return '<button type="button" class="pk-pick '+cls+(sel?' sel':'')+'" data-mid="'+m.id+'" data-side="'+side+'" '+(open?'onclick="pkPick(\''+m.id+'\',\''+side+'\')"':'disabled')+' aria-pressed="'+sel+'">'
+        +(p!=null?'<span class="bar'+(p===top?' top':'')+(PK.grow?' grow':'')+'" style="width:'+p+'%"></span>':'')
         +(t?pkCrest(t):'')+'<span class="tx"><span class="nm">'+(t?gmEsc(t.name):'무')+'</span>'+(p!=null?'<span class="pc">'+p+'%</span>':'')+'</span></button>';
     };
     var stTxt=m.state==='open'?'킥오프 전까지 수정 가능':m.state==='done'?'종료 '+gmEsc(m.score):m.state==='cancelled'?'취소·연기':'🔒 경기 시작 · 수정 불가';
@@ -8072,11 +8079,20 @@ function pkRender(){
   var pickedN=d.matches.filter(function(m){return m.state==='open'&&PK.picks[m.id];}).length;
   h+='<div class="pk-save"><button class="gm-btn" id="pkSave" onclick="pkSave()" '+(openN?'':'disabled')+'>'+(hasSaved?'다시 저장':'예측 저장')+' ('+pickedN+'/'+openN+')</button>'
     +'<div class="gm-note" id="pkNote">'+(PK.dirty?'저장하지 않은 변경이 있어요':hasSaved?'저장했어요 · '+pkWhen(new Date(PK.savedAt).toISOString()).split(' ').slice(-1)[0]+' · 경기 시작 전까지 고칠 수 있어요':'저장하면 경기별 참여자 비율이 보여요')+'</div></div>';
-  gmRoot().innerHTML=h; pkMe();
+  gmRoot().innerHTML=h; PK.grow=false; pkMe();
 }
+// 고른 경기의 버튼 셋만 바꾼다 — 화면 전체를 다시 그리면 색 전환이 안 먹고 깜빡인다.
 function pkPick(id, side){
   PK.picks[id]= PK.picks[id]===side ? null : side;
-  PK.dirty=true; pkRender();
+  PK.dirty=true;
+  document.querySelectorAll('.pk-pick[data-mid="'+id+'"]').forEach(function(b){
+    var on=PK.picks[id]===b.getAttribute('data-side');
+    b.classList.toggle('sel', on); b.setAttribute('aria-pressed', String(on));
+  });
+  var d=PK.data, openN=0, pickedN=0;
+  d.matches.forEach(function(m){ if(m.state==='open'){ openN++; if(PK.picks[m.id]) pickedN++; } });
+  var btn=document.getElementById('pkSave'); if(btn) btn.textContent=(PK.savedAt?'다시 저장':'예측 저장')+' ('+pickedN+'/'+openN+')';
+  var n=document.getElementById('pkNote'); if(n) n.textContent='저장하지 않은 변경이 있어요';
 }
 function pkSave(){
   if(PK.busy) return; PK.busy=true;
@@ -8085,7 +8101,7 @@ function pkSave(){
   pkApi('save','',{round:PK.data.round, picks:send}).then(function(r){
     PK.busy=false; PK.saved=r.picks; PK.picks=Object.assign({},r.picks); PK.savedAt=r.savedAt; PK.dirty=false;
     // 비율은 서버가 1분 단위로 다시 센다 — 방금 저장한 내 표가 바로 안 보일 수 있어 다시 받아 온다.
-    return pkApi('round','r='+PK.data.round).then(function(d){ PK.data=d; pkRender();
+    return pkApi('round','r='+PK.data.round).then(function(d){ PK.data=d; PK.grow=true; pkRender();
       var n=document.getElementById('pkNote'); if(n && r.rejected) n.textContent='저장했어요 · 그사이 시작한 경기 '+r.rejected+'개는 바뀌지 않았어요';
     });
   }).catch(function(e){
