@@ -1831,6 +1831,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media (prefers-reduced-motion: reduce){.cr-anmsg span,.cr-badges.pop span,.cr-anim .cr-rs b.bump{animation:none}}
 .cr-hist .cr-rc-row:not(.hd){background:var(--surface2)}
 .cr-hist .cr-rc-row.ars{background:linear-gradient(90deg,rgba(239,1,7,.18),var(--surface2) 70%)}
+.cr-goal{border:1px solid var(--border-accent);background:linear-gradient(135deg,rgba(200,168,75,.16),rgba(200,168,75,.04));border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.cr-goal-tag{align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:var(--gold);border-radius:999px;padding:3px 9px}
+.cr-goal-t{font-size:17px;font-weight:700}
 .cr-rk-list{display:flex;flex-direction:column;gap:6px}
 .cr-rk-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto 34px 56px;gap:8px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:9px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cr-rk-row.me{border-color:var(--gold);background:rgba(200,168,75,.12)}
@@ -8938,7 +8941,7 @@ function crPrep(){
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
   crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'
    +crHead()
-   +'<div class="cr-panel"><div class="cr-lbl"><b>이번 시즌 목표</b></div><div style="font-size:15px">'+gmEsc(pr.goal)+'</div>'
+   +'<div class="cr-goal"><span class="cr-goal-tag">SEASON GOAL · 이번 시즌 목표</span><div class="cr-goal-t">'+gmEsc(pr.goal)+'</div>'
    +'<div class="cr-note">'+(pr.youth?'유스 시즌이라 출전 기회는 유스팀 기준이에요.':'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
    +'<div class="cr-panel"><div class="cr-lbl"><b>훈련 방향</b><span>오른 만큼이 스탯에 나뉘는 방식</span></div><div class="cr-seg" style="--n:3">'
    +['강점 강화','균형','약점 보완'].map(function(t){ return '<button class="cr-chip" aria-pressed="'+(CR.train===t)+'" onclick="CR.train=\''+t+'\';crPrep()">'+t+'</button>'; }).join('')+'</div></div>'
