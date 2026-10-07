@@ -80,7 +80,7 @@ export function createCareer(input, clubIdx, seed){
   const st = startStats(pos, card), ovr = ovrOf(st, CARDS[pos][card].w);
   C = {v:1, seed:seed>>>0, name, nation, pos, card, foot, want:num, num:null, dream:dream||null,
        st, ovr, off:st.map(v => v-ovr), age:15, club:o.club, fame:0, wf:2, phase:'prep', train:'균형', ev:null, evPick:null,
-       hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, honors:[], boost:1, peak:ovr, clubs:[o.club.n],
+       hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, boost:1, peak:ovr, clubs:[o.club.n],
        talent:1, youthPts:0, awoken:false, last:null, offers:null};
   newEvent();
   return C;
@@ -353,9 +353,8 @@ export function playSeason(state, choice){
   }
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club), games, starts, apps, goals, ast, cs, rating:Math.round(rating*100)/100, rank,
                youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured};
-  C.hist.push(row); C.last = row;
+  C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg;
-  C.honors = C.honors.concat(hon);
   C.peak = Math.max(C.peak, cOvr());
   C.offers = makeOffers(rng, row);
   if(!C.glass && (C.injCount||0)>=4 && C.injCount/C.hist.length>=0.3){ C.glass = true; row.notes.push('잦은 부상으로 "유리몸" 꼬리표가 붙었어요. 구단들이 영입을 망설여요.'); }
@@ -388,6 +387,7 @@ function makeOffers(rng, row){
 }
 const forcedRetire = () => C.age>=40 || (!!C.released && !C.offers.length);
 const pub = c => ({n:c.n, id:c.id, nat:c.nat});
+export function offersView(state){ C = state; return offerView(); }
 function offerView(){
   return C.offers.map(o => ({...pub(o.c), kind:o.kind, dream:!!o.dream, chance:chanceOf(pStart(o.c)), grow:growLv(o.c.r)}));
 }
@@ -402,6 +402,8 @@ export function nextSeason(state, pick){
     const o = C.offers[pick]; if(!o) throw new Error('pick');
     C.club = o.c; if(!C.clubs.includes(o.c.n)) C.clubs.push(o.c.n);
   }
+  // 지난 시즌 줄에서 결과 화면에만 쓰는 값은 버린다(토큰 크기 — 은퇴 카드엔 필요 없다)
+  const r = C.hist[C.hist.length-1]; delete r.notes; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
   C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
   newEvent();
   return C;
@@ -421,9 +423,11 @@ export function retire(state){
   C.score = careerScore(C);
   return C;
 }
+// 통산 수상 목록 — 시즌 줄의 hon을 이어 붙인 것(토큰에 따로 두지 않는다)
+export const honorsOf = state => state.hist.flatMap(r => r.hon);
 export function contribScore(state){ const w = CONTRIB[state.pos], t = state.tot; return t.goals*w.g + t.ast*w.a + (t.cs||0)*w.cs; }
 export function careerScore(state){
-  const hp = state.honors.reduce((t,h) => t + ((HONOR_TIER[h.tier]||{p:0}).p)*(+(String(h.n).split('×')[1])||1), 0);
+  const hp = honorsOf(state).reduce((t,h) => t + ((HONOR_TIER[h.tier]||{p:0}).p)*(+(String(h.n).split('×')[1])||1), 0);
   return Math.round(state.tot.apps + contribScore(state) + state.tot.caps*2 + state.peak*10 + hp);
 }
 
@@ -449,5 +453,5 @@ export function cardView(state){
     tot:C.tot, clubs:C.clubs,
     seasons: C.hist.map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:r.ovr,
       apps:r.apps, goals:r.goals, ast:r.ast, cs:r.cs, hon:r.hon.filter(h => h.tier!=='C' && h.tier!=='-').map(h => [h.n, h.tier, h.kind])})),
-    honors: C.honors.filter(h => h.tier!=='-').map(h => [h.n, h.tier, h.kind])};
+    honors: honorsOf(C).filter(h => h.tier!=='-').map(h => [h.n, h.tier, h.kind])};
 }

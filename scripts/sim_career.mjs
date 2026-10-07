@@ -42,9 +42,9 @@ for(let t=0; t<N; t++){
   peaks[lv].push(C.peak); scores.push(C.score); byPos[C.pos].push(C.score);
   retireAge.push(C.age);
   if(C.majorInj) majorInj++; if(C.glass) glass++;
-  ballonByLv[lv].push(C.honors.filter(h => h.n==='발롱도르').length);
+  ballonByLv[lv].push(S.honorsOf(C).filter(h => h.n==='발롱도르').length);
   const seen = {};
-  C.honors.forEach(h => { if(h.tier==='-') return; const n = norm(h.n), c = +(String(h.n).split('×')[1])||1;
+  S.honorsOf(C).forEach(h => { if(h.tier==='-') return; const n = norm(h.n), c = +(String(h.n).split('×')[1])||1;
     cnt[n] = (cnt[n]||0)+c; seen[n] = 1; tierCnt[lv][n] = (tierCnt[lv][n]||0)+c; });
   Object.keys(seen).forEach(n => any[n] = (any[n]||0)+1);
 }
