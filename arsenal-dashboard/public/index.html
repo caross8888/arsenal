@@ -8011,7 +8011,7 @@ function pkAuthBack(cancel){
 }
 function pkLogout(){ pkSetAuth(null,null); PK.data=null; pkAuth('login'); }
 function pkLoad(r){
-  gmRoot().innerHTML='<div class="gm-empty">불러오는 중...</div>';
+  gmRoot().innerHTML=loadingHtml('불러오는 중...','padding:60px 20px');
   var q=r?'r='+r:'';
   pkApi('round', q).then(function(d){
     PK.data=d;
@@ -8128,7 +8128,7 @@ function pkRank(){
   gmRoot().innerHTML=pkHeader()
     +'<div class="pk-tabs" role="group" aria-label="랭킹 기간"><button type="button" aria-pressed="'+(PK.board==='month')+'" onclick="PK.board=\'month\';pkRank()">이번 달 ('+(+mon.slice(5))+'월)</button><button type="button" aria-pressed="'+(PK.board==='season')+'" onclick="PK.board=\'season\';pkRank()">시즌</button></div>'
     +(PK.board==='month'?'<div class="pk-prev" id="pkPrev"></div>':'')
-    +'<div id="pkBoard"><div class="gm-empty">불러오는 중...</div></div>'
+    +'<div id="pkBoard">'+loadingHtml('랭킹 불러오는 중...','padding:32px 0')+'</div>'
     +'<p class="pk-help">맞히면 1점, 라운드 전 경기를 맞히면 +3점. 동점이면 적중률 → 먼저 저장한 순. 이번 달 순위는 경기 킥오프 날짜 기준이에요.</p>';
   pkMe();
   pkApi('board', 'm='+(PK.board==='month'?mon:'season')).then(function(d){
@@ -8321,7 +8321,7 @@ function gameBoard(){
   gameStopTimer();
   gmRoot().innerHTML='<button class="gm-back" onclick="gameIntro()">← Who Am I?</button>'
     +'<div class="gm-panel"><div class="gm-hud" style="display:flex;justify-content:space-between"><div class="gm-score" style="color:var(--text)">랭킹</div><div class="gm-qno">역대 TOP 100</div></div>'
-    +'<div id="gmBoard"><div class="gm-empty">불러오는 중...</div></div>'
+    +'<div id="gmBoard">'+loadingHtml('랭킹 불러오는 중...','padding:32px 0')+'</div>'
     +'<button class="gm-btn" onclick="gameStart()" id="gmStart">게임 시작</button></div>';
   fetch(FN+'/game?a=board').then(function(r){ return r.json(); }).then(function(d){
     var el=document.getElementById('gmBoard'); if(!el) return;
