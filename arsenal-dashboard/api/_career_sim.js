@@ -37,8 +37,10 @@ const EV_GROW = {coach:1.15, coachInj:0.05, coachStart:0.10, extra:1.15, extraIn
 // 특성: 18세부터 시즌 끝에 조건 스탯을 넘은 특성이 있으면 이 확률로 제안(최대 3개 제시, 하나 고름), 선수당 최대 TRAIT_MAX개
 const TRAIT_P = 0.3, TRAIT_MAX = 3;
 const TRAIT_BY_ID = new Map([...TRAITS, ...CTRAITS.map(t => ({...t, pos:'공통'}))].map(t => [t.id, t]));
-// 공통 특성: 17세 시즌 끝에 3개 제시(반드시 하나). 성장하는 시즌마다 대상 스탯 +CT_SHIFT, 나머지 넷이 그만큼 나눠 뺀다(합 0 — 오버롤 불변).
-const CT_AGE = 17, CT_SHIFT = 0.8, CT_CAP = 18;
+// 공통 특성: 17세 시즌 끝에 3개 제시(반드시 하나). 무조건 이득만(사용자 지정 — 다른 스탯을 깎지 않는다):
+// 성장하는 시즌마다 대상 스탯 +CT_SHIFT(누적 CT_CAP까지, C.ctg). 오버롤은 그대로.
+// 골·도움 계산에 안 쓰이는 수비 스탯(태클·대인마크)이 대상이면 누적분만큼 클린시트 확률 ×(1+CT_CS×누적), 평점 +CT_R×누적.
+const CT_AGE = 17, CT_SHIFT = 0.8, CT_CAP = 10, CT_CS = 0.01, CT_R = 0.004, CT_DEF = ['태클','대인마크'];
 const commonOf = () => (C.traits||[]).map(id => TRAIT_BY_ID.get(id)).find(t => t && t.pos==='공통');
 // 가진 특성의 효과를 곱/합으로 모은다
 function traitMods(){
@@ -49,7 +51,8 @@ function traitMods(){
 }
 const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련)
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
-const G_RATE = {FW:0.446, MF:0.13, DF:0.035}, A_RATE = {FW:0.19, MF:0.17, DF:0.06};
+// 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06).
+const G_RATE = {FW:0.422, MF:0.124, DF:0.0325}, A_RATE = {FW:0.183, MF:0.163, DF:0.053};
 const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.5}, DF:{g:8,a:5,cs:3.5}};
 // 카드별 기여 보정(사용자 지정): 같은 포지션 안에서도 카드마다 골·도움·클린시트 기대치가 달라
 // (포처는 골, 펄스나인·수비형은 적게) 기여 점수 평균이 같아지게 곱한다. 순서는 CARDS와 같음.
@@ -317,13 +320,14 @@ export function playSeason(state, choice){
   const minsEq = starts + subs*0.3;
   const hot = !row0Youth && starts>=15 && rng()<0.02;   // 커리어 하이 시즌
   const goals = Math.round(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.6:1)), ast = Math.round(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.6:1));
-  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs));
+  const ctc = commonOf(), ctDef = !!ctc && CT_DEF.includes(ctc.s[C.pos]), ctCS = ctDef ? 1+CT_CS*(C.ctg||0) : 1;
+  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*ctCS));
   const cs = row0Youth ? Math.round(starts*pCS*0.8) : Math.round(starts*pCS*(0.85+rng()*0.3));
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
   // 평점: 실력 + 팀 안 위치 + 포지션별 활약 + 운
   const clubLv = club.r - (youth()&&!onLoan ? YOUTH_GAP : 0), ap = Math.max(apps,1);
   const perfBonus = {FW:(goals+ast*0.6)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.6, DF:cs/Math.max(starts,1)*0.6+(goals*2+ast*1.5)/ap*0.6}[C.pos];
-  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+(rng()-0.5)*0.5)) : 0;
+  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+(ctDef ? CT_R*(C.ctg||0) : 0)+(rng()-0.5)*0.5)) : 0;
 
   // 성장 / 하락
   const base = AGE_BASE[Math.min(37, C.age)], ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
@@ -347,7 +351,7 @@ export function playSeason(state, choice){
   }
   // 훈련 방향: 강점·약점 모두 "더한 만큼 다른 쪽에서 뺀다"(합 0). 예전엔 둘 다 스탯 합이 늘어 "균형"이 늘 손해였다(전략 검사).
   const ct = base > 0 && commonOf(), ci = ct ? st.indexOf(ct.s[C.pos]) : -1;
-  if(ci >= 0 && C.off[ci] < CT_CAP) C.off = C.off.map((o2,i) => o2 + (i===ci ? CT_SHIFT : -CT_SHIFT/4));
+  if(ci >= 0 && (C.ctg||0) < CT_CAP){ const g = Math.min(CT_SHIFT, CT_CAP-(C.ctg||0)); C.off[ci] += g; C.ctg = (C.ctg||0) + g; }
   if(C.train==='강점 강화') C.off = C.off.map((o2,i) => Math.min(15, o2+(w[i]>=1.2?0.5:w[i]<=0.9?-0.7:0)));
   if(C.train==='약점 보완') C.off = C.off.map((o2,i) => Math.max(-25, o2+(w[i]>=1.2?-0.5:w[i]<=0.9?1:0)));
   syncSt();
