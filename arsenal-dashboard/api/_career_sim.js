@@ -67,7 +67,8 @@ const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95;   // 남기: [성장 배율, 선�
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 // 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
 const G_RATE = {FW:0.395, MF:0.121, DF:0.03}, A_RATE = {FW:0.172, MF:0.159, DF:0.049};
-const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.5}, DF:{g:8,a:5,cs:3.5}};
+// 클린시트를 출전 경기 전체로 세면서(약 1.5배) cs 점수는 그만큼 낮췄다(예전 MF 0.5 · DF 3.5 — DF는 포지션 점수 중앙을 맞추느라 조금 더 낮춤).
+const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.33}, DF:{g:8,a:5,cs:2.2}};
 // 카드별 기여 보정(사용자 지정): 같은 포지션 안에서도 카드마다 골·도움·클린시트 기대치가 달라
 // (포처는 골, 펄스나인·수비형은 적게) 기여 점수 평균이 같아지게 곱한다. 순서는 CARDS와 같음.
 // 포지션 몫도 함께 곱해져 있다: 공격수 ×1.13(시작 오버롤 54 통일로 줄어든 점수를 되돌린 몫), 수비수 ×1.09(미드필더와 점수 중앙을 맞춘 몫 — 사용자 지적).
@@ -336,11 +337,12 @@ export function playSeason(state, choice){
   const hot = !row0Youth && starts>=15 && rng()<0.02;   // 커리어 하이 시즌
   const goals = Math.round(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.6:1)), ast = Math.round(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.6:1));
   const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*CB.cs));
-  const cs = row0Youth ? Math.round(starts*pCS*0.8) : Math.round(starts*pCS*(0.85+rng()*0.3));
+  // 클린시트는 출전 경기 전체로 센다(교체 출전 포함). 예전엔 선발만 세서 출전 대비 25%로 너무 적게 보였다(사용자 지적).
+  const cs = row0Youth ? Math.round(apps*pCS*0.8) : Math.round(apps*pCS*(0.85+rng()*0.3));
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
   // 평점: 실력 + 팀 안 위치 + 포지션별 활약 + 운
   const clubLv = club.r - (youth()&&!onLoan ? YOUTH_GAP : 0), ap = Math.max(apps,1);
-  const perfBonus = {FW:(goals+ast*0.6)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.6, DF:cs/Math.max(starts,1)*0.6+(goals*2+ast*1.5)/ap*0.6}[C.pos];
+  const perfBonus = {FW:(goals+ast*0.6)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.6, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.6}[C.pos];
   const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+(rng()-0.5)*0.5)) : 0;
 
   // 성장 / 하락
@@ -430,7 +432,7 @@ export function playSeason(state, choice){
 
   // 발롱도르·FIFA 올해의 선수: 시즌 활약 점수 vs 그해 세계 경쟁자
   if(senior && apps>=20){
-    const rec = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.6+goals*2+ast}[C.pos];
+    const rec = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos];
     let hp2 = 0; hon.forEach(x => { const m = BALLON_PTS.find(r => r[0].test(x.n)); if(m) hp2 += m[1]; });
     const star = Math.max(0,ov-85)*2 + Math.max(0,ov-94)*BALLON.top + (C.lastBallon===C.age-1 ? BALLON.inc : 0);
     const bp = (rec + Math.max(0,rating-7.0)*20 + hp2 + star)*BALLON.pos[C.pos];
