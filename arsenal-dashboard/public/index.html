@@ -8993,12 +8993,15 @@ function crSeasonLabel(age){ var y=2026+age-15; return y+'-'+String(y+1).slice(-
 function crAnimStart(from, resumed){
   var p=CR.v.player, df=p.pos==='DF', yth=p.age<18;
   if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf);   // 루프가 둘 돌면 프레임마다 두 번 움직인다
-  CR.anim={t:from, from:from, target:null, v:null, stopAt:null, raf:null, resumed:!!resumed, last:null, shown:[-1,-1,-1]};
+  // 부상 뒤 이어 갈 때는 멈췄던 숫자부터(부상 응답의 최소 기록 × 멈춘 지점), 처음엔 0부터
+  var pre0=resumed && CR.injPre ? CR.injPre.map(function(f){ return Math.round(f*from); }) : [0,0,0];
+  if(!resumed) CR.injPre=null;
+  CR.anim={t:from, from:from, target:null, v:null, stopAt:null, raf:null, resumed:!!resumed, last:null, shown:pre0.slice()};
   crRender('<div class="cr-top"><div></div><div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
     +'<div class="cr-panel cr-anim"><div class="cr-lbl"><b>'+crSeasonLabel(p.age)+' 시즌 · '+gmEsc(p.club.team)+'</b><span id="crAnTick">'+(yth?'유스 리그':'리그')+'</span></div>'
     +'<div class="cr-months">'+CR_MONTHS.map(function(m,i){ return '<span data-i="'+i+'">'+m+'</span>'; }).join('')+'</div>'
     +'<div class="cr-anbar" id="crAnTrack"><i id="crAnBar"></i><em id="crAnKnob"></em></div>'
-    +'<div class="cr-rs" style="grid-template-columns:repeat(3,1fr)"><div><b id="crAn0">—</b><span>경기</span></div><div><b id="crAn1">—</b><span>골</span></div><div><b id="crAn2">—</b><span>'+(df?'클린시트':'도움')+'</span></div></div>'
+    +'<div class="cr-rs" style="grid-template-columns:repeat(3,1fr)"><div><b id="crAn0">'+pre0[0]+'</b><span>경기</span></div><div><b id="crAn1">'+pre0[1]+'</b><span>골</span></div><div><b id="crAn2">'+pre0[2]+'</b><span>'+(df?'클린시트':'도움')+'</span></div></div>'
     +'<div class="cr-anmsg" id="crAnMsg"></div></div>',
     '<button class="gm-btn ghost" style="flex:1" onclick="crAnimSkip()">건너뛰기</button>');
   window.scrollTo(0,0);
@@ -9028,12 +9031,15 @@ function crAnimFrame(){
   var mi=Math.min(9, Math.floor(A.t*10));
   if(mi!==A.mi){ A.mi=mi; document.querySelectorAll('#gameRoot .cr-months span').forEach(function(el,i){ el.className=i<mi?'done':i===mi?'on':''; }); }
   var tk=''; (CR.v.player.age<18?CR_TICK_Y:CR_TICK).forEach(function(x){ if(A.t>=x[0]) tk=x[1]; }); var te=document.getElementById('crAnTick'); if(te) te.textContent=tk;
-  // 숫자는 결과를 받은 뒤에만(부상 전 구간은 아직 모른다) — 시즌 진행률만큼 최종 기록에 비례해 올린다
-  var R=A.v && A.v.result;
-  if(R){
-    var r=R.row, fin=[r.apps, r.goals, CR.v.player.pos==='DF'?r.cs:r.ast];
+  // 숫자는 시즌 진행률만큼 기록에 비례해 올린다. 결과가 오면 최종 기록, 부상 응답이면 그 "최소 기록"(pre)으로
+  // 부상 시점까지 올리고, 이어 갈 땐 앞서 보인 숫자 밑으로 내려가지 않게 한다.
+  var R=A.v && A.v.result, dfp=CR.v.player.pos==='DF', fin=null;
+  if(R) fin=[R.row.apps, R.row.goals, dfp?R.row.cs:R.row.ast];
+  else if(A.v && A.v.pre){ fin=[A.v.pre.apps, A.v.pre.goals, dfp?A.v.pre.cs:A.v.pre.ast]; CR.injPre=fin; }
+  else if(A.resumed && CR.injPre) fin=CR.injPre;
+  if(fin){
     fin.forEach(function(f,i){
-      var val=Math.round(f*A.t), el=document.getElementById('crAn'+i);
+      var val=Math.max(A.shown[i], Math.round(f*A.t)), el=document.getElementById('crAn'+i);
       if(el && val!==A.shown[i]){ el.textContent=val; if(i>0 && A.shown[i]>=0 && val>A.shown[i]){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } A.shown[i]=val; }
     });
   }

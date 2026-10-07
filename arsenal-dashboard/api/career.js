@@ -175,7 +175,11 @@ export default async function handler(req, res){
       const r = S.playSeason(C, choice);
       if(r.injury){
         C.pending = {train: choice.train, evPick: choice.evPick};
-        return res.json({token: seal(C), ...view(C)});
+        // 시즌 진행 화면이 부상 전까지도 숫자를 올릴 수 있게: 부상 처리를 어느 쪽으로 골라도 나오는 최소 기록.
+        // (최종 기록은 이보다 작아지지 않아서, 부상 뒤 이어서 올라가도 숫자가 뒤로 가지 않는다) 상태는 건드리지 않는다.
+        const pre = [0, 1].map(k => { const c = JSON.parse(JSON.stringify(C)); return S.playSeason(c, {...C.pending, injPick: k}).row; })
+          .reduce((m, w) => m ? m.map((x, i) => Math.min(x, [w.apps, w.goals, w.ast, w.cs][i])) : [w.apps, w.goals, w.ast, w.cs], null);
+        return res.json({token: seal(C), ...view(C), pre: {apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3]}});
       }
       delete C.pending;
       C.forced = r.forced;
