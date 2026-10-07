@@ -8,9 +8,9 @@
 // 난수는 커리어 시드 + (나이·선택)으로 정해져서, 같은 시즌에 같은 선택을 하면 결과가 같다.
 // 함수들은 모듈 변수 C에 상태를 걸어 두고 계산한다(요청 하나 안에서만 쓰므로 안전).
 
-import { NATIONS, CLUBS, NAMES, STATS, CARDS } from './_career_data.js';
+import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS } from './_career_data.js';
 
-export { NATIONS, CLUBS, NAMES, STATS, CARDS };
+export { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS };
 
 // ── 상수 ──────────────────────────────────────────────────────────────
 export const BASE = 40, POOL = 50, MAXADD = 20, YOUTH_GAP = 30;
@@ -34,6 +34,16 @@ const NEW_SIGNING = [0.08, -0.04];   // 선발 확률: [이적 첫 시즌 +, 같
 const AW_PRESTIGE = [0.2, 105];   // 수상용 평점의 구단 수준 보정: [15 차이마다 ±, 기준 명성(1군 시즌 평균 구단 명성 근처)]
 // 이벤트 성장 효과(선택 차이를 키움 — 사용자 지정). 성장 쪽을 고르면 부상 위험도 같이 커진다.
 const EV_GROW = {coach:1.15, coachInj:0.05, coachStart:0.10, extra:1.15, extraInj:0.07, talk:1.1};
+// 특성: 18세부터 시즌 끝에 조건 스탯을 넘은 특성이 있으면 이 확률로 제안(최대 3개 제시, 하나 고름), 선수당 최대 TRAIT_MAX개
+const TRAIT_P = 0.3, TRAIT_MAX = 3;
+const TRAIT_BY_ID = new Map(TRAITS.map(t => [t.id, t]));
+// 가진 특성의 효과를 곱/합으로 모은다
+function traitMods(){
+  const m = {g:1, a:1, cs:1, r:0, st:0, inj:0, goty:1};
+  for(const id of (C.traits||[])){ const e = (TRAIT_BY_ID.get(id)||{}).eff || {};
+    m.g *= e.g||1; m.a *= e.a||1; m.cs *= e.cs||1; m.r += e.r||0; m.st += e.st||0; m.inj += e.inj||0; m.goty *= e.goty||1; }
+  return m;
+}
 const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련)
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 const G_RATE = {FW:0.446, MF:0.13, DF:0.035}, A_RATE = {FW:0.19, MF:0.17, DF:0.06};
@@ -52,7 +62,7 @@ const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[
 const DEV = [0.8, 1.2];
 const K_GROW = 0.47, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:131, sd:14, pos:{FW:1.03, MF:0.93, DF:0.82}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
+const BALLON = {mu:134, sd:14, pos:{FW:1.03, MF:0.93, DF:0.82}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
 
@@ -214,6 +224,7 @@ function injRiskOf(){
   r -= C.injNext || 0;                                  // 지난 부상 때 완전히 회복했으면 −3%p
   if(C.injBoost && C.injBoost.n > 0) r += 0.08;         // 큰 부상을 보존 치료했으면 2시즌 +8%p
   if(C.glass) r += 0.04;                                // 유리몸
+  r += traitMods().inj;
   return Math.max(0.03, r + Math.max(0, C.age-30)*0.01);
 }
 function rollInjury(){
@@ -263,6 +274,7 @@ export function playSeason(state, choice){
   // 새 영입 효과: 이적 첫 시즌엔 구단이 기회를 더 준다(돈을 주고 데려왔으니). 없으면 큰 구단으로 가는 게 늘 손해였다(전략 검사).
   const lastSr = [...C.hist].reverse().find(r => !r.youth && !r.loan);
   if(!onLoan && lastSr) startAdj += lastSr.club !== club.n ? NEW_SIGNING[0] : NEW_SIGNING[1];
+  const TM = traitMods(); startAdj += TM.st;
   const p = pStart(club, startAdj);
   if(youth() && !onLoan && C.age===17 && cOvr()>=club.r-22) notes.push('1군 데뷔 기회를 받았어요!');
   // 부상
@@ -297,18 +309,18 @@ export function playSeason(state, choice){
   const cardA = Math.sqrt({'윙어':1.5,'펄스나인':1.5,'공격형 미드필더':1.4,'딥라잉 플레이메이커':1.2,'윙백':1.6,'풀백':1.3,'포처':0.6}[card.n]||1);
   // 약발 보너스(골·도움): ★3까지는 작고 ★4부터 커진다 — 훈련 비용(그 시즌 성장 ×0.92) 대비 ★3은 약간 손해, ★4부터 약간 이득(사용자 지정)
   const wfF = (C.pos==='FW'||C.pos==='MF') ? 1+WF_BONUS[C.wf] : 1;
-  const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF;
-  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF;
+  const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF*TM.g;
+  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a;
   const minsEq = starts + subs*0.3;
   const hot = !row0Youth && starts>=15 && rng()<0.02;   // 커리어 하이 시즌
   const goals = Math.round(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.6:1)), ast = Math.round(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.6:1));
-  const pCS = Math.max(0.05, Math.min(0.6, 0.12+0.35*(club.r-50)/45+(o-75)/150));
+  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs));
   const cs = row0Youth ? Math.round(starts*pCS*0.8) : Math.round(starts*pCS*(0.85+rng()*0.3));
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
   // 평점: 실력 + 팀 안 위치 + 포지션별 활약 + 운
   const clubLv = club.r - (youth()&&!onLoan ? YOUTH_GAP : 0), ap = Math.max(apps,1);
   const perfBonus = {FW:(goals+ast*0.6)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.6, DF:cs/Math.max(starts,1)*0.6+(goals*2+ast*1.5)/ap*0.6}[C.pos];
-  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+(rng()-0.5)*0.5)) : 0;
+  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+(rng()-0.5)*0.5)) : 0;
 
   // 성장 / 하락
   const base = AGE_BASE[Math.min(37, C.age)], ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
@@ -354,7 +366,7 @@ export function playSeason(state, choice){
       // 리그 개인상은 "수상용 평점"으로 뽑는다: 평점 + 구단 수준 보정. 평점에는 약팀 에이스가 높게 나오는 항목이 있어서,
       // 그대로 쓰면 약한 팀에 남는 게 개인상을 쓸어 가 "항상 잔류"가 정답이었다(전략 검사). 실제처럼 큰 팀일수록 유리하게.
       const awR = rating + AW_PRESTIGE[0]*(club.r-AW_PRESTIGE[1])/15;
-      const gT = {ENG:26,ESP:26,GER:24,ITA:24,FRA:24}[club.nat]||22, aT = gT>=24 ? 14 : 12;
+      const gT = {ENG:27,ESP:27,GER:25,ITA:25,FRA:25}[club.nat]||23, aT = gT>=25 ? 16 : 14;
       const gk = goals>=gT && rng()<Math.min(0.95,0.4+(goals-gT)*0.1), ak = ast>=aT && rng()<Math.min(0.95,0.4+(ast-aT)*0.12);
       if(gk) add(natN+' 리그 득점왕','B'); if(ak) add(natN+' 리그 도움왕','B');
       if(awR>=7.8 && rank<=3 && rng()<(gk?0.5:0.3)) add(natN+' 리그 올해의 선수','A');
@@ -373,7 +385,7 @@ export function playSeason(state, choice){
     }
     if(ov>=92 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
     if(C.age<=21 && ov>=80 && rating>=7.1 && rng()<0.5) add('골든보이','B');
-    if(rng()<(C.pos==='FW'?0.008:0.004)) add('올해의 골','C');
+    if(rng()<(C.pos==='FW'?0.008:0.004)*TM.goty) add('올해의 골','C');
   } else if(rng()<0.25) add('유스 리그 우승','-','team');
   C.uclNext = rank<=4 && club.r>=78 ? club.n : null;
 
@@ -438,10 +450,29 @@ export function playSeason(state, choice){
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg;
   C.peak = Math.max(C.peak, cOvr());
   C.offers = makeOffers(rng, row);
+  C.traitOffer = rollTraits();   // 시즌 결과와 다른 난수열(시즌 결과가 바뀌지 않게)
   if(!C.glass && (C.injCount||0)>=4 && C.injCount/C.hist.length>=0.3){ C.glass = true; row.notes.push('잦은 부상으로 "유리몸" 꼬리표가 붙었어요. 구단들이 영입을 망설여요.'); }
   C.phase = 'result';
   return {row, offers: offerView(), released: !!C.released, forced: forcedRetire(), canRetire: C.age>=29};
 }
+
+// ── 특성 제안 ──────────────────────────────────────────────────────────
+// 조건 스탯을 넘었고 아직 없는 특성 중, 카드에 어울리는 것(가중치 ×3)을 우선해 최대 3개
+function rollTraits(){
+  if(C.age < 18 || (C.traits||[]).length >= TRAIT_MAX) return null;
+  const r = mulberry(C.seed ^ hashStr('trait|'+C.age));
+  const st = STATS[C.pos], card = CARDS[C.pos][C.card].n, have = new Set(C.traits||[]);
+  const pool = TRAITS.filter(t => t.pos===C.pos && !have.has(t.id) && Math.round(C.st[st.indexOf(t.stat)]) >= t.min);
+  if(!pool.length || r() >= TRAIT_P) return null;
+  const out = [];
+  while(out.length < 3 && pool.length){
+    const w = pool.map(t => t.aff.includes(card) ? 3 : 1), tot = w.reduce((a,b)=>a+b,0);
+    let x = r()*tot, i = 0; while(x >= w[i]){ x -= w[i]; i++; }
+    out.push(pool.splice(i,1)[0].id);
+  }
+  return out;
+}
+export const traitView = id => { const t = TRAIT_BY_ID.get(id); return t ? {id:t.id, n:t.n, d:t.d, stat:t.stat, min:t.min} : null; };
 
 // ── 이적 · 방출 ────────────────────────────────────────────────────────
 // 방출: 31세 이후 오버롤 66 미만이거나 소속팀 선발 확률 15% 미만이면 재계약 불가(잔류 불가) → 낮은 구단의 말년 제안만.
@@ -476,9 +507,16 @@ function offerView(){
 }
 
 // pick: 제안 번호(없으면 잔류). 방출됐는데 고르지 않으면 은퇴.
-export function nextSeason(state, pick){
+// traitPick: 특성 제안이 있으면 고른 번호(스크립트에서 생략하면 첫 번째). 은퇴로 끝나면 무시.
+export function nextSeason(state, pick, traitPick){
   C = state;
   if(C.phase !== 'result') throw new Error('phase');
+  if(C.traitOffer && C.traitOffer.length && !forcedRetire()){
+    const id = C.traitOffer[traitPick == null ? 0 : traitPick];
+    if(!id) throw new Error('trait');
+    C.traits = (C.traits||[]).concat(id);
+  }
+  C.traitOffer = null;
   if(forcedRetire()) return retire(state);
   if(C.released && (pick==null || !C.offers[pick])) return retire(state);
   if(pick != null){
@@ -525,7 +563,7 @@ export function playerView(state){
   C = state;
   return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, num:C.num, want:C.want, age:C.age, ovr:cOvr(),
     st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(C.club), team:teamName(C.club)}, phase:C.phase, seasons:C.hist.length,
-    glass:!!C.glass, tot:C.tot, peak:C.peak,
+    glass:!!C.glass, tot:C.tot, peak:C.peak, traits:(C.traits||[]).map(traitView),
     // 커리어 기록 접이식 표: [나이, 팀, 임대, 경기, 골, 도움(수비수는 클린시트), 오버롤, 구단, 유스, 그 시즌 주요 수상(S·A·B, 대표팀 제외)]
     hist: C.hist.map(r => [r.age, r.team, r.loan?1:0, r.apps, r.goals, C.pos==='DF' ? r.cs : r.ast, r.ovr, r.club, r.youth?1:0,
       r.hon.filter(h => 'SAB'.includes(h.tier) && h.kind!=='nat').sort((a,b) => 'SAB'.indexOf(a.tier)-'SAB'.indexOf(b.tier)).map(h => h.n)])};
@@ -535,7 +573,7 @@ export function cardView(state){
   C = state;
   let peakVal = 0; C.hist.forEach(r => { peakVal = Math.max(peakVal, marketValue(r.ovr, r.age)); });
   return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C),
-    peakValue: Math.round(peakVal*10)/10, oneClub:!!C.oneClub, farewell:!!C.farewell, glass:!!C.glass, iron:!!C.iron,
+    peakValue: Math.round(peakVal*10)/10, traits:(C.traits||[]).map(id => (TRAIT_BY_ID.get(id)||{}).n).filter(Boolean), oneClub:!!C.oneClub, farewell:!!C.farewell, glass:!!C.glass, iron:!!C.iron,
     tot:C.tot, clubs:C.clubs,
     seasons: C.hist.map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:r.ovr,
       apps:r.apps, goals:r.goals, ast:r.ast, cs:r.cs, hon:r.hon.filter(h => h.tier!=='C' && h.tier!=='-').map(h => [h.n, h.tier, h.kind])})),

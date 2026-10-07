@@ -7,7 +7,7 @@
 //   POST ?a=new     {name, nation, foot, pos, card, num, dream}  → {token, clubs}      첫 구단 3곳
 //   POST ?a=join    {token, pick}                                 → {token, player, prep}
 //   POST ?a=season  {token, train, evPick[, injPick]}             → {token, injury} | {token, player, result}
-//   POST ?a=next    {token, pick?}                                → {token, player, prep} | {token, card}(은퇴)
+//   POST ?a=next    {token, pick?, trait?}                                → {token, player, prep} | {token, card}(은퇴)
 //   POST ?a=retire  {token}                                       → {token, card}
 //   POST ?a=view    {token}                                       → 지금 단계 화면(이어 하기)
 //   POST ?a=submit  {token} + Authorization: Bearer <승부예측 토큰> → {registered, rank, best, improved, key}
@@ -101,7 +101,7 @@ const firstView = input => S.firstClubs(input.nation, input.pos, input.card).map
 // 시즌 결과 화면(숨김 값 없음). 지난 결과(last)는 토큰에 결과 화면용으로 남겨 둔다 — 이어 하기에서 다시 그린다.
 const resultView = C => {
   const r = C.hist[C.hist.length - 1];
-  return {row: r, offers: S.offersView(C), stay: S.stayView(C),
+  return {row: r, offers: S.offersView(C), stay: S.stayView(C), traitOffer: (C.traitOffer||[]).map(S.traitView),
           released: !!C.released, forced: !!C.forced, canRetire: C.age >= 29};
 };
 
@@ -190,7 +190,10 @@ export default async function handler(req, res){
       const C = load(body.token, ['result']);
       const pick = body.pick == null || body.pick === '' ? null : Number(body.pick);
       if(pick != null && !(Number.isInteger(pick) && C.offers[pick])) bad('제안을 다시 골라 주세요.');
-      S.nextSeason(C, pick);
+      // 특성 제안이 있으면 반드시 하나를 고른다(강제 은퇴로 끝나는 시즌은 제외)
+      const tp = body.trait == null || body.trait === '' ? null : Number(body.trait);
+      if(C.traitOffer && C.traitOffer.length && !C.forced && !(Number.isInteger(tp) && C.traitOffer[tp])) bad('특성을 하나 골라 주세요.');
+      S.nextSeason(C, pick, tp);
       delete C.forced;
       return res.json({token: seal(C), ...view(C)});
     }
