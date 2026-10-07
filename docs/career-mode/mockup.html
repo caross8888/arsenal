@@ -136,6 +136,61 @@ input[type=text],input[type=number],select{font:inherit;font-size:16px;color:var
 .lg{display:grid;grid-template-columns:100px 1fr 46px;gap:8px;align-items:center;font-size:12.5px}
 .lg i{height:6px;border-radius:3px;background:var(--surface3);overflow:hidden} .lg em{display:block;height:100%;background:var(--red)}
 .lg b{text-align:right;color:var(--text-secondary);font-weight:400}
+.rc-head{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:stretch}
+.rc-ovr{background:linear-gradient(160deg,#E9C766,#B8892E);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#3a2a06;min-width:78px}
+.rc-ovr.elite{background:linear-gradient(160deg,#FFE7A0,#D9A93E 60%,#B8892E);box-shadow:0 0 18px rgba(233,199,102,.35)}
+.rc-ovr span{font-size:10px;font-weight:700;letter-spacing:.5px;opacity:.75}
+.rc-ovr b{font-family:var(--fd);font-size:52px;font-weight:400;line-height:.95}
+.rc-id{background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:10px 12px;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.rc-chips{display:flex;gap:5px;flex-wrap:wrap}
+.rc-chip{font-size:11px;font-weight:700;background:var(--surface3);border-radius:999px;padding:3px 8px}
+.rc-chip.gold{background:rgba(200,168,75,.2);color:var(--gold)}
+.rc-name{font-size:20px;font-weight:700;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-sub{font-size:11.5px;color:var(--text-secondary)}
+.rc-meta{display:flex;flex-direction:column;justify-content:center;gap:6px;text-align:right}
+.rc-meta span{display:block;font-size:10px;color:var(--text-secondary);letter-spacing:.3px}
+.rc-meta b{font-family:var(--fd);font-size:24px;font-weight:400;line-height:1}
+.rc-table{display:flex;flex-direction:column;gap:4px}
+.rc-row{display:grid;grid-template-columns:34px minmax(0,1fr) 38px 34px 30px 30px;gap:6px;align-items:center;background:var(--surface);border-radius:10px;padding:6px 8px;font-size:13px;font-variant-numeric:tabular-nums}
+.rc-row>span:nth-child(n+4){text-align:right}
+.rc-row.hd{background:none;padding:0 8px;font-size:10.5px;color:var(--text-secondary);letter-spacing:.3px}
+.rc-row.youth{opacity:.6}
+.rc-row.ars{background:linear-gradient(90deg,rgba(239,1,7,.18),var(--surface) 70%)}
+.rc-row .age{display:inline-flex;justify-content:center;align-items:center;height:22px;border-radius:999px;background:var(--text);color:var(--navy);font-weight:700;font-size:12.5px}
+.rc-row.ars .age{background:var(--red);color:#fff}
+.rc-row.nat .age{background:none;font-size:18px}
+.rc-row .rcc{display:flex;align-items:center;gap:7px;min-width:0}
+.rc-row .rcc .crest{flex:none;font-size:11px}
+.rc-row .rcc em{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.rc-row .rcc small{font-size:10px;color:var(--amber)}
+.rc-row .ic{display:flex;gap:1px;flex:none;font-size:12px}
+.rc-row .ic i{font-style:normal}
+.rc-row .ic b{font-size:10px;color:var(--text-secondary);margin-left:2px;align-self:center}
+.rc-row .ic i.ucl,.rc-tro .i.ucl{filter:drop-shadow(0 0 3px rgba(96,165,250,.9))}
+.rc-row .ovr{display:inline-flex;justify-content:center;height:22px;align-items:center;border-radius:6px;font-family:var(--fd);font-size:17px;color:#3a2a06;background:#D9B24C}
+.rc-row .ovr.e{background:linear-gradient(160deg,#C9E6FF,#7DB7F2);color:#0b2440}
+.rc-row .ovr.n{background:var(--surface3);color:var(--text)}
+.rc-row .ovr.y{background:none;color:var(--text-secondary)}
+.rc-end{background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.rc-end-t{text-align:center;font-size:20px;font-weight:700}
+.rc-tot{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface2);border-radius:12px;padding:10px 0;text-align:center}
+.rc-tot>div+div{border-left:1px solid rgba(255,255,255,.08)}
+.rc-tot span{display:block;font-size:10.5px;color:var(--text-secondary)}
+.rc-tot b{font-family:var(--fd);font-size:28px;font-weight:400}
+.rc-score{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
+.rc-score span{font-size:12px;color:var(--text-secondary)} .rc-score b{font-family:var(--fd);font-size:30px;font-weight:400;color:var(--gold)}
+.rc-shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rc-tro{text-align:center;background:var(--surface2);border-radius:12px;padding:10px 4px 8px}
+.rc-tro.tS{background:radial-gradient(circle at 50% 30%,rgba(233,199,102,.28),var(--surface2) 70%);outline:1px solid rgba(200,168,75,.5)}
+.rc-tro .i{font-size:30px;line-height:1.1;position:relative;display:inline-block}
+.rc-tro .i em{position:absolute;right:-14px;bottom:-2px;font-style:normal;font-size:11px;font-weight:700;background:var(--gold);color:#3a2a06;border-radius:999px;padding:0 5px}
+.rc-tro .l{font-size:10.5px;color:var(--text-secondary);line-height:1.3;margin-top:5px;word-break:keep-all}
+.rc-minor summary{cursor:pointer;font-size:12.5px;color:var(--text-secondary);text-align:center;list-style:none}
+.rc-minor summary::-webkit-details-marker{display:none}
+.rc-minor .badges{margin-top:8px}
+.lg2{display:grid;grid-template-columns:1fr auto 70px;gap:10px;align-items:center;font-size:13px;padding:4px 0}
+.lg2 b{font-weight:400;color:var(--text-secondary)} .lg2 em{font-style:normal;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.lg2 em.up{color:var(--green)} .lg2 em.down{color:var(--loss)}
 .hidden{display:none!important}
 .done{text-align:center}
 .done .big{font-family:var(--fd);font-size:40px;color:var(--gold)}
@@ -704,28 +759,69 @@ function careerScore(){
   return Math.round(C.tot.apps*1+C.tot.goals*3+C.tot.ast*2+C.tot.caps*2+C.peak*10+hp);
 }
 function retire(){ C.phase='retired'; page4(); }
+// 은퇴 카드: 시즌별 표(나이·구단·오버롤·경기·골·도움 + 그 시즌 트로피 아이콘) → 대표팀 줄 → 통산 → 트로피 진열장
+var HON_ICON=[[/발롱도르/,'👑'],[/FIFA 올해의 선수/,'💎'],[/월드컵 우승/,'🌍'],[/(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) 우승/,'🌎'],
+  [/챔피언스리그 우승/,'🏆','ucl'],[/리그 우승/,'🏆'],[/컵 대회 우승/,'🏅'],[/득점왕|골든슈/,'⚽'],[/도움왕/,'🎯'],[/골든볼/,'🥇'],[/.*/,'⭐']];
+function honIcon(n){ for(var i=0;i<HON_ICON.length;i++) if(HON_ICON[i][0].test(n)) return HON_ICON[i]; }
+// 시장가치(€M): 오버롤과 나이로 계산한 재미용 숫자
+function marketValue(ovr,age){
+  var af=age<=23?1.15:age<=28?1:({29:.8,30:.6,31:.45,32:.32,33:.22}[age]||.12);
+  return 2.2*Math.exp((ovr-60)/7.5)*af;
+}
+function fmtVal(v){ return v>=100?'€'+Math.round(v)+'M':v>=1?'€'+v.toFixed(v>=10?0:1)+'M':'€'+Math.round(v*1000)+'K'; }
 function pRetired(){
-  var t=C.tot, ars=C.arsenal.apps>0, grade=C.peak>=90?'월드 클래스':C.peak>=84?'스타':C.peak>=76?'주전급':C.peak>=68?'프로':'저니맨';
-  // 같은 상은 모아서 ×N (이달의 선수 ×2 같은 건 이름에서 횟수를 뗀다)
-  var grp={}, order=[]; C.honors.filter(function(h){return h.tier!=='-';}).forEach(function(h){ var nm=String(h.n).split(' ×')[0], k=h.kind+'|'+nm;
-    var n=+(String(h.n).split('×')[1])||1; if(!grp[k]){ grp[k]={h:{n:nm,kind:h.kind,tier:h.tier},c:0}; order.push(k); } grp[k].c+=n; });
-  order.sort(function(a,b){ return 'SABC'.indexOf(grp[a].h.tier)-'SABC'.indexOf(grp[b].h.tier); });
-  var nTro=C.honors.filter(function(h){return h.kind!=='ind'&&h.tier!=='-'&&/우승/.test(h.n);}).length;
-  var h='<div class="hc done2"><div style="font-size:12px;opacity:.8">'+C.age+'세 은퇴 · '+grade+'</div><div class="hc-n" style="font-size:26px;margin:4px 0">'+esc(C.name)+'</div>'
-   +'<div class="hc-s">'+natInfo(C.nation).f+' '+natInfo(C.nation).n+' · '+CARDS[C.pos][C.card].n+' · 최고 오버롤 '+C.peak+'</div>'
-   +'<div class="score"><span>커리어 점수</span><b>'+careerScore().toLocaleString()+'</b></div></div>'
-   +'<div class="rs" style="background:var(--surface);border:1px solid var(--border-bright);border-radius:14px;padding:12px">'
-   +[[t.apps,'경기'],[t.goals,'골'],[t.ast,'도움'],[t.caps,'A매치'],[nTro,'우승']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
-   +(order.length?'<div class="panel"><div class="lbl"><b>트로피 · 수상</b><span>🏆 팀 · ⭐ 개인 · 🌍 대표팀</span></div><div class="badges">'
-     +order.map(function(k){ return honBadge(grp[k].h,grp[k].c); }).join('')+'</div></div>':'')
-   +'<div class="panel"><div class="lbl"><b>거쳐 간 구단</b></div><div style="font-size:14px;line-height:1.6">'+C.clubs.map(esc).join(' → ')+'</div></div>';
-  if(ars){
+  var t=C.tot, last=C.hist[C.hist.length-1], lastClub=ALL.filter(function(c){return c.n===last.club;})[0]||C.club;
+  var grade=C.peak>=90?'월드 클래스':C.peak>=84?'스타':C.peak>=76?'주전급':C.peak>=68?'프로':'저니맨';
+  var peakVal=0; C.hist.forEach(function(r){ peakVal=Math.max(peakVal,marketValue(r.ovr,r.age)); });
+  var posKo={FW:'FW',MF:'MF',DF:'DF'}[C.pos];
+  // 머리: 오버롤 타일 + 국적·포지션·번호 + 마지막 구단 + 은퇴 나이·최고 가치
+  var h='<div class="rc-head">'
+   +'<div class="rc-ovr'+(C.peak>=90?' elite':'')+'"><span>최고 OVR</span><b>'+C.peak+'</b></div>'
+   +'<div class="rc-id"><div class="rc-chips"><span class="rc-chip">'+natInfo(C.nation).f+' '+natInfo(C.nation).n+'</span><span class="rc-chip gold">'+(C.num?'#'+C.num+' ':'')+posKo+'</span></div>'
+   +'<div class="rc-name">'+esc(C.name)+'</div>'
+   +'<div class="rc-sub">'+CARDS[C.pos][C.card].n+' · '+grade+'</div></div>'
+   +'<div class="rc-meta"><div><span>은퇴</span><b>'+C.age+'세</b></div><div><span>최고 가치</span><b>'+fmtVal(peakVal)+'</b></div></div></div>';
+  // 시즌 표
+  h+='<div class="rc-table"><div class="rc-row hd"><span>나이</span><span>구단</span><span>OVR</span><span>경기</span><span>골</span><span>도움</span></div>';
+  C.hist.forEach(function(r){
+    var club=ALL.filter(function(c){return c.n===r.club;})[0]||{n:r.club,col:'#444'};
+    var ars=/아스날/.test(r.club)&&!r.youth;
+    var hs=(r.hon||[]).filter(function(x){return x.tier&&x.tier!=='C'&&x.tier!=='-'&&x.kind!=='nat';}).sort(function(a,b){ return 'SAB'.indexOf(a.tier)-'SAB'.indexOf(b.tier); });
+    var icons=hs.slice(0,3).map(function(x){ var ic=honIcon(x.n); return '<i class="'+(ic[2]||'')+'" title="'+esc(x.n)+'">'+ic[1]+'</i>'; }).join('')+(hs.length>3?'<b>+'+(hs.length-3)+'</b>':'');
+    var oc=r.youth?'y':r.ovr>=90?'e':r.ovr>=80?'g':'n';
+    h+='<div class="rc-row'+(r.youth?' youth':'')+(ars?' ars':'')+'">'
+     +'<span class="age">'+r.age+'</span>'
+     +'<span class="rcc">'+crest(club,24)+'<em>'+esc(r.team)+(r.loan?' <small>임대</small>':'')+'</em>'+(icons?'<span class="ic">'+icons+'</span>':'')+'</span>'
+     +'<span class="ovr '+oc+'">'+r.ovr+'</span><span>'+r.apps+'</span><span>'+r.goals+'</span><span>'+r.ast+'</span></div>';
+  });
+  // 대표팀 줄
+  var natHon=C.honors.filter(function(x){return x.kind==='nat'&&/우승/.test(x.n);});
+  if(t.caps) h+='<div class="rc-row nat"><span class="age">'+natInfo(C.nation).f+'</span><span class="rcc"><em>'+natInfo(C.nation).n+' 대표팀</em>'
+     +(natHon.length?'<span class="ic">'+natHon.map(function(x){return '<i title="'+esc(x.n)+'">'+honIcon(x.n)[1]+'</i>';}).join('')+'</span>':'')+'</span>'
+     +'<span></span><span>'+t.caps+'</span><span>'+t.cg+'</span><span>—</span></div>';
+  h+='</div>';
+  // 통산
+  var grp={}, order=[];
+  C.honors.filter(function(x){return x.tier&&x.tier!=='-';}).forEach(function(x){ var nm=String(x.n).split(' ×')[0], n=+(String(x.n).split('×')[1])||1;
+    if(!grp[nm]){ grp[nm]={n:nm,tier:x.tier,c:0}; order.push(nm); } grp[nm].c+=n; });
+  order.sort(function(a,b){ return 'SABC'.indexOf(grp[a].tier)-'SABC'.indexOf(grp[b].tier) || grp[b].c-grp[a].c; });
+  var nTro=C.honors.filter(function(x){return x.kind!=='ind'&&x.tier!=='-'&&/우승/.test(x.n);}).length;
+  h+='<div class="rc-end"><div class="rc-end-t">커리어가 끝났어요</div>'
+   +'<div class="rc-tot">'+[[t.apps,'경기'],[t.goals,'골'],[t.ast,'도움'],[nTro,'우승']].map(function(x){ return '<div><span>'+x[1]+'</span><b>'+x[0]+'</b></div>'; }).join('')+'</div>'
+   +'<div class="rc-score"><span>커리어 점수</span><b>'+careerScore().toLocaleString()+'</b></div>';
+  // 트로피 진열장: S·A·B는 아이콘 타일, C는 접기
+  var main=order.filter(function(k){return grp[k].tier!=='C';}), minor=order.filter(function(k){return grp[k].tier==='C';});
+  if(main.length) h+='<div class="rc-shelf">'+main.map(function(k){ var g=grp[k], ic=honIcon(k);
+      return '<div class="rc-tro t'+g.tier+'"><div class="i '+(ic[2]||'')+'">'+ic[1]+(g.c>1?'<em>×'+g.c+'</em>':'')+'</div><div class="l">'+esc(k)+'</div></div>'; }).join('')+'</div>';
+  if(minor.length) h+='<details class="rc-minor"><summary>기타 수상 '+minor.reduce(function(s,k){return s+grp[k].c;},0)+'개</summary><div class="badges">'
+      +minor.map(function(k){ return '<span>'+honIcon(k)[1]+' '+esc(k)+(grp[k].c>1?' ×'+grp[k].c:'')+'</span>'; }).join('')+'</div></details>';
+  if(!order.length) h+='<div class="note" style="text-align:center">트로피 없이 끝난 커리어예요.</div>';
+  h+='</div>';
+  // 아스날 레전드 비교(넘었는지·모자란지 숫자로)
+  if(C.arsenal.apps>0){
     h+='<div class="panel"><div class="lbl"><b>아스날 레전드와 비교</b><span>아스날 '+C.arsenal.apps+'경기 '+C.arsenal.goals+'골</span></div>'
-     +LEGENDS.map(function(l){ var p=Math.min(100,Math.round(C.arsenal.goals/l[2]*100)); return '<div class="lg"><span>'+l[0]+'</span><i><em style="width:'+p+'%"></em></i><b>'+l[2]+'골</b></div>'; }).join('')+'</div>';
-  } else {
-    h+='<div class="note" style="text-align:center">아스날에서 뛰면 은퇴할 때 아스날 레전드와 비교해 줘요.</div>';
+     +LEGENDS.map(function(l){ var d=C.arsenal.goals-l[2]; return '<div class="lg2"><span>'+l[0]+'</span><b>'+l[2]+'골</b><em class="'+(d>=0?'up':'down')+'">'+(d>=0?'▲ +'+d:'▼ '+d)+'</em></div>'; }).join('')+'</div>';
   }
-  h+=histHtml();
   document.getElementById('app').innerHTML=h;
   document.getElementById('dock').innerHTML='<button class="btn ghost2" onclick="C=null;S={step:1,name:\'\',nation:null,foot:null,pos:null,num:null,dream:null,card:null,add:[0,0,0,0,0],club:null};go(1)">새 커리어</button><button class="btn" onclick="alert(\'목업이라 실제 등록은 안 돼요\')">랭킹 등록</button>';
 }
