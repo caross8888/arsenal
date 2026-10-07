@@ -17,7 +17,13 @@ export const BASE = 40, POOL = 50, MAXADD = 20, YOUTH_GAP = 30;
 // 시작 오버롤: 모든 포지션·카드가 같다(사용자 지정 — 동일한 출발선). 포지션 사이 균형은 시작값이 아니라
 // 골·도움 비율(G_RATE·A_RATE)·기여 점수·발롱 배율로 맞춘다. 54는 맞추기 전 재능별 정점이 그대로 나오는 값.
 export const START_OVR = 54;
-const AGE_BASE = {15:4,16:4,17:4,18:4.5,19:4.5,20:4.5,21:4,22:4,23:3.5,24:3,25:2.5,26:2,27:1.5,28:0.5,29:-0.5,30:-1,31:-1.5,32:-2,33:-2.5,34:-3,35:-3.5,36:-4,37:-4.5};
+// 29~30세는 정체(0), 31세부터 매년 −0.5씩 커지는 하락(사용자 지정 — 정점을 몇 시즌 유지하게. 예전엔 29세부터 −0.5·−1·…).
+const AGE_BASE = {15:4,16:4,17:4,18:4.5,19:4.5,20:4.5,21:4,22:4,23:3.5,24:3,25:2.5,26:2,27:1.5,28:0.5,29:0,30:0,31:-0.5,32:-1,33:-1.5,34:-2,35:-2.5,36:-3,37:-3.5};
+// 몸의 소모(사용자 지정): 부상 이력만큼 28세 이후 나이 커브를 그 햇수만큼 앞당긴다 — 잦은 부상·큰 부상이면 정체·하락이 일찍 온다.
+// 일반 부상 +WEAR[0], 서둘러 복귀하다 재부상 +WEAR[1] 더, 큰 부상 +WEAR[2], 최대 WEAR[3]년.
+const WEAR = [0.3, 0.3, 1.0, 3];
+const ageAt = a => { a = Math.min(37, a); const f = Math.floor(a), t = a - f; return f >= 37 ? AGE_BASE[37] : AGE_BASE[f]*(1-t) + AGE_BASE[f+1]*t; };
+const ageBase = () => C.age < 28 ? AGE_BASE[C.age] : Math.min(AGE_BASE[Math.min(37, C.age)], ageAt(C.age + (C.wear||0)));
 const DECLINE = {'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5,'빌드업':0.5};
 const NAT_BAR = {ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
 const NAT_STR = {BRA:.18,FRA:.18,ESP:.16,ARG:.16,ENG:.14,GER:.12,POR:.10,NED:.08,ITA:.08,BEL:.06,NOR:.03,JPN:.03,USA:.02,KOR:.02,NGA:.02};
@@ -83,7 +89,7 @@ const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[
 const DEV = [0.8, 1.2];
 const K_GROW = 0.47, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:129, sd:14, pos:{FW:1.03, MF:0.93, DF:0.82}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
+const BALLON = {mu:131, sd:14, pos:{FW:1.03, MF:0.93, DF:0.82}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
 
@@ -231,7 +237,7 @@ export function prepView(state){
   else if(C.age < 18) goal = cOvr() >= C.club.r-22 ? '1군 데뷔 노리기' : 'U-18 주전 자리 잡기';
   else goal = seniorGoal();
   let a = ev.a;
-  if(ev.id === 'talk') a = [a[0], a[1]+(AGE_BASE[Math.min(37, C.age)] > 0 ? ' (성장 ↑)' : ' (하락 완화)')];
+  if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 완화)' : ' (감독 신뢰 ↑)')];
   return {goal, youth: youth(), event:{id:ev.id, t:ev.t, d, a},
     loanClub: C.ev==='loan' && C.loanClub ? {...pub(C.loanClub), chance: chanceOf(pStart(C.loanClub))} : null};
 }
@@ -279,7 +285,7 @@ export function playSeason(state, choice){
   if(ev==='loan' && pick===0 && C.loanClub){ club = C.loanClub; onLoan = true; growMul *= LOAN_GO; notes.push(C.loanClub.n+'로 1시즌 임대를 떠났어요.'); }
   // 남아서 경쟁: 1군 선수들과 훈련하는 효과(성장 ↑)와 감독의 관심(출전 ↑ 조금). 예전엔 효과가 없어 "임대 간다"가 늘 정답이었다(전략 검사).
   if(ev==='loan' && pick===1){ growMul *= LOAN_STAY[0]; startAdj += LOAN_STAY[1]; notes.push('남아서 1군 선수들과 부딪히며 훈련했어요.'); }
-  if(ev==='talk'){ if(pick===0){ if(rng()<0.75){ startAdj+=0.12; notes.push('면담 후 출전 시간이 늘었어요.'); } else { startAdj-=0.1; notes.push('감독이 불쾌해해서 한동안 벤치였어요.'); } } else if(AGE_BASE[Math.min(37, C.age)] > 0) growMul*=EV_GROW.talk; else { declMul*=0.8; notes.push('묵묵히 훈련한 덕분에 하락 폭이 줄었어요.'); } }   // 하락기(29세+)엔 성장 대신 하락 완화
+  if(ev==='talk'){ if(pick===0){ if(rng()<0.75){ startAdj+=0.12; notes.push('면담 후 출전 시간이 늘었어요.'); } else { startAdj-=0.1; notes.push('감독이 불쾌해해서 한동안 벤치였어요.'); } } else if(ageBase() > 0) growMul*=EV_GROW.talk; else if(ageBase() < 0){ declMul*=0.8; notes.push('묵묵히 훈련한 덕분에 하락 폭이 줄었어요.'); } else { startAdj+=0.03; notes.push('묵묵히 훈련하는 모습에 감독의 신뢰가 쌓였어요.'); } }   // 성장기엔 성장 ↑, 하락기엔 하락 완화, 정체기(29~30세, ageBase 0)엔 감독 신뢰
   // 대가: 개인 훈련에 치중해 팀 훈련이 소홀 → 선발 −10%p. 부상 위험만으로는 대가가 안 됐다(+20%p여도 늘 고용이 이득).
   // 그래서 상황마다 정답이 갈린다: 21세까지(벤치여도 크는 시기)는 고용, 22세부터(뛰어야 크는 시기)는 거절(전략 검사 ±1.1%).
   if(ev==='coach' && pick===0){ growMul*=EV_GROW.coach; startAdj-=EV_GROW.coachStart; notes.push('개인 트레이너와 훈련한 효과가 있었어요.'); }
@@ -305,14 +311,15 @@ export function playSeason(state, choice){
     if(inj.major){
       if(C.injPick===0){ STATS[C.pos].forEach((n,i) => { if(n==='스피드'||n==='체력') C.off[i]-=2; }); notes.push(inj.name+' — 수술 후 재활. '+injured+'경기 결장, 스피드·체력이 조금 떨어졌어요.'); }
       else { C.injBoost = {n:3}; notes.push(inj.name+' — 보존 치료. '+injured+'경기 결장, 한동안 재발 위험이 있어요.'); }
-      C.majorInj = (C.majorInj||0) + 1;
+      C.majorInj = (C.majorInj||0) + 1; C.wear = Math.min(WEAR[3], (C.wear||0) + WEAR[2]);
     } else if(C.injPick===0){
       injured = Math.round(injured/2);
-      if(rng()<0.3){ injured += Math.round(4+rng()*6); growMul*=0.9; notes.push(inj.name+' — 서둘러 복귀했다가 재부상. 총 '+injured+'경기 결장.'); }
+      if(rng()<0.3){ injured += Math.round(4+rng()*6); growMul*=0.9; C.wear = Math.min(WEAR[3], (C.wear||0) + WEAR[1]); notes.push(inj.name+' — 서둘러 복귀했다가 재부상. 총 '+injured+'경기 결장.'); }
       else notes.push(inj.name+' — 빨리 복귀했어요. '+injured+'경기 결장.');
     } else { C.injNext = 0.03; notes.push(inj.name+' — 완전히 회복하고 돌아왔어요. '+injured+'경기 결장.'); }
     injured = Math.min(games-2, injured);
     C.injCount = (C.injCount||0) + 1;
+    if(!inj.major) C.wear = Math.min(WEAR[3], (C.wear||0) + WEAR[0]);
   }
   C.injGames = (C.injGames||0) + injured;
   if(C.injBoost && C.injBoost.n > 0) C.injBoost.n--;
@@ -340,13 +347,14 @@ export function playSeason(state, choice){
   // 클린시트는 출전 경기 전체로 센다(교체 출전 포함). 예전엔 선발만 세서 출전 대비 25%로 너무 적게 보였다(사용자 지적).
   const cs = row0Youth ? Math.round(apps*pCS*0.8) : Math.round(apps*pCS*(0.85+rng()*0.3));
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
-  // 평점: 실력 + 팀 안 위치 + 포지션별 활약 + 운
+  // 평점: 실력 + 팀 안 위치 + 포지션별 활약 + 운. 기본값 6.42(예전 6.45 — 정체기를 29~30세로 늘려 상위 시즌이 많아진 만큼 내림)
   const clubLv = club.r - (youth()&&!onLoan ? YOUTH_GAP : 0), ap = Math.max(apps,1);
   const perfBonus = {FW:(goals+ast*0.6)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.6, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.6}[C.pos];
-  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+(rng()-0.5)*0.5)) : 0;
+  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.42+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+(rng()-0.5)*0.5)) : 0;
 
   // 성장 / 하락
-  const base = AGE_BASE[Math.min(37, C.age)], ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
+  const base = ageBase(), ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
+  if(!C.wearNote && base < AGE_BASE[Math.min(37, C.age)] && base <= 0){ C.wearNote = true; notes.push('부상 이력 탓에 몸이 예전 같지 않아요. 또래보다 일찍 내리막이 시작됐어요.'); }
   if(row0Youth){ if(ev==='extra' && pick===0) C.youthPts++; if(ratio>=0.6) C.youthPts++; }
   if(C.age>=18 && !C.awoken){
     const tr = mulberry(C.seed ^ hashStr('talent'))(), b = Math.min(6, C.youthPts);
