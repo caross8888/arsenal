@@ -14,9 +14,9 @@ export { NATIONS, CLUBS, NAMES, STATS, CARDS };
 
 // ── 상수 ──────────────────────────────────────────────────────────────
 export const BASE = 40, POOL = 50, MAXADD = 20, YOUTH_GAP = 30;
-// 시작 오버롤: 같은 포지션 안에서는 카드끼리 같게, 포지션 평균은 맞추기 전 값 그대로(공격수 54.8 / 미드필더 53.8 / 수비수 53.5).
-// 하나로(54) 맞췄더니 공격수 시작이 낮아져 골·발롱·득점왕·점수가 6% 안팎 줄었다(밸런스 → 기록 → 점수로 번진다 — 사용자 지적).
-export const START_OVR = {FW:55, MF:54, DF:53.5};
+// 시작 오버롤: 모든 포지션·카드가 같다(사용자 지정 — 동일한 출발선). 포지션 사이 균형은 시작값이 아니라
+// 골·도움 비율(G_RATE·A_RATE)·기여 점수·발롱 배율로 맞춘다. 54는 맞추기 전 재능별 정점이 그대로 나오는 값.
+export const START_OVR = 54;
 const AGE_BASE = {15:4,16:4,17:4,18:4.5,19:4.5,20:4.5,21:4,22:4,23:3.5,24:3,25:2.5,26:2,27:1.5,28:0.5,29:-0.5,30:-1,31:-1.5,32:-2,33:-2.5,34:-3,35:-3.5,36:-4,37:-4.5};
 const DECLINE = {'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5,'빌드업':0.5};
 const NAT_BAR = {ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
@@ -29,16 +29,18 @@ export const HONOR_TIER = {S:{f:5,g:1.08,p:200}, A:{f:3,g:1.05,p:80}, B:{f:2,g:1
 const BALLON_PTS = [[/챔피언스리그 우승/,25],[/월드컵 우승/,25],[/(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) 우승/,15],[/리그 우승/,12],[/컵 대회 우승/,4],
   [/골든볼/,10],[/리그 올해의 (선수|미드필더|수비수)/,10],[/챔스 올해의 선수/,10],[/골든슈/,8],[/리그 득점왕/,8],[/챔스 득점왕|대회 득점왕|월드컵 득점왕/,6],[/도움왕/,5],[/챔스 올해의 (공격수|미드필더|수비수)/,5]];
 // 포지션별 기여 점수 — 미드필더·수비수는 골·도움 가중치를 높이고 수비수는 클린시트를 더한다
+// 경기당 골·도움 기본 비율. 공격수는 시작 오버롤을 54로 통일하면서(예전 카드 평균 54.8) 줄어든 골·도움을 되돌린 값(0.42·0.18에서)
+const G_RATE = {FW:0.446, MF:0.13, DF:0.035}, A_RATE = {FW:0.19, MF:0.17, DF:0.06};
 const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.5}, DF:{g:8,a:5,cs:3.5}};
 // 카드별 기여 보정(사용자 지정): 같은 포지션 안에서도 카드마다 골·도움·클린시트 기대치가 달라
 // (포처는 골, 펄스나인·수비형은 적게) 기여 점수 평균이 같아지게 곱한다. 순서는 CARDS와 같음.
 // scripts/sim_career.mjs와 같은 전략으로 카드당 3,000 커리어를 돌려 잰 값 — 카드·출력 공식을 바꾸면 다시 잴 것.
 // 득점왕 같은 수상은 보정하지 않는다(포처가 득점왕을 더 받는 건 자연스럽다).
-const CARD_CONTRIB = {FW:[1.21,0.95,0.91,0.93,1.05], MF:[1.16,0.81,0.93,0.92,1.35], DF:[1.06,1.03,0.98,1.01,0.92,1]};
+const CARD_CONTRIB = {FW:[1.37,1.07,1.03,1.05,1.19], MF:[1.16,0.81,0.93,0.92,1.35], DF:[0.98,0.95,0.91,0.93,0.85,0.93]};
 const TALENT = {gen:2.05, wonder:1.58, prospect:1.18};   // 숨은 재능 배율(18세에 정해짐)
 const K_GROW = 0.6, DAMP = [0.6, 30], PLAY_C = [0.3, 1.1], CLUB_C = [1.35, 1.18, 1.05, 0.92, 0.8], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:120, sd:14, pos:{FW:0.96, MF:0.865, DF:0.78}, top:4, inc:10};   // 포지션 배율은 시작 오버롤을 포지션별로 맞춘 뒤 세대급 발롱 평균(공격수 2.6 · 미드 0.35 · 수비 0.06)이 그대로 나오게 다시 맞춘 값
+const BALLON = {mu:120, sd:14, pos:{FW:1.02, MF:0.855, DF:0.72}, top:4, inc:10};   // 포지션 배율은 시작 오버롤을 포지션별로 맞춘 뒤 세대급 발롱 평균(공격수 2.6 · 미드 0.35 · 수비 0.06)이 그대로 나오게 다시 맞춘 값
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
 
@@ -66,7 +68,7 @@ export function startStats(pos, card){
   // 맞추지 않으면 강점이 한두 개에 몰린 카드(포처 56)가 고른 카드(메짤라·풀백 52)보다 높게 시작해
   // 명성 → 구단 → 출전 → 성장으로 불어나 정점이 5 가까이 벌어졌다(사용자 지적).
   const st = add.map(a => BASE+a), o = ovrOf(st, w);
-  return st.map(v => Math.round((v - o + START_OVR[pos])*10)/10);
+  return st.map(v => v - o + START_OVR);
 }
 // 오버롤 = 카드 가중치의 세제곱으로 가중 평균(핵심 스탯이 오버롤을 거의 결정한다)
 export function ovrOf(st, w){ let t=0, sw=0; for(let i=0;i<5;i++){ const w3=w[i]**3; t+=st[i]*w3; sw+=w3; } return Math.round(t/sw); }
@@ -76,7 +78,7 @@ const growLv = r => Math.max(1, Math.min(5, Math.round((r-40)/11)));
 
 // 첫 구단: 자국 구단 3곳 — 도전 / 적정 / 안정. 리그 구단이 16개 이상이면 3칸 간격.
 export function firstClubs(nation, pos, card){
-  const myRep = START_OVR[pos] + 5, me = myRep + YOUTH_GAP;
+  const myRep = START_OVR + 5, me = myRep + YOUTH_GAP;
   const home = (CLUBS[nation]||[]).map(c => clubByName(c[0])).sort((a,b) => b.r-a.r);
   let mid = 0; home.forEach((c,i) => { if(Math.abs(c.r-me) < Math.abs(home[mid].r-me)) mid = i; });
   const step = home.length >= 16 ? 3 : 1;
@@ -89,7 +91,7 @@ export function createCareer(input, clubIdx, seed){
   const {name, nation, foot, pos, card, num, dream} = input;
   const o = firstClubs(nation, pos, card)[clubIdx];
   if(!o) throw new Error('bad club');
-  const st = startStats(pos, card), ovr = START_OVR[pos];
+  const st = startStats(pos, card), ovr = START_OVR;
   C = {v:1, seed:seed>>>0, name, nation, pos, card, foot, want:num, num:null, dream:dream||null,
        st, ovr, off:st.map(v => v-ovr), age:15, club:o.club, fame:0, wf:2, phase:'prep', train:'균형', ev:null, evPick:null,
        hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, boost:1, peak:ovr, clubs:[o.club.n],
@@ -271,8 +273,8 @@ export function playSeason(state, choice){
   const cardG = Math.sqrt({'포처':1.35,'타깃맨':1.15,'윙어':0.8,'펄스나인':0.85,'공격형 미드필더':1.4,'메짤라':1.2,'수비형 미드필더':0.5,'윙백':1.3,'인버티드 풀백':1.2}[card.n]||1);
   const cardA = Math.sqrt({'윙어':1.5,'펄스나인':1.5,'공격형 미드필더':1.4,'딥라잉 플레이메이커':1.2,'윙백':1.6,'풀백':1.3,'포처':0.6}[card.n]||1);
   const wfF = (C.pos==='FW'||C.pos==='MF') ? 1+0.04*(C.wf-2) : 1;
-  const gRate = wfF*{FW:0.42,MF:0.13,DF:0.035}[C.pos]*Math.pow(effG/75,2)*cardG*teamF;
-  const aRate = wfF*{FW:0.18,MF:0.17,DF:0.06}[C.pos]*Math.pow(effA/75,2)*cardA*teamF;
+  const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF;
+  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF;
   const minsEq = starts + subs*0.3;
   const hot = !row0Youth && starts>=15 && rng()<0.02;   // 커리어 하이 시즌
   const goals = Math.round(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.6:1)), ast = Math.round(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.6:1));
