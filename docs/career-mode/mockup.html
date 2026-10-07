@@ -557,10 +557,16 @@ function playSeason(){
   // 커리어 하이 시즌: 1군 시즌에 2% 확률로 골·도움 ×1.6
   var hot=!row0Youth && starts>=15 && rng()<0.02;
   var goals=Math.round(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.6:1)), ast=Math.round(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.6:1));
+  // 클린시트: 선발 경기 중 무실점. 팀이 강할수록, 내가 구단보다 잘할수록 늘어난다(수비수 커리어 점수에 쓴다).
+  var pCS=Math.max(0.05,Math.min(0.6,0.12+0.35*(club.r-50)/45+(o-75)/150));
+  var cs=row0Youth?Math.round(starts*pCS*0.8):Math.round(starts*pCS*(0.85+rng()*0.3));
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
   // 평점: 내 실력(오버롤) 기준 + 팀 안에서의 위치(구단보다 잘하면 +) + 골·도움 + 운
   var clubLv=club.r-(youth()&&!onLoan?YOUTH_GAP:0);
-  var rating=apps?Math.max(5.6,Math.min(8.9,6.45+(o-70)/17+(o-clubLv)/40+(goals+ast*0.6)/Math.max(apps,1)*0.6+(rng()-0.5)*0.5)):0;
+  // 평점의 활약 보너스는 포지션마다 다른 지표로 — 공격수 골·도움 / 미드필더 도움 비중 ↑ / 수비수 클린시트
+  var ap=Math.max(apps,1), perfBonus={FW:(goals+ast*0.6)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.6,
+      DF:cs/Math.max(starts,1)*0.6+(goals*2+ast*1.5)/ap*0.6}[C.pos];
+  var rating=apps?Math.max(5.6,Math.min(8.9,6.45+(o-70)/17+(o-clubLv)/40+perfBonus+(rng()-0.5)*0.5)):0;
 
   // 성장 / 하락
   var base=(window.__AB||AGE_BASE)[Math.min(37,C.age)], ratio=starts/Math.max(1,games), luck=0.8+rng()*0.4;
@@ -620,14 +626,15 @@ function playSeason(){
       var motm=0; for(var mi=0;mi<3;mi++) if(rng()<Math.max(0,rating-7.0)*0.25) motm++;
       if(motm) add('이달의 선수'+(motm>1?' ×'+motm:''),'C');
       if(rating>=7.3 && apps>=25 && rng()<0.4) add('구단 올해의 선수','C');
-      if(goals>=30 && rng()<0.6) add('유러피언 골든슈','A');
+      if(C.pos!=='FW' && rating>=7.3 && rng()<0.6) add(natN+' 리그 올해의 '+(C.pos==='MF'?'미드필더':'수비수'),'B');
+      if(goals>=30 && rng()<0.6) add('유러피언 골든슈','B');
     }
     if(inUCL){
       if(uG>=9) add('챔스 득점왕','B'); if(uA>=6) add('챔스 도움왕','B');
       if(uclWin && rating>=7.5 && rng()<0.5) add('챔스 올해의 선수','A');
       if(rating>=7.6 && rng()<0.2) add('챔스 올해의 '+{FW:'공격수',MF:'미드필더',DF:'수비수'}[C.pos],'B');
     }
-    var big=hon.some(function(h){ return /리그 우승|챔피언스리그 우승|득점왕|올해의 선수/.test(h.n); });
+    var big=hon.some(function(h){ return /리그 우승|챔피언스리그 우승|득점왕|도움왕|올해의 (선수|미드필더|수비수)/.test(h.n); });
     if(ov>=92 && rating>=7.9 && big){
       var bd=rng()<0.25+(ov-92)*0.08; if(bd) add('발롱도르','S');
       if(rng()<(bd?0.7:0.15)) add('FIFA 올해의 선수','S');
@@ -683,9 +690,9 @@ function playSeason(){
     if(hint) notes.push(hint[C.age===19?0:1]);
   }
   var row={age:C.age, club:club.n, loan:onLoan, team:teamName(club), games:games, starts:starts, apps:apps, goals:goals, ast:ast, rating:rating, rank:rank, youth:youth()&&!onLoan,
-           ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas:deltas, trophies:counted, awards:awards, hon:hon, caps:caps, notes:notes, injured:injured};
+           ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas:deltas, trophies:counted, awards:awards, hon:hon, caps:caps, cs:cs, notes:notes, injured:injured};
   C.hist.push(row); C.last=row;
-  C.tot.apps+=apps; C.tot.goals+=goals; C.tot.ast+=ast; C.tot.caps+=caps; C.tot.cg+=cg;
+  C.tot.apps+=apps; C.tot.goals+=goals; C.tot.ast+=ast; C.tot.cs=(C.tot.cs||0)+cs; C.tot.caps+=caps; C.tot.cg+=cg;
   C.trophies=C.trophies.concat(counted); C.awards=C.awards.concat(awards); C.honors=C.honors.concat(hon);
   if(/아스날/.test(club.n) && !row.youth){ C.arsenal.apps+=apps; C.arsenal.goals+=goals; }
   C.peak=Math.max(C.peak,cOvr());
@@ -714,7 +721,7 @@ function pResult(){
   var h='<div class="top"><button class="back">← 게임 목록</button><div class="season-no">시즌 '+C.hist.length+' 결과</div></div>'
    +headCard()
    +'<div class="panel"><div class="lbl"><b>'+r.age+'세 시즌 · '+esc(r.team)+(r.loan?' (임대)':'')+'</b><span>'+(r.youth?'유스 리그':natInfo(ALL.filter(function(c){return c.n===r.club;})[0].nat).n+' 리그')+' '+r.rank+'위</span></div>'
-   +'<div class="rs">'+[[r.apps,'경기'],[r.starts,'선발'],[r.goals,'골'],[r.ast,'도움'],[r.apps?r.rating.toFixed(2):'—','평점']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
+   +'<div class="rs">'+[[r.apps,'경기'],[r.starts,'선발'],[r.goals,'골'],C.pos==='DF'?[r.cs,'클린시트']:[r.ast,'도움'],[r.apps?r.rating.toFixed(2):'—','평점']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
    +'<div class="dovr '+dCls+'"><span>오버롤</span><b>'+r.ovrBefore+' → '+r.ovr+'</b><em>'+(r.dOvr>0?'+':'')+r.dOvr+'</em></div>'
    +'<div class="dst">'+st.map(function(n,i){ var d=r.deltas[i]; return '<span class="'+(d>0?'up':d<0?'down':'')+'">'+n+' '+(d>0?'+':'')+d+'</span>'; }).join('')+'</div>'
    +(r.hon.length?'<div class="badges">'+r.hon.map(function(h){ return honBadge(h); }).join('')+'</div>':'')
@@ -756,10 +763,13 @@ function honBadge(h,cnt){
   var ic=h.kind==='team'?'🏆':h.kind==='nat'?'🌍':'⭐';
   return '<span class="'+(h.kind==='ind'?'aw':h.kind==='nat'?'nt':'')+(h.tier==='S'?' s':'')+'">'+ic+' '+esc(h.n)+(cnt>1?' ×'+cnt:'')+'</span>';
 }
-// 커리어 점수 = 출전·골·도움·A매치 + 정점 오버롤 + 수상 등급 점수
+// 포지션별 기여 점수 — 공격수만 유리하지 않게 미드필더·수비수는 골·도움 가중치를 높이고 수비수는 클린시트를 더한다
+var CONTRIB={FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.5}, DF:{g:8,a:5,cs:3.5}};
+function contribScore(){ var w=window.__CW?window.__CW[C.pos]:CONTRIB[C.pos]; return C.tot.goals*w.g+C.tot.ast*w.a+(C.tot.cs||0)*w.cs; }
+// 커리어 점수 = 출전·포지션별 기여·A매치 + 정점 오버롤 + 수상 등급 점수
 function careerScore(){
   var hp=C.honors.reduce(function(t,h){ return t+((HONOR_TIER[h.tier]||{p:0}).p)*(+(String(h.n).split('×')[1])||1); },0);
-  return Math.round(C.tot.apps*1+C.tot.goals*3+C.tot.ast*2+C.tot.caps*2+C.peak*10+hp);
+  return Math.round(C.tot.apps*1+contribScore()+C.tot.caps*2+C.peak*10+hp);
 }
 function retire(){ C.phase='retired'; page4(); }
 // ── 트로피 일러스트(직접 그린 SVG) ─────────────────────────────────────
@@ -817,7 +827,7 @@ var TROPHY_ART={
      +'<path d="M24 28l2.4 4.9 5.4.8-3.9 3.8.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.9-3.8 5.4-.8z" fill="#FFF0B3" opacity=".9"/>'};
 var TROPHY_OF=[[/챔피언스리그 우승/,'ucl'],[/월드컵 우승/,'worldcup'],[/(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) 우승/,'continental'],
   [/리그 우승/,'league'],[/컵 대회 우승/,'cup'],[/발롱도르/,'ballon'],[/FIFA 올해의 선수/,'best'],[/득점왕|골든슈/,'bootG'],[/도움왕/,'bootS'],
-  [/골든볼/,'gball'],[/(리그|챔스) 올해의 선수/,'plaqueG'],[/베스트 11/,'plaqueS'],[/챔스 올해의 (공격수|미드필더|수비수)/,'plaqueStar'],[/.*/,'medal']];
+  [/골든볼/,'gball'],[/(리그|챔스) 올해의 선수|리그 올해의 (미드필더|수비수)/,'plaqueG'],[/베스트 11/,'plaqueS'],[/챔스 올해의 (공격수|미드필더|수비수)/,'plaqueStar'],[/.*/,'medal']];
 function trophySvg(name, h){
   var k='medal'; for(var i=0;i<TROPHY_OF.length;i++) if(TROPHY_OF[i][0].test(name)){ k=TROPHY_OF[i][1]; break; }
   return '<svg class="tro" viewBox="0 0 48 62" height="'+(h||40)+'" role="img" aria-label="'+esc(name)+'">'+TROPHY_ART[k]+'</svg>';
@@ -846,7 +856,7 @@ function pRetired(){
    +'<div class="rc-sub">'+CARDS[C.pos][C.card].n+' · '+grade+'</div></div>'
    +'<div class="rc-meta"><div><span>은퇴</span><b>'+C.age+'세</b></div><div><span>최고 가치</span><b>'+fmtVal(peakVal)+'</b></div></div></div>';
   // 시즌 표
-  h+='<div class="rc-table"><div class="rc-row hd"><span>나이</span><span>구단</span><span>OVR</span><span>경기</span><span>골</span><span>도움</span></div>';
+  h+='<div class="rc-table"><div class="rc-row hd"><span>나이</span><span>구단</span><span>OVR</span><span>경기</span><span>골</span><span>'+(C.pos==='DF'?'CS':'도움')+'</span></div>';
   C.hist.forEach(function(r){
     var club=ALL.filter(function(c){return c.n===r.club;})[0]||{n:r.club,col:'#444'};
     var ars=/아스날/.test(r.club)&&!r.youth;
@@ -856,7 +866,7 @@ function pRetired(){
     h+='<div class="rc-row'+(r.youth?' youth':'')+(ars?' ars':'')+'">'
      +'<span class="age">'+r.age+'</span>'
      +'<span class="rcc">'+crest(club,24)+'<em>'+esc(r.team)+(r.loan?' <small>임대</small>':'')+'</em>'+(icons?'<span class="ic">'+icons+'</span>':'')+'</span>'
-     +'<span class="ovr '+oc+'">'+r.ovr+'</span><span>'+r.apps+'</span><span>'+r.goals+'</span><span>'+r.ast+'</span></div>';
+     +'<span class="ovr '+oc+'">'+r.ovr+'</span><span>'+r.apps+'</span><span>'+r.goals+'</span><span>'+(C.pos==='DF'?(r.cs||0):r.ast)+'</span></div>';
   });
   // 대표팀 줄
   var natHon=C.honors.filter(function(x){return x.kind==='nat'&&/우승/.test(x.n);});
@@ -871,7 +881,7 @@ function pRetired(){
   order.sort(function(a,b){ return 'SABC'.indexOf(grp[a].tier)-'SABC'.indexOf(grp[b].tier) || grp[b].c-grp[a].c; });
   var nTro=C.honors.filter(function(x){return x.kind!=='ind'&&x.tier!=='-'&&/우승/.test(x.n);}).length;
   h+='<div class="rc-end"><div class="rc-end-t">커리어가 끝났어요</div>'
-   +'<div class="rc-tot">'+[[t.apps,'경기'],[t.goals,'골'],[t.ast,'도움'],[nTro,'우승']].map(function(x){ return '<div><span>'+x[1]+'</span><b>'+x[0]+'</b></div>'; }).join('')+'</div>'
+   +'<div class="rc-tot">'+[[t.apps,'경기'],[t.goals,'골'],C.pos==='DF'?[t.cs||0,'클린시트']:[t.ast,'도움'],[nTro,'우승']].map(function(x){ return '<div><span>'+x[1]+'</span><b>'+x[0]+'</b></div>'; }).join('')+'</div>'
    +'<div class="rc-score"><span>커리어 점수</span><b>'+careerScore().toLocaleString()+'</b></div>';
   // 트로피 진열장: S·A·B는 아이콘 타일, C는 접기
   var main=order.filter(function(k){return grp[k].tier!=='C';}), minor=order.filter(function(k){return grp[k].tier==='C';});
