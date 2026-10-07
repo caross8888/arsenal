@@ -1720,6 +1720,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hc-o{text-align:center;line-height:1}
 .cr-hc-o b{display:block;font-family:var(--fd);font-size:44px;font-weight:400;color:#E9C766}
 .cr-hc-o span{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.8)}
+/* 나이는 OVR과 같은 크기, 흰색 — 둘 사이 옅은 세로줄 */
+.cr-hc-o.age b{color:#fff}
+.cr-hc-o.age{padding-right:12px;border-right:1px solid rgba(255,255,255,.2)}
 .cr-hc-st{display:grid;gap:5px}
 .cr-hc-st>div{display:grid;grid-template-columns:62px 1fr 26px;align-items:center;gap:8px;font-size:12px}
 .cr-hc-st span{color:rgba(255,255,255,.85)}
@@ -1828,10 +1831,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media (prefers-reduced-motion: reduce){.cr-anmsg span,.cr-badges.pop span,.cr-anim .cr-rs b.bump{animation:none}}
 .cr-hist .cr-rc-row:not(.hd){background:var(--surface2)}
 .cr-hist .cr-rc-row.ars{background:linear-gradient(90deg,rgba(239,1,7,.18),var(--surface2) 70%)}
-.cr-agetag{display:flex;align-items:baseline;gap:2px;flex-wrap:wrap;justify-content:flex-end;text-align:right;line-height:1}
-.cr-agetag b{font-family:var(--fd);font-size:40px;font-weight:400;color:var(--gold);line-height:.9}
-.cr-agetag span{font-size:15px;font-weight:700;margin-right:6px}
-.cr-agetag small{flex-basis:100%;font-size:11px;color:var(--text-secondary);margin-top:4px}
 .cr-rk-list{display:flex;flex-direction:column;gap:6px}
 .cr-rk-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto 34px 56px;gap:8px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:9px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cr-rk-row.me{border-color:var(--gold);background:rgba(200,168,75,.12)}
@@ -8909,9 +8908,9 @@ function crHead(){
   var p=CR.v.player, st=CR.meta.stats[p.pos], card=CR.meta.cards[p.pos][p.card];
   return '<div class="cr-hc"><div class="cr-hc-top">'+crCrest(p.club,40)
    +'<div style="flex:1;min-width:0"><div class="cr-hc-n">'+gmEsc(p.name)+(p.num?' <span>#'+p.num+'</span>':'')+'</div>'
-   +'<div class="cr-hc-s">'+p.age+'세 · '+gmEsc(p.club.team)+' · '+gmEsc(card.n)+'</div>'
+   +'<div class="cr-hc-s">'+gmEsc(p.club.team)+' · '+gmEsc(card.n)+'</div>'
    +'<div class="cr-hc-s">'+p.foot+(p.pos!=='DF'?' · 약발 '+crStars(p.wf):'')+(p.glass?' · 🩹 유리몸':'')+'</div></div>'
-   +'<div class="cr-hc-o"><b>'+p.ovr+'</b><span>OVR</span></div></div>'
+   +'<div class="cr-hc-o age"><b>'+p.age+'</b><span>AGE</span></div><div class="cr-hc-o"><b>'+p.ovr+'</b><span>OVR</span></div></div>'
    +'<div class="cr-hc-st">'+st.map(function(n,i){ var v=p.st[i]; return '<div><span>'+n+'</span><i><em style="width:'+v+'%"></em></i><b>'+v+'</b></div>'; }).join('')+'</div></div>';
 }
 // 커리어 기록: 은퇴 카드와 같은 표(나이 알약 · 엠블럼 · 그 시즌 트로피 · 오버롤 색 배지), 최근 시즌이 위
@@ -8930,17 +8929,13 @@ function crHist(){
        +'<span class="o '+(r[8]?'y':crOvrCls(r[6]))+'" title="'+(d>0?'+':'')+d+'">'+r[6]+'</span><span>'+r[3]+'</span><span>'+r[4]+'</span><span>'+r[5]+'</span></div>';
     }).join('')+'</div></details>';
 }
-// 머리 줄 오른쪽: 지금 나이를 크게(시즌 번호·연도는 작게)
-function crAgeTag(age, no, suffix){
-  return '<div class="cr-agetag"><b>'+age+'</b><span>세</span><small>시즌 '+no+(suffix||'')+' · '+crSeasonLabel(age)+'</small></div>';
-}
 function crBack(){ return '<button class="gm-back" onclick="gameList()">← 게임 목록</button>'; }
 
 // ── 시즌 준비 ──────────────────────────────────────────────────────────
 function crPrep(){
   var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lc=pr.loanClub;
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
-  crRender('<div class="cr-top">'+crBack()+crAgeTag(p.age, p.seasons+1)+'</div>'
+  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'
    +crHead()
    +'<div class="cr-panel"><div class="cr-lbl"><b>이번 시즌 목표</b></div><div style="font-size:15px">'+gmEsc(pr.goal)+'</div>'
    +'<div class="cr-note">'+(pr.youth?'유스 시즌이라 출전 기회는 유스팀 기준이에요.':'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
@@ -8969,7 +8964,7 @@ function crSeason(btn){
 function crInjury(){
   var p=CR.v.player, j=CR.v.injury;
   var opt=function(k, ic, t, d){ return '<button class="cr-club" onclick="crInjPick('+k+',this)"><div style="font-size:22px;text-align:center">'+ic+'</div><div><div class="nm">'+t+'</div><div class="meta">'+d+'</div></div><div></div></button>'; };
-  crRender('<div class="cr-top">'+crBack()+crAgeTag(p.age, p.seasons+1)+'</div>'+crHead()
+  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
    +'<div class="cr-panel"><div class="cr-lbl"><b>🚑 '+(j.major?'큰 부상':'부상')+' — '+gmEsc(j.name)+'</b><span>'+p.age+'세 시즌</span></div>'
    +'<div style="font-size:14px;line-height:1.6">'+(j.major?'시즌 대부분을 쉬어야 해요. 예상 결장 <b>'+j.games+'경기</b>.':'예상 결장 <b>'+j.games+'경기</b>. 복귀 시점을 정해 주세요.')+'</div>'
    +'<div class="cr-list">'+(j.major
@@ -8998,7 +8993,7 @@ function crAnimStart(from, resumed){
   var p=CR.v.player, df=p.pos==='DF', yth=p.age<18;
   if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf);   // 루프가 둘 돌면 프레임마다 두 번 움직인다
   CR.anim={t:from, from:from, target:null, v:null, stopAt:null, raf:null, resumed:!!resumed, last:null, shown:[-1,-1,-1]};
-  crRender('<div class="cr-top"><div></div>'+crAgeTag(p.age, p.seasons+1)+'</div>'+crHead()
+  crRender('<div class="cr-top"><div></div><div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
     +'<div class="cr-panel cr-anim"><div class="cr-lbl"><b>'+crSeasonLabel(p.age)+' 시즌 · '+gmEsc(p.club.team)+'</b><span id="crAnTick">'+(yth?'유스 리그':'리그')+'</span></div>'
     +'<div class="cr-months">'+CR_MONTHS.map(function(m,i){ return '<span data-i="'+i+'">'+m+'</span>'; }).join('')+'</div>'
     +'<div class="cr-anbar" id="crAnTrack"><i id="crAnBar"></i><em id="crAnKnob"></em></div>'
@@ -9063,7 +9058,7 @@ function crHonBadge(h){
 function crResult(){
   var p=CR.v.player, R=CR.v.result, r=R.row, st=CR.meta.stats[p.pos];
   var dCls=r.dOvr>0?'up':r.dOvr<0?'down':'', lg=r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그';
-  var h='<div class="cr-top">'+crBack()+crAgeTag(p.age, p.seasons, ' 결과')+'</div>'+crHead()
+  var h='<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+p.seasons+' 결과</div></div>'+crHead()
    +'<div class="cr-panel"><div class="cr-lbl"><b>'+r.age+'세 시즌 · '+gmEsc(r.team)+(r.loan?' (임대)':'')+'</b><span>'+lg+' '+r.rank+'위</span></div>'
    +'<div class="cr-rs">'+[[r.apps,'경기'],[r.starts,'선발'],[r.goals,'골'],p.pos==='DF'?[r.cs,'클린시트']:[r.ast,'도움'],[r.apps?r.rating.toFixed(2):'—','평점']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
    +'<div class="cr-dovr '+dCls+'"><span>오버롤</span><b>'+r.ovrBefore+' → <span id="crOvrTo">'+(CR.fresh?r.ovrBefore:r.ovr)+'</span></b><em>'+(r.dOvr>0?'+':'')+r.dOvr+'</em></div>'
