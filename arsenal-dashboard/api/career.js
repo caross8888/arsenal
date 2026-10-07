@@ -1,7 +1,7 @@
 // api/career.js — 미니게임 "커리어 모드"(선수 한 명의 커리어 키우기)
 //
 // 계산은 전부 _career_sim.js(서버)에서 하고, 진행 상태는 암호화 토큰(_token.js, deflate)으로 브라우저와 주고받는다.
-// KV는 랭킹에만 쓴다(submit/board/card — 아직 없음). 숨은 재능·구단 명성 숫자·발롱 점수 같은 숨김 값은
+// KV는 랭킹에만 쓴다(submit/board/card). 숨은 재능·구단 명성 숫자·발롱 점수 같은 숨김 값은
 // 응답에 넣지 않는다(토큰은 암호화라 안 보인다). 설계는 docs/career-mode/implementation.md.
 //
 //   POST ?a=new     {name, nation, foot, pos, card, num, dream}  → {token, clubs}      첫 구단 3곳
@@ -10,10 +10,14 @@
 //   POST ?a=next    {token, pick?}                                → {token, player, prep} | {token, card}(은퇴)
 //   POST ?a=retire  {token}                                       → {token, card}
 //   POST ?a=view    {token}                                       → 지금 단계 화면(이어 하기)
+//   POST ?a=submit  {token} + Authorization: Bearer <승부예측 토큰> → {registered, rank, best, improved, key}
+//   GET  ?a=board                                                 → 역대 TOP 100(30초 CDN 캐시)
+//   GET  ?a=card&k=<계정 키>                                      → 그 계정의 대표 은퇴 카드
 //   GET  ?a=meta                                                  → 화면용 고정 데이터(국가·카드·스탯·이름·구단 이름/id, 명성 없음)
 
 import crypto from 'crypto';
 import { tokenCodec } from './_token.js';
+import { readToken } from './_account.js';
 import * as S from './_career_sim.js';
 
 const {ready: tokenReady, seal, open} = tokenCodec('career-token-v1', {zip: true});
@@ -23,6 +27,46 @@ const BAD_WORDS = /(시발|씨발|ㅅㅂ|병신|ㅂㅅ|좆|존나|개새|새끼|
 const FEET = ['오른발', '왼발'];
 
 let META = null;
+const KV_URL = process.env.KV_REST_API_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+
+// ── 랭킹(KV) ─────────────────────────────────────────────────────────
+// career:board:v1  정렬 집합, 멤버 '@{계정 키}', 점수 = 커리어 점수. 계정당 최고 커리어 하나, 상위 1,000개만.
+// career:card:{키}  그 계정 대표 커리어의 은퇴 카드(cardView) JSON — 랭킹에서 눌러 열어 본다.
+// career:sum        해시 {키: 랭킹 한 줄 요약 JSON} — 랭킹 100줄을 HMGET 한 번으로 그린다.
+// career:done:{id}  같은 커리어 두 번 등록 방지(30일) / career:reg:{YYYY-MM} 월 등록 수(무료 한도 보호).
+const BOARD_KEY = 'career:board:v1', BOARD_KEEP = 1000, BOARD_SHOW = 100, MONTHLY_REG_CAP = 20000, ACCT = '@';
+async function kv(...args){
+  const r = await fetch(KV_URL, {
+    method: 'POST',
+    headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
+    body: JSON.stringify(args),
+    signal: AbortSignal.timeout(6000),
+  });
+  const j = await r.json();
+  if(j.error) throw new Error(`KV ${args[0]}: ${j.error}`);
+  return j.result;
+}
+const kvReady = () => !!(KV_URL && KV_TOKEN);
+// 랭킹 한 줄 요약: 대표 업적(발롱도르·월드컵·챔스·리그 우승·득점왕 중 있는 것 셋)
+const TOP_HON = [['발롱도르', /^발롱도르$/], ['월드컵 우승', /월드컵 우승/], ['챔피언스리그 우승', /챔피언스리그 우승/], ['리그 우승', /리그 우승$/], ['득점왕', /득점왕/]];
+const summaryOf = card => ({nm: card.name, nat: card.nation, pos: card.pos, card: card.card, peak: card.peak,
+  hon: TOP_HON.map(([n, re]) => [n, card.honors.filter(h => re.test(h[0])).length]).filter(x => x[1]).slice(0, 3)});
+let _board = null, _boardAt = 0;
+async function readBoard(){
+  if(_board && Date.now() - _boardAt < 30 * 1000) return _board;
+  const flat = await kv('ZRANGE', BOARD_KEY, 0, BOARD_SHOW - 1, 'REV', 'WITHSCORES') || [];
+  const top = [];
+  for(let i = 0; i + 1 < flat.length; i += 2) top.push({key: String(flat[i]).slice(1), score: Number(flat[i + 1])});
+  if(top.length){
+    const keys = top.map(r => r.key);
+    const [names, sums] = await Promise.all([kv('HMGET', 'pk:names', ...keys), kv('HMGET', 'career:sum', ...keys)]);
+    top.forEach((r, i) => { r.nick = (names || [])[i] || r.key; try { Object.assign(r, JSON.parse((sums || [])[i] || '{}')); } catch(_){} });
+  }
+  _board = {top}; _boardAt = Date.now();
+  return _board;
+}
+
 class Bad extends Error {}
 const bad = m => { throw new Bad(m); };
 
@@ -91,6 +135,19 @@ export default async function handler(req, res){
         // 꿈의 구단 고르기용 — 명성 숫자는 빼고 이름·엠블럼 id만(국가 안에서는 명성 순)
         clubs: Object.fromEntries(Object.entries(S.CLUBS).map(([k, cs]) => [k, cs.map(c => [c[0], c[2]])]))}));
     }
+    if(a === 'board'){
+      if(!kvReady()) return res.json({top: []});
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=30');
+      return res.json(await readBoard());
+    }
+    if(a === 'card'){
+      const k = String(req.query.k || '').slice(0, 64);
+      if(!k || !kvReady()) return res.status(404).json({error: '카드를 찾을 수 없어요.'});
+      const [raw, nick] = await Promise.all([kv('GET', `career:card:${k}`), kv('HGET', 'pk:names', k)]);
+      if(!raw) return res.status(404).json({error: '랭킹에서 내려간 기록이에요.'});
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=30');
+      return res.json({nick: nick || k, card: JSON.parse(raw)});
+    }
     if(req.method !== 'POST') return res.status(405).json({error: 'POST만 받습니다'});
     if(!tokenReady()) return res.status(503).json({error: '게임 서버 설정이 아직 안 됐어요.'});
     const body = await readBody(req);
@@ -139,6 +196,40 @@ export default async function handler(req, res){
       if(C.phase === 'result' && C.age < 29 && !C.forced) bad('29세부터 은퇴할 수 있어요.');
       S.retire(C);
       return res.json({token: seal(C), ...view(C)});
+    }
+
+    if(a === 'submit'){
+      const C = load(body.token, ['retired']);
+      // 등록은 승부예측 계정으로만(Who Am I와 같음). 계정당 최고 커리어 하나.
+      const acct = readToken(req);
+      if(!acct) return res.status(401).json({error: '랭킹 등록은 로그인 후에 할 수 있어요.', login: true});
+      if(!kvReady()) return res.status(503).json({error: '랭킹 저장소에 연결할 수 없어요.'});
+      const fresh = await kv('SET', `career:done:${C.id}`, acct.k, 'NX', 'EX', 30 * 86400);
+      if(fresh !== 'OK') return res.status(409).json({error: '이미 등록한 커리어예요.'});
+      const month = new Date().toISOString().slice(0, 7);
+      const used = await kv('INCR', `career:reg:${month}`);
+      if(used === 1) await kv('EXPIRE', `career:reg:${month}`, 40 * 86400);
+      if(used > MONTHLY_REG_CAP) return res.status(429).json({error: '이번 달 랭킹 등록이 마감됐어요. 다음 달에 다시 열려요.'});
+      const member = ACCT + acct.k, score = C.score;
+      const prev = Number(await kv('ZSCORE', BOARD_KEY, member)) || 0;
+      if(score > prev){
+        const card = S.cardView(C);
+        await kv('SET', `career:card:${acct.k}`, JSON.stringify(card));
+        await kv('HSET', 'career:sum', acct.k, JSON.stringify(summaryOf(card)));
+        await kv('ZADD', BOARD_KEY, score, member);
+        // 1,000위 밖으로 밀린 계정은 카드·요약도 지운다
+        const out = await kv('ZRANGE', BOARD_KEY, 0, -(BOARD_KEEP + 1)) || [];
+        if(out.length){
+          const ks = out.map(m => String(m).slice(1));
+          await kv('ZREM', BOARD_KEY, ...out);
+          await kv('DEL', ...ks.map(k => `career:card:${k}`));
+          await kv('HDEL', 'career:sum', ...ks);
+        }
+        _board = null;
+      }
+      const rank = await kv('ZREVRANK', BOARD_KEY, member);
+      return res.json(rank == null ? {registered: false, outside: true}
+        : {registered: true, rank: rank + 1, key: acct.k, score, best: Math.max(prev, score), improved: score > prev});
     }
 
     if(a === 'view'){

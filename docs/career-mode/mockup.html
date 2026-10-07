@@ -223,7 +223,7 @@ input[type=text],input[type=number],select{font:inherit;font-size:16px;color:var
 <script>
 // ── 목업 데이터 ─────────────────────────────────────────────────────────
 var NATIONS=[
- {id:'ENG',n:'잉글랜드',f:'🏴'},{id:'ESP',n:'스페인',f:'🇪🇸'},{id:'GER',n:'독일',f:'🇩🇪'},{id:'ITA',n:'이탈리아',f:'🇮🇹'},
+ {id:'ENG',n:'잉글랜드',f:'\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}'},{id:'ESP',n:'스페인',f:'🇪🇸'},{id:'GER',n:'독일',f:'🇩🇪'},{id:'ITA',n:'이탈리아',f:'🇮🇹'},
  {id:'FRA',n:'프랑스',f:'🇫🇷'},{id:'POR',n:'포르투갈',f:'🇵🇹'},{id:'NED',n:'네덜란드',f:'🇳🇱'},{id:'BEL',n:'벨기에',f:'🇧🇪'},
  {id:'BRA',n:'브라질',f:'🇧🇷'},{id:'ARG',n:'아르헨티나',f:'🇦🇷'},{id:'NOR',n:'노르웨이',f:'🇳🇴'},{id:'KOR',n:'대한민국',f:'🇰🇷'},
  {id:'JPN',n:'일본',f:'🇯🇵'},{id:'USA',n:'미국',f:'🇺🇸'},{id:'NGA',n:'나이지리아',f:'🇳🇬'}];
@@ -1083,7 +1083,8 @@ function showBoard(scrollMe){
   C=keepC;
   if(scrollMe){ var el=document.getElementById('rkMe'); if(el) setTimeout(function(){ el.scrollIntoView({block:'center'}); },50); } else window.scrollTo(0,0);
 }
-function openBoardCard(i){ var c=window.__ROWS[i].c; C=c; pRetired(true); window.scrollTo(0,0); }
+// 남의 카드는 그리는 동안만 C에 잠깐 올린다 — C를 그 카드로 둔 채 두면 랭킹 → 돌아가기에서 남의 카드가 내 은퇴 카드(랭킹 등록 버튼)로 뜬다
+function openBoardCard(i){ var keep=C; C=window.__ROWS[i].c; pRetired(true); C=keep; window.scrollTo(0,0); }
 function boardBack(){
   if(document.querySelector('.rk-list')){ C=CUR; if(C&&C.phase==='retired') pRetired(); else { C=null; go(1); } window.scrollTo(0,0); return; }
   showBoard();

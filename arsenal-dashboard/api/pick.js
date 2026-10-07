@@ -33,6 +33,7 @@ const PW_MIN = 4, PW_MAX = 20, NICK_MAX = 12;
 const FAIL_LIMIT = 5, FAIL_LOCK_SEC = 10 * 60;
 const SIGNUP_PER_IP_DAY = 3;
 const RENAME_COOLDOWN_DAYS = 30;   // 닉네임 변경 간격 — 남을 흉내 내며 이름을 계속 바꾸는 걸 막는다
+const CAREER_BOARD = 'career:board:v1';   // api/career.js의 BOARD_KEY와 같은 키
 const WHOAMI_BOARD = 'whoami:board:v1';   // api/game.js의 BOARD_KEY와 같은 키(계정 멤버는 '@'+계정 키)
 const ALL_HIT_BONUS = 3;
 const MAIN_BLOCK_DAYS = 4;   // 라운드의 "본 일정" — 중앙 킥오프 ±4일. 밖으로 밀린 경기는 연기 경기로 본다.
@@ -465,6 +466,9 @@ export default async function handler(req, res){
       }
       const [ws, wr] = await Promise.all([kv('ZSCORE', WHOAMI_BOARD, '@' + t.k), kv('ZREVRANK', WHOAMI_BOARD, '@' + t.k)]);
       out.whoami = ws == null ? null : {best: Number(ws), rank: Number(wr) + 1};
+      // 커리어 모드(api/career.js) 대표 기록 — 점수·순위·선수 이름
+      const [cs, cr, csum] = await Promise.all([kv('ZSCORE', CAREER_BOARD, '@' + t.k), kv('ZREVRANK', CAREER_BOARD, '@' + t.k), kv('HGET', 'career:sum', t.k)]);
+      out.career = cs == null ? null : {best: Number(cs), rank: Number(cr) + 1, name: (() => { try { return JSON.parse(csum).nm; } catch(_){ return null; } })()};
       return res.json(out);
     }
 
