@@ -8173,6 +8173,9 @@ function pkRank(){
 
 var GM_GEAR='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
 
+var GM_USER='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+function gameLogin(){ PK.after=gameList; PK.afterLabel='게임 목록'; PK.afterBack=gameList; pkAuth('login'); }
+
 // ── 내 정보(게임 목록 우측) ───────────────────────────────────────────────
 // 승부예측·Who Am I 공용 계정의 순위·기록, 닉네임 변경(중복 확인), 비밀번호 변경.
 // 상세모달(모바일은 아래에서 올라오는 시트, PC는 가운데 창)로 띄운다. 로그인 전이면 로그인 화면을 거친다.
@@ -8267,7 +8270,10 @@ function gameList(){
   gameStopTimer();
   gmRoot().innerHTML =
     '<div class="gm-hrow"><div class="gm-h">게임 목록</div>'
-    +'<button type="button" class="gm-my" onclick="gameProfile()">'+GM_GEAR+'내 정보</button></div>'
+    // 로그아웃 상태면 "내 정보" 대신 로그인·가입 입구를 보여 준다(로그인하면 게임 목록으로 돌아온다).
+    +(PK.tok
+      ? '<button type="button" class="gm-my" onclick="gameProfile()">'+GM_GEAR+'내 정보</button></div>'
+      : '<button type="button" class="gm-my" onclick="gameLogin()">'+GM_USER+'로그인 · 가입</button></div>')
     +'<button class="gm-card" onclick="pkOpen()"><span class="gm-card-ic" style="font-size:20px">VS</span>'
     +'<span><div class="gm-card-t">승부예측</div><div class="gm-card-d">프리미어리그 이번 라운드 10경기 승·무·패 맞히기, 월간·시즌 랭킹</div></span></button>'
     +'<button class="gm-card" onclick="gameIntro()"><span class="gm-card-ic">?</span>'
