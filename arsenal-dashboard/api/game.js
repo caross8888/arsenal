@@ -264,6 +264,15 @@ export default async function handler(req, res){
       return res.json({...result, over: false, score: st2.s, lives: st2.l, n: st2.n + 1, q, token: seal(st2)});
     }
 
+    // 중간에 그만두기: 지금까지 점수로 게임을 끝낸다(등록 가능). 점수는 줄지 않는 구조라
+    // 계속하는 것보다 유리해질 길이 없어서 막을 이유가 없다.
+    if(a === 'quit'){
+      const st = open(body.token);
+      if(!st) return res.status(400).json({error: '게임 정보가 올바르지 않아요. 새 게임을 시작해 주세요.'});
+      const next = {...st, over: true, a: null, ch: null};
+      return res.json({over: true, quit: true, score: st.s, lives: st.l, correct: st.c, token: seal(next)});
+    }
+
     if(a === 'submit'){
       const st = open(body.token);
       if(!st || !st.over) return res.status(400).json({error: '끝난 게임만 등록할 수 있어요.'});
@@ -302,8 +311,9 @@ export default async function handler(req, res){
       await kv('ZREMRANGEBYRANK', BOARD_KEY, 0, -(BOARD_KEEP + 1));
       const rank = await kv('ZREVRANK', BOARD_KEY, member);
       _board = null;
+      const nick = await kv('HGET', 'pk:names', acct.k) || acct.n;   // 다른 기기에서 닉네임을 바꿨을 수 있다
       return res.json(rank == null ? {registered: false, outside: true}
-        : {registered: true, rank: rank + 1, nick: acct.n, score: st.s, best, improved: st.s > prev});
+        : {registered: true, rank: rank + 1, nick, score: st.s, best, improved: st.s > prev});
     }
 
     return res.status(400).json({error: '알 수 없는 요청'});

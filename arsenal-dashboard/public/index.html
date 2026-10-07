@@ -34,8 +34,10 @@
   // MutationObserver 콜백은 노드가 붙자마자(마이크로태스크) 실행되고, 그 시점은 다음 그리기
   // 이전이다 — 그래서 요소가 생기는 즉시 여기서 class를 입히면 잘못된/빈 상태가 그려질 틈이 없다.
   // 아래 복원 코드는 그대로 두고(여기선 화면 상태만, 거기선 데이터 로딩까지) 같은 결과를 다시 쓴다.
-  var TITLES={fixtures:'경기 일정', leaderboard:'리더보드', squad:'선수단', media:'미디어', history:'History'};
-  var SECS=['fixtures','leaderboard','squad','media','history'];
+  // 게임(#games)은 하단 탭이 없는 섹션이다 — 여기서 빠뜨리면 일정으로 떨어져서, 게임 화면에서
+  // 새로고침할 때 일정 탭이 선택된 프레임이 잠깐 보였다(사용자 재보고).
+  var TITLES={fixtures:'경기 일정', leaderboard:'리더보드', squad:'선수단', media:'미디어', history:'History', games:'게임'};
+  var SECS=['fixtures','leaderboard','squad','media','history','games'];
   var h=(location.hash||'').replace('#','').trim();
   if(h==='news'||h==='sns') h='media';
   if(SECS.indexOf(h)===-1) h='fixtures';
@@ -43,7 +45,7 @@
   try{ prefs=JSON.parse(sessionStorage.getItem('uiPrefs_v1'))||{}; }catch(e){}
   var want=[
     ['#'+h, 'active'],
-    ['.nav-btn[onclick*="\''+h+'\'"]', 'active'],
+    h==='games' ? null : ['.nav-btn[onclick*="\''+h+'\'"]', 'active'],
     ['.fix-view-btn[data-view="'+(prefs.fixView==='cal'?'cal':'list')+'"]', 'active'],
     ['.media-seg-btn[onclick*="\''+(prefs.mediaTab||'news')+'\'"]', 'active'],
     ['#lbTabs .lb-tab[data-tab="'+(prefs.lbTab||'team')+'"]', 'active'],
@@ -1282,7 +1284,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      height:auto로 바뀐 이 모달은 글 길이에 따라 슬라이드 이동 거리가
      들쭉날쭉해 보이는 버그가 있었다(글 짧으면 조금만, 길면 많이 올라옴).
      높이와 무관한 페이드+스케일로 교체한다. */
-  #transferModal{align-items:center;}
+  #transferModal,#gmProfileModal{align-items:center;}
+  #gmProfileModal .modal-sheet{border-radius:16px;max-height:88vh;animation:dialogPop .25s cubic-bezier(.32,.72,0,1);}
   #transferModal .modal-sheet{border-radius:16px;height:auto;max-height:80vh;animation:dialogPop .25s cubic-bezier(.32,.72,0,1);}
   /* History도 선수단/경기일정/리더보드와 동일한 "리스트+우측 상세패널"
      구조로 맞춘다 — 섹션 자체는 max-width:none으로 채우고, 안에서
@@ -1455,6 +1458,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    집 모양으로 바뀌어 직전 탭으로 돌아가는 버튼이 된다. 색은 전부 테마 변수만 쓴다. */
 #games.section{max-width:600px}
 .gm-wrap{display:flex;flex-direction:column;gap:14px}
+.gm-hrow{display:flex;justify-content:space-between;align-items:center}
+.gm-my{display:inline-flex;align-items:center;gap:5px;background:none;border:0;color:var(--text-secondary);font:inherit;font-size:13px;cursor:pointer;padding:4px 0}
+.gm-my:hover{color:var(--text)}
+#gmProfileModal .modal-sheet{height:auto;max-height:92vh;max-height:92dvh}
+.gm-me-n{font-size:20px;font-weight:700;color:var(--on-dark-header);margin-top:6px}
+.gm-me-s{font-size:12px;color:var(--on-dark-header-secondary);margin-top:2px}
+.gm-me-body{padding:16px;display:flex;flex-direction:column;gap:12px}
+.gm-inrow{display:flex;gap:8px}
+.gm-inrow input{flex:1;min-width:0}
+.gm-inrow input{transition:border-color .2s,box-shadow .2s}
+.gm-inrow input.ok{border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.22);animation:gmOkPulse .5s ease-out}
+.gm-inrow input.bad{border-color:var(--loss);box-shadow:0 0 0 3px rgba(239,68,68,.22);animation:gmShake .4s ease-in-out}
+@keyframes gmOkPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)}100%{box-shadow:0 0 0 3px rgba(34,197,94,.22)}}
+@keyframes gmShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+@media (prefers-reduced-motion: reduce){.gm-inrow input.ok,.gm-inrow input.bad{animation:none}}
+.gm-inrow .gm-btn{width:auto;flex:none;padding:0 14px;font-size:14px}
 .gm-h{font-size:13px;letter-spacing:1px;color:var(--text-secondary);margin:2px 0 0}
 .gm-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border-bright);border-radius:14px;padding:16px;color:var(--text);font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .gm-card:active{opacity:.85}
@@ -1472,6 +1491,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .gm-btn:disabled{opacity:.5;cursor:default}
 .gm-btn:focus-visible,.gm-choice:focus-visible,.gm-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .gm-back{align-self:flex-start;background:none;border:0;color:var(--text-secondary);font:inherit;font-size:13px;cursor:pointer;padding:2px 0}
+.gm-back.confirm{color:var(--gold)}
 .gm-hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
 .gm-hud>:last-child{justify-self:end}
 .gm-lives{display:flex;gap:3px;color:var(--red)}
@@ -1867,6 +1887,12 @@ function playIntro(){
 </div>
 
 <!-- PLAYER DETAIL MODAL -->
+<div class="modal-overlay" id="gmProfileModal" onclick="if(event.target===this) closeGameProfile()">
+  <div class="modal-sheet" id="gmProfileSheet">
+    <button class="modal-close" onclick="closeGameProfile()" aria-label="닫기">&#10005;</button>
+    <div class="modal-sheet-inner" id="gmProfileContent"></div>
+  </div>
+</div>
 <div class="modal-overlay" id="playerModal" onclick="closeModal(event)">
   <div class="modal-sheet" id="modalSheet">
     <button class="modal-close" onclick="closePlayerModal()">&#10005;</button>
@@ -7806,6 +7832,7 @@ function enableSheetSwipeClose(sheetEl, headerSelector, closeFn){
 enableSheetSwipeClose(document.getElementById('modalSheet'), '.pm-header, .hist-modal-photo', closePlayerModal);
 enableSheetSwipeClose(document.querySelector('.match-modal-sheet'), '.mm-header-top, .hist-modal-photo', closeMatchModal);
 enableSheetSwipeClose(document.getElementById('transferModalSheet'), '.pm-header', closeTransferModal);
+enableSheetSwipeClose(document.getElementById('gmProfileSheet'), '.pm-header', closeGameProfile);
 
 // ── TICKER ──
 
@@ -7965,7 +7992,8 @@ function pkApi(a, q, body){
   if(body){ o.headers['Content-Type']='application/json'; o.body=JSON.stringify(body); }
   if(PK.tok) o.headers.Authorization='Bearer '+PK.tok;
   return fetch(url,o).then(function(r){ return r.json().then(function(j){
-    if(j && j.token) pkSetAuth(j.token, PK.nick);   // 서버가 유효기간을 늘린 새 토큰을 주면 바꿔 둔다
+    // 서버가 유효기간을 늘린(또는 다른 기기에서 바꾼 닉네임을 반영한) 새 토큰을 주면 바꿔 둔다
+    if(j && j.token) pkSetAuth(j.token, (a==='me'||a==='profile'||a==='rename') && j.nick ? j.nick : PK.nick);
     if(!r.ok){ var e=new Error(j.error||'잠시 후 다시 시도해 주세요.'); e.login=!!j.login; throw e; }
     return j;
   }); });
@@ -8145,10 +8173,109 @@ function pkRank(){
   }).catch(function(){});
 }
 
+var GM_GEAR='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+
+var GM_USER='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+function gameLogin(){ PK.after=gameList; PK.afterLabel='게임 목록'; PK.afterBack=gameList; pkAuth('login'); }
+
+// ── 내 정보(게임 목록 우측) ───────────────────────────────────────────────
+// 승부예측·Who Am I 공용 계정의 순위·기록, 닉네임 변경(중복 확인), 비밀번호 변경.
+// 상세모달(모바일은 아래에서 올라오는 시트, PC는 가운데 창)로 띄운다. 로그인 전이면 로그인 화면을 거친다.
+function gameProfile(){
+  gameStopTimer();
+  if(!PK.tok){ PK.after=function(){ gameList(); gameProfile(); }; PK.afterLabel='게임 목록'; PK.afterBack=gameList; return pkAuth('login'); }
+  var ov=document.getElementById('gmProfileModal'), box=document.getElementById('gmProfileContent');
+  box.innerHTML=gameProfileHead(PK.nick||'', null)+loadingHtml('불러오는 중...','padding:40px 20px');
+  if(!ov.classList.contains('open')){
+    ov.classList.add('open'); document.body.style.overflow='hidden';
+    history.pushState({modal:'profile'},'',' #profile-modal');
+  }
+  pkApi('profile').then(gameProfileRender).catch(function(e){
+    if(e.login){ closeGameProfile(); pkSetAuth(null,null); return gameProfile(); }
+    box.innerHTML=gameProfileHead(PK.nick||'', null)+'<div class="gm-empty" style="padding:32px 16px">'+gmEsc(e.message)+'</div>';
+  });
+}
+function closeGameProfile(fromHash){
+  document.getElementById('gmProfileModal').classList.remove('open');
+  document.body.style.overflow='';
+  if(!fromHash && location.hash.includes('profile-modal')) clearModalHash();
+}
+function gameProfileHead(nick, since){
+  var ymd=function(t){ var x=new Date(t); return x.getFullYear()+'.'+(x.getMonth()+1)+'.'+x.getDate()+' 가입'; };
+  return '<div class="pm-header" style="padding:16px 16px 14px;"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>'
+    +'<div class="gm-me-n">'+gmEsc(nick)+'</div><div class="gm-me-s">'+(since?ymd(since):'내 정보')+'</div></div>';
+}
+function gameProfileRender(d){
+  var p=d.pick||{}, w=d.whoami, se=p.season, mo=p.monthly;
+  var cell=function(v,l){ return '<div><div class="v">'+v+'</div><div class="l">'+l+'</div></div>'; };
+  var waitRename=d.renameAt && d.renameAt>Date.now();
+  document.getElementById('gmProfileContent').innerHTML=gameProfileHead(d.nick, d.since)+'<div class="gm-me-body">'
+    +'<div class="gm-h">승부예측 · '+gmEsc(p.seasonName||'')+' 시즌</div>'
+    +'<div class="pk-sum">'+cell(se?se.rank+'위':'—','시즌 순위')+cell(se?se.points:'—','시즌 점수'+(se&&se.total?' ('+se.hit+'/'+se.total+' 적중)':''))
+      +cell(mo?mo.rank+'위':'—',(p.month?(+p.month.slice(5))+'월':'이번 달')+' 순위'+(mo?' · '+mo.points+'점':''))+'</div>'
+    +'<div class="gm-h">Who Am I?</div>'
+    +'<div class="pk-sum" style="grid-template-columns:repeat(2,1fr)">'+cell(w?w.best:'—','최고 기록')+cell(w?w.rank+'위':'—','역대 순위')+'</div>'
+    +'<form class="gm-panel" id="gmRename"><div style="font-weight:700">닉네임 변경</div>'
+      +'<div class="pk-field"><label for="gmNewNick">새 닉네임 (최대 12자)</label><div class="gm-inrow"><input id="gmNewNick" maxlength="12" autocomplete="off"'+(waitRename?' disabled':'')+'><button type="button" class="gm-btn ghost" id="gmNickChk"'+(waitRename?' disabled':'')+'>중복 확인</button></div></div>'
+      +'<div class="pk-field"><label for="gmRnPw">지금 비밀번호</label><input id="gmRnPw" type="password" maxlength="20" autocomplete="current-password"'+(waitRename?' disabled':'')+'></div>'
+      +'<div class="pk-err" id="gmRnErr"></div>'
+      +'<button class="gm-btn" type="submit"'+(waitRename?' disabled':'')+'>닉네임 변경</button>'
+      +'<p class="pk-help">'+(waitRename?'<b style="color:var(--text)">'+(new Date(d.renameAt).getMonth()+1)+'월 '+new Date(d.renameAt).getDate()+'일</b>부터 다시 바꿀 수 있어요. ':'')
+      +'닉네임은 30일에 한 번 바꿀 수 있어요. 랭킹·예측 기록은 그대로 이어지고, 가입할 때 쓴 닉네임은 다른 사람이 가져갈 수 없어요.</p></form>'
+    +'<form class="gm-panel" id="gmPwForm"><div style="font-weight:700">비밀번호 변경</div>'
+      +'<div class="pk-field"><label for="gmPwOld">지금 비밀번호</label><input id="gmPwOld" type="password" maxlength="20" autocomplete="current-password"></div>'
+      +'<div class="pk-field"><label for="gmPwNew">새 비밀번호 (4~20자)</label><input id="gmPwNew" type="password" maxlength="20" autocomplete="new-password"></div>'
+      +'<div class="pk-field"><label for="gmPwNew2">새 비밀번호 확인</label><input id="gmPwNew2" type="password" maxlength="20" autocomplete="new-password"></div>'
+      +'<div class="pk-err" id="gmPwErr"></div>'
+      +'<button class="gm-btn" type="submit">비밀번호 변경</button></form>'
+    +'<button class="gm-btn ghost" type="button" onclick="closeGameProfile();pkSetAuth(null,null);PK.data=null;gameList()">로그아웃</button></div>';
+
+  var nickIn=document.getElementById('gmNewNick'), rnErr=document.getElementById('gmRnErr');
+  var say=function(el,msg,ok){ el.textContent=msg; el.style.color=ok?'var(--green)':''; };
+  // 중복 확인 결과를 입력칸 테두리로도 보여 준다(쓸 수 있으면 초록 + 번지는 빛, 안 되면 빨강 + 흔들림).
+  var mark=function(st){
+    nickIn.classList.remove('ok','bad');
+    if(st){ void nickIn.offsetWidth; nickIn.classList.add(st); }   // 같은 결과가 또 나와도 애니메이션이 다시 돌게
+  };
+  nickIn.addEventListener('input', function(){ say(rnErr,''); mark(null); });
+  document.getElementById('gmNickChk').onclick=function(){
+    var n=nickIn.value.trim(); if(!n){ mark('bad'); return say(rnErr,'새 닉네임을 입력해 주세요.'); }
+    pkApi('nickcheck','nick='+encodeURIComponent(n)).then(function(r){ mark(r.ok?'ok':'bad'); say(rnErr, r.ok?'쓸 수 있는 닉네임이에요.':r.error, r.ok); })
+      .catch(function(e){ say(rnErr,e.message); });
+  };
+  document.getElementById('gmRename').addEventListener('submit', function(e){
+    e.preventDefault();
+    var n=nickIn.value.trim(), pw=document.getElementById('gmRnPw').value, btn=this.querySelector('[type=submit]');
+    if(!n) return say(rnErr,'새 닉네임을 입력해 주세요.');
+    if(!pw) return say(rnErr,'지금 비밀번호를 입력해 주세요.');
+    btn.disabled=true;
+    pkApi('rename','',{nick:n, pw:pw}).then(function(r){
+      d.nick=r.nick; d.renameAt=Date.now()+30*86400000; gameProfileRender(d);
+      say(document.getElementById('gmRnErr'),'「'+r.nick+'」(으)로 바꿨어요.',true);
+    }).catch(function(e2){ btn.disabled=false; if(!/비밀번호/.test(e2.message)) mark('bad'); say(rnErr,e2.message); });
+  });
+  document.getElementById('gmPwForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var err=document.getElementById('gmPwErr'), old=document.getElementById('gmPwOld').value,
+        nw=document.getElementById('gmPwNew').value, nw2=document.getElementById('gmPwNew2').value, btn=this.querySelector('[type=submit]'), f=this;
+    if(!old) return say(err,'지금 비밀번호를 입력해 주세요.');
+    if(nw.length<4||nw.length>20) return say(err,'새 비밀번호는 4~20자로 정해 주세요.');
+    if(nw!==nw2) return say(err,'새 비밀번호 확인이 달라요.');
+    btn.disabled=true;
+    pkApi('password','',{pw:old, newPw:nw}).then(function(){
+      f.reset(); btn.disabled=false; say(err,'비밀번호를 바꿨어요.',true);
+    }).catch(function(e2){ btn.disabled=false; say(err,e2.message); });
+  });
+}
+
 function gameList(){
   gameStopTimer();
   gmRoot().innerHTML =
-    '<div class="gm-h">게임 목록</div>'
+    '<div class="gm-hrow"><div class="gm-h">게임 목록</div>'
+    // 로그아웃 상태면 "내 정보" 대신 로그인·가입 입구를 보여 준다(로그인하면 게임 목록으로 돌아온다).
+    +(PK.tok
+      ? '<button type="button" class="gm-my" onclick="gameProfile()">'+GM_GEAR+'내 정보</button></div>'
+      : '<button type="button" class="gm-my" onclick="gameLogin()">'+GM_USER+'로그인 · 가입</button></div>')
     +'<button class="gm-card" onclick="pkOpen()"><span class="gm-card-ic" style="font-size:20px">VS</span>'
     +'<span><div class="gm-card-t">승부예측</div><div class="gm-card-d">프리미어리그 이번 라운드 10경기 승·무·패 맞히기, 월간·시즌 랭킹</div></span></button>'
     +'<button class="gm-card" onclick="gameIntro()"><span class="gm-card-ic">?</span>'
@@ -8234,7 +8361,8 @@ function gameRenderQ(q, st){
       +'<div class="gm-yrs">'+gmYears(c)+(c.l?'<div class="gm-loan">임대</div>':'')+'</div></div></div>';
   }).join('');
   gmRoot().innerHTML =
-    '<div class="gm-hud"><div class="gm-lives" id="gmLives" aria-label="목숨 '+st.lives+'개">'+gmLives(st.lives)+'</div>'
+    '<button class="gm-back" id="gmQuit" onclick="gameQuit()">← 그만하기</button>'
+    +'<div class="gm-hud"><div class="gm-lives" id="gmLives" aria-label="목숨 '+st.lives+'개">'+gmLives(st.lives)+'</div>'
     +'<div class="gm-qno">문제 '+st.n+'</div><div class="gm-score" id="gmScore">'+st.score+'</div></div>'
     +'<div class="gm-timer" id="gmTimer"><i id="gmBar"></i></div>'
     +'<div class="gm-panel gm-q"><div class="gm-q-t">WHO AM I?</div><div class="gm-path">'+path+'</div>'
@@ -8251,6 +8379,23 @@ function gameRenderQ(q, st){
     tm.className='gm-timer'+(left<3?' crit':left<6?' warn':'');
     if(left<=0) gamePick(null);
   }, 100);
+}
+// 퀴즈 중 그만두기 — 실수로 누르는 걸 막으려고 한 번 더 눌러야 끝난다(타이머는 계속 간다).
+function gameQuit(){
+  var b=document.getElementById('gmQuit'); if(!b || GAME.busy) return;
+  if(!b.classList.contains('confirm')){
+    b.classList.add('confirm'); b.textContent='한 번 더 누르면 종료 · 지금 점수는 등록할 수 있어요';
+    clearTimeout(GAME.quitT); GAME.quitT=setTimeout(function(){ if(b.isConnected){ b.classList.remove('confirm'); b.textContent='← 그만하기'; } }, 3000);
+    return;
+  }
+  GAME.busy=true; gameStopTimer();
+  gmPost('quit', {token:GAME.token}).then(function(d){
+    GAME.busy=false; GAME.token=d.token; gameOver(d);
+  }).catch(function(e){
+    GAME.busy=false;
+    var note=document.getElementById('gmNote');
+    if(note) note.innerHTML=gmEsc(e.message)+' <button class="gm-back" onclick="gameIntro()">처음으로</button>';
+  });
 }
 function gamePick(id){
   if(GAME.busy) return;
@@ -8284,8 +8429,9 @@ function gameOver(d){
   GAME.last=d;
   var best=gmBest(d.score);
   gmRoot().innerHTML =
-    '<div class="gm-panel" style="text-align:center">'
-    +'<div class="gm-qno">'+(d.clear?'전부 클리어!':'GAME OVER')+'</div>'
+    '<button class="gm-back" onclick="gameIntro()">← Who Am I?</button>'
+    +'<div class="gm-panel" style="text-align:center">'
+    +'<div class="gm-qno">'+(d.clear?'전부 클리어!':d.quit?'게임 종료':'GAME OVER')+'</div>'
     +'<div class="gm-big">'+d.score+'</div>'
     +'<div class="gm-best">'+d.correct+'문제 정답'+(d.score>=best&&d.score>0?' · 내 최고 기록':'')+'</div>'
     +(d.score>0 && !d.registered
@@ -8390,6 +8536,10 @@ function showSec(id,btn,fromHistory){
     }
     if(transferModal && transferModal.classList.contains('open')){
       closeTransferModal(true); return;
+    }
+    var gmProfileModal = document.getElementById('gmProfileModal');
+    if(gmProfileModal && gmProfileModal.classList.contains('open')){
+      closeGameProfile(true); return;
     }
     var hash = location.hash.replace('#','').trim();
     if(hash === 'news' || hash === 'sns') hash = 'media';
