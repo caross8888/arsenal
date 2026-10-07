@@ -1806,6 +1806,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rc-minor summary{cursor:pointer;font-size:12.5px;color:var(--text-secondary);text-align:center;list-style:none}
 .cr-rc-minor summary::-webkit-details-marker{display:none}
 .cr-rc-minor .cr-badges{margin-top:8px}
+.cr-months{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;text-align:center}
+.cr-months span{font-size:10.5px;color:var(--text-dim);padding:4px 0;border-radius:6px;background:var(--surface2);transition:background .2s,color .2s}
+.cr-months span.done{color:var(--text-secondary);background:rgba(34,197,94,.12)}
+.cr-months span.on{color:#fff;background:var(--red);font-weight:700}
+.cr-anbar{height:6px;border-radius:3px;background:var(--surface3);overflow:hidden}
+.cr-anbar i{display:block;height:100%;width:0;background:var(--green);border-radius:3px}
+.cr-anim .cr-rs b{transition:color .2s}
+.cr-anim .cr-rs b.bump{animation:gmScoreBump .45s ease-out}
+.cr-anmsg{min-height:30px;text-align:center;font-family:var(--fd);font-size:26px;letter-spacing:1px}
+.cr-anmsg span{display:inline-block;animation:crPop .45s cubic-bezier(.3,1.6,.5,1) both}
+.cr-anmsg .inj{color:var(--loss);font-family:var(--fb);font-size:18px;font-weight:700}
+@keyframes crPop{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:scale(1)}}
+/* 시즌 결과: 수상 배지가 하나씩 떠오른다 */
+.cr-badges.pop span{animation:crPop .4s cubic-bezier(.3,1.6,.5,1) both}
+@media (prefers-reduced-motion: reduce){.cr-anmsg span,.cr-badges.pop span,.cr-anim .cr-rs b.bump{animation:none}}
 .cr-rk-list{display:flex;flex-direction:column;gap:6px}
 .cr-rk-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto 34px 56px;gap:8px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:9px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cr-rk-row.me{border-color:var(--gold);background:rgba(200,168,75,.12)}
@@ -8875,7 +8890,7 @@ function crShow(v){
   CR.busy=false; CR.v=v; CR.tok=v.token; CR.armed=null; crStore(v);
   if(v.phase==='prep'){ CR.evPick=null; return crPrep(); }
   if(v.phase==='injury') return crInjury();
-  if(v.phase==='result'){ CR.pick=v.result.released && v.result.offers.length ? 0 : null; return crResult(); }
+  if(v.phase==='result'){ CR.pick=v.result.released && v.result.offers.length ? 0 : null; CR.fresh=!!CR.animDone; CR.animDone=false; return crResult(); }
   if(v.phase==='retired') return crRetired();
   if(v.phase==='pick'){ CR.firstClubs=v.clubs; return crIntro(); }
 }
@@ -8915,9 +8930,14 @@ function crPrep(){
 }
 function crSeason(btn){
   if(!crBusy(btn,'시즌 진행 중...')) return;
-  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick}).then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(crErr);
+  var age=CR.v.player.age;
+  crAnimStart(0);
+  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick}).then(function(v){
+    // 부상이면 시즌 중간(부상 시점)까지만 진행하고 멈춘다. 결과면 끝까지.
+    if(v.phase==='injury') crAnimTo(0.3+((v.injury.games*7+age)%25)/100, v, true);
+    else crAnimTo(1, v);
+  }).catch(function(e){ crAnimStop(); crPrep(); crErr(e); });
 }
-
 // ── 부상(시즌 중간 질문) ───────────────────────────────────────────────
 function crInjury(){
   var p=CR.v.player, j=CR.v.injury;
@@ -8933,10 +8953,73 @@ function crInjury(){
 }
 function crInjPick(k, btn){
   if(!crBusy(btn)) return;
-  document.querySelectorAll('#gameRoot .cr-club').forEach(function(b){ b.disabled=true; });
-  crApi('season', {token:CR.tok, injPick:k}).then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(function(e){
-    document.querySelectorAll('#gameRoot .cr-club').forEach(function(b){ b.disabled=false; }); crErr(e);
-  });
+  var from=CR.anim && CR.anim.stopAt || 0.4;
+  crAnimStart(from, true);
+  crApi('season', {token:CR.tok, injPick:k}).then(function(v){ crAnimTo(1, v); })
+    .catch(function(e){ crAnimStop(); crInjury(); crErr(e); });
+}
+
+// ── 시즌 진행 애니메이션 ───────────────────────────────────────────────
+// 결과는 서버가 한 번에 주지만, 바로 결과 화면으로 넘기면 시즌이 "지나간" 느낌이 없어서
+// 8월→5월 달력이 차오르며 경기·골·도움 숫자가 올라가는 화면을 2초 남짓 보여 준다(누르면 건너뛰기).
+// 응답이 오기 전엔 15%까지만 가고 기다린다. 부상이면 그 시점에서 멈추고 부상 질문으로.
+var CR_MONTHS=['8월','9월','10월','11월','12월','1월','2월','3월','4월','5월'];
+var CR_TICK=[[0,'개막전을 앞두고 있어요'],[.12,'시즌 초반 일정'],[.35,'빡빡한 겨울 일정'],[.5,'겨울 이적시장'],[.65,'시즌 후반 레이스'],[.88,'마지막 라운드']];
+var CR_TICK_Y=[[0,'유스 리그 개막'],[.12,'시즌 초반'],[.4,'겨울 휴식기'],[.6,'시즌 후반'],[.88,'마지막 라운드']];
+function crSeasonLabel(age){ var y=2026+age-15; return y+'-'+String(y+1).slice(-2); }
+function crAnimStart(from, resumed){
+  var p=CR.v.player, df=p.pos==='DF', yth=p.age<18;
+  CR.anim={t:from, from:from, target:null, v:null, stopAt:null, raf:null, resumed:!!resumed, last:null, shown:[-1,-1,-1]};
+  crRender('<div class="cr-top"><div></div><div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
+    +'<div class="cr-panel cr-anim"><div class="cr-lbl"><b>'+crSeasonLabel(p.age)+' 시즌 · '+gmEsc(p.club.team)+'</b><span id="crAnTick">'+(yth?'유스 리그':'리그')+'</span></div>'
+    +'<div class="cr-months">'+CR_MONTHS.map(function(m,i){ return '<span data-i="'+i+'">'+m+'</span>'; }).join('')+'</div>'
+    +'<div class="cr-anbar"><i id="crAnBar"></i></div>'
+    +'<div class="cr-rs" style="grid-template-columns:repeat(3,1fr)"><div><b id="crAn0">—</b><span>경기</span></div><div><b id="crAn1">—</b><span>골</span></div><div><b id="crAn2">—</b><span>'+(df?'클린시트':'도움')+'</span></div></div>'
+    +'<div class="cr-anmsg" id="crAnMsg"></div></div>',
+    '<button class="gm-btn ghost" style="flex:1" onclick="crAnimSkip()">건너뛰기</button>');
+  window.scrollTo(0,0);
+  crAnimFrame();
+}
+function crAnimTo(target, v, injury){
+  if(!CR.anim) return;
+  CR.anim.target=target; CR.anim.v=v; CR.anim.injury=!!injury;
+  if(injury) CR.anim.stopAt=target;
+  // 동작 줄이기 설정이면 바로 끝으로
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) CR.anim.t=target;
+}
+function crAnimSkip(){ var A=CR.anim; if(A && A.target!=null) A.t=A.target; }
+function crAnimStop(){ if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf); CR.anim=null; }
+function crAnimFrame(){
+  var A=CR.anim; if(!A) return;
+  var bar=document.getElementById('crAnBar'); if(!bar){ CR.anim=null; return; }   // 다른 화면으로 나감
+  var now=performance.now(), dt=A.last ? Math.min(64, now-A.last) : 16; A.last=now;
+  var cap=A.target==null ? Math.max(A.t, A.from+0.15) : A.target;
+  A.t=Math.min(cap, A.t+dt/2400);   // 한 시즌 약 2.4초
+  bar.style.width=(A.t*100)+'%';
+  var mi=Math.min(9, Math.floor(A.t*10));
+  document.querySelectorAll('#gameRoot .cr-months span').forEach(function(el,i){ el.className=i<mi?'done':i===mi?'on':''; });
+  var tk=''; (CR.v.player.age<18?CR_TICK_Y:CR_TICK).forEach(function(x){ if(A.t>=x[0]) tk=x[1]; }); var te=document.getElementById('crAnTick'); if(te) te.textContent=tk;
+  // 숫자는 결과를 받은 뒤에만(부상 전 구간은 아직 모른다) — 시즌 진행률만큼 최종 기록에 비례해 올린다
+  var R=A.v && A.v.result;
+  if(R){
+    var r=R.row, fin=[r.apps, r.goals, CR.v.player.pos==='DF'?r.cs:r.ast];
+    fin.forEach(function(f,i){
+      var val=Math.round(f*A.t), el=document.getElementById('crAn'+i);
+      if(el && val!==A.shown[i]){ el.textContent=val; if(i>0 && A.shown[i]>=0 && val>A.shown[i]){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } A.shown[i]=val; }
+    });
+  }
+  if(A.target!=null && A.t>=A.target){
+    var msg=document.getElementById('crAnMsg'), v=A.v;
+    if(A.injury){
+      if(msg) msg.innerHTML='<span class="inj">🚑 '+gmEsc(v.injury.name)+'!</span>';
+      A.raf=null; setTimeout(function(){ if(CR.anim===A){ A.stopAt=A.target; crShow(v); CR.anim={stopAt:A.target}; } }, 900);
+      return;
+    }
+    if(msg) msg.innerHTML='<span>시즌 종료</span>';
+    A.raf=null; setTimeout(function(){ if(CR.anim===A){ CR.anim=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, 650);
+    return;
+  }
+  A.raf=requestAnimationFrame(crAnimFrame);
 }
 
 // ── 시즌 결과 · 이적시장 ──────────────────────────────────────────────
@@ -8950,9 +9033,9 @@ function crResult(){
   var h='<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+p.seasons+' 결과</div></div>'+crHead()
    +'<div class="cr-panel"><div class="cr-lbl"><b>'+r.age+'세 시즌 · '+gmEsc(r.team)+(r.loan?' (임대)':'')+'</b><span>'+lg+' '+r.rank+'위</span></div>'
    +'<div class="cr-rs">'+[[r.apps,'경기'],[r.starts,'선발'],[r.goals,'골'],p.pos==='DF'?[r.cs,'클린시트']:[r.ast,'도움'],[r.apps?r.rating.toFixed(2):'—','평점']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
-   +'<div class="cr-dovr '+dCls+'"><span>오버롤</span><b>'+r.ovrBefore+' → '+r.ovr+'</b><em>'+(r.dOvr>0?'+':'')+r.dOvr+'</em></div>'
+   +'<div class="cr-dovr '+dCls+'"><span>오버롤</span><b>'+r.ovrBefore+' → <span id="crOvrTo">'+(CR.fresh?r.ovrBefore:r.ovr)+'</span></b><em>'+(r.dOvr>0?'+':'')+r.dOvr+'</em></div>'
    +'<div class="cr-dst">'+st.map(function(n,i){ var dd=r.deltas[i]; return '<span class="'+(dd>0?'up':dd<0?'down':'')+'">'+n+' '+(dd>0?'+':'')+dd+'</span>'; }).join('')+'</div>'
-   +(r.hon.length?'<div class="cr-badges">'+r.hon.map(crHonBadge).join('')+'</div>':'')
+   +(r.hon.length?'<div class="cr-badges'+(CR.fresh?' pop':'')+'">'+r.hon.map(function(h,i){ return crHonBadge(h).replace('<span class="','<span style="animation-delay:'+(0.3+i*0.12)+'s" class="'); }).join('')+'</div>':'')
    +(r.notes.length||R.forced?'<ul class="cr-notes">'+r.notes.map(function(t){ return '<li>'+gmEsc(t)+'</li>'; }).join('')
       +(R.forced?'<li>'+(p.age>=40?'40세 — 선수 생활을 마무리할 때가 됐어요.':gmEsc(p.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.')+'</li>':'')+'</ul>':'')
    +'</div>';
@@ -8974,6 +9057,13 @@ function crResult(){
     : (R.canRetire?'<button class="gm-btn ghost" onclick="crRetire(this)">은퇴</button>':'')
       +'<button class="gm-btn" onclick="crNext(this)">'+(CR.pick!=null?gmEsc(R.offers[CR.pick].n)+' 이적':R.released?'은퇴':'다음 시즌')+'</button>');
   window.scrollTo(0,y);   // 제안을 고를 때마다 다시 그려도 보던 자리 그대로
+  // 시즌을 막 끝낸 직후에만 오버롤 숫자가 올라가는 연출(제안을 고르며 다시 그릴 땐 안 한다)
+  if(CR.fresh){
+    CR.fresh=false;
+    var el=document.getElementById('crOvrTo'), a0=r.ovrBefore, a1=r.ovr, st=null;
+    if(el && a0!==a1) setTimeout(function(){ (function step(ts){ if(!st) st=ts; var k=Math.min(1,(ts-st)/600); if(!document.body.contains(el)) return; el.textContent=Math.round(a0+(a1-a0)*k); if(k<1) requestAnimationFrame(step); })(performance.now()); }, 250);
+    else if(el) el.textContent=a1;
+  }
 }
 function crNext(btn){
   if(!crBusy(btn,'다음 시즌 준비 중...')) return;
