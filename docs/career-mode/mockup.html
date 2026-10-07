@@ -419,7 +419,8 @@ function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul
 function hashStr(s){ var h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function seasonRng(extra){ return mulberry(C.seed ^ hashStr(C.age+'|'+extra)); }
 function natInfo(id){ return NATIONS.filter(function(n){return n.id===id;})[0]; }
-function clubCoef(r){ return r>=91?1.3:r>=86?1.15:r>=76?1.05:r>=61?0.95:0.85; }
+function clubCoef(r){ var c=window.__CC||[1.35,1.18,1.05,0.92,0.8]; return r>=91?c[0]:r>=86?c[1]:r>=76?c[2]:r>=61?c[3]:c[4]; }
+function playCoef(ratio){ var c=window.__PC||[0.3,1.1]; return c[0]+c[1]*ratio; }
 function cOvr(){ return Math.round(C.ovr); }
 // 스탯 = 오버롤 + 카드 모양(오프셋). 오버롤이 "얼마나 잘하나", 오프셋이 "어떤 선수인가"를 정한다.
 function syncSt(){ C.st=C.off.map(function(o){ return Math.max(20,Math.min(99,C.ovr+o)); }); }
@@ -577,7 +578,7 @@ function playSeason(){
   if(C.age>=18 && !C.awoken){
     var tr=mulberry(C.seed ^ hashStr('talent'))(), b=Math.min(6,C.youthPts);
     var pG=0.02+b*0.0017, pW=pG+0.08+b*0.005, pP=pW+0.20;   // 세대급 2~3% / 원더키드 8~11% / 유망주 20%
-    var TM=window.__TM||[1.6,1.3,1.12]; C.talent = tr<pG?TM[0] : tr<pW?TM[1] : tr<pP?TM[2] : 1.0;
+    var TM=window.__TM||[2.05,1.58,1.18]; C.talent = tr<pG?TM[0] : tr<pW?TM[1] : tr<pP?TM[2] : 1.0;
     C.awoken=true;
   }
   // 성장 포인트(스탯 합계 기준) = 나이 기본값×5 × 출전 × 구단 × 운 × 이벤트 × 0.75
@@ -587,7 +588,7 @@ function playSeason(){
   if(base>0){
     // 오버롤 성장: 나이 기본값 × 출전 × 구단 × 운 × 이벤트 × 숨은 재능 × K × 감쇠(99에 가까울수록 느려지지만 최소 절반 속도)
     var DP=window.__D||[0.6,30]; var dmp=Math.min(1,Math.max(DP[0],(99-C.ovr)/DP[1]));
-    C.ovr=Math.min(99,C.ovr+C.boost*base*(0.4+0.9*ratio)*clubCoef(club.r)*luck*growMul*C.talent*(window.__K||0.74)*dmp);
+    C.ovr=Math.min(99,C.ovr+C.boost*base*playCoef(ratio)*clubCoef(club.r)*luck*growMul*C.talent*(window.__K||0.6)*dmp);
   } else {
     // 하락기: 지난 시즌 수상 보너스가 하락폭을 줄인다(×1.10 → 하락 ×0.8)
     C.ovr=Math.max(30,C.ovr+base*Math.max(0.5,1-(C.boost-1)*2));
