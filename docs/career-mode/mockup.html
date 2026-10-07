@@ -182,8 +182,11 @@ input[type=text],input[type=number],select{font:inherit;font-size:16px;color:var
 .rc-shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .rc-tro{text-align:center;background:var(--surface2);border-radius:12px;padding:10px 4px 8px}
 .rc-tro.tS{background:radial-gradient(circle at 50% 30%,rgba(233,199,102,.28),var(--surface2) 70%);outline:1px solid rgba(200,168,75,.5)}
-.rc-tro .i{font-size:30px;line-height:1.1;position:relative;display:inline-block}
-.rc-tro .i em{position:absolute;right:-14px;bottom:-2px;font-style:normal;font-size:11px;font-weight:700;background:var(--gold);color:#3a2a06;border-radius:999px;padding:0 5px}
+.rc-tro .i{position:relative;display:inline-block;height:58px}
+.rc-tro .i svg{display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))}
+.rc-row .ic svg{display:block}
+.badges span.mi{display:inline-flex;align-items:center;gap:4px}
+.rc-tro .i em{position:absolute;right:-12px;bottom:6px;font-style:normal;font-size:11px;font-weight:700;background:var(--gold);color:#3a2a06;border-radius:999px;padding:0 5px}
 .rc-tro .l{font-size:10.5px;color:var(--text-secondary);line-height:1.3;margin-top:5px;word-break:keep-all}
 .rc-minor summary{cursor:pointer;font-size:12.5px;color:var(--text-secondary);text-align:center;list-style:none}
 .rc-minor summary::-webkit-details-marker{display:none}
@@ -759,6 +762,67 @@ function careerScore(){
   return Math.round(C.tot.apps*1+C.tot.goals*3+C.tot.ast*2+C.tot.caps*2+C.peak*10+hp);
 }
 function retire(){ C.phase='retired'; page4(); }
+// ── 트로피 일러스트(직접 그린 SVG) ─────────────────────────────────────
+// 실제 트로피 사진은 디자인 저작권·상표 문제가 있어(월드컵·발롱도르 사진은 위키미디어에서도 삭제되는 일이 잦다)
+// 실루엣만 닮게 직접 그린다. 금속 그라데이션은 문서에 한 번만 정의하고(TROPHY_DEFS) 모든 그림이 같이 쓴다.
+var TROPHY_DEFS='<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>'
+ +'<linearGradient id="tGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF4BF"/><stop offset=".45" stop-color="#E6B941"/><stop offset="1" stop-color="#94620F"/></linearGradient>'
+ +'<linearGradient id="tGoldH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A06A12"/><stop offset=".35" stop-color="#FFE38A"/><stop offset=".6" stop-color="#E2B33B"/><stop offset="1" stop-color="#8E5C0C"/></linearGradient>'
+ +'<linearGradient id="tSilv" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A929E"/><stop offset=".35" stop-color="#FFFFFF"/><stop offset=".65" stop-color="#C7CDD6"/><stop offset="1" stop-color="#6E7682"/></linearGradient>'
+ +'<linearGradient id="tBase" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A3D45"/><stop offset="1" stop-color="#15171C"/></linearGradient>'
+ +'<radialGradient id="tBall" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#FFF6CC"/><stop offset=".5" stop-color="#E8BC45"/><stop offset="1" stop-color="#8A5A0B"/></radialGradient>'
+ +'</defs></svg>';
+var TROPHY_ART={
+  // 빅이어: 몸통 양옆으로 크게 휘는 손잡이
+  ucl:'<path d="M15 10C1 7 2 35 19 33M33 10C47 7 46 35 29 33" fill="none" stroke="url(#tSilv)" stroke-width="3.6" stroke-linecap="round"/>'
+     +'<path d="M14 7Q24 4 34 7L31 30Q24 37 17 30Z" fill="url(#tSilv)"/><path d="M21 34h6l1.5 10h-9z" fill="url(#tSilv)"/>'
+     +'<path d="M15 44h18l2 9H13z" fill="url(#tSilv)"/><rect x="11" y="53" width="26" height="7" rx="1.5" fill="url(#tBase)"/>',
+  // 리그 트로피: 왕관을 얹은 금빛 컵
+  league:'<path d="M15 12L17 3l3.5 6L24 1l3.5 8L31 3l2 9z" fill="url(#tGold)"/>'
+     +'<path d="M14 13h20q0 17-10 19Q14 30 14 13z" fill="url(#tGoldH)"/><path d="M14 16q-6 1-4 8 1 3 5 3M34 16q6 1 4 8-1 3-5 3" fill="none" stroke="url(#tGold)" stroke-width="2.4"/>'
+     +'<path d="M22 32h4l1 8h-6z" fill="url(#tGold)"/><path d="M16 40h16l2 10H14z" fill="url(#tGoldH)"/><rect x="12" y="50" width="24" height="9" rx="1.5" fill="url(#tBase)"/>',
+  // 컵 대회: 뚜껑 달린 은빛 항아리
+  cup:'<circle cx="24" cy="8" r="2.6" fill="url(#tSilv)"/><path d="M16 18Q24 9 32 18z" fill="url(#tSilv)"/>'
+     +'<path d="M15 18h18q1 17-9 19-10-2-9-19z" fill="url(#tSilv)"/><path d="M15 21q-8 0-7 7 1 4 8 3M33 21q8 0 7 7-1 4-8 3" fill="none" stroke="url(#tSilv)" stroke-width="2.4"/>'
+     +'<path d="M22 37h4l1 7h-6z" fill="url(#tSilv)"/><path d="M17 44h14l2 8H15z" fill="url(#tSilv)"/><rect x="13" y="52" width="22" height="7" rx="1.5" fill="url(#tBase)"/>',
+  // 월드컵: 지구를 받쳐 든 금빛 조형 + 초록 띠 받침
+  worldcup:'<circle cx="24" cy="14" r="11" fill="url(#tBall)"/><path d="M14 11q10 5 20 0M13 17q11 5 22 0M24 3q-5 11 0 22" fill="none" stroke="#9C6A12" stroke-width=".9" opacity=".6"/>'+'<path d="M14 22q7 7 3 14-3 6 0 11h14q3-5 0-11-4-7 3-14-10 7-20 0z" fill="url(#tGoldH)"/>'+'<path d="M14 47h20v12H14z" fill="url(#tGoldH)"/><rect x="14" y="50" width="20" height="2" fill="#1E7A3C"/><rect x="14" y="55" width="20" height="2" fill="#1E7A3C"/>',
+  // 대륙컵: 손잡이가 몸통에 붙은 길쭉한 은빛 컵
+  continental:'<path d="M16 4h16l-2 32q-6 4-12 0z" fill="url(#tSilv)"/><path d="M16 7q-5 5 0 24M32 7q5 5 0 24" fill="none" stroke="url(#tSilv)" stroke-width="2.2"/>'
+     +'<path d="M21 38h6v8h-6z" fill="url(#tSilv)"/><path d="M15 46h18l2 7H13z" fill="url(#tSilv)"/><rect x="12" y="53" width="24" height="7" rx="1.5" fill="url(#tBase)"/>',
+  // 발롱도르: 받침 위의 금빛 공
+  ballon:'<circle cx="24" cy="22" r="15" fill="url(#tBall)"/>'
+     +'<path d="M24 14l6 4-2 7h-8l-2-7zM24 7v7M30 18l7-3M28 25l4 7M20 25l-4 7M18 18l-7-3" fill="none" stroke="#8A5A0B" stroke-width="1" opacity=".55"/>'
+     +'<path d="M18 38h12l4 12H14z" fill="url(#tBase)"/><path d="M18 38h12" stroke="url(#tGold)" stroke-width="1.5"/><rect x="12" y="50" width="24" height="9" rx="1.5" fill="url(#tBase)"/>',
+  // 올해의 선수(세계): 공을 이고 몸을 비튼 금빛 인물 조형
+  best:'<circle cx="24" cy="10" r="6" fill="url(#tBall)"/><path d="M20 17q12 10 1 28h8q8-16-4-28z" fill="url(#tGoldH)"/>'
+     +'<rect x="15" y="45" width="18" height="5" fill="url(#tGold)"/><rect x="13" y="50" width="22" height="9" rx="1.5" fill="url(#tBase)"/>',
+  // 득점왕·골든슈 / 도움왕(은빛)
+  bootG:'<path d="M5 37q0-6 8-7l11-2q5-1 7-8l1-6h7q2 0 2 3v17q0 3-3 3H7q-2 0-2 0z" fill="url(#tGoldH)"/>'+'<path d="M14 30l3 5M19 29l3 5M24 28l2 5" stroke="#7A4E08" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>'+'<path d="M32 14h7" stroke="#7A4E08" stroke-width="1.6"/><path d="M9 40v3M17 40v3M30 40v3M37 40v3" stroke="#7A4E08" stroke-width="2.6" stroke-linecap="round"/>'+'<rect x="10" y="46" width="28" height="4" fill="url(#tGoldH)"/><rect x="8" y="50" width="32" height="9" rx="1.5" fill="url(#tBase)"/>',
+  bootS:'<path d="M5 37q0-6 8-7l11-2q5-1 7-8l1-6h7q2 0 2 3v17q0 3-3 3H7q-2 0-2 0z" fill="url(#tSilv)"/>'+'<path d="M14 30l3 5M19 29l3 5M24 28l2 5" stroke="#59616C" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>'+'<path d="M32 14h7" stroke="#59616C" stroke-width="1.6"/><path d="M9 40v3M17 40v3M30 40v3M37 40v3" stroke="#59616C" stroke-width="2.6" stroke-linecap="round"/>'+'<rect x="10" y="46" width="28" height="4" fill="url(#tSilv)"/><rect x="8" y="50" width="32" height="9" rx="1.5" fill="url(#tBase)"/>',
+  // 대회 골든볼: 작은 받침 위 공
+  gball:'<circle cx="24" cy="26" r="12" fill="url(#tBall)"/><path d="M24 20l5 3-2 6h-6l-2-6z" fill="none" stroke="#8A5A0B" stroke-width="1" opacity=".55"/>'
+     +'<path d="M19 38h10l3 8H16z" fill="url(#tGold)"/><rect x="13" y="46" width="22" height="12" rx="1.5" fill="url(#tBase)"/>',
+  // 올해의 선수(리그·챔스): 금빛 방패 패
+  plaqueG:'<path d="M11 6h26v30q0 10-13 16Q11 46 11 36z" fill="url(#tGoldH)"/><path d="M15 10h18v25q0 7-9 12-9-5-9-12z" fill="#2A1E08" opacity=".85"/>'
+     +'<path d="M24 18l2.6 5.4 5.9.8-4.3 4.1 1 5.8L24 31.3l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z" fill="url(#tGold)"/><rect x="14" y="54" width="20" height="5" rx="1.5" fill="url(#tBase)"/>',
+  // 베스트 11·포지션 상: 은빛 방패 패(XI)
+  plaqueS:'<path d="M11 6h26v30q0 10-13 16Q11 46 11 36z" fill="url(#tSilv)"/><path d="M15 10h18v25q0 7-9 12-9-5-9-12z" fill="#1C2028" opacity=".85"/>'
+     +'<text x="24" y="33" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="15" fill="#E6EAF0">XI</text><rect x="14" y="54" width="20" height="5" rx="1.5" fill="url(#tBase)"/>',
+  plaqueStar:'<path d="M11 6h26v30q0 10-13 16Q11 46 11 36z" fill="url(#tSilv)"/><path d="M15 10h18v25q0 7-9 12-9-5-9-12z" fill="#1C2028" opacity=".85"/>'
+     +'<path d="M24 18l2.6 5.4 5.9.8-4.3 4.1 1 5.8L24 31.3l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z" fill="url(#tSilv)"/><rect x="14" y="54" width="20" height="5" rx="1.5" fill="url(#tBase)"/>',
+  // 메달(그 외 개인상)
+  medal:'<path d="M16 2h6l4 16h-6zM26 2h6l-4 16h-6z" fill="#C8102E"/><path d="M22 2h4l2 16h-8z" fill="#1D3F8F"/>'
+     +'<circle cx="24" cy="36" r="15" fill="url(#tBall)"/><circle cx="24" cy="36" r="11" fill="none" stroke="#8A5A0B" stroke-width="1" opacity=".6"/>'
+     +'<path d="M24 28l2.4 4.9 5.4.8-3.9 3.8.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.9-3.8 5.4-.8z" fill="#FFF0B3" opacity=".9"/>'};
+var TROPHY_OF=[[/챔피언스리그 우승/,'ucl'],[/월드컵 우승/,'worldcup'],[/(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) 우승/,'continental'],
+  [/리그 우승/,'league'],[/컵 대회 우승/,'cup'],[/발롱도르/,'ballon'],[/FIFA 올해의 선수/,'best'],[/득점왕|골든슈/,'bootG'],[/도움왕/,'bootS'],
+  [/골든볼/,'gball'],[/(리그|챔스) 올해의 선수/,'plaqueG'],[/베스트 11/,'plaqueS'],[/챔스 올해의 (공격수|미드필더|수비수)/,'plaqueStar'],[/.*/,'medal']];
+function trophySvg(name, h){
+  var k='medal'; for(var i=0;i<TROPHY_OF.length;i++) if(TROPHY_OF[i][0].test(name)){ k=TROPHY_OF[i][1]; break; }
+  return '<svg class="tro" viewBox="0 0 48 62" height="'+(h||40)+'" role="img" aria-label="'+esc(name)+'">'+TROPHY_ART[k]+'</svg>';
+}
+
 // 은퇴 카드: 시즌별 표(나이·구단·오버롤·경기·골·도움 + 그 시즌 트로피 아이콘) → 대표팀 줄 → 통산 → 트로피 진열장
 var HON_ICON=[[/발롱도르/,'👑'],[/FIFA 올해의 선수/,'💎'],[/월드컵 우승/,'🌍'],[/(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) 우승/,'🌎'],
   [/챔피언스리그 우승/,'🏆','ucl'],[/리그 우승/,'🏆'],[/컵 대회 우승/,'🏅'],[/득점왕|골든슈/,'⚽'],[/도움왕/,'🎯'],[/골든볼/,'🥇'],[/.*/,'⭐']];
@@ -787,7 +851,7 @@ function pRetired(){
     var club=ALL.filter(function(c){return c.n===r.club;})[0]||{n:r.club,col:'#444'};
     var ars=/아스날/.test(r.club)&&!r.youth;
     var hs=(r.hon||[]).filter(function(x){return x.tier&&x.tier!=='C'&&x.tier!=='-'&&x.kind!=='nat';}).sort(function(a,b){ return 'SAB'.indexOf(a.tier)-'SAB'.indexOf(b.tier); });
-    var icons=hs.slice(0,3).map(function(x){ var ic=honIcon(x.n); return '<i class="'+(ic[2]||'')+'" title="'+esc(x.n)+'">'+ic[1]+'</i>'; }).join('')+(hs.length>3?'<b>+'+(hs.length-3)+'</b>':'');
+    var icons=hs.slice(0,3).map(function(x){ return trophySvg(x.n,20); }).join('')+(hs.length>3?'<b>+'+(hs.length-3)+'</b>':'');
     var oc=r.youth?'y':r.ovr>=90?'e':r.ovr>=80?'g':'n';
     h+='<div class="rc-row'+(r.youth?' youth':'')+(ars?' ars':'')+'">'
      +'<span class="age">'+r.age+'</span>'
@@ -797,7 +861,7 @@ function pRetired(){
   // 대표팀 줄
   var natHon=C.honors.filter(function(x){return x.kind==='nat'&&/우승/.test(x.n);});
   if(t.caps) h+='<div class="rc-row nat"><span class="age">'+natInfo(C.nation).f+'</span><span class="rcc"><em>'+natInfo(C.nation).n+' 대표팀</em>'
-     +(natHon.length?'<span class="ic">'+natHon.map(function(x){return '<i title="'+esc(x.n)+'">'+honIcon(x.n)[1]+'</i>';}).join('')+'</span>':'')+'</span>'
+     +(natHon.length?'<span class="ic">'+natHon.map(function(x){ return trophySvg(x.n,20); }).join('')+'</span>':'')+'</span>'
      +'<span></span><span>'+t.caps+'</span><span>'+t.cg+'</span><span>—</span></div>';
   h+='</div>';
   // 통산
@@ -812,16 +876,11 @@ function pRetired(){
   // 트로피 진열장: S·A·B는 아이콘 타일, C는 접기
   var main=order.filter(function(k){return grp[k].tier!=='C';}), minor=order.filter(function(k){return grp[k].tier==='C';});
   if(main.length) h+='<div class="rc-shelf">'+main.map(function(k){ var g=grp[k], ic=honIcon(k);
-      return '<div class="rc-tro t'+g.tier+'"><div class="i '+(ic[2]||'')+'">'+ic[1]+(g.c>1?'<em>×'+g.c+'</em>':'')+'</div><div class="l">'+esc(k)+'</div></div>'; }).join('')+'</div>';
+      return '<div class="rc-tro t'+g.tier+'"><div class="i">'+trophySvg(k,58)+(g.c>1?'<em>×'+g.c+'</em>':'')+'</div><div class="l">'+esc(k)+'</div></div>'; }).join('')+'</div>';
   if(minor.length) h+='<details class="rc-minor"><summary>기타 수상 '+minor.reduce(function(s,k){return s+grp[k].c;},0)+'개</summary><div class="badges">'
-      +minor.map(function(k){ return '<span>'+honIcon(k)[1]+' '+esc(k)+(grp[k].c>1?' ×'+grp[k].c:'')+'</span>'; }).join('')+'</div></details>';
+      +minor.map(function(k){ return '<span class="mi">'+trophySvg(k,16)+esc(k)+(grp[k].c>1?' ×'+grp[k].c:'')+'</span>'; }).join('')+'</div></details>';
   if(!order.length) h+='<div class="note" style="text-align:center">트로피 없이 끝난 커리어예요.</div>';
   h+='</div>';
-  // 아스날 레전드 비교(넘었는지·모자란지 숫자로)
-  if(C.arsenal.apps>0){
-    h+='<div class="panel"><div class="lbl"><b>아스날 레전드와 비교</b><span>아스날 '+C.arsenal.apps+'경기 '+C.arsenal.goals+'골</span></div>'
-     +LEGENDS.map(function(l){ var d=C.arsenal.goals-l[2]; return '<div class="lg2"><span>'+l[0]+'</span><b>'+l[2]+'골</b><em class="'+(d>=0?'up':'down')+'">'+(d>=0?'▲ +'+d:'▼ '+d)+'</em></div>'; }).join('')+'</div>';
-  }
   document.getElementById('app').innerHTML=h;
   document.getElementById('dock').innerHTML='<button class="btn ghost2" onclick="C=null;S={step:1,name:\'\',nation:null,foot:null,pos:null,num:null,dream:null,card:null,add:[0,0,0,0,0],club:null};go(1)">새 커리어</button><button class="btn" onclick="alert(\'목업이라 실제 등록은 안 돼요\')">랭킹 등록</button>';
 }
@@ -834,6 +893,7 @@ function autoRun(n){
   }
 }
 
+document.body.insertAdjacentHTML('afterbegin', TROPHY_DEFS);
 render();
 </script>
 </body>
