@@ -442,7 +442,8 @@ export function playerView(state){
   C = state;
   return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, num:C.num, want:C.want, age:C.age, ovr:cOvr(),
     st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(C.club), team:teamName(C.club)}, phase:C.phase, seasons:C.hist.length,
-    glass:!!C.glass, tot:C.tot, peak:C.peak};
+    glass:!!C.glass, tot:C.tot, peak:C.peak,
+    hist: C.hist.map(r => [r.age, r.team, r.loan?1:0, r.apps, r.goals, C.pos==='DF' ? r.cs : r.ast, r.ovr])};   // 커리어 기록 접이식 표
 }
 // 은퇴 카드(랭킹에도 이 모양으로 저장한다)
 export function cardView(state){
