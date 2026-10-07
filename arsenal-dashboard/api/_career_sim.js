@@ -492,11 +492,12 @@ export function playSeason(state, choice){
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg;
   C.peak = Math.max(C.peak, cOvr());
+  C.bodyOut = bodyEnd();
   C.offers = makeOffers(rng, row);
   C.traitOffer = rollTraits();   // 시즌 결과와 다른 난수열(시즌 결과가 바뀌지 않게)
   if(!C.glass && (C.injCount||0)>=4 && C.injCount/C.hist.length>=0.3){ C.glass = true; row.notes.push('잦은 부상으로 "유리몸" 꼬리표가 붙었어요. 구단들이 영입을 망설여요.'); }
   C.phase = 'result';
-  return {row, offers: offerView(), released: !!C.released, forced: forcedRetire(), canRetire: C.age>=29};
+  return {row, offers: offerView(), released: !!C.released, forced: forcedRetire(), forcedWhy: forcedWhy(), canRetire: C.age>=29};
 }
 
 // ── 특성 제안 ──────────────────────────────────────────────────────────
@@ -529,13 +530,19 @@ export const traitView = (id, pos) => { const t = TRAIT_BY_ID.get(id); if(!t) re
 
 // ── 이적 · 방출 ────────────────────────────────────────────────────────
 // 방출: 31세 이후 오버롤 66 미만이거나 소속팀 선발 확률 15% 미만이면 재계약 불가(잔류 불가) → 낮은 구단의 말년 제안만.
-const isReleased = () => C.age>=31 && (cOvr()<66 || pStart(C.club)<0.15);
+// 재계약 문턱은 33세까지 66, 그 뒤로 매년 +2(34세 68 … 39세 78) — 나이 든 선수일수록 실력이 확실해야 계약이 이어진다.
+// 예전엔 나이와 상관없이 66이라 정점 85 이상이면 97%가 40세까지 뛰었다(사용자 지적: "80만 넘어도 40살까지 수월").
+const relBar = () => 66 + Math.max(0, C.age-33)*2;
+const isReleased = () => C.age>=31 && (cOvr()<relBar() || pStart(C.club)<0.15);
+// 몸의 한계: 35세부터 시즌 끝에 은퇴할 수밖에 없는 확률 — 나이와 몸의 소모(부상 이력)가 클수록 높다.
+const BODY_END = [0.06, 0.05];   // [나이 1살당(34세 넘는 만큼), 소모 1년당]
+const bodyEnd = () => C.age>=35 && mulberry(C.seed ^ hashStr('body|'+C.age))() < BODY_END[0]*(C.age-34) + BODY_END[1]*(C.wear||0);
 function makeOffers(rng, row){
   if(C.age < 17) return [];
   C.released = isReleased();
   if(C.released){
     const me0 = cRep(), lows = ALL.filter(c => c.n!==C.club.n && c.r<=me0 && c.r>=me0-15).sort((a,b) => b.r-a.r);
-    const k = cOvr()>=63 ? 2 : cOvr()>=60 ? 1 : 0, out0 = [];
+    const k = cOvr()>=relBar()-3 ? 2 : cOvr()>=relBar()-6 ? 1 : 0, out0 = [];   // 말년 제안도 나이 문턱을 따라 오른다
     for(let i=0; i<k && lows.length; i++){ out0.push({c: lows.splice(Math.floor(rng()*Math.min(lows.length,6)),1)[0], kind:'말년'}); }
     return out0;
   }
@@ -550,7 +557,8 @@ function makeOffers(rng, row){
   if(dream && dream.n!==C.club.n && dream.r<=me+10 && out.every(o => o.c.n!==dream.n) && rng()<0.5) out.push({c:dream, kind: dream.r>me+3 ? '도전' : '적정', dream:true});
   return out;
 }
-const forcedRetire = () => C.age>=40 || (!!C.released && !C.offers.length);
+const forcedWhy = () => C.age>=40 ? 'age' : C.bodyOut ? 'body' : (C.released && !C.offers.length) ? 'contract' : null;
+const forcedRetire = () => C.age>=40 || !!C.bodyOut || (!!C.released && !C.offers.length);
 const pub = c => ({n:c.n, id:c.id, nat:c.nat});
 export function offersView(state){ C = state; return offerView(); }
 // 이적시장 카드에 보이는 출전 기회는 다음 시즌 실제 계산과 같게(제안 구단은 새 영입 효과, 잔류는 같은 팀 몫 포함)

@@ -9116,7 +9116,7 @@ function crResult(){
    +'<div class="cr-dovr '+dCls+'"><span>오버롤</span><b>'+r.ovrBefore+' → <span id="crOvrTo">'+(CR.fresh?r.ovrBefore:r.ovr)+'</span></b><em>'+(r.dOvr>0?'+':'')+r.dOvr+'</em></div>'
    +(r.hon.length?'<div class="cr-badges'+(CR.fresh?' pop':'')+'">'+r.hon.map(function(h,i){ return crHonBadge(h).replace('<span class="','<span style="animation-delay:'+(0.3+i*0.12)+'s" class="'); }).join('')+'</div>':'')
    +(r.notes.length||R.forced?'<ul class="cr-notes">'+r.notes.map(function(t){ return '<li>'+gmEsc(t)+'</li>'; }).join('')
-      +(R.forced?'<li>'+(p.age>=40?'40세 — 선수 생활을 마무리할 때가 됐어요.':gmEsc(p.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.')+'</li>':'')+'</ul>':'')
+      +(R.forced?'<li>'+(R.forcedWhy==='body'?'몸이 더 이상 버텨 주지 않아요. 선수 생활을 마무리할 때가 됐어요.':p.age>=40?'40세 — 선수 생활을 마무리할 때가 됐어요.':gmEsc(p.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.')+'</li>':'')+'</ul>':'')
    +'</div>';
   // 특성 제안: 3개 중 하나를 골라야 다음 시즌으로(강제 은퇴 시즌은 없음)
   var TO=!R.forced && R.traitOffer && R.traitOffer.length ? R.traitOffer : null;

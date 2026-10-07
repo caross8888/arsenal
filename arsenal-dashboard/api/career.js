@@ -102,7 +102,7 @@ const firstView = input => S.firstClubs(input.nation, input.pos, input.card).map
 const resultView = C => {
   const r = C.hist[C.hist.length - 1];
   return {row: r, offers: S.offersView(C), stay: S.stayView(C), traitOffer: (C.traitOffer||[]).map(id => S.traitView(id, C.pos)),
-          released: !!C.released, forced: !!C.forced, canRetire: C.age >= 29};
+          released: !!C.released, forced: !!C.forced, forcedWhy: C.forcedWhy || null, canRetire: C.age >= 29};
 };
 
 // 지금 단계에 맞는 화면 데이터
@@ -182,7 +182,7 @@ export default async function handler(req, res){
         return res.json({token: seal(C), ...view(C), pre: {apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3]}});
       }
       delete C.pending;
-      C.forced = r.forced;
+      C.forced = r.forced; C.forcedWhy = r.forcedWhy;
       return res.json({token: seal(C), ...view(C)});
     }
 
@@ -194,7 +194,7 @@ export default async function handler(req, res){
       const tp = body.trait == null || body.trait === '' ? null : Number(body.trait);
       if(C.traitOffer && C.traitOffer.length && !C.forced && !(Number.isInteger(tp) && C.traitOffer[tp])) bad('특성을 하나 골라 주세요.');
       S.nextSeason(C, pick, tp);
-      delete C.forced;
+      delete C.forced; delete C.forcedWhy;
       return res.json({token: seal(C), ...view(C)});
     }
 
