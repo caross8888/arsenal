@@ -39,8 +39,17 @@ const TRAIT_P = 0.3, TRAIT_MAX = 3;
 const TRAIT_BY_ID = new Map([...TRAITS, ...CTRAITS.map(t => ({...t, pos:'공통'}))].map(t => [t.id, t]));
 // 공통 특성: 17세 시즌 끝에 3개 제시(반드시 하나). 무조건 이득만(사용자 지정 — 다른 스탯을 깎지 않는다):
 // 성장하는 시즌마다 대상 스탯 +CT_SHIFT(누적 CT_CAP까지, C.ctg). 오버롤은 그대로.
-// 골·도움 계산에 안 쓰이는 수비 스탯(태클·대인마크)이 대상이면 누적분만큼 클린시트 확률 ×(1+CT_CS×누적), 평점 +CT_R×누적.
-const CT_AGE = 17, CT_SHIFT = 0.8, CT_CAP = 10, CT_CS = 0.01, CT_R = 0.004, CT_DEF = ['태클','대인마크'];
+// 스탯이 오르는 것만으론 골·도움 계산(FX)에 적게 들어가는 스탯은 이득이 거의 없어서, 대상 스탯마다 누적 1점당 보너스를 더 준다
+// (g·a·cs: 배율 +, r: 평점 +). 특성마다 점수 이득이 비슷해지게 맞춘 값 — 스탯·보너스를 바꾸면 특성별 비교를 다시 돌릴 것.
+const CT_AGE = 17, CT_SHIFT = 0.8, CT_CAP = 10;
+const CT_BONUS = {
+  FW:{'스피드':{g:.01, a:.01}, '패스':{g:.007, a:.013}, '드리블':{g:.007}, '오프더볼':{g:.006}},
+  MF:{'태클':{cs:.012, r:.008}, '체력':{g:.003, a:.006}},
+  DF:{'태클':{cs:.01, r:.004}, '대인마크':{cs:.01, r:.004}, '스피드':{cs:.005, r:.003}, '빌드업':{a:.005, r:.007}, '공중볼':{r:.007}}};
+function ctBonus(){
+  const t = commonOf(), b = t && (CT_BONUS[C.pos]||{})[t.s[C.pos]], n = C.ctg||0;
+  return {g:1+(b&&b.g||0)*n, a:1+(b&&b.a||0)*n, cs:1+(b&&b.cs||0)*n, r:(b&&b.r||0)*n};
+}
 const commonOf = () => (C.traits||[]).map(id => TRAIT_BY_ID.get(id)).find(t => t && t.pos==='공통');
 // 가진 특성의 효과를 곱/합으로 모은다
 function traitMods(){
@@ -51,8 +60,8 @@ function traitMods(){
 }
 const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련)
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
-// 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06).
-const G_RATE = {FW:0.422, MF:0.124, DF:0.0325}, A_RATE = {FW:0.183, MF:0.163, DF:0.053};
+// 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
+const G_RATE = {FW:0.395, MF:0.121, DF:0.03}, A_RATE = {FW:0.172, MF:0.159, DF:0.049};
 const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.5}, DF:{g:8,a:5,cs:3.5}};
 // 카드별 기여 보정(사용자 지정): 같은 포지션 안에서도 카드마다 골·도움·클린시트 기대치가 달라
 // (포처는 골, 펄스나인·수비형은 적게) 기여 점수 평균이 같아지게 곱한다. 순서는 CARDS와 같음.
@@ -68,7 +77,7 @@ const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[
 const DEV = [0.8, 1.2];
 const K_GROW = 0.47, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:134, sd:14, pos:{FW:1.03, MF:0.93, DF:0.82}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
+const BALLON = {mu:129, sd:14, pos:{FW:1.03, MF:0.93, DF:0.82}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
 
@@ -315,19 +324,19 @@ export function playSeason(state, choice){
   const cardA = Math.sqrt({'윙어':1.5,'펄스나인':1.5,'공격형 미드필더':1.4,'딥라잉 플레이메이커':1.2,'윙백':1.6,'풀백':1.3,'포처':0.6}[card.n]||1);
   // 약발 보너스(골·도움): ★3까지는 작고 ★4부터 커진다 — 훈련 비용(그 시즌 성장 ×0.92) 대비 ★3은 약간 손해, ★4부터 약간 이득(사용자 지정)
   const wfF = (C.pos==='FW'||C.pos==='MF') ? 1+WF_BONUS[C.wf] : 1;
-  const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF*TM.g;
-  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a;
+  const CB = ctBonus();
+  const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF*TM.g*CB.g;
+  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a*CB.a;
   const minsEq = starts + subs*0.3;
   const hot = !row0Youth && starts>=15 && rng()<0.02;   // 커리어 하이 시즌
   const goals = Math.round(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.6:1)), ast = Math.round(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.6:1));
-  const ctc = commonOf(), ctDef = !!ctc && CT_DEF.includes(ctc.s[C.pos]), ctCS = ctDef ? 1+CT_CS*(C.ctg||0) : 1;
-  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*ctCS));
+  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*CB.cs));
   const cs = row0Youth ? Math.round(starts*pCS*0.8) : Math.round(starts*pCS*(0.85+rng()*0.3));
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
   // 평점: 실력 + 팀 안 위치 + 포지션별 활약 + 운
   const clubLv = club.r - (youth()&&!onLoan ? YOUTH_GAP : 0), ap = Math.max(apps,1);
   const perfBonus = {FW:(goals+ast*0.6)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.6, DF:cs/Math.max(starts,1)*0.6+(goals*2+ast*1.5)/ap*0.6}[C.pos];
-  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+(ctDef ? CT_R*(C.ctg||0) : 0)+(rng()-0.5)*0.5)) : 0;
+  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+(rng()-0.5)*0.5)) : 0;
 
   // 성장 / 하락
   const base = AGE_BASE[Math.min(37, C.age)], ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
