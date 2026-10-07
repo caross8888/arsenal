@@ -32,6 +32,8 @@ const PL_LEAGUE = 47;
 const PW_MIN = 4, PW_MAX = 20, NICK_MAX = 12;
 const FAIL_LIMIT = 5, FAIL_LOCK_SEC = 10 * 60;
 const SIGNUP_PER_IP_DAY = 3;
+const RENAME_COOLDOWN_DAYS = 30;   // 닉네임 변경 간격 — 남을 흉내 내며 이름을 계속 바꾸는 걸 막는다
+const WHOAMI_BOARD = 'whoami:board:v1';   // api/game.js의 BOARD_KEY와 같은 키(계정 멤버는 '@'+계정 키)
 const ALL_HIT_BONUS = 3;
 const MAIN_BLOCK_DAYS = 4;   // 라운드의 "본 일정" — 중앙 킥오프 ±4일. 밖으로 밀린 경기는 연기 경기로 본다.
 
@@ -141,8 +143,28 @@ function checkPw(pw, nick){
   if(nick && normNick(pw) === normNick(nick)) return '닉네임과 같은 비밀번호는 쓸 수 없어요.';
   return null;
 }
+// 계정 키는 가입할 때의 정규화 닉네임으로 고정이다(예측·랭킹·Who Am I 기록이 전부 이 키에 붙어 있다).
+// 닉네임을 바꾸면 pk:alias:{새 닉네임} → 계정 키 별칭을 만들고 표시 이름(u.n, pk:names)만 바꾼다.
+// 가입 닉네임은 계정 키라서 바꾼 뒤에도 다른 사람이 가져갈 수 없다. 로그인은 지금 닉네임으로만 된다.
+async function findAccount(nickKey){
+  const alias = await kv('GET', `pk:alias:${nickKey}`);
+  const k = alias || nickKey;
+  const raw = await kv('GET', `pk:user:${k}`);
+  const u = raw ? JSON.parse(raw) : null;
+  if(!u || normNick(u.n) !== nickKey) return null;   // 바꾸기 전 닉네임으로는 로그인 안 됨
+  return {k, u};
+}
+async function nickTaken(nickKey, selfKey){
+  if(nickKey === selfKey) return false;   // 내 가입 닉네임으로 되돌리기
+  const [user, alias] = await Promise.all([kv('EXISTS', `pk:user:${nickKey}`), kv('GET', `pk:alias:${nickKey}`)]);
+  return !!Number(user) || (!!alias && alias !== selfKey);
+}
 function hashPw(pw, salt){
   return new Promise((ok, no) => crypto.scrypt(String(pw), salt, 32, {N: 16384, r: 8, p: 1}, (e, k) => e ? no(e) : ok(k.toString('hex'))));
+}
+
+async function pwMatches(pw, u){
+  return crypto.timingSafeEqual(Buffer.from(await hashPw(String(pw || ''), u.s), 'hex'), Buffer.from(u.h, 'hex'));
 }
 
 function clientIp(req){
@@ -307,10 +329,9 @@ export default async function handler(req, res){
       if(!secret) return res.status(503).json({error: 'CRON_SECRET 미설정'});
       if(req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({error: 'unauthorized'});
       const body = await readBody(req);
-      const key = normNick(body.nick);
-      const raw = await kv('GET', `pk:user:${key}`);
-      if(!raw) return res.status(404).json({error: '없는 닉네임이에요.'});
-      const u = JSON.parse(raw);
+      const acc = await findAccount(normNick(body.nick));
+      if(!acc) return res.status(404).json({error: '없는 닉네임이에요.'});
+      const {k: key, u} = acc;
       const err = checkPw(body.pw, u.n);
       if(err) return res.status(400).json({error: err});
       const salt = crypto.randomBytes(16).toString('hex');
@@ -325,6 +346,7 @@ export default async function handler(req, res){
       const {nick, key, error} = checkNick(body.nick);
       if(error) return res.status(400).json({error});
       if(a === 'signup'){
+        if(await kv('GET', `pk:alias:${key}`)) return res.status(409).json({error: '이미 사용 중인 닉네임이에요.'});
         const pwErr = checkPw(body.pw, nick);
         if(pwErr) return res.status(400).json({error: pwErr});
         const day = new Date().toISOString().slice(0, 10);
@@ -336,28 +358,45 @@ export default async function handler(req, res){
         const rec = JSON.stringify({n: nick, s: salt, h: await hashPw(body.pw, salt), c: Date.now()});
         const ok = await kv('SET', `pk:user:${key}`, rec, 'NX');
         if(ok !== 'OK') return res.status(409).json({error: '이미 사용 중인 닉네임이에요.'});
+        // 같은 순간 누가 이 이름으로 닉네임을 바꿨으면 가입을 물린다(변경 쪽도 같은 방식으로 양보한다).
+        if(await kv('GET', `pk:alias:${key}`)){ await kv('DEL', `pk:user:${key}`); return res.status(409).json({error: '이미 사용 중인 닉네임이에요.'}); }
         await kv('HSET', 'pk:names', key, nick);
         return res.json({token: signToken(key, nick), nick});
       }
       // login
-      const fails = Number(await kv('GET', `pk:fail:${key}`)) || 0;
+      const acc = await findAccount(key);
+      const fk = acc ? acc.k : key;
+      const fails = Number(await kv('GET', `pk:fail:${fk}`)) || 0;
       if(fails >= FAIL_LIMIT) return res.status(429).json({error: '비밀번호를 여러 번 틀렸어요. 10분 뒤에 다시 시도해 주세요.'});
-      const raw = await kv('GET', `pk:user:${key}`);
-      const u = raw ? JSON.parse(raw) : null;
-      const okPw = u && crypto.timingSafeEqual(Buffer.from(await hashPw(String(body.pw || ''), u.s), 'hex'), Buffer.from(u.h, 'hex'));
-      if(!okPw){
-        const f = await kv('INCR', `pk:fail:${key}`);
-        if(f === 1) await kv('EXPIRE', `pk:fail:${key}`, FAIL_LOCK_SEC);
+      const u = acc && acc.u;
+      if(!u || !(await pwMatches(body.pw, u))){
+        const f = await kv('INCR', `pk:fail:${fk}`);
+        if(f === 1) await kv('EXPIRE', `pk:fail:${fk}`, FAIL_LOCK_SEC);
         return res.status(401).json({error: '닉네임이나 비밀번호가 맞지 않아요.'});
       }
-      if(fails) await kv('DEL', `pk:fail:${key}`);
-      return res.json({token: signToken(key, u.n), nick: u.n});
+      if(fails) await kv('DEL', `pk:fail:${fk}`);
+      return res.json({token: signToken(acc.k, u.n), nick: u.n});
+    }
+
+    // 닉네임 중복 확인(가입·닉네임 변경 화면). 실제 가입·변경 때도 다시 확인한다.
+    if(a === 'nickcheck'){
+      const {nick, key, error} = checkNick(req.query.nick);
+      if(error) return res.json({ok: false, error});
+      const self = readToken(req);
+      const taken = await nickTaken(key, self ? self.k : null);
+      return res.json(taken ? {ok: false, error: '이미 사용 중인 닉네임이에요.'} : {ok: true, nick});
     }
 
     // ── 로그인 필요 ──
     const t = readToken(req);
     if(!t) return res.status(401).json({error: '로그인이 필요해요.', login: true});
-    const fresh = renew(t);
+    let fresh = renew(t);
+    // 다른 기기에서 닉네임을 바꿨으면 토큰의 표시 이름이 옛것이다 — 이름을 보여 주는 두 요청에서만
+    // 지금 이름을 확인해 고친 토큰을 내려 준다(요청마다 KV를 더 읽지 않으려고).
+    if(a === 'me' || a === 'profile'){
+      const cur = await kv('HGET', 'pk:names', t.k);
+      if(cur && cur !== t.n){ t.n = cur; fresh = signToken(t.k, cur); }
+    }
 
     if(a === 'mine'){
       const fx = await getFixtures();
@@ -403,6 +442,80 @@ export default async function handler(req, res){
       const [season, month] = await Promise.all([readBoard(S, 'season'), readBoard(S, mon)]);
       const find = rows => { const x = rows.find(r => r.key === t.k); return x ? {rank: x.rank, points: x.points} : null; };
       return res.json({nick: t.n, month: mon, season: find(season), monthly: find(month), token: fresh});
+    }
+
+    // 내 정보: 승부예측 시즌·이번 달 순위, Who Am I 최고 기록·순위
+    if(a === 'profile'){
+      const fx = await getFixtures().catch(() => null);
+      const raw = await kv('GET', `pk:user:${t.k}`);
+      const u = raw ? JSON.parse(raw) : {};
+      const out = {nick: t.n, since: u.c || null, renameAt: u.r ? u.r + RENAME_COOLDOWN_DAYS * 86400000 : null, token: fresh};
+      if(fx){
+        const S = fx.season, mon = kstMonth(new Date().toISOString());
+        const one = async id => {
+          const rows = await readBoard(S, id === S ? 'season' : id.slice(S.length + 1));
+          const x = rows.find(r => r.key === t.k);
+          if(x) return {rank: x.rank, points: x.points, hit: x.hit, total: x.total};
+          // 100위 밖: 점수 순위만(동점 정렬 없이) 따로 센다.
+          const [sc, rk, st] = await Promise.all([kv('ZSCORE', `pk:lb:${id}`, t.k), kv('ZREVRANK', `pk:lb:${id}`, t.k), kv('HMGET', `pk:st:${id}`, `${t.k}:h`, `${t.k}:t`)]);
+          return sc == null ? null : {rank: Number(rk) + 1, points: Number(sc), hit: Number(st[0]) || 0, total: Number(st[1]) || 0};
+        };
+        const [season, monthly] = await Promise.all([one(S), one(`${S}:${mon}`)]);
+        out.pick = {season, monthly, month: mon, seasonName: S};
+      }
+      const [ws, wr] = await Promise.all([kv('ZSCORE', WHOAMI_BOARD, '@' + t.k), kv('ZREVRANK', WHOAMI_BOARD, '@' + t.k)]);
+      out.whoami = ws == null ? null : {best: Number(ws), rank: Number(wr) + 1};
+      return res.json(out);
+    }
+
+    if(a === 'rename' || a === 'password'){
+      if(req.method !== 'POST') return res.status(405).json({error: 'POST만 받습니다'});
+      const body = await readBody(req);
+      const raw = await kv('GET', `pk:user:${t.k}`);
+      if(!raw) return res.status(401).json({error: '로그인이 필요해요.', login: true});
+      const u = JSON.parse(raw);
+      // 둘 다 지금 비밀번호를 한 번 더 확인한다(로그인 실패와 같은 잠금 카운터).
+      const fails = Number(await kv('GET', `pk:fail:${t.k}`)) || 0;
+      if(fails >= FAIL_LIMIT) return res.status(429).json({error: '비밀번호를 여러 번 틀렸어요. 10분 뒤에 다시 시도해 주세요.'});
+      if(!(await pwMatches(body.pw, u))){
+        const f = await kv('INCR', `pk:fail:${t.k}`);
+        if(f === 1) await kv('EXPIRE', `pk:fail:${t.k}`, FAIL_LOCK_SEC);
+        return res.status(401).json({error: '지금 비밀번호가 맞지 않아요.'});
+      }
+      if(fails) await kv('DEL', `pk:fail:${t.k}`);
+
+      if(a === 'password'){
+        const err = checkPw(body.newPw, u.n);
+        if(err) return res.status(400).json({error: err});
+        const salt = crypto.randomBytes(16).toString('hex');
+        await kv('SET', `pk:user:${t.k}`, JSON.stringify({...u, s: salt, h: await hashPw(body.newPw, salt)}));
+        return res.json({ok: true, token: fresh});
+      }
+
+      // rename
+      const {nick, key: nk, error} = checkNick(body.nick);
+      if(error) return res.status(400).json({error});
+      if(nick === u.n) return res.status(400).json({error: '지금 닉네임과 같아요.'});
+      const oldKey = normNick(u.n);
+      const sameName = nk === oldKey;   // 띄어쓰기·대소문자만 바꾸는 건 별칭이 그대로라 간격 제한 없이 허용
+      if(!sameName && u.r && Date.now() - u.r < RENAME_COOLDOWN_DAYS * 86400000){
+        const d = new Date(u.r + RENAME_COOLDOWN_DAYS * 86400000 + 9 * 3600000);
+        return res.status(429).json({error: `닉네임은 ${RENAME_COOLDOWN_DAYS}일에 한 번 바꿀 수 있어요. ${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일부터 다시 바꿀 수 있어요.`});
+      }
+      if(!sameName){
+        if(await nickTaken(nk, t.k)) return res.status(409).json({error: '이미 사용 중인 닉네임이에요.'});
+        if(nk !== t.k){
+          if(await kv('SET', `pk:alias:${nk}`, t.k, 'NX') !== 'OK' && await kv('GET', `pk:alias:${nk}`) !== t.k)
+            return res.status(409).json({error: '이미 사용 중인 닉네임이에요.'});
+          // 같은 순간 이 이름으로 누가 가입했으면 양보한다.
+          if(Number(await kv('EXISTS', `pk:user:${nk}`))){ await kv('DEL', `pk:alias:${nk}`); return res.status(409).json({error: '이미 사용 중인 닉네임이에요.'}); }
+        }
+        if(oldKey !== t.k) await kv('DEL', `pk:alias:${oldKey}`);   // 바로 전 닉네임은 다른 사람이 쓸 수 있게 풀어 준다
+      }
+      await kv('SET', `pk:user:${t.k}`, JSON.stringify({...u, n: nick, r: sameName ? u.r : Date.now()}));
+      await kv('HSET', 'pk:names', t.k, nick);
+      _board.clear();
+      return res.json({ok: true, nick, token: signToken(t.k, nick)});
     }
 
     return res.status(400).json({error: '알 수 없는 요청'});

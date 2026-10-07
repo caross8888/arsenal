@@ -311,8 +311,9 @@ export default async function handler(req, res){
       await kv('ZREMRANGEBYRANK', BOARD_KEY, 0, -(BOARD_KEEP + 1));
       const rank = await kv('ZREVRANK', BOARD_KEY, member);
       _board = null;
+      const nick = await kv('HGET', 'pk:names', acct.k) || acct.n;   // 다른 기기에서 닉네임을 바꿨을 수 있다
       return res.json(rank == null ? {registered: false, outside: true}
-        : {registered: true, rank: rank + 1, nick: acct.n, score: st.s, best, improved: st.s > prev});
+        : {registered: true, rank: rank + 1, nick, score: st.s, best, improved: st.s > prev});
     }
 
     return res.status(400).json({error: '알 수 없는 요청'});

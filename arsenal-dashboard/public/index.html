@@ -1455,6 +1455,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
    집 모양으로 바뀌어 직전 탭으로 돌아가는 버튼이 된다. 색은 전부 테마 변수만 쓴다. */
 #games.section{max-width:600px}
 .gm-wrap{display:flex;flex-direction:column;gap:14px}
+.gm-hrow{display:flex;justify-content:space-between;align-items:center}
+.gm-my{display:inline-flex;align-items:center;gap:5px;background:none;border:0;color:var(--text-secondary);font:inherit;font-size:13px;cursor:pointer;padding:4px 0}
+.gm-my:hover{color:var(--text)}
+.gm-me{text-align:center;padding:6px 0 2px}
+.gm-me-n{font-size:24px;font-weight:700;color:var(--text)}
+.gm-me-s{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.gm-inrow{display:flex;gap:8px}
+.gm-inrow input{flex:1;min-width:0}
+.gm-inrow .gm-btn{width:auto;flex:none;padding:0 14px;font-size:14px}
 .gm-h{font-size:13px;letter-spacing:1px;color:var(--text-secondary);margin:2px 0 0}
 .gm-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border-bright);border-radius:14px;padding:16px;color:var(--text);font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .gm-card:active{opacity:.85}
@@ -7966,7 +7975,8 @@ function pkApi(a, q, body){
   if(body){ o.headers['Content-Type']='application/json'; o.body=JSON.stringify(body); }
   if(PK.tok) o.headers.Authorization='Bearer '+PK.tok;
   return fetch(url,o).then(function(r){ return r.json().then(function(j){
-    if(j && j.token) pkSetAuth(j.token, PK.nick);   // 서버가 유효기간을 늘린 새 토큰을 주면 바꿔 둔다
+    // 서버가 유효기간을 늘린(또는 다른 기기에서 바꾼 닉네임을 반영한) 새 토큰을 주면 바꿔 둔다
+    if(j && j.token) pkSetAuth(j.token, (a==='me'||a==='profile'||a==='rename') && j.nick ? j.nick : PK.nick);
     if(!r.ok){ var e=new Error(j.error||'잠시 후 다시 시도해 주세요.'); e.login=!!j.login; throw e; }
     return j;
   }); });
@@ -8146,10 +8156,84 @@ function pkRank(){
   }).catch(function(){});
 }
 
+var GM_GEAR='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+
+// ── 내 정보(게임 목록 우측) ───────────────────────────────────────────────
+// 승부예측·Who Am I 공용 계정의 순위·기록, 닉네임 변경(중복 확인), 비밀번호 변경.
+function gameProfile(){
+  gameStopTimer();
+  if(!PK.tok){ PK.after=gameProfile; PK.afterLabel='게임 목록'; PK.afterBack=gameList; return pkAuth('login'); }
+  gmRoot().innerHTML='<button class="gm-back" onclick="gameList()">← 게임 목록</button>'+loadingHtml('불러오는 중...','padding:60px 20px');
+  pkApi('profile').then(gameProfileRender).catch(function(e){
+    if(e.login){ pkSetAuth(null,null); return gameProfile(); }
+    gmRoot().innerHTML='<button class="gm-back" onclick="gameList()">← 게임 목록</button><div class="gm-empty">'+gmEsc(e.message)+'</div>';
+  });
+}
+function gameProfileRender(d){
+  var p=d.pick||{}, w=d.whoami, se=p.season, mo=p.monthly;
+  var ymd=function(t){ var x=new Date(t); return x.getFullYear()+'.'+(x.getMonth()+1)+'.'+x.getDate(); };
+  var cell=function(v,l){ return '<div><div class="v">'+v+'</div><div class="l">'+l+'</div></div>'; };
+  var waitRename=d.renameAt && d.renameAt>Date.now();
+  gmRoot().innerHTML='<button class="gm-back" onclick="gameList()">← 게임 목록</button>'
+    +'<div class="gm-me"><div class="gm-me-n">'+gmEsc(d.nick)+'</div>'+(d.since?'<div class="gm-me-s">'+ymd(d.since)+' 가입</div>':'')+'</div>'
+    +'<div class="gm-h">승부예측 · '+gmEsc(p.seasonName||'')+' 시즌</div>'
+    +'<div class="pk-sum">'+cell(se?se.rank+'위':'—','시즌 순위')+cell(se?se.points:'—','시즌 점수'+(se&&se.total?' ('+se.hit+'/'+se.total+' 적중)':''))
+      +cell(mo?mo.rank+'위':'—',(p.month?(+p.month.slice(5))+'월':'이번 달')+' 순위'+(mo?' · '+mo.points+'점':''))+'</div>'
+    +'<div class="gm-h">Who Am I?</div>'
+    +'<div class="pk-sum" style="grid-template-columns:repeat(2,1fr)">'+cell(w?w.best:'—','최고 기록')+cell(w?w.rank+'위':'—','역대 순위')+'</div>'
+    +'<form class="gm-panel" id="gmRename"><div style="font-weight:700">닉네임 변경</div>'
+      +'<div class="pk-field"><label for="gmNewNick">새 닉네임 (최대 12자)</label><div class="gm-inrow"><input id="gmNewNick" maxlength="12" autocomplete="off"'+(waitRename?' disabled':'')+'><button type="button" class="gm-btn ghost" id="gmNickChk"'+(waitRename?' disabled':'')+'>중복 확인</button></div></div>'
+      +'<div class="pk-field"><label for="gmRnPw">지금 비밀번호</label><input id="gmRnPw" type="password" maxlength="20" autocomplete="current-password"'+(waitRename?' disabled':'')+'></div>'
+      +'<div class="pk-err" id="gmRnErr"></div>'
+      +'<button class="gm-btn" type="submit"'+(waitRename?' disabled':'')+'>닉네임 변경</button>'
+      +'<p class="pk-help">'+(waitRename?'<b style="color:var(--text)">'+(new Date(d.renameAt).getMonth()+1)+'월 '+new Date(d.renameAt).getDate()+'일</b>부터 다시 바꿀 수 있어요. ':'')
+      +'닉네임은 30일에 한 번 바꿀 수 있어요. 랭킹·예측 기록은 그대로 이어지고, 가입할 때 쓴 닉네임은 다른 사람이 가져갈 수 없어요.</p></form>'
+    +'<form class="gm-panel" id="gmPwForm"><div style="font-weight:700">비밀번호 변경</div>'
+      +'<div class="pk-field"><label for="gmPwOld">지금 비밀번호</label><input id="gmPwOld" type="password" maxlength="20" autocomplete="current-password"></div>'
+      +'<div class="pk-field"><label for="gmPwNew">새 비밀번호 (4~20자)</label><input id="gmPwNew" type="password" maxlength="20" autocomplete="new-password"></div>'
+      +'<div class="pk-field"><label for="gmPwNew2">새 비밀번호 확인</label><input id="gmPwNew2" type="password" maxlength="20" autocomplete="new-password"></div>'
+      +'<div class="pk-err" id="gmPwErr"></div>'
+      +'<button class="gm-btn" type="submit">비밀번호 변경</button></form>'
+    +'<button class="gm-btn ghost" type="button" onclick="pkSetAuth(null,null);PK.data=null;gameList()">로그아웃</button>';
+
+  var nickIn=document.getElementById('gmNewNick'), rnErr=document.getElementById('gmRnErr');
+  var say=function(el,msg,ok){ el.textContent=msg; el.style.color=ok?'var(--green)':''; };
+  nickIn.addEventListener('input', function(){ say(rnErr,''); });
+  document.getElementById('gmNickChk').onclick=function(){
+    var n=nickIn.value.trim(); if(!n) return say(rnErr,'새 닉네임을 입력해 주세요.');
+    pkApi('nickcheck','nick='+encodeURIComponent(n)).then(function(r){ say(rnErr, r.ok?'쓸 수 있는 닉네임이에요.':r.error, r.ok); })
+      .catch(function(e){ say(rnErr,e.message); });
+  };
+  document.getElementById('gmRename').addEventListener('submit', function(e){
+    e.preventDefault();
+    var n=nickIn.value.trim(), pw=document.getElementById('gmRnPw').value, btn=this.querySelector('[type=submit]');
+    if(!n) return say(rnErr,'새 닉네임을 입력해 주세요.');
+    if(!pw) return say(rnErr,'지금 비밀번호를 입력해 주세요.');
+    btn.disabled=true;
+    pkApi('rename','',{nick:n, pw:pw}).then(function(r){
+      d.nick=r.nick; d.renameAt=Date.now()+30*86400000; gameProfileRender(d);
+      say(document.getElementById('gmRnErr'),'「'+r.nick+'」(으)로 바꿨어요.',true);
+    }).catch(function(e2){ btn.disabled=false; say(rnErr,e2.message); });
+  });
+  document.getElementById('gmPwForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var err=document.getElementById('gmPwErr'), old=document.getElementById('gmPwOld').value,
+        nw=document.getElementById('gmPwNew').value, nw2=document.getElementById('gmPwNew2').value, btn=this.querySelector('[type=submit]'), f=this;
+    if(!old) return say(err,'지금 비밀번호를 입력해 주세요.');
+    if(nw.length<4||nw.length>20) return say(err,'새 비밀번호는 4~20자로 정해 주세요.');
+    if(nw!==nw2) return say(err,'새 비밀번호 확인이 달라요.');
+    btn.disabled=true;
+    pkApi('password','',{pw:old, newPw:nw}).then(function(){
+      f.reset(); btn.disabled=false; say(err,'비밀번호를 바꿨어요.',true);
+    }).catch(function(e2){ btn.disabled=false; say(err,e2.message); });
+  });
+}
+
 function gameList(){
   gameStopTimer();
   gmRoot().innerHTML =
-    '<div class="gm-h">게임 목록</div>'
+    '<div class="gm-hrow"><div class="gm-h">게임 목록</div>'
+    +'<button type="button" class="gm-my" onclick="gameProfile()">'+GM_GEAR+'내 정보</button></div>'
     +'<button class="gm-card" onclick="pkOpen()"><span class="gm-card-ic" style="font-size:20px">VS</span>'
     +'<span><div class="gm-card-t">승부예측</div><div class="gm-card-d">프리미어리그 이번 라운드 10경기 승·무·패 맞히기, 월간·시즌 랭킹</div></span></button>'
     +'<button class="gm-card" onclick="gameIntro()"><span class="gm-card-ic">?</span>'
