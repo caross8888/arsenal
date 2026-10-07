@@ -251,7 +251,7 @@ function injRiskOf(){
   r -= C.injNext || 0;                                  // 지난 부상 때 완전히 회복했으면 −3%p
   if(C.injBoost && C.injBoost.n > 0) r += 0.08;         // 큰 부상을 보존 치료했으면 2시즌 +8%p
   if(C.glass) r += 0.04;                                // 유리몸
-  r += traitMods().inj;
+  r += traitMods().inj + ((commonOf()||{}).inj||0);
   return Math.max(0.03, r + Math.max(0, C.age-30)*0.01);
 }
 function rollInjury(){
@@ -370,6 +370,7 @@ export function playSeason(state, choice){
     const dmp = Math.min(1, Math.max(DAMP[0], (99.6-C.ovr)/DAMP[1]));
     C.ovr = Math.min(99, C.ovr + C.boost*base*playCoef(ratio)*clubCoef(club.r)*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
+    declMul *= (commonOf()||{}).decl || 1;
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
     C.off = C.off.map((o2,i) => o2 + base*declMul*((DECLINE[st[i]]||1)-1));
   }
@@ -514,6 +515,7 @@ function rollTraits(){
   return out;
 }
 export const traitView = (id, pos) => { const t = TRAIT_BY_ID.get(id); if(!t) return null;
+  if(t.pos==='공통' && t.d) return {id:t.id, n:t.n, d:t.d, common:true};
   return t.pos==='공통' ? {id:t.id, n:t.n, d:t.s[pos]+' 성장 ↑ · '+((CT_LABEL[pos]||{})[t.s[pos]]||'')+' ↑', common:true} : {id:t.id, n:t.n, d:t.d, stat:t.stat, min:t.min}; };
 
 // ── 이적 · 방출 ────────────────────────────────────────────────────────
