@@ -403,6 +403,9 @@ var AGE_BASE={15:4,16:4,17:4,18:4.5,19:4.5,20:4.5,21:4,22:4,23:3.5,24:3,25:2.5,2
 var DECLINE={'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5,'빌드업':0.5};
 var NAT_BAR={ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
 // 수상 등급: f 명성, g 다음 시즌 성장 배율, p 커리어 점수
+// 발롱도르 점수에 들어가는 트로피·개인상 점수
+var BALLON_PTS=[[/챔피언스리그 우승/,25],[/월드컵 우승/,25],[/(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) 우승/,15],[/리그 우승/,12],[/컵 대회 우승/,4],
+  [/골든볼/,10],[/리그 올해의 (선수|미드필더|수비수)/,10],[/챔스 올해의 선수/,10],[/골든슈/,8],[/리그 득점왕/,8],[/챔스 득점왕|대회 득점왕|월드컵 득점왕/,6],[/도움왕/,5],[/챔스 올해의 (공격수|미드필더|수비수)/,5]];
 var HONOR_TIER={S:{f:5,g:1.08,p:200}, A:{f:3,g:1.05,p:80}, B:{f:2,g:1.03,p:50}, C:{f:1,g:1,p:15}};
 // 국가 대표 대회: 월드컵 우승 확률(국가 강도), 대륙컵 이름과 배율
 var NAT_STR={BRA:.18,FRA:.18,ESP:.16,ARG:.16,ENG:.14,GER:.12,POR:.10,NED:.08,ITA:.08,BEL:.06,NOR:.03,JPN:.03,USA:.02,KOR:.02,NGA:.02};
@@ -634,11 +637,6 @@ function playSeason(){
       if(uclWin && rating>=7.5 && rng()<0.5) add('챔스 올해의 선수','A');
       if(rating>=7.6 && rng()<0.2) add('챔스 올해의 '+{FW:'공격수',MF:'미드필더',DF:'수비수'}[C.pos],'B');
     }
-    var big=hon.some(function(h){ return /리그 우승|챔피언스리그 우승|득점왕|도움왕|올해의 (선수|미드필더|수비수)/.test(h.n); });
-    if(ov>=92 && rating>=7.9 && big){
-      var bd=rng()<0.25+(ov-92)*0.08; if(bd) add('발롱도르','S');
-      if(rng()<(bd?0.7:0.15)) add('FIFA 올해의 선수','S');
-    }
     if(ov>=89 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
     if(C.age<=21 && ov>=80 && rating>=7.1 && rng()<0.5) add('골든보이','B');
     if(rng()<(C.pos==='FW'?0.008:0.004)) add('올해의 골','C');
@@ -662,6 +660,25 @@ function playSeason(){
     }
   }
   else if(C.age>=16 && C.age<18 && ov>=NAT_BAR[C.nation]-22) notes.push(natInfo(C.nation).n+' 연령별 대표팀에 뽑혔어요.');
+
+  // 발롱도르·FIFA 올해의 선수: 그 시즌 활약을 점수로 매겨 "세계 경쟁자"와 비교한다(대표 대회까지 끝난 뒤에 계산).
+  // 점수 = 개인 기록(포지션별) + 평점 + 팀 트로피 + 개인상 + 명성(오버롤), × 포지션 배율(투표가 공격수에게 쏠리는 현실 반영).
+  if(senior && apps>=20){
+    var BD=window.__BD||{mu:120,sd:14,pos:{FW:1,MF:0.85,DF:0.7}};
+    var rec={FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.6+goals*2+ast}[C.pos];
+    var hp2=0; hon.forEach(function(x){ hp2+=BALLON_PTS.reduce(function(v,r){ return v||(r[0].test(x.n)?r[1]:0); },0); });
+    var bp=(rec+Math.max(0,rating-7.0)*20+hp2+Math.max(0,ov-85)*2)*BD.pos[C.pos];
+    // 그해 최고의 경쟁자 점수(정규분포 근사)
+    var rival=BD.mu+BD.sd*((rng()+rng()+rng()+rng()-2)*1.73);
+    var gap=bp-rival;
+    if(gap>0){ add('발롱도르','S'); if(rng()<0.75) add('FIFA 올해의 선수','S'); }
+    else {
+      if(gap>-12) notes.push('발롱도르 투표 2위');
+      else if(gap>-25) notes.push('발롱도르 투표 3위');
+      else if(gap>-45 && bp>60) notes.push('발롱도르 후보 30인');
+      if(gap>-10 && rng()<0.3) add('FIFA 올해의 선수','S');
+    }
+  }
 
   // 수상 효과: 명성·다음 시즌 성장(최대 ×1.15)
   var boost=1, fameAdd=0;
