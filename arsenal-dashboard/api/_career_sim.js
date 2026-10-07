@@ -447,7 +447,9 @@ export function playerView(state){
   return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, num:C.num, want:C.want, age:C.age, ovr:cOvr(),
     st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(C.club), team:teamName(C.club)}, phase:C.phase, seasons:C.hist.length,
     glass:!!C.glass, tot:C.tot, peak:C.peak,
-    hist: C.hist.map(r => [r.age, r.team, r.loan?1:0, r.apps, r.goals, C.pos==='DF' ? r.cs : r.ast, r.ovr])};   // 커리어 기록 접이식 표
+    // 커리어 기록 접이식 표: [나이, 팀, 임대, 경기, 골, 도움(수비수는 클린시트), 오버롤, 구단, 유스, 그 시즌 주요 수상(S·A·B, 대표팀 제외)]
+    hist: C.hist.map(r => [r.age, r.team, r.loan?1:0, r.apps, r.goals, C.pos==='DF' ? r.cs : r.ast, r.ovr, r.club, r.youth?1:0,
+      r.hon.filter(h => 'SAB'.includes(h.tier) && h.kind!=='nat').sort((a,b) => 'SAB'.indexOf(a.tier)-'SAB'.indexOf(b.tier)).map(h => h.n)])};
 }
 // 은퇴 카드(랭킹에도 이 모양으로 저장한다)
 export function cardView(state){
