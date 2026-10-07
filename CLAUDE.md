@@ -114,7 +114,7 @@ Each file is one Vercel serverless function. `football.js` is the largest and mu
 
 `api/_translate.js` is **not an endpoint** — files prefixed with `_` are excluded from Vercel's zero-config function detection, so it's the one shared module in `api/` (everything else is deliberately self-contained). `news.js`, `social.js`, and `videos.js` import it to translate their payloads to Korean *before* responding, so the frontend needs no translation-aware code. See the Translation section below.
 
-`api/injuries.js` and `api/photos.js` exist but are **not called by the frontend** — their logic was superseded by branches inside `football.js` (`type=injuries`, and inline FPL-photo fallback respectively). Don't assume editing them affects the live site; check `grep -n "apiFetch(FN" public/index.html` for the actual call sites before changing API behavior.
+**Vercel Hobby 플랜은 배포당 서버리스 함수가 최대 12개다** — `api/`에서 `_`로 시작하지 않는 파일 하나가 함수 하나다(현재 11개). 넘으면 배포(미리보기 포함)가 실패한다. 새 기능은 가능하면 기존 엔드포인트에 `?a=`/`?type=` 분기로 넣고, 새 파일이 꼭 필요하면 개수부터 셀 것. 예전에 있던 `api/injuries.js`·`api/photos.js`(프론트가 안 부르던 옛 엔드포인트, 각각 `football.js`의 `type=injuries`와 FPL 사진 대체로 대체됨)는 커리어 모드(`api/career.js`)를 넣으면서 이 한도 때문에 지웠다. Check `grep -n "apiFetch(FN" public/index.html` for the actual call sites before changing API behavior.
 
 Real data sources in use (verified against source, not the stale README below):
 
