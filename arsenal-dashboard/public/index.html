@@ -1498,6 +1498,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .gm-status.active{color:var(--green);border-color:var(--green)}
 .gm-status.free{color:var(--gold);border-color:var(--border-accent)}
 .gm-choices{display:flex;flex-direction:column;gap:10px}
+.gm-guest{display:block;margin:4px auto 0;font:inherit;font-size:14px;color:var(--text-secondary);background:none;border:0;padding:8px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.gm-guest:disabled{color:var(--text-dim);cursor:default}
 .gm-choice{font:inherit;font-size:16px;font-weight:600;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:12px;padding:14px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent}
 .gm-choice:disabled{cursor:default}
 .gm-choice.right{border-color:var(--green);background:rgba(34,197,94,.16)}
@@ -7977,7 +7979,7 @@ function pkOpen(){
 // PK.after: 로그인 뒤 돌아갈 화면(Who Am I 결과 화면에서 "로그인하고 등록"으로 들어온 경우). 없으면 승부예측으로.
 function pkAuth(mode){
   var join=mode==='join';
-  gmRoot().innerHTML=(PK.after?'<button class="gm-back" onclick="pkAuthBack()">← 결과로 돌아가기</button>':'<button class="gm-back" onclick="gameList()">← 게임 목록</button>')
+  gmRoot().innerHTML=(PK.after?'<button class="gm-back" onclick="pkAuthBack(true)">← '+gmEsc(PK.afterLabel||'돌아가기')+'</button>':'<button class="gm-back" onclick="gameList()">← 게임 목록</button>')
     +'<div class="pk-tabs" role="group" aria-label="가입 또는 로그인"><button type="button" aria-pressed="'+join+'" onclick="pkAuth(\'join\')">가입</button><button type="button" aria-pressed="'+(!join)+'" onclick="pkAuth(\'login\')">로그인</button></div>'
     +'<form class="gm-panel" id="pkForm">'
     +'<div style="font-weight:700;font-size:17px">'+(join?'승부예측 가입':'로그인')+'</div>'
@@ -8003,10 +8005,13 @@ function pkAuth(mode){
     }).catch(function(e2){ btn.disabled=false; err.textContent=e2.message; });
   });
 }
-function pkAuthBack(){ var f=PK.after; PK.after=null; if(f) f(); else gameList(); }
+function pkAuthBack(cancel){
+  var f=(cancel && PK.afterBack) || PK.after; PK.after=PK.afterBack=null;
+  if(f) f(); else gameList();
+}
 function pkLogout(){ pkSetAuth(null,null); PK.data=null; pkAuth('login'); }
 function pkLoad(r){
-  gmRoot().innerHTML='<div class="gm-empty">불러오는 중...</div>';
+  gmRoot().innerHTML=loadingHtml('불러오는 중...','padding:60px 20px');
   var q=r?'r='+r:'';
   pkApi('round', q).then(function(d){
     PK.data=d;
@@ -8123,7 +8128,7 @@ function pkRank(){
   gmRoot().innerHTML=pkHeader()
     +'<div class="pk-tabs" role="group" aria-label="랭킹 기간"><button type="button" aria-pressed="'+(PK.board==='month')+'" onclick="PK.board=\'month\';pkRank()">이번 달 ('+(+mon.slice(5))+'월)</button><button type="button" aria-pressed="'+(PK.board==='season')+'" onclick="PK.board=\'season\';pkRank()">시즌</button></div>'
     +(PK.board==='month'?'<div class="pk-prev" id="pkPrev"></div>':'')
-    +'<div id="pkBoard"><div class="gm-empty">불러오는 중...</div></div>'
+    +'<div id="pkBoard">'+loadingHtml('랭킹 불러오는 중...','padding:32px 0')+'</div>'
     +'<p class="pk-help">맞히면 1점, 라운드 전 경기를 맞히면 +3점. 동점이면 적중률 → 먼저 저장한 순. 이번 달 순위는 경기 킥오프 날짜 기준이에요.</p>';
   pkMe();
   pkApi('board', 'm='+(PK.board==='month'?mon:'season')).then(function(d){
@@ -8144,10 +8149,10 @@ function gameList(){
   gameStopTimer();
   gmRoot().innerHTML =
     '<div class="gm-h">게임 목록</div>'
-    +'<button class="gm-card" onclick="gameIntro()"><span class="gm-card-ic">?</span>'
-    +'<span><div class="gm-card-t">Who Am I?</div><div class="gm-card-d">커리어 경로를 보고 어떤 아스날 선수인지 맞히기</div></span></button>'
     +'<button class="gm-card" onclick="pkOpen()"><span class="gm-card-ic" style="font-size:20px">VS</span>'
-    +'<span><div class="gm-card-t">승부예측</div><div class="gm-card-d">프리미어리그 이번 라운드 10경기 승·무·패 맞히기, 월간·시즌 랭킹</div></span></button>';
+    +'<span><div class="gm-card-t">승부예측</div><div class="gm-card-d">프리미어리그 이번 라운드 10경기 승·무·패 맞히기, 월간·시즌 랭킹</div></span></button>'
+    +'<button class="gm-card" onclick="gameIntro()"><span class="gm-card-ic">?</span>'
+    +'<span><div class="gm-card-t">Who Am I?</div><div class="gm-card-d">커리어 경로를 보고 어떤 아스날 선수인지 맞히기</div></span></button>';
 }
 function gameIntro(){
   gameStopTimer();
@@ -8163,19 +8168,31 @@ function gameIntro(){
     +'<li>처음엔 유명한 선수부터, 맞힐수록 어려운 선수가 나와요.</li>'
     +'</ul>'
     +(best?'<div class="gm-best">내 최고 기록 '+best+'점 (이 기기)</div>':'')
-    +'<button class="gm-btn" id="gmStart" onclick="gameStart()">시작하기</button>'
+    // 랭킹 등록은 승부예측 계정으로 한다 — 시작 전에 로그인을 권하되, 로그인 없이도 해볼 수는 있게 둔다.
+    +(PK.tok
+      ? '<div class="gm-best"><b style="color:var(--text)">'+gmEsc(PK.nick||'')+'</b> 계정으로 랭킹에 등록돼요</div>'
+        +'<button class="gm-btn" id="gmStart" onclick="gameStart()">시작하기</button>'
+      : '<button class="gm-btn" type="button" onclick="gameLoginStart()">로그인하고 시작</button>'
+        +'<div class="gm-best" style="margin-top:-4px;word-break:keep-all">승부예측과 같은 계정이에요 · 처음이면 가입부터</div>'
+    )
     +'<button class="gm-btn ghost" onclick="gameBoard()">랭킹 보기</button>'
+    +(PK.tok?'':'<button class="gm-guest" id="gmStart" onclick="gameStart()">로그인 없이 해보기 · 랭킹 등록 안 됨</button>')
     +'</div>';
 }
 
+function gameLoginStart(){
+  PK.after=function(){ gameIntro(); gameStart(); };
+  PK.afterLabel='Who Am I?'; PK.afterBack=gameIntro;   // 로그인 안 하고 돌아가면 바로 시작하지 않는다
+  pkAuth('join');
+}
 function gameStart(){
-  var b=document.getElementById('gmStart'); if(b){ b.disabled=true; b.textContent='불러오는 중...'; }
+  var b=document.getElementById('gmStart'), label=b&&b.textContent; if(b){ b.disabled=true; b.textContent='불러오는 중...'; }
   GAME.myRank=null;
   gmPost('start').then(function(d){
     GAME.token=d.token; GAME.busy=false;
     gameRenderQ(d.q, {score:d.score, lives:d.lives, n:d.n});
   }).catch(function(e){
-    if(b){ b.disabled=false; b.textContent='시작하기'; }
+    if(b){ b.disabled=false; b.textContent=label; }
     gameToast(e.message);
   });
 }
@@ -8282,7 +8299,7 @@ function gameOver(d){
     +'<button class="gm-btn ghost" onclick="gameBoard()">랭킹 보기</button>'
     +'</div>';
   var lg=document.getElementById('gmLogin');
-  if(lg) lg.onclick=function(){ PK.after=function(){ gameOver(GAME.last); }; pkAuth('login'); };
+  if(lg) lg.onclick=function(){ PK.after=function(){ gameOver(GAME.last); }; PK.afterLabel='결과로 돌아가기'; PK.afterBack=null; pkAuth('login'); };
   var btn=document.getElementById('gmSubmit');
   if(btn) btn.onclick=function(){
     btn.disabled=true;
@@ -8304,7 +8321,7 @@ function gameBoard(){
   gameStopTimer();
   gmRoot().innerHTML='<button class="gm-back" onclick="gameIntro()">← Who Am I?</button>'
     +'<div class="gm-panel"><div class="gm-hud" style="display:flex;justify-content:space-between"><div class="gm-score" style="color:var(--text)">랭킹</div><div class="gm-qno">역대 TOP 100</div></div>'
-    +'<div id="gmBoard"><div class="gm-empty">불러오는 중...</div></div>'
+    +'<div id="gmBoard">'+loadingHtml('랭킹 불러오는 중...','padding:32px 0')+'</div>'
     +'<button class="gm-btn" onclick="gameStart()" id="gmStart">게임 시작</button></div>';
   fetch(FN+'/game?a=board').then(function(r){ return r.json(); }).then(function(d){
     var el=document.getElementById('gmBoard'); if(!el) return;
