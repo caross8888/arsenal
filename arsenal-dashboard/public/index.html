@@ -1724,9 +1724,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hc-o.age b{color:#fff}
 .cr-hc-o.age{padding-right:12px;border-right:1px solid rgba(255,255,255,.2)}
 .cr-hc-st{display:grid;gap:5px}
-.cr-hc-st>div{display:grid;grid-template-columns:62px 1fr 26px;align-items:center;gap:8px;font-size:12px}
+.cr-hc-st>div{display:grid;grid-template-columns:62px 1fr 48px;align-items:center;gap:8px;font-size:12px}
 .cr-hc-st span{color:rgba(255,255,255,.85)}
-.cr-hc-st i{height:5px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden}
+.cr-hc-st i{height:6px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;position:relative}
+.cr-hc-st u{position:absolute;top:0;bottom:0;text-decoration:none}
+.cr-hc-st u.up{background:#4ADE80;border-radius:0 3px 3px 0;transform-origin:left center;min-width:6px;box-shadow:0 0 6px rgba(74,222,128,.8)}
+.cr-hc-st u.up.grow{animation:crBarGrow .7s .35s cubic-bezier(.2,.8,.2,1) both}
+.cr-hc-st u.dn{background:rgba(255,120,120,.55)}
+.cr-hc-st u.dn.fade{animation:crBarFade 1.2s .35s ease-out both}
+.cr-hc-st small{font-size:10px;font-weight:700;margin-left:4px}
+.cr-hc-st small.up{color:#4ADE80}.cr-hc-st small.dn{color:#FCA5A5}
+@keyframes crBarGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes crBarFade{from{opacity:1}to{opacity:.35}}
+@media (prefers-reduced-motion: reduce){.cr-hc-st u.up.grow,.cr-hc-st u.dn.fade{animation:none}}
 .cr-hc-st em{display:block;height:100%;background:#fff;border-radius:3px;transition:width .5s}
 .cr-hc-st b{text-align:right;font-variant-numeric:tabular-nums}
 .cr-stars{color:#E9C766;letter-spacing:1px}
@@ -8910,12 +8920,19 @@ function crShow(v){
 }
 function crHead(){
   var p=CR.v.player, st=CR.meta.stats[p.pos], card=CR.meta.cards[p.pos][p.card];
+  var dl=CR.v.phase==='result' && CR.v.result ? CR.v.result.row.deltas : null;
   return '<div class="cr-hc"><div class="cr-hc-top">'+crCrest(p.club,40)
    +'<div style="flex:1;min-width:0"><div class="cr-hc-n">'+gmEsc(p.name)+(p.num?' <span>#'+p.num+'</span>':'')+'</div>'
    +'<div class="cr-hc-s">'+gmEsc(p.club.team)+' · '+gmEsc(card.n)+'</div>'
    +'<div class="cr-hc-s">'+p.foot+(p.pos!=='DF'?' · 약발 '+crStars(p.wf):'')+(p.glass?' · 🩹 유리몸':'')+'</div></div>'
    +'<div class="cr-hc-o age"><b>'+p.age+'</b><span>AGE</span></div><div class="cr-hc-o"><b>'+p.ovr+'</b><span>OVR</span></div></div>'
-   +'<div class="cr-hc-st">'+st.map(function(n,i){ var v=p.st[i]; return '<div><span>'+n+'</span><i><em style="width:'+v+'%"></em></i><b>'+v+'</b></div>'; }).join('')+'</div></div>';
+   +'<div class="cr-hc-st">'+st.map(function(n,i){
+      // 시즌 결과 화면: 이번 시즌 오른 만큼은 초록(내린 만큼은 빨강) 구간으로, 막 끝난 시즌이면 차오르는 애니메이션
+      // 막대 눈금은 30~99(스탯이 그 사이라 0~100으로 그리면 +2 같은 변화가 안 보인다)
+      var v=p.st[i], d=dl?dl[i]:0, base=d>0?v-d:v, X=function(x){ return Math.max(0,Math.min(100,(x-30)/69*100)).toFixed(1); }, seg='';
+      if(d>0) seg='<u class="up'+(CR.fresh?' grow':'')+'" style="left:'+X(base)+'%;width:'+(X(v)-X(base)).toFixed(1)+'%"></u>';
+      if(d<0) seg='<u class="dn'+(CR.fresh?' fade':'')+'" style="left:'+X(v)+'%;width:'+(X(v-d)-X(v)).toFixed(1)+'%"></u>';
+      return '<div><span>'+n+'</span><i><em style="width:'+X(base)+'%"></em>'+seg+'</i><b>'+v+(d?'<small class="'+(d>0?'up':'dn')+'">'+(d>0?'+':'')+d+'</small>':'')+'</b></div>'; }).join('')+'</div></div>';
 }
 // 커리어 기록: 은퇴 카드와 같은 표(나이 알약 · 엠블럼 · 그 시즌 트로피 · 오버롤 색 배지), 최근 시즌이 위
 function crHist(){
@@ -9072,7 +9089,6 @@ function crResult(){
    +'<div class="cr-panel"><div class="cr-lbl"><b>'+r.age+'세 시즌 · '+gmEsc(r.team)+(r.loan?' (임대)':'')+'</b><span>'+lg+' '+r.rank+'위</span></div>'
    +'<div class="cr-rs">'+[[r.apps,'경기'],[r.starts,'선발'],[r.goals,'골'],p.pos==='DF'?[r.cs,'클린시트']:[r.ast,'도움'],[r.apps?r.rating.toFixed(2):'—','평점']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
    +'<div class="cr-dovr '+dCls+'"><span>오버롤</span><b>'+r.ovrBefore+' → <span id="crOvrTo">'+(CR.fresh?r.ovrBefore:r.ovr)+'</span></b><em>'+(r.dOvr>0?'+':'')+r.dOvr+'</em></div>'
-   +'<div class="cr-dst">'+st.map(function(n,i){ var dd=r.deltas[i]; return '<span class="'+(dd>0?'up':dd<0?'down':'')+'">'+n+' '+(dd>0?'+':'')+dd+'</span>'; }).join('')+'</div>'
    +(r.hon.length?'<div class="cr-badges'+(CR.fresh?' pop':'')+'">'+r.hon.map(function(h,i){ return crHonBadge(h).replace('<span class="','<span style="animation-delay:'+(0.3+i*0.12)+'s" class="'); }).join('')+'</div>':'')
    +(r.notes.length||R.forced?'<ul class="cr-notes">'+r.notes.map(function(t){ return '<li>'+gmEsc(t)+'</li>'; }).join('')
       +(R.forced?'<li>'+(p.age>=40?'40세 — 선수 생활을 마무리할 때가 됐어요.':gmEsc(p.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.')+'</li>':'')+'</ul>':'')

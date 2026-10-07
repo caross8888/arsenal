@@ -126,6 +126,37 @@ function newEvent(){
   }
 }
 
+// 1군 시즌 목표(사용자 지적: 선발 확률 구간만 보면 이적 제안이 명성 ±8이라 거의 늘 "로테이션"이었다).
+// 지금 상황(새 팀·임대·대표팀 문턱·전성기·하락기·지난 시즌 출전)에 맞는 후보를 모아, 같은 게 매 시즌 반복되지 않게 고른다.
+// 화면용 문구일 뿐 계산엔 쓰지 않는다.
+function seniorGoal(){
+  const p = pStart(C.club), o = cOvr(), last = C.hist[C.hist.length-1], ratio = last ? last.starts/Math.max(1,last.games) : 0;
+  // 지난 시즌이 임대였으면 임대 전 소속을 본다(임대 복귀는 "새 팀"이 아니다)
+  const prev = [...C.hist].reverse().find(r => !r.loan), firstSenior = !prev || prev.youth;
+  const back = last && last.loan, newClub = !firstSenior && prev.club !== C.club.n, bar = NAT_BAR[C.nation], cand = [];
+  if(firstSenior) cand.push('1군 무대에 적응하기');
+  if(back) cand.push('임대 복귀 후 자리 잡기');
+  const leagueWins = C.hist.filter(r => r.club===C.club.n && r.hon.some(h => /리그 우승/.test(h.n))).length;
+  if(C.age >= 34) cand.push('마지막 불꽃 태우기', '후배들에게 본보기가 되기');
+  else if(C.age >= 31) cand.push('베테랑으로 경쟁력 지키기', '노련함으로 주전 자리 지키기');
+  if(p < 0.3) cand.push(newClub ? '새 팀에서 출전 기회 잡기' : '1군에서 출전 기회 잡기', '훈련장에서 감독 눈도장 받기', '컵 대회에서 기회 살리기');
+  else if(p < 0.65){
+    if(newClub) cand.push('새 팀에 빨리 녹아들기');
+    cand.push(ratio < 0.45 ? '주전 경쟁에서 이기기' : C.age <= 23 ? '로테이션 멤버로 자리 잡기' : '더 많은 선발 기회 얻기');
+  } else {
+    if(newClub) cand.push('이적 첫 시즌부터 주전 꿰차기');
+    cand.push('팀의 핵심으로 활약하기', {FW:'두 자릿수 골 넣기', MF:'공격 포인트 두 자릿수 올리기', DF:'클린시트로 뒷문 지키기'}[C.pos]);
+    if(C.club.r >= 78 && !leagueWins) cand.push('리그 우승 이끌기');
+    if(o >= 88) cand.push(C.lastBallon ? '발롱도르 지키기' : '발롱도르 후보에 오르기');
+  }
+  if(!C.tot.caps && o >= bar-6 && o < bar+4) cand.push('대표팀 발탁 노리기');
+  // 대표팀 주축 목표는 가끔만(매번 끼면 둘이 번갈아 나온다)
+  if(C.tot.caps && o >= bar+3 && C.age % 3 === 0) cand.push(natInfo(C.nation).n+' 대표팀의 핵심 되기');
+  // 지난 시즌과 같은 목표는 피하고, 남은 것 중 시드·나이로 고른다(같은 시즌은 늘 같은 목표)
+  const pool = cand.filter(g => g !== C.lastGoal), list = pool.length ? pool : cand;
+  return list[hashStr(C.seed+'|goal|'+C.age) % list.length];
+}
+
 // 시즌 준비 화면에 보여 줄 것(숨김 값 없음)
 export function prepView(state){
   C = state;
@@ -137,7 +168,7 @@ export function prepView(state){
   let goal;
   if(C.age < 16) goal = '유스 무대에 적응하기';
   else if(C.age < 18) goal = cOvr() >= C.club.r-22 ? '1군 데뷔 노리기' : 'U-18 주전 자리 잡기';
-  else { const p = pStart(C.club); goal = p<0.3 ? '1군에서 출전 기회 잡기' : p<0.65 ? '로테이션 멤버로 자리 잡기' : '팀의 핵심으로 활약하기'; }
+  else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(AGE_BASE[Math.min(37, C.age)] > 0 ? ' (성장 ↑)' : ' (하락 완화)')];
   return {goal, youth: youth(), event:{id:ev.id, t:ev.t, d, a},
@@ -180,6 +211,7 @@ export function playSeason(state, choice){
     C.injPick = choice.injPick;
   }
   const rng = seasonRng(C.train+'|'+C.ev+'|'+C.evPick+'|'+C.club.n+'|inj'+(C.inj ? C.injPick : ''));
+  if(C.age >= 18) C.lastGoal = seniorGoal();
   const ev = C.ev, pick = C.evPick, card = CARDS[C.pos][C.card], notes = [];
   let club = C.club, onLoan = false, startAdj = 0, growMul = 1, declMul = 1;
   if(ev==='loan' && pick===0 && C.loanClub){ club = C.loanClub; onLoan = true; notes.push(C.loanClub.n+'로 1시즌 임대를 떠났어요.'); }
