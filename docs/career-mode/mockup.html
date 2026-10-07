@@ -195,6 +195,20 @@ input[type=text],input[type=number],select{font:inherit;font-size:16px;color:var
 .lg2 b{font-weight:400;color:var(--text-secondary)} .lg2 em{font-style:normal;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 .lg2 em.up{color:var(--green)} .lg2 em.down{color:var(--loss)}
 .crest-img{object-fit:contain;flex:none;display:block}
+.rk-list{display:flex;flex-direction:column;gap:6px}
+.rk-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto 34px 56px;gap:8px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:9px 10px;cursor:pointer}
+.rk-row.me{border-color:var(--gold);background:rgba(200,168,75,.12)}
+.rk-row.top1 .rk-n{color:#E9C766}.rk-row.top2 .rk-n{color:#C7CDD6}.rk-row.top3 .rk-n{color:#C98A4B}
+.rk-n{font-family:var(--fd);font-size:22px;text-align:center;color:var(--text-secondary)}
+.rk-main{min-width:0;display:flex;flex-direction:column}
+.rk-main b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk-main em{font-style:normal;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk-hon{display:flex;gap:2px}
+.rk-hon i{position:relative;display:block}
+.rk-hon small{position:absolute;right:-3px;bottom:-2px;font-size:9px;font-weight:700;background:var(--gold);color:#3a2a06;border-radius:999px;padding:0 3px;line-height:1.3}
+.rk-ovr{font-family:var(--fd);font-size:17px;text-align:center;border-radius:6px;background:#D9B24C;color:#3a2a06;padding:1px 0}
+.rk-ovr.e{background:linear-gradient(160deg,#C9E6FF,#7DB7F2);color:#0b2440}
+.rk-sc{font-family:var(--fd);font-size:19px;text-align:right;color:var(--gold)}
 .hidden{display:none!important}
 .done{text-align:center}
 .done .big{font-family:var(--fd);font-size:40px;color:var(--gold)}
@@ -300,7 +314,7 @@ function render(){ [null,page1,page2,page3,page4][S.step](); }
 function page1(){
   var allClubs=[]; NATIONS.forEach(function(n){ (CLUBS[n.id]||[]).forEach(function(c){ allClubs.push([n.n,c[0],c[1]]); }); });
   document.getElementById('app').innerHTML=topHtml(false)
-   +'<h1>CAREER <span>MODE</span></h1><p class="sub">1 / 3 · 선수 만들기</p>'
+   +'<h1>CAREER <span>MODE</span></h1><p class="sub">1 / 3 · 선수 만들기 · <a href="#" onclick="showBoard();return false" style="color:var(--gold)">랭킹 보기</a></p>'
    +'<div class="mock">목업이에요. 선택·계산은 화면 확인용이고 저장되지 않아요.</div>'
    +'<div class="panel"><div class="age"><b>15</b>세에 시작해요 · 유스팀부터 은퇴까지</div>'
    +'<div class="lbl"><b>이름</b><span>최대 12자</span></div>'
@@ -953,13 +967,13 @@ function marketValue(ovr,age){
   return 2.2*Math.exp((ovr-60)/7.5)*af;
 }
 function fmtVal(v){ return v>=100?'€'+Math.round(v)+'M':v>=1?'€'+v.toFixed(v>=10?0:1)+'M':'€'+Math.round(v*1000)+'K'; }
-function pRetired(){
+function pRetired(viewOnly){
   var t=C.tot, last=C.hist[C.hist.length-1], lastClub=ALL.filter(function(c){return c.n===last.club;})[0]||C.club;
   var grade=C.peak>=90?'월드 클래스':C.peak>=84?'스타':C.peak>=76?'주전급':C.peak>=68?'프로':'저니맨';
   var peakVal=0; C.hist.forEach(function(r){ peakVal=Math.max(peakVal,marketValue(r.ovr,r.age)); });
   var posKo={FW:'FW',MF:'MF',DF:'DF'}[C.pos];
   // 머리: 오버롤 타일 + 국적·포지션·번호 + 마지막 구단 + 은퇴 나이·최고 가치
-  var h='<div class="rc-head">'
+  var h=(viewOnly?'<div class="top"><button class="back" onclick="boardBack()">← 랭킹</button><div class="season-no">'+esc(C._nick||'')+'</div></div>':'')+'<div class="rc-head">'
    +'<div class="rc-ovr'+(C.peak>=90?' elite':'')+'"><span>최고 OVR</span><b>'+C.peak+'</b></div>'
    +'<div class="rc-id"><div class="rc-chips"><span class="rc-chip">'+natInfo(C.nation).f+' '+natInfo(C.nation).n+'</span><span class="rc-chip gold">'+(C.num?'#'+C.num+' ':'')+posKo+'</span>'
    +(C.oneClub?'<span class="rc-chip" style="color:var(--gold)">🛡 원클럽맨</span>':'')
@@ -1005,7 +1019,72 @@ function pRetired(){
   if(!order.length) h+='<div class="note" style="text-align:center">트로피 없이 끝난 커리어예요.</div>';
   h+='</div>';
   document.getElementById('app').innerHTML=h;
-  document.getElementById('dock').innerHTML='<button class="btn ghost2" onclick="C=null;S={step:1,name:\'\',nation:null,foot:null,pos:null,num:null,dream:null,card:null,add:[0,0,0,0,0],club:null};go(1)">새 커리어</button><button class="btn" onclick="alert(\'목업이라 실제 등록은 안 돼요\')">랭킹 등록</button>';
+  if(viewOnly){ document.getElementById('dock').innerHTML='<button class="btn" onclick="boardBack()">랭킹으로 돌아가기</button>'; return; }
+  document.getElementById('dock').innerHTML='<button class="btn ghost2" onclick="C=null;S={step:1,name:\'\',nation:null,foot:null,pos:null,num:null,dream:null,card:null,add:[0,0,0,0,0],club:null};go(1)">새 커리어</button>'
+    +(C._registered?'<button class="btn" onclick="showBoard()">랭킹 보기</button>':'<button class="btn" onclick="registerCareer()">랭킹 등록</button>');
+}
+
+
+// ── 랭킹(목업: 가상 커리어 150개를 자동으로 돌려 채운다) ─────────────────
+var BOARD=null, MY=null, CUR=null;
+var NICKS=['구너19','하이버리키드','앙리의후예','북런던빨강','엠레이츠석','캐넌볼','아르테타볼','인빈시블04','사카사랑','외데고르팬','라이스라인','가브리엘마갈','토마스파티','빨간대포','클락엔드','COYG','레드앤화이트','아스날짱','플랫벽','노스뱅크'];
+function snapshot(c){ var o=JSON.parse(JSON.stringify(c)); return o; }
+function buildBoard(){
+  if(BOARD) return BOARD;
+  var keep=C, keepS=S, auto=window.__AUTOINJ, list=[];
+  window.__AUTOINJ=-1;
+  var nats=NATIONS.map(function(n){return n.id;}), poses=['FW','MF','DF'];
+  for(var t=0;t<150;t++){
+    var nat=nats[t%nats.length], pos=poses[t%3], nm=NAMES[nat], r=mulberry(t*7919+13);
+    var name=nat==='KOR'?nm[1][t%6]+nm[0][(t*5)%6]:nm[0][t%6]+' '+nm[1][(t*7)%6];
+    S={step:3,name:name,nation:nat,foot:t%4?'오른발':'왼발',pos:pos,num:[7,9,10,11,8,4,5,3,2,6][t%10],dream:null,card:(t*3)%CARDS[pos].length,add:[0,0,0,0,0],club:t%3};
+    autoPts(); S._offers=null; offers(); S.club=t%3; C=null; careerStart(); C.seed=(t*2654435761)>>>0;
+    while(C.phase!=='retired'){ C.evPick=r()<0.5?0:1; playSeason();
+      if(C.age>=40||(C.released&&!C.offers.length)){ retire(); break; }
+      if(C.age>=33&&!C.released&&r()<0.3){ retire(); break; }
+      C.pick=C.released?0:(r()<0.4&&C.offers.length?Math.floor(r()*C.offers.length):null); nextSeason(); }
+    var snap=snapshot(C); snap._nick=NICKS[t%NICKS.length]+(t>=NICKS.length?String(t):''); list.push(snap);
+  }
+  window.__AUTOINJ=auto; C=keep; S=keepS;
+  BOARD=list; return list;
+}
+function scoreOf(c){ var k=C; C=c; var v=careerScore(); C=k; return v; }
+function registerCareer(){
+  C._registered=true; C._nick='강예슬 (나)';
+  MY=snapshot(C); showBoard(true);
+}
+// 대표 업적: 발롱도르·월드컵·챔스·리그 우승 중 있는 것 상위 3개를 ×횟수로
+function topHonors(c){
+  var keys=[['발롱도르',/^발롱도르$/],['월드컵 우승',/월드컵 우승/],['챔피언스리그 우승',/챔피언스리그 우승/],['리그 우승',/리그 우승$/],['득점왕',/득점왕/]];
+  var out=[]; keys.forEach(function(k){ var n=c.honors.filter(function(h){return k[1].test(h.n);}).length; if(n) out.push([k[0],n]); });
+  return out.slice(0,3);
+}
+function showBoard(scrollMe){
+  var keepC=C; CUR=keepC;
+  var list=buildBoard().slice(); if(MY) list.push(MY);
+  var rows=list.map(function(c){ return {c:c, sc:scoreOf(c)}; }).sort(function(a,b){ return b.sc-a.sc; }).slice(0,100);
+  window.__ROWS=rows;
+  var h='<div class="top"><button class="back" onclick="boardBack()">← 돌아가기</button><div class="season-no">역대 TOP 100</div></div>'
+   +'<h1>CAREER <span>RANKING</span></h1><p class="sub">계정당 최고 커리어 하나 · 커리어 점수 순</p>'
+   +'<div class="mock">목업이에요. 순위는 자동으로 돌린 가상 커리어 150개로 채웠어요.</div>'
+   +'<div class="rk-list">'+rows.map(function(r,i){
+      var c=r.c, me=c===MY, nat=natInfo(c.nation), hon=topHonors(c);
+      return '<button class="rk-row'+(me?' me':'')+(i<3?' top'+(i+1):'')+'" id="'+(me?'rkMe':'')+'" onclick="openBoardCard('+i+')">'
+       +'<span class="rk-n">'+(i+1)+'</span>'
+       +'<span class="rk-main"><b>'+nat.f+' '+esc(c.name)+'</b><em>'+esc(c._nick)+' · '+CARDS[c.pos][c.card].n+'</em></span>'
+       +'<span class="rk-hon">'+hon.map(function(x){ return '<i>'+trophySvg(x[0],18)+(x[1]>1?'<small>'+x[1]+'</small>':'')+'</i>'; }).join('')+'</span>'
+       +'<span class="rk-ovr'+(c.peak>=90?' e':'')+'">'+c.peak+'</span>'
+       +'<span class="rk-sc">'+r.sc.toLocaleString()+'</span></button>'; }).join('')+'</div>';
+  if(MY && !rows.some(function(r){return r.c===MY;})) h+='<div class="note" style="text-align:center">내 커리어는 TOP 100 밖이에요.</div>';
+  document.getElementById('app').innerHTML=h;
+  document.getElementById('dock').innerHTML='<button class="btn" onclick="boardBack()">'+(CUR&&CUR.phase==='retired'?'은퇴 카드로':'처음으로')+'</button>';
+  C=keepC;
+  if(scrollMe){ var el=document.getElementById('rkMe'); if(el) setTimeout(function(){ el.scrollIntoView({block:'center'}); },50); } else window.scrollTo(0,0);
+}
+function openBoardCard(i){ var c=window.__ROWS[i].c; C=c; pRetired(true); window.scrollTo(0,0); }
+function boardBack(){
+  if(document.querySelector('.rk-list')){ C=CUR; if(C&&C.phase==='retired') pRetired(); else { C=null; go(1); } window.scrollTo(0,0); return; }
+  showBoard();
 }
 
 // 목업 확인용: 이벤트는 첫 번째 선택, 잔류로 n시즌 자동 진행
