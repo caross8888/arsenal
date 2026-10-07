@@ -31,7 +31,9 @@ const BALLON_PTS = [[/챔피언스리그 우승/,25],[/월드컵 우승/,25],[/(
 // 포지션별 기여 점수 — 미드필더·수비수는 골·도움 가중치를 높이고 수비수는 클린시트를 더한다
 // 경기당 골·도움 기본 비율. 공격수는 시작 오버롤을 54로 통일하면서(예전 카드 평균 54.8) 줄어든 골·도움을 되돌린 값(0.42·0.18에서)
 const NEW_SIGNING = [0.08, -0.04];   // 선발 확률: [이적 첫 시즌 +, 같은 팀 2시즌째부터 −] — 평균이 0 근처가 되게(전체 성장이 빨라지지 않게)
-const AW_PRESTIGE = [0.2, 97];   // 수상용 평점의 구단 수준 보정: [15 차이마다 ±, 기준 명성(1군 시즌 평균 구단 명성 근처)]
+const AW_PRESTIGE = [0.2, 105];   // 수상용 평점의 구단 수준 보정: [15 차이마다 ±, 기준 명성(1군 시즌 평균 구단 명성 근처)]
+// 이벤트 성장 효과(선택 차이를 키움 — 사용자 지정). 성장 쪽을 고르면 부상 위험도 같이 커진다.
+const EV_GROW = {coach:1.15, coachInj:0.05, extra:1.15, extraInj:0.07, talk:1.1};
 const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련)
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 const G_RATE = {FW:0.446, MF:0.13, DF:0.035}, A_RATE = {FW:0.19, MF:0.17, DF:0.06};
@@ -48,9 +50,9 @@ const CARD_CONTRIB = {FW:[1.25,0.97,0.94,0.96,1.08], MF:[1.15,0.8,0.92,0.91,1.34
 const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[0.85,1.15]};
 // 발전 운: 커리어마다 하나, 성장에 곱한다(같은 재능이라도 선수마다 다르게 — 사용자 지적: "재능이 결과를 다 정한다")
 const DEV = [0.8, 1.2];
-const K_GROW = 0.48, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.6, 1.33, 1.1, 0.88, 0.7], LEAGUE_T = 3.5;
+const K_GROW = 0.47, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:127, sd:14, pos:{FW:1.03, MF:0.93, DF:0.82}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
+const BALLON = {mu:131, sd:14, pos:{FW:1.03, MF:0.93, DF:0.82}, top:4, inc:10};   // 포지션 배율: 시작 오버롤 54 통일 뒤 세대급 발롱 평균(공격 약 2.6 · 미드 0.35 · 수비 0.05)이 예전대로 나오게 다시 맞춘 값(처음 1 · 0.85 · 0.75)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
 
@@ -206,8 +208,8 @@ export function prepView(state){
 // ── 부상 ──────────────────────────────────────────────────────────────
 function injRiskOf(){
   const k = C.evPick; let r = INJ[0];
-  if(C.ev==='coach') r += k===0 ? 0.03 : -0.03;
-  if(C.ev==='extra') r += k===0 ? 0.05 : -0.05;
+  if(C.ev==='coach') r += k===0 ? EV_GROW.coachInj : -0.03;
+  if(C.ev==='extra') r += k===0 ? EV_GROW.extraInj : -0.05;
   if(C.ev==='tour') r += k===0 ? 0.07 : -0.05;
   r -= C.injNext || 0;                                  // 지난 부상 때 완전히 회복했으면 −3%p
   if(C.injBoost && C.injBoost.n > 0) r += 0.08;         // 큰 부상을 보존 치료했으면 2시즌 +8%p
@@ -245,9 +247,9 @@ export function playSeason(state, choice){
   if(ev==='loan' && pick===0 && C.loanClub){ club = C.loanClub; onLoan = true; growMul *= LOAN_GO; notes.push(C.loanClub.n+'로 1시즌 임대를 떠났어요.'); }
   // 남아서 경쟁: 1군 선수들과 훈련하는 효과(성장 ↑)와 감독의 관심(출전 ↑ 조금). 예전엔 효과가 없어 "임대 간다"가 늘 정답이었다(전략 검사).
   if(ev==='loan' && pick===1){ growMul *= LOAN_STAY[0]; startAdj += LOAN_STAY[1]; notes.push('남아서 1군 선수들과 부딪히며 훈련했어요.'); }
-  if(ev==='talk'){ if(pick===0){ if(rng()<0.75){ startAdj+=0.12; notes.push('면담 후 출전 시간이 늘었어요.'); } else { startAdj-=0.1; notes.push('감독이 불쾌해해서 한동안 벤치였어요.'); } } else if(AGE_BASE[Math.min(37, C.age)] > 0) growMul*=1.05; else { declMul*=0.8; notes.push('묵묵히 훈련한 덕분에 하락 폭이 줄었어요.'); } }   // 하락기(29세+)엔 성장 대신 하락 완화
-  if(ev==='coach' && pick===0){ growMul*=1.08; notes.push('개인 트레이너와 훈련한 효과가 있었어요.'); }
-  if(ev==='extra' && pick===0) growMul*=1.08;
+  if(ev==='talk'){ if(pick===0){ if(rng()<0.75){ startAdj+=0.12; notes.push('면담 후 출전 시간이 늘었어요.'); } else { startAdj-=0.1; notes.push('감독이 불쾌해해서 한동안 벤치였어요.'); } } else if(AGE_BASE[Math.min(37, C.age)] > 0) growMul*=EV_GROW.talk; else { declMul*=0.8; notes.push('묵묵히 훈련한 덕분에 하락 폭이 줄었어요.'); } }   // 하락기(29세+)엔 성장 대신 하락 완화
+  if(ev==='coach' && pick===0){ growMul*=EV_GROW.coach; notes.push('개인 트레이너와 훈련한 효과가 있었어요.'); }
+  if(ev==='extra' && pick===0) growMul*=EV_GROW.extra;
   if(ev==='weak'){
     if(pick===0){ growMul*=0.92; if(rng()<0.75){ C.wf++; notes.push('약발 훈련 성과! 약발이 '+'★'.repeat(C.wf)+'☆'.repeat(5-C.wf)+'이 됐어요.'); } else notes.push('약발 훈련을 했지만 아직 몸에 익지 않았어요.'); }
     else growMul*=1.03;
@@ -350,7 +352,7 @@ export function playSeason(state, choice){
       // 리그 개인상은 "수상용 평점"으로 뽑는다: 평점 + 구단 수준 보정. 평점에는 약팀 에이스가 높게 나오는 항목이 있어서,
       // 그대로 쓰면 약한 팀에 남는 게 개인상을 쓸어 가 "항상 잔류"가 정답이었다(전략 검사). 실제처럼 큰 팀일수록 유리하게.
       const awR = rating + AW_PRESTIGE[0]*(club.r-AW_PRESTIGE[1])/15;
-      const gT = {ENG:24,ESP:24,GER:22,ITA:22,FRA:22}[club.nat]||20, aT = gT>=22 ? 13 : 11;
+      const gT = {ENG:26,ESP:26,GER:24,ITA:24,FRA:24}[club.nat]||22, aT = gT>=24 ? 14 : 12;
       const gk = goals>=gT && rng()<Math.min(0.95,0.4+(goals-gT)*0.1), ak = ast>=aT && rng()<Math.min(0.95,0.4+(ast-aT)*0.12);
       if(gk) add(natN+' 리그 득점왕','B'); if(ak) add(natN+' 리그 도움왕','B');
       if(awR>=7.8 && rank<=3 && rng()<(gk?0.5:0.3)) add(natN+' 리그 올해의 선수','A');
@@ -358,7 +360,7 @@ export function playSeason(state, choice){
       if(awR>=7.6 ? rng()<0.7 : awR>=7.4 && rng()<0.3) add(natN+' 리그 베스트 11','B');
       let motm = 0; for(let mi=0; mi<3; mi++) if(rng()<Math.max(0,awR-7.0)*0.25) motm++;
       if(motm) add('이달의 선수'+(motm>1?' ×'+motm:''),'C');
-      if(rating>=7.5 && apps>=25 && rng()<0.4) add('구단 올해의 선수','C');
+      if(rating>=7.6 && apps>=25 && rng()<0.4) add('구단 올해의 선수','C');
       if(C.pos!=='FW' && awR>=7.3 && rng()<0.6) add(natN+' 리그 올해의 '+(C.pos==='MF'?'미드필더':'수비수'),'B');
       if(goals>=30 && rng()<0.6) add('유러피언 골든슈','B');
     }
@@ -367,7 +369,7 @@ export function playSeason(state, choice){
       if(uclWin && rating>=7.5 && rng()<0.5) add('챔스 올해의 선수','A');
       if(rating>=7.6 && rng()<0.2) add('챔스 올해의 '+{FW:'공격수',MF:'미드필더',DF:'수비수'}[C.pos],'B');
     }
-    if(ov>=91 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
+    if(ov>=92 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
     if(C.age<=21 && ov>=80 && rating>=7.1 && rng()<0.5) add('골든보이','B');
     if(rng()<(C.pos==='FW'?0.008:0.004)) add('올해의 골','C');
   } else if(rng()<0.25) add('유스 리그 우승','-','team');
@@ -378,7 +380,7 @@ export function playSeason(state, choice){
   if(C.age>=18 && ov>=NAT_BAR[C.nation]-2){
     caps = Math.round(4+rng()*6); cg = C.pos==='FW' ? Math.round(caps*0.3*rng()) : 0;
     notes.push(natInfo(C.nation).n+' 대표팀에 뽑혔어요.');
-    if(ov>=NAT_BAR[C.nation]+6 && rating>=7.0 && rng()<0.35) add(natInfo(C.nation).n+' 올해의 선수','C','nat');
+    if(ov>=NAT_BAR[C.nation]+7 && rating>=7.0 && rng()<0.35) add(natInfo(C.nation).n+' 올해의 선수','C','nat');
     const wc = year%4===2, cont = year%4===0;
     if(wc || cont){
       const cup = wc ? '월드컵' : CONT_CUP[C.nation], str = Math.min(0.4, NAT_STR[C.nation]*0.55*(wc?1:CONT_MUL[C.nation]));
