@@ -104,7 +104,7 @@ export const EVENTS = [
   {id:'talk', t:'감독 면담', d:'출전 시간이 부족하다고 느껴요. 어떻게 할까요?', a:['출전 시간을 요구한다','훈련으로 증명한다'], ok:() => !youth()},
   {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑ · 부상 위험 ↑)','지금은 괜찮다 (부상 위험 ↓)'], ok:() => C.age<=27},   // 28세부터는 성장 폭이 거의 없어 어색하다(사용자 지적)
   {id:'tour', t:'프리시즌 투어', d:'감독이 투어 전 경기 출전을 원해요. 컨디션이 걱정돼요.', a:['모두 뛴다 (눈도장)','컨디션 관리'], ok:() => !youth()},
-  {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 넘치게 (잘하면 명성 ↑↑ · 못하면 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:() => C.age>=17},
+  {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 있게 (명성 ↑↑ 또는 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:() => C.age>=17},
   {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:() => C.age>=17 && C.age<=22 && C.last && C.last.starts/Math.max(1,C.last.games) < 0.35},
   {id:'weak', t:'약발 훈련', d:'', a:['약발 집중 훈련','주발 강점 살리기'], ok:() => false},   // newEvent가 가끔 따로 띄운다
   {id:'extra', t:'유스 특별 훈련', d:'유스 코치가 방과 후 특별 훈련을 제안했어요.', a:['참가한다 (성장 ↑ · 부상 위험 ↑)','쉬면서 회복 (부상 위험 ↓)'], ok:() => youth()}];
@@ -131,6 +131,8 @@ export function prepView(state){
   C = state;
   const ev = evById(C.ev);
   let d = ev.d;
+  if(ev.id === 'media' && (C.mediaN || C.age > 20)) d =   // "첫 인터뷰"는 어릴 때 처음 한 번만
+    ['기자들이 이번 시즌 각오를 묻고 있어요.','스포츠 매체에서 단독 인터뷰를 요청했어요.','개막 전 기자회견에 나서게 됐어요.','팬 채널에서 인터뷰를 하고 싶대요.'][C.age % 4];
   if(ev.id === 'weak') d = '코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. 양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요. 대신 이번 시즌 다른 훈련 시간이 줄어요.';
   let goal;
   if(C.age < 16) goal = '유스 무대에 적응하기';
@@ -189,7 +191,7 @@ export function playSeason(state, choice){
     else growMul*=1.03;
   }
   if(ev==='tour' && pick===0) startAdj+=0.06;
-  if(ev==='media' && pick===1) startAdj+=0.03;   // 겸손: 감독 신뢰. 자신감은 시즌 평점을 보고 아래에서 정산
+  if(ev==='media'){ C.mediaN = (C.mediaN||0) + 1; if(pick===1) startAdj+=0.03; }   // 겸손: 감독 신뢰. 자신감은 시즌 평점을 보고 아래에서 정산
 
   const row0Youth = youth() && !onLoan, games = row0Youth ? 26 : 42;
   const p = pStart(club, startAdj);

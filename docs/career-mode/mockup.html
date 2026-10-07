@@ -480,7 +480,7 @@ var EVENTS=[
   {id:'talk', t:'감독 면담', d:'출전 시간이 부족하다고 느껴요. 어떻게 할까요?', a:['출전 시간을 요구한다','훈련으로 증명한다'], ok:function(){ return !youth(); }},
   {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑ · 부상 위험 ↑)','지금은 괜찮다 (부상 위험 ↓)'], ok:function(){ return C.age<=27; }},
   {id:'tour', t:'프리시즌 투어', d:'감독이 투어 전 경기 출전을 원해요. 컨디션이 걱정돼요.', a:['모두 뛴다 (눈도장)','컨디션 관리'], ok:function(){ return !youth(); }},
-  {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 넘치게 (잘하면 명성 ↑↑ · 못하면 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:function(){ return C.age>=17; }},
+  {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 있게 (명성 ↑↑ 또는 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:function(){ return C.age>=17; }},
   {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:function(){ return C.age>=17&&C.age<=22&&C.last&&C.last.starts/Math.max(1,C.last.games)<0.35; }},
   {id:'weak', t:'약발 훈련', d:'', a:['약발 집중 훈련','주발 강점 살리기'], ok:function(){ return false; }},   // newEvent가 가끔 따로 띄운다
   {id:'extra', t:'유스 특별 훈련', d:'유스 코치가 방과 후 특별 훈련을 제안했어요.', a:['참가한다 (성장 ↑ · 부상 위험 ↑)','쉬면서 회복 (부상 위험 ↓)'], ok:function(){ return youth(); }}];
