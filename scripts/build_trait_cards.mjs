@@ -2,26 +2,13 @@
 //   node scripts/build_trait_cards.mjs
 // → arsenal-dashboard/public/img/traits/{id}.svg + docs/career-mode/traits.html(미리보기 시트)
 // 아이콘은 100×100 좌표에 흰 선으로 직접 그린 것. 카드엔 아이콘과 이름만 넣는다 — 효과·조건은 수치가 바뀌니 UI가 HTML로 얹는다.
-// 포지션 특성 이름은 api/_career_data.js의 TRAITS에서 읽는다.
+// 이름은 api/_career_data.js의 CTRAITS(공통)·TRAITS(포지션)에서 읽는다.
 
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { TRAITS } from '../arsenal-dashboard/api/_career_data.js';
+import { TRAITS, CTRAITS } from '../arsenal-dashboard/api/_career_data.js';
 
 const OUT = new URL('../arsenal-dashboard/public/img/traits/', import.meta.url);
 const SHEET = new URL('../docs/career-mode/traits.html', import.meta.url);
-
-// 공통 특성(17세 확정 지급 후보) — 아직 _career_data.js에 없으니 여기 둔다.
-const COMMON = [
-  {id:'agile',   n:'날쌘 몸놀림',   d:'스피드 성장 ↑',          m:'FW 스피드 · MF 볼키핑 · DF 스피드'},
-  {id:'vision',  n:'넓은 시야',     d:'패스 계열 성장 ↑',       m:'FW 패스 · MF 시야 · DF 빌드업'},
-  {id:'calm',    n:'침착함',        d:'결정적 순간에 흔들림 없음', m:'FW 결정력 · MF 패스 · DF 대인마크'},
-  {id:'iq',      n:'축구 지능',     d:'위치 선정 성장 ↑',       m:'FW 오프더볼 · MF 시야 · DF 대인마크'},
-  {id:'strong',  n:'강인한 몸',     d:'몸싸움 성장 ↑',          m:'FW 드리블 · MF 볼키핑 · DF 공중볼'},
-  {id:'jump',    n:'타고난 점프력', d:'공중전 성장 ↑',          m:'FW 결정력 · MF 태클 · DF 공중볼'},
-  {id:'grit',    n:'투지',          d:'경합·압박 성장 ↑',       m:'FW 오프더볼 · MF 태클 · DF 태클'},
-  {id:'touch',   n:'부드러운 터치', d:'볼 다루는 능력 성장 ↑',  m:'FW 드리블 · MF 패스 · DF 빌드업'},
-  {id:'engine',  n:'왕성한 활동량', d:'뛰는 양 성장 ↑',         m:'FW 스피드 · MF 체력 · DF 스피드'},
-  {id:'stamina', n:'타고난 체력',   d:'부상 빈도 ↓',            m:'부상 시스템 개편 후 확정'}];
 
 // ── 아이콘 ──────────────────────────────────────────────────────
 const arrow = (x1, y1, x2, y2, h = 13) => {
@@ -89,7 +76,7 @@ const FONT = `Pretendard, 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic'
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const fit = (len, max, room) => Math.min(max, Math.floor(room / Math.max(1, len)));
 
-function card({id, tag, n, d, sub}){
+function card({id, tag, n}){
   const a = ACC[tag], nameSize = fit(n.length, 32, 264);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
 <defs>
@@ -109,8 +96,8 @@ function card({id, tag, n, d, sub}){
 }
 
 const cards = [
-  ...COMMON.map(t => ({id:t.id, tag:'공통', n:t.n, d:t.d, sub:t.m})),
-  ...TRAITS.map(t => ({id:t.id, tag:t.pos, n:t.n, d:t.d, sub:`조건 ${t.stat} ${t.min}+`}))];
+  ...CTRAITS.map(t => ({id:t.id, tag:'공통', n:t.n})),
+  ...TRAITS.map(t => ({id:t.id, tag:t.pos, n:t.n}))];
 
 mkdirSync(OUT, {recursive:true});
 for(const c of cards){
@@ -126,7 +113,7 @@ h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:28px 0 12px;color:rgba
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
 figure{margin:0}img{width:100%;display:block}figcaption{font-size:11px;color:rgba(255,255,255,.5);text-align:center;margin-top:4px}</style></head><body>
 <h1>커리어 모드 특성 카드</h1>
-${group('공통 특성 (17세 확정 지급 후보)', cards.filter(c => c.tag==='공통'))}
+${group('공통 특성 (17세 시즌 끝, 3개 중 하나)', cards.filter(c => c.tag==='공통'))}
 ${['FW','MF','DF'].map(p => group(p + ' 특성', cards.filter(c => c.tag===p))).join('')}
 </body></html>
 `);

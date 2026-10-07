@@ -8,9 +8,9 @@
 // 난수는 커리어 시드 + (나이·선택)으로 정해져서, 같은 시즌에 같은 선택을 하면 결과가 같다.
 // 함수들은 모듈 변수 C에 상태를 걸어 두고 계산한다(요청 하나 안에서만 쓰므로 안전).
 
-import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS } from './_career_data.js';
+import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS } from './_career_data.js';
 
-export { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS };
+export { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS };
 
 // ── 상수 ──────────────────────────────────────────────────────────────
 export const BASE = 40, POOL = 50, MAXADD = 20, YOUTH_GAP = 30;
@@ -36,7 +36,10 @@ const AW_PRESTIGE = [0.2, 105];   // 수상용 평점의 구단 수준 보정: [
 const EV_GROW = {coach:1.15, coachInj:0.05, coachStart:0.10, extra:1.15, extraInj:0.07, talk:1.1};
 // 특성: 18세부터 시즌 끝에 조건 스탯을 넘은 특성이 있으면 이 확률로 제안(최대 3개 제시, 하나 고름), 선수당 최대 TRAIT_MAX개
 const TRAIT_P = 0.3, TRAIT_MAX = 3;
-const TRAIT_BY_ID = new Map(TRAITS.map(t => [t.id, t]));
+const TRAIT_BY_ID = new Map([...TRAITS, ...CTRAITS.map(t => ({...t, pos:'공통'}))].map(t => [t.id, t]));
+// 공통 특성: 17세 시즌 끝에 3개 제시(반드시 하나). 성장하는 시즌마다 대상 스탯 +CT_SHIFT, 나머지 넷이 그만큼 나눠 뺀다(합 0 — 오버롤 불변).
+const CT_AGE = 17, CT_SHIFT = 0.8, CT_CAP = 18;
+const commonOf = () => (C.traits||[]).map(id => TRAIT_BY_ID.get(id)).find(t => t && t.pos==='공통');
 // 가진 특성의 효과를 곱/합으로 모은다
 function traitMods(){
   const m = {g:1, a:1, cs:1, r:0, st:0, inj:0, goty:1};
@@ -343,6 +346,8 @@ export function playSeason(state, choice){
     C.off = C.off.map((o2,i) => o2 + base*declMul*((DECLINE[st[i]]||1)-1));
   }
   // 훈련 방향: 강점·약점 모두 "더한 만큼 다른 쪽에서 뺀다"(합 0). 예전엔 둘 다 스탯 합이 늘어 "균형"이 늘 손해였다(전략 검사).
+  const ct = base > 0 && commonOf(), ci = ct ? st.indexOf(ct.s[C.pos]) : -1;
+  if(ci >= 0 && C.off[ci] < CT_CAP) C.off = C.off.map((o2,i) => o2 + (i===ci ? CT_SHIFT : -CT_SHIFT/4));
   if(C.train==='강점 강화') C.off = C.off.map((o2,i) => Math.min(15, o2+(w[i]>=1.2?0.5:w[i]<=0.9?-0.7:0)));
   if(C.train==='약점 보완') C.off = C.off.map((o2,i) => Math.max(-25, o2+(w[i]>=1.2?-0.5:w[i]<=0.9?1:0)));
   syncSt();
@@ -459,7 +464,15 @@ export function playSeason(state, choice){
 // ── 특성 제안 ──────────────────────────────────────────────────────────
 // 조건 스탯을 넘었고 아직 없는 특성 중, 카드에 어울리는 것(가중치 ×3)을 우선해 최대 3개
 function rollTraits(){
-  if(C.age < 18 || (C.traits||[]).length >= TRAIT_MAX) return null;
+  if(C.age === CT_AGE && !commonOf()){
+    // 대상 스탯이 서로 다른 3개(같은 스탯을 키우는 둘이 나란히 나오면 고르는 의미가 없다)
+    const r = mulberry(C.seed ^ hashStr('ctrait')), pool = CTRAITS.filter(t => !t.off), out = [];
+    while(out.length < 3 && pool.length){ const t = pool.splice(Math.floor(r()*pool.length), 1)[0];
+      if(out.every(id => TRAIT_BY_ID.get(id).s[C.pos] !== t.s[C.pos])) out.push(t.id); }
+    return out;
+  }
+  const own = (C.traits||[]).filter(id => (TRAIT_BY_ID.get(id)||{}).pos !== '공통');
+  if(C.age < 18 || own.length >= TRAIT_MAX) return null;
   const r = mulberry(C.seed ^ hashStr('trait|'+C.age));
   const st = STATS[C.pos], card = CARDS[C.pos][C.card].n, have = new Set(C.traits||[]);
   const pool = TRAITS.filter(t => t.pos===C.pos && !have.has(t.id) && Math.round(C.st[st.indexOf(t.stat)]) >= t.min);
@@ -472,7 +485,8 @@ function rollTraits(){
   }
   return out;
 }
-export const traitView = id => { const t = TRAIT_BY_ID.get(id); return t ? {id:t.id, n:t.n, d:t.d, stat:t.stat, min:t.min} : null; };
+export const traitView = (id, pos) => { const t = TRAIT_BY_ID.get(id); if(!t) return null;
+  return t.pos==='공통' ? {id:t.id, n:t.n, d:t.s[pos]+' 성장 ↑', common:true} : {id:t.id, n:t.n, d:t.d, stat:t.stat, min:t.min}; };
 
 // ── 이적 · 방출 ────────────────────────────────────────────────────────
 // 방출: 31세 이후 오버롤 66 미만이거나 소속팀 선발 확률 15% 미만이면 재계약 불가(잔류 불가) → 낮은 구단의 말년 제안만.
@@ -563,7 +577,7 @@ export function playerView(state){
   C = state;
   return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, num:C.num, want:C.want, age:C.age, ovr:cOvr(),
     st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(C.club), team:teamName(C.club)}, phase:C.phase, seasons:C.hist.length,
-    glass:!!C.glass, tot:C.tot, peak:C.peak, traits:(C.traits||[]).map(traitView),
+    glass:!!C.glass, tot:C.tot, peak:C.peak, traits:(C.traits||[]).map(id => traitView(id, C.pos)),
     // 커리어 기록 접이식 표: [나이, 팀, 임대, 경기, 골, 도움(수비수는 클린시트), 오버롤, 구단, 유스, 그 시즌 주요 수상(S·A·B, 대표팀 제외)]
     hist: C.hist.map(r => [r.age, r.team, r.loan?1:0, r.apps, r.goals, C.pos==='DF' ? r.cs : r.ast, r.ovr, r.club, r.youth?1:0,
       r.hon.filter(h => 'SAB'.includes(h.tier) && h.kind!=='nat').sort((a,b) => 'SAB'.indexOf(a.tier)-'SAB'.indexOf(b.tier)).map(h => h.n)])};
