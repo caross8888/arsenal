@@ -1768,7 +1768,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hist summary span{font-size:12px;color:var(--text-secondary)}
 .cr-hist summary::-webkit-details-marker{display:none}
 /* 은퇴 카드 */
-.cr-rc-head{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:stretch}
+.cr-rc-head{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:stretch}
 .cr-rc-ovr{background:linear-gradient(160deg,#E9C766,#B8892E);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#3a2a06;min-width:78px}
 .cr-rc-ovr.elite{background:linear-gradient(160deg,#C9E6FF,#7DB7F2 55%,#4F8FD6);color:#0b2440;box-shadow:0 0 18px rgba(125,183,242,.4)}
 .cr-rc-ovr.purple{background:linear-gradient(160deg,#EBD9FF,#A877F0 55%,#6E3FC4);color:#1d0b3d;box-shadow:0 0 18px rgba(168,119,240,.45)}
@@ -1781,9 +1781,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rc-chip.gold{background:rgba(200,168,75,.2);color:var(--gold)}
 .cr-rc-name{font-size:20px;font-weight:700;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cr-rc-sub{font-size:12px;color:var(--text-secondary)}
-.cr-rc-meta{display:flex;flex-direction:column;justify-content:center;gap:6px;text-align:right}
-.cr-rc-meta span{display:block;font-size:10px;color:var(--text-secondary);letter-spacing:.3px}
-.cr-rc-meta b{font-family:var(--fd);font-size:24px;font-weight:400;line-height:1}
+.cr-rc-sub b{font-family:var(--fd);font-size:17px;font-weight:400;color:var(--text);letter-spacing:.3px}
 .cr-rc-table{display:flex;flex-direction:column;gap:4px}
 .cr-rc-row{display:grid;grid-template-columns:34px minmax(0,1fr) 38px 34px 30px 30px;gap:6px;align-items:center;background:var(--surface);border-radius:10px;padding:6px 8px;font-size:13px;font-variant-numeric:tabular-nums}
 .cr-rc-row>span:nth-child(n+4){text-align:right}
@@ -9196,8 +9194,9 @@ function crCardHtml(c){
    +(c.oneClub?'<span class="cr-rc-chip" style="color:var(--gold)">🛡 원클럽맨</span>':'')
    +(c.farewell?'<span class="cr-rc-chip" style="color:var(--gold)">👏 레전드 고별전</span>':'')
    +(c.glass?'<span class="cr-rc-chip" style="color:var(--loss)">🩹 유리몸</span>':c.iron?'<span class="cr-rc-chip" style="color:var(--green)">💪 강철 체력</span>':'')+'</div>'
-   +'<div class="cr-rc-name">'+gmEsc(c.name)+'</div><div class="cr-rc-sub">'+gmEsc(card.n)+' · '+grade+'</div></div>'
-   +'<div class="cr-rc-meta"><div><span>은퇴</span><b>'+c.age+'세</b></div><div><span>최고 가치</span><b>'+crFmtVal(c.peakValue)+'</b></div></div></div>';
+   +'<div class="cr-rc-name">'+gmEsc(c.name)+'</div><div class="cr-rc-sub">'+gmEsc(card.n)+' · '+grade+'</div>'
+   // 은퇴 나이·최고 가치도 카드 안에(사용자 지정 — 따로 오른쪽 칸에 두면 카드가 좁아져 칩이 여러 줄로 접혔다)
+   +'<div class="cr-rc-sub"><b>'+c.age+'세</b> 은퇴 · 최고 가치 <b>'+crFmtVal(c.peakValue)+'</b></div></div></div>';
   h+='<div class="cr-rc-table"><div class="cr-rc-row hd"><span>나이</span><span>구단</span><span>OVR</span><span>경기</span><span>골</span><span>'+(c.pos==='DF'?'CS':'도움')+'</span></div>';
   c.seasons.forEach(function(r){
     var ars=/아스날/.test(r.club)&&!r.youth;
