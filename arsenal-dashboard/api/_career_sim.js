@@ -293,7 +293,7 @@ export function playSeason(state, choice){
   if(row0Youth){ if(ev==='extra' && pick===0) C.youthPts++; if(ratio>=0.6) C.youthPts++; }
   if(C.age>=18 && !C.awoken){
     const tr = mulberry(C.seed ^ hashStr('talent'))(), b = Math.min(6, C.youthPts);
-    const pG = 0.02+b*0.0017, pW = pG+0.08+b*0.005, pP = pW+0.20;   // 세대급 2~3% / 원더키드 8~11% / 유망주 20%
+    const pG = 0.02+b*0.0017, pW = pG+0.11+b*0.005, pP = pW+0.25;   // 세대급 2~3% / 원더키드 11~14% / 유망주 25% / 보통 62~58%(사용자 지정 — 처음 8~11% / 20% / 70~66%)
     C.talent = tr<pG ? TALENT.gen : tr<pW ? TALENT.wonder : tr<pP ? TALENT.prospect : 1;
     C.awoken = true;
   }
