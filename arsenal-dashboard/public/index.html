@@ -1282,7 +1282,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
      height:auto로 바뀐 이 모달은 글 길이에 따라 슬라이드 이동 거리가
      들쭉날쭉해 보이는 버그가 있었다(글 짧으면 조금만, 길면 많이 올라옴).
      높이와 무관한 페이드+스케일로 교체한다. */
-  #transferModal{align-items:center;}
+  #transferModal,#gmProfileModal{align-items:center;}
+  #gmProfileModal .modal-sheet{border-radius:16px;max-height:88vh;animation:dialogPop .25s cubic-bezier(.32,.72,0,1);}
   #transferModal .modal-sheet{border-radius:16px;height:auto;max-height:80vh;animation:dialogPop .25s cubic-bezier(.32,.72,0,1);}
   /* History도 선수단/경기일정/리더보드와 동일한 "리스트+우측 상세패널"
      구조로 맞춘다 — 섹션 자체는 max-width:none으로 채우고, 안에서
@@ -1458,9 +1459,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .gm-hrow{display:flex;justify-content:space-between;align-items:center}
 .gm-my{display:inline-flex;align-items:center;gap:5px;background:none;border:0;color:var(--text-secondary);font:inherit;font-size:13px;cursor:pointer;padding:4px 0}
 .gm-my:hover{color:var(--text)}
-.gm-me{text-align:center;padding:6px 0 2px}
-.gm-me-n{font-size:24px;font-weight:700;color:var(--text)}
-.gm-me-s{font-size:12px;color:var(--text-secondary);margin-top:2px}
+#gmProfileModal .modal-sheet{height:auto;max-height:92vh;max-height:92dvh}
+.gm-me-n{font-size:20px;font-weight:700;color:var(--on-dark-header);margin-top:6px}
+.gm-me-s{font-size:12px;color:var(--on-dark-header-secondary);margin-top:2px}
+.gm-me-body{padding:16px;display:flex;flex-direction:column;gap:12px}
 .gm-inrow{display:flex;gap:8px}
 .gm-inrow input{flex:1;min-width:0}
 .gm-inrow .gm-btn{width:auto;flex:none;padding:0 14px;font-size:14px}
@@ -1877,6 +1879,12 @@ function playIntro(){
 </div>
 
 <!-- PLAYER DETAIL MODAL -->
+<div class="modal-overlay" id="gmProfileModal" onclick="if(event.target===this) closeGameProfile()">
+  <div class="modal-sheet" id="gmProfileSheet">
+    <button class="modal-close" onclick="closeGameProfile()" aria-label="닫기">&#10005;</button>
+    <div class="modal-sheet-inner" id="gmProfileContent"></div>
+  </div>
+</div>
 <div class="modal-overlay" id="playerModal" onclick="closeModal(event)">
   <div class="modal-sheet" id="modalSheet">
     <button class="modal-close" onclick="closePlayerModal()">&#10005;</button>
@@ -7816,6 +7824,7 @@ function enableSheetSwipeClose(sheetEl, headerSelector, closeFn){
 enableSheetSwipeClose(document.getElementById('modalSheet'), '.pm-header, .hist-modal-photo', closePlayerModal);
 enableSheetSwipeClose(document.querySelector('.match-modal-sheet'), '.mm-header-top, .hist-modal-photo', closeMatchModal);
 enableSheetSwipeClose(document.getElementById('transferModalSheet'), '.pm-header', closeTransferModal);
+enableSheetSwipeClose(document.getElementById('gmProfileSheet'), '.pm-header', closeGameProfile);
 
 // ── TICKER ──
 
@@ -8160,22 +8169,36 @@ var GM_GEAR='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke=
 
 // ── 내 정보(게임 목록 우측) ───────────────────────────────────────────────
 // 승부예측·Who Am I 공용 계정의 순위·기록, 닉네임 변경(중복 확인), 비밀번호 변경.
+// 상세모달(모바일은 아래에서 올라오는 시트, PC는 가운데 창)로 띄운다. 로그인 전이면 로그인 화면을 거친다.
 function gameProfile(){
   gameStopTimer();
-  if(!PK.tok){ PK.after=gameProfile; PK.afterLabel='게임 목록'; PK.afterBack=gameList; return pkAuth('login'); }
-  gmRoot().innerHTML='<button class="gm-back" onclick="gameList()">← 게임 목록</button>'+loadingHtml('불러오는 중...','padding:60px 20px');
+  if(!PK.tok){ PK.after=function(){ gameList(); gameProfile(); }; PK.afterLabel='게임 목록'; PK.afterBack=gameList; return pkAuth('login'); }
+  var ov=document.getElementById('gmProfileModal'), box=document.getElementById('gmProfileContent');
+  box.innerHTML=gameProfileHead(PK.nick||'', null)+loadingHtml('불러오는 중...','padding:40px 20px');
+  if(!ov.classList.contains('open')){
+    ov.classList.add('open'); document.body.style.overflow='hidden';
+    history.pushState({modal:'profile'},'',' #profile-modal');
+  }
   pkApi('profile').then(gameProfileRender).catch(function(e){
-    if(e.login){ pkSetAuth(null,null); return gameProfile(); }
-    gmRoot().innerHTML='<button class="gm-back" onclick="gameList()">← 게임 목록</button><div class="gm-empty">'+gmEsc(e.message)+'</div>';
+    if(e.login){ closeGameProfile(); pkSetAuth(null,null); return gameProfile(); }
+    box.innerHTML=gameProfileHead(PK.nick||'', null)+'<div class="gm-empty" style="padding:32px 16px">'+gmEsc(e.message)+'</div>';
   });
+}
+function closeGameProfile(fromHash){
+  document.getElementById('gmProfileModal').classList.remove('open');
+  document.body.style.overflow='';
+  if(!fromHash && location.hash.includes('profile-modal')) clearModalHash();
+}
+function gameProfileHead(nick, since){
+  var ymd=function(t){ var x=new Date(t); return x.getFullYear()+'.'+(x.getMonth()+1)+'.'+x.getDate()+' 가입'; };
+  return '<div class="pm-header" style="padding:16px 16px 14px;"><div class="modal-handle" style="position:absolute;top:6px;left:50%;transform:translateX(-50%)"></div>'
+    +'<div class="gm-me-n">'+gmEsc(nick)+'</div><div class="gm-me-s">'+(since?ymd(since):'내 정보')+'</div></div>';
 }
 function gameProfileRender(d){
   var p=d.pick||{}, w=d.whoami, se=p.season, mo=p.monthly;
-  var ymd=function(t){ var x=new Date(t); return x.getFullYear()+'.'+(x.getMonth()+1)+'.'+x.getDate(); };
   var cell=function(v,l){ return '<div><div class="v">'+v+'</div><div class="l">'+l+'</div></div>'; };
   var waitRename=d.renameAt && d.renameAt>Date.now();
-  gmRoot().innerHTML='<button class="gm-back" onclick="gameList()">← 게임 목록</button>'
-    +'<div class="gm-me"><div class="gm-me-n">'+gmEsc(d.nick)+'</div>'+(d.since?'<div class="gm-me-s">'+ymd(d.since)+' 가입</div>':'')+'</div>'
+  document.getElementById('gmProfileContent').innerHTML=gameProfileHead(d.nick, d.since)+'<div class="gm-me-body">'
     +'<div class="gm-h">승부예측 · '+gmEsc(p.seasonName||'')+' 시즌</div>'
     +'<div class="pk-sum">'+cell(se?se.rank+'위':'—','시즌 순위')+cell(se?se.points:'—','시즌 점수'+(se&&se.total?' ('+se.hit+'/'+se.total+' 적중)':''))
       +cell(mo?mo.rank+'위':'—',(p.month?(+p.month.slice(5))+'월':'이번 달')+' 순위'+(mo?' · '+mo.points+'점':''))+'</div>'
@@ -8194,7 +8217,7 @@ function gameProfileRender(d){
       +'<div class="pk-field"><label for="gmPwNew2">새 비밀번호 확인</label><input id="gmPwNew2" type="password" maxlength="20" autocomplete="new-password"></div>'
       +'<div class="pk-err" id="gmPwErr"></div>'
       +'<button class="gm-btn" type="submit">비밀번호 변경</button></form>'
-    +'<button class="gm-btn ghost" type="button" onclick="pkSetAuth(null,null);PK.data=null;gameList()">로그아웃</button>';
+    +'<button class="gm-btn ghost" type="button" onclick="closeGameProfile();pkSetAuth(null,null);PK.data=null;gameList()">로그아웃</button></div>';
 
   var nickIn=document.getElementById('gmNewNick'), rnErr=document.getElementById('gmRnErr');
   var say=function(el,msg,ok){ el.textContent=msg; el.style.color=ok?'var(--green)':''; };
@@ -8494,6 +8517,10 @@ function showSec(id,btn,fromHistory){
     }
     if(transferModal && transferModal.classList.contains('open')){
       closeTransferModal(true); return;
+    }
+    var gmProfileModal = document.getElementById('gmProfileModal');
+    if(gmProfileModal && gmProfileModal.classList.contains('open')){
+      closeGameProfile(true); return;
     }
     var hash = location.hash.replace('#','').trim();
     if(hash === 'news' || hash === 'sns') hash = 'media';
