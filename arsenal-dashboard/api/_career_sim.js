@@ -454,8 +454,10 @@ function makeOffers(rng, row){
 const forcedRetire = () => C.age>=40 || (!!C.released && !C.offers.length);
 const pub = c => ({n:c.n, id:c.id, nat:c.nat});
 export function offersView(state){ C = state; return offerView(); }
+// 이적시장 카드에 보이는 출전 기회는 다음 시즌 실제 계산과 같게(제안 구단은 새 영입 효과, 잔류는 같은 팀 몫 포함)
+export function stayView(state){ C = state; return {chance: chanceOf(pStart(C.club, NEW_SIGNING[1])), grow: growLv(C.club.r)}; }
 function offerView(){
-  return C.offers.map(o => ({...pub(o.c), kind:o.kind, dream:!!o.dream, chance:chanceOf(pStart(o.c)), grow:growLv(o.c.r)}));
+  return C.offers.map(o => ({...pub(o.c), kind:o.kind, dream:!!o.dream, chance:chanceOf(pStart(o.c, NEW_SIGNING[0])), grow:growLv(o.c.r)}));
 }
 
 // pick: 제안 번호(없으면 잔류). 방출됐는데 고르지 않으면 은퇴.

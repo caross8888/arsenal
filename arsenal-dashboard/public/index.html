@@ -9096,7 +9096,7 @@ function crResult(){
     if(r.age<17) h+='<div class="cr-note">17세부터 다른 구단 제안을 받을 수 있어요.</div>';
     if(R.released) h+='<div class="cr-note">'+gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 낮은 수준의 구단에서 커리어를 이어 가거나 은퇴할 수 있어요.</div>';
     h+='<div class="cr-list">'
-     +(R.released?'':'<button class="cr-club" aria-pressed="'+(CR.pick==null)+'" onclick="CR.pick=null;crResult()">'+crCrest(p.club)+'<div><div class="tag">잔류</div><div class="nm">'+gmEsc(p.club.n)+'</div><div class="meta">'+crNat(p.club.nat).f+' '+crNat(p.club.nat).n+'</div></div><div></div></button>')
+     +(R.released?'':'<button class="cr-club" aria-pressed="'+(CR.pick==null)+'" onclick="CR.pick=null;crResult()">'+crCrest(p.club)+'<div><div class="tag">잔류</div><div class="nm">'+gmEsc(p.club.n)+'</div><div class="meta">'+crNat(p.club.nat).f+' '+crNat(p.club.nat).n+'</div>'+(R.stay?crGrow(R.stay.grow):'')+'</div><div>'+(R.stay?crChance(R.stay.chance):'')+'</div></button>')
      +R.offers.map(function(o,k){
         return '<button class="cr-club" aria-pressed="'+(CR.pick===k)+'" onclick="CR.pick='+k+';crResult()">'+crCrest(o)+'<div><div class="tag">'+o.kind+(o.dream?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+gmEsc(o.n)+'</div>'
           +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':'')+'</div>'+crGrow(o.grow)+'</div><div>'+crChance(o.chance)+'</div></button>'; }).join('')

@@ -101,7 +101,7 @@ const firstView = input => S.firstClubs(input.nation, input.pos, input.card).map
 // 시즌 결과 화면(숨김 값 없음). 지난 결과(last)는 토큰에 결과 화면용으로 남겨 둔다 — 이어 하기에서 다시 그린다.
 const resultView = C => {
   const r = C.hist[C.hist.length - 1];
-  return {row: r, offers: S.offersView(C),
+  return {row: r, offers: S.offersView(C), stay: S.stayView(C),
           released: !!C.released, forced: !!C.forced, canRetire: C.age >= 29};
 };
 
