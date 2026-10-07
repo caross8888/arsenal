@@ -13,7 +13,10 @@ import { NATIONS, CLUBS, NAMES, STATS, CARDS } from './_career_data.js';
 export { NATIONS, CLUBS, NAMES, STATS, CARDS };
 
 // ── 상수 ──────────────────────────────────────────────────────────────
-export const BASE = 40, POOL = 50, MAXADD = 20, YOUTH_GAP = 30, START_OVR = 54;
+export const BASE = 40, POOL = 50, MAXADD = 20, YOUTH_GAP = 30;
+// 시작 오버롤: 같은 포지션 안에서는 카드끼리 같게, 포지션 평균은 맞추기 전 값 그대로(공격수 54.8 / 미드필더 53.8 / 수비수 53.5).
+// 하나로(54) 맞췄더니 공격수 시작이 낮아져 골·발롱·득점왕·점수가 6% 안팎 줄었다(밸런스 → 기록 → 점수로 번진다 — 사용자 지적).
+export const START_OVR = {FW:55, MF:54, DF:53.5};
 const AGE_BASE = {15:4,16:4,17:4,18:4.5,19:4.5,20:4.5,21:4,22:4,23:3.5,24:3,25:2.5,26:2,27:1.5,28:0.5,29:-0.5,30:-1,31:-1.5,32:-2,33:-2.5,34:-3,35:-3.5,36:-4,37:-4.5};
 const DECLINE = {'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5,'빌드업':0.5};
 const NAT_BAR = {ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
@@ -35,7 +38,7 @@ const CARD_CONTRIB = {FW:[1.21,0.95,0.91,0.93,1.05], MF:[1.16,0.81,0.93,0.92,1.3
 const TALENT = {gen:2.05, wonder:1.58, prospect:1.18};   // 숨은 재능 배율(18세에 정해짐)
 const K_GROW = 0.6, DAMP = [0.6, 30], PLAY_C = [0.3, 1.1], CLUB_C = [1.35, 1.18, 1.05, 0.92, 0.8], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:120, sd:14, pos:{FW:1, MF:0.85, DF:0.75}, top:4, inc:10};
+const BALLON = {mu:120, sd:14, pos:{FW:0.96, MF:0.865, DF:0.78}, top:4, inc:10};   // 포지션 배율은 시작 오버롤을 포지션별로 맞춘 뒤 세대급 발롱 평균(공격수 2.6 · 미드 0.35 · 수비 0.06)이 그대로 나오게 다시 맞춘 값
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
 
@@ -63,7 +66,7 @@ export function startStats(pos, card){
   // 맞추지 않으면 강점이 한두 개에 몰린 카드(포처 56)가 고른 카드(메짤라·풀백 52)보다 높게 시작해
   // 명성 → 구단 → 출전 → 성장으로 불어나 정점이 5 가까이 벌어졌다(사용자 지적).
   const st = add.map(a => BASE+a), o = ovrOf(st, w);
-  return st.map(v => v - o + START_OVR);
+  return st.map(v => Math.round((v - o + START_OVR[pos])*10)/10);
 }
 // 오버롤 = 카드 가중치의 세제곱으로 가중 평균(핵심 스탯이 오버롤을 거의 결정한다)
 export function ovrOf(st, w){ let t=0, sw=0; for(let i=0;i<5;i++){ const w3=w[i]**3; t+=st[i]*w3; sw+=w3; } return Math.round(t/sw); }
@@ -73,7 +76,7 @@ const growLv = r => Math.max(1, Math.min(5, Math.round((r-40)/11)));
 
 // 첫 구단: 자국 구단 3곳 — 도전 / 적정 / 안정. 리그 구단이 16개 이상이면 3칸 간격.
 export function firstClubs(nation, pos, card){
-  const myRep = START_OVR + 5, me = myRep + YOUTH_GAP;
+  const myRep = START_OVR[pos] + 5, me = myRep + YOUTH_GAP;
   const home = (CLUBS[nation]||[]).map(c => clubByName(c[0])).sort((a,b) => b.r-a.r);
   let mid = 0; home.forEach((c,i) => { if(Math.abs(c.r-me) < Math.abs(home[mid].r-me)) mid = i; });
   const step = home.length >= 16 ? 3 : 1;
@@ -86,7 +89,7 @@ export function createCareer(input, clubIdx, seed){
   const {name, nation, foot, pos, card, num, dream} = input;
   const o = firstClubs(nation, pos, card)[clubIdx];
   if(!o) throw new Error('bad club');
-  const st = startStats(pos, card), ovr = ovrOf(st, CARDS[pos][card].w);
+  const st = startStats(pos, card), ovr = START_OVR[pos];
   C = {v:1, seed:seed>>>0, name, nation, pos, card, foot, want:num, num:null, dream:dream||null,
        st, ovr, off:st.map(v => v-ovr), age:15, club:o.club, fame:0, wf:2, phase:'prep', train:'균형', ev:null, evPick:null,
        hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, boost:1, peak:ovr, clubs:[o.club.n],
