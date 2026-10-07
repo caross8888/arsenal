@@ -1465,6 +1465,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .gm-me-body{padding:16px;display:flex;flex-direction:column;gap:12px}
 .gm-inrow{display:flex;gap:8px}
 .gm-inrow input{flex:1;min-width:0}
+.gm-inrow input{transition:border-color .2s,box-shadow .2s}
+.gm-inrow input.ok{border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.22);animation:gmOkPulse .5s ease-out}
+.gm-inrow input.bad{border-color:var(--loss);box-shadow:0 0 0 3px rgba(239,68,68,.22);animation:gmShake .4s ease-in-out}
+@keyframes gmOkPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)}100%{box-shadow:0 0 0 3px rgba(34,197,94,.22)}}
+@keyframes gmShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+@media (prefers-reduced-motion: reduce){.gm-inrow input.ok,.gm-inrow input.bad{animation:none}}
 .gm-inrow .gm-btn{width:auto;flex:none;padding:0 14px;font-size:14px}
 .gm-h{font-size:13px;letter-spacing:1px;color:var(--text-secondary);margin:2px 0 0}
 .gm-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border-bright);border-radius:14px;padding:16px;color:var(--text);font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -8221,10 +8227,15 @@ function gameProfileRender(d){
 
   var nickIn=document.getElementById('gmNewNick'), rnErr=document.getElementById('gmRnErr');
   var say=function(el,msg,ok){ el.textContent=msg; el.style.color=ok?'var(--green)':''; };
-  nickIn.addEventListener('input', function(){ say(rnErr,''); });
+  // 중복 확인 결과를 입력칸 테두리로도 보여 준다(쓸 수 있으면 초록 + 번지는 빛, 안 되면 빨강 + 흔들림).
+  var mark=function(st){
+    nickIn.classList.remove('ok','bad');
+    if(st){ void nickIn.offsetWidth; nickIn.classList.add(st); }   // 같은 결과가 또 나와도 애니메이션이 다시 돌게
+  };
+  nickIn.addEventListener('input', function(){ say(rnErr,''); mark(null); });
   document.getElementById('gmNickChk').onclick=function(){
-    var n=nickIn.value.trim(); if(!n) return say(rnErr,'새 닉네임을 입력해 주세요.');
-    pkApi('nickcheck','nick='+encodeURIComponent(n)).then(function(r){ say(rnErr, r.ok?'쓸 수 있는 닉네임이에요.':r.error, r.ok); })
+    var n=nickIn.value.trim(); if(!n){ mark('bad'); return say(rnErr,'새 닉네임을 입력해 주세요.'); }
+    pkApi('nickcheck','nick='+encodeURIComponent(n)).then(function(r){ mark(r.ok?'ok':'bad'); say(rnErr, r.ok?'쓸 수 있는 닉네임이에요.':r.error, r.ok); })
       .catch(function(e){ say(rnErr,e.message); });
   };
   document.getElementById('gmRename').addEventListener('submit', function(e){
@@ -8236,7 +8247,7 @@ function gameProfileRender(d){
     pkApi('rename','',{nick:n, pw:pw}).then(function(r){
       d.nick=r.nick; d.renameAt=Date.now()+30*86400000; gameProfileRender(d);
       say(document.getElementById('gmRnErr'),'「'+r.nick+'」(으)로 바꿨어요.',true);
-    }).catch(function(e2){ btn.disabled=false; say(rnErr,e2.message); });
+    }).catch(function(e2){ btn.disabled=false; if(!/비밀번호/.test(e2.message)) mark('bad'); say(rnErr,e2.message); });
   });
   document.getElementById('gmPwForm').addEventListener('submit', function(e){
     e.preventDefault();
