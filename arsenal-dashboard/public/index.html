@@ -1661,9 +1661,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-chip[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
 .cr-seg{display:grid;grid-template-columns:repeat(var(--n,2),1fr);gap:6px}
 .cr-seg .cr-chip{border-radius:10px;padding:11px;text-align:center;white-space:normal;word-break:keep-all;line-height:1.35}
-.cr-age{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--text-secondary)}
-.cr-age b{font-family:var(--fd);font-size:26px;color:var(--gold);font-weight:400;line-height:1}
 .cr-note{font-size:12px;color:var(--text-secondary);line-height:1.6;margin:0}
+.cr-form{gap:0;padding:4px 16px}
+.cr-fd{display:flex;flex-direction:column;gap:10px;padding:14px 0}
+.cr-fd+.cr-fd{border-top:1px solid var(--border)}
+.cr-fd.off{opacity:.5}
+.cr-f2{display:grid;grid-template-columns:1fr 110px;gap:12px}
+.cr-f2>div{display:flex;flex-direction:column;gap:10px;min-width:0}
+.cr-sub-age{color:var(--gold);font-weight:700}
 .cr-dock{position:sticky;bottom:calc(56px + var(--safe-bottom));z-index:5;margin:0 -16px -16px;background:var(--chrome-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border-bright);padding:12px 16px;display:flex;gap:10px;align-items:center}
 .cr-dock .sum{flex:none;font-size:12px;color:var(--text-secondary);line-height:1.3}
 .cr-dock .sum b{display:block;font-family:var(--fd);font-size:24px;color:var(--gold);font-weight:400;line-height:1}
@@ -8844,29 +8849,29 @@ function crPage1(){
   m.nations.forEach(function(n){
     dreamOpts+='<optgroup label="'+gmEsc(n.f+' '+n.n)+'">'+(m.clubs[n.id]||[]).map(function(c){ return '<option'+(S.dream===c[0]?' selected':'')+' value="'+gmEsc(c[0])+'">'+gmEsc(c[0])+'</option>'; }).join('')+'</optgroup>';
   });
+  // 한 패널 안에 항목을 줄로 나눠 담는다(예전엔 항목마다 패널 6개 — 사용자 지적). 주발·등번호는 한 줄에 나란히.
+  var dis=S.nation?'':' disabled';
   crRender('<div class="cr-top"><button class="gm-back" onclick="crIntro()">← 커리어 모드</button>'+crSteps(1)+'</div>'
-   +'<h1 class="cr-h1">CAREER <span>MODE</span></h1><p class="cr-sub">1 / 3 · 선수 만들기</p>'
-   +'<div class="cr-panel"><div class="cr-age"><b>15</b>세에 시작해요 · 유스팀부터 은퇴까지</div>'
-   +'<div class="cr-lbl"><b>국적</b><span>대표팀 경쟁 난이도가 달라요</span></div>'
+   +'<h1 class="cr-h1">CAREER <span>MODE</span></h1><p class="cr-sub">1 / 3 · 선수 만들기 · <b class="cr-sub-age">15세</b> 유스팀부터 은퇴까지</p>'
+   +'<div class="cr-panel cr-form">'
+   +'<div class="cr-fd"><div class="cr-lbl"><b>국적</b><span>첫 구단 리그 · 대표팀 경쟁이 달라져요</span></div>'
    +'<select onchange="CR.S.nation=this.value||null;crPage1()"><option value="">국적 선택</option>'
-   +m.nations.map(function(n){ return '<option value="'+n.id+'"'+(S.nation===n.id?' selected':'')+'>'+n.f+' '+n.n+'</option>'; }).join('')+'</select>'
-   +'<p class="cr-note">첫 구단은 국적의 리그에서 정해져요.</p></div>'
+   +m.nations.map(function(n){ return '<option value="'+n.id+'"'+(S.nation===n.id?' selected':'')+'>'+n.f+' '+n.n+'</option>'; }).join('')+'</select></div>'
    // 이름은 국적을 고른 뒤에(랜덤 이름이 국적에 맞춰 나오므로)
-   +'<div class="cr-panel"'+(S.nation?'':' style="opacity:.5"')+'><div class="cr-lbl"><b>이름</b><span>'+(S.nation?'최대 12자':'국적을 먼저 골라 주세요')+'</span></div>'
-   +'<div class="cr-row"><input type="text" id="crName" maxlength="12" placeholder="선수 이름" value="'+gmEsc(S.name)+'" oninput="CR.S.name=this.value;crDock1()"'+(S.nation?'':' disabled')+'>'
-   +'<button class="cr-chip" onclick="CR.S.name=crRandName();crPage1()"'+(S.nation?'':' disabled')+'>🎲 랜덤</button>'
-   +(PK.tok&&PK.nick?'<button class="cr-chip" onclick="CR.S.name=PK.nick;crPage1()"'+(S.nation?'':' disabled')+'>내 계정명</button>':'')+'</div>'
-   +'<p class="cr-note">랜덤 이름은 고른 국적에 맞는 이름으로 나와요.</p></div>'
-   +'<div class="cr-panel"><div class="cr-lbl"><b>주발</b></div><div class="cr-seg">'
+   +'<div class="cr-fd'+(S.nation?'':' off')+'"><div class="cr-lbl"><b>이름</b><span>'+(S.nation?'최대 12자 · 랜덤은 국적에 맞는 이름':'국적을 먼저 골라 주세요')+'</span></div>'
+   +'<div class="cr-row"><input type="text" id="crName" maxlength="12" placeholder="선수 이름" value="'+gmEsc(S.name)+'" oninput="CR.S.name=this.value;crDock1()"'+dis+'>'
+   +'<button class="cr-chip" onclick="CR.S.name=crRandName();crPage1()"'+dis+'>🎲 랜덤</button>'
+   +(PK.tok&&PK.nick?'<button class="cr-chip" onclick="CR.S.name=PK.nick;crPage1()"'+dis+'>내 계정명</button>':'')+'</div></div>'
+   +'<div class="cr-fd cr-f2"><div><div class="cr-lbl"><b>주발</b></div><div class="cr-seg">'
    +['오른발','왼발'].map(function(f){ return '<button class="cr-chip" aria-pressed="'+(S.foot===f)+'" onclick="crSet(\'foot\',\''+f+'\')">'+f+'</button>'; }).join('')+'</div></div>'
-   +'<div class="cr-panel"><div class="cr-lbl"><b>포지션</b></div><div class="cr-seg" style="--n:3">'
+   +'<div><div class="cr-lbl"><b>등번호</b><span>1~99</span></div>'
+   +'<input type="text" inputmode="numeric" maxlength="2" placeholder="예: 7" value="'+(S.num||'')+'" oninput="this.value=this.value.replace(/\\D/g,\'\');var n=+this.value;CR.S.num=n>=1&&n<=99?n:null;crDock1()"></div></div>'
+   +'<div class="cr-fd"><div class="cr-lbl"><b>포지션</b>'+(S.pos?'<span>'+CR_POS.filter(function(p){ return p.id===S.pos; })[0].d+'</span>':'')+'</div><div class="cr-seg" style="--n:3">'
    +CR_POS.map(function(p){ return '<button class="cr-chip" aria-pressed="'+(S.pos===p.id)+'" onclick="crSet(\'pos\',\''+p.id+'\')">'+p.n+'</button>'; }).join('')+'</div>'
-   +(S.pos?'<p class="cr-note">'+CR_POS.filter(function(p){ return p.id===S.pos; })[0].d+' · 주요 스탯: '+m.stats[S.pos].join(' / ')+'</p>':'')+'</div>'
-   +'<div class="cr-panel"><div class="cr-lbl"><b>희망 등번호</b><span>1~99</span></div>'
-   +'<input type="text" inputmode="numeric" maxlength="2" placeholder="예: 7" value="'+(S.num||'')+'" oninput="this.value=this.value.replace(/\\D/g,\'\');var n=+this.value;CR.S.num=n>=1&&n<=99?n:null;crDock1()">'
-   +'<p class="cr-note">1군에 올라갈 때 그 번호가 비어 있으면 받아요.</p></div>'
-   +'<div class="cr-panel"><div class="cr-lbl"><b>꿈의 구단</b><span>가끔 이 구단에서 제안이 와요</span></div>'
-   +'<select onchange="CR.S.dream=this.value||null"><option value="">고르지 않음</option>'+dreamOpts+'</select></div>', ' ');
+   +(S.pos?'<p class="cr-note">주요 스탯 · '+m.stats[S.pos].join(' / ')+'</p>':'')+'</div>'
+   +'<div class="cr-fd"><div class="cr-lbl"><b>꿈의 구단</b><span>선택 · 가끔 이 구단에서 제안이 와요</span></div>'
+   +'<select onchange="CR.S.dream=this.value||null"><option value="">고르지 않음</option>'+dreamOpts+'</select></div>'
+   +'</div>', ' ');
   crDock1();
 }
 function crDock1(){
