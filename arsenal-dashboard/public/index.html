@@ -8877,7 +8877,8 @@ function crPage1(){
 function crDock1(){
   var S=CR.S, ok=S.name.trim() && S.nation && S.foot && S.pos && S.num;
   var miss=[!S.nation&&'국적',!S.name.trim()&&'이름',!S.foot&&'주발',!S.pos&&'포지션',!S.num&&'등번호'].filter(Boolean);
-  crDock('<div class="sum">'+(ok?'준비 완료':'남은 항목')+'<br>'+(ok?'':miss.join(' · '))+'</div><button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage2()">다음 · 선수 유형</button>');
+  // 남은 항목은 버튼 글자로 알려 준다(옆에 요약 칸을 두지 않는다 — 사용자 지적)
+  crDock('<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage2()">'+(ok?'다음 · 선수 유형':({국적:'국적을 골라 주세요',이름:'이름을 입력해 주세요',주발:'주발을 골라 주세요',포지션:'포지션을 골라 주세요',등번호:'등번호를 입력해 주세요'})[miss[0]])+'</button>');
 }
 
 // ── 2페이지: 선수 유형 카드(시작 스탯은 카드로 자동) ───────────────────
