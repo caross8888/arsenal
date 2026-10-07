@@ -21,6 +21,7 @@
 import crypto from 'crypto';
 import SEED from './_whoami_bank.js';
 import { applyGlossary } from './_glossary.js';
+import { readToken, normNick } from './_account.js';
 
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
@@ -151,11 +152,25 @@ function nextState(bank, st){
 // ── 랭킹 ───────────────────────────────────────────────────────────────
 // 멤버는 "닉네임\u0001게임id" — 닉네임이 겹쳐도 판마다 따로 남는다.
 let _board = null, _boardAt = 0;
+// 멤버 형식 두 가지:
+//  - "@{계정 키}"            — 계정으로 등록한 기록. 한 사람당 최고 기록 하나(사용자 지정). 이름은 pk:names에서.
+//  - "닉네임\u0001게임id"   — 계정 도입 전, 닉네임만 적어 등록한 옛 기록. 그대로 둔다.
+const ACCT = '@';
 async function readBoard(){
   if(_board && Date.now() - _boardAt < 30 * 1000) return _board;
   const flat = await kv('ZRANGE', BOARD_KEY, 0, BOARD_SHOW - 1, 'REV', 'WITHSCORES') || [];
   const top = [];
-  for(let i = 0; i + 1 < flat.length; i += 2) top.push({name: String(flat[i]).split('\u0001')[0], score: Number(flat[i + 1])});
+  for(let i = 0; i + 1 < flat.length; i += 2){
+    const m = String(flat[i]);
+    top.push(m.startsWith(ACCT) ? {key: m.slice(1), name: null, score: Number(flat[i + 1]), account: true}
+                                : {name: m.split('\u0001')[0], score: Number(flat[i + 1]), account: false});
+  }
+  const accts = top.filter(r => r.account);
+  if(accts.length){
+    const names = await kv('HMGET', 'pk:names', ...accts.map(r => r.key)) || [];
+    accts.forEach((r, i) => { r.name = names[i] || r.key; });
+  }
+  top.forEach(r => { delete r.key; });
   const cutRaw = await kv('ZRANGE', BOARD_KEY, BOARD_KEEP - 1, BOARD_KEEP - 1, 'REV', 'WITHSCORES') || [];
   _board = {top, cut: cutRaw.length ? Number(cutRaw[1]) : null};
   _boardAt = Date.now();
@@ -197,6 +212,7 @@ export default async function handler(req, res){
       const hit = await kv('ZRANGE', BOARD_KEY, rank - 1, rank - 1, 'REV', 'WITHSCORES') || [];
       if(!hit.length) return res.status(404).json({error: `${rank}위 기록이 없어요.`});
       const [member, score] = [String(hit[0]), Number(hit[1])];
+      if(member.startsWith(ACCT)) return res.status(409).json({error: `${rank}위는 계정 기록이라 닉네임을 여기서 바꿀 수 없어요.`});
       const [oldNick, gid] = member.split('\u0001');
       if(body.from && String(body.from).trim() !== oldNick) return res.status(409).json({error: `${rank}위 닉네임이 "${oldNick}"라서 바꾸지 않았어요.`});
       await kv('ZREM', BOARD_KEY, member);
@@ -254,8 +270,9 @@ export default async function handler(req, res){
       // 점수 컷: 이론상 최대(전 문제 0.4초 안에 정답 + 클리어 보너스 = 214×200+1000 = 43,800)를 넘으면 거부.
       // 점수는 서버만 계산하고 토큰은 암호화돼 있어 정상 경로로는 못 넘지만, 버그·키 유출에 대비한 마지막 안전장치다.
       if(st.s > getBank().list.length * MAX_PER_Q + ALL_CLEAR_BONUS) return res.status(400).json({error: '등록할 수 없는 기록이에요.'});
-      const {nick, error} = cleanNick(body.nick);
-      if(error) return res.status(400).json({error});
+      // 등록은 로그인한 계정으로만(사용자 지정 — 닉네임만 적는 방식은 남의 닉네임을 사칭할 수 있었다).
+      const acct = readToken(req);
+      if(!acct) return res.status(401).json({error: '랭킹 등록은 로그인 후에 할 수 있어요.', login: true});
       if(!KV_URL || !KV_TOKEN) return res.status(503).json({error: '랭킹 저장소에 연결할 수 없어요.'});
       if(st.s <= 0) return res.json({registered: false, reason: '0점은 등록하지 않아요.'});
       // 1,000위 컷보다 낮으면 KV에 쓰지 않는다(최근 30초 안에 읽어 둔 컷 기준 — 컷은 내려가지 않는다).
@@ -267,12 +284,26 @@ export default async function handler(req, res){
       const used = await kv('INCR', `whoami:reg:${month}`);
       if(used === 1) await kv('EXPIRE', `whoami:reg:${month}`, 40 * 86400);
       if(used > MONTHLY_REG_CAP) return res.status(429).json({error: '이번 달 랭킹 등록이 마감됐어요. 다음 달에 다시 열려요.'});
-      const member = `${nick}\u0001${st.g}`;
-      await kv('ZADD', BOARD_KEY, st.s, member);
+      const member = ACCT + acct.k;
+      // 계정으로 처음 등록할 때 한 번: 같은 닉네임으로 남아 있던 옛 기록을 이 계정의 기록으로 합친다(최고점만).
+      let legacy = 0;
+      if(await kv('SET', `whoami:mig:${acct.k}`, '1', 'NX') === 'OK'){
+        const all = await kv('ZRANGE', BOARD_KEY, 0, -1, 'WITHSCORES') || [];
+        const mine = [];
+        for(let i = 0; i + 1 < all.length; i += 2){
+          const m = String(all[i]);
+          if(!m.startsWith(ACCT) && normNick(m.split('\u0001')[0]) === acct.k){ mine.push(m); legacy = Math.max(legacy, Number(all[i + 1])); }
+        }
+        if(mine.length) await kv('ZREM', BOARD_KEY, ...mine);
+      }
+      const prev = Math.max(Number(await kv('ZSCORE', BOARD_KEY, member)) || 0, legacy);
+      const best = Math.max(prev, st.s);
+      await kv('ZADD', BOARD_KEY, best, member);
       await kv('ZREMRANGEBYRANK', BOARD_KEY, 0, -(BOARD_KEEP + 1));
       const rank = await kv('ZREVRANK', BOARD_KEY, member);
       _board = null;
-      return res.json(rank == null ? {registered: false, outside: true} : {registered: true, rank: rank + 1, nick, score: st.s});
+      return res.json(rank == null ? {registered: false, outside: true}
+        : {registered: true, rank: rank + 1, nick: acct.n, score: st.s, best, improved: st.s > prev});
     }
 
     return res.status(400).json({error: '알 수 없는 요청'});
