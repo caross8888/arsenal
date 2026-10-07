@@ -528,7 +528,7 @@ function pPrep(){
 // ── 부상 ──────────────────────────────────────────────────────────────
 // 시즌 부상 위험: 기본 13% + 이벤트 선택 + 지난 부상 여파 + 유리몸 + 30세 이후 나이
 function injRiskOf(){
-  var ev=C.ev, k=C.evPick, r=0.13;
+  var IB=window.__IB||[0.10,0.008,0.003], ev=C.ev, k=C.evPick, r=IB[0];
   if(ev.id==='coach') r+=k===0?0.03:-0.03;
   if(ev.id==='extra') r+=k===0?0.05:-0.05;
   if(ev.id==='tour') r+=k===0?0.07:-0.05;
@@ -540,7 +540,7 @@ function injRiskOf(){
 var INJ_MINOR=['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'], INJ_MAJOR=['십자인대 파열','아킬레스건 부상','중족골 골절'];
 function rollInjury(){
   var r=mulberry(C.seed ^ hashStr('inj|'+C.age+'|'+C.ev.id+'|'+C.evPick+'|'+C.club.n));
-  var senior=C.age>=18, pMajor=senior?0.02+Math.max(0,C.age-29)*0.006:0;
+  var IB=window.__IB||[0.10,0.008,0.003], senior=C.age>=18, pMajor=senior?IB[1]+Math.max(0,C.age-29)*IB[2]:0;
   if(r()<pMajor) C.inj={major:true, games:Math.round(25+r()*10), name:INJ_MAJOR[Math.floor(r()*3)]};
   else if(r()<injRiskOf()) C.inj={major:false, games:Math.round(5+r()*12), name:INJ_MINOR[Math.floor(r()*5)]};
   else C.inj=null;
@@ -788,8 +788,18 @@ function playSeason(){
   C.phase='result'; page4();
 }
 
+// 방출: 31세 이후 오버롤 66 미만이거나 소속팀 선발 확률이 15% 미만이면 계약 연장이 안 된다(잔류 불가).
+// 그때는 내 명성보다 낮은 구단(−15~0)의 "말년 제안"만 1~2개 온다. 없으면 은퇴.
+function isReleased(){ return C.age>=31 && (cOvr()<66 || pStart(C.club)<0.15); }
 function makeOffers(rng,row){
   if(C.age<17) return [];
+  C.released=isReleased();
+  if(C.released){
+    var me0=cRep(), lows=ALL.filter(function(c){ return c.n!==C.club.n && c.r<=me0 && c.r>=me0-15; }).sort(function(a,b){ return b.r-a.r; });
+    var k=cOvr()>=63?2:cOvr()>=60?1:0, out0=[];
+    for(var i=0;i<k && lows.length;i++){ var c=lows.splice(Math.floor(rng()*Math.min(lows.length,6)),1)[0]; out0.push({c:c, kind:'말년'}); }
+    return out0;
+  }
   var n=row.rating>=7.2?3:row.rating>=6.8?2:row.apps>5?1:0;
   if(C.glass) n=Math.max(0,n-1);
   if(rng()<0.25) n=Math.max(0,n-1);
@@ -805,7 +815,7 @@ function makeOffers(rng,row){
 }
 
 function pResult(){
-  var r=C.last, st=STATS[C.pos], canRetire=C.age>=29, forced=C.age>=37;
+  var r=C.last, st=STATS[C.pos], canRetire=C.age>=29, forced=C.age>=40 || (C.released && !C.offers.length);
   var dCls=r.dOvr>0?'up':r.dOvr<0?'down':'';
   var h='<div class="top"><button class="back">← 게임 목록</button><div class="season-no">시즌 '+C.hist.length+' 결과</div></div>'
    +headCard()
@@ -817,11 +827,13 @@ function pResult(){
    +(r.notes.length?'<ul class="notes">'+r.notes.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul>':'')
    +'</div>';
   if(!forced){
-    h+='<div class="panel"><div class="lbl"><b>이적시장</b><span>'+(C.offers.length?'제안 '+C.offers.length+'개':'제안 없음')+'</span></div>';
+    if(C.released && C.pick==null && C.offers.length) C.pick=0;
+    h+='<div class="panel"><div class="lbl"><b>'+(C.released?'계약 만료 · 방출':'이적시장')+'</b><span>'+(C.offers.length?'제안 '+C.offers.length+'개':'제안 없음')+'</span></div>';
     if(C.age<17) h+='<div class="note">17세부터 다른 구단 제안을 받을 수 있어요.</div>';
+    if(C.released) h+='<div class="note">'+esc(C.club.n)+'과(와) 재계약이 안 됐어요. 낮은 수준의 구단에서 커리어를 이어 가거나 은퇴할 수 있어요.</div>';
     h+='<div class="list">'
-     +'<button class="club" aria-pressed="'+(C.pick==null)+'" onclick="C.pick=null;pResult()">'+crest(C.club)+'<div><div class="tag">잔류</div><div class="nm">'+esc(C.club.n)+'</div><div class="meta">'+natInfo(C.club.nat).f+' '+natInfo(C.club.nat).n+'</div></div>'
-     +'<div class="rep"><span class="chance '+chanceTag(pStart(C.club))[0]+'">'+chanceTag(pStart(C.club))[1]+'</span></div></button>'
+     +(C.released?'':'<button class="club" aria-pressed="'+(C.pick==null)+'" onclick="C.pick=null;pResult()">'+crest(C.club)+'<div><div class="tag">잔류</div><div class="nm">'+esc(C.club.n)+'</div><div class="meta">'+natInfo(C.club.nat).f+' '+natInfo(C.club.nat).n+'</div></div>'
+     +'<div class="rep"><span class="chance '+chanceTag(pStart(C.club))[0]+'">'+chanceTag(pStart(C.club))[1]+'</span></div></button>')
      +C.offers.map(function(o,k){ var c=o.c, ch=chanceTag(pStart(c)), lvl=Math.max(1,Math.min(5,Math.round((c.r-40)/11))), g='';
         for(var i=1;i<=5;i++) g+='<i class="'+(i<=lvl?'on':'')+'"></i>';
         return '<button class="club" aria-pressed="'+(C.pick===k)+'" onclick="C.pick='+k+';pResult()">'+crest(c)+'<div><div class="tag">'+o.kind+(o.dream?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+esc(c.n)+'</div>'
@@ -831,11 +843,13 @@ function pResult(){
   }
   h+=histHtml();
   document.getElementById('app').innerHTML=h;
+  if(forced && C.released && C.age<40) h=h.replace('</ul>','<li>'+esc(C.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.</li></ul>');
   document.getElementById('dock').innerHTML=forced
     ? '<button class="btn" onclick="retire()">은퇴 · 커리어 마무리</button>'
     : (canRetire?'<button class="btn ghost2" onclick="retire()">은퇴</button>':'')+'<button class="btn" onclick="nextSeason()">'+(C.pick!=null?C.offers[C.pick].c.n+' 이적':'다음 시즌')+'</button>';
 }
 function nextSeason(){
+  if(C.released && C.pick==null) return retire();   // 방출됐는데 갈 곳을 안 고르면 은퇴
   if(C.pick!=null){ var c=C.offers[C.pick].c; C.club=c; if(C.clubs.indexOf(c.n)<0) C.clubs.push(c.n); }
   C.pick=null; C.age++; C.phase='prep'; newEvent(); page4();
 }
@@ -860,7 +874,14 @@ function careerScore(){
   var hp=C.honors.reduce(function(t,h){ return t+((HONOR_TIER[h.tier]||{p:0}).p)*(+(String(h.n).split('×')[1])||1); },0);
   return Math.round(C.tot.apps*1+contribScore()+C.tot.caps*2+C.peak*10+hp);
 }
-function retire(){ C.phase='retired'; page4(); }
+function retire(){
+  // 고별전: 마지막 구단에서 8시즌 이상 뛰었거나 명성·최고 오버롤이 높으면 레전드 은퇴
+  var lastClub=C.hist[C.hist.length-1].club, atLast=C.hist.filter(function(r){ return !r.youth && r.club===lastClub; }).length;
+  var senior=C.hist.filter(function(r){ return !r.youth && !r.loan; }), clubsSr={}; senior.forEach(function(r){ clubsSr[r.club]=1; });
+  C.oneClub = senior.length>=10 && Object.keys(clubsSr).length===1;
+  C.farewell = atLast>=8 || C.peak>=88 || C.fame>=8;
+  C.phase='retired'; page4();
+}
 // ── 트로피 일러스트(직접 그린 SVG) ─────────────────────────────────────
 // 실제 트로피 사진은 디자인 저작권·상표 문제가 있어(월드컵·발롱도르 사진은 위키미디어에서도 삭제되는 일이 잦다)
 // 실루엣만 닮게 직접 그린다. 금속 그라데이션은 문서에 한 번만 정의하고(TROPHY_DEFS) 모든 그림이 같이 쓴다.
@@ -941,7 +962,9 @@ function pRetired(){
   var h='<div class="rc-head">'
    +'<div class="rc-ovr'+(C.peak>=90?' elite':'')+'"><span>최고 OVR</span><b>'+C.peak+'</b></div>'
    +'<div class="rc-id"><div class="rc-chips"><span class="rc-chip">'+natInfo(C.nation).f+' '+natInfo(C.nation).n+'</span><span class="rc-chip gold">'+(C.num?'#'+C.num+' ':'')+posKo+'</span>'
-   +(C.glass?'<span class="rc-chip" style="color:var(--loss)">🩹 유리몸</span>':(C.hist.filter(function(r){return !r.youth;}).length>=14&&(C.injGames||0)<=20&&!C.majorInj?'<span class="rc-chip" style="color:var(--green)">💪 강철 체력</span>':''))+'</div>'
+   +(C.oneClub?'<span class="rc-chip" style="color:var(--gold)">🛡 원클럽맨</span>':'')
+   +(C.farewell?'<span class="rc-chip" style="color:var(--gold)">👏 레전드 고별전</span>':'')
+   +(C.glass?'<span class="rc-chip" style="color:var(--loss)">🩹 유리몸</span>':(C.hist.filter(function(r){return !r.youth;}).length>=15&&(C.injGames||0)<=12&&!C.majorInj?'<span class="rc-chip" style="color:var(--green)">💪 강철 체력</span>':''))+'</div>'
    +'<div class="rc-name">'+esc(C.name)+'</div>'
    +'<div class="rc-sub">'+CARDS[C.pos][C.card].n+' · '+grade+'</div></div>'
    +'<div class="rc-meta"><div><span>은퇴</span><b>'+C.age+'세</b></div><div><span>최고 가치</span><b>'+fmtVal(peakVal)+'</b></div></div></div>';
