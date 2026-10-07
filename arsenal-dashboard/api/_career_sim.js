@@ -136,7 +136,9 @@ export function prepView(state){
   if(C.age < 16) goal = '유스 무대에 적응하기';
   else if(C.age < 18) goal = cOvr() >= C.club.r-22 ? '1군 데뷔 노리기' : 'U-18 주전 자리 잡기';
   else { const p = pStart(C.club); goal = p<0.3 ? '1군에서 출전 기회 잡기' : p<0.65 ? '로테이션 멤버로 자리 잡기' : '팀의 핵심으로 활약하기'; }
-  return {goal, youth: youth(), event:{id:ev.id, t:ev.t, d, a:ev.a},
+  let a = ev.a;
+  if(ev.id === 'talk') a = [a[0], a[1]+(AGE_BASE[Math.min(37, C.age)] > 0 ? ' (성장 ↑)' : ' (하락 완화)')];
+  return {goal, youth: youth(), event:{id:ev.id, t:ev.t, d, a},
     loanClub: C.ev==='loan' && C.loanClub ? {...pub(C.loanClub), chance: chanceOf(pStart(C.loanClub))} : null};
 }
 
@@ -177,9 +179,9 @@ export function playSeason(state, choice){
   }
   const rng = seasonRng(C.train+'|'+C.ev+'|'+C.evPick+'|'+C.club.n+'|inj'+(C.inj ? C.injPick : ''));
   const ev = C.ev, pick = C.evPick, card = CARDS[C.pos][C.card], notes = [];
-  let club = C.club, onLoan = false, startAdj = 0, growMul = 1;
+  let club = C.club, onLoan = false, startAdj = 0, growMul = 1, declMul = 1;
   if(ev==='loan' && pick===0 && C.loanClub){ club = C.loanClub; onLoan = true; notes.push(C.loanClub.n+'로 1시즌 임대를 떠났어요.'); }
-  if(ev==='talk'){ if(pick===0){ if(rng()<0.75){ startAdj+=0.12; notes.push('면담 후 출전 시간이 늘었어요.'); } else { startAdj-=0.1; notes.push('감독이 불쾌해해서 한동안 벤치였어요.'); } } else growMul*=1.05; }
+  if(ev==='talk'){ if(pick===0){ if(rng()<0.75){ startAdj+=0.12; notes.push('면담 후 출전 시간이 늘었어요.'); } else { startAdj-=0.1; notes.push('감독이 불쾌해해서 한동안 벤치였어요.'); } } else if(AGE_BASE[Math.min(37, C.age)] > 0) growMul*=1.05; else { declMul*=0.8; notes.push('묵묵히 훈련한 덕분에 하락 폭이 줄었어요.'); } }   // 하락기(29세+)엔 성장 대신 하락 완화
   if(ev==='coach' && pick===0){ growMul*=1.08; notes.push('개인 트레이너와 훈련한 효과가 있었어요.'); }
   if(ev==='extra' && pick===0) growMul*=1.08;
   if(ev==='weak'){
@@ -250,8 +252,8 @@ export function playSeason(state, choice){
     const dmp = Math.min(1, Math.max(DAMP[0], (99-C.ovr)/DAMP[1]));
     C.ovr = Math.min(99, C.ovr + C.boost*base*playCoef(ratio)*clubCoef(club.r)*luck*growMul*C.talent*K_GROW*dmp);
   } else {
-    C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2));
-    C.off = C.off.map((o2,i) => o2 + base*((DECLINE[st[i]]||1)-1));
+    C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
+    C.off = C.off.map((o2,i) => o2 + base*declMul*((DECLINE[st[i]]||1)-1));
   }
   if(C.train==='강점 강화') C.off = C.off.map((o2,i) => Math.min(15, o2+(w[i]>=1.2?1:w[i]<=0.9?-0.5:0)));
   if(C.train==='약점 보완') C.off = C.off.map((o2,i) => Math.max(-25, o2+(w[i]>=1.2?-0.5:w[i]<=0.9?1.5:0.5)));
