@@ -676,7 +676,6 @@ function makeOffers(rng, row){
   }
   let n = row.rating>=7.2 ? 3 : row.rating>=6.8 ? 2 : row.apps>5 ? 1 : 0;
   if(C.glass) n = Math.max(0, n-1);
-  if(rng()<0.25) n = Math.max(0, n-1);
   // 내 명성 ±8 구단만(유스 보정은 넣지 않는다 — 넣었다가 17세에 레알·인터 제안이 오는 버그가 있었다)
   const me = cRep(), out = [], pool = ALL.filter(c => c.n!==C.club.n && c.r>=me-8 && c.r<=me+8);
   const kinds = [['도전', c => c.r>me+3], ['적정', c => Math.abs(c.r-me)<=3], ['안정', c => c.r<me-3]];
