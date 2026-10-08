@@ -9507,10 +9507,11 @@ function crSfFeedStart(){
   var tick=function(){
     if(CR.sf!==S || !document.getElementById('crSfFeed')) return;
     var t=S.fan.q.shift();
-    var src=S.fan.hurt?CR_FAN.injury:pool;   // 부상 질문 중엔 걱정하는 반응만
-    if(!t && !S.fan.hold){ var k=0; do { t=src[Math.floor(Math.random()*src.length)]; } while(S.fan.last.indexOf(t)>=0 && ++k<8); }
-    if(t) crSfSay(t);
-    S.fan.timer=setTimeout(tick, 380+Math.random()*180);
+    var src=S.fan.hurt?CR_FAN.injury:pool;   // 부상 질문 중엔 걱정하는 반응만 — 3개까지 올리고 멈춘다(선택을 미뤄도 끝없이 바뀌지 않게, 사용자 지적)
+    if(S.fan.hurt && (S.fan.hurtN||0)>=3) t=null;
+    else if(!t && !S.fan.hold){ var k=0; do { t=src[Math.floor(Math.random()*src.length)]; } while(S.fan.last.indexOf(t)>=0 && ++k<8); }
+    if(t){ crSfSay(t); if(S.fan.hurt) S.fan.hurtN=(S.fan.hurtN||0)+1; }
+    S.fan.timer=setTimeout(tick, 650+Math.random()*250);   // 사용자 지적 — 피드가 너무 빨라 읽을 틈이 없었다(예전 0.38~0.56초)
   };
   S.fan.timer=setTimeout(tick, 350);
 }
@@ -9573,9 +9574,9 @@ function crSfWall(){ if(CR.sf) CR.sf.wall=true; }
 function crSfRun(list, done){
   var S=CR.sf; if(!S) return;
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // 시간 예산(사용자 지적 — 너무 길다): 경기 칸 전체 약 1.6초 + 골·도움 멈춤 합계 최대 0.6초, 킥오프 최소 0.45초
   var nBig=list.filter(function(m){ return m.g||m.a; }).length;
-  var step=Math.max(30, 1600/Math.max(1,S.G)), extra=nBig?Math.min(110, 600/nBig):0, i=0, wait=Math.max(0, 450-(Date.now()-S.t0));
+  // 0.8배 속도(사용자 지정): 경기 전체 약 2초 + 골·도움 멈춤 합계 최대 0.75초
+  var step=Math.max(38, 2000/Math.max(1,S.G)), extra=nBig?Math.min(140, 750/nBig):0, i=0, wait=Math.max(0, 450-(Date.now()-S.t0));
   S.q=list; S.done=done;
   var tick=function(){
     if(CR.sf!==S) return;
@@ -9630,7 +9631,7 @@ function crSfInjury(v){
   var j=v.injury, lt=document.getElementById('crSfLt'), x=document.getElementById('crSfExtra'), box=document.getElementById('crSfBox');
   CR.busy=false; S.done=null;
   if(box) box.classList.add('hurt');
-  crSfReact('injury'); var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('mini'); if(S.fan) S.fan.hurt=true;   // 부상 카드 자리 확보: 피드는 한 줄만
+  crSfReact('injury'); var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('mini'); if(S.fan){ S.fan.hurt=true; S.fan.hurtN=0; }   // 부상 카드 자리 확보: 피드는 한 줄만
   if(lt){ lt.className='cr-sf-lt red'; lt.innerHTML='<em>🚑 INJURY</em><span><b>'+gmEsc(j.name)+'</b></span><i>'+(j.major?'큰 부상 · ':'')+'결장 '+j.games+'경기</i>'; }
   var opt=function(k, ic, t, d){ return '<button class="cr-inj-c" style="--from:'+(k?'60px':'-60px')+';--d:'+(0.25+k*0.12)+'s" onclick="crInjPick('+k+',this)"><span class="e" aria-hidden="true">'+ic+'</span><b>'+t+'</b><span class="d">'+d+'</span></button>'; };
   if(x) x.innerHTML='<div class="cr-inj"><div class="hd"><span>'+(j.major?'시즌 대부분을 쉬어야 해요. 어떻게 할까요?':'복귀 시점을 정해 주세요.')+'</span></div><div class="cr-inj-row">'+(j.major
