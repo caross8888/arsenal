@@ -46,10 +46,12 @@ const YOUTH_CUT = 0.4, YOUTH_CUT_P = 0.5, YOUTH_CUT_TO = 6, YOUTH_CUT_BEHIND = -
 const COHORT = {15:50, 16:53, 17:56}, COHORT_K = 0.2;
 const cohortLv = (club, age) => (COHORT[Math.min(17, Math.max(15, age))]) + (club.r - 75)*COHORT_K;
 // 아카데미 등급(★1~5). 실제 자료(_career_data.js ACADEMY, CIES 2025 상위 100 = ★4·5)가 없으면 명성·리그로 추정(최대 ★3, 사용자 지정):
-// 구단 수준 84+ 또는 유망주 강국 리그(ARG·BRA·POR·NED·BEL·ESP·FRA) 74+ 또는 잉글랜드 72+(EPPP 1등급 다수) → ★3, 1부 중위(66+) → ★2, 나머지 ★1.
+// 구단 수준 84+ 또는 유망주 강국 리그(ARG·BRA·POR·NED·BEL·ESP·FRA) 74+ 또는 잉글랜드 72+(EPPP 1등급 다수) → ★3, 66+ 또는 자국 상위권(NAT_TOP) → ★2, 나머지 ★1.
 // 유스 단계(U-16~U-21) 성장에 ACAD_G를 곱한다 — 구단 수준(코칭 계수)과 따로, 실제로 잘 키워 내는 곳이 더 키우게.
 const ACAD_PROD = new Set(['ARG','BRA','POR','NED','BEL','ESP','FRA']);
-const acadOf = club => ACADEMY[club.n] || (club.r >= 84 || (ACAD_PROD.has(club.nat) && club.r >= 74) || (club.nat==='ENG' && club.r >= 72) ? 3 : club.r >= 66 ? 2 : 1);
+// 자국 리그 상위권(명성 순 상위 1/4, 최소 3팀)은 최소 ★2(사용자 지정 — 리그가 약한 나라도 그 나라 명문 유스는 낫다).
+const NAT_TOP = new Set(Object.keys(CLUBS).flatMap(k => CLUBS[k].map(c => [c[0], c[1]]).sort((a,b) => b[1]-a[1]).slice(0, Math.max(3, Math.round(CLUBS[k].length/4))).map(c => c[0])));
+const acadOf = club => ACADEMY[club.n] || (club.r >= 84 || (ACAD_PROD.has(club.nat) && club.r >= 74) || (club.nat==='ENG' && club.r >= 72) ? 3 : club.r >= 66 || NAT_TOP.has(club.n) ? 2 : 1);
 const acadStars = club => acadOf(club);
 const ACAD_G = {1:1, 2:1.03, 3:1.06, 4:1.09, 5:1.12};
 const YOUTH_CC = 0.35;
