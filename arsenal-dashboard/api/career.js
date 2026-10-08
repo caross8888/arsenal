@@ -56,7 +56,7 @@ async function kv(...args){
 const kvReady = () => !!(KV_URL && KV_TOKEN);
 // 랭킹 한 줄 요약: 대표 업적(발롱도르·월드컵·챔스·리그 우승·득점왕 중 있는 것 셋)
 const TOP_HON = [['발롱도르', /^발롱도르$/], ['월드컵 우승', /월드컵 우승/], ['챔피언스리그 우승', /챔피언스리그 우승/], ['리그 우승', /리그 우승$/], ['득점왕', /득점왕/]];
-const summaryOf = card => ({sc: card.sc, nm: card.name, nat: card.nation, pos: card.pos, card: card.card, peak: card.peak,
+const summaryOf = card => ({nm: card.name, nat: card.nation, pos: card.pos, card: card.card, peak: card.peak,
   hon: TOP_HON.map(([n, re]) => [n, card.honors.filter(h => re.test(h[0])).length]).filter(x => x[1]).slice(0, 3)});
 // 옛 한 판 → 포지션별(한 번만). 옛 요약에 포지션이 있어서 그걸로 나눈다.
 let _migrated = false;
@@ -86,7 +86,7 @@ async function readPos(p, n){
   for(let i = 0; i + 1 < flat.length; i += 2) top.push({key: String(flat[i]).slice(1), score: Number(flat[i + 1]), p});
   if(top.length){
     const sums = await kv('HMGET', sumKey(p), ...top.map(r => r.key)) || [];
-    top.forEach((r, i) => { try { Object.assign(r, JSON.parse(sums[i] || '{}')); } catch(_){} r.p = p; if(!r.sc && r.peak != null) r.peak = S.disp(r.peak); });   // 화면 눈금 전 기록(sc 없음)
+    top.forEach((r, i) => { try { Object.assign(r, JSON.parse(sums[i] || '{}')); } catch(_){} r.p = p; });
   }
   return top;
 }
@@ -143,7 +143,7 @@ const firstView = (input, seed) => S.firstClubs(input.nation, input.pos, input.c
 // 시즌 결과 화면(숨김 값 없음). 지난 결과(last)는 토큰에 결과 화면용으로 남겨 둔다 — 이어 하기에서 다시 그린다.
 const resultView = C => {
   const r = C.hist[C.hist.length - 1];
-  return {row: S.rowView(C, r), offers: S.offersView(C), stay: S.stayView(C), traitOffer: (C.traitOffer||[]).map(id => S.traitView(id, C.pos)),
+  return {row: r, offers: S.offersView(C), stay: S.stayView(C), traitOffer: (C.traitOffer||[]).map(id => S.traitView(id, C.pos)),
           released: !!C.released, forced: !!C.forced, forcedWhy: C.forcedWhy || null, canRetire: C.age >= 29};
 };
 
@@ -173,8 +173,7 @@ export default async function handler(req, res){
       res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
       return res.json(META || (META = {
         nations: S.NATIONS, stats: S.STATS, names: S.NAMES, bodies: S.bodyMeta(),
-        // 시작 스탯·오버롤도 화면 눈금(S.disp)으로
-        cards: Object.fromEntries(Object.entries(S.CARDS).map(([p, cs]) => [p, cs.map((c, i) => { const st = S.startStats(p, i); return {n: c.n, d: c.d, w: c.w, st: st.map(v => S.disp(v)), ovr: S.disp(S.ovrOf(st, c.w))}; })])),
+        cards: Object.fromEntries(Object.entries(S.CARDS).map(([p, cs]) => [p, cs.map((c, i) => { const st = S.startStats(p, i); return {n: c.n, d: c.d, w: c.w, st, ovr: S.ovrOf(st, c.w)}; })])),
         // 꿈의 구단 고르기용 — 명성 숫자는 빼고 이름·엠블럼 id만(국가 안에서는 명성 순)
         clubs: Object.fromEntries(Object.entries(S.CLUBS).map(([k, cs]) => [k, cs.map(c => [c[0], c[2]])])),
         // 특성 이름 → 아이콘 id(img/traits/{id}.svg). 예전 은퇴 카드엔 이름만 저장돼 있어 이걸로 아이콘을 찾는다
@@ -204,10 +203,8 @@ export default async function handler(req, res){
         try { if(old && (!POSS.includes(p) || JSON.parse(old).pos === p)) raw = old; } catch(_){}
       }
       if(!raw) return res.status(404).json({error: '랭킹에서 내려간 기록이에요.'});
-      const card = JSON.parse(raw);
-      if(!card.sc){ card.peak = S.disp(card.peak); (card.seasons || []).forEach(x => { x.ovr = S.disp(x.ovr); }); card.sc = 2; }   // 화면 눈금 전에 저장한 카드
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=30');
-      return res.json({nick: nick || k, card});
+      return res.json({nick: nick || k, card: JSON.parse(raw)});
     }
     if(req.method !== 'POST') return res.status(405).json({error: 'POST만 받습니다'});
     if(!tokenReady()) return res.status(503).json({error: '게임 서버 설정이 아직 안 됐어요.'});
