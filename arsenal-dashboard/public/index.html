@@ -1873,6 +1873,26 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-anbar em{position:absolute;top:50%;left:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(239,1,7,.2);will-change:transform}
 .cr-anim .cr-rs b{transition:color .2s}
 .cr-anim .cr-rs b.bump{animation:gmScoreBump .45s ease-out}
+.cr-ss{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;
+  background:radial-gradient(110% 70% at 50% 110%,rgba(20,70,40,.55),transparent 60%),radial-gradient(120% 80% at 50% 0%,rgba(18,22,40,.95),rgba(5,6,12,.97) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
+.cr-ss.still,.cr-ss.still *{animation-duration:0s!important;animation-delay:0s!important}
+.cr-ss .beam{position:absolute;top:-10%;width:46%;height:90%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,240,.16),rgba(255,255,240,0) 80%);filter:blur(6px);opacity:0;animation:crSsBeam 1.2s .15s ease-out both}
+.cr-ss .beam.l{left:-6%;transform:skewX(18deg);transform-origin:top}.cr-ss .beam.r{right:-6%;transform:skewX(-18deg);transform-origin:top;animation-delay:.35s}
+@keyframes crSsBeam{0%{opacity:0}40%{opacity:1}55%{opacity:.6}100%{opacity:1}}
+.cr-ss-box{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px;margin:auto 0}
+.cr-ss .tag{align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .1s ease-out both}
+.cr-ss-club{display:flex;align-items:center;justify-content:center;gap:12px;color:#F0F2F7;animation:crIvUp .45s .25s ease-out both}
+.cr-ss-club b{display:block;font-size:18px}.cr-ss-club span{font-size:12.5px;color:rgba(255,255,255,.75)}
+.cr-ss .cr-anim{margin:0;box-shadow:0 12px 34px rgba(0,0,0,.45);animation:crIvUp .45s .4s ease-out both}
+.cr-ss-skip{align-self:center;border:0;background:none;color:rgba(255,255,255,.75);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer}
+.cr-inj{display:flex;flex-direction:column;gap:10px;animation:crIvUp .35s ease-out both}
+.cr-inj .hd{text-align:center;color:#F0F2F7}.cr-inj .hd b{display:block;font-size:17px;color:#FCA5A5}.cr-inj .hd span{font-size:13px;color:rgba(255,255,255,.75)}
+.cr-inj-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cr-inj-c{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;font:inherit;color:#F0F2F7;cursor:pointer;border-radius:16px;padding:16px 10px 14px;border:1.5px solid rgba(255,255,255,.14);background:rgba(24,20,28,.88);animation:crInjIn .5s cubic-bezier(.2,1.3,.4,1) both;animation-delay:var(--d);transition:border-color .15s,transform .15s}
+.cr-inj-c .e{font-size:30px;line-height:1}.cr-inj-c b{font-size:15px;line-height:1.35}.cr-inj-c .d{font-size:12px;line-height:1.45;color:rgba(255,255,255,.75)}
+.cr-inj-c:hover,.cr-inj-c:focus-visible,.cr-inj-c[aria-pressed="true"]{border-color:#C8A84B;transform:translateY(-3px)}
+@keyframes crInjIn{from{opacity:0;transform:translateX(var(--from)) scale(.94)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.cr-ss,.cr-ss *{animation:none!important}}
 .cr-anmsg{min-height:30px;text-align:center;font-family:var(--fd);font-size:26px;letter-spacing:1px}
 .cr-anmsg span{display:inline-block;animation:crPop .45s cubic-bezier(.3,1.6,.5,1) both}
 .cr-anmsg .inj{color:var(--loss);font-family:var(--fb);font-size:18px;font-weight:700}
@@ -9354,20 +9374,22 @@ function crSeason(btn){
   }).catch(function(e){ crAnimStop(); crPrep(); crErr(e); });
 }
 // ── 부상(시즌 중간 질문) ───────────────────────────────────────────────
-function crInjury(){
-  var p=CR.v.player, j=CR.v.injury;
-  var opt=function(k, ic, t, d){ return '<button class="cr-club" onclick="crInjPick('+k+',this)"><div style="font-size:22px;text-align:center">'+ic+'</div><div><div class="nm">'+t+'</div><div class="meta">'+d+'</div></div><div></div></button>'; };
-  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
-   +'<div class="cr-panel"><div class="cr-lbl"><b>🚑 '+(j.major?'큰 부상':'부상')+' — '+gmEsc(j.name)+'</b><span>'+p.age+'세 시즌</span></div>'
-   +'<div style="font-size:14px;line-height:1.6">'+(j.major?'시즌 대부분을 쉬어야 해요. 예상 결장 <b>'+j.games+'경기</b>.':'예상 결장 <b>'+j.games+'경기</b>. 복귀 시점을 정해 주세요.')+'</div>'
-   +'<div class="cr-list">'+(j.major
+function crInjury(){   // 시즌 진행 오버레이를 멈춘 자리 그대로 두고, 아래에 좌우 카드 두 장(사용자 지정)
+  var p=CR.v.player, j=CR.v.injury, at=(CR.anim && CR.anim.stopAt) || 0.4;
+  var opt=function(k, ic, t, d){ return '<button class="cr-inj-c" style="--from:'+(k?'60px':'-60px')+';--d:'+(0.15+k*0.12)+'s" onclick="crInjPick('+k+',this)"><span class="e" aria-hidden="true">'+ic+'</span><b>'+t+'</b><span class="d">'+d+'</span></button>'; };
+  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead(), '<div class="sum" style="flex:1">부상 처리 방법을 골라 주세요</div>');
+  crTovSet(crSsHtml((CR.injPre||[]).map(function(f){ return Math.round(f*at); }), true,
+    '<div class="cr-inj"><div class="hd"><b>🚑 '+(j.major?'큰 부상':'부상')+' — '+gmEsc(j.name)+'</b><span>'+(j.major?'시즌 대부분을 쉬어야 해요. 예상 결장 '+j.games+'경기':'예상 결장 '+j.games+'경기. 복귀 시점을 정해 주세요.')+'</span></div>'
+    +'<div class="cr-inj-row">'+(j.major
       ? opt(0,'🏥','수술 후 재활 집중','회복은 확실해요. 대신 스피드·체력 영구 −2')+opt(1,'🩹','보존 치료','스탯 손해 없음. 대신 다음 2시즌 부상 위험 ↑')
       : opt(0,'⚡','빨리 복귀','결장 절반. 대신 30% 확률로 재부상(추가 결장 + 이번 시즌 성장 ↓)')+opt(1,'🛌','완전히 회복','결장 그대로. 다음 시즌 부상 위험 ↓'))
-   +'</div></div>', '<div class="sum" style="flex:1">부상 처리 방법을 골라 주세요</div>');
-  window.scrollTo(0,0);
+    +'</div></div>'));
+  crSsPaint(at);
+  var m=document.getElementById('crAnMsg'); if(m) m.innerHTML='<span class="inj">🚑 '+gmEsc(j.name)+'!</span>';
 }
 function crInjPick(k, btn){
   if(!crBusy(btn)) return;
+  if(btn) btn.setAttribute('aria-pressed','true');
   var from=CR.anim && CR.anim.stopAt || 0.4;
   crAnimStart(from, true);
   crApi('season', {token:CR.tok, injPick:k}).then(function(v){ crAnimTo(1, v); })
@@ -9390,15 +9412,30 @@ function crAnimStart(from, resumed){
   var pre0=resumed && CR.injPre ? CR.injPre.map(function(f){ return Math.round(f*from); }) : lbs.map(function(){ return 0; });
   if(!resumed) CR.injPre=null;
   CR.anim={t:from, from:from, target:null, v:null, stopAt:null, raf:null, resumed:!!resumed, last:null, shown:pre0.slice()};
-  crRender('<div class="cr-top"><div></div><div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
-    +'<div class="cr-panel cr-anim"><div class="cr-lbl"><b>'+crSeasonLabel(p.age)+' 시즌 · '+gmEsc(p.club.team)+'</b><span id="crAnTick">'+(yth?'유스 리그':'리그')+'</span></div>'
+  crTovSet(crSsHtml(pre0, resumed, ''));
+  crAnimFrame();
+}
+// 시즌 진행 오버레이(사용자 지정 — 화면 대신 오버레이로). 밤 경기장 조명 아래 달력·진행 막대·기록 숫자. 부상이면 같은 오버레이에 좌우 카드 두 장.
+// still: 부상 질문처럼 다시 그릴 때 들어오는 애니메이션을 생략한다.
+function crSsHtml(vals, still, extra){
+  var p=CR.v.player, df=p.pos==='DF', yth=p.age<18 || /U-\d+$/.test(p.club.team||''), lbs=df?['경기','골','도움','클린시트']:['경기','골','도움'];
+  return '<div class="cr-ss'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행"><i class="beam l"></i><i class="beam r"></i><div class="cr-ss-box">'
+    +'<span class="tag">SEASON '+crSeasonLabel(p.age)+' · 시즌 '+(p.seasons+1)+'</span>'
+    +'<div class="cr-ss-club">'+crCrest(p.club,46)+'<div><b>'+gmEsc(p.club.team)+'</b><span>'+p.age+'세 · '+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div></div>'
+    +'<div class="cr-panel cr-anim"><div class="cr-lbl"><b>'+gmEsc(p.name)+'</b><span id="crAnTick">'+(yth?'유스 리그':'리그')+'</span></div>'
     +'<div class="cr-months">'+CR_MONTHS.map(function(m,i){ return '<span data-i="'+i+'">'+m+'</span>'; }).join('')+'</div>'
     +'<div class="cr-anbar" id="crAnTrack"><i id="crAnBar"></i><em id="crAnKnob"></em></div>'
-    +'<div class="cr-rs" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l,i){ return '<div><b id="crAn'+i+'">'+pre0[i]+'</b><span>'+l+'</span></div>'; }).join('')+'</div>'
-    +'<div class="cr-anmsg" id="crAnMsg"></div></div>',
-    '<button class="gm-btn ghost" style="flex:1" onclick="crAnimSkip()">건너뛰기</button>');
-  window.scrollTo(0,0);
-  crAnimFrame();
+    +'<div class="cr-rs" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l,i){ return '<div><b id="crAn'+i+'">'+(vals[i]||0)+'</b><span>'+l+'</span></div>'; }).join('')+'</div>'
+    +'<div class="cr-anmsg" id="crAnMsg"></div></div>'
+    +(extra||'<button class="cr-ss-skip" onclick="crAnimSkip()">건너뛰기 ›</button>')+'</div></div>';
+}
+function crSsPaint(t){   // 진행 막대·달·안내 문구를 t(0~1) 지점으로
+  var bar=document.getElementById('crAnBar'), knob=document.getElementById('crAnKnob'), tr=document.getElementById('crAnTrack');
+  if(bar) bar.style.transform='scaleX('+t+')';
+  if(knob && tr) knob.style.transform='translateX('+(t*tr.clientWidth)+'px)';
+  var mi=Math.min(9, Math.floor(t*10));
+  document.querySelectorAll('#crTov .cr-months span').forEach(function(el,i){ el.className=i<mi?'done':i===mi?'on':''; });
+  var tk=''; (CR.v.player.age<18?CR_TICK_Y:CR_TICK).forEach(function(x){ if(t>=x[0]) tk=x[1]; }); var te=document.getElementById('crAnTick'); if(te) te.textContent=tk;
 }
 function crAnimTo(target, v, injury){
   if(!CR.anim) return;
@@ -9408,7 +9445,7 @@ function crAnimTo(target, v, injury){
   if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) CR.anim.t=target;
 }
 function crAnimSkip(){ var A=CR.anim; if(A && A.target!=null) A.t=A.target; }
-function crAnimStop(){ if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf); CR.anim=null; }
+function crAnimStop(){ if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf); CR.anim=null; crTovSet(''); }
 function crAnimFrame(){
   var A=CR.anim; if(!A) return;
   var bar=document.getElementById('crAnBar'); if(!bar){ CR.anim=null; return; }   // 다른 화면으로 나감
@@ -9417,13 +9454,7 @@ function crAnimFrame(){
   var step=dt/2400;
   if(A.target==null) A.t=Math.min(A.from+0.2, A.t+step*Math.max(0.05, 1-(A.t-A.from)/0.2));
   else A.t=Math.min(A.target, A.t+step);
-  bar.style.transform='scaleX('+A.t+')';
-  var knob=document.getElementById('crAnKnob'), tr=document.getElementById('crAnTrack');
-  if(knob && tr) knob.style.transform='translateX('+(A.t*tr.clientWidth)+'px)';
-  // 달 글자는 바뀔 때만 건드린다(매 프레임 class를 다시 쓰지 않는다)
-  var mi=Math.min(9, Math.floor(A.t*10));
-  if(mi!==A.mi){ A.mi=mi; document.querySelectorAll('#gameRoot .cr-months span').forEach(function(el,i){ el.className=i<mi?'done':i===mi?'on':''; }); }
-  var tk=''; (CR.v.player.age<18?CR_TICK_Y:CR_TICK).forEach(function(x){ if(A.t>=x[0]) tk=x[1]; }); var te=document.getElementById('crAnTick'); if(te) te.textContent=tk;
+  crSsPaint(A.t);
   // 숫자는 시즌 진행률만큼 기록에 비례해 올린다. 결과가 오면 최종 기록, 부상 응답이면 그 "최소 기록"(pre)으로
   // 부상 시점까지 올리고, 이어 갈 땐 앞서 보인 숫자 밑으로 내려가지 않게 한다.
   var R=A.v && A.v.result, dfp=CR.v.player.pos==='DF', fin=null;
@@ -9444,7 +9475,7 @@ function crAnimFrame(){
       return;
     }
     if(msg) msg.innerHTML='<span>시즌 종료</span>';
-    A.raf=null; setTimeout(function(){ if(CR.anim===A){ CR.anim=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, 650);
+    A.raf=null; setTimeout(function(){ if(CR.anim===A){ CR.anim=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, 650);   // crShow가 오버레이를 닫는다
     return;
   }
   A.raf=requestAnimationFrame(crAnimFrame);
