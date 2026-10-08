@@ -5,7 +5,7 @@
 // 응답에 넣지 않는다(토큰은 암호화라 안 보인다). 설계는 docs/career-mode/implementation.md.
 //
 //   POST ?a=new     {name, nation, foot, pos, card, num, dream}  → {token, clubs}      첫 구단 3곳
-//   POST ?a=join    {token}            (첫 구단은 시드로 배정)        → {token, player, prep}
+//   POST ?a=join    {token, pick}                                 → {token, player, prep}
 //   POST ?a=season  {token, train, evPick[, injPick]}             → {token, injury} | {token, player, result}
 //   POST ?a=next    {token, pick?, trait?}                                → {token, player, prep} | {token, card}(은퇴)
 //   POST ?a=retire  {token}                                       → {token, card}
@@ -107,7 +107,7 @@ const resultView = C => {
 
 // 지금 단계에 맞는 화면 데이터
 function view(C){
-  if(C.phase === 'pick'){ const i = S.assignedFirst(C.input.nation, C.input.pos, C.input.card, C.seed); return {phase: 'pick', clubs: [firstView(C.input, C.seed)[i]]}; }
+  if(C.phase === 'pick') return {phase: 'pick', clubs: firstView(C.input, C.seed)};
   if(C.phase === 'retired') return {phase: 'retired', card: S.cardView(C)};
   const player = S.playerView(C);
   if(C.phase === 'prep') return {phase: 'prep', player, prep: S.prepView(C)};
@@ -159,9 +159,9 @@ export default async function handler(req, res){
     }
 
     if(a === 'join'){
-      // 첫 구단은 배정(고르지 않음) — body.pick은 무시한다
-      const P = load(body.token, ['pick']);
-      const C = S.createCareer(P.input, S.assignedFirst(P.input.nation, P.input.pos, P.input.card, P.seed), P.seed);
+      const P = load(body.token, ['pick']), pick = Number(body.pick);
+      if(!(Number.isInteger(pick) && pick >= 0 && pick < S.firstClubs(P.input.nation, P.input.pos, P.input.card, P.seed).length)) bad('구단을 골라 주세요.');
+      const C = S.createCareer(P.input, pick, P.seed);
       Object.assign(C, {v: FORMAT, id: P.id});
       return res.json({token: seal(C), ...view(C)});
     }

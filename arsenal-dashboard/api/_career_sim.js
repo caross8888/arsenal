@@ -18,14 +18,22 @@ export const BASE = 40, POOL = 50, MAXADD = 20, YOUTH_GAP = 30;
 // 골·도움 비율(G_RATE·A_RATE)·기여 점수·발롱 배율로 맞춘다. 54는 맞추기 전 재능별 정점이 그대로 나오는 값.
 export const START_OVR = 54;
 // 29~30세는 정체(0), 31세부터 매년 −0.5씩 커지는 하락(사용자 지정 — 정점을 몇 시즌 유지하게. 예전엔 29세부터 −0.5·−1·…).
-const AGE_BASE = {15:4,16:4,17:4,18:3.7,19:3.7,20:3.7,21:3.3,22:4,23:3.5,24:3,25:2.5,26:2,27:1.5,28:0.5,29:0,30:0,31:-0.5,32:-1,33:-1.5,34:-2,35:-2.5,36:-3,37:-3.5};
+const AGE_BASE = {15:4.7,16:4.7,17:4.7,18:3.7,19:3.7,20:3.7,21:3.3,22:4,23:3.5,24:3,25:2.5,26:2,27:1.5,28:0.5,29:0,30:0,31:-0.5,32:-1,33:-1.5,34:-2,35:-2.5,36:-3,37:-3.5};
 // 소속 단계(사용자 지정 — 예전엔 18세가 되면 누구나 1군): U-16 → U-18 → U-21 → 1군. 나이 기본 단계(15세 U-16, 16~17세 U-18, 18~21세 U-21,
 // 22세부터 1군)보다 실력이 앞서면 시즌 끝에 월반한다(구단 수준 − 오버롤이 문턱 이하, 문턱엔 시즌마다 ±2 운).
 // gap: 그 단계의 상대 수준(구단 수준에서 뺀다), games: 시즌 경기 수, up: 그 단계로 올라가는 "구단 수준 − 오버롤" 문턱(null = 나이로만).
-const STAGE = [{n:'U-16', gap:30, games:26, up:null}, {n:'U-18', gap:30, games:26, up:null}, {n:'U-21', gap:16, games:30, up:13}, {n:'', gap:0, games:42, up:8}];
+const STAGE = [{n:'U-16', gap:30, games:26, up:null}, {n:'U-18', gap:24, games:26, up:null}, {n:'U-21', gap:16, games:30, up:13}, {n:'', gap:0, games:42, up:8}];
 // 성장: 유스 단계는 출전 비율의 영향이 작고(0.9~1.2 — 유스 경기는 많이 뛰어도 1군만큼 크지 않다), 1군은 예전 출전 계수 그대로.
 // 나이 기본 단계보다 한 단계 높을 때마다 ×(1+STAGE_UP) — 또래보다 높은 무대에서 부딪히는 효과. 1군 벤치 ≈ U-21 주전, 1군에서 뛰면 그 이상.
-const STAGE_UP = 0.2, YPLAY = [0.9, 0.3];
+const STAGE_UP = 0.2, YPLAY = [0.9, 0.3], YPLAY_KID = [0.6, 0.8];   // 유스 출전 계수: 18세 이상 U-21 / 17세까지(첫 구단 시절)
+// 유스 단계(U-16~U-21)의 구단 수준 효과는 1군의 35%만(사용자 지정 — 첫 구단 3곳 중 "도전"이 늘 정답이던 것): 예전엔 맨시티 유스 ×1.85 vs 브라이튼 ×1.12로
+// 구단 수준이 유스 성장을 다 정해서 출전 기회 손해가 의미 없었다(점수 평균 도전 3,817 · 적정 3,263 · 안정 2,672). 대신 유스는 뛰는 만큼 크게(YPLAY_KID 0.6~1.4).
+// 17세까지만 — 18세 이상 U-21에도 걸었더니 1군에 올라가는 것보다 U-21에 남는 게 9~16% 더 컸다(월반의 의미가 뒤집힘).
+const ABROAD_G = 1.2;   // 해외 유스 성장 배율(17세까지) — 큰 리그 아카데미라 자국 작은 구단보다 출전·1군 데뷔가 늦다. 없으면 같은 선수의 적정보다 점수 −13%
+// 유스 계약 만료(18세가 되는 여름): 17세 시즌 선발 40% 미만이면 80% 확률로 재계약 없이 "내 오버롤 + 6" 근처 자국 구단으로(nextSeason).
+// 구단 수준이 아니라 출전 비율로 정한다 — 수준으로 정했더니 리그 전체가 강한 잉글랜드·독일 선수만 줄줄이 방출됐다.
+const YOUTH_CUT = 0.4, YOUTH_CUT_P = 0.8, YOUTH_CUT_TO = 6;   // 해외 유스 성장 배율(17세까지) — 큰 리그 아카데미는 자국 작은 구단보다 1군 데뷔가 늦어(월반 보너스 손해) 없으면 적정보다 점수 −22%였다
+const YOUTH_CC = 0.35;   // U21_CC: 18세 이상 U-21도 큰 구단(계수 1 초과) 몫은 25%만 — 큰 구단 U-21에 남는 게 작은 구단 1군보다 크게 크면 첫 구단 "도전"이 다시 정답이 된다
 // 어린 나이 월반은 문턱을 더 낮춘다(16세 1군 데뷔는 드물게): [U-21 문턱 −, 1군 문턱 −] 나이별
 const EARLY = {16:[8,14], 17:[4,7]};
 // 빅클럽(수준 85+) 16~17세 1군 데뷔(사용자 지정 — 은와네리·야말처럼 극히 드물게, 1만 커리어에 1명꼴): 위 문턱으론 불가능하다(17세에 84+ 필요).
@@ -42,7 +50,7 @@ const NAT_STR = {BRA:.18,FRA:.18,ESP:.16,ARG:.16,ENG:.14,GER:.12,POR:.10,NED:.08
 const CONT_CUP = {ENG:'유로',ESP:'유로',GER:'유로',ITA:'유로',FRA:'유로',POR:'유로',NED:'유로',BEL:'유로',NOR:'유로',BRA:'코파 아메리카',ARG:'코파 아메리카',KOR:'아시안컵',JPN:'아시안컵',USA:'골드컵',NGA:'아프리카 네이션스컵'};
 // 유스 아카데미 보정(사용자 지정): 유스 시절 성장 계수에 쓰는 구단 수준에 더한다. 첫 구단이 자국 리그라 리그가 약한 나라는
 // 유스 성장부터 뒤처졌다(아르헨티나·포르투갈·네덜란드 점수 중앙이 이탈리아·잉글랜드보다 40% 낮음). 실제로 유망주를 많이 길러 내는 나라는 크게.
-const ACAD = {ARG:14, BRA:10, POR:11, NED:11, BEL:12, ESP:7, FRA:8, GER:2, NOR:11, KOR:13, JPN:14, USA:12, NGA:15};   // 유스 성장 계수 단계(76·86) 기준: 유망주 강국은 적정 구단이 86 이상, 나머지는 76 이상이 되게
+const ACAD = {ARG:14, BRA:10, POR:11, NED:10, BEL:10, ESP:12, FRA:12, GER:13, ITA:8, ENG:13, NOR:11, KOR:6, JPN:6, USA:6, NGA:20};   // 유스 성장 계수 단계(76·86) 기준: 유망주 강국은 적정 구단이 86 이상, 나머지는 76 이상이 되게
 const CONT_MUL = {ENG:1.3,ESP:1.4,GER:1.4,ITA:1.4,FRA:1.4,POR:1.4,NED:1.5,BEL:1.6,NOR:2,BRA:2.2,ARG:2.2,KOR:6,JPN:6,USA:12,NGA:6};
 // 수상 등급: f 명성, g 다음 시즌 성장 배율, p 커리어 점수
 export const HONOR_TIER = {S:{f:5,g:1.08,p:200}, A:{f:3,g:1.05,p:80}, B:{f:2,g:1.03,p:50}, C:{f:1,g:1,p:15}};
@@ -192,7 +200,7 @@ export function firstClubs(nation, pos, card, seed){
   return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp(((c.r-YOUTH_GAP)-myRep)/7))), grow: growLv(c.r + (c.nat===nation ? ACAD[nation]||0 : 0))}));
 }
 
-// 첫 구단은 고르지 않고 시드로 배정한다(사용자 지정): 고르게 하면 "도전"이 하위 10%까지 늘 유리한 정답이었다(점수 평균 +18% vs 적정, +43% vs 안정).
+// 첫 구단 무작위 배정 — 지금은 게임에서 쓰지 않고(사용자가 셋 중 고른다) 분석 스크립트의 "아무거나 고르는 사람"용으로 남겨 둔다.
 // 도전·적정·안정 중 하나를 같은 확률로, 해외 유스 선택지가 나온 커리어는 절반 확률로 해외 유스.
 export function assignedFirst(nation, pos, card, seed){
   const list = firstClubs(nation, pos, card, seed), r = mulberry((seed>>>0) ^ hashStr('assign'));
@@ -448,8 +456,11 @@ export function playSeason(state, choice){
   if(base > 0){
     // 99 근처 감속: 최소값 없이 99.6에 다가갈수록 0에 가깝게 줄어든다. 예전엔 최소 40%라 상위권이 계속 커서 99 상한에 부딪혀 쌓였다(사용자 지적).
     const dmp = Math.min(1, Math.max(DAMP[0], (99.6-C.ovr)/DAMP[1]));
-    const play = (row0Youth ? YPLAY[0]+YPLAY[1]*ratio : playCoef(ratio)) * (1 + STAGE_UP*Math.max(0, lv-defLv(C.age)));
-    C.ovr = Math.min(99, C.ovr + C.boost*base*play*clubCoef(club.r + (C.age<18 && !onLoan && club.nat===C.nation ? ACAD[C.nation]||0 : 0))*luck*growMul*C.talent*devOf()*K_GROW*dmp);
+    const kid = row0Youth && C.age < 18, yp = kid ? YPLAY_KID : YPLAY;
+    if(kid && club.nat !== C.nation) growMul *= ABROAD_G;   // 해외 유스: 큰 리그 아카데미의 경쟁·훈련(자국 유스의 ACAD 보정 대신)
+    const play = (row0Youth ? yp[0]+yp[1]*ratio : playCoef(ratio)) * (1 + STAGE_UP*Math.max(0, lv-defLv(C.age)));
+    const cc0 = clubCoef(club.r + (C.age<18 && !onLoan && club.nat===C.nation ? ACAD[C.nation]||0 : 0)), cc = kid ? 1 + (cc0-1)*YOUTH_CC : cc0;
+    C.ovr = Math.min(99, C.ovr + C.boost*base*play*cc*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
     declMul *= (commonOf()||{}).decl || 1;
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
@@ -682,10 +693,18 @@ export function nextSeason(state, pick, traitPick){
   const r = C.hist[C.hist.length-1]; delete r.notes; delete r.coach; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
   const moved = pick != null, lv0 = lvOf();
   C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
+  // 유스 계약 만료(18세가 되는 여름): 첫 구단 유스에서 구단 수준에 한참 못 미치면 재계약 없이 내보낸다 → 실력에 맞는 자국 구단으로.
+  // 큰 구단 유스(첫 구단 "도전")의 대가 — 없으면 출전 기회가 적어도 잃을 게 없어서 도전이 늘 정답이었다.
+  if(!moved && C.age === 18 && lv0 < 3 && C.last && C.last.starts/Math.max(1,C.last.games) < YOUTH_CUT && mulberry(C.seed ^ hashStr('cut'))() < YOUTH_CUT_P){
+    const near = ALL.filter(c => c.nat === C.club.nat && c.n !== C.club.n && Math.abs(c.r - (cOvr() + YOUTH_CUT_TO)) <= 4);
+    const to = near.length ? near[Math.floor(mulberry(C.seed ^ hashStr('cutto'))()*near.length)] : null;
+    if(to){ C.cutFrom = C.club.n; C.club = to; if(!C.clubs.includes(to.n)) C.clubs.push(to.n); }
+  }
   C.lv = Math.max(stageFor(C.club, !moved), moved && lv0===3 ? 3 : 0);   // 1군 선수를 데려간 구단은 1군으로 쓴다(이적했더니 U-21로 내려가는 일이 없게)
   // 승격 알림: 다음 시즌 준비 화면 맨 위에 한 번(prepView.promo)
   if(C.lv > Math.max(lv0, defLv(C.age)) || moved && C.lv===3 && C.age<22 && lv0<3) C.stageNote = C.prodigy && C.age<18 ? C.club.n+' 1군에 '+C.age+'세로 데뷔! 구단 역사에 남을 최연소급 데뷔예요.' : C.lv===3 ? (C.age<=18 ? '1군에 합류했어요! 또래보다 빠른 데뷔예요.' : '1군에 합류했어요!') : STAGE[C.lv].n+'로 월반했어요! 형들과 부딪히며 더 크게 성장해요.';
   else if(C.lv===3 && lv0<3) C.stageNote = '1군에 합류했어요.';
+  if(C.cutFrom){ C.stageNote = C.cutFrom+' 유스와 재계약하지 못했어요. '+C.club.n+(C.lv===3 ? ' 1군' : ' '+STAGE[C.lv].n)+'에서 새로 시작해요.'; delete C.cutFrom; }
   newEvent();
   return C;
 }
@@ -719,7 +738,7 @@ const MF_BONUS = [[/리그 베스트 11$/, 1.8], [/^월드 베스트 11$/, 1.6],
 const TROPHY_PTS = [[/^챔피언스리그 우승$/, 150], [/^(?!유스).+ 리그 우승$/, 80], [/^월드컵 우승$/, 300]];   // 유스 리그 우승은 0점 그대로
 // 카드별 개인상 점수 배율(사용자 지정 — 카드마다 상위 1% 점수가 최소 8,300은 되게). 개인상(득점왕·베스트 11·올해의 선수·발롱 등, 팀 우승·대표팀 제외)에만 곱한다.
 // 개인상은 상위권에 몰려 있어(상위 1% 1,100~2,800점, 점수 중앙 선수는 3~40점) 보통 선수 점수는 거의 그대로 두고 상한만 올린다. 순서는 CARDS와 같음.
-const CARD_HON = {FW:[1.08,1,1,1,1], MF:[1,1,1.2,1,1.25], DF:[1.25,1.47,1.12,1.15,1.15,1.12]};
+const CARD_HON = {FW:[1.08,1,1,1,1.08], MF:[1.1,1,1.2,1.1,1.25], DF:[1.25,1.47,1.3,1.35,1.3,1.2]};
 export function careerScore(state){
   const ch = (CARD_HON[state.pos]||[])[state.card] || 1;
   const seen = {};
