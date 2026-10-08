@@ -130,7 +130,7 @@ function traitMods(){
     m.g *= e.g||1; m.a *= e.a||1; m.cs *= e.cs||1; m.r += e.r||0; m.st += e.st||0; m.inj += e.inj||0; m.goty *= e.goty||1; }
   return m;
 }
-const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95, LOAN_GO_Y = 1.1;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련). U-21에서 가는 임대는 첫 성인 무대 경험이라 ↑(_Y)
+const LOAN_STAY = [1.0, 0.03], LOAN_GO = 1.08, LOAN_GO_Y = 1.1;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련). U-21에서 가는 임대는 첫 성인 무대 경험이라 ↑(_Y)
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 // 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
 const G_RATE = {FW:0.41, MF:0.126, DF:0.031}, A_RATE = {FW:0.181, MF:0.168, DF:0.052};
@@ -278,12 +278,15 @@ function newEvent(){
   // 약발 훈련: 공격수·미드필더, 20세까지, 시즌당 30% 확률
   const r2 = mulberry(C.seed ^ hashStr('wf'+C.age))();
   if(!loan && (C.pos==='FW'||C.pos==='MF') && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');
-  C.ev = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null;
+  C.ev = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null; delete C.loanClubs;
   if(ev.id === 'loan'){
+    // 임대 구단은 두 곳 중 고른다(사용자 지정): 후보를 수준순으로 반으로 나눠 위쪽(덜 뛰지만 수준 높은 팀)·아래쪽(많이 뛰는 팀)에서 하나씩
     let cands = ALL.filter(c => c.nat===C.club.nat && c.r<=C.club.r-10 && c.r>=C.club.r-22);
     if(!cands.length) cands = ALL.filter(c => c.r < C.club.r-8);
-    C.loanClub = cands[Math.floor(r*cands.length)] || null;
-    if(!C.loanClub) C.ev = 'coach';
+    cands = [...cands].sort((a,b) => b.r-a.r);
+    const h = Math.ceil(cands.length/2), r3 = mulberry(C.seed ^ hashStr('loan2|'+C.age))();
+    const picks = [cands[Math.floor(r*h)], cands.length > 1 ? cands[h + Math.floor(r3*(cands.length-h))] : null].filter(Boolean);
+    if(picks.length) C.loanClubs = picks; else C.ev = 'coach';
   }
 }
 
@@ -325,6 +328,7 @@ export function prepView(state){
   let d = ev.d;
   if(ev.id === 'media' && (C.mediaN || C.age > 20)) d =   // "첫 인터뷰"는 어릴 때 처음 한 번만
     ['기자들이 이번 시즌 각오를 묻고 있어요.','스포츠 매체에서 단독 인터뷰를 요청했어요.','개막 전 기자회견에 나서게 됐어요.','팬 채널에서 인터뷰를 하고 싶대요.'][C.age % 4];
+  if(ev.id === 'loan' && loanList().length > 1) d = '두 구단에서 한 시즌 임대 제안이 왔어요. 갈 곳을 고르거나, 남아서 경쟁할 수 있어요.';
   if(ev.id === 'weak') d = '코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. 양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요. 대신 이번 시즌 다른 훈련 시간이 줄어요.';
   let goal;
   const lv = lvOf();
@@ -334,9 +338,10 @@ export function prepView(state){
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 완화)' : ' (감독 신뢰 ↑)')];
   return {goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
-    loanClub: C.ev==='loan' && C.loanClub ? {...pub(C.loanClub), chance: chanceOf(pStart(C.loanClub))} : null};
+    loanClubs: C.ev==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
 }
 
+const loanList = () => C.loanClubs || (C.loanClub ? [C.loanClub] : []);   // 옛 토큰은 임대 구단 하나(loanClub)
 // ── 부상 ──────────────────────────────────────────────────────────────
 function injRiskOf(){
   const k = C.evPick; let r = INJ[0];
@@ -358,7 +363,7 @@ function rollInjury(){
 }
 
 // ── 시즌 진행 ──────────────────────────────────────────────────────────
-// choice: {train, evPick, injPick}. 부상이 났는데 injPick이 없으면 {injury}만 돌려준다(상태는 그대로 두고
+// choice: {train, evPick, loanPick, injPick}. loanPick: 임대 이벤트에서 "간다"(evPick 0)일 때 고른 임대 구단 번호. 부상이 났는데 injPick이 없으면 {injury}만 돌려준다(상태는 그대로 두고
 // 부상 결과만 C.inj에 남김 — 같은 요청을 injPick과 함께 다시 부르면 이어서 계산한다).
 export function playSeason(state, choice){
   C = state;
@@ -367,6 +372,11 @@ export function playSeason(state, choice){
   if(C.phase === 'prep'){
     if(choice.evPick !== 0 && choice.evPick !== 1) throw new Error('evPick');
     C.evPick = choice.evPick;
+    if(C.ev === 'loan' && C.evPick === 0){
+      const lc = loanList()[choice.loanPick ?? 0];
+      if(!lc) throw new Error('loanPick');
+      C.loanClub = lc; delete C.loanClubs;
+    }
     rollInjury();
   }
   if(C.inj){

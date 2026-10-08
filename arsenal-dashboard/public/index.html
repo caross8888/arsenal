@@ -1762,7 +1762,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hc-st em{display:block;height:100%;background:#fff;border-radius:3px;transition:width .5s}
 .cr-hc-st b{text-align:right;font-variant-numeric:tabular-nums}
 .cr-stars{color:#E9C766;letter-spacing:1px}
-.cr-loanc{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px}
+.cr-loanc{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px;width:100%;border:1.5px solid transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.cr-loanc[aria-pressed="true"]{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--surface2))}
 /* 시즌 결과 */
 .cr-rs{display:grid;grid-template-columns:repeat(5,1fr);text-align:center}
 .cr-rs b{display:block;font-family:var(--fd);font-size:26px;font-weight:400;line-height:1.1}
@@ -9015,7 +9016,7 @@ function crTovSet(html){
 function crShow(v){
   crTovSet('');
   CR.busy=false; CR.v=v; CR.tok=v.token; CR.armed=null; crStore(v);
-  if(v.phase==='prep'){ CR.evPick=null; return crPrep(); }
+  if(v.phase==='prep'){ CR.evPick=null; CR.loanPick=null; return crPrep(); }
   if(v.phase==='injury') return crInjury();
   if(v.phase==='result'){ CR.traitPick=null; CR.pick=v.result.released && v.result.offers.length ? 0 : null; CR.fresh=!!CR.animDone; CR.animDone=false; return crResult(); }
   if(v.phase==='retired') return crRetired();
@@ -9058,7 +9059,7 @@ function crBack(){ return '<button class="gm-back" onclick="gameList()">← 게�
 
 // ── 시즌 준비 ──────────────────────────────────────────────────────────
 function crPrep(){
-  var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lc=pr.loanClub;
+  var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lcs=pr.loanClubs||(pr.loanClub?[pr.loanClub]:[]);
   // 성장이 멈춘 뒤엔 훈련 방향 대신 시즌 운영(몸 관리·균형·주전 경쟁) — 서버가 지금 고를 수 있는 것을 준다
   var topts=pr.trainOpts||['강점 강화','균형','약점 보완']; if(topts.indexOf(CR.train)<0) CR.train='균형';
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
@@ -9073,8 +9074,10 @@ function crPrep(){
      :pr.keyMax?'<div class="cr-note" style="margin-top:6px">주요 능력이 모두 최고치예요. 강점 강화로는 더 오를 데가 없어요.</div>'
      :pr.keyCapped&&pr.keyCapped.length?'<div class="cr-note" style="margin-top:6px">'+gmEsc(pr.keyCapped.join('·'))+'은(는) 이미 최고치라 강점 강화 효율이 절반으로 떨어져요.</div>':'')+'</div>'
    +'<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(ev.t)+'</b><span>이벤트</span></div><div style="font-size:14px;line-height:1.5">'+d
-   +(lc?'<div class="cr-loanc">'+crCrest(lc,30)+'<div><b>'+gmEsc(lc.n)+'</b><div class="cr-note">'+crNat(lc.nat).f+' '+crNat(lc.nat).n+' · 1시즌 임대</div></div>'+crChance(lc.chance)+'</div>':'')
-   +'</div><div class="cr-seg">'+ev.a.map(function(t,k){
+   // 임대: 구단 카드를 눌러 "간다"(evPick 0 + loanPick), 아래 버튼은 "남는다"만
+   +(lcs.length?lcs.map(function(lc,k){ return '<button class="cr-loanc" aria-pressed="'+(CR.evPick===0&&CR.loanPick===k)+'" onclick="CR.evPick=0;CR.loanPick='+k+';crPrep()">'+crCrest(lc,30)+'<div><b>'+gmEsc(lc.n)+'</b><div class="cr-note">'+crNat(lc.nat).f+' '+crNat(lc.nat).n+' · 1시즌 임대</div></div>'+crChance(lc.chance)+'</button>'; }).join(''):'')
+   +'</div><div class="cr-seg"'+(lcs.length?' style="--n:1"':'')+'>'+ev.a.map(function(t,k){
+     if(lcs.length&&k===0) return '';
      // "고용한다 (성장 ↑ · 부상 위험 ↑)" → 굵은 한 줄 + 작은 효과 줄(버튼이 길어지지 않게)
      var m=String(t).match(/^(.*?)\s*\((.*)\)$/);
      return '<button class="cr-chip cr-opt" aria-pressed="'+(CR.evPick===k)+'" onclick="CR.evPick='+k+';crPrep()"><b>'+gmEsc(m?m[1]:t)+'</b>'+(m?'<small>'+crFx(m[2])+'</small>':'')+'</button>'; }).join('')+'</div></div>'
@@ -9085,7 +9088,7 @@ function crSeason(btn){
   if(!crBusy(btn,'시즌 진행 중...')) return;
   var age=CR.v.player.age;
   crAnimStart(0);
-  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick}).then(function(v){
+  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick, loanPick:CR.loanPick||0}).then(function(v){
     // 부상이면 시즌 중간(부상 시점)까지만 진행하고 멈춘다. 결과면 끝까지.
     if(v.phase==='injury') crAnimTo(0.3+((v.injury.games*7+age)%25)/100, v, true);
     else crAnimTo(1, v);

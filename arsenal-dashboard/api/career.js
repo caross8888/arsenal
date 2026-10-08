@@ -6,7 +6,7 @@
 //
 //   POST ?a=new     {name, nation, foot, pos, card, num, dream}  → {token, clubs}      첫 구단 3곳
 //   POST ?a=join    {token, pick}                                 → {token, player, prep}
-//   POST ?a=season  {token, train, evPick[, injPick]}             → {token, injury} | {token, player, result}
+//   POST ?a=season  {token, train, evPick[, loanPick][, injPick]}             → {token, injury} | {token, player, result}
 //   POST ?a=next    {token, pick?, trait?}                                → {token, player, prep} | {token, card}(은퇴)
 //   POST ?a=retire  {token}                                       → {token, card}
 //   POST ?a=view    {token}                                       → 지금 단계 화면(이어 하기)
@@ -181,12 +181,12 @@ export default async function handler(req, res){
     if(a === 'season'){
       const C = load(body.token, ['prep', 'injury']);
       // 부상 질문에 답하는 두 번째 호출은 첫 호출의 훈련·이벤트 선택을 그대로 쓴다(토큰에 남겨 둔 것)
-      const choice = C.phase === 'injury' ? {...C.pending, injPick: Number(body.injPick)} : {train: body.train, evPick: Number(body.evPick)};
+      const choice = C.phase === 'injury' ? {...C.pending, injPick: Number(body.injPick)} : {train: body.train, evPick: Number(body.evPick), loanPick: Number(body.loanPick) || 0};
       if(C.phase === 'prep' && ![0, 1].includes(choice.evPick)) bad('이벤트 선택지를 골라 주세요.');
       if(C.phase === 'injury' && ![0, 1].includes(choice.injPick)) bad('부상 대처를 골라 주세요.');
       const r = S.playSeason(C, choice);
       if(r.injury){
-        C.pending = {train: choice.train, evPick: choice.evPick};
+        C.pending = {train: choice.train, evPick: choice.evPick};   // 임대 구단은 이미 C.loanClub에 정해졌다
         // 시즌 진행 화면이 부상 전까지도 숫자를 올릴 수 있게: 부상 처리를 어느 쪽으로 골라도 나오는 최소 기록.
         // (최종 기록은 이보다 작아지지 않아서, 부상 뒤 이어서 올라가도 숫자가 뒤로 가지 않는다) 상태는 건드리지 않는다.
         const pre = [0, 1].map(k => { const c = JSON.parse(JSON.stringify(C)); return S.playSeason(c, {...C.pending, injPick: k}).row; })
