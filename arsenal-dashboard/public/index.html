@@ -9408,7 +9408,7 @@ function crResult(){
       h+='<div class="cr-goal"><span class="cr-goal-tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성')+'</span><div class="cr-tsel">'+tImg(tp)
         +'<div><b>'+gmEsc(tp.n)+'</b><span>'+gmEsc(tp.d)+'</span></div><button onclick="CR.traitPick=null;crResult()">다시 고르기</button></div></div>'; }
   }
-  if(!R.forced){
+  if(!R.forced && (R.released || R.offers.length)){   // 제안이 없어 잔류뿐이면 이적시장 칸은 안 띄운다
     h+='<div class="cr-panel"><div class="cr-lbl"><b>'+(R.released?'계약 만료 · 방출':'이적시장')+'</b><span>'+(R.offers.length?'제안 '+R.offers.length+'개':'제안 없음')+'</span></div>';
     if(r.age<17) h+='<div class="cr-note">17세부터 다른 구단 제안을 받을 수 있어요.</div>';
     if(R.released) h+='<div class="cr-note">'+gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 낮은 수준의 구단에서 커리어를 이어 가거나 은퇴할 수 있어요.</div>';
