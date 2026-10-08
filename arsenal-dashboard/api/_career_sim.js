@@ -649,10 +649,12 @@ export function contribScore(state){ const w = CONTRIB[state.pos], t = state.tot
 const REPEAT_PTS = [1, 0.8, 0.65, 0.5, 0.4, 0.35], REPEAT_AW = /^(발롱도르|FIFA 올해의 선수)$/;
 // 수비수 가점(사용자 지정): 수비수는 발롱을 여러 번 받기 어려워 통합 최상위에서 사라졌다 — 수비수의 대표 상과 발롱을 더 쳐 준다.
 const DF_BONUS = [[/올해의 수비수$/, 1.6], [/^월드 베스트 11$/, 1.6], [/^발롱도르$/, 2]];
+// 미드필더도 발롱 반복 감점 때문에 최상위가 얇아 발롱 점수만 ×1.2(사용자 지정 — 1.4는 과하다)
+const MF_BONUS = [[/^발롱도르$/, 1.2]];
 export function careerScore(state){
   const seen = {};
   const hp = honorsOf(state).reduce((t,h) => {
-    const mul = state.pos==='DF' ? ((DF_BONUS.find(b => b[0].test(h.n))||[0,1])[1]) : 1;
+    const bon = {DF:DF_BONUS, MF:MF_BONUS}[state.pos], mul = bon ? ((bon.find(b => b[0].test(h.n))||[0,1])[1]) : 1;
     const base = (HONOR_TIER[h.tier]||{p:0}).p*mul, n = +(String(h.n).split('×')[1])||1;
     if(!REPEAT_AW.test(h.n)) return t + base*n;
     const k = seen[h.n] = (seen[h.n]||0) + 1;
