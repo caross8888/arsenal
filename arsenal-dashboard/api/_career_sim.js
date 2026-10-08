@@ -28,6 +28,9 @@ const DECLINE = {'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5,'빌드�
 const NAT_BAR = {ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
 const NAT_STR = {BRA:.18,FRA:.18,ESP:.16,ARG:.16,ENG:.14,GER:.12,POR:.10,NED:.08,ITA:.08,BEL:.06,NOR:.03,JPN:.03,USA:.02,KOR:.02,NGA:.02};
 const CONT_CUP = {ENG:'유로',ESP:'유로',GER:'유로',ITA:'유로',FRA:'유로',POR:'유로',NED:'유로',BEL:'유로',NOR:'유로',BRA:'코파 아메리카',ARG:'코파 아메리카',KOR:'아시안컵',JPN:'아시안컵',USA:'골드컵',NGA:'아프리카 네이션스컵'};
+// 유스 아카데미 보정(사용자 지정): 유스 시절 성장 계수에 쓰는 구단 수준에 더한다. 첫 구단이 자국 리그라 리그가 약한 나라는
+// 유스 성장부터 뒤처졌다(아르헨티나·포르투갈·네덜란드 점수 중앙이 이탈리아·잉글랜드보다 40% 낮음). 실제로 유망주를 많이 길러 내는 나라는 크게.
+const ACAD = {ARG:14, BRA:10, POR:11, NED:11, BEL:12, ESP:7, FRA:8, GER:2, NOR:11, KOR:13, JPN:14, USA:12, NGA:15};   // 유스 성장 계수 단계(76·86) 기준: 유망주 강국은 적정 구단이 86 이상, 나머지는 76 이상이 되게
 const CONT_MUL = {ENG:1.3,ESP:1.4,GER:1.4,ITA:1.4,FRA:1.4,POR:1.4,NED:1.5,BEL:1.6,NOR:2,BRA:2.2,ARG:2.2,KOR:6,JPN:6,USA:12,NGA:6};
 // 수상 등급: f 명성, g 다음 시즌 성장 배율, p 커리어 점수
 export const HONOR_TIER = {S:{f:5,g:1.08,p:200}, A:{f:3,g:1.05,p:80}, B:{f:2,g:1.03,p:50}, C:{f:1,g:1,p:15}};
@@ -104,7 +107,8 @@ const CARD_CONTRIB = {FW:[1.25,0.97,0.94,0.96,1.08], MF:[1.15,0.8,0.92,0.91,1.34
 const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[0.85,1.15]};
 // 발전 운: 커리어마다 하나, 성장에 곱한다(같은 재능이라도 선수마다 다르게 — 사용자 지적: "재능이 결과를 다 정한다")
 const DEV = [0.8, 1.2];
-const K_GROW = 0.47, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
+// K_GROW 0.47 → 0.445: 유스 아카데미 보정으로 늘어난 유스 성장만큼 낮춰 재능별 정점을 예전대로(75.9/79.0/85.6/92.8)
+const K_GROW = 0.445, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
 const BALLON = {mu:138, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.08, DF:0.95}, top:4, inc:10, recW:0.7, fat:{FW:0, MF:5, DF:25}};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점.
 // fat: 받은 횟수당 감점, 포지션별 — 공격수는 10회도 자연스럽지만 미드필더는 메시·호날두급이어도 5~6회, 수비수는 세대급이어도 2회 안팎이 상식선(사용자 지정)
@@ -391,7 +395,7 @@ export function playSeason(state, choice){
   if(base > 0){
     // 99 근처 감속: 최소값 없이 99.6에 다가갈수록 0에 가깝게 줄어든다. 예전엔 최소 40%라 상위권이 계속 커서 99 상한에 부딪혀 쌓였다(사용자 지적).
     const dmp = Math.min(1, Math.max(DAMP[0], (99.6-C.ovr)/DAMP[1]));
-    C.ovr = Math.min(99, C.ovr + C.boost*base*playCoef(ratio)*clubCoef(club.r)*luck*growMul*C.talent*devOf()*K_GROW*dmp);
+    C.ovr = Math.min(99, C.ovr + C.boost*base*playCoef(ratio)*clubCoef(club.r + (row0Youth ? ACAD[C.nation]||0 : 0))*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
     declMul *= (commonOf()||{}).decl || 1;
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
