@@ -1939,6 +1939,39 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tr-o .fxs{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}
 .cr-tr-o .fx{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.75)}
 .cr-tr-o .fx.good{background:rgba(34,197,94,.16);color:#4ADE80}.cr-tr-o .fx.bad{background:rgba(239,68,68,.16);color:#FCA5A5}
+.cr-tm{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(16,22,48,.95),rgba(5,6,12,.96) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
+.cr-tm-x{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#F0F2F7;font-size:16px;cursor:pointer;z-index:2}
+.cr-tm-box{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px;margin:auto 0}
+.cr-tm .tag{align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#fff;background:#EF0107;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .1s ease-out both}
+.cr-tm-note{display:flex;gap:12px;align-items:center;background:#F0F2F7;color:#14161C;border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crTmDrop .55s .25s cubic-bezier(.2,1.3,.4,1) both}
+.cr-tm-note .ic{font-size:26px;animation:crTmShake .5s .8s ease-in-out}
+.cr-tm-note b{display:block;font-size:15px}.cr-tm-note span{font-size:12.5px;color:#4b5060;line-height:1.45}
+@keyframes crTmDrop{from{opacity:0;transform:translateY(-40px)}to{opacity:1;transform:none}}
+@keyframes crTmShake{25%{transform:rotate(-14deg)}50%{transform:rotate(12deg)}75%{transform:rotate(-6deg)}}
+.cr-tm-list{display:flex;flex-direction:column;gap:9px}
+.cr-tm-c{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;text-align:left;font:inherit;color:#F0F2F7;cursor:pointer;border-radius:16px;padding:12px 14px;border:1.5px solid rgba(255,255,255,.14);background:rgba(20,24,40,.85);animation:crTmIn .5s cubic-bezier(.2,1.25,.4,1) both;animation-delay:var(--d);transition:border-color .15s,transform .15s}
+.cr-tm-c:hover,.cr-tm-c:focus-visible{border-color:#C8A84B;transform:translateX(3px)}
+.cr-tm-c .tg{font-size:11px;font-weight:700;color:#C8A84B}.cr-tm-c .nm{font-size:16px;font-weight:700;line-height:1.3}.cr-tm-c .mt{font-size:12px;color:rgba(255,255,255,.75)}
+.cr-tm-ret{width:40px;height:40px;display:grid;place-items:center;font-size:24px}
+@keyframes crTmIn{from{opacity:0;transform:translateX(70px) rotate(3deg)}to{opacity:1;transform:none}}
+.cr-tm.done{background:radial-gradient(90% 60% at 50% 45%,rgba(120,8,12,.92),rgba(5,6,12,.97) 70%)}
+.cr-tmd{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;color:#F0F2F7}
+.cr-tmd-row{display:flex;align-items:center;gap:16px}
+.cr-tmd .old{opacity:.55;animation:crTmOld .6s .1s ease-out both}
+.cr-tmd .arr{font-size:26px;color:#C8A84B;animation:crIvUp .4s .45s ease-out both}
+.cr-tmd .new{animation:crTmNew .7s .6s cubic-bezier(.2,1.6,.4,1) both;filter:drop-shadow(0 0 22px rgba(255,215,120,.45))}
+.cr-tmd .stamp{font-size:15px;font-weight:800;letter-spacing:3px;color:#EF0107;background:#F0F2F7;border-radius:6px;padding:4px 14px;transform:rotate(-6deg);animation:crTmStamp .45s 1.05s cubic-bezier(.3,1.6,.5,1) both}
+.cr-tmd .hwg{font-family:var(--fd);font-size:44px;line-height:1;color:#C8A84B;letter-spacing:1px;animation:crTmHwg .6s 1.35s cubic-bezier(.2,1.4,.4,1) both}
+.cr-tmd .who{font-size:14px;color:rgba(255,255,255,.75);animation:crIvUp .4s 1.6s ease-out both}.cr-tmd .who b{color:#F0F2F7}
+@keyframes crTmOld{from{opacity:0;transform:translateX(-30px)}to{opacity:.55;transform:none}}
+@keyframes crTmNew{from{opacity:0;transform:scale(.2) rotate(-25deg)}to{opacity:1;transform:none}}
+@keyframes crTmStamp{from{opacity:0;transform:rotate(-6deg) scale(2.6)}to{opacity:1;transform:rotate(-6deg) scale(1)}}
+@keyframes crTmHwg{from{opacity:0;transform:scale(.6);letter-spacing:12px}to{opacity:1;transform:none}}
+.cr-tm .conf{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cr-tm .conf i{position:absolute;top:-12px;left:var(--x);width:8px;height:12px;background:var(--c);border-radius:2px;opacity:0;animation:crTmConf 1.8s var(--d) ease-in both}
+@keyframes crTmConf{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:1;transform:translateY(105vh) rotate(var(--r))}}
+@media (prefers-reduced-motion: reduce){.cr-tm,.cr-tm *{animation:none!important}.cr-tm .conf{display:none}}
 .cr-tr-o[aria-pressed="true"]{border-color:#22C55E;background:rgba(22,60,38,.9);transform:translateY(-3px)}
 @keyframes crTrCard{from{opacity:0;transform:translateY(40px) scale(.92)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.cr-tr,.cr-tr *{animation:none!important}}
@@ -9475,23 +9508,14 @@ function crResult(){
       h+='<div class="cr-goal"><span class="cr-goal-tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성')+'</span><div class="cr-tsel">'+tImg(tp)
         +'<div><b>'+gmEsc(tp.n)+'</b><span>'+gmEsc(tp.d)+'</span></div><button onclick="CR.traitPick=null;crResult()">다시 고르기</button></div></div>'; }
   }
-  if(!R.forced && (R.released || R.offers.length)){   // 제안이 없어 잔류뿐이면 이적시장 칸은 안 띄운다
-    h+='<div class="cr-panel"><div class="cr-lbl"><b>'+(R.released?'계약 만료 · 방출':'이적시장')+'</b><span>'+(R.offers.length?'제안 '+R.offers.length+'개':'제안 없음')+'</span></div>';
-    if(r.age<17) h+='<div class="cr-note">17세부터 다른 구단 제안을 받을 수 있어요.</div>';
-    if(R.released) h+='<div class="cr-note">'+gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 낮은 수준의 구단에서 커리어를 이어 가거나 은퇴할 수 있어요.</div>';
-    h+='<div class="cr-list">'
-     +(R.released?'':'<button class="cr-club" aria-pressed="'+(CR.pick==null)+'" onclick="CR.pick=null;crResult()">'+crCrest(p.club)+'<div><div class="tag">잔류</div><div class="nm">'+gmEsc(p.club.n)+'</div><div class="meta">'+crFlag(p.club.nat)+crNat(p.club.nat).n+'</div>'+'</div><div>'+(R.stay?crChance(R.stay.chance):'')+'</div></button>')
-     +R.offers.map(function(o,k){
-        return '<button class="cr-club" aria-pressed="'+(CR.pick===k)+'" onclick="CR.pick='+k+';crResult()">'+crCrest(o)+'<div><div class="tag">'+o.kind+(o.dream?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+gmEsc(o.n)+'</div>'
-          +'<div class="meta">'+crFlag(o.nat)+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':'')+'</div>'+'</div><div>'+crChance(o.chance)+'</div></button>'; }).join('')
-     +'</div></div>';
-  }
+  // 이적시장은 결과 화면 칸 대신 "이적시장 열기" 버튼 → 오버레이(crTmShow, 사용자 지정). 제안 없이 잔류뿐이면 버튼 없이 바로 다음 시즌.
+  var tm=!R.forced && (R.released || R.offers.length);
   h+=crHist();
   var y=window.scrollY;
   crRender(h, R.forced
     ? '<button class="gm-btn" onclick="crRetire(this,true)">은퇴 · 커리어 마무리</button>'
     : (R.canRetire?'<button class="gm-btn ghost" onclick="crRetire(this)">은퇴</button>':'')
-      +'<button class="gm-btn" '+(TO&&CR.traitPick==null?'disabled ':'')+'onclick="crNext(this)">'+(TO&&CR.traitPick==null?'특성을 골라 주세요':CR.pick!=null?gmEsc(R.offers[CR.pick].n)+' 이적':R.released?'은퇴':'다음 시즌')+'</button>');
+      +'<button class="gm-btn" '+(TO&&CR.traitPick==null?'disabled ':'')+'onclick="'+(tm?'crTmShow()':'crNext(this)')+'">'+(TO&&CR.traitPick==null?'특성을 골라 주세요':tm?(R.released?'계약 만료 · 다음 행선지':'이적시장 열기'):'다음 시즌')+'</button>');
   window.scrollTo(0,y);   // 제안을 고를 때마다 다시 그려도 보던 자리 그대로
   if(scPending && !document.querySelector('#crTov .cr-sc')) crScoutShow(SC, scKey);
   // 시즌을 막 끝낸 직후에만 오버롤 숫자가 올라가는 연출(제안을 고르며 다시 그릴 땐 안 한다)
@@ -9501,6 +9525,37 @@ function crResult(){
     if(el && a0!==a1) setTimeout(function(){ (function step(ts){ if(!st) st=ts; var k=Math.min(1,(ts-st)/600); if(!document.body.contains(el)) return; el.textContent=Math.round(a0+(a1-a0)*k); if(k<1) requestAnimationFrame(step); })(performance.now()); }, 250);
     else if(el) el.textContent=a1;
   }
+}
+// ── 이적시장 오버레이(사용자 지정) ── 제안 알림이 뜨고 구단 카드가 한 장씩 날아 들어온다. 카드를 누르면 바로 반영:
+// 잔류는 곧장 다음 시즌, 이적은 "OFFICIAL · HERE WE GO" 이적 완료 연출을 보여 주면서 다음 시즌을 불러온다.
+// 방출이면 하위 구단 제안 + 은퇴 카드. ✕로 닫으면 결과 화면으로 돌아간다(선택 전).
+function crTmShow(){
+  var p=CR.v.player, R=CR.v.result, n=R.offers.length, d=0;
+  var card=function(on, crest, tag, nm, meta, right){ d+=0.12; return '<button class="cr-tm-c" style="--d:'+(0.55+d)+'s" onclick="'+on+'">'+crest+'<div class="b"><div class="tg">'+tag+'</div><div class="nm">'+nm+'</div><div class="mt">'+meta+'</div></div><div>'+right+'</div></button>'; };
+  var h=(R.released?'':card('crTmPick(-1)', crCrest(p.club,40), '잔류', gmEsc(p.club.n), crFlag(p.club.nat)+crNat(p.club.nat).n, R.stay?crChance(R.stay.chance):''))
+    +R.offers.map(function(o,k){ return card('crTmPick('+k+')', crCrest(o,40), gmEsc(o.kind)+(o.dream?' · ♥ 꿈의 구단':''), gmEsc(o.n), crFlag(o.nat)+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':''), crChance(o.chance)); }).join('')
+    +(R.released?card('crTmPick(-2)', '<div class="cr-tm-ret" aria-hidden="true">🏁</div>', '커리어 마무리', '은퇴', '여기서 축구화를 벗어요', ''):'');
+  crTovSet('<div class="cr-tm" role="dialog" aria-modal="true" aria-label="이적시장"><button class="cr-tm-x" onclick="crTovSet(\'\')" aria-label="닫기">✕</button><div class="cr-tm-box">'
+    +'<span class="tag">'+(R.released?'CONTRACT EXPIRED · 계약 만료':'TRANSFER WINDOW · 이적시장')+'</span>'
+    +'<div class="cr-tm-note"><span class="ic" aria-hidden="true">📩</span><div><b>'+(n?'제안 '+n+'건 도착':'제안 없음')+'</b><span>'+(R.released?gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 다음 행선지를 골라 주세요.':'에이전트가 받은 제안이에요. 남을지 떠날지 골라 주세요.')+'</span></div></div>'
+    +'<div class="cr-tm-list">'+h+'</div></div></div>');
+}
+function crTmPick(k){
+  if(CR.busy || CR.tmGo) return;
+  var R=CR.v.result;
+  if(k<0){ CR.pick=null; if(k===-2 || !R.released){ crTovSet(''); crNext(null); } return; }
+  CR.pick=k; CR.tmGo=true; crTmDone(R.offers[k]);
+  var t0=Date.now(), MIN=2600, fin=function(fn){ setTimeout(function(){ CR.tmGo=false; crTovSet(''); fn(); }, Math.max(0, MIN-(Date.now()-t0))); };
+  CR.busy=true;
+  crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ fin(function(){ crShow(v); window.scrollTo(0,0); }); }).catch(function(e){ fin(function(){ crErr(e); }); });
+}
+function crTmDone(o){   // 이적 완료 연출: 옛 구단 → 새 구단, OFFICIAL 도장, HERE WE GO
+  var p=CR.v.player, conf='';
+  for(var i=0;i<26;i++) conf+='<i style="--x:'+((i*37)%100)+'%;--d:'+(0.9+(i%7)*0.09)+'s;--r:'+((i*53)%360)+'deg;--c:'+['#EF0107','#C8A84B','#F0F2F7','#22C55E'][i%4]+'"></i>';
+  crTovSet('<div class="cr-tm done" role="dialog" aria-modal="true" aria-label="이적 완료"><div class="conf" aria-hidden="true">'+conf+'</div><div class="cr-tmd">'
+    +'<div class="cr-tmd-row"><div class="old">'+crCrest(p.club,56)+'</div><div class="arr" aria-hidden="true">➜</div><div class="new">'+crCrest(o,96)+'</div></div>'
+    +'<div class="stamp">OFFICIAL</div><div class="hwg">HERE WE GO!</div>'
+    +'<div class="who"><b>'+gmEsc(p.name)+'</b> · '+gmEsc(o.n)+' 이적 완료</div></div></div>');
 }
 function crNext(btn){
   if(!crBusy(btn,'다음 시즌 준비 중...')) return;
