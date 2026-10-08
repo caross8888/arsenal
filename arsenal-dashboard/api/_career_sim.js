@@ -105,7 +105,8 @@ const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[
 const DEV = [0.8, 1.2];
 const K_GROW = 0.47, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:134, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.0, DF:1.05}, top:4, inc:10};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점
+const BALLON = {mu:134, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.0, DF:1.05}, top:4, inc:10, fat:{FW:0, MF:5, DF:25}};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점.
+// fat: 받은 횟수당 감점, 포지션별 — 공격수는 10회도 자연스럽지만 미드필더는 메시·호날두급이어도 5~6회, 수비수는 세대급이어도 2회 안팎이 상식선(사용자 지정)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
 
@@ -476,12 +477,12 @@ export function playSeason(state, choice){
   if(senior && apps>=20){
     const rec = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos];
     let hp2 = 0; hon.forEach(x => { const m = BALLON_PTS.find(r => r[0].test(x.n)); if(m) hp2 += m[1]; });
-    const star = Math.max(0,ov-85)*2 + Math.max(0,ov-94)*BALLON.top + (C.lastBallon===C.age-1 ? BALLON.inc : 0);
+    const star = Math.max(0,ov-85)*2 + Math.max(0,ov-94)*BALLON.top + (C.lastBallon===C.age-1 ? BALLON.inc : 0) - (C.ballonN||0)*BALLON.fat[C.pos];
     // 압도적 시즌(공격 포인트가 아주 많은 시즌)은 따로 더 친다 — 62골을 넣고도 "후보 30인"에 그치던 문제(사용자 지적)
     const standout = Math.max(0, rec-BALLON.big)*BALLON.bigW;
     const bp = (rec + Math.max(0,rating-7.0)*20 + hp2 + star + standout)*BALLON.pos[C.pos];
     const rival = BALLON.mu + BALLON.sd*((rng()+rng()+rng()+rng()-2)*1.73), gap = bp-rival;
-    if(gap > 0){ add('발롱도르','S'); C.lastBallon = C.age; if(rng()<0.75) add('FIFA 올해의 선수','S'); }
+    if(gap > 0){ add('발롱도르','S'); C.lastBallon = C.age; C.ballonN = (C.ballonN||0) + 1; if(rng()<0.75) add('FIFA 올해의 선수','S'); }
     else {
       if(gap > -12) notes.push('발롱도르 투표 2위');
       else if(gap > -25) notes.push('발롱도르 투표 3위');
