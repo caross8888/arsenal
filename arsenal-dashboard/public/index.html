@@ -1902,8 +1902,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rk-row.top1,.cr-rk-row.top2,.cr-rk-row.top3{position:relative;overflow:hidden;border:1.5px solid var(--c);
   background:linear-gradient(110deg,color-mix(in srgb,var(--c) 28%,transparent),color-mix(in srgb,var(--c) 6%,transparent) 55%,color-mix(in srgb,var(--c) 16%,transparent)),var(--surface);
   box-shadow:0 0 14px color-mix(in srgb,var(--c) 22%,transparent)}
-.cr-rk-medal{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-style:normal;font-size:17px;color:#1a1408;
-  background:radial-gradient(circle at 35% 30%,#fff9 0,transparent 45%),var(--c);box-shadow:0 2px 6px color-mix(in srgb,var(--c) 45%,transparent)}
+.cr-rk-row.top1 .n,.cr-rk-row.top2 .n,.cr-rk-row.top3 .n{color:var(--c);font-size:26px;text-shadow:0 0 10px color-mix(in srgb,var(--c) 45%,transparent)}
+:root[data-theme="light"] .cr-rk-row.top1 .n,:root[data-theme="light"] .cr-rk-row.top2 .n,:root[data-theme="light"] .cr-rk-row.top3 .n{filter:brightness(.8);text-shadow:none}
 .cr-rk-row.top1 .cr-rk-sc,.cr-rk-row.top2 .cr-rk-sc,.cr-rk-row.top3 .cr-rk-sc{color:var(--c)}
 :root[data-theme="light"] .cr-rk-row.top1 .cr-rk-sc{filter:brightness(.72)}:root[data-theme="light"] .cr-rk-row.top2 .cr-rk-sc,:root[data-theme="light"] .cr-rk-row.top3 .cr-rk-sc{filter:brightness(.8)}
 .cr-rk-row.top1::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.25) 50%,transparent 65%);transform:translateX(-100%);animation:crPdShine 3.2s ease-in-out infinite;pointer-events:none}
@@ -9458,7 +9458,7 @@ function crBoard(from){
     el.innerHTML=top.map(function(r,i){
       var me=myKey && r.key===myKey, nat=crNat(r.nat), card=(CR.meta.cards[r.pos]||[])[r.card]||{n:''};
       return '<button class="cr-rk-row'+(me?' me':'')+(i<3?' top'+(i+1):'')+'"'+(me?' id="crRkMe"':'')+' onclick="crViewCard('+i+')">'
-       +'<span class="n">'+(i<3?'<i class="cr-rk-medal">'+(i+1)+'</i>':(i+1))+'</span>'
+       +'<span class="n">'+(i+1)+'</span>'
        +'<span class="m"><b>'+nat.f+' '+gmEsc(r.nm||'')+'</b><em>'+gmEsc(r.nick)+' · '+gmEsc(card.n)+'</em></span>'
        +'<span class="cr-rk-hon">'+(r.hon||[]).map(function(x){ return '<i>'+crTrophy(x[0],18)+(x[1]>1?'<small>'+x[1]+'</small>':'')+'</i>'; }).join('')+'</span>'
        +'<span class="cr-rk-o '+crOvrCls(r.peak)+'">'+r.peak+'</span>'
