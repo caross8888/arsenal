@@ -1666,6 +1666,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-fd{display:flex;flex-direction:column;gap:10px;padding:14px 0}
 .cr-fd+.cr-fd{border-top:1px solid var(--border)}
 .cr-fd.off{opacity:.5}
+.cr-acad{font-size:12px;color:var(--text-secondary);margin-top:4px}.cr-acad b{color:var(--gold);letter-spacing:1px;font-weight:400}.cr-acad i{font-style:normal;opacity:.25}
 .cr-why{font-size:12.5px;color:var(--text-secondary);line-height:1.4;margin-top:4px}
 .cr-dream{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .cr .cr-dream select:disabled{opacity:.5}
@@ -1898,6 +1899,30 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rk-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto 34px 56px;gap:8px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:9px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cr-rk-row.me{border-color:var(--gold);background:rgba(200,168,75,.12)}
 .cr-rk-row.top1 .n{color:#E9C766}.cr-rk-row.top2 .n{color:#C7CDD6}.cr-rk-row.top3 .n{color:#C98A4B}
+/* 랭킹 1~3위 시상대 카드 — 금·은·동 테두리와 은은한 그라데이션, 1위는 빛이 지나간다 */
+.cr-podium{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.cr-pd{--c:#E9C766;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font:inherit;color:var(--text);cursor:pointer;
+  border:1.5px solid var(--c);border-radius:16px;padding:14px 10px 12px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 30%,transparent),color-mix(in srgb,var(--c) 5%,transparent) 60%),var(--surface);
+  box-shadow:0 0 18px color-mix(in srgb,var(--c) 25%,transparent)}
+.cr-pd.p1{grid-column:1/-1;padding:18px 14px 16px}
+.cr-pd.p2{--c:#C7CDD6}.cr-pd.p3{--c:#C98A4B}
+.cr-pd.me{outline:2px solid var(--gold);outline-offset:2px}
+.cr-pd-rank{position:relative;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;color:#1a1408;
+  background:radial-gradient(circle at 35% 30%,#fff8 0,transparent 45%),var(--c);box-shadow:0 2px 8px color-mix(in srgb,var(--c) 50%,transparent)}
+.cr-pd.p1 .cr-pd-rank{width:44px;height:44px;font-size:28px;margin-top:8px}
+.cr-pd-rank i{position:absolute;top:-19px;font-style:normal;font-size:20px}
+.cr-pd-nm{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.cr-pd.p1 .cr-pd-nm{font-size:18px}
+.cr-pd-sub{font-style:normal;font-size:11px;color:var(--text-secondary);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-pd-hon{min-height:22px;margin-top:2px}
+.cr-pd-foot{display:flex;align-items:center;gap:8px;margin-top:2px}
+.cr-pd-foot .cr-rk-o{padding:1px 7px}
+.cr-pd-sc{font-family:var(--fd);font-size:22px;color:var(--c);line-height:1}
+.cr-pd.p1 .cr-pd-sc{font-size:30px}
+.cr-pd.p1::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);transform:translateX(-100%);animation:crPdShine 3.2s ease-in-out infinite;pointer-events:none}
+@keyframes crPdShine{0%,55%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.cr-pd.p1::after{animation:none;display:none}}
+:root[data-theme="light"] .cr-pd.p2{--c:#9AA3B0}:root[data-theme="light"] .cr-pd-sc{filter:brightness(.85)}
 .cr-rk-row .n{font-family:var(--fd);font-size:22px;text-align:center;color:var(--text-secondary)}
 .cr-rk-row .m{min-width:0;display:flex;flex-direction:column}
 .cr-rk-row .m b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -8974,20 +8999,18 @@ function crPage3(btn){
     CR.busy=false; CR.tok=d.token; CR.firstClubs=d.clubs; CR.firstPick=null; crPage3Render(); window.scrollTo(0,0);
   }).catch(function(e){ CR.busy=false; if(btn){ btn.disabled=false; btn.textContent='다음 · 첫 구단'; } gameToast(e.message); });
 }
-// 첫 구단 종류별 한 줄 — 예전 "성장 보너스" 칸 대신(사용자 지정). 칸수는 실제 성장(유스는 출전, 18세 이후는 구단 수준, 방출 위험)과 안 맞았고
-// 숨기기로 한 구단 수준을 대신 드러냈다. 결과는 도전 = 고점·위험 큼, 안정 = 바닥 높음(docs/career-mode/career-mode.md).
-var CR_FIRST_WHY={'도전':'큰 구단 · 자리 못 잡으면 17세에 방출 위험','적정':'균형 잡힌 선택','안정':'많이 뛰며 크고 1군 데뷔가 빨라요 · 구단 규모는 작아요','해외':'큰 리그 아카데미 · 낯선 환경에서 출전 경쟁'};
+// 첫 구단: 자국 구단 무작위 3곳(+가끔 해외 유스)을 이름 그대로 — 도전·적정·안정 틀 없이(사용자 지정). 아카데미 수준(★)과 출전 경쟁만 보여 준다.
 function crPage3Render(){
   var S=CR.S, c0=CR.meta.cards[S.pos][S.card], list=CR.firstClubs;
   crRender('<div class="cr-top"><button class="gm-back" onclick="crPage2()">← 이전</button>'+crSteps(3)+'</div>'
    +'<h1 class="cr-h1">FIRST <span>CLUB</span></h1><p class="cr-sub">3 / 3 · 유스팀 '+list.length+'곳에서 제안이 왔어요</p>'
    +'<div class="cr-me"><div><div class="v">'+c0.ovr+'</div><div class="l">오버롤</div></div><div><div class="v" style="font-family:var(--fb);font-size:15px;font-weight:700;line-height:1.9">'+gmEsc(c0.n)+'</div><div class="l">유형</div></div><div><div class="v">15</div><div class="l">나이</div></div></div>'
-   +'<p class="cr-note">유스 시절엔 뛰는 만큼 크고, 18세 이후엔 큰 구단일수록 훈련 환경이 좋아요.'
+   +'<p class="cr-note">아카데미 수준이 높을수록 코칭이 좋고, 출전 경쟁이 낮을수록 많이 뛰어요. 유스는 또래끼리 경쟁해요.'
      +(list.some(function(o){ return o.kind==='해외'; })?' 부모님과 함께 해외로 건너가 현지 유스팀에서 시작하는 길도 열렸어요.':'')+'</p>'
    +'<div class="cr-list">'+list.map(function(o,k){
      return '<button class="cr-club" aria-pressed="'+(CR.firstPick===k)+'" onclick="CR.firstPick='+k+';crPage3Render()">'+crCrest(o,44)
-      +'<div><div class="tag">'+(o.kind==='해외'?'✈ 해외 유스':o.kind)+(S.dream===o.n?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+gmEsc(o.n)+' U-16</div>'
-      +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+'</div><div class="cr-why">'+(CR_FIRST_WHY[o.kind]||'')+'</div></div>'
+      +'<div>'+(o.kind==='해외'||S.dream===o.n?'<div class="tag">'+[o.kind==='해외'?'✈ 해외 유스':'',S.dream===o.n?'♥ 꿈의 구단':''].filter(Boolean).join(' · ')+'</div>':'')+'<div class="nm">'+gmEsc(o.n)+' U-16</div>'
+      +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+'</div><div class="cr-acad">아카데미 <b>'+'★★★'.slice(0,o.acad||1)+'<i>'+'★★★'.slice(0,3-(o.acad||1))+'</i></b></div></div>'
       +'<div>'+crChance(o.chance)+'</div></button>'; }).join('')+'</div>',
    '<button class="gm-btn" '+(CR.firstPick!=null?'':'disabled')+' onclick="crJoin(this)">입단 · 커리어 시작</button>');
 }
@@ -9446,7 +9469,16 @@ function crBoard(from){
     var top=res[1].top||[], el=document.getElementById('crRk'); if(!el) return;
     CR.boardRows=top;
     if(!top.length){ el.innerHTML='<div class="gm-empty">아직 등록된 커리어가 없어요. 첫 기록의 주인공이 되어 보세요.</div>'; return; }
-    el.innerHTML=top.map(function(r,i){
+    // 1~3위는 시상대 카드(사용자 지정 — 화려하게): 1위 크게 한 줄, 2·3위 나란히. 4위부터 기존 줄.
+    var pod=top.slice(0,3).map(function(r,i){
+      var me=myKey && r.key===myKey, nat=crNat(r.nat), card=(CR.meta.cards[r.pos]||[])[r.card]||{n:''};
+      return '<button class="cr-pd p'+(i+1)+(me?' me':'')+'"'+(me?' id="crRkMe"':'')+' onclick="crViewCard('+i+')">'
+       +'<span class="cr-pd-rank">'+(i===0?'<i>👑</i>':'')+(i+1)+'</span>'
+       +'<b class="cr-pd-nm">'+nat.f+' '+gmEsc(r.nm||'')+'</b><em class="cr-pd-sub">'+gmEsc(r.nick)+' · '+gmEsc(card.n)+'</em>'
+       +'<span class="cr-rk-hon cr-pd-hon">'+(r.hon||[]).slice(0,i?3:5).map(function(x){ return '<i>'+crTrophy(x[0],i?20:26)+(x[1]>1?'<small>'+x[1]+'</small>':'')+'</i>'; }).join('')+'</span>'
+       +'<span class="cr-pd-foot"><span class="cr-rk-o '+crOvrCls(r.peak)+'">'+r.peak+'</span><span class="cr-pd-sc">'+Number(r.score).toLocaleString()+'</span></span></button>';
+    }).join('');
+    el.innerHTML='<div class="cr-podium">'+pod+'</div>'+top.slice(3).map(function(r,j){ var i=j+3;
       var me=myKey && r.key===myKey, nat=crNat(r.nat), card=(CR.meta.cards[r.pos]||[])[r.card]||{n:''};
       return '<button class="cr-rk-row'+(me?' me':'')+(i<3?' top'+(i+1):'')+'"'+(me?' id="crRkMe"':'')+' onclick="crViewCard('+i+')">'
        +'<span class="n">'+(i+1)+'</span>'
