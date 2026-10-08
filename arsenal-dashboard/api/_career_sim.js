@@ -359,6 +359,39 @@ function seniorGoal(){
   return list[hashStr(C.seed+'|goal|'+C.age) % list.length];
 }
 
+// 인터뷰(사용자 지정 — 이벤트 카드 대신 오버레이로 바로 뜨고, 기자 질문에 자신감·겸손 답변 문장 하나씩만 보고 고른다. 효과 문구는 안 보인다).
+// 질문은 지금 상황(첫 인터뷰·유스·지난 시즌 기록·새 팀·대표팀·베테랑)에 맞는 것 중 시드로 하나. 답변 순서도 시드로 섞는다.
+// 고른 답의 k가 evPick(0 자신감 / 1 겸손) — 효과는 예전 그대로(자신감: 시즌 평점 7.0 이상이면 명성 +2, 아니면 −1 / 겸손: 선발 +3%p).
+const IV_WHO = [['PRESS CONFERENCE · 개막 기자회견','현지 방송 기자'],['EXCLUSIVE · 단독 인터뷰','축구 전문지 기자'],['INTERVIEW · 매체 인터뷰','스포츠 매체 기자'],['FAN TALK · 팬 채널','팬 채널 진행자']];
+function interviewOf(){
+  const last = C.hist[C.hist.length-1], lv = lvOf(), pick = [], gen = [];
+  const prevSr = [...C.hist].reverse().find(r => !r.youth && !r.loan);
+  const add = (q, c, h) => pick.push([q, c, h]);
+  if(lv < 3) add('1군 데뷔를 앞두고 있는데, 이번 시즌 목표가 뭔가요?', '주전 자리를 따내는 게 목표예요. 저는 준비돼 있어요.', '아직 배울 게 많아요. 형들 뒤에서 기회가 오면 잡겠습니다.');
+  if(last && !last.youth){
+    if(C.pos==='FW' && last.goals >= 10) add(`지난 시즌 ${last.goals}골을 넣었는데, 이번 시즌엔 몇 골을 노리나요?`, `${Math.ceil((last.goals+8)/5)*5}골은 넣어야죠. 득점왕도 욕심나요.`, '숫자보다 팀이 이기는 게 먼저예요. 골은 따라오겠죠.');
+    if(C.pos==='MF' && last.ast >= 6) add(`지난 시즌 도움 ${last.ast}개로 팀 공격을 이끌었어요. 비결이 뭔가요?`, '제가 공을 잡으면 뭔가 일어난다는 걸 다들 알아요. 이번엔 더 보여 줄게요.', '동료들이 잘 움직여 준 덕분이에요. 저는 공을 건넸을 뿐이에요.');
+    if(C.pos==='DF' && (last.cs||0) >= 10) add(`지난 시즌 클린시트 ${last.cs}번, 리그 최고 수비라는 평가예요.`, '저를 뚫을 공격수는 많지 않아요. 올해도 다르지 않을 거예요.', '수비는 열한 명이 같이 하는 거예요. 골키퍼와 동료들 덕분이에요.');
+    if(last.starts/Math.max(1,last.games) < 0.4) add('지난 시즌 출전 시간이 부족했는데, 이번 시즌은 어떨까요?', '이번엔 제가 왜 뛰어야 하는지 경기장에서 증명할 거예요.', '제가 더 잘해야죠. 감독님 결정을 존중하고 훈련으로 보여 드릴게요.');
+    if(last.rating >= 7.2 && C.club.r < 88) add('빅클럽 이적설이 돌고 있는데, 어떻게 생각하세요?', '더 큰 무대에서 뛰고 싶은 건 사실이에요. 제 수준은 그 정도라고 생각해요.', '지금 팀에 집중하고 있어요. 감독님과 동료들에게 감사할 뿐이에요.');
+  }
+  if(lv === 3 && prevSr && prevSr.club !== C.club.n) add(`${C.club.n}에 온 첫 시즌이에요. 각오 한마디 해 주세요.`, '이 팀을 우승시키러 왔어요. 팬들은 기대해도 좋아요.', '좋은 팀에 와서 영광이에요. 빨리 적응해서 보탬이 되고 싶어요.');
+  if(lv === 3 && C.age <= 27 && !(C.tot.caps > 0) && cOvr() >= (NAT_BAR[C.nation]||75) - 4) add('대표팀 발탁 이야기가 나오는데 어떻게 생각하세요?', '대표팀 유니폼은 제 자리라고 생각해요. 부르시면 증명할게요.', '아직 멀었어요. 소속팀에서 꾸준히 하다 보면 기회가 오겠죠.');
+  if(C.age >= 30) add('베테랑이 됐는데, 아직 전성기라고 생각하세요?', '전성기는 지금부터예요. 젊은 선수들한테 질 생각 없어요.', '몸이 예전 같진 않죠. 경험으로 팀에 보탬이 되고 싶어요.');
+  gen.push(['개막을 앞두고 팀 분위기는 어떤가요?', '이번 시즌 우리 팀이 리그 최고예요. 그 중심엔 제가 있을 거고요.', '다들 열심히 준비했어요. 한 경기씩 최선을 다하겠습니다.'],
+    ['라이벌 팀 에이스와 자주 비교되는데, 누가 더 낫다고 보세요?', '비교할 필요도 없죠. 경기장에서 보면 알 거예요.', '훌륭한 선수예요. 저도 배울 점이 많아요.'],
+    ['이번 시즌 가장 기대되는 경기는 뭔가요?', '빅매치요. 큰 경기일수록 제가 더 빛나거든요.', '모든 경기가 중요해요. 매 경기 결승처럼 뛰겠습니다.'],
+    ['팬들에게 한마디 해 주세요.', '올 시즌 제 이름 많이 외치게 될 거예요. 목 관리 잘하세요.', '늘 응원해 주셔서 감사해요. 실망시키지 않게 열심히 뛸게요.']);
+  // 첫 인터뷰(20세까지 처음 한 번)는 고정 질문, 그 밖엔 상황 질문 80% · 일반 질문 20%(상황 질문이 없으면 일반)
+  const r = mulberry(C.seed ^ hashStr('iv|'+C.age)), first = !C.mediaN && C.age <= 20;
+  const pool = pick.length && r() < 0.8 ? pick : gen;
+  const [q, c, h] = first ? ['첫 인터뷰네요. 프로 무대에서 이루고 싶은 꿈이 있나요?', '세계 최고의 선수가 되는 거요. 시간문제라고 생각해요.', '우선 이 팀에서 꾸준히 뛰는 게 꿈이에요. 하나씩 해 나갈게요.']
+    : pool[Math.floor(r()*pool.length)];
+  const [tag, who] = first ? ['FIRST INTERVIEW · 첫 인터뷰', '스포츠 매체 기자'] : IV_WHO[C.age % IV_WHO.length];
+  const a = [{t:c, k:0}, {t:h, k:1}];
+  if(r() < 0.5) a.reverse();
+  return {tag, who, q, a};
+}
 // 시즌 준비 화면에 보여 줄 것(숨김 값 없음)
 export function prepView(state){
   C = state;
@@ -376,6 +409,7 @@ export function prepView(state){
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 완화)' : ' (감독 신뢰 ↑)')];
   return {goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
+    interview: ev.id === 'media' ? interviewOf() : null,
     loanClubs: C.ev==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
 }
 
