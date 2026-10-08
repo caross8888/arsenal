@@ -254,8 +254,8 @@ const clubCoef = r => r>=91 ? CLUB_C[0] : r>=86 ? CLUB_C[1] : r>=76 ? CLUB_C[2] 
 // "어릴 땐 큰 구단, 그 뒤엔 뛸 곳"(사용자 지정)과 "출전 못 하면 망하는 커리어도 있게"를 같이 만족시키려는 것. 선발 100%면 둘 다 1.3.
 const playCoef = ratio => { const f = C.age <= 21 ? PLAY_C[0] : PLAY_C[1]; return f + (1.3 - f)*ratio; };
 function syncSt(){ C.st = C.off.map(o => Math.max(20, Math.min(99, C.ovr+o))); }
-function pStart(club, opt){
-  const lv = club===C.club ? lvOf() : 3;   // 다른 구단(임대·이적 제안)은 1군 기준
+function pStart(club, opt, lvAt){
+  const lv = lvAt ?? (club===C.club ? lvOf() : 3);   // 다른 구단(임대·이적 제안)은 1군 기준
   const gap = lv < 2 ? cohortLv(club, C.age) - cOvr() : (club.r-STAGE[lv].gap)-cRep();   // U-16·U-18은 또래 수준과 비교
   return Math.max(0.02, Math.min(0.97, 1/(1+Math.exp(gap/7)) + (opt||0)));
 }
@@ -690,9 +690,20 @@ const forcedRetire = () => C.age>=40 || !!C.bodyOut || (!!C.released && !C.offer
 const pub = c => ({n:c.n, id:c.id, nat:c.nat});
 export function offersView(state){ C = state; return offerView(); }
 // 이적시장 카드에 보이는 출전 기회는 다음 시즌 실제 계산과 같게(제안 구단은 새 영입 효과, 잔류는 같은 팀 몫 포함)
-export function stayView(state){ C = state; return {chance: chanceOf(pStart(C.club, NEW_SIGNING[1]))}; }
+// 지금 단계가 아니라 다음 시즌 단계로 본다(사용자 지적: 21세 U-21 잔류가 "높음"으로 떴는데 22세엔 1군이라 실제론 낮았다).
+// nextSeason과 같은 규칙으로 나이를 한 살 올려 단계를 정하고, 새 영입 효과도 1군 경력이 있을 때만 넣는다.
+function nextChance(club, moved){
+  const lv0 = lvOf(), age = C.age, prodigy = C.prodigy;
+  C.age++;
+  const lv = Math.max(stageFor(club, !moved), moved && lv0===3 ? 3 : 0);
+  const adj = [...C.hist].some(r => !r.youth && !r.loan) ? NEW_SIGNING[moved ? 0 : 1] : 0;
+  const p = pStart(club, adj, lv);
+  C.age = age; if(prodigy === undefined) delete C.prodigy; else C.prodigy = prodigy;
+  return chanceOf(p);
+}
+export function stayView(state){ C = state; return {chance: nextChance(C.club, false)}; }
 function offerView(){
-  return C.offers.map(o => ({...pub(o.c), kind:o.kind, dream:!!o.dream, chance:chanceOf(pStart(o.c, NEW_SIGNING[0]))}));   // 성장 보너스 칸은 없앴다(사용자 지정 — 첫 구단과 같은 이유)
+  return C.offers.map(o => ({...pub(o.c), kind:o.kind, dream:!!o.dream, chance:nextChance(o.c, true)}));   // 성장 보너스 칸은 없앴다(사용자 지정 — 첫 구단과 같은 이유)
 }
 
 // pick: 제안 번호(없으면 잔류). 방출됐는데 고르지 않으면 은퇴.
