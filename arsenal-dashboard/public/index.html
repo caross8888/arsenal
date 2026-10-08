@@ -1784,8 +1784,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-notes{margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:var(--text-secondary)}
 .cr-hist summary{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;list-style:none;font-size:14px}
 /* 접힌 칸 표시: 오른쪽 화살표가 펼치면 뒤집힌다 */
-.cr-hist summary::after,.cr-rc-minor summary::after{content:'';width:7px;height:7px;border-right:2px solid var(--text-secondary);border-bottom:2px solid var(--text-secondary);transform:translateY(-2px) rotate(45deg);transition:transform .2s;flex:none}
-.cr-hist[open] summary::after,.cr-rc-minor[open] summary::after{transform:translateY(2px) rotate(-135deg)}
+.cr-hist summary::after{content:'';width:7px;height:7px;border-right:2px solid var(--text-secondary);border-bottom:2px solid var(--text-secondary);transform:translateY(-2px) rotate(45deg);transition:transform .2s;flex:none}
+.cr-hist[open] summary::after{transform:translateY(2px) rotate(-135deg)}
 .cr-hist summary span{margin-left:auto}
 .cr-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:700}   /* 효과 줄이 없는 버튼도 세로 가운데(옆 버튼이 두 줄이라 높이가 같아진다) */
 .cr-opt b{font-weight:700}
@@ -1844,8 +1844,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rc-tro .i svg{display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))}
 .cr-rc-tro .i em{position:absolute;right:-12px;bottom:6px;font-style:normal;font-size:11px;font-weight:700;background:var(--gold);color:#3a2a06;border-radius:999px;padding:0 5px}
 .cr-rc-tro .l{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-top:5px;word-break:keep-all}
-.cr-rc-minor summary{cursor:pointer;font-size:12.5px;color:var(--text-secondary);list-style:none;display:flex;justify-content:center;align-items:center;gap:8px}
-.cr-rc-minor summary::-webkit-details-marker{display:none}
+.cr-shot-btn{display:block;margin:12px auto 0;font:inherit;font-size:13px;font-weight:700;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:999px;padding:9px 16px;cursor:pointer}
+.cr-shot-btn:disabled{opacity:.6;cursor:default}
+.cr-rc-minor-t{font-size:12.5px;color:var(--text-secondary);text-align:center}
 .cr-rc-minor .cr-badges{margin-top:8px}
 .cr-months{display:grid;grid-template-columns:repeat(10,1fr);text-align:center}
 .cr-months span{font-size:11px;color:var(--text-dim);font-variant-numeric:tabular-nums}
@@ -9032,7 +9033,7 @@ function crHist(){
   var p=CR.v.player, h=p.hist||[];
   if(!h.length) return '';
   crTrophyDefs();
-  return '<details class="cr-panel cr-hist"><summary><b>커리어 기록</b><span>'+h.length+'시즌 · '+p.tot.apps+'경기 '+p.tot.goals+'골</span></summary>'
+  return '<details class="cr-panel cr-hist"><summary><b>커리어 기록</b><span>'+h.length+'시즌 · '+p.tot.apps+'경기 '+p.tot.goals+'골 '+p.tot.ast+'도움</span></summary>'
    +'<div class="cr-rc-table" style="margin-top:10px"><div class="cr-rc-row hd"><span>나이</span><span>구단</span><span>OVR</span><span>경기</span><span>골</span><span>'+(p.pos==='DF'?'CS':'도움')+'</span></div>'
    +h.slice().reverse().map(function(r, i){
       var hs=r[9]||[], ars=/아스날/.test(r[7]||'')&&!r[8];
@@ -9340,8 +9341,9 @@ function crCardHtml(c){
   var main=order.filter(function(k){ return grp[k].tier!=='C'; }), minor=order.filter(function(k){ return grp[k].tier==='C'; });
   if(main.length) h+='<div class="cr-rc-shelf">'+main.map(function(k){ var g=grp[k];
       return '<div class="cr-rc-tro t'+g.tier+'"><div class="i">'+crTrophy(k,58)+(g.c>1?'<em>×'+g.c+'</em>':'')+'</div><div class="l">'+gmEsc(k)+'</div></div>'; }).join('')+'</div>';
-  if(minor.length) h+='<details class="cr-rc-minor"><summary>기타 수상 '+minor.reduce(function(s,k){ return s+grp[k].c; },0)+'개</summary><div class="cr-badges">'
-      +minor.map(function(k){ return '<span>'+crTrophy(k,16)+gmEsc(k)+(grp[k].c>1?' ×'+grp[k].c:'')+'</span>'; }).join('')+'</div></details>';
+  // 기타 수상은 접지 않고 그대로 보여 준다(사용자 지정 — 은퇴 카드 스크린샷에도 들어가게)
+  if(minor.length) h+='<div class="cr-rc-minor"><div class="cr-rc-minor-t">기타 수상 '+minor.reduce(function(s,k){ return s+grp[k].c; },0)+'개</div><div class="cr-badges">'
+      +minor.map(function(k){ return '<span>'+crTrophy(k,16)+gmEsc(k)+(grp[k].c>1?' ×'+grp[k].c:'')+'</span>'; }).join('')+'</div></div>';
   if(!order.length) h+='<div class="cr-note" style="text-align:center">트로피 없이 끝난 커리어예요.</div>';
   return h+'</div>';
 }
@@ -9349,11 +9351,41 @@ function crCardHtml(c){
 // (목업에서 내 커리어 변수를 남의 카드로 덮어써서, 랭킹 → 돌아가기에 남의 카드가 내 카드처럼 뜨던 버그가 있었다).
 function crRetired(){
   var sv=crSaved(), reg=sv && sv.info && sv.info.reg;
-  crRender('<div class="cr-top"><button class="gm-back" onclick="crIntro()">← 커리어 모드</button><div class="cr-season">은퇴 카드</div></div>'+crCardHtml(CR.v.card)
+  crRender('<div class="cr-top"><button class="gm-back" onclick="crIntro()">← 커리어 모드</button><div class="cr-season">은퇴 카드</div></div>'
+    +'<div id="crShotBox">'+crCardHtml(CR.v.card)+'</div><button class="cr-shot-btn" onclick="crShot(this)">📷 이미지로 저장</button>'
     +(reg?'':'<div class="gm-best">'+(PK.tok?'<b style="color:var(--text)">'+gmEsc(PK.nick||'')+'</b> 계정으로 랭킹에 등록돼요 · 계정당 최고 커리어 하나':'랭킹 등록은 승부예측 계정으로 해요 · 처음이면 가입부터')+'</div>'),
     '<button class="gm-btn ghost" onclick="crNew()">새 커리어</button>'
     +(reg?'<button class="gm-btn" onclick="crBoard(\'retired\')">랭킹 보기</button>'
          :'<button class="gm-btn" onclick="crSubmit(this)">'+(PK.tok?'랭킹 등록':'로그인하고 랭킹 등록')+'</button>'));
+}
+// 은퇴 카드 이미지 저장(사용자 지정). html-to-image를 처음 누를 때만 불러온다(번들러가 없어서 CDN, hls.js와 같은 방식).
+// 캡처는 카드 노드만 복제해 그리므로 ① 트로피 SVG가 참조하는 그라데이션 defs를 카드 안에 잠깐 넣고
+// ② Fotmob 엠블럼은 CORS가 없어 캔버스에 못 그리므로 같은 출처 프록시(/api/career?a=logo)로 잠깐 바꿔 그린다.
+var CR_H2I='https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js';
+function crLoadH2I(){
+  if(window.htmlToImage) return Promise.resolve(window.htmlToImage);
+  return new Promise(function(ok, no){ var s=document.createElement('script'); s.src=CR_H2I; s.onload=function(){ ok(window.htmlToImage); }; s.onerror=no; document.head.appendChild(s); });
+}
+function crShot(btn){
+  var box=document.getElementById('crShotBox'); if(!box || btn.disabled) return;
+  btn.disabled=true; var label=btn.textContent; btn.textContent='이미지 만드는 중...';
+  var defs=document.getElementById('crTrophyDefs'), tmp=defs?defs.cloneNode(true):null; if(tmp){ tmp.removeAttribute('id'); box.appendChild(tmp); }
+  var imgs=[].slice.call(box.querySelectorAll('img.cr-crest-img')), orig=imgs.map(function(i){ return i.src; });
+  imgs.forEach(function(i){ var m=i.src.match(/teamlogo\/(\d+)\.png/); if(m) i.src=FN+'/career?a=logo&id='+m[1]; });
+  var done=function(){ imgs.forEach(function(i,k){ i.src=orig[k]; }); if(tmp) tmp.remove(); btn.disabled=false; btn.textContent=label; };
+  var bg=getComputedStyle(document.body).backgroundColor;
+  Promise.all(imgs.map(function(i){ return i.complete ? 0 : new Promise(function(r){ i.onload=i.onerror=r; }); }))
+    .then(crLoadH2I)
+    .then(function(h2i){ return h2i.toBlob(box, {pixelRatio:2, backgroundColor:bg, style:{padding:'16px'}, width:box.offsetWidth+32, height:box.offsetHeight+32}); })
+    .then(function(blob){
+      done();
+      var name='career-'+String((CR.v.card||{}).name||'card').replace(/[^\w가-힣]+/g,'_')+'.png';
+      var file=new File([blob], name, {type:'image/png'});
+      // 모바일은 공유 시트(사진 저장·메신저), 안 되면 파일로 내려받기
+      if(navigator.canShare && navigator.canShare({files:[file]})) return navigator.share({files:[file], title:'은퇴 카드'}).catch(function(){});
+      var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    })
+    .catch(function(){ done(); gameToast('이미지를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.'); });
 }
 function crMarkReg(key){
   try{ var i=JSON.parse(localStorage.getItem(CR_INFO)||'{}'); i.reg=true; localStorage.setItem(CR_INFO, JSON.stringify(i)); if(key) localStorage.setItem('careerMyKey', key); }catch(e){}

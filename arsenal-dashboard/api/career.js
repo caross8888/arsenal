@@ -137,6 +137,16 @@ export default async function handler(req, res){
         // 특성 이름 → 아이콘 id(img/traits/{id}.svg). 예전 은퇴 카드엔 이름만 저장돼 있어 이걸로 아이콘을 찾는다
         traitIds: Object.fromEntries([...S.CTRAITS, ...S.TRAITS].map(t => [t.n, t.id]))}));
     }
+    // 은퇴 카드 이미지 저장용 엠블럼 프록시 — Fotmob 이미지는 CORS 헤더가 없어 캔버스에 그리면 막힌다. 숫자 id만, CDN에 30일 캐시.
+    if(a === 'logo'){
+      const id = String(req.query.id || '');
+      if(!/^\d{1,9}$/.test(id)) return res.status(400).end();
+      const r = await fetch(`https://images.fotmob.com/image_resources/logo/teamlogo/${id}.png`);
+      if(!r.ok) return res.status(404).end();
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=2592000, immutable');
+      return res.end(Buffer.from(await r.arrayBuffer()));
+    }
     if(a === 'board'){
       if(!kvReady()) return res.json({top: []});
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=30');
