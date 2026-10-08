@@ -682,7 +682,7 @@ export function nextSeason(state, pick, traitPick){
   const r = C.hist[C.hist.length-1]; delete r.notes; delete r.coach; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
   const moved = pick != null, lv0 = lvOf();
   C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
-  C.lv = stageFor(C.club, !moved);
+  C.lv = Math.max(stageFor(C.club, !moved), moved && lv0===3 ? 3 : 0);   // 1군 선수를 데려간 구단은 1군으로 쓴다(이적했더니 U-21로 내려가는 일이 없게)
   // 승격 알림: 다음 시즌 준비 화면 맨 위에 한 번(prepView.promo)
   if(C.lv > Math.max(lv0, defLv(C.age)) || moved && C.lv===3 && C.age<22 && lv0<3) C.stageNote = C.prodigy && C.age<18 ? C.club.n+' 1군에 '+C.age+'세로 데뷔! 구단 역사에 남을 최연소급 데뷔예요.' : C.lv===3 ? (C.age<=18 ? '1군에 합류했어요! 또래보다 빠른 데뷔예요.' : '1군에 합류했어요!') : STAGE[C.lv].n+'로 월반했어요! 형들과 부딪히며 더 크게 성장해요.';
   else if(C.lv===3 && lv0<3) C.stageNote = '1군에 합류했어요.';
