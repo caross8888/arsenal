@@ -32,7 +32,8 @@ const CONT_MUL = {ENG:1.3,ESP:1.4,GER:1.4,ITA:1.4,FRA:1.4,POR:1.4,NED:1.5,BEL:1.
 // 수상 등급: f 명성, g 다음 시즌 성장 배율, p 커리어 점수
 export const HONOR_TIER = {S:{f:5,g:1.08,p:200}, A:{f:3,g:1.05,p:80}, B:{f:2,g:1.03,p:50}, C:{f:1,g:1,p:15}};
 // 발롱도르 점수에 들어가는 트로피·개인상 점수
-const BALLON_PTS = [[/챔피언스리그 우승/,25],[/월드컵 우승/,25],[/(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) 우승/,15],[/리그 우승/,12],[/컵 대회 우승/,4],
+// 큰 대회 우승 비중을 키웠다(챔스·월드컵 25 → 45, 대륙컵 15 → 30) — 발롱 시즌의 70%가 큰 대회 우승 없이 골만으로 받았다(사용자 지적)
+const BALLON_PTS = [[/챔피언스리그 우승/,45],[/월드컵 우승/,50],[/(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) 우승/,35],[/리그 우승/,12],[/컵 대회 우승/,4],
   [/골든볼/,10],[/리그 올해의 (선수|미드필더|수비수)/,10],[/챔스 올해의 선수/,10],[/골든슈/,8],[/리그 득점왕/,8],[/챔스 득점왕|대회 득점왕|월드컵 득점왕/,6],[/도움왕/,5],[/챔스 올해의 (공격수|미드필더|수비수)/,5]];
 // 포지션별 기여 점수 — 미드필더·수비수는 골·도움 가중치를 높이고 수비수는 클린시트를 더한다
 // 경기당 골·도움 기본 비율. 공격수는 시작 오버롤을 54로 통일하면서(예전 카드 평균 54.8) 줄어든 골·도움을 되돌린 값(0.42·0.18에서)
@@ -57,7 +58,7 @@ const CT_BONUS = {
 const DEF_FX = {
   MF:{cs:{'태클':1}, r:{'태클':0.6, '체력':0.4}},
   DF:{cs:{'태클':0.35, '대인마크':0.35, '공중볼':0.15, '스피드':0.15}, r:{'태클':0.5, '대인마크':0.5}}};
-const DEF_K = {cs:0.012, r:0.012};
+const DEF_K = {cs:0.012, r:0.006};
 // 강점 스탯(카드 가중치 1.2 이상)이 모두 99 — 강점 강화를 해도 더 오를 데가 없다(훈련 선택지에 표시)
 const keyMax = () => CARDS[C.pos][C.card].w.every((x,i) => x < 1.2 || C.ovr+C.off[i] >= 99 || C.off[i] >= 15);
 // 이미 막힌 강점 스탯 이름(훈련 화면 안내용)
@@ -66,7 +67,7 @@ function defFx(){
   const fx = DEF_FX[C.pos]; if(!fx) return {cs:1, r:0};
   const st = STATS[C.pos], o0 = startStats(C.pos, C.card).map(v => v - START_OVR);
   const d = map => Object.entries(map).reduce((t,[n,w]) => { const i = st.indexOf(n); return t + w*((C.st[i]-C.ovr) - o0[i]); }, 0);
-  return {cs: Math.max(0.7, 1 + DEF_K.cs*d(fx.cs)), r: Math.max(-0.25, Math.min(0.25, DEF_K.r*d(fx.r)))};
+  return {cs: Math.max(0.7, 1 + DEF_K.cs*d(fx.cs)), r: Math.max(-0.15, Math.min(0.15, DEF_K.r*d(fx.r)))};
 }
 // 선택 카드에 보여 줄 "무엇이 좋아지나"(스탯이 들어가는 골·도움 계산 + CT_BONUS)
 const CT_LABEL = {
@@ -105,7 +106,7 @@ const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[
 const DEV = [0.8, 1.2];
 const K_GROW = 0.47, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:134, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.0, DF:1.05}, top:4, inc:10, fat:{FW:0, MF:5, DF:25}};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점.
+const BALLON = {mu:137, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.0, DF:0.9}, top:4, inc:10, recW:0.7, fat:{FW:0, MF:5, DF:25}};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점.
 // fat: 받은 횟수당 감점, 포지션별 — 공격수는 10회도 자연스럽지만 미드필더는 메시·호날두급이어도 5~6회, 수비수는 세대급이어도 2회 안팎이 상식선(사용자 지정)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
@@ -371,7 +372,7 @@ export function playSeason(state, choice){
   const clubLv = club.r - (youth()&&!onLoan ? YOUTH_GAP : 0), ap = Math.max(apps,1);
   // MF 0.85(예전 0.6): 같은 오버롤의 수비수와 평점 분포를 맞춘 값 — 낮으면 평점 기반 상·발롱에서 미드필더 고점이 눌렸다(사용자 지적)
   // FW 도움 1.0(예전 0.6): 도움형 공격수(펄스나인·윙어)가 평점 기반 상을 못 받아 상위권 천장이 가장 낮았다(사용자 지적)
-  const perfBonus = {FW:(goals+ast*1.0)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.85, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.6}[C.pos];
+  const perfBonus = {FW:(goals+ast*1.0)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.85, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.3+0.065}[C.pos];
   const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+DF_.r+(rng()-0.5)*0.5)) : 0;
 
   // 성장 / 하락
@@ -423,7 +424,9 @@ export function playSeason(state, choice){
   if(senior){
     if(rank===1 && apps>=8) add(natN+' 리그 우승','B','team');
     if(apps>=8 && rng()<0.12*Math.pow(club.r/90,3)) add('컵 대회 우승','C','team');
-    const uclWin = inUCL && apps>=8 && rng()<0.06*Math.pow(club.r/90,4);
+    // 챔스 우승 확률: 강팀일수록 가파르게(레알 96 약 20%, 맨시티·바이에른 95 약 16%, 92 약 7%, 88 약 3%) — 상위 구단 확률 합이 100% 안팎.
+    // 예전 0.06×(r/90)^4는 레알도 7.8%라 레알에서 17시즌을 뛰고 챔스 0회인 커리어가 나왔다(사용자 지적).
+    const uclWin = inUCL && apps>=8 && rng()<Math.min(0.25, 0.16*Math.exp((club.r-95)/4));
     if(uclWin) add('챔피언스리그 우승','A','team');
     if(apps>=20){
       // 리그 개인상은 "수상용 평점"으로 뽑는다: 평점 + 구단 수준 보정. 평점에는 약팀 에이스가 높게 나오는 항목이 있어서,
@@ -475,18 +478,18 @@ export function playSeason(state, choice){
 
   // 발롱도르·FIFA 올해의 선수: 시즌 활약 점수 vs 그해 세계 경쟁자
   if(senior && apps>=20){
-    const rec = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos];
+    const recRaw = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos], rec = BALLON.recW*recRaw;   // recW: 공격 포인트 비중(우승 비중을 키운 만큼 낮춤)
     let hp2 = 0; hon.forEach(x => { const m = BALLON_PTS.find(r => r[0].test(x.n)); if(m) hp2 += m[1]; });
     const star = Math.max(0,ov-85)*2 + Math.max(0,ov-94)*BALLON.top + (C.lastBallon===C.age-1 ? BALLON.inc : 0) - (C.ballonN||0)*BALLON.fat[C.pos];
     // 압도적 시즌(공격 포인트가 아주 많은 시즌)은 따로 더 친다 — 62골을 넣고도 "후보 30인"에 그치던 문제(사용자 지적)
-    const standout = Math.max(0, rec-BALLON.big)*BALLON.bigW;
+    const standout = Math.max(0, recRaw-BALLON.big)*BALLON.bigW;
     const bp = (rec + Math.max(0,rating-7.0)*20 + hp2 + star + standout)*BALLON.pos[C.pos];
     const rival = BALLON.mu + BALLON.sd*((rng()+rng()+rng()+rng()-2)*1.73), gap = bp-rival;
     if(gap > 0){ add('발롱도르','S'); C.lastBallon = C.age; C.ballonN = (C.ballonN||0) + 1; if(rng()<0.75) add('FIFA 올해의 선수','S'); }
     else {
       if(gap > -12) notes.push('발롱도르 투표 2위');
       else if(gap > -25) notes.push('발롱도르 투표 3위');
-      else if((gap > -45 && bp > 60) || rec >= 35) notes.push('발롱도르 후보 30인');   // 35골 넘게 넣었으면 최소 후보엔 든다
+      else if((gap > -45 && bp > 60) || recRaw >= 35) notes.push('발롱도르 후보 30인');   // 35골 넘게 넣었으면 최소 후보엔 든다
       if(gap > -10 && rng()<0.3) add('FIFA 올해의 선수','S');
     }
   }
