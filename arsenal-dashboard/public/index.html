@@ -1787,8 +1787,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hist summary::after,.cr-rc-minor summary::after{content:'';width:7px;height:7px;border-right:2px solid var(--text-secondary);border-bottom:2px solid var(--text-secondary);transform:translateY(-2px) rotate(45deg);transition:transform .2s;flex:none}
 .cr-hist[open] summary::after,.cr-rc-minor[open] summary::after{transform:translateY(2px) rotate(-135deg)}
 .cr-hist summary span{margin-left:auto}
-.cr-opt{display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:700}
-.cr-opt small{font-size:11px;font-weight:400;opacity:.8}
+.cr-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:700}   /* 효과 줄이 없는 버튼도 세로 가운데(옆 버튼이 두 줄이라 높이가 같아진다) */
+.cr-opt b{font-weight:700}
+.cr-opt small{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 8px;font-size:11px;font-weight:400;color:var(--text-secondary)}
+.cr-opt small i{font-style:normal;font-weight:700}
+.cr-opt[aria-pressed="true"] small{color:inherit}
 .cr-hist summary span{font-size:12px;color:var(--text-secondary)}
 .cr-hist summary::-webkit-details-marker{display:none}
 /* 은퇴 카드 */
@@ -8816,6 +8819,17 @@ var CR_CHANCE={low:'출전 기회 낮음', mid:'출전 기회 보통', high:'출
 // 특성 아이콘: 특성 카드 이미지(img/traits/{id}.svg — scripts/build_trait_cards.mjs로 만든 것)를 작게. 예전엔 ✨/🎯 이모지였다(사용자 지적)
 // 카드 전체(아이콘+이름)를 줄이면 아이콘이 안 보여서 가운데 원형 배지만 잘라 쓴다 — 배지는 300×300 캔버스의 (150,124) 반지름 78.
 function crTraitIc(id){ return id ? '<span class="cr-tr-ic" style="background-image:url(/img/traits/'+id+'.svg)"></span>' : ''; }
+// 효과 줄 정리: 같은 방향끼리 묶는다 — "성장 ↑ · 출전 ↓ · 부상 위험 ↑" → "성장·부상 위험 ↑  출전 ↓"(사용자 지정).
+// 화살표 꼴이 아닌 조각("명성 ↑↑ 또는 ↓" 같은)이 섞여 있으면 손대지 않는다.
+function crFx(txt){
+  var parts=String(txt).split(/\s*·\s*/), groups=[], idx={};
+  for(var i=0;i<parts.length;i++){
+    var m=parts[i].match(/^(.+?)\s*([↑↓]+)$/); if(!m) return gmEsc(txt);
+    if(idx[m[2]]==null){ idx[m[2]]=groups.length; groups.push({a:m[2], n:[]}); }
+    groups[idx[m[2]]].n.push(m[1]);
+  }
+  return groups.map(function(g){ return '<span class="fx">'+gmEsc(g.n.join('·'))+' <i>'+g.a+'</i></span>'; }).join('');
+}
 function crChance(k){ return '<span class="cr-chance '+k+'">'+CR_CHANCE[k]+'</span>'; }
 function crGrow(lv){ var g=''; for(var i=1;i<=5;i++) g+='<i class="'+(i<=lv?'on':'')+'"></i>'; return '<div class="cr-grow">성장 보너스 '+g+'</div>'; }
 function crStars(n){ var t=''; for(var i=1;i<=5;i++) t+=i<=n?'★':'☆'; return '<span class="cr-stars">'+t+'</span>'; }
@@ -9052,7 +9066,7 @@ function crPrep(){
    +'</div><div class="cr-seg">'+ev.a.map(function(t,k){
      // "고용한다 (성장 ↑ · 부상 위험 ↑)" → 굵은 한 줄 + 작은 효과 줄(버튼이 길어지지 않게)
      var m=String(t).match(/^(.*?)\s*\((.*)\)$/);
-     return '<button class="cr-chip cr-opt" aria-pressed="'+(CR.evPick===k)+'" onclick="CR.evPick='+k+';crPrep()">'+(m?gmEsc(m[1])+'<small>'+gmEsc(m[2])+'</small>':gmEsc(t))+'</button>'; }).join('')+'</div></div>'
+     return '<button class="cr-chip cr-opt" aria-pressed="'+(CR.evPick===k)+'" onclick="CR.evPick='+k+';crPrep()"><b>'+gmEsc(m?m[1]:t)+'</b>'+(m?'<small>'+crFx(m[2])+'</small>':'')+'</button>'; }).join('')+'</div></div>'
    +crHist(),
    '<div class="sum">'+p.age+'세<b>'+p.ovr+'</b></div><button class="gm-btn" '+(CR.evPick!=null?'':'disabled')+' onclick="crSeason(this)">'+(CR.evPick!=null?'시즌 시작':'이벤트를 골라 주세요')+'</button>');
 }
