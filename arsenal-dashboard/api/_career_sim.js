@@ -25,6 +25,13 @@ const AGE_BASE = {15:4.7,16:4.7,17:4.7,18:3.7,19:3.7,20:3.7,21:3.3,22:4,23:3.5,2
 const STAGE = [{n:'U-16', gap:30, games:26, up:null}, {n:'U-18', gap:24, games:26, up:null}, {n:'U-21', gap:16, games:30, up:13}, {n:'', gap:0, games:42, up:8}];
 // 성장: 유스 단계는 출전 비율의 영향이 작고(0.9~1.2 — 유스 경기는 많이 뛰어도 1군만큼 크지 않다), 1군은 예전 출전 계수 그대로.
 // 나이 기본 단계보다 한 단계 높을 때마다 ×(1+STAGE_UP) — 또래보다 높은 무대에서 부딪히는 효과. 1군 벤치 ≈ U-21 주전, 1군에서 뛰면 그 이상.
+// 성장이 멈춘 뒤(ageBase ≤ 0 — 보통 29세, 부상 소모가 크면 더 일찍)의 훈련 방향(사용자 지적: 그 나이부턴 강점·균형·약점 중 뭘 골라도
+// 점수 차 10점 안이라 고르는 의미가 없었다). "지금 vs 나중" 선택으로 바꾼다: 몸 관리 = 출전 ↓·하락 ↓·부상 ↓(오래 뛴다),
+// 주전 경쟁 = 출전 ↑·하락 ↑·부상 ↑(지금 더 뛴다). st 선발 확률 +, decl 하락 배율, inj 부상 확률 +.
+// 실측(29세부터 고정, 3,000커리어): 균형 2,880 · 몸 관리 2,868(은퇴 +0.6년, 골 −12%) · 주전 경쟁 2,895(은퇴 −0.3년, 골 +9%) · 31세까지 경쟁 후 몸 관리 2,907.
+const LATE = {'몸 관리':{st:-0.12, decl:0.75, inj:-0.03}, '주전 경쟁':{st:0.1, decl:1.15, inj:0.03}};
+const lateTrain = () => ageBase() <= 0;
+export const trainOpts = () => lateTrain() ? ['몸 관리','균형','주전 경쟁'] : ['강점 강화','균형','약점 보완'];
 const STAGE_UP = 0.2, YPLAY = [0.9, 0.3], YPLAY_KID = [0.6, 0.8];   // 유스 출전 계수: 18세 이상 U-21 / 17세까지(첫 구단 시절)
 // 유스 단계(U-16~U-21)의 구단 수준 효과는 1군의 35%만(사용자 지정 — 첫 구단 3곳 중 "도전"이 늘 정답이던 것): 예전엔 맨시티 유스 ×1.85 vs 브라이튼 ×1.12로
 // 구단 수준이 유스 성장을 다 정해서 출전 기회 손해가 의미 없었다(점수 평균 도전 3,817 · 적정 3,263 · 안정 2,672). 대신 유스는 뛰는 만큼 크게(YPLAY_KID 0.6~1.4).
@@ -321,7 +328,7 @@ export function prepView(state){
   else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 완화)' : ' (감독 신뢰 ↑)')];
-  return {goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
+  return {goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
     loanClub: C.ev==='loan' && C.loanClub ? {...pub(C.loanClub), chance: chanceOf(pStart(C.loanClub))} : null};
 }
 
@@ -334,7 +341,7 @@ function injRiskOf(){
   r -= C.injNext || 0;                                  // 지난 부상 때 완전히 회복했으면 −3%p
   if(C.injBoost && C.injBoost.n > 0) r += 0.08;         // 큰 부상을 보존 치료했으면 2시즌 +8%p
   if(C.glass) r += 0.04;                                // 유리몸
-  r += traitMods().inj + ((commonOf()||{}).inj||0);
+  r += traitMods().inj + ((commonOf()||{}).inj||0) + ((LATE[C.train]||{}).inj||0);
   return Math.max(0.03, r + Math.max(0, C.age-30)*0.01);
 }
 function rollInjury(){
@@ -351,7 +358,7 @@ function rollInjury(){
 export function playSeason(state, choice){
   C = state;
   if(C.phase !== 'prep' && C.phase !== 'injury') throw new Error('phase');
-  if(['강점 강화','균형','약점 보완'].includes(choice.train)) C.train = choice.train;
+  if(trainOpts().includes(choice.train)) C.train = choice.train; else if(!trainOpts().includes(C.train)) C.train = '균형';
   if(C.phase === 'prep'){
     if(choice.evPick !== 0 && choice.evPick !== 1) throw new Error('evPick');
     C.evPick = choice.evPick;
@@ -385,7 +392,7 @@ export function playSeason(state, choice){
   // 새 영입 효과: 이적 첫 시즌엔 구단이 기회를 더 준다(돈을 주고 데려왔으니). 없으면 큰 구단으로 가는 게 늘 손해였다(전략 검사).
   const lastSr = [...C.hist].reverse().find(r => !r.youth && !r.loan);
   if(!onLoan && lastSr) startAdj += lastSr.club !== club.n ? NEW_SIGNING[0] : NEW_SIGNING[1];
-  const TM = traitMods(); startAdj += TM.st;
+  const TM = traitMods(); startAdj += TM.st + ((LATE[C.train]||{}).st||0);
   const p = pStart(club, startAdj);
   // 부상
   let injured = 0; const inj = C.inj; C.injNext = 0;
@@ -462,7 +469,7 @@ export function playSeason(state, choice){
     const cc0 = clubCoef(club.r + (C.age<18 && !onLoan && club.nat===C.nation ? ACAD[C.nation]||0 : 0)), cc = kid ? 1 + (cc0-1)*YOUTH_CC : cc0;
     C.ovr = Math.min(99, C.ovr + C.boost*base*play*cc*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
-    declMul *= (commonOf()||{}).decl || 1;
+    declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1);
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
     C.off = C.off.map((o2,i) => o2 + base*declMul*((DECLINE[st[i]]||1)-1));
   }

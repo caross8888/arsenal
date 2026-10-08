@@ -9029,15 +9029,18 @@ function crBack(){ return '<button class="gm-back" onclick="gameList()">← 게�
 // ── 시즌 준비 ──────────────────────────────────────────────────────────
 function crPrep(){
   var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lc=pr.loanClub;
+  // 성장이 멈춘 뒤엔 훈련 방향 대신 시즌 운영(몸 관리·균형·주전 경쟁) — 서버가 지금 고를 수 있는 것을 준다
+  var topts=pr.trainOpts||['강점 강화','균형','약점 보완']; if(topts.indexOf(CR.train)<0) CR.train='균형';
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
   crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'
    +crHead()
    +(pr.promo?'<div class="cr-promo">⬆ '+gmEsc(pr.promo)+'</div>':'')
    +'<div class="cr-goal"><span class="cr-goal-tag">SEASON GOAL · 이번 시즌 목표</span><div class="cr-goal-t">'+gmEsc(pr.goal)+'</div>'
-   +'<div class="cr-note">'+(pr.youth?(pr.stage?pr.stage+' 시즌이에요. 실력이 팀 수준에 가까워지면 시즌 끝에 '+(pr.stage==='U-21'?'1군에 합류':'월반')+'하고, 높은 무대일수록 더 크게 성장해요.':'유스 시즌이라 출전 기회는 유스팀 기준이에요.'):'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
-   +'<div class="cr-panel"><div class="cr-lbl"><b>훈련 방향</b><span>오른 만큼이 스탯에 나뉘는 방식</span></div><div class="cr-seg" style="--n:3">'
-   +['강점 강화','균형','약점 보완'].map(function(t){ return '<button class="cr-chip" aria-pressed="'+(CR.train===t)+'" onclick="CR.train=\''+t+'\';crPrep()">'+t+'</button>'; }).join('')+'</div>'
-   +(pr.keyMax?'<div class="cr-note" style="margin-top:6px">주요 능력이 모두 최고치예요. 강점 강화로는 더 오를 데가 없어요.</div>'
+   +'<div class="cr-note">'+(pr.youth?(pr.stage?pr.stage+' 시즌이에요. 실력이 팀 수준에 가까워지면 시즌 끝에 '+(pr.stage==='U-21'?'1군에 합류':'월반')+'하고, 높은 무대일수록 더 크게 성장해요.':'유스 시즌이라 출전 기회는 유스팀 기준이에요.'):pr.late?'성장이 멈춘 나이예요. 이제는 기량을 얼마나 오래 지키느냐가 관건이에요.':'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
+   +'<div class="cr-panel"><div class="cr-lbl"><b>'+(pr.late?'시즌 운영':'훈련 방향')+'</b><span>'+(pr.late?'지금이냐 나중이냐':'오른 만큼이 스탯에 나뉘는 방식')+'</span></div><div class="cr-seg" style="--n:3">'
+   +topts.map(function(t){ return '<button class="cr-chip" aria-pressed="'+(CR.train===t)+'" onclick="CR.train=\''+t+'\';crPrep()">'+t+'</button>'; }).join('')+'</div>'
+   +(pr.late?'<div class="cr-note" style="margin-top:6px">'+({'몸 관리':'출전을 줄이고 몸을 아껴요. 하락·부상이 줄어 더 오래 뛰어요.','균형':'평소대로 시즌을 보내요.','주전 경쟁':'더 많이 뛰는 대신 몸이 빨리 닳아요. 하락·부상이 늘어요.'})[CR.train]+'</div>'
+     :pr.keyMax?'<div class="cr-note" style="margin-top:6px">주요 능력이 모두 최고치예요. 강점 강화로는 더 오를 데가 없어요.</div>'
      :pr.keyCapped&&pr.keyCapped.length?'<div class="cr-note" style="margin-top:6px">'+gmEsc(pr.keyCapped.join('·'))+'은(는) 이미 최고치라 강점 강화 효율이 절반으로 떨어져요.</div>':'')+'</div>'
    +'<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(ev.t)+'</b><span>이벤트</span></div><div style="font-size:14px;line-height:1.5">'+d
    +(lc?'<div class="cr-loanc">'+crCrest(lc,30)+'<div><b>'+gmEsc(lc.n)+'</b><div class="cr-note">'+crNat(lc.nat).f+' '+crNat(lc.nat).n+' · 1시즌 임대</div></div>'+crChance(lc.chance)+'</div>':'')
