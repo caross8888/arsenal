@@ -8815,9 +8815,12 @@ function crApi(a, body){
   return fetch(FN+'/career?a='+a, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{})})
     .then(function(r){ return r.json().then(function(j){ if(!r.ok){ var e=new Error(j.error||'잠시 후 다시 시도해 주세요.'); e.status=r.status; throw e; } return j; }); });
 }
+// meta는 CDN에 하루 캐시된다(s-maxage). 모양이 바뀌면(체형 bodies 추가 등) CR_META_V를 올려 URL을 바꿔야 옛 캐시를 안 받는다
+// — 체형을 넣고 이걸 안 해서 배포 직후 옛 meta(체형 없음)가 내려와 1페이지 체형 칸이 안 보이고 진행이 막혔다(사용자 지적).
+var CR_META_V='2';
 function crMeta(){
   if(CR.meta) return Promise.resolve(CR.meta);
-  return fetch(FN+'/career?a=meta').then(function(r){ if(!r.ok) throw new Error('잠시 후 다시 시도해 주세요.'); return r.json(); }).then(function(m){
+  return fetch(FN+'/career?a=meta&v='+CR_META_V).then(function(r){ if(!r.ok) throw new Error('잠시 후 다시 시도해 주세요.'); return r.json(); }).then(function(m){
     m.club={}; Object.keys(m.clubs).forEach(function(k){ m.clubs[k].forEach(function(c){ m.club[c[0]]={n:c[0], id:c[1], nat:k}; }); });
     m.nat={}; m.nations.forEach(function(n){ m.nat[n.id]=n; });
     CR.meta=m; return m;
@@ -8997,8 +9000,8 @@ function crBodyFit(b, pos, card){
   return sh.reduce(function(t,x,i){ return t+x*(w[i]-1); },0);
 }
 function crDock1(){
-  var S=CR.S, ok=S.name.trim() && S.nation && S.foot && S.body && S.pos && S.num;
-  var miss=[!S.pos&&'포지션',!S.nation&&'국적',!S.name.trim()&&'이름',!S.foot&&'주발',!S.num&&'등번호',!S.body&&'체형'].filter(Boolean);
+  var S=CR.S, needBody=!!CR.meta.bodies, ok=S.name.trim() && S.nation && S.foot && (S.body||!needBody) && S.pos && S.num;   // 체형 정보가 없는 옛 meta면 표준으로 진행
+  var miss=[!S.pos&&'포지션',!S.nation&&'국적',!S.name.trim()&&'이름',!S.foot&&'주발',!S.num&&'등번호',needBody&&!S.body&&'체형'].filter(Boolean);
   // 남은 항목은 버튼 글자로 알려 준다(옆에 요약 칸을 두지 않는다 — 사용자 지적)
   crDock('<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage2()">'+(ok?'다음 · 선수 유형':({국적:'국적을 골라 주세요',이름:'이름을 입력해 주세요',주발:'주발을 골라 주세요',포지션:'포지션을 골라 주세요',등번호:'등번호를 입력해 주세요',체형:'체형을 골라 주세요'})[miss[0]])+'</button>');
 }
@@ -9033,7 +9036,7 @@ function crPage3(btn){
   var S=CR.S;
   if(CR.firstClubs) return crPage3Render();
   if(!crBusy(btn,'불러오는 중...')) return;
-  crApi('new', {name:S.name.trim(), nation:S.nation, foot:S.foot, body:S.body, pos:S.pos, card:S.card, num:S.num, dream:S.dream}).then(function(d){
+  crApi('new', {name:S.name.trim(), nation:S.nation, foot:S.foot, body:S.body||'표준', pos:S.pos, card:S.card, num:S.num, dream:S.dream}).then(function(d){
     CR.busy=false; CR.tok=d.token; CR.firstClubs=d.clubs; CR.firstPick=null; crPage3Render(); window.scrollTo(0,0);
   }).catch(function(e){ CR.busy=false; if(btn){ btn.disabled=false; btn.textContent='다음 · 첫 구단'; } gameToast(e.message); });
 }
@@ -9461,13 +9464,19 @@ function crShot(btn){
     .then(function(x){ return x[0].toBlob(box, {pixelRatio:2, backgroundColor:bg, fontEmbedCSS:x[1]}); })
     .then(function(blob){
       done();
-      var name='career-'+String((CR.v.card||{}).name||'card').replace(/[^\w가-힣]+/g,'_')+'.png';
+      var name='career-'+String(((box.dataset.board?CR.shotCard:CR.v&&CR.v.card)||{}).name||'card').replace(/[^\w가-힣]+/g,'_')+'.png';
       var file=new File([blob], name, {type:'image/png'});
       // 모바일은 공유 시트(사진 저장·메신저), 안 되면 파일로 내려받기
       if(navigator.canShare && navigator.canShare({files:[file]})) return navigator.share({files:[file], title:'은퇴 카드'}).catch(function(){});
       var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     })
     .catch(function(){ done(); gameToast('이미지를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.'); });
+}
+// 내 계정 키: 로그인 토큰 앞부분(base64url JSON {k,n,e})에서 읽는다 — 다른 기기에서 등록한 기록도 "내 카드"로 알아보게.
+// 서명 확인은 서버 몫이고 여기선 화면 표시(강조·저장 버튼)에만 쓴다. 로그인 전이면 이 기기에서 등록할 때 저장한 키.
+function crMyKey(){
+  try{ if(PK.tok){ var b=PK.tok.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); var t=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b), function(c){ return c.charCodeAt(0); }))); if(t&&t.k) return t.k; } }catch(e){}
+  try{ return localStorage.getItem('careerMyKey'); }catch(e){ return null; }
 }
 function crMarkReg(key){
   try{ var i=JSON.parse(localStorage.getItem(CR_INFO)||'{}'); i.reg=true; localStorage.setItem(CR_INFO, JSON.stringify(i)); if(key) localStorage.setItem('careerMyKey', key); }catch(e){}
@@ -9510,7 +9519,7 @@ function crBoard(from, pos){
     +'<div class="cr-rk-list" id="crRk">'+loadingHtml('랭킹 불러오는 중...','padding:32px 0')+'</div>',
     '<button class="gm-btn" onclick="crBoardBack()">'+(CR.boardFrom==='retired'?'은퇴 카드로':'돌아가기')+'</button>');
   window.scrollTo(0,0);
-  var myKey=null; try{ myKey=localStorage.getItem('careerMyKey'); }catch(e){}
+  var myKey=crMyKey();
   Promise.all([crMeta(), fetch(FN+'/career?a=board'+(bp?'&p='+bp:'')).then(function(r){ return r.json(); })]).then(function(res){
     if((CR.boardPos||'')!==bp) return;   // 그사이 다른 탭을 눌렀다
     var top=res[1].top||[], el=document.getElementById('crRk'); if(!el) return;
@@ -9537,7 +9546,11 @@ function crViewCard(i){
   window.scrollTo(0,0);
   fetch(FN+'/career?a=card&k='+encodeURIComponent(r.key)+'&p='+(r.p||r.pos||'')).then(function(x){ return x.json().then(function(j){ if(!x.ok) throw new Error(j.error); return j; }); }).then(function(d){
     var box=document.querySelector('#gameRoot .cr'); if(!box) return;
-    box.innerHTML='<div class="cr-top"><button class="gm-back" onclick="crBoard()">← 랭킹</button><div class="cr-season">'+gmEsc(d.nick)+'</div></div>'+crCardHtml(d.card);
+    // 내 카드면 은퇴 화면처럼 이미지로 저장할 수 있게(사용자 지정). 내 카드 판별은 crMyKey(로그인 계정 키).
+    var myKey=crMyKey();
+    var mine=!!myKey && r.key===myKey; CR.shotCard=mine?d.card:null;
+    box.innerHTML='<div class="cr-top"><button class="gm-back" onclick="crBoard()">← 랭킹</button><div class="cr-season">'+gmEsc(d.nick)+'</div></div>'
+      +(mine?'<div id="crShotBox" data-board="1">'+crCardHtml(d.card)+'</div><button class="cr-shot-btn" onclick="crShot(this)">📷 이미지로 저장</button>':crCardHtml(d.card));
   }).catch(function(e){ var box=document.querySelector('#gameRoot .cr'); if(box) box.insertAdjacentHTML('beforeend','<div class="gm-empty">'+gmEsc(e.message||'카드를 불러오지 못했어요.')+'</div>'); var l=box&&box.querySelector('.loading-state'); if(l) l.remove(); });
 }
 
