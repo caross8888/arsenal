@@ -40,6 +40,7 @@ const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 // 옛 한 판(career:board:v1 · career:card:{키} · career:sum)은 처음 읽을 때 한 번 포지션별로 옮긴다(career:mig:v2 NX).
 //   옛 카드는 옮기지 않고 career:card:{키}로 그대로 읽는다(새 키가 없을 때, 그 카드의 포지션이 맞으면).
 // career:done:{id}  같은 커리어 두 번 등록 방지(30일) / career:reg:{YYYY-MM} 월 등록 수(무료 한도 보호).
+// 초기화: POST ?a=wipe (CRON_SECRET, {confirm:'RESET'}) — .github/workflows/career-reset.yml로 실행한다.
 const POSS = ['FW', 'MF', 'DF'], BOARD_V1 = 'career:board:v1', boardKey = p => `career:board:v2:${p}`, sumKey = p => `career:sum:${p}`;
 const BOARD_KEEP = 1000, BOARD_SHOW = 100, MONTHLY_REG_CAP = 20000, ACCT = '@';
 async function kv(...args){
@@ -169,6 +170,32 @@ export default async function handler(req, res){
   res.setHeader('Cache-Control', 'no-store');
   const a = String(req.query.a || '');
   try {
+    // 관리자: 커리어 랭킹 초기화(사용자 지정 — 밸런스가 크게 바뀌어 예전 기록과 비교가 안 된다). CRON_SECRET으로만 열리고(미설정이면 거부),
+    // {confirm:'RESET'}이 있어야 지운다({dry:true}면 지울 개수만). 지우는 것: 포지션별 판·요약·은퇴 카드, 옛 한 판(v1)과 그 요약·카드.
+    // 남기는 것: career:done(같은 커리어 재등록 방지)·career:reg(월 등록 수)·career:mig:v2(옛 판을 다시 옮기지 않게).
+    if(a === 'wipe'){
+      const secret = process.env.CRON_SECRET;
+      if(!secret) return res.status(503).json({error: 'CRON_SECRET 미설정'});
+      if(req.method !== 'POST' || req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({error: 'unauthorized'});
+      if(!kvReady()) return res.status(503).json({error: 'KV 미설정'});
+      const body = await readBody(req);
+      if(!body.dry && body.confirm !== 'RESET') bad('confirm: RESET이 필요해요.');
+      const keys = [];
+      for(const p of POSS){
+        const ms = await kv('ZRANGE', boardKey(p), 0, -1) || [];
+        ms.forEach(m => keys.push(`career:card:${String(m).slice(1)}:${p}`));
+        keys.push(boardKey(p), sumKey(p));
+      }
+      (await kv('ZRANGE', BOARD_V1, 0, -1) || []).forEach(m => keys.push(`career:card:${String(m).slice(1)}`));
+      keys.push(BOARD_V1, 'career:sum');
+      const counts = Object.fromEntries(await Promise.all(POSS.map(async p => [p, await kv('ZCARD', boardKey(p))])));
+      if(body.dry) return res.json({dry: true, records: counts, keys: keys.length});
+      await kv('SET', 'career:mig:v2', '1');
+      let deleted = 0;
+      for(let i = 0; i < keys.length; i += 200) deleted += await kv('DEL', ...keys.slice(i, i + 200));
+      for(const id in _boards) delete _boards[id];
+      return res.json({ok: true, records: counts, deleted});
+    }
     if(a === 'meta'){
       res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
       return res.json(META || (META = {

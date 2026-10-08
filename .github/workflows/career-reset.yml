@@ -1,0 +1,41 @@
+# 커리어 모드 랭킹 초기화 — 수동 실행 전용
+#
+# 밸런스가 크게 바뀌어 예전 기록과 비교가 안 될 때 랭킹(포지션별 판·요약·은퇴 카드)을 전부 지운다(api/career.js?a=wipe).
+# 되돌릴 수 없다. confirm 칸에 RESET을 적어야 지우고, dry를 켜면 지울 개수만 본다.
+# 준비물은 pick-reset.yml과 같다: 저장소 시크릿 CRON_SECRET(Vercel 프로젝트의 CRON_SECRET과 같은 값).
+
+name: career ranking reset
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: '정말 지우려면 RESET'
+        required: true
+        default: ''
+      dry:
+        description: '지우지 않고 개수만 보기'
+        type: boolean
+        default: true
+
+permissions: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: 랭킹 초기화 요청
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          CONFIRM: ${{ inputs.confirm }}
+          DRY: ${{ inputs.dry }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "::error::CRON_SECRET 시크릿이 없습니다."; exit 1; fi
+          body=$(node -e 'console.log(JSON.stringify({confirm:process.env.CONFIRM,dry:process.env.DRY==="true"}))')
+          code=$(curl -sS -o res.json -w '%{http_code}' --max-time 60 \
+            -X POST -H "Authorization: Bearer $CRON_SECRET" -H 'Content-Type: application/json' \
+            --data "$body" "https://coyg.vercel.app/api/career?a=wipe")
+          echo "HTTP $code"; cat res.json; echo
+          cat res.json >> "$GITHUB_STEP_SUMMARY"
+          [ "$code" = "200" ] || { echo "::error::초기화 실패 (HTTP $code)"; exit 1; }
