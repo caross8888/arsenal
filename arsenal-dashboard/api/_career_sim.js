@@ -181,7 +181,6 @@ export function startStats(pos, card){
 export function ovrOf(st, w){ let t=0, sw=0; for(let i=0;i<5;i++){ const w3=w[i]**3; t+=st[i]*w3; sw+=w3; } return Math.round(t/sw); }
 
 const chanceOf = p => p<0.3 ? 'low' : p<0.65 ? 'mid' : 'high';
-const growLv = r => Math.max(1, Math.min(5, Math.round((r-40)/11)));
 
 // 첫 구단: 자국 구단 3곳 — 도전 / 적정 / 안정. 리그 구단이 16개 이상이면 3칸 간격.
 // 해외 유스(사용자 지정): 부모님과 함께 해외로 건너가 현지 유스팀에서 시작하는 길. 시드에 따라 가끔 네 번째 선택지로 나온다 —
@@ -684,9 +683,9 @@ const forcedRetire = () => C.age>=40 || !!C.bodyOut || (!!C.released && !C.offer
 const pub = c => ({n:c.n, id:c.id, nat:c.nat});
 export function offersView(state){ C = state; return offerView(); }
 // 이적시장 카드에 보이는 출전 기회는 다음 시즌 실제 계산과 같게(제안 구단은 새 영입 효과, 잔류는 같은 팀 몫 포함)
-export function stayView(state){ C = state; return {chance: chanceOf(pStart(C.club, NEW_SIGNING[1])), grow: growLv(C.club.r)}; }
+export function stayView(state){ C = state; return {chance: chanceOf(pStart(C.club, NEW_SIGNING[1]))}; }
 function offerView(){
-  return C.offers.map(o => ({...pub(o.c), kind:o.kind, dream:!!o.dream, chance:chanceOf(pStart(o.c, NEW_SIGNING[0])), grow:growLv(o.c.r)}));
+  return C.offers.map(o => ({...pub(o.c), kind:o.kind, dream:!!o.dream, chance:chanceOf(pStart(o.c, NEW_SIGNING[0]))}));   // 성장 보너스 칸은 없앴다(사용자 지정 — 첫 구단과 같은 이유)
 }
 
 // pick: 제안 번호(없으면 잔류). 방출됐는데 고르지 않으면 은퇴.

@@ -1732,9 +1732,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-chance.low{color:var(--loss);background:rgba(239,68,68,.14)}
 .cr-chance.mid{color:var(--amber);background:rgba(245,158,11,.14)}
 .cr-chance.high{color:var(--green);background:rgba(34,197,94,.14)}
-.cr-grow{display:flex;gap:4px;margin-top:6px;align-items:center;font-size:11px;color:var(--text-secondary)}
-.cr-grow i{width:10px;height:5px;border-radius:2px;background:var(--surface3)}
-.cr-grow i.on{background:var(--green)}
 .cr-season{font-family:var(--fd);font-size:20px;letter-spacing:1px;color:var(--text-secondary)}
 /* 선수 머리 카드(빨간 배경이라 테마와 무관하게 흰 글자) */
 .cr-hc{background:var(--modal-header-grad);border-radius:16px;padding:14px;color:#fff;display:flex;flex-direction:column;gap:12px}
@@ -8859,7 +8856,6 @@ function crFx(txt){
   return groups.map(function(g){ return '<span class="fx">'+gmEsc(g.n.join('·'))+' <i>'+g.a+'</i></span>'; }).join('');
 }
 function crChance(k){ return '<span class="cr-chance '+k+'">'+CR_CHANCE[k]+'</span>'; }
-function crGrow(lv){ var g=''; for(var i=1;i<=5;i++) g+='<i class="'+(i<=lv?'on':'')+'"></i>'; return '<div class="cr-grow">성장 보너스 '+g+'</div>'; }
 function crStars(n){ var t=''; for(var i=1;i<=5;i++) t+=i<=n?'★':'☆'; return '<span class="cr-stars">'+t+'</span>'; }
 function crSteps(n){ return '<div class="cr-steps">'+[1,2,3].map(function(k){ return '<i class="'+(k<=n?'on':'')+'"></i>'; }).join('')+'</div>'; }
 
@@ -9239,10 +9235,10 @@ function crResult(){
     if(r.age<17) h+='<div class="cr-note">17세부터 다른 구단 제안을 받을 수 있어요.</div>';
     if(R.released) h+='<div class="cr-note">'+gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 낮은 수준의 구단에서 커리어를 이어 가거나 은퇴할 수 있어요.</div>';
     h+='<div class="cr-list">'
-     +(R.released?'':'<button class="cr-club" aria-pressed="'+(CR.pick==null)+'" onclick="CR.pick=null;crResult()">'+crCrest(p.club)+'<div><div class="tag">잔류</div><div class="nm">'+gmEsc(p.club.n)+'</div><div class="meta">'+crNat(p.club.nat).f+' '+crNat(p.club.nat).n+'</div>'+(R.stay?crGrow(R.stay.grow):'')+'</div><div>'+(R.stay?crChance(R.stay.chance):'')+'</div></button>')
+     +(R.released?'':'<button class="cr-club" aria-pressed="'+(CR.pick==null)+'" onclick="CR.pick=null;crResult()">'+crCrest(p.club)+'<div><div class="tag">잔류</div><div class="nm">'+gmEsc(p.club.n)+'</div><div class="meta">'+crNat(p.club.nat).f+' '+crNat(p.club.nat).n+'</div>'+'</div><div>'+(R.stay?crChance(R.stay.chance):'')+'</div></button>')
      +R.offers.map(function(o,k){
         return '<button class="cr-club" aria-pressed="'+(CR.pick===k)+'" onclick="CR.pick='+k+';crResult()">'+crCrest(o)+'<div><div class="tag">'+o.kind+(o.dream?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+gmEsc(o.n)+'</div>'
-          +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':'')+'</div>'+crGrow(o.grow)+'</div><div>'+crChance(o.chance)+'</div></button>'; }).join('')
+          +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':'')+'</div>'+'</div><div>'+crChance(o.chance)+'</div></button>'; }).join('')
      +'</div></div>';
   }
   h+=crHist();
