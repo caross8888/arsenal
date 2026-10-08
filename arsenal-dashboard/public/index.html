@@ -1885,7 +1885,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @keyframes crTovIn{from{opacity:0}to{opacity:1}}
 @keyframes crTcIn{from{opacity:0;transform:translateY(24px) scale(.9)}to{opacity:1;transform:none}}
 .cr-hc-tr{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
-.cr-hc-tr span{font-size:10.5px;font-weight:700;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:2px 7px}
+.cr-hc-tr > span{font-size:10.5px;font-weight:700;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px}
+.cr-tr-ic{display:inline-block;width:18px;height:18px;border-radius:50%;flex:none;vertical-align:-4px;background-repeat:no-repeat;background-size:176.5%;background-position:50% 30%}
+.cr-rc-chip .cr-tr-ic{margin-right:4px}
 .cr-rk-list{display:flex;flex-direction:column;gap:6px}
 .cr-rk-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto 34px 56px;gap:8px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:9px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cr-rk-row.me{border-color:var(--gold);background:rgba(200,168,75,.12)}
@@ -8811,6 +8813,9 @@ function crCrest(club, size){
   return '<img class="cr-crest-img" src="https://images.fotmob.com/image_resources/logo/teamlogo/'+gmEsc(id)+'.png" width="'+size+'" height="'+size+'" alt="" loading="lazy" onerror="this.outerHTML=this.dataset.ph" data-ph="'+ph.replace(/"/g,'&quot;')+'">';
 }
 var CR_CHANCE={low:'출전 기회 낮음', mid:'출전 기회 보통', high:'출전 기회 높음'};
+// 특성 아이콘: 특성 카드 이미지(img/traits/{id}.svg — scripts/build_trait_cards.mjs로 만든 것)를 작게. 예전엔 ✨/🎯 이모지였다(사용자 지적)
+// 카드 전체(아이콘+이름)를 줄이면 아이콘이 안 보여서 가운데 원형 배지만 잘라 쓴다 — 배지는 300×300 캔버스의 (150,124) 반지름 78.
+function crTraitIc(id){ return id ? '<span class="cr-tr-ic" style="background-image:url(/img/traits/'+id+'.svg)"></span>' : ''; }
 function crChance(k){ return '<span class="cr-chance '+k+'">'+CR_CHANCE[k]+'</span>'; }
 function crGrow(lv){ var g=''; for(var i=1;i<=5;i++) g+='<i class="'+(i<=lv?'on':'')+'"></i>'; return '<div class="cr-grow">성장 보너스 '+g+'</div>'; }
 function crStars(n){ var t=''; for(var i=1;i<=5;i++) t+=i<=n?'★':'☆'; return '<span class="cr-stars">'+t+'</span>'; }
@@ -8998,7 +9003,7 @@ function crHead(){
    +'<div style="flex:1;min-width:0"><div class="cr-hc-n">'+gmEsc(p.name)+(p.num?' <span>#'+p.num+'</span>':'')+'</div>'
    +'<div class="cr-hc-s">'+gmEsc(p.club.team)+' · '+gmEsc(card.n)+'</div>'
    +'<div class="cr-hc-s">'+p.foot+(p.pos!=='DF'?' · 약발 '+crStars(p.wf):'')+(p.glass?' · 🩹 유리몸':'')+'</div>'
-   +(p.traits&&p.traits.length?'<div class="cr-hc-tr">'+p.traits.map(function(t){ return '<span title="'+gmEsc(t.d)+'">'+(t.common?'✨ ':'🎯 ')+gmEsc(t.n)+'</span>'; }).join('')+'</div>':'')+'</div>'
+   +(p.traits&&p.traits.length?'<div class="cr-hc-tr">'+p.traits.map(function(t){ return '<span title="'+gmEsc(t.d)+'">'+crTraitIc(t.id)+gmEsc(t.n)+'</span>'; }).join('')+'</div>':'')+'</div>'
    +'<div class="cr-hc-o age"><b>'+p.age+'</b><span>AGE</span></div><div class="cr-hc-o"><b>'+p.ovr+'</b><span>OVR</span></div></div>'
    +'<div class="cr-hc-st">'+st.map(function(n,i){
       // 시즌 결과 화면: 이번 시즌 오른 만큼은 초록(내린 만큼은 빨강) 구간으로, 막 끝난 시즌이면 차오르는 애니메이션
@@ -9289,7 +9294,7 @@ function crCardHtml(c){
   var h='<div class="cr-rc-head">'
    +'<div class="cr-rc-ovr'+(oc==='p'?' purple':oc==='e'?' elite':oc==='n'?' plain':'')+'"><span>최고 OVR</span><b>'+c.peak+'</b></div>'
    +'<div class="cr-rc-id"><div class="cr-rc-chips"><span class="cr-rc-chip">'+nat.f+' '+nat.n+'</span><span class="cr-rc-chip gold">'+(c.num?'#'+c.num+' ':'')+c.pos+'</span>'
-   +(c.traits||[]).map(function(t){ return '<span class="cr-rc-chip">🎯 '+gmEsc(t)+'</span>'; }).join('')
+   +(c.traits||[]).map(function(t,i){ return '<span class="cr-rc-chip">'+crTraitIc((c.traitIds||[])[i]||(CR.meta.traitIds||{})[t])+gmEsc(t)+'</span>'; }).join('')
    +(c.oneClub?'<span class="cr-rc-chip" style="color:var(--gold)">🛡 원클럽맨</span>':'')
    +(c.farewell?'<span class="cr-rc-chip" style="color:var(--gold)">👏 레전드 고별전</span>':'')
    +(c.glass?'<span class="cr-rc-chip" style="color:var(--loss)">🩹 유리몸</span>':c.iron?'<span class="cr-rc-chip" style="color:var(--green)">💪 강철 체력</span>':'')+'</div>'

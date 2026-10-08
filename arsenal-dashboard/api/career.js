@@ -133,7 +133,9 @@ export default async function handler(req, res){
         nations: S.NATIONS, stats: S.STATS, names: S.NAMES,
         cards: Object.fromEntries(Object.entries(S.CARDS).map(([p, cs]) => [p, cs.map((c, i) => { const st = S.startStats(p, i); return {n: c.n, d: c.d, w: c.w, st, ovr: S.ovrOf(st, c.w)}; })])),
         // 꿈의 구단 고르기용 — 명성 숫자는 빼고 이름·엠블럼 id만(국가 안에서는 명성 순)
-        clubs: Object.fromEntries(Object.entries(S.CLUBS).map(([k, cs]) => [k, cs.map(c => [c[0], c[2]])]))}));
+        clubs: Object.fromEntries(Object.entries(S.CLUBS).map(([k, cs]) => [k, cs.map(c => [c[0], c[2]])])),
+        // 특성 이름 → 아이콘 id(img/traits/{id}.svg). 예전 은퇴 카드엔 이름만 저장돼 있어 이걸로 아이콘을 찾는다
+        traitIds: Object.fromEntries([...S.CTRAITS, ...S.TRAITS].map(t => [t.n, t.id]))}));
     }
     if(a === 'board'){
       if(!kvReady()) return res.json({top: []});
