@@ -22,6 +22,7 @@ import crypto from 'crypto';
 import SEED from './_whoami_bank.js';
 import { applyGlossary } from './_glossary.js';
 import { readToken, normNick } from './_account.js';
+import { tokenCodec } from './_token.js';
 
 const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
@@ -114,29 +115,8 @@ function shuffle(a){
 // 브라우저에 보낼 문제 — 정답은 빼고 경로·상태·보기만.
 const publicQ = (q, choices) => ({career: q.career, status: q.status, choices});
 
-// ── 토큰 ───────────────────────────────────────────────────────────────
-// 키는 따로 등록할 필요 없게 기존 비밀값에서 파생한다(WHOAMI_SECRET이 있으면 그걸 쓴다).
-function tokenKey(){
-  const base = process.env.WHOAMI_SECRET || KV_TOKEN || process.env.CRON_SECRET;
-  if(!base) return null;
-  return crypto.createHash('sha256').update('whoami-token-v1:' + base).digest();
-}
-function seal(obj){
-  const key = tokenKey();
-  const iv = crypto.randomBytes(12);
-  const c = crypto.createCipheriv('aes-256-gcm', key, iv);
-  const body = Buffer.concat([c.update(JSON.stringify(obj), 'utf8'), c.final()]);
-  return Buffer.concat([iv, c.getAuthTag(), body]).toString('base64url');
-}
-function open(token){
-  try {
-    const key = tokenKey();
-    const raw = Buffer.from(String(token || ''), 'base64url');
-    const d = crypto.createDecipheriv('aes-256-gcm', key, raw.subarray(0, 12));
-    d.setAuthTag(raw.subarray(12, 28));
-    return JSON.parse(Buffer.concat([d.update(raw.subarray(28)), d.final()]).toString('utf8'));
-  } catch(_){ return null; }
-}
+// ── 토큰(api/_token.js) ─────────────────────────────────────────────────
+const {ready: tokenReady, seal, open} = tokenCodec('whoami-token-v1');
 
 // 다음 문제를 뽑아 상태에 싣는다. 문제가 바닥나면(전부 출제) 게임 끝 — 전부 클리어.
 function nextState(bank, st){
@@ -229,7 +209,7 @@ export default async function handler(req, res){
     }
 
     if(req.method !== 'POST') return res.status(405).json({error: 'POST만 받습니다'});
-    if(!tokenKey()) return res.status(503).json({error: '게임 서버 설정이 아직 안 됐어요.'});
+    if(!tokenReady()) return res.status(503).json({error: '게임 서버 설정이 아직 안 됐어요.'});
     res.setHeader('Cache-Control', 'no-store');
     const body = await readBody(req);
     const bank = getBank();

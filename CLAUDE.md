@@ -114,7 +114,7 @@ Each file is one Vercel serverless function. `football.js` is the largest and mu
 
 `api/_translate.js` is **not an endpoint** — files prefixed with `_` are excluded from Vercel's zero-config function detection, so it's the one shared module in `api/` (everything else is deliberately self-contained). `news.js`, `social.js`, and `videos.js` import it to translate their payloads to Korean *before* responding, so the frontend needs no translation-aware code. See the Translation section below.
 
-`api/injuries.js` and `api/photos.js` exist but are **not called by the frontend** — their logic was superseded by branches inside `football.js` (`type=injuries`, and inline FPL-photo fallback respectively). Don't assume editing them affects the live site; check `grep -n "apiFetch(FN" public/index.html` for the actual call sites before changing API behavior.
+**Vercel Hobby 플랜은 배포당 서버리스 함수가 최대 12개다** — `api/`에서 `_`로 시작하지 않는 파일 하나가 함수 하나다(현재 11개). 넘으면 배포(미리보기 포함)가 실패한다. 새 기능은 가능하면 기존 엔드포인트에 `?a=`/`?type=` 분기로 넣고, 새 파일이 꼭 필요하면 개수부터 셀 것. 예전에 있던 `api/injuries.js`·`api/photos.js`(프론트가 안 부르던 옛 엔드포인트, 각각 `football.js`의 `type=injuries`와 FPL 사진 대체로 대체됨)는 커리어 모드(`api/career.js`)를 넣으면서 이 한도 때문에 지웠다. Check `grep -n "apiFetch(FN" public/index.html` for the actual call sites before changing API behavior.
 
 Real data sources in use (verified against source, not the stale README below):
 
@@ -162,7 +162,7 @@ Real data sources in use (verified against source, not the stale README below):
 
 ### 미니게임 (`api/game.js`, 헤더 게임기 버튼 → `#games`)
 
-하단 탭에 없는 섹션이다. 헤더의 게임기 버튼(`toggleGameMode`)으로 들어오고, 게임 화면에 있는 동안 그 버튼은 집 모양이 되어 직전 탭으로 돌아간다. 현재 게임은 "Who Am I?"(커리어 경로 퀴즈) 하나.
+하단 탭에 없는 섹션이다. 헤더의 게임기 버튼(`toggleGameMode`)으로 들어오고, 게임 화면에 있는 동안 그 버튼은 집 모양이 되어 직전 탭으로 돌아간다. 모바일에선 게임 화면에 있는 동안 하단 탭을 아래로 내려 숨긴다(`body.game-mode`). 켜고 끄는 곳은 섹션을 바꾸는 `openGames`/`showSec`(→ `gameLeave`) 두 곳뿐이라 홈 버튼·뒤로 가기 어느 길로 나가도 복구된다 — 버튼 클릭 핸들러에 따로 넣지 말 것. 현재 게임은 "Who Am I?"(커리어 경로 퀴즈) 하나.
 
 - **문제 은행은 고정 파일** `api/_whoami_bank.js`(자동 생성, 직접 고치지 말 것)다. 사용자 지정으로 크론·자동 갱신이 없다. 다시 만들 땐 `NODE_USE_ENV_PROXY=1 node scripts/build_whoami.mjs --module`(위키백과 선수 목록 + Fotmob 커리어, 수집·검증 규칙은 `api/_whoami.js`).
 - **KV는 랭킹에만 쓴다**(사용자 지정 — 무료 플랜 부담). 게임 진행 상태(정답·출제 시각·점수·목숨)는 암호화 토큰으로 브라우저와 주고받고, KV는 랭킹 등록(약 5회)과 랭킹 보기(30초 CDN 캐시)뿐이다. 랭킹은 상위 1,000개만 남기고 월 등록 상한이 있다. 문제마다 KV를 쓰는 구조로 바꾸지 말 것.

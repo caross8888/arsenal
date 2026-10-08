@@ -1640,6 +1640,276 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 :root[data-theme="light"] .pk-pick.sel .bar{background:rgba(184,146,58,.32)}
 
 @media (prefers-reduced-motion: reduce){.gm-timer i{transition:none!important}.gm-choice.right,.gm-choice.wrong,.gm-gain,.gm-choice.right::after,.gm-score.bump,.gm-lives .lose{animation:none}}
+/* ── 커리어 모드(#games 안, api/career.js) — 목업 docs/career-mode/mockup.html을 옮긴 것.
+   다른 화면과 클래스가 겹치지 않게 전부 cr- 접두어. 색은 테마 변수, 빨간 머리 카드·오버롤 타일만 고정색. */
+.cr{display:flex;flex-direction:column;gap:14px}
+.cr-top{display:flex;align-items:center;justify-content:space-between}
+.cr-top .gm-back{align-self:center}
+.cr-steps{display:flex;gap:6px}
+.cr-steps i{width:22px;height:4px;border-radius:2px;background:var(--surface3)}
+.cr-steps i.on{background:var(--red)}
+.cr-h1{font-family:var(--fd);font-size:34px;letter-spacing:1px;margin:0;line-height:1}
+.cr-h1 span{color:var(--red)}
+.cr-sub{font-size:13px;color:var(--text-secondary);margin:-6px 0 0}
+.cr-panel{background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.cr-lbl{font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cr-lbl b{color:var(--text);font-weight:700;font-size:14px}
+.cr input[type=text],.cr select{font:inherit;font-size:16px;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:10px;padding:11px;width:100%}
+.cr-row{display:flex;gap:8px}
+.cr-row>input{flex:1;min-width:0}
+.cr-chip{font:inherit;font-size:13px;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:999px;padding:8px 12px;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.cr-chip[aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff;font-weight:700}
+.cr-seg{display:grid;grid-template-columns:repeat(var(--n,2),1fr);gap:6px}
+.cr-seg .cr-chip{border-radius:10px;padding:11px;text-align:center;white-space:normal;word-break:keep-all;line-height:1.35}
+.cr-note{font-size:12px;color:var(--text-secondary);line-height:1.6;margin:0}
+.cr-form{gap:0;padding:4px 16px}
+.cr-fd{display:flex;flex-direction:column;gap:10px;padding:14px 0}
+.cr-fd+.cr-fd{border-top:1px solid var(--border)}
+.cr-fd.off{opacity:.5}
+.cr-why{font-size:12.5px;color:var(--text-secondary);line-height:1.4;margin-top:4px}
+.cr-dream{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cr .cr-dream select:disabled{opacity:.5}
+.cr-f2{display:grid;grid-template-columns:1fr 110px;gap:12px}
+.cr-f2>div{display:flex;flex-direction:column;gap:10px;min-width:0}
+.cr-sub-age{color:var(--gold);font-weight:700}
+.cr-dock{position:sticky;bottom:calc(56px + var(--safe-bottom));z-index:5;margin:0 -16px -16px;background:var(--chrome-bg);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border-bright);padding:12px 16px;display:flex;gap:10px;align-items:center}
+.cr-dock .sum{flex:none;font-size:12px;color:var(--text-secondary);line-height:1.3}
+.cr-dock .sum b{display:block;font-family:var(--fd);font-size:24px;color:var(--gold);font-weight:400;line-height:1}
+.cr-dock .gm-btn{flex:1}
+.cr-dock .gm-btn.ghost{flex:0 0 32%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:8px;padding-right:8px}
+@media (min-width:900px){.cr-dock{bottom:0}}   /* 모바일 56px = 하단 탭 높이(실측). PC는 탭이 사이드바라 0 */
+/* 게임 모드(모바일): 하단 탭을 아래로 내려 숨기고, 탭 자리만큼 띄워 둔 여백·하단 독도 같이 내린다. 나가면 거꾸로 스르륵 올라온다. */
+@media (max-width:899px){
+  .bottom-nav{transition:transform .3s ease}
+  body{transition:padding-bottom .3s ease}
+  .cr-dock{transition:bottom .3s ease}
+  body.game-mode{padding-bottom:var(--safe-bottom)}
+  body.game-mode .bottom-nav{transform:translateY(100%);pointer-events:none}
+  body.game-mode .cr-dock{bottom:var(--safe-bottom)}
+  /* 내용이 화면보다 짧으면 하단 독이 내용 끝에 떠 있고 그 아래가 비어 보인다(예전엔 하단 탭이 그 자리를 가렸다) —
+     커리어 화면(하단 독 있음)일 때만 세로로 채워 독을 화면 맨 아래에 붙인다. */
+  body.game-mode:has(#gameRoot > .cr-dock){display:flex;flex-direction:column}
+  body.game-mode:has(#gameRoot > .cr-dock) .page{flex:1;display:flex;flex-direction:column;width:100%}
+  body.game-mode #games.active:has(#gameRoot > .cr-dock){flex:1;display:flex;flex-direction:column;width:100%;box-sizing:border-box}
+  body.game-mode #gameRoot:has(> .cr-dock){flex:1;display:flex;flex-direction:column}
+  body.game-mode #gameRoot > .cr{flex:1}
+}
+/* 2페이지 카드 */
+.cr-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cr-card{font:inherit;text-align:left;color:var(--text);background:var(--surface2);border:1.5px solid var(--border-bright);border-radius:14px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,transform .15s;-webkit-tap-highlight-color:transparent}
+.cr-card:active{transform:scale(.98)}
+.cr-card[aria-pressed=true]{border-color:var(--gold);background:rgba(200,168,75,.1)}
+.cr-card .t{font-weight:700;font-size:15px}
+.cr-card .d{font-size:12px;color:var(--text-secondary);line-height:1.45;min-height:35px}
+.cr-wbar{display:grid;grid-template-columns:44px 1fr 30px;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary)}
+.cr-wbar i{height:5px;border-radius:3px;background:var(--surface3);position:relative;overflow:hidden}
+.cr-wbar i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--c,var(--gold));border-radius:3px}
+.cr-wbar span{text-align:right;font-variant-numeric:tabular-nums}
+.cr-stat{display:grid;grid-template-columns:76px 1fr 40px;align-items:center;gap:8px}
+.cr-stat .n{font-size:13px;font-weight:700}
+.cr-stat .n small{display:block;font-weight:400;font-size:11px;color:var(--gold)}
+.cr-stat .bar{height:8px;border-radius:4px;background:var(--surface3);position:relative;overflow:hidden}
+.cr-stat .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--text-secondary);border-radius:4px}
+.cr-stat .bar i.add{background:var(--gold)}
+.cr-stat .v{font-family:var(--fd);font-size:22px;text-align:right}
+.cr-ovr{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:12px;padding:10px 14px}
+.cr-ovr .big{font-family:var(--fd);font-size:44px;color:var(--gold);line-height:1}
+/* 3페이지 구단 · 이적시장 */
+.cr-me{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;background:var(--surface);border:1px solid var(--border-bright);border-radius:14px;padding:12px}
+.cr-me .v{font-family:var(--fd);font-size:28px;color:var(--gold);line-height:1.1}
+.cr-me .l{font-size:11px;color:var(--text-secondary)}
+.cr-list{display:flex;flex-direction:column;gap:8px}
+.cr-club{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1.5px solid var(--border-bright);border-radius:14px;padding:12px;cursor:pointer;width:100%;-webkit-tap-highlight-color:transparent}
+.cr-club[aria-pressed=true]{border-color:var(--gold);background:rgba(200,168,75,.08)}
+.cr-club:disabled{cursor:default;opacity:.6}
+.cr-club .nm{font-weight:700;font-size:15px}
+.cr-club .meta{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.cr-club .tag{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.5px}
+.cr-crest{border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:18px;color:var(--text);background:var(--surface3);flex:none}
+.cr-crest-img{object-fit:contain;flex:none;display:block}
+.cr-chance{font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;display:inline-block;white-space:nowrap}
+.cr-chance.low{color:var(--loss);background:rgba(239,68,68,.14)}
+.cr-chance.mid{color:var(--amber);background:rgba(245,158,11,.14)}
+.cr-chance.high{color:var(--green);background:rgba(34,197,94,.14)}
+.cr-grow{display:flex;gap:4px;margin-top:6px;align-items:center;font-size:11px;color:var(--text-secondary)}
+.cr-grow i{width:10px;height:5px;border-radius:2px;background:var(--surface3)}
+.cr-grow i.on{background:var(--green)}
+.cr-season{font-family:var(--fd);font-size:20px;letter-spacing:1px;color:var(--text-secondary)}
+/* 선수 머리 카드(빨간 배경이라 테마와 무관하게 흰 글자) */
+.cr-hc{background:var(--modal-header-grad);border-radius:16px;padding:14px;color:#fff;display:flex;flex-direction:column;gap:12px}
+.cr-hc-top{display:flex;align-items:center;gap:12px}
+.cr-hc-n{font-size:19px;font-weight:700;line-height:1.2}
+.cr-hc-n span{font-family:var(--fd);font-weight:400;color:#E9C766;font-size:20px}
+.cr-hc-s{font-size:12px;color:rgba(255,255,255,.8);margin-top:2px}
+.cr-hc-o{text-align:center;line-height:1}
+.cr-hc-o b{display:block;font-family:var(--fd);font-size:44px;font-weight:400;color:#E9C766}
+.cr-hc-o span{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.8)}
+/* 나이는 OVR과 같은 크기, 흰색 — 둘 사이 옅은 세로줄 */
+.cr-hc-o.age b{color:#fff}
+.cr-hc-o.age{padding-right:12px;border-right:1px solid rgba(255,255,255,.2)}
+.cr-hc-st{display:grid;gap:5px}
+.cr-hc-st>div{display:grid;grid-template-columns:62px 1fr 48px;align-items:center;gap:8px;font-size:12px}
+.cr-hc-st span{color:rgba(255,255,255,.85)}
+.cr-hc-st i{height:6px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;position:relative}
+.cr-hc-st u{position:absolute;top:0;bottom:0;text-decoration:none}
+.cr-hc-st u.up{background:#4ADE80;border-radius:0 3px 3px 0;transform-origin:left center;min-width:6px;box-shadow:0 0 6px rgba(74,222,128,.8)}
+.cr-hc-st u.up.grow{animation:crBarGrow .7s .35s cubic-bezier(.2,.8,.2,1) both}
+.cr-hc-st u.dn{background:rgba(255,120,120,.55)}
+.cr-hc-st u.dn.fade{animation:crBarFade 1.2s .35s ease-out both}
+.cr-hc-st small{font-size:10px;font-weight:700;margin-left:4px}
+.cr-hc-st small.up{color:#4ADE80}.cr-hc-st small.dn{color:#FCA5A5}
+@keyframes crBarGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes crBarFade{from{opacity:1}to{opacity:.35}}
+@media (prefers-reduced-motion: reduce){.cr-hc-st u.up.grow,.cr-hc-st u.dn.fade{animation:none}}
+.cr-hc-st em{display:block;height:100%;background:#fff;border-radius:3px;transition:width .5s}
+.cr-hc-st b{text-align:right;font-variant-numeric:tabular-nums}
+.cr-stars{color:#E9C766;letter-spacing:1px}
+.cr-loanc{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px}
+/* 시즌 결과 */
+.cr-rs{display:grid;grid-template-columns:repeat(5,1fr);text-align:center}
+.cr-rs b{display:block;font-family:var(--fd);font-size:26px;font-weight:400;line-height:1.1}
+.cr-rs span{font-size:11px;color:var(--text-secondary)}
+.cr-dovr{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--text-secondary)}
+.cr-dovr b{font-family:var(--fd);font-size:24px;font-weight:400;color:var(--text);flex:1}
+.cr-dovr em{font-style:normal;font-family:var(--fd);font-size:26px}
+.cr-dovr.up em{color:var(--green)} .cr-dovr.down em{color:var(--loss)}
+.cr-dst{display:flex;flex-wrap:wrap;gap:6px}
+.cr-dst span{font-size:12px;border-radius:999px;padding:4px 10px;background:var(--surface2);color:var(--text-secondary)}
+.cr-dst span.up{color:var(--green);background:rgba(34,197,94,.12)} .cr-dst span.down{color:var(--loss);background:rgba(239,68,68,.12)}
+.cr-badges{display:flex;flex-wrap:wrap;gap:6px}
+.cr-badges span{font-size:12.5px;font-weight:700;border-radius:999px;padding:5px 11px;background:rgba(200,168,75,.15);color:var(--gold);display:inline-flex;align-items:center;gap:4px}
+.cr-badges span.nt{background:rgba(34,197,94,.13);color:var(--green)}
+.cr-badges span.s{outline:1.5px solid var(--gold)}
+.cr-badges span.aw{background:rgba(96,165,250,.15);color:var(--blue)}
+.cr-notes{margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:var(--text-secondary)}
+.cr-hist summary{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;list-style:none;font-size:14px}
+/* 접힌 칸 표시: 오른쪽 화살표가 펼치면 뒤집힌다 */
+.cr-hist summary::after{content:'';width:7px;height:7px;border-right:2px solid var(--text-secondary);border-bottom:2px solid var(--text-secondary);transform:translateY(-2px) rotate(45deg);transition:transform .2s;flex:none}
+.cr-hist[open] summary::after{transform:translateY(2px) rotate(-135deg)}
+.cr-hist summary span{margin-left:auto}
+.cr-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-weight:700}   /* 효과 줄이 없는 버튼도 세로 가운데(옆 버튼이 두 줄이라 높이가 같아진다) */
+.cr-opt b{font-weight:700}
+.cr-opt small{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 8px;font-size:11px;font-weight:400;color:var(--text-secondary)}
+.cr-opt small i{font-style:normal;font-weight:700}
+.cr-opt[aria-pressed="true"] small{color:inherit}
+.cr-hist summary span{font-size:12px;color:var(--text-secondary)}
+.cr-hist summary::-webkit-details-marker{display:none}
+/* 은퇴 카드 */
+.cr-rc-head{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:stretch}
+.cr-rc-ovr{background:linear-gradient(160deg,#E9C766,#B8892E);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#3a2a06;min-width:78px}
+.cr-rc-ovr.elite{background:linear-gradient(160deg,#C9E6FF,#7DB7F2 55%,#4F8FD6);color:#0b2440;box-shadow:0 0 18px rgba(125,183,242,.4)}
+.cr-rc-ovr.purple{background:linear-gradient(160deg,#EBD9FF,#A877F0 55%,#6E3FC4);color:#1d0b3d;box-shadow:0 0 18px rgba(168,119,240,.45)}
+.cr-rc-ovr.plain{background:var(--surface3);color:var(--text)}
+.cr-rc-ovr span{font-size:10px;font-weight:700;letter-spacing:.5px;opacity:.75}
+.cr-rc-ovr b{font-family:var(--fd);font-size:52px;font-weight:400;line-height:.95}
+.cr-rc-id{background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:10px 12px;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.cr-rc-chips{display:flex;gap:5px;flex-wrap:wrap}
+.cr-rc-chip{font-size:11px;font-weight:700;background:var(--surface3);border-radius:999px;padding:3px 8px}
+.cr-rc-chip.gold{background:rgba(200,168,75,.2);color:var(--gold)}
+.cr-rc-name{font-size:20px;font-weight:700;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-rc-sub{font-size:12px;color:var(--text-secondary)}
+.cr-rc-sub b{font-family:var(--fd);font-size:17px;font-weight:400;color:var(--text);letter-spacing:.3px}
+.cr-rc-table{display:flex;flex-direction:column;gap:4px}
+.cr-rc-row{display:grid;grid-template-columns:34px minmax(0,1fr) 38px 34px 30px 30px;gap:6px;align-items:center;background:var(--surface);border-radius:10px;padding:6px 8px;font-size:13px;font-variant-numeric:tabular-nums}
+.cr-rc-row>span:nth-child(n+4){text-align:right}
+.cr-rc-row.hd{background:none;padding:0 8px;font-size:11px;color:var(--text-secondary);letter-spacing:.3px}
+.cr-rc-row.youth{opacity:.6}
+.cr-rc-row.ars{background:linear-gradient(90deg,rgba(239,1,7,.18),var(--surface) 70%)}
+.cr-rc-row .a{display:inline-flex;justify-content:center;align-items:center;height:22px;border-radius:999px;background:var(--text);color:var(--navy);font-weight:700;font-size:12.5px}
+.cr-rc-row.ars .a{background:var(--red);color:#fff}
+.cr-rc-row.nat .a{background:none;font-size:18px}
+.cr-rc-row .c{display:flex;align-items:center;gap:7px;min-width:0}
+.cr-rc-row .c em{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.cr-rc-row .c small{font-size:10px;color:var(--amber)}
+.cr-rc-row .ic{display:flex;gap:1px;flex:none;font-size:12px}
+.cr-rc-row .ic b{font-size:10px;color:var(--text-secondary);margin-left:2px;align-self:center}
+.cr-rc-row .ic svg{display:block}
+.cr-rc-row .o{display:inline-flex;justify-content:center;height:22px;align-items:center;border-radius:6px;font-family:var(--fd);font-size:17px;color:#3a2a06;background:#D9B24C}
+.cr-rc-row .o.e{background:linear-gradient(160deg,#C9E6FF,#7DB7F2);color:#0b2440}
+.cr-rc-row .o.p{background:linear-gradient(160deg,#E2C8FF,#9B6BEA);color:#24104a}
+.cr-rc-row .o.n{background:var(--surface3);color:var(--text)}
+.cr-rc-row .o.y{background:none;color:var(--text-secondary)}
+.cr-rc-end{background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.cr-rc-end-t{text-align:center;font-size:20px;font-weight:700}
+.cr-rc-tot{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface2);border-radius:12px;padding:10px 0;text-align:center}
+.cr-rc-tot>div+div{border-left:1px solid var(--border)}
+.cr-rc-tot span{display:block;font-size:11px;color:var(--text-secondary)}
+.cr-rc-tot b{font-family:var(--fd);font-size:28px;font-weight:400}
+.cr-rc-score{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
+.cr-rc-score span{font-size:12px;color:var(--text-secondary)} .cr-rc-score b{font-family:var(--fd);font-size:30px;font-weight:400;color:var(--gold)}
+.cr-rc-shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cr-rc-tro{text-align:center;background:var(--surface2);border-radius:12px;padding:10px 4px 8px}
+.cr-rc-tro.tS{background:radial-gradient(circle at 50% 30%,rgba(233,199,102,.28),var(--surface2) 70%);outline:1px solid rgba(200,168,75,.5)}
+.cr-rc-tro .i{position:relative;display:inline-block;height:58px}
+.cr-rc-tro .i svg{display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))}
+.cr-rc-tro .i em{position:absolute;right:-12px;bottom:6px;font-style:normal;font-size:11px;font-weight:700;background:var(--gold);color:#3a2a06;border-radius:999px;padding:0 5px}
+.cr-rc-tro .l{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-top:5px;word-break:keep-all}
+#crShotBox{display:flex;flex-direction:column;gap:14px}   /* .cr의 간격을 그대로(감싸면서 카드 조각 사이 간격이 사라졌었다) */
+#crShotBox.shooting{padding:16px;background:var(--navy)}
+.cr-shot-btn{display:block;margin:12px auto 0;font:inherit;font-size:13px;font-weight:700;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:999px;padding:9px 16px;cursor:pointer}
+.cr-shot-btn:disabled{opacity:.6;cursor:default}
+.cr-rc-minor-t{font-size:12.5px;color:var(--text-secondary);text-align:center}
+.cr-rc-minor .cr-badges{margin-top:8px}
+.cr-months{display:grid;grid-template-columns:repeat(10,1fr);text-align:center}
+.cr-months span{font-size:11px;color:var(--text-dim);font-variant-numeric:tabular-nums}
+.cr-months span.done{color:var(--text-secondary)}
+.cr-months span.on{color:var(--red);font-weight:700}
+/* 진행 막대: 너비 대신 transform으로 늘리고, 동그란 표시가 그 끝을 따라 미끄러진다(칸 단위로 바꾸면 덜컹거린다) */
+.cr-anbar{position:relative;height:6px;border-radius:3px;background:var(--surface3);margin:2px 0 6px}
+.cr-anbar i{position:absolute;left:0;top:0;bottom:0;width:100%;background:var(--green);border-radius:3px;transform-origin:left center;transform:scaleX(0);will-change:transform}
+.cr-anbar em{position:absolute;top:50%;left:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(239,1,7,.2);will-change:transform}
+.cr-anim .cr-rs b{transition:color .2s}
+.cr-anim .cr-rs b.bump{animation:gmScoreBump .45s ease-out}
+.cr-anmsg{min-height:30px;text-align:center;font-family:var(--fd);font-size:26px;letter-spacing:1px}
+.cr-anmsg span{display:inline-block;animation:crPop .45s cubic-bezier(.3,1.6,.5,1) both}
+.cr-anmsg .inj{color:var(--loss);font-family:var(--fb);font-size:18px;font-weight:700}
+@keyframes crPop{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:scale(1)}}
+/* 시즌 결과: 수상 배지가 하나씩 떠오른다 */
+.cr-badges.pop span{animation:crPop .4s cubic-bezier(.3,1.6,.5,1) both}
+@media (prefers-reduced-motion: reduce){.cr-anmsg span,.cr-badges.pop span,.cr-anim .cr-rs b.bump{animation:none}}
+.cr-hist .cr-rc-row:not(.hd){background:var(--surface2)}
+.cr-hist .cr-rc-row.ars{background:linear-gradient(90deg,rgba(239,1,7,.18),var(--surface2) 70%)}
+.cr-goal{border:1px solid var(--border-accent);background:linear-gradient(135deg,rgba(200,168,75,.16),rgba(200,168,75,.04));border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.cr-goal-tag{align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:var(--gold);border-radius:999px;padding:3px 9px}
+.cr-promo{border:1px solid rgba(34,197,94,.45);background:rgba(34,197,94,.12);color:var(--green);border-radius:14px;padding:11px 14px;font-size:14px;font-weight:700}
+.cr-goal-t{font-size:17px;font-weight:700}
+.cr-tsel{display:flex;align-items:center;gap:12px;margin-top:4px}
+.cr-tsel img{width:56px;height:56px;flex-shrink:0}
+.cr-tsel div{flex:1;min-width:0;display:flex;flex-direction:column} .cr-tsel b{font-size:14px} .cr-tsel span{font-size:12.5px;color:var(--text-secondary)}
+.cr-tsel button{font:inherit;font-size:12px;color:var(--text-secondary);background:none;border:1px solid var(--border-bright);border-radius:999px;padding:5px 10px;cursor:pointer;flex-shrink:0}
+.cr-tov{position:fixed;inset:0;z-index:10000;background:rgba(5,6,10,.86);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;animation:crTovIn .25s ease-out}
+.cr-tov .tag{font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:var(--gold);border-radius:999px;padding:3px 9px}
+.cr-tov h3{margin:6px 0 0;font-size:19px;color:#F0F2F7;text-align:center}
+.cr-tov p{margin:0 0 12px;font-size:13px;color:rgba(255,255,255,.75);text-align:center}
+.cr-tcards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:540px}
+.cr-tc{font:inherit;color:#F0F2F7;background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;animation:crTcIn .45s cubic-bezier(.2,.8,.3,1.2) both;-webkit-tap-highlight-color:transparent}
+.cr-tc:nth-child(2){animation-delay:.08s} .cr-tc:nth-child(3){animation-delay:.16s}
+/* 모서리 라운드는 SVG 자체 모양을 쓴다 — img에 border-radius를 주면 작은 화면에서 카드 테두리 모서리가 잘려 각져 보였다 */
+.cr-tc img{width:100%;aspect-ratio:1;display:block;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));transition:transform .15s}
+.cr-tc:hover img,.cr-tc:focus-visible img{transform:translateY(-4px) scale(1.03)}
+.cr-tc span{font-size:12px;line-height:1.4;color:rgba(255,255,255,.75);text-align:center}
+@keyframes crTovIn{from{opacity:0}to{opacity:1}}
+@keyframes crTcIn{from{opacity:0;transform:translateY(24px) scale(.9)}to{opacity:1;transform:none}}
+.cr-hc-tr{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.cr-hc-tr > span{font-size:10.5px;font-weight:700;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px}
+.cr-tr-ic{display:inline-block;width:18px;height:18px;border-radius:50%;flex:none;vertical-align:-4px;background-repeat:no-repeat;background-size:176.5%;background-position:50% 30%}
+.cr-rc-chip .cr-tr-ic{margin-right:4px}
+.cr-rk-list{display:flex;flex-direction:column;gap:6px}
+.cr-rk-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto 34px 56px;gap:8px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:9px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cr-rk-row.me{border-color:var(--gold);background:rgba(200,168,75,.12)}
+.cr-rk-row.top1 .n{color:#E9C766}.cr-rk-row.top2 .n{color:#C7CDD6}.cr-rk-row.top3 .n{color:#C98A4B}
+.cr-rk-row .n{font-family:var(--fd);font-size:22px;text-align:center;color:var(--text-secondary)}
+.cr-rk-row .m{min-width:0;display:flex;flex-direction:column}
+.cr-rk-row .m b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-rk-row .m em{font-style:normal;font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-rk-hon{display:flex;gap:2px}
+.cr-rk-hon i{position:relative;display:block}
+.cr-rk-hon small{position:absolute;right:-3px;bottom:-2px;font-size:9px;font-weight:700;background:var(--gold);color:#3a2a06;border-radius:999px;padding:0 3px;line-height:1.3}
+.cr-rk-o{font-family:var(--fd);font-size:17px;text-align:center;border-radius:6px;background:#D9B24C;color:#3a2a06;padding:1px 0}
+.cr-rk-o.e{background:linear-gradient(160deg,#C9E6FF,#7DB7F2);color:#0b2440}
+.cr-rk-o.p{background:linear-gradient(160deg,#E2C8FF,#9B6BEA);color:#24104a}
+.cr-rk-o.n{background:var(--surface3);color:var(--text)}
+.cr-rk-sc{font-family:var(--fd);font-size:19px;text-align:right;color:var(--gold)}
 </style>
 </head>
 <body>
@@ -7945,7 +8215,10 @@ setGameIcon(false);
 function inGames(){ var g=document.getElementById('games'); return !!(g && g.classList.contains('active')); }
 function gameStopTimer(){ if(GAME.timer){ clearInterval(GAME.timer); GAME.timer=null; } }
 // showSec가 부른다 — 다른 탭으로 나가면 진행 중이던 문제 타이머를 멈춘다.
-function gameLeave(){ gameStopTimer(); setGameIcon(false); }
+// 게임 모드 표시(모바일: 하단 탭을 내린다). 섹션을 바꾸는 곳은 openGames와 showSec 둘뿐이라 여기 두 곳에서만 켜고 끈다 —
+// 홈 버튼·하단 탭·뒤로 가기(popstate → showSec) 어느 길로 나가도 showSec → gameLeave를 지나므로 하단 탭이 늘 복구된다.
+function gameModeUi(on){ document.body.classList.toggle('game-mode', !!on); }
+function gameLeave(){ gameStopTimer(); setGameIcon(false); gameModeUi(false); }
 function toggleGameMode(){
   if(inGames()){
     var btn=document.querySelector('.nav-btn[onclick*="\''+GAME.prev+'\'"]');
@@ -7960,7 +8233,7 @@ function openGames(fromHistory){
   document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
   document.getElementById('games').classList.add('active');
   document.getElementById('headerTabTitle').textContent='게임';
-  setGameIcon(true);
+  setGameIcon(true); gameModeUi(true);
   if(!fromHistory) window.history.pushState({tab:'games'},'','#games');
   window.scrollTo(0,0);
   gameList();
@@ -8219,6 +8492,8 @@ function gameProfileRender(d){
       +cell(mo?mo.rank+'위':'—',(p.month?(+p.month.slice(5))+'월':'이번 달')+' 순위'+(mo?' · '+mo.points+'점':''))+'</div>'
     +'<div class="gm-h">Who Am I?</div>'
     +'<div class="pk-sum" style="grid-template-columns:repeat(2,1fr)">'+cell(w?w.best:'—','최고 기록')+cell(w?w.rank+'위':'—','역대 순위')+'</div>'
+    +'<div class="gm-h">커리어 모드'+(d.career&&d.career.name?' · '+gmEsc(d.career.name):'')+'</div>'
+    +'<div class="pk-sum" style="grid-template-columns:repeat(2,1fr)">'+cell(d.career?Number(d.career.best).toLocaleString():'—','최고 점수')+cell(d.career?d.career.rank+'위':'—','역대 순위')+'</div>'
     +'<form class="gm-panel" id="gmRename"><div style="font-weight:700">닉네임 변경</div>'
       +'<div class="pk-field"><label for="gmNewNick">새 닉네임 (최대 12자)</label><div class="gm-inrow"><input id="gmNewNick" maxlength="12" autocomplete="off"'+(waitRename?' disabled':'')+'><button type="button" class="gm-btn ghost" id="gmNickChk"'+(waitRename?' disabled':'')+'>중복 확인</button></div></div>'
       +'<div class="pk-field"><label for="gmRnPw">지금 비밀번호</label><input id="gmRnPw" type="password" maxlength="20" autocomplete="current-password"'+(waitRename?' disabled':'')+'></div>'
@@ -8282,6 +8557,9 @@ function gameList(){
       : '<button type="button" class="gm-my" onclick="gameLogin()">'+GM_USER+'로그인 · 가입</button></div>')
     +'<button class="gm-card" onclick="pkOpen()"><span class="gm-card-ic" style="font-size:20px">VS</span>'
     +'<span><div class="gm-card-t">승부예측</div><div class="gm-card-d">프리미어리그 이번 라운드 10경기 승·무·패 맞히기, 월간·시즌 랭킹</div></span></button>'
+    +'<button class="gm-card" onclick="crOpen()"><span class="gm-card-ic" style="font-size:20px">CM</span>'
+    +'<span><div class="gm-card-t">커리어 모드</div><div class="gm-card-d">'+(function(){ var sv=crSaved(), i=sv&&sv.info;
+      return i&&i.phase!=='retired' ? '이어 하기 · '+gmEsc(i.name||'')+' '+(i.age||'')+'세' : '15세 유스부터 은퇴까지, 선수 한 명의 커리어 키우기'; })()+'</div></span></button>'
     +'<button class="gm-card" onclick="gameIntro()"><span class="gm-card-ic">?</span>'
     +'<span><div class="gm-card-t">Who Am I?</div><div class="gm-card-d">커리어 경로를 보고 어떤 아스날 선수인지 맞히기</div></span></button>';
 }
@@ -8488,9 +8766,714 @@ function gameBoard(){
   }).catch(function(){ var el=document.getElementById('gmBoard'); if(el) el.innerHTML='<div class="gm-empty">랭킹을 불러오지 못했어요.</div>'; });
 }
 
+// ── 커리어 모드(api/career.js) ──────────────────────────────────────────
+// 선수 한 명을 15세 유스부터 은퇴까지 키운다. 계산(성장·기록·수상·이적)은 전부 서버가 하고 여기는 받은 화면 데이터를
+// 그리고 고른 것을 보낼 뿐이다. 진행 상태는 서버가 준 암호화 토큰을 이 기기 localStorage에 둔다(같은 기기에서 이어 하기).
+// 화면은 목업(docs/career-mode/mockup.html)을 옮긴 것이고, 클래스는 다른 화면과 겹치지 않게 cr- 접두어.
+var CR = {meta:null, S:null, tok:null, v:null, train:'균형', evPick:null, pick:null, busy:false, armed:null, firstClubs:null, firstPick:null};
+var CR_KEY='careerToken', CR_INFO='careerInfo';
+function crSaved(){
+  try{ var t=localStorage.getItem(CR_KEY); return t ? {tok:t, info:JSON.parse(localStorage.getItem(CR_INFO)||'null')||{}} : null; }catch(e){ return null; }
+}
+function crStore(v){
+  try{
+    if(!v){ localStorage.removeItem(CR_KEY); localStorage.removeItem(CR_INFO); return; }
+    var p=v.player||v.card||{};
+    localStorage.setItem(CR_KEY, v.token);
+    var prev=JSON.parse(localStorage.getItem(CR_INFO)||'{}')||{};
+    // 랭킹 등록 표시는 같은 은퇴 카드를 다시 열 때만 이어 간다(새 커리어는 prep부터라 자연히 지워진다)
+    localStorage.setItem(CR_INFO, JSON.stringify({name:p.name, age:p.age, phase:v.phase, reg: v.phase==='retired' && prev.phase==='retired' && prev.reg || undefined}));
+  }catch(e){}
+}
+function crApi(a, body){
+  return fetch(FN+'/career?a='+a, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{})})
+    .then(function(r){ return r.json().then(function(j){ if(!r.ok){ var e=new Error(j.error||'잠시 후 다시 시도해 주세요.'); e.status=r.status; throw e; } return j; }); });
+}
+function crMeta(){
+  if(CR.meta) return Promise.resolve(CR.meta);
+  return fetch(FN+'/career?a=meta').then(function(r){ if(!r.ok) throw new Error('잠시 후 다시 시도해 주세요.'); return r.json(); }).then(function(m){
+    m.club={}; Object.keys(m.clubs).forEach(function(k){ m.clubs[k].forEach(function(c){ m.club[c[0]]={n:c[0], id:c[1], nat:k}; }); });
+    m.nat={}; m.nations.forEach(function(n){ m.nat[n.id]=n; });
+    CR.meta=m; return m;
+  });
+}
+function crNat(id){ return (CR.meta && CR.meta.nat[id]) || {n:id, f:''}; }
+function crRender(body, dock){
+  gmRoot().innerHTML='<div class="cr">'+body+'</div>'+(dock?'<div class="cr-dock">'+dock+'</div>':'');
+}
+function crDock(html){ var d=document.querySelector('#gameRoot .cr-dock'); if(d) d.innerHTML=html; }
+function crErr(e){
+  CR.busy=false;
+  // 토큰이 깨졌거나(서버 비밀값 교체 등) 순서가 꼬였으면 이어 하기를 지우고 처음으로
+  if(e && /커리어 정보가 올바르지|진행 순서/.test(e.message)){ crStore(null); gameToast(e.message); return crIntro(); }
+  gameToast(e ? e.message : '잠시 후 다시 시도해 주세요.');
+  document.querySelectorAll('#gameRoot .cr-dock .gm-btn').forEach(function(b){ b.disabled=false; });
+}
+function crBusy(btn, text){ if(CR.busy) return false; CR.busy=true; if(btn){ btn.disabled=true; if(text) btn.textContent=text; } return true; }
+
+// 엠블럼: Fotmob 이미지, 못 불러오면 이름 첫 글자 동그라미
+function crCrest(club, size){
+  size=size||44; var id=club.id || ((CR.meta && CR.meta.club[club.n])||{}).id;
+  var ph='<div class="cr-crest" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.42)+'px">'+gmEsc(String(club.n||'').replace(/^(FC|AC|AS|SC|RB|RC|OGC|PSV|KV|OH|SK|IK|CF|DC|LA|V-|JEF|VfB|TSG|1\. FC|SV) /,'').slice(0,1))+'</div>';
+  if(!id) return ph;
+  return '<img class="cr-crest-img" src="https://images.fotmob.com/image_resources/logo/teamlogo/'+gmEsc(id)+'.png" width="'+size+'" height="'+size+'" alt="" loading="lazy" onerror="this.outerHTML=this.dataset.ph" data-ph="'+ph.replace(/"/g,'&quot;')+'">';
+}
+var CR_CHANCE={low:'출전 기회 낮음', mid:'출전 기회 보통', high:'출전 기회 높음'};
+// 특성 아이콘: 특성 카드 이미지(img/traits/{id}.svg — scripts/build_trait_cards.mjs로 만든 것)를 작게. 예전엔 ✨/🎯 이모지였다(사용자 지적)
+// 카드 전체(아이콘+이름)를 줄이면 아이콘이 안 보여서 가운데 원형 배지만 잘라 쓴다 — 배지는 300×300 캔버스의 (150,124) 반지름 78.
+function crTraitIc(id){ return id ? '<span class="cr-tr-ic" style="background-image:url(/img/traits/'+id+'.svg)"></span>' : ''; }
+// 효과 줄 정리: 같은 방향끼리 묶는다 — "성장 ↑ · 출전 ↓ · 부상 위험 ↑" → "성장·부상 위험 ↑  출전 ↓"(사용자 지정).
+// 화살표 꼴이 아닌 조각("명성 ↑↑ 또는 ↓" 같은)이 섞여 있으면 손대지 않는다.
+function crFx(txt){
+  var parts=String(txt).split(/\s*·\s*/), groups=[], idx={};
+  for(var i=0;i<parts.length;i++){
+    var m=parts[i].match(/^(.+?)\s*([↑↓]+)$/); if(!m) return gmEsc(txt);
+    if(idx[m[2]]==null){ idx[m[2]]=groups.length; groups.push({a:m[2], n:[]}); }
+    groups[idx[m[2]]].n.push(m[1]);
+  }
+  return groups.map(function(g){ return '<span class="fx">'+gmEsc(g.n.join('·'))+' <i>'+g.a+'</i></span>'; }).join('');
+}
+function crChance(k){ return '<span class="cr-chance '+k+'">'+CR_CHANCE[k]+'</span>'; }
+function crGrow(lv){ var g=''; for(var i=1;i<=5;i++) g+='<i class="'+(i<=lv?'on':'')+'"></i>'; return '<div class="cr-grow">성장 보너스 '+g+'</div>'; }
+function crStars(n){ var t=''; for(var i=1;i<=5;i++) t+=i<=n?'★':'☆'; return '<span class="cr-stars">'+t+'</span>'; }
+function crSteps(n){ return '<div class="cr-steps">'+[1,2,3].map(function(k){ return '<i class="'+(k<=n?'on':'')+'"></i>'; }).join('')+'</div>'; }
+
+// ── 시작 화면 ──────────────────────────────────────────────────────────
+function crOpen(){
+  gameStopTimer();
+  gmRoot().innerHTML=loadingHtml('불러오는 중...','padding:60px 20px');
+  crMeta().then(crIntro).catch(function(e){
+    gmRoot().innerHTML='<button class="gm-back" onclick="gameList()">← 게임 목록</button><div class="gm-empty">'+gmEsc(e.message)+'</div>';
+  });
+}
+function crIntro(){
+  var sv=crSaved(), info=sv&&sv.info||{}, live=sv && info.phase!=='retired';
+  CR.armed=null;
+  gmRoot().innerHTML='<button class="gm-back" onclick="gameList()">← 게임 목록</button>'
+    +'<div class="gm-panel">'
+    +'<p class="gm-logo">CAREER <span>MODE</span></p>'
+    +'<ul class="gm-rules">'
+    +'<li><b>15세 유스</b>에서 시작해 은퇴할 때까지 선수 한 명을 키워요.</li>'
+    +'<li>시즌마다 훈련 방향과 이벤트를 고르고, 시즌이 끝나면 <b>이적 제안</b>을 받아요.</li>'
+    +'<li>큰 구단은 출전이 어렵지만 뛰면 크게 성장해요. 숨은 재능은 <b>18세</b>에 드러나요.</li>'
+    +'<li>골·도움·우승·개인상과 최고 오버롤로 <b>커리어 점수</b>가 매겨져요.</li>'
+    +'</ul>'
+    +(live
+      ? '<button class="gm-btn" onclick="crResume()">이어 하기 · '+gmEsc(info.name||'')+' '+(info.age||'')+'세</button>'
+        +'<button class="gm-btn ghost" id="crNewBtn" onclick="crNewConfirm(this)">새 커리어 시작</button>'
+      : (sv?'<button class="gm-btn ghost" onclick="crResume()">지난 은퇴 카드 보기 · '+gmEsc(info.name||'')+'</button>':'')
+        +'<button class="gm-btn" onclick="crNew()">새 커리어 시작</button>')
+    +'<button class="gm-btn ghost" onclick="crBoard(\'intro\')">랭킹 보기</button>'
+    +'<div class="gm-best">진행 상황은 이 기기에 저장돼요</div>'
+    +'</div>';
+}
+// 진행 중인 커리어가 있으면 두 번 눌러야 새로 시작한다(지금 커리어는 사라진다)
+function crNewConfirm(btn){
+  if(CR.armed!=='new'){ CR.armed='new'; btn.textContent='한 번 더 누르면 지금 커리어는 사라져요'; btn.style.color='var(--gold)'; return; }
+  crNew();
+}
+function crResume(){
+  var sv=crSaved(); if(!sv) return crIntro();
+  gmRoot().innerHTML=loadingHtml('불러오는 중...','padding:60px 20px');
+  crMeta().then(function(){ return crApi('view', {token:sv.tok}); }).then(crShow).catch(crErr);
+}
+
+// ── 1페이지: 선수 만들기 ───────────────────────────────────────────────
+var CR_POS=[{id:'FW',n:'공격수',d:'골과 찬스를 만든다'},{id:'MF',n:'미드필더',d:'경기를 조율한다'},{id:'DF',n:'수비수',d:'골문을 지킨다'}];
+function crNew(){
+  CR.S={step:1, name:'', nation:null, foot:null, pos:null, num:null, dream:null, dreamNat:null, card:null};
+  CR.firstClubs=null; CR.firstPick=null; CR.tok=null; CR.train='균형';
+  crPage1(); window.scrollTo(0,0);
+}
+function crRandName(){
+  var nm=CR.meta.names[CR.S.nation||'ENG'], pk=function(a){ return a[Math.floor(Math.random()*a.length)]; };
+  return CR.S.nation==='KOR' ? pk(nm[1])+pk(nm[0]) : CR.S.nation==='JPN' ? pk(nm[1])+' '+pk(nm[0]) : pk(nm[0])+' '+pk(nm[1]);
+}
+// 포지션별 흔한 등번호(포지션을 고르면 이 중 하나를 자동으로 — 직접 고친 번호는 건드리지 않는다)
+var CR_NUMS={FW:[7,9,10,11,14,17,19,20,21,27], MF:[6,8,10,16,18,22,23,25], DF:[2,3,4,5,12,13,15,24,26]};
+function crSet(k, v){
+  CR.S[k]=v;
+  if(k==='pos'){ CR.S.card=null; if(!CR.S.num||CR.S.numAuto){ var a=CR_NUMS[v]; CR.S.num=a[Math.floor(Math.random()*a.length)]; CR.S.numAuto=true; } }
+  crPage1();
+}
+// 국적을 고르면 그 나라 랜덤 이름을 채운다(직접 입력한 이름은 건드리지 않는다)
+function crSetNation(v){
+  CR.S.nation=v||null;
+  if(CR.S.nation && (!CR.S.name.trim()||CR.S.nameAuto)){ CR.S.name=crRandName(); CR.S.nameAuto=true; }
+  crPage1();
+}
+function crPage1(){
+  var S=CR.S, m=CR.meta;
+  // 꿈의 구단: 국가 → 구단 두 단계(사용자 지정 — 한 목록에 국가별로 묶어 두니 고르기 불편했다). 고른 구단이 있으면 그 나라를 되살린다.
+  if(S.dream && !S.dreamNat) m.nations.forEach(function(n){ if((m.clubs[n.id]||[]).some(function(c){ return c[0]===S.dream; })) S.dreamNat=n.id; });
+  var dreamClubs=S.dreamNat ? (m.clubs[S.dreamNat]||[]) : [];
+  // 한 패널 안에 항목을 줄로 나눠 담는다(예전엔 항목마다 패널 6개 — 사용자 지적). 주발·등번호는 한 줄에 나란히.
+  var dis=S.nation?'':' disabled';
+  crRender('<div class="cr-top"><button class="gm-back" onclick="crIntro()">← 커리어 모드</button>'+crSteps(1)+'</div>'
+   +'<h1 class="cr-h1">CAREER <span>MODE</span></h1><p class="cr-sub">1 / 3 · 선수 만들기 · <b class="cr-sub-age">15세</b> 유스팀부터 은퇴까지</p>'
+   +'<div class="cr-panel cr-form">'
+   +'<div class="cr-fd"><div class="cr-lbl"><b>포지션</b>'+(S.pos?'<span>'+CR_POS.filter(function(p){ return p.id===S.pos; })[0].d+'</span>':'')+'</div><div class="cr-seg" style="--n:3">'
+   +CR_POS.map(function(p){ return '<button class="cr-chip" aria-pressed="'+(S.pos===p.id)+'" onclick="crSet(\'pos\',\''+p.id+'\')">'+p.n+'</button>'; }).join('')+'</div>'
+   +(S.pos?'<p class="cr-note">주요 스탯 · '+m.stats[S.pos].join(' / ')+'</p>':'')+'</div>'
+   +'<div class="cr-fd"><div class="cr-lbl"><b>국적</b><span>첫 구단 리그 · 대표팀 경쟁이 달라져요</span></div>'
+   +'<select onchange="crSetNation(this.value)"><option value="">국적 선택</option>'
+   +m.nations.map(function(n){ return '<option value="'+n.id+'"'+(S.nation===n.id?' selected':'')+'>'+n.f+' '+n.n+'</option>'; }).join('')+'</select></div>'
+   // 이름은 국적을 고른 뒤에(랜덤 이름이 국적에 맞춰 나오므로)
+   +'<div class="cr-fd'+(S.nation?'':' off')+'"><div class="cr-lbl"><b>이름</b><span>'+(S.nation?'최대 12자 · 랜덤은 국적에 맞는 이름':'국적을 먼저 골라 주세요')+'</span></div>'
+   +'<div class="cr-row"><input type="text" id="crName" maxlength="12" placeholder="선수 이름" value="'+gmEsc(S.name)+'" oninput="CR.S.name=this.value;CR.S.nameAuto=false;crDock1()"'+dis+'>'
+   +'<button class="cr-chip" onclick="CR.S.name=crRandName();CR.S.nameAuto=true;crPage1()"'+dis+'>🎲 랜덤</button>'
+   +(PK.tok&&PK.nick?'<button class="cr-chip" onclick="CR.S.name=PK.nick;CR.S.nameAuto=false;crPage1()"'+dis+'>내 계정명</button>':'')+'</div></div>'
+   +'<div class="cr-fd cr-f2"><div><div class="cr-lbl"><b>주발</b></div><div class="cr-seg">'
+   +['오른발','왼발'].map(function(f){ return '<button class="cr-chip" aria-pressed="'+(S.foot===f)+'" onclick="crSet(\'foot\',\''+f+'\')">'+f+'</button>'; }).join('')+'</div></div>'
+   +'<div><div class="cr-lbl"><b>등번호</b><span>1~99</span></div>'
+   +'<input type="text" inputmode="numeric" maxlength="2" placeholder="예: 7" value="'+(S.num||'')+'" oninput="this.value=this.value.replace(/\\D/g,\'\');var n=+this.value;CR.S.num=n>=1&&n<=99?n:null;CR.S.numAuto=false;crDock1()"></div></div>'
+   +'<div class="cr-fd"><div class="cr-lbl"><b>꿈의 구단</b><span>선택 · 가끔 이 구단에서 제안이 와요</span></div>'
+   +'<div class="cr-dream"><select aria-label="꿈의 구단 국가" onchange="CR.S.dreamNat=this.value||null;CR.S.dream=null;crPage1()"><option value="">선택 안 함</option>'
+   +m.nations.map(function(n){ return '<option value="'+n.id+'"'+(S.dreamNat===n.id?' selected':'')+'>'+n.f+' '+n.n+'</option>'; }).join('')+'</select>'
+   +'<select aria-label="꿈의 구단" onchange="CR.S.dream=this.value||null"'+(S.dreamNat?'':' disabled')+'><option value="">'+(S.dreamNat?'구단 선택':'국가 먼저')+'</option>'
+   +dreamClubs.map(function(c){ return '<option'+(S.dream===c[0]?' selected':'')+' value="'+gmEsc(c[0])+'">'+gmEsc(c[0])+'</option>'; }).join('')+'</select></div></div>'
+   +'</div>', ' ');
+  crDock1();
+}
+function crDock1(){
+  var S=CR.S, ok=S.name.trim() && S.nation && S.foot && S.pos && S.num;
+  var miss=[!S.pos&&'포지션',!S.nation&&'국적',!S.name.trim()&&'이름',!S.foot&&'주발',!S.num&&'등번호'].filter(Boolean);
+  // 남은 항목은 버튼 글자로 알려 준다(옆에 요약 칸을 두지 않는다 — 사용자 지적)
+  crDock('<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage2()">'+(ok?'다음 · 선수 유형':({국적:'국적을 골라 주세요',이름:'이름을 입력해 주세요',주발:'주발을 골라 주세요',포지션:'포지션을 골라 주세요',등번호:'등번호를 입력해 주세요'})[miss[0]])+'</button>');
+}
+
+// ── 2페이지: 선수 유형 카드(시작 스탯은 카드로 자동) ───────────────────
+function crPage2(){
+  var S=CR.S, st=CR.meta.stats[S.pos], cards=CR.meta.cards[S.pos], h='';
+  h='<div class="cr-top"><button class="gm-back" onclick="crPage1()">← 이전</button>'+crSteps(2)+'</div>'
+   +'<h1 class="cr-h1">PLAYER <span>TYPE</span></h1><p class="cr-sub">2 / 3 · 카드마다 시작 스탯과 성장 속도가 달라요</p>'
+   +'<div class="cr-cards">'+cards.map(function(c,k){
+     return '<button class="cr-card" aria-pressed="'+(S.card===k)+'" onclick="CR.S.card='+k+';CR.firstClubs=null;crPage2()"><div class="t">'+gmEsc(c.n)+'</div><div class="d">'+gmEsc(c.d)+'</div>'
+      +c.w.map(function(w,i){ return '<div class="cr-wbar"><span style="text-align:left">'+st[i]+'</span><i style="--w:'+Math.round((w-0.5)/1.1*100)+'%;--c:'+(w>=1.3?'var(--gold)':w<=0.8?'var(--text-dim)':'var(--text-secondary)')+'"></i><span>×'+w.toFixed(1)+'</span></div>'; }).join('')
+      +'</button>'; }).join('')+'</div>';
+  if(S.card!=null){
+    var c=cards[S.card];
+    h+='<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(c.n)+' 시작 스탯</b><span>카드에 따라 정해져요</span></div>'
+     +st.map(function(n,i){ var v=c.st[i], base=Math.min(40,v), add=Math.max(0,v-40);   // 시작 오버롤을 맞추느라 약점 스탯이 40 아래일 수 있다
+       return '<div class="cr-stat"><div class="n">'+n+'<small>성장 ×'+c.w[i].toFixed(1)+'</small></div>'
+        +'<div class="bar"><i style="width:'+base+'%"></i><i class="add" style="left:'+base+'%;width:'+add+'%"></i></div><div class="v">'+v+'</div></div>'; }).join('')
+     +'<p class="cr-note">시작 스탯도 성장 속도도 카드의 강점(금색)을 따라가요. 같은 카드면 누구나 같은 스탯으로 시작해요.</p>'
+     +'<div class="cr-ovr"><div class="cr-note">시작 오버롤<br>최대 99까지 성장</div><div class="big">'+c.ovr+'</div></div></div>';
+  }
+  var ok=S.card!=null;
+  crRender(h, '<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage3(this)">'+(ok?'다음 · 첫 구단':'카드를 골라 주세요')+'</button>');
+  window.scrollTo(0,0);
+}
+
+// ── 3페이지: 첫 구단(자국 유스팀 세 곳) ────────────────────────────────
+function crPage3(btn){
+  var S=CR.S;
+  if(CR.firstClubs) return crPage3Render();
+  if(!crBusy(btn,'불러오는 중...')) return;
+  crApi('new', {name:S.name.trim(), nation:S.nation, foot:S.foot, pos:S.pos, card:S.card, num:S.num, dream:S.dream}).then(function(d){
+    CR.busy=false; CR.tok=d.token; CR.firstClubs=d.clubs; CR.firstPick=null; crPage3Render(); window.scrollTo(0,0);
+  }).catch(function(e){ CR.busy=false; if(btn){ btn.disabled=false; btn.textContent='다음 · 첫 구단'; } gameToast(e.message); });
+}
+// 첫 구단 종류별 한 줄 — 예전 "성장 보너스" 칸 대신(사용자 지정). 칸수는 실제 성장(유스는 출전, 18세 이후는 구단 수준, 방출 위험)과 안 맞았고
+// 숨기기로 한 구단 수준을 대신 드러냈다. 결과는 도전 = 고점·위험 큼, 안정 = 바닥 높음(docs/career-mode/career-mode.md).
+var CR_FIRST_WHY={'도전':'큰 구단 · 자리 못 잡으면 17세에 방출 위험','적정':'균형 잡힌 선택','안정':'많이 뛰며 크고 1군 데뷔가 빨라요 · 구단 규모는 작아요','해외':'큰 리그 아카데미 · 낯선 환경에서 출전 경쟁'};
+function crPage3Render(){
+  var S=CR.S, c0=CR.meta.cards[S.pos][S.card], list=CR.firstClubs;
+  crRender('<div class="cr-top"><button class="gm-back" onclick="crPage2()">← 이전</button>'+crSteps(3)+'</div>'
+   +'<h1 class="cr-h1">FIRST <span>CLUB</span></h1><p class="cr-sub">3 / 3 · 유스팀 '+list.length+'곳에서 제안이 왔어요</p>'
+   +'<div class="cr-me"><div><div class="v">'+c0.ovr+'</div><div class="l">오버롤</div></div><div><div class="v" style="font-family:var(--fb);font-size:15px;font-weight:700;line-height:1.9">'+gmEsc(c0.n)+'</div><div class="l">유형</div></div><div><div class="v">15</div><div class="l">나이</div></div></div>'
+   +'<p class="cr-note">유스 시절엔 뛰는 만큼 크고, 18세 이후엔 큰 구단일수록 훈련 환경이 좋아요.'
+     +(list.some(function(o){ return o.kind==='해외'; })?' 부모님과 함께 해외로 건너가 현지 유스팀에서 시작하는 길도 열렸어요.':'')+'</p>'
+   +'<div class="cr-list">'+list.map(function(o,k){
+     return '<button class="cr-club" aria-pressed="'+(CR.firstPick===k)+'" onclick="CR.firstPick='+k+';crPage3Render()">'+crCrest(o,44)
+      +'<div><div class="tag">'+(o.kind==='해외'?'✈ 해외 유스':o.kind)+(S.dream===o.n?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+gmEsc(o.n)+' U-16</div>'
+      +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+'</div><div class="cr-why">'+(CR_FIRST_WHY[o.kind]||'')+'</div></div>'
+      +'<div>'+crChance(o.chance)+'</div></button>'; }).join('')+'</div>',
+   '<button class="gm-btn" '+(CR.firstPick!=null?'':'disabled')+' onclick="crJoin(this)">입단 · 커리어 시작</button>');
+}
+function crJoin(btn){
+  if(!crBusy(btn,'입단 중...')) return;
+  crApi('join', {token:CR.tok, pick:CR.firstPick}).then(crShow).catch(crErr);
+}
+
+// ── 서버 응답 → 화면 ──────────────────────────────────────────────────
+// 특성 선택 오버레이는 body 바로 아래에 둔다(섹션 안에 두면 헤더·하단 탭보다 아래 깔린다)
+function crTovSet(html){
+  var o=document.getElementById('crTov');
+  if(!html){ if(o) o.remove(); return; }
+  if(!o){ o=document.createElement('div'); o.id='crTov'; document.body.appendChild(o); }
+  o.innerHTML=html;
+}
+function crShow(v){
+  crTovSet('');
+  CR.busy=false; CR.v=v; CR.tok=v.token; CR.armed=null; crStore(v);
+  if(v.phase==='prep'){ CR.evPick=null; return crPrep(); }
+  if(v.phase==='injury') return crInjury();
+  if(v.phase==='result'){ CR.traitPick=null; CR.pick=v.result.released && v.result.offers.length ? 0 : null; CR.fresh=!!CR.animDone; CR.animDone=false; return crResult(); }
+  if(v.phase==='retired') return crRetired();
+  if(v.phase==='pick'){ CR.firstClubs=v.clubs; return crIntro(); }
+}
+function crHead(){
+  var p=CR.v.player, st=CR.meta.stats[p.pos], card=CR.meta.cards[p.pos][p.card];
+  var dl=CR.v.phase==='result' && CR.v.result ? CR.v.result.row.deltas : null;
+  return '<div class="cr-hc"><div class="cr-hc-top">'+crCrest(p.club,40)
+   +'<div style="flex:1;min-width:0"><div class="cr-hc-n">'+gmEsc(p.name)+(p.num?' <span>#'+p.num+'</span>':'')+'</div>'
+   +'<div class="cr-hc-s">'+gmEsc(p.club.team)+' · '+gmEsc(card.n)+'</div>'
+   +'<div class="cr-hc-s">'+p.foot+(p.pos!=='DF'?' · 약발 '+crStars(p.wf):'')+(p.glass?' · 🩹 유리몸':'')+'</div>'
+   +(p.traits&&p.traits.length?'<div class="cr-hc-tr">'+p.traits.map(function(t){ return '<span title="'+gmEsc(t.d)+'">'+crTraitIc(t.id)+gmEsc(t.n)+'</span>'; }).join('')+'</div>':'')+'</div>'
+   +'<div class="cr-hc-o age"><b>'+p.age+'</b><span>AGE</span></div><div class="cr-hc-o"><b>'+p.ovr+'</b><span>OVR</span></div></div>'
+   +'<div class="cr-hc-st">'+st.map(function(n,i){
+      // 시즌 결과 화면: 이번 시즌 오른 만큼은 초록(내린 만큼은 빨강) 구간으로, 막 끝난 시즌이면 차오르는 애니메이션
+      // 막대 눈금은 30~99(스탯이 그 사이라 0~100으로 그리면 +2 같은 변화가 안 보인다)
+      var v=p.st[i], d=dl?dl[i]:0, base=d>0?v-d:v, X=function(x){ return Math.max(0,Math.min(100,(x-30)/69*100)).toFixed(1); }, seg='';
+      if(d>0) seg='<u class="up'+(CR.fresh?' grow':'')+'" style="left:'+X(base)+'%;width:'+(X(v)-X(base)).toFixed(1)+'%"></u>';
+      if(d<0) seg='<u class="dn'+(CR.fresh?' fade':'')+'" style="left:'+X(v)+'%;width:'+(X(v-d)-X(v)).toFixed(1)+'%"></u>';
+      return '<div><span>'+n+'</span><i><em style="width:'+X(base)+'%"></em>'+seg+'</i><b>'+v+(d?'<small class="'+(d>0?'up':'dn')+'">'+(d>0?'+':'')+d+'</small>':'')+'</b></div>'; }).join('')+'</div></div>';
+}
+// 커리어 기록: 은퇴 카드와 같은 표(나이 알약 · 엠블럼 · 그 시즌 트로피 · 오버롤 색 배지), 최근 시즌이 위
+function crHist(){
+  var p=CR.v.player, h=p.hist||[];
+  if(!h.length) return '';
+  crTrophyDefs();
+  return '<details class="cr-panel cr-hist"><summary><b>커리어 기록</b><span>'+h.length+'시즌 · '+p.tot.apps+'경기 '+p.tot.goals+'골 '+p.tot.ast+'도움</span></summary>'
+   +'<div class="cr-rc-table" style="margin-top:10px"><div class="cr-rc-row hd"><span>나이</span><span>구단</span><span>OVR</span><span>경기</span><span>골</span><span>'+(p.pos==='DF'?'CS':'도움')+'</span></div>'
+   +h.slice().reverse().map(function(r, i){
+      var hs=r[9]||[], ars=/아스날/.test(r[7]||'')&&!r[8];
+      var icons=hs.slice(0,3).map(function(n){ return crTrophy(n,20); }).join('')+(hs.length>3?'<b>+'+(hs.length-3)+'</b>':'');
+      var prev=h[h.length-2-i], d=prev?r[6]-prev[6]:0;
+      return '<div class="cr-rc-row'+(r[8]?' youth':'')+(ars?' ars':'')+'"><span class="a">'+r[0]+'</span>'
+       +'<span class="c">'+crCrest({n:r[7]||r[1]},24)+'<em>'+gmEsc(r[1])+(r[2]?' <small>임대</small>':'')+'</em>'+(icons?'<span class="ic">'+icons+'</span>':'')+'</span>'
+       +'<span class="o '+(r[8]?'y':crOvrCls(r[6]))+'" title="'+(d>0?'+':'')+d+'">'+r[6]+'</span><span>'+r[3]+'</span><span>'+r[4]+'</span><span>'+r[5]+'</span></div>';
+    }).join('')+'</div></details>';
+}
+function crBack(){ return '<button class="gm-back" onclick="gameList()">← 게임 목록</button>'; }
+
+// ── 시즌 준비 ──────────────────────────────────────────────────────────
+function crPrep(){
+  var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lc=pr.loanClub;
+  // 성장이 멈춘 뒤엔 훈련 방향 대신 시즌 운영(몸 관리·균형·주전 경쟁) — 서버가 지금 고를 수 있는 것을 준다
+  var topts=pr.trainOpts||['강점 강화','균형','약점 보완']; if(topts.indexOf(CR.train)<0) CR.train='균형';
+  var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
+  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'
+   +crHead()
+   +(pr.promo?'<div class="cr-promo">⬆ '+gmEsc(pr.promo)+'</div>':'')
+   +'<div class="cr-goal"><span class="cr-goal-tag">SEASON GOAL · 이번 시즌 목표</span><div class="cr-goal-t">'+gmEsc(pr.goal)+'</div>'
+   +'<div class="cr-note">'+(pr.youth?(pr.stage?pr.stage+' 시즌이에요. 실력이 팀 수준에 가까워지면 시즌 끝에 '+(pr.stage==='U-21'?'1군에 합류':'월반')+'하고, 높은 무대일수록 더 크게 성장해요.':'유스 시즌이라 출전 기회는 유스팀 기준이에요.'):pr.late?'성장이 멈춘 나이예요. 이제는 기량을 얼마나 오래 지키느냐가 관건이에요.':'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
+   +'<div class="cr-panel"><div class="cr-lbl"><b>'+(pr.late?'시즌 운영':'훈련 방향')+'</b><span>'+(pr.late?'지금이냐 나중이냐':'오른 만큼이 스탯에 나뉘는 방식')+'</span></div><div class="cr-seg" style="--n:3">'
+   +topts.map(function(t){ return '<button class="cr-chip" aria-pressed="'+(CR.train===t)+'" onclick="CR.train=\''+t+'\';crPrep()">'+t+'</button>'; }).join('')+'</div>'
+   +(pr.late?'<div class="cr-note" style="margin-top:6px">'+({'몸 관리':'출전을 줄이고 몸을 아껴요. 하락·부상이 줄어 더 오래 뛰어요.','균형':'평소대로 시즌을 보내요.','주전 경쟁':'더 많이 뛰는 대신 몸이 빨리 닳아요. 하락·부상이 늘어요.'})[CR.train]+'</div>'
+     :pr.keyMax?'<div class="cr-note" style="margin-top:6px">주요 능력이 모두 최고치예요. 강점 강화로는 더 오를 데가 없어요.</div>'
+     :pr.keyCapped&&pr.keyCapped.length?'<div class="cr-note" style="margin-top:6px">'+gmEsc(pr.keyCapped.join('·'))+'은(는) 이미 최고치라 강점 강화 효율이 절반으로 떨어져요.</div>':'')+'</div>'
+   +'<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(ev.t)+'</b><span>이벤트</span></div><div style="font-size:14px;line-height:1.5">'+d
+   +(lc?'<div class="cr-loanc">'+crCrest(lc,30)+'<div><b>'+gmEsc(lc.n)+'</b><div class="cr-note">'+crNat(lc.nat).f+' '+crNat(lc.nat).n+' · 1시즌 임대</div></div>'+crChance(lc.chance)+'</div>':'')
+   +'</div><div class="cr-seg">'+ev.a.map(function(t,k){
+     // "고용한다 (성장 ↑ · 부상 위험 ↑)" → 굵은 한 줄 + 작은 효과 줄(버튼이 길어지지 않게)
+     var m=String(t).match(/^(.*?)\s*\((.*)\)$/);
+     return '<button class="cr-chip cr-opt" aria-pressed="'+(CR.evPick===k)+'" onclick="CR.evPick='+k+';crPrep()"><b>'+gmEsc(m?m[1]:t)+'</b>'+(m?'<small>'+crFx(m[2])+'</small>':'')+'</button>'; }).join('')+'</div></div>'
+   +crHist(),
+   '<div class="sum">'+p.age+'세<b>'+p.ovr+'</b></div><button class="gm-btn" '+(CR.evPick!=null?'':'disabled')+' onclick="crSeason(this)">'+(CR.evPick!=null?'시즌 시작':'이벤트를 골라 주세요')+'</button>');
+}
+function crSeason(btn){
+  if(!crBusy(btn,'시즌 진행 중...')) return;
+  var age=CR.v.player.age;
+  crAnimStart(0);
+  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick}).then(function(v){
+    // 부상이면 시즌 중간(부상 시점)까지만 진행하고 멈춘다. 결과면 끝까지.
+    if(v.phase==='injury') crAnimTo(0.3+((v.injury.games*7+age)%25)/100, v, true);
+    else crAnimTo(1, v);
+  }).catch(function(e){ crAnimStop(); crPrep(); crErr(e); });
+}
+// ── 부상(시즌 중간 질문) ───────────────────────────────────────────────
+function crInjury(){
+  var p=CR.v.player, j=CR.v.injury;
+  var opt=function(k, ic, t, d){ return '<button class="cr-club" onclick="crInjPick('+k+',this)"><div style="font-size:22px;text-align:center">'+ic+'</div><div><div class="nm">'+t+'</div><div class="meta">'+d+'</div></div><div></div></button>'; };
+  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
+   +'<div class="cr-panel"><div class="cr-lbl"><b>🚑 '+(j.major?'큰 부상':'부상')+' — '+gmEsc(j.name)+'</b><span>'+p.age+'세 시즌</span></div>'
+   +'<div style="font-size:14px;line-height:1.6">'+(j.major?'시즌 대부분을 쉬어야 해요. 예상 결장 <b>'+j.games+'경기</b>.':'예상 결장 <b>'+j.games+'경기</b>. 복귀 시점을 정해 주세요.')+'</div>'
+   +'<div class="cr-list">'+(j.major
+      ? opt(0,'🏥','수술 후 재활 집중','회복은 확실해요. 대신 스피드·체력 영구 −2')+opt(1,'🩹','보존 치료','스탯 손해 없음. 대신 다음 2시즌 부상 위험 ↑')
+      : opt(0,'⚡','빨리 복귀','결장 절반. 대신 30% 확률로 재부상(추가 결장 + 이번 시즌 성장 ↓)')+opt(1,'🛌','완전히 회복','결장 그대로. 다음 시즌 부상 위험 ↓'))
+   +'</div></div>', '<div class="sum" style="flex:1">부상 처리 방법을 골라 주세요</div>');
+  window.scrollTo(0,0);
+}
+function crInjPick(k, btn){
+  if(!crBusy(btn)) return;
+  var from=CR.anim && CR.anim.stopAt || 0.4;
+  crAnimStart(from, true);
+  crApi('season', {token:CR.tok, injPick:k}).then(function(v){ crAnimTo(1, v); })
+    .catch(function(e){ crAnimStop(); crInjury(); crErr(e); });
+}
+
+// ── 시즌 진행 애니메이션 ───────────────────────────────────────────────
+// 결과는 서버가 한 번에 주지만, 바로 결과 화면으로 넘기면 시즌이 "지나간" 느낌이 없어서
+// 8월→5월 달력이 차오르며 경기·골·도움 숫자가 올라가는 화면을 2초 남짓 보여 준다(누르면 건너뛰기).
+// 응답이 오기 전엔 15%까지만 가고 기다린다. 부상이면 그 시점에서 멈추고 부상 질문으로.
+var CR_MONTHS=['8월','9월','10월','11월','12월','1월','2월','3월','4월','5월'];
+var CR_TICK=[[0,'개막전을 앞두고 있어요'],[.12,'시즌 초반 일정'],[.35,'빡빡한 겨울 일정'],[.5,'겨울 이적시장'],[.65,'시즌 후반 레이스'],[.88,'마지막 라운드']];
+var CR_TICK_Y=[[0,'유스 리그 개막'],[.12,'시즌 초반'],[.4,'겨울 휴식기'],[.6,'시즌 후반'],[.88,'마지막 라운드']];
+function crSeasonLabel(age){ var y=2026+age-15; return y+'-'+String(y+1).slice(-2); }
+function crAnimStart(from, resumed){
+  var p=CR.v.player, df=p.pos==='DF', yth=p.age<18;
+  if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf);   // 루프가 둘 돌면 프레임마다 두 번 움직인다
+  // 부상 뒤 이어 갈 때는 멈췄던 숫자부터(부상 응답의 최소 기록 × 멈춘 지점), 처음엔 0부터
+  var pre0=resumed && CR.injPre ? CR.injPre.map(function(f){ return Math.round(f*from); }) : [0,0,0];
+  if(!resumed) CR.injPre=null;
+  CR.anim={t:from, from:from, target:null, v:null, stopAt:null, raf:null, resumed:!!resumed, last:null, shown:pre0.slice()};
+  crRender('<div class="cr-top"><div></div><div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
+    +'<div class="cr-panel cr-anim"><div class="cr-lbl"><b>'+crSeasonLabel(p.age)+' 시즌 · '+gmEsc(p.club.team)+'</b><span id="crAnTick">'+(yth?'유스 리그':'리그')+'</span></div>'
+    +'<div class="cr-months">'+CR_MONTHS.map(function(m,i){ return '<span data-i="'+i+'">'+m+'</span>'; }).join('')+'</div>'
+    +'<div class="cr-anbar" id="crAnTrack"><i id="crAnBar"></i><em id="crAnKnob"></em></div>'
+    +'<div class="cr-rs" style="grid-template-columns:repeat(3,1fr)"><div><b id="crAn0">'+pre0[0]+'</b><span>경기</span></div><div><b id="crAn1">'+pre0[1]+'</b><span>골</span></div><div><b id="crAn2">'+pre0[2]+'</b><span>'+(df?'클린시트':'도움')+'</span></div></div>'
+    +'<div class="cr-anmsg" id="crAnMsg"></div></div>',
+    '<button class="gm-btn ghost" style="flex:1" onclick="crAnimSkip()">건너뛰기</button>');
+  window.scrollTo(0,0);
+  crAnimFrame();
+}
+function crAnimTo(target, v, injury){
+  if(!CR.anim) return;
+  CR.anim.target=target; CR.anim.v=v; CR.anim.injury=!!injury;
+  if(injury) CR.anim.stopAt=target;
+  // 동작 줄이기 설정이면 바로 끝으로
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) CR.anim.t=target;
+}
+function crAnimSkip(){ var A=CR.anim; if(A && A.target!=null) A.t=A.target; }
+function crAnimStop(){ if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf); CR.anim=null; }
+function crAnimFrame(){
+  var A=CR.anim; if(!A) return;
+  var bar=document.getElementById('crAnBar'); if(!bar){ CR.anim=null; return; }   // 다른 화면으로 나감
+  var now=performance.now(), dt=A.last ? Math.min(64, now-A.last) : 16; A.last=now;
+  // 한 시즌 약 2.4초. 응답 전에는 시작점+20%에 다가갈수록 천천히(멈췄다 튀지 않게), 응답이 오면 목표까지 같은 속도로.
+  var step=dt/2400;
+  if(A.target==null) A.t=Math.min(A.from+0.2, A.t+step*Math.max(0.05, 1-(A.t-A.from)/0.2));
+  else A.t=Math.min(A.target, A.t+step);
+  bar.style.transform='scaleX('+A.t+')';
+  var knob=document.getElementById('crAnKnob'), tr=document.getElementById('crAnTrack');
+  if(knob && tr) knob.style.transform='translateX('+(A.t*tr.clientWidth)+'px)';
+  // 달 글자는 바뀔 때만 건드린다(매 프레임 class를 다시 쓰지 않는다)
+  var mi=Math.min(9, Math.floor(A.t*10));
+  if(mi!==A.mi){ A.mi=mi; document.querySelectorAll('#gameRoot .cr-months span').forEach(function(el,i){ el.className=i<mi?'done':i===mi?'on':''; }); }
+  var tk=''; (CR.v.player.age<18?CR_TICK_Y:CR_TICK).forEach(function(x){ if(A.t>=x[0]) tk=x[1]; }); var te=document.getElementById('crAnTick'); if(te) te.textContent=tk;
+  // 숫자는 시즌 진행률만큼 기록에 비례해 올린다. 결과가 오면 최종 기록, 부상 응답이면 그 "최소 기록"(pre)으로
+  // 부상 시점까지 올리고, 이어 갈 땐 앞서 보인 숫자 밑으로 내려가지 않게 한다.
+  var R=A.v && A.v.result, dfp=CR.v.player.pos==='DF', fin=null;
+  if(R) fin=[R.row.apps, R.row.goals, dfp?R.row.cs:R.row.ast];
+  else if(A.v && A.v.pre){ fin=[A.v.pre.apps, A.v.pre.goals, dfp?A.v.pre.cs:A.v.pre.ast]; CR.injPre=fin; }
+  else if(A.resumed && CR.injPre) fin=CR.injPre;
+  if(fin){
+    fin.forEach(function(f,i){
+      var val=Math.max(A.shown[i], Math.round(f*A.t)), el=document.getElementById('crAn'+i);
+      if(el && val!==A.shown[i]){ el.textContent=val; if(i>0 && A.shown[i]>=0 && val>A.shown[i]){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } A.shown[i]=val; }
+    });
+  }
+  if(A.target!=null && A.t>=A.target){
+    var msg=document.getElementById('crAnMsg'), v=A.v;
+    if(A.injury){
+      if(msg) msg.innerHTML='<span class="inj">🚑 '+gmEsc(v.injury.name)+'!</span>';
+      A.raf=null; setTimeout(function(){ if(CR.anim===A){ A.stopAt=A.target; crShow(v); CR.anim={stopAt:A.target}; } }, 900);
+      return;
+    }
+    if(msg) msg.innerHTML='<span>시즌 종료</span>';
+    A.raf=null; setTimeout(function(){ if(CR.anim===A){ CR.anim=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, 650);
+    return;
+  }
+  A.raf=requestAnimationFrame(crAnimFrame);
+}
+
+// ── 시즌 결과 · 이적시장 ──────────────────────────────────────────────
+function crHonBadge(h){
+  var ic=h.kind==='team'?'🏆':h.kind==='nat'?'🌍':'⭐';
+  return '<span class="'+(h.kind==='ind'?'aw':h.kind==='nat'?'nt':'')+(h.tier==='S'?' s':'')+'">'+ic+' '+gmEsc(h.n)+'</span>';
+}
+function crResult(){
+  var p=CR.v.player, R=CR.v.result, r=R.row, st=CR.meta.stats[p.pos];
+  var dCls=r.dOvr>0?'up':r.dOvr<0?'down':'', lg=r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그';
+  var h='<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+p.seasons+' 결과</div></div>'+crHead()
+   +'<div class="cr-panel"><div class="cr-lbl"><b>'+r.age+'세 시즌 · '+gmEsc(r.team)+(r.loan?' (임대)':'')+'</b><span>'+lg+' '+r.rank+'위</span></div>'
+   +'<div class="cr-rs">'+[[r.apps,'경기'],[r.starts,'선발'],[r.goals,'골'],p.pos==='DF'?[r.cs,'클린시트']:[r.ast,'도움'],[r.apps?r.rating.toFixed(2):'—','평점']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
+   +'<div class="cr-dovr '+dCls+'"><span>오버롤</span><b>'+r.ovrBefore+' → <span id="crOvrTo">'+(CR.fresh?r.ovrBefore:r.ovr)+'</span></b><em>'+(r.dOvr>0?'+':'')+r.dOvr+'</em></div>'
+   +(r.hon.length?'<div class="cr-badges'+(CR.fresh?' pop':'')+'">'+r.hon.map(function(h,i){ return crHonBadge(h).replace('<span class="','<span style="animation-delay:'+(0.3+i*0.12)+'s" class="'); }).join('')+'</div>':'')
+   +(r.notes.length||R.forced?'<ul class="cr-notes">'+r.notes.map(function(t){ return '<li>'+gmEsc(t)+'</li>'; }).join('')
+      +(R.forced?'<li>'+(R.forcedWhy==='body'?'몸이 더 이상 버텨 주지 않아요. 선수 생활을 마무리할 때가 됐어요.':p.age>=40?'40세 — 선수 생활을 마무리할 때가 됐어요.':gmEsc(p.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.')+'</li>':'')+'</ul>':'')
+   +'</div>';
+  // 코치 평가(18세 시즌 끝 한 번, 재능 3구간)
+  if(r.coach) h+='<div class="cr-goal"><span class="cr-goal-tag">COACH · 코치 평가</span><div class="cr-goal-t">'+gmEsc(r.coach)+'</div></div>';
+  // 특성 제안: 3개 중 하나를 골라야 다음 시즌으로(강제 은퇴 시즌은 없음)
+  var TO=!R.forced && R.traitOffer && R.traitOffer.length ? R.traitOffer : null;
+  // 공통 특성(17세, 반드시 하나)과 포지션 특성 모두 카드 3장 오버레이로 고른다. 고른 뒤엔 결과 화면에 작게 남고 다시 고를 수 있다.
+  if(TO){
+    var tCommon=!!TO[0].common, tImg=function(t){ return '<img src="/img/traits/'+t.id+'.svg" alt="'+gmEsc(t.n)+'">'; },
+        tDesc=function(t){ return (t.common?gmEsc(t.d).replace(' · ','<br>'):gmEsc(t.d))+(t.stat?'<br>'+gmEsc(t.stat)+' '+t.min+' 이상':''); };
+    if(CR.traitPick==null) crTovSet('<div class="cr-tov" role="dialog" aria-modal="true"><span class="tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성 선택')+'</span>'
+      +'<h3>'+(tCommon?'어떤 재능을 타고났나요?':'새 플레이 스타일을 익혔어요')+'</h3>'
+      +'<p>'+(tCommon?'하나를 고르면 그 능력이 커리어 내내 더 잘 자라요.':'하나를 골라 주세요. 특성은 최대 3개까지예요.')+'</p>'
+      +'<div class="cr-tcards">'+TO.map(function(t,k){ return '<button class="cr-tc" onclick="CR.traitPick='+k+';crResult()">'+tImg(t)+'<span>'+tDesc(t)+'</span></button>'; }).join('')+'</div></div>');
+    else { crTovSet(''); var tp=TO[CR.traitPick];
+      h+='<div class="cr-goal"><span class="cr-goal-tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성')+'</span><div class="cr-tsel">'+tImg(tp)
+        +'<div><b>'+gmEsc(tp.n)+'</b><span>'+gmEsc(tp.d)+'</span></div><button onclick="CR.traitPick=null;crResult()">다시 고르기</button></div></div>'; }
+  }
+  if(!R.forced){
+    h+='<div class="cr-panel"><div class="cr-lbl"><b>'+(R.released?'계약 만료 · 방출':'이적시장')+'</b><span>'+(R.offers.length?'제안 '+R.offers.length+'개':'제안 없음')+'</span></div>';
+    if(r.age<17) h+='<div class="cr-note">17세부터 다른 구단 제안을 받을 수 있어요.</div>';
+    if(R.released) h+='<div class="cr-note">'+gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 낮은 수준의 구단에서 커리어를 이어 가거나 은퇴할 수 있어요.</div>';
+    h+='<div class="cr-list">'
+     +(R.released?'':'<button class="cr-club" aria-pressed="'+(CR.pick==null)+'" onclick="CR.pick=null;crResult()">'+crCrest(p.club)+'<div><div class="tag">잔류</div><div class="nm">'+gmEsc(p.club.n)+'</div><div class="meta">'+crNat(p.club.nat).f+' '+crNat(p.club.nat).n+'</div>'+(R.stay?crGrow(R.stay.grow):'')+'</div><div>'+(R.stay?crChance(R.stay.chance):'')+'</div></button>')
+     +R.offers.map(function(o,k){
+        return '<button class="cr-club" aria-pressed="'+(CR.pick===k)+'" onclick="CR.pick='+k+';crResult()">'+crCrest(o)+'<div><div class="tag">'+o.kind+(o.dream?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+gmEsc(o.n)+'</div>'
+          +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':'')+'</div>'+crGrow(o.grow)+'</div><div>'+crChance(o.chance)+'</div></button>'; }).join('')
+     +'</div></div>';
+  }
+  h+=crHist();
+  var y=window.scrollY;
+  crRender(h, R.forced
+    ? '<button class="gm-btn" onclick="crRetire(this,true)">은퇴 · 커리어 마무리</button>'
+    : (R.canRetire?'<button class="gm-btn ghost" onclick="crRetire(this)">은퇴</button>':'')
+      +'<button class="gm-btn" '+(TO&&CR.traitPick==null?'disabled ':'')+'onclick="crNext(this)">'+(TO&&CR.traitPick==null?'특성을 골라 주세요':CR.pick!=null?gmEsc(R.offers[CR.pick].n)+' 이적':R.released?'은퇴':'다음 시즌')+'</button>');
+  window.scrollTo(0,y);   // 제안을 고를 때마다 다시 그려도 보던 자리 그대로
+  // 시즌을 막 끝낸 직후에만 오버롤 숫자가 올라가는 연출(제안을 고르며 다시 그릴 땐 안 한다)
+  if(CR.fresh){
+    CR.fresh=false;
+    var el=document.getElementById('crOvrTo'), a0=r.ovrBefore, a1=r.ovr, st=null;
+    if(el && a0!==a1) setTimeout(function(){ (function step(ts){ if(!st) st=ts; var k=Math.min(1,(ts-st)/600); if(!document.body.contains(el)) return; el.textContent=Math.round(a0+(a1-a0)*k); if(k<1) requestAnimationFrame(step); })(performance.now()); }, 250);
+    else if(el) el.textContent=a1;
+  }
+}
+function crNext(btn){
+  if(!crBusy(btn,'다음 시즌 준비 중...')) return;
+  crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(crErr);
+}
+// 은퇴는 되돌릴 수 없어서 두 번 눌러야 한다(강제 은퇴는 한 번)
+function crRetire(btn, forced){
+  if(!forced && CR.armed!=='retire'){ CR.armed='retire'; btn.textContent='정말 은퇴?'; btn.style.color='var(--gold)'; btn.style.borderColor='var(--gold)'; return; }
+  if(!crBusy(btn,'은퇴 중...')) return;
+  crApi('retire', {token:CR.tok}).then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(crErr);
+}
+
+// ── 트로피 일러스트(직접 그린 SVG) ─────────────────────────────────────
+// 실제 트로피 사진은 디자인 저작권·상표 문제가 있어 실루엣만 닮게 직접 그린다.
+// 금속 그라데이션은 문서에 한 번만 넣고(crTrophyDefs) 모든 그림이 같이 쓴다.
+var CR_TROPHY_DEFS='<svg width="0" height="0" style="position:absolute" aria-hidden="true" id="crTrophyDefs"><defs>'
+ +'<linearGradient id="tGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF4BF"/><stop offset=".45" stop-color="#E6B941"/><stop offset="1" stop-color="#94620F"/></linearGradient>'
+ +'<linearGradient id="tGoldH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A06A12"/><stop offset=".35" stop-color="#FFE38A"/><stop offset=".6" stop-color="#E2B33B"/><stop offset="1" stop-color="#8E5C0C"/></linearGradient>'
+ +'<linearGradient id="tSilv" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A929E"/><stop offset=".35" stop-color="#FFFFFF"/><stop offset=".65" stop-color="#C7CDD6"/><stop offset="1" stop-color="#6E7682"/></linearGradient>'
+ +'<linearGradient id="tBase" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A3D45"/><stop offset="1" stop-color="#15171C"/></linearGradient>'
+ +'<radialGradient id="tBall" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#FFF6CC"/><stop offset=".5" stop-color="#E8BC45"/><stop offset="1" stop-color="#8A5A0B"/></radialGradient>'
+ +'</defs></svg>';
+function crTrophyDefs(){ if(!document.getElementById('crTrophyDefs')) document.body.insertAdjacentHTML('afterbegin', CR_TROPHY_DEFS); }
+var CR_TROPHY_ART={
+  ucl:'<path d="M15 10C1 7 2 35 19 33M33 10C47 7 46 35 29 33" fill="none" stroke="url(#tSilv)" stroke-width="3.6" stroke-linecap="round"/>'
+     +'<path d="M14 7Q24 4 34 7L31 30Q24 37 17 30Z" fill="url(#tSilv)"/><path d="M21 34h6l1.5 10h-9z" fill="url(#tSilv)"/>'
+     +'<path d="M15 44h18l2 9H13z" fill="url(#tSilv)"/><rect x="11" y="53" width="26" height="7" rx="1.5" fill="url(#tBase)"/>',
+  league:'<path d="M15 12L17 3l3.5 6L24 1l3.5 8L31 3l2 9z" fill="url(#tGold)"/>'
+     +'<path d="M14 13h20q0 17-10 19Q14 30 14 13z" fill="url(#tGoldH)"/><path d="M14 16q-6 1-4 8 1 3 5 3M34 16q6 1 4 8-1 3-5 3" fill="none" stroke="url(#tGold)" stroke-width="2.4"/>'
+     +'<path d="M22 32h4l1 8h-6z" fill="url(#tGold)"/><path d="M16 40h16l2 10H14z" fill="url(#tGoldH)"/><rect x="12" y="50" width="24" height="9" rx="1.5" fill="url(#tBase)"/>',
+  cup:'<circle cx="24" cy="8" r="2.6" fill="url(#tSilv)"/><path d="M16 18Q24 9 32 18z" fill="url(#tSilv)"/>'
+     +'<path d="M15 18h18q1 17-9 19-10-2-9-19z" fill="url(#tSilv)"/><path d="M15 21q-8 0-7 7 1 4 8 3M33 21q8 0 7 7-1 4-8 3" fill="none" stroke="url(#tSilv)" stroke-width="2.4"/>'
+     +'<path d="M22 37h4l1 7h-6z" fill="url(#tSilv)"/><path d="M17 44h14l2 8H15z" fill="url(#tSilv)"/><rect x="13" y="52" width="22" height="7" rx="1.5" fill="url(#tBase)"/>',
+  worldcup:'<circle cx="24" cy="14" r="11" fill="url(#tBall)"/><path d="M14 11q10 5 20 0M13 17q11 5 22 0M24 3q-5 11 0 22" fill="none" stroke="#9C6A12" stroke-width=".9" opacity=".6"/>'+'<path d="M14 22q7 7 3 14-3 6 0 11h14q3-5 0-11-4-7 3-14-10 7-20 0z" fill="url(#tGoldH)"/>'+'<path d="M14 47h20v12H14z" fill="url(#tGoldH)"/><rect x="14" y="50" width="20" height="2" fill="#1E7A3C"/><rect x="14" y="55" width="20" height="2" fill="#1E7A3C"/>',
+  continental:'<path d="M16 4h16l-2 32q-6 4-12 0z" fill="url(#tSilv)"/><path d="M16 7q-5 5 0 24M32 7q5 5 0 24" fill="none" stroke="url(#tSilv)" stroke-width="2.2"/>'
+     +'<path d="M21 38h6v8h-6z" fill="url(#tSilv)"/><path d="M15 46h18l2 7H13z" fill="url(#tSilv)"/><rect x="12" y="53" width="24" height="7" rx="1.5" fill="url(#tBase)"/>',
+  ballon:'<circle cx="24" cy="22" r="15" fill="url(#tBall)"/>'
+     +'<path d="M24 14l6 4-2 7h-8l-2-7zM24 7v7M30 18l7-3M28 25l4 7M20 25l-4 7M18 18l-7-3" fill="none" stroke="#8A5A0B" stroke-width="1" opacity=".55"/>'
+     +'<path d="M18 38h12l4 12H14z" fill="url(#tBase)"/><path d="M18 38h12" stroke="url(#tGold)" stroke-width="1.5"/><rect x="12" y="50" width="24" height="9" rx="1.5" fill="url(#tBase)"/>',
+  best:'<circle cx="24" cy="10" r="6" fill="url(#tBall)"/><path d="M20 17q12 10 1 28h8q8-16-4-28z" fill="url(#tGoldH)"/>'
+     +'<rect x="15" y="45" width="18" height="5" fill="url(#tGold)"/><rect x="13" y="50" width="22" height="9" rx="1.5" fill="url(#tBase)"/>',
+  bootG:'<path d="M5 37q0-6 8-7l11-2q5-1 7-8l1-6h7q2 0 2 3v17q0 3-3 3H7q-2 0-2 0z" fill="url(#tGoldH)"/>'+'<path d="M14 30l3 5M19 29l3 5M24 28l2 5" stroke="#7A4E08" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>'+'<path d="M32 14h7" stroke="#7A4E08" stroke-width="1.6"/><path d="M9 40v3M17 40v3M30 40v3M37 40v3" stroke="#7A4E08" stroke-width="2.6" stroke-linecap="round"/>'+'<rect x="10" y="46" width="28" height="4" fill="url(#tGoldH)"/><rect x="8" y="50" width="32" height="9" rx="1.5" fill="url(#tBase)"/>',
+  bootS:'<path d="M5 37q0-6 8-7l11-2q5-1 7-8l1-6h7q2 0 2 3v17q0 3-3 3H7q-2 0-2 0z" fill="url(#tSilv)"/>'+'<path d="M14 30l3 5M19 29l3 5M24 28l2 5" stroke="#59616C" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>'+'<path d="M32 14h7" stroke="#59616C" stroke-width="1.6"/><path d="M9 40v3M17 40v3M30 40v3M37 40v3" stroke="#59616C" stroke-width="2.6" stroke-linecap="round"/>'+'<rect x="10" y="46" width="28" height="4" fill="url(#tSilv)"/><rect x="8" y="50" width="32" height="9" rx="1.5" fill="url(#tBase)"/>',
+  gball:'<circle cx="24" cy="26" r="12" fill="url(#tBall)"/><path d="M24 20l5 3-2 6h-6l-2-6z" fill="none" stroke="#8A5A0B" stroke-width="1" opacity=".55"/>'
+     +'<path d="M19 38h10l3 8H16z" fill="url(#tGold)"/><rect x="13" y="46" width="22" height="12" rx="1.5" fill="url(#tBase)"/>',
+  plaqueG:'<path d="M11 6h26v30q0 10-13 16Q11 46 11 36z" fill="url(#tGoldH)"/><path d="M15 10h18v25q0 7-9 12-9-5-9-12z" fill="#2A1E08" opacity=".85"/>'
+     +'<path d="M24 18l2.6 5.4 5.9.8-4.3 4.1 1 5.8L24 31.3l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z" fill="url(#tGold)"/><rect x="14" y="54" width="20" height="5" rx="1.5" fill="url(#tBase)"/>',
+  plaqueS:'<path d="M11 6h26v30q0 10-13 16Q11 46 11 36z" fill="url(#tSilv)"/><path d="M15 10h18v25q0 7-9 12-9-5-9-12z" fill="#1C2028" opacity=".85"/>'
+     +'<text x="24" y="33" text-anchor="middle" font-family="Bebas Neue,sans-serif" font-size="15" fill="#E6EAF0">XI</text><rect x="14" y="54" width="20" height="5" rx="1.5" fill="url(#tBase)"/>',
+  plaqueStar:'<path d="M11 6h26v30q0 10-13 16Q11 46 11 36z" fill="url(#tSilv)"/><path d="M15 10h18v25q0 7-9 12-9-5-9-12z" fill="#1C2028" opacity=".85"/>'
+     +'<path d="M24 18l2.6 5.4 5.9.8-4.3 4.1 1 5.8L24 31.3l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z" fill="url(#tSilv)"/><rect x="14" y="54" width="20" height="5" rx="1.5" fill="url(#tBase)"/>',
+  medal:'<path d="M16 2h6l4 16h-6zM26 2h6l-4 16h-6z" fill="#C8102E"/><path d="M22 2h4l2 16h-8z" fill="#1D3F8F"/>'
+     +'<circle cx="24" cy="36" r="15" fill="url(#tBall)"/><circle cx="24" cy="36" r="11" fill="none" stroke="#8A5A0B" stroke-width="1" opacity=".6"/>'
+     +'<path d="M24 28l2.4 4.9 5.4.8-3.9 3.8.9 5.3-4.8-2.5-4.8 2.5.9-5.3-3.9-3.8 5.4-.8z" fill="#FFF0B3" opacity=".9"/>'};
+var CR_TROPHY_OF=[[/챔피언스리그 우승/,'ucl'],[/월드컵 우승/,'worldcup'],[/(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) 우승/,'continental'],
+  [/리그 우승/,'league'],[/컵 대회 우승/,'cup'],[/발롱도르/,'ballon'],[/FIFA 올해의 선수/,'best'],[/득점왕|골든슈/,'bootG'],[/도움왕/,'bootS'],
+  [/골든볼/,'gball'],[/(리그|챔스) 올해의 선수|리그 올해의 (미드필더|수비수)/,'plaqueG'],[/베스트 11/,'plaqueS'],[/챔스 올해의 (공격수|미드필더|수비수)/,'plaqueStar'],[/.*/,'medal']];
+function crTrophy(name, h){
+  var k='medal'; for(var i=0;i<CR_TROPHY_OF.length;i++) if(CR_TROPHY_OF[i][0].test(name)){ k=CR_TROPHY_OF[i][1]; break; }
+  return '<svg viewBox="0 0 48 62" height="'+(h||40)+'" role="img" aria-label="'+gmEsc(name)+'">'+CR_TROPHY_ART[k]+'</svg>';
+}
+function crFmtVal(v){ return v>=100?'€'+Math.round(v)+'M':v>=1?'€'+v.toFixed(v>=10?0:1)+'M':'€'+Math.round(v*1000)+'K'; }
+// 오버롤 색: 80 미만 회색 · 80~89 금색 · 90~94 하늘색 · 95+ 보라색
+function crOvrCls(o){ return o>=95?'p':o>=90?'e':o>=80?'g':'n'; }
+
+// ── 은퇴 카드 ──────────────────────────────────────────────────────────
+// 시즌별 표(나이·구단·오버롤·경기·골·도움 + 그 시즌 트로피) → 대표팀 줄 → 통산 → 트로피 진열장
+function crCardHtml(c){
+  crTrophyDefs();
+  var t=c.tot, card=CR.meta.cards[c.pos][c.card], nat=crNat(c.nation);
+  var grade=c.peak>=90?'월드 클래스':c.peak>=84?'스타':c.peak>=76?'주전급':c.peak>=68?'프로':'저니맨';
+  var oc=crOvrCls(c.peak), honors=c.honors.map(function(x){ return {n:x[0], tier:x[1], kind:x[2]}; });
+  var h='<div class="cr-rc-head">'
+   +'<div class="cr-rc-ovr'+(oc==='p'?' purple':oc==='e'?' elite':oc==='n'?' plain':'')+'"><span>최고 OVR</span><b>'+c.peak+'</b></div>'
+   +'<div class="cr-rc-id"><div class="cr-rc-chips"><span class="cr-rc-chip">'+nat.f+' '+nat.n+'</span><span class="cr-rc-chip gold">'+(c.num?'#'+c.num+' ':'')+c.pos+'</span>'
+   +(c.traits||[]).map(function(t,i){ return '<span class="cr-rc-chip">'+crTraitIc((c.traitIds||[])[i]||(CR.meta.traitIds||{})[t])+gmEsc(t)+'</span>'; }).join('')
+   +(c.oneClub?'<span class="cr-rc-chip" style="color:var(--gold)">🛡 원클럽맨</span>':'')
+   +(c.farewell?'<span class="cr-rc-chip" style="color:var(--gold)">👏 레전드 고별전</span>':'')
+   +(c.glass?'<span class="cr-rc-chip" style="color:var(--loss)">🩹 유리몸</span>':c.iron?'<span class="cr-rc-chip" style="color:var(--green)">💪 강철 체력</span>':'')+'</div>'
+   +'<div class="cr-rc-name">'+gmEsc(c.name)+'</div><div class="cr-rc-sub">'+gmEsc(card.n)+' · '+grade+'</div>'
+   // 은퇴 나이·최고 가치도 카드 안에(사용자 지정 — 따로 오른쪽 칸에 두면 카드가 좁아져 칩이 여러 줄로 접혔다)
+   +'<div class="cr-rc-sub"><b>'+c.age+'세</b> 은퇴 · 최고 가치 <b>'+crFmtVal(c.peakValue)+'</b></div></div></div>';
+  h+='<div class="cr-rc-table"><div class="cr-rc-row hd"><span>나이</span><span>구단</span><span>OVR</span><span>경기</span><span>골</span><span>'+(c.pos==='DF'?'CS':'도움')+'</span></div>';
+  c.seasons.forEach(function(r){
+    var ars=/아스날/.test(r.club)&&!r.youth;
+    var hs=(r.hon||[]).filter(function(x){ return x[2]!=='nat'; }).sort(function(a,b){ return 'SAB'.indexOf(a[1])-'SAB'.indexOf(b[1]); });
+    var icons=hs.slice(0,3).map(function(x){ return crTrophy(x[0],20); }).join('')+(hs.length>3?'<b>+'+(hs.length-3)+'</b>':'');
+    h+='<div class="cr-rc-row'+(r.youth?' youth':'')+(ars?' ars':'')+'"><span class="a">'+r.age+'</span>'
+     +'<span class="c">'+crCrest({n:r.club, id:r.id},24)+'<em>'+gmEsc(r.team)+(r.loan?' <small>임대</small>':'')+'</em>'+(icons?'<span class="ic">'+icons+'</span>':'')+'</span>'
+     +'<span class="o '+(r.youth?'y':crOvrCls(r.ovr))+'">'+r.ovr+'</span><span>'+r.apps+'</span><span>'+r.goals+'</span><span>'+(c.pos==='DF'?(r.cs||0):r.ast)+'</span></div>';
+  });
+  var natHon=honors.filter(function(x){ return x.kind==='nat' && /우승/.test(x.n); });
+  if(t.caps) h+='<div class="cr-rc-row nat"><span class="a">'+nat.f+'</span><span class="c"><em>'+nat.n+' 대표팀</em>'
+     +(natHon.length?'<span class="ic">'+natHon.map(function(x){ return crTrophy(x.n,20); }).join('')+'</span>':'')+'</span>'
+     +'<span></span><span>'+t.caps+'</span><span>'+t.cg+'</span><span>—</span></div>';
+  h+='</div>';
+  var grp={}, order=[];
+  honors.forEach(function(x){ var nm=String(x.n).split(' ×')[0], n=+(String(x.n).split('×')[1])||1;
+    if(!grp[nm]){ grp[nm]={tier:x.tier, c:0}; order.push(nm); } grp[nm].c+=n; });
+  order.sort(function(a,b){ return 'SABC'.indexOf(grp[a].tier)-'SABC'.indexOf(grp[b].tier) || grp[b].c-grp[a].c; });
+  var nTro=honors.filter(function(x){ return x.kind!=='ind' && /우승/.test(x.n); }).length;
+  h+='<div class="cr-rc-end"><div class="cr-rc-end-t">커리어가 끝났어요</div>'
+   +'<div class="cr-rc-tot">'+[[t.apps,'경기'],[t.goals,'골'],c.pos==='DF'?[t.cs||0,'클린시트']:[t.ast,'도움'],[nTro,'우승']].map(function(x){ return '<div><span>'+x[1]+'</span><b>'+x[0]+'</b></div>'; }).join('')+'</div>'
+   +'<div class="cr-rc-score"><span>커리어 점수</span><b>'+Number(c.score).toLocaleString()+'</b></div>';
+  var main=order.filter(function(k){ return grp[k].tier!=='C'; }), minor=order.filter(function(k){ return grp[k].tier==='C'; });
+  if(main.length) h+='<div class="cr-rc-shelf">'+main.map(function(k){ var g=grp[k];
+      return '<div class="cr-rc-tro t'+g.tier+'"><div class="i">'+crTrophy(k,58)+(g.c>1?'<em>×'+g.c+'</em>':'')+'</div><div class="l">'+gmEsc(k)+'</div></div>'; }).join('')+'</div>';
+  // 기타 수상은 접지 않고 그대로 보여 준다(사용자 지정 — 은퇴 카드 스크린샷에도 들어가게)
+  if(minor.length) h+='<div class="cr-rc-minor"><div class="cr-rc-minor-t">기타 수상 '+minor.reduce(function(s,k){ return s+grp[k].c; },0)+'개</div><div class="cr-badges">'
+      +minor.map(function(k){ return '<span>'+crTrophy(k,16)+gmEsc(k)+(grp[k].c>1?' ×'+grp[k].c:'')+'</span>'; }).join('')+'</div></div>';
+  if(!order.length) h+='<div class="cr-note" style="text-align:center">트로피 없이 끝난 커리어예요.</div>';
+  return h+'</div>';
+}
+// 내 은퇴 카드. 랭킹에서 남의 카드를 열 때는 CR.v(내 커리어)를 건드리지 않고 따로 그린다
+// (목업에서 내 커리어 변수를 남의 카드로 덮어써서, 랭킹 → 돌아가기에 남의 카드가 내 카드처럼 뜨던 버그가 있었다).
+function crRetired(){
+  var sv=crSaved(), reg=sv && sv.info && sv.info.reg;
+  crRender('<div class="cr-top"><button class="gm-back" onclick="crIntro()">← 커리어 모드</button><div class="cr-season">은퇴 카드</div></div>'
+    +'<div id="crShotBox">'+crCardHtml(CR.v.card)+'</div><button class="cr-shot-btn" onclick="crShot(this)">📷 이미지로 저장</button>'
+    +(reg?'':'<div class="gm-best">'+(PK.tok?'<b style="color:var(--text)">'+gmEsc(PK.nick||'')+'</b> 계정으로 랭킹에 등록돼요 · 계정당 최고 커리어 하나':'랭킹 등록은 승부예측 계정으로 해요 · 처음이면 가입부터')+'</div>'),
+    '<button class="gm-btn ghost" onclick="crNew()">새 커리어</button>'
+    +(reg?'<button class="gm-btn" onclick="crBoard(\'retired\')">랭킹 보기</button>'
+         :'<button class="gm-btn" onclick="crSubmit(this)">'+(PK.tok?'랭킹 등록':'로그인하고 랭킹 등록')+'</button>'));
+}
+// 은퇴 카드 이미지 저장(사용자 지정). html-to-image를 처음 누를 때만 불러온다(번들러가 없어서 CDN, hls.js와 같은 방식).
+// 캡처는 카드 노드만 복제해 그리므로 ① 트로피 SVG가 참조하는 그라데이션 defs를 카드 안에 잠깐 넣고
+// ② Fotmob 엠블럼은 CORS가 없어 캔버스에 못 그리므로 같은 출처 프록시(/api/career?a=logo)로 잠깐 바꿔 그린다.
+var CR_H2I='https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js';
+function crLoadH2I(){
+  if(window.htmlToImage) return Promise.resolve(window.htmlToImage);
+  return new Promise(function(ok, no){ var s=document.createElement('script'); s.src=CR_H2I; s.onload=function(){ ok(window.htmlToImage); }; s.onerror=no; document.head.appendChild(s); });
+}
+// 캡처 이미지(SVG foreignObject)에는 페이지의 웹폰트가 안 따라가서 숫자 글꼴(Bebas Neue)이 넓은 기본 글꼴로 바뀌어 넘쳤다.
+// 숫자·영문 글꼴만(Bebas Neue, Noto Sans의 라틴 부분) 직접 받아 data URL로 넣는다 — 한글은 기기 기본 글꼴로 충분하고,
+// Noto Sans KR까지 넣으면 조각 파일이 100개가 넘어 느리다. 실패하면 빈 값(글꼴만 기본으로).
+var _crShotFonts=null;
+function crShotFonts(){
+  if(_crShotFonts) return _crShotFonts;
+  var toData=function(u){ return fetch(u).then(function(r){ return r.blob(); }).then(function(b){ return new Promise(function(ok){ var fr=new FileReader(); fr.onload=function(){ ok(fr.result); }; fr.readAsDataURL(b); }); }); };
+  _crShotFonts=fetch('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans:wght@400;500;700&display=swap').then(function(r){ return r.text(); })
+    .then(function(css){
+      var faces=(css.match(/@font-face\s*{[^}]*}/g)||[]).filter(function(f){ return /U\+0000-00FF/.test(f); });
+      return Promise.all(faces.map(function(f){ var u=(f.match(/url\(([^)]+)\)/)||[])[1]; return u ? toData(u).then(function(d){ return f.replace(u, d); }) : f; }));
+    }).then(function(fs){ return fs.join('\n'); }).catch(function(){ _crShotFonts=null; return ''; });
+  return _crShotFonts;
+}
+function crShot(btn){
+  var box=document.getElementById('crShotBox'); if(!box || btn.disabled) return;
+  btn.disabled=true; var label=btn.textContent; btn.textContent='이미지 만드는 중...';
+  var defs=document.getElementById('crTrophyDefs'), tmp=defs?defs.cloneNode(true):null; if(tmp){ tmp.removeAttribute('id'); box.appendChild(tmp); }
+  var imgs=[].slice.call(box.querySelectorAll('img.cr-crest-img')), orig=imgs.map(function(i){ return i.src; });
+  imgs.forEach(function(i){ var m=i.src.match(/teamlogo\/(\d+)\.png/); if(m) i.src=FN+'/career?a=logo&id='+m[1]; });
+  var done=function(){ imgs.forEach(function(i,k){ i.src=orig[k]; }); if(tmp) tmp.remove(); btn.disabled=false; btn.textContent=label; };
+  var bg=getComputedStyle(document.body).backgroundColor;
+  box.classList.add('shooting');   // 캡처하는 동안만 여백·배경(크기를 옵션으로 덮어쓰면 내부 배치가 틀어졌다)
+  var done0=done; done=function(){ box.classList.remove('shooting'); done0(); };
+  Promise.all(imgs.map(function(i){ return i.complete ? 0 : new Promise(function(r){ i.onload=i.onerror=r; }); }))
+    .then(function(){ return Promise.all([crLoadH2I(), crShotFonts()]); })
+    .then(function(x){ return x[0].toBlob(box, {pixelRatio:2, backgroundColor:bg, fontEmbedCSS:x[1]}); })
+    .then(function(blob){
+      done();
+      var name='career-'+String((CR.v.card||{}).name||'card').replace(/[^\w가-힣]+/g,'_')+'.png';
+      var file=new File([blob], name, {type:'image/png'});
+      // 모바일은 공유 시트(사진 저장·메신저), 안 되면 파일로 내려받기
+      if(navigator.canShare && navigator.canShare({files:[file]})) return navigator.share({files:[file], title:'은퇴 카드'}).catch(function(){});
+      var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    })
+    .catch(function(){ done(); gameToast('이미지를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.'); });
+}
+function crMarkReg(key){
+  try{ var i=JSON.parse(localStorage.getItem(CR_INFO)||'{}'); i.reg=true; localStorage.setItem(CR_INFO, JSON.stringify(i)); if(key) localStorage.setItem('careerMyKey', key); }catch(e){}
+}
+function crSubmit(btn){
+  if(!PK.tok){
+    PK.after=function(){ crRetired(); crSubmit(document.querySelector('#gameRoot .cr-dock .gm-btn:last-child')); };
+    PK.afterLabel='은퇴 카드'; PK.afterBack=crRetired;
+    return pkAuth('join');
+  }
+  if(!crBusy(btn,'등록 중...')) return;
+  fetch(FN+'/career?a=submit', {method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+PK.tok}, body:JSON.stringify({token:CR.tok})})
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, status:r.status, j:j}; }); })
+    .then(function(x){
+      CR.busy=false;
+      if(x.j.login){ pkSetAuth(null,null); return crSubmit(btn); }
+      if(x.status===409){ crMarkReg(); return crBoard('retired'); }   // 이미 등록한 커리어 — 표시만 맞춘다
+      if(!x.ok) throw new Error(x.j.error||'잠시 후 다시 시도해 주세요.');
+      crMarkReg(x.j.key);
+      CR.lastReg=x.j;
+      crBoard('retired');
+    }).catch(crErr);
+}
+
+// ── 랭킹(역대 TOP 100) ─────────────────────────────────────────────────
+// from: 돌아갈 곳('retired' 내 은퇴 카드 / 'intro' 시작 화면)
+function crBoard(from){
+  if(from) CR.boardFrom=from;
+  crTrophyDefs();
+  var back=CR.boardFrom==='retired'?'은퇴 카드':'커리어 모드';
+  var reg=CR.lastReg; CR.lastReg=null;
+  crRender('<div class="cr-top"><button class="gm-back" onclick="crBoardBack()">← '+back+'</button><div class="cr-season">역대 TOP 100</div></div>'
+    +'<h1 class="cr-h1">CAREER <span>RANKING</span></h1><p class="cr-sub">계정당 최고 커리어 하나 · 커리어 점수 순</p>'
+    +(reg?'<div class="gm-best">'+(reg.registered?(reg.improved?'등록했어요! 지금 <b style="color:var(--text)">'+reg.rank+'위</b>예요.':'이번 커리어('+Number(reg.score).toLocaleString()+'점)보다 높은 최고 기록 '+Number(reg.best).toLocaleString()+'점이 그대로 유지돼요. 지금 '+reg.rank+'위예요.'):'1,000위 밖이라 랭킹에 남지 않았어요.')+'</div>':'')
+    +'<div class="cr-rk-list" id="crRk">'+loadingHtml('랭킹 불러오는 중...','padding:32px 0')+'</div>',
+    '<button class="gm-btn" onclick="crBoardBack()">'+(CR.boardFrom==='retired'?'은퇴 카드로':'돌아가기')+'</button>');
+  window.scrollTo(0,0);
+  var myKey=null; try{ myKey=localStorage.getItem('careerMyKey'); }catch(e){}
+  Promise.all([crMeta(), fetch(FN+'/career?a=board').then(function(r){ return r.json(); })]).then(function(res){
+    var top=res[1].top||[], el=document.getElementById('crRk'); if(!el) return;
+    CR.boardRows=top;
+    if(!top.length){ el.innerHTML='<div class="gm-empty">아직 등록된 커리어가 없어요. 첫 기록의 주인공이 되어 보세요.</div>'; return; }
+    el.innerHTML=top.map(function(r,i){
+      var me=myKey && r.key===myKey, nat=crNat(r.nat), card=(CR.meta.cards[r.pos]||[])[r.card]||{n:''};
+      return '<button class="cr-rk-row'+(me?' me':'')+(i<3?' top'+(i+1):'')+'"'+(me?' id="crRkMe"':'')+' onclick="crViewCard('+i+')">'
+       +'<span class="n">'+(i+1)+'</span>'
+       +'<span class="m"><b>'+nat.f+' '+gmEsc(r.nm||'')+'</b><em>'+gmEsc(r.nick)+' · '+gmEsc(card.n)+'</em></span>'
+       +'<span class="cr-rk-hon">'+(r.hon||[]).map(function(x){ return '<i>'+crTrophy(x[0],18)+(x[1]>1?'<small>'+x[1]+'</small>':'')+'</i>'; }).join('')+'</span>'
+       +'<span class="cr-rk-o '+crOvrCls(r.peak)+'">'+r.peak+'</span>'
+       +'<span class="cr-rk-sc">'+Number(r.score).toLocaleString()+'</span></button>'; }).join('');
+    var meEl=document.getElementById('crRkMe'); if(meEl && reg) setTimeout(function(){ meEl.scrollIntoView({block:'center'}); },50);
+  }).catch(function(){ var el=document.getElementById('crRk'); if(el) el.innerHTML='<div class="gm-empty">랭킹을 불러오지 못했어요.</div>'; });
+}
+function crBoardBack(){ if(CR.boardFrom==='retired' && CR.v && CR.v.phase==='retired') crRetired(); else crIntro(); window.scrollTo(0,0); }
+// 남의(또는 내) 대표 은퇴 카드 — 보기 전용. CR.v는 그대로 둔다.
+function crViewCard(i){
+  var r=(CR.boardRows||[])[i]; if(!r) return;
+  crRender('<div class="cr-top"><button class="gm-back" onclick="crBoard()">← 랭킹</button><div class="cr-season">'+gmEsc(r.nick)+'</div></div>'+loadingHtml('불러오는 중...','padding:60px 20px'),
+    '<button class="gm-btn" onclick="crBoard()">랭킹으로 돌아가기</button>');
+  window.scrollTo(0,0);
+  fetch(FN+'/career?a=card&k='+encodeURIComponent(r.key)).then(function(x){ return x.json().then(function(j){ if(!x.ok) throw new Error(j.error); return j; }); }).then(function(d){
+    var box=document.querySelector('#gameRoot .cr'); if(!box) return;
+    box.innerHTML='<div class="cr-top"><button class="gm-back" onclick="crBoard()">← 랭킹</button><div class="cr-season">'+gmEsc(d.nick)+'</div></div>'+crCardHtml(d.card);
+  }).catch(function(e){ var box=document.querySelector('#gameRoot .cr'); if(box) box.insertAdjacentHTML('beforeend','<div class="gm-empty">'+gmEsc(e.message||'카드를 불러오지 못했어요.')+'</div>'); var l=box&&box.querySelector('.loading-state'); if(l) l.remove(); });
+}
+
 function showSec(id,btn,fromHistory){
   if(typeof stopSnsVideo==='function') stopSnsVideo();  // 탭을 옮기면 SNS 영상 정지
   gameLeave();   // 게임 화면에서 나가면 타이머를 멈추고 헤더 버튼을 게임기 모양으로 되돌린다
+  crTovSet('');   // 커리어 특성 선택 오버레이가 떠 있었다면 닫는다(뒤로 가기 등)
   // 실제로 다른 탭으로 옮길 때만 초기화한다 — 같은 탭을 다시 누르는 건 "맨 위로"일 뿐이고,
   // 초기 복원 중(_subTabsBootDone 이전)에는 저장된 하위 탭을 그대로 살려야 한다.
   var prevSec = (document.querySelector('.section.active')||{}).id;

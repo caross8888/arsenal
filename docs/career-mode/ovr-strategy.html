@@ -1,0 +1,63 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>선택 전략별 오버롤 분포</title><style>
+.viz-root{color-scheme:light;--surface-1:#fcfcfb;--surface-2:#f1f0ec;--text-primary:#0b0b0b;--text-secondary:#52514e;--grid:#e4e3de;--axis:#b9b8b1;
+ --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100}
+@media (prefers-color-scheme: dark){:root:where(:not([data-theme="light"])) .viz-root{color-scheme:dark;--surface-1:#1a1a19;--surface-2:#252523;--text-primary:#fff;--text-secondary:#c3c2b7;--grid:#33332f;--axis:#5b5a54;
+ --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500}}
+:root[data-theme="dark"] .viz-root{color-scheme:dark;--surface-1:#1a1a19;--surface-2:#252523;--text-primary:#fff;--text-secondary:#c3c2b7;--grid:#33332f;--axis:#5b5a54;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500}
+*{box-sizing:border-box} body{margin:0;background:var(--surface-1)}
+.viz-root{background:var(--surface-1);color:var(--text-primary);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;padding:20px 16px 40px;max-width:900px;margin:0 auto}
+h1{font-size:20px;margin:0 0 4px} .sub{color:var(--text-secondary);font-size:13px;margin:0 0 24px;line-height:1.5}
+h2{font-size:16px;margin:28px 0 4px} .cap{color:var(--text-secondary);font-size:12.5px;margin:0 0 10px;line-height:1.5}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--text-secondary);margin:0 0 8px}
+.legend span{display:inline-flex;align-items:center;gap:6px} .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.chart{position:relative} svg{display:block;width:100%;height:auto;overflow:visible}
+.tick{fill:var(--text-secondary);font-size:11px} .gl{stroke:var(--grid);stroke-width:1} .ax{stroke:var(--axis);stroke-width:1}
+.lbl{font-size:11.5px;font-weight:600;fill:var(--text-primary)}
+.tip{position:absolute;pointer-events:none;background:var(--surface-2);color:var(--text-primary);border:1px solid var(--grid);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.55;box-shadow:0 4px 14px rgba(0,0,0,.15);display:none;white-space:nowrap;z-index:2}
+.tip b{font-size:12.5px} .tip i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+details{margin-top:10px;font-size:12.5px;color:var(--text-secondary)} summary{cursor:pointer}
+table{border-collapse:collapse;margin-top:8px;font-size:12px;color:var(--text-primary)} td,th{padding:3px 8px;text-align:right;border-bottom:1px solid var(--grid)} th{color:var(--text-secondary);font-weight:600}
+</style></head><body><div class="viz-root">
+<h1>선택 전략별 최고 오버롤 분포</h1>
+<p class="sub">같은 1만 커리어(같은 시드)를 두 가지 방식으로 진행. 34세 은퇴. 막대에 손가락·마우스를 올리면 수치가 나온다.</p>
+<div id="sum"></div>
+<h2>① 성장에 유리한 쪽만 골랐을 때</h2><p class="cap">트레이너·특별 훈련 받기, 면담은 훈련으로 증명, 출전 느는 쪽, 약발은 주발 살리기, 21세까지 임대 대신 남기·성장 보너스 높은 구단, 22세부터 출전 기회 높은 구단, 부상은 완전 회복·수술</p>
+<div class="legend" id="lgb"></div><div class="chart" id="cb"><div class="tip"></div></div>
+<details><summary>표로 보기</summary><div id="tb"></div></details>
+<h2>② 모든 선택을 50% 확률로 골랐을 때</h2><p class="cap">이벤트·부상 처리는 반반, 이적은 절반 확률로 아무 제안이나 수락</p>
+<div class="legend" id="lgr"></div><div class="chart" id="cr"><div class="tip"></div></div>
+<details><summary>표로 보기</summary><div id="tr"></div></details>
+</div>
+<script>
+const D={"N":10000,"LV":["보통","유망주","원더키드","세대급"],"random":{"counts":[6100,2423,1242,235],"avgPeak":[75.5,78.7,85.5,93.5],"mean":77.9,"p10":71,"med":77,"p90":87,"n99":10,"n85":1515,"score":2152,"hist":[[66,14,0,0,0],[67,63,0,0,0],[68,156,1,0,0],[69,264,13,0,0],[70,371,45,0,0],[71,462,86,0,0],[72,482,109,5,0],[73,537,153,4,0],[74,535,139,7,0],[75,500,178,24,0],[76,497,179,25,0],[77,393,209,42,0],[78,346,175,44,0],[79,284,158,55,0],[80,283,173,57,1],[81,222,142,58,0],[82,163,117,64,1],[83,147,126,80,5],[84,104,92,90,5],[85,76,82,68,2],[86,62,51,71,6],[87,38,44,69,7],[88,32,37,78,11],[89,23,41,73,6],[90,24,21,61,8],[91,13,19,64,15],[92,8,17,49,20],[93,1,11,45,11],[94,0,3,45,15],[95,0,2,25,19],[96,0,0,23,30],[97,0,0,10,34],[98,0,0,6,29],[99,0,0,0,10]]},"best":{"counts":[6059,2433,1266,242],"avgPeak":[77.5,80.8,87.6,94.9],"mean":80,"p10":72,"med":79,"p90":90,"n99":55,"n85":2476,"score":2420,"hist":[[66,0,0,0,0],[67,24,0,0,0],[68,69,0,0,0],[69,132,1,0,0],[70,239,19,0,0],[71,327,45,0,0],[72,371,67,0,0],[73,426,109,1,0],[74,480,114,4,0],[75,460,129,11,0],[76,467,171,16,0],[77,426,168,17,0],[78,391,153,43,0],[79,350,157,38,0],[80,312,142,53,0],[81,233,149,46,0],[82,230,124,65,0],[83,177,156,66,1],[84,173,104,67,1],[85,148,128,59,5],[86,116,69,54,5],[87,116,76,69,8],[88,96,63,69,4],[89,92,66,79,6],[90,68,45,77,8],[91,51,39,70,11],[92,40,38,61,13],[93,26,30,55,17],[94,15,44,57,12],[95,4,18,61,19],[96,0,9,47,16],[97,0,0,43,28],[98,0,0,28,43],[99,0,0,10,45]]}}, COL=['var(--s1)','var(--s2)','var(--s3)','var(--s4)'];
+const NS='http://www.w3.org/2000/svg', el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e;};
+const YMAX=Math.max(...['best','random'].flatMap(k=>D[k].hist.map(r=>r[1]+r[2]+r[3]+r[4])));
+const row=(l,a,b)=>'<tr><th style="text-align:left">'+l+'</th><td>'+a+'</td><td>'+b+'</td></tr>';
+document.getElementById('sum').innerHTML='<table><tr><th></th><th>① 성장 위주</th><th>② 50% 무작위</th></tr>'
+ +row('전체 평균 최고 OVR',D.best.mean,D.random.mean)+row('하위 10% / 중앙 / 상위 10%',D.best.p10+' / '+D.best.med+' / '+D.best.p90,D.random.p10+' / '+D.random.med+' / '+D.random.p90)
+ +D.LV.map((n,i)=>row(n+' 평균',D.best.avgPeak[i],D.random.avgPeak[i])).join('')
+ +row('85 이상',D.best.n85.toLocaleString()+'명',D.random.n85.toLocaleString()+'명')+row('99 도달',D.best.n99+'명',D.random.n99+'명')+row('커리어 점수 중앙',D.best.score.toLocaleString(),D.random.score.toLocaleString())+'</table>';
+function hist(key, boxId, lgId, tId){
+ const S=D[key], box=document.getElementById(boxId), tip=box.querySelector('.tip'), W=Math.max(320,box.clientWidth), H=W<500?220:260, m={l:40,r:6,t:10,b:30}, step=W<500?4:2;
+ document.getElementById(lgId).innerHTML=D.LV.map((n,i)=>'<span><i style="background:'+COL[i]+'"></i>'+n+' '+S.counts[i].toLocaleString()+'명 · 평균 '+S.avgPeak[i]+'</span>').join('');
+ const svg=el('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':'최고 오버롤 분포'},box);
+ const tot=S.hist.map(r=>r[1]+r[2]+r[3]+r[4]), ts=200, ymax=Math.ceil(YMAX/ts)*ts, n=S.hist.length, bw=(W-m.l-m.r)/n, y=v=>H-m.b-(v/ymax)*(H-m.t-m.b);
+ for(let v=0;v<=ymax;v+=ts){ el('line',{x1:m.l,x2:W-m.r,y1:y(v),y2:y(v),class:'gl'},svg); el('text',{x:m.l-6,y:y(v)+4,'text-anchor':'end',class:'tick'},svg).textContent=v; }
+ el('line',{x1:m.l,x2:W-m.r,y1:y(0),y2:y(0),class:'ax'},svg);
+ S.hist.forEach((r,i)=>{ const x=m.l+i*bw; let acc=0;
+   if(r[0]%step===0) el('text',{x:x+bw/2,y:H-m.b+16,'text-anchor':'middle',class:'tick'},svg).textContent=r[0];
+   const segs=[1,2,3,4].filter(k=>r[k]>0), top=segs[segs.length-1];
+   segs.forEach(k=>{ const h=(r[k]/ymax)*(H-m.t-m.b), y0=y(acc+r[k]); acc+=r[k];
+     const isTop=k===top, gap=isTop?0:2, rr=isTop?Math.min(4,bw/2-1):0, x0=x+1, w=bw-2, hh=Math.max(0,h-gap);
+     if(rr>0&&hh>rr) el('path',{d:'M'+x0+','+(y0+hh)+'V'+(y0+rr)+'Q'+x0+','+y0+' '+(x0+rr)+','+y0+'H'+(x0+w-rr)+'Q'+(x0+w)+','+y0+' '+(x0+w)+','+(y0+rr)+'V'+(y0+hh)+'Z',fill:COL[k-1]},svg);
+     else el('rect',{x:x0,y:y0,width:w,height:hh,fill:COL[k-1]},svg); });
+   const hit=el('rect',{x,y:m.t,width:bw,height:H-m.t-m.b,fill:'transparent'},svg);
+   hit.addEventListener('mousemove',e=>{ const b=box.getBoundingClientRect(); tip.style.display='block';
+     tip.innerHTML='<b>최고 오버롤 '+r[0]+' · '+tot[i]+'명</b><br>'+D.LV.map((nm,k)=>r[k+1]?'<i style="background:'+COL[k]+'"></i>'+nm+' '+r[k+1]+'명':'').filter(Boolean).join('<br>');
+     let lx=e.clientX-b.left+12; if(lx>b.width-150) lx=e.clientX-b.left-150; tip.style.left=lx+'px'; tip.style.top=(e.clientY-b.top-20)+'px'; });
+   hit.addEventListener('mouseleave',()=>tip.style.display='none'); });
+ document.getElementById(tId).innerHTML='<table><tr><th>최고 OVR</th>'+D.LV.map(n=>'<th>'+n+'</th>').join('')+'<th>합계</th></tr>'+S.hist.map((r,i)=>'<tr><td>'+r[0]+'</td>'+[1,2,3,4].map(k=>'<td>'+r[k]+'</td>').join('')+'<td>'+tot[i]+'</td></tr>').join('')+'</table>';
+}
+hist('best','cb','lgb','tb'); hist('random','cr','lgr','tr');
+</script></body></html>

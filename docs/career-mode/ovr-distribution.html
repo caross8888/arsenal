@@ -1,0 +1,83 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>커리어 모드 오버롤 분포</title>
+<style>
+.viz-root{color-scheme:light;--surface-1:#fcfcfb;--surface-2:#f1f0ec;--text-primary:#0b0b0b;--text-secondary:#52514e;--grid:#e4e3de;--axis:#b9b8b1;
+ --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100}
+@media (prefers-color-scheme: dark){:root:where(:not([data-theme="light"])) .viz-root{color-scheme:dark;--surface-1:#1a1a19;--surface-2:#252523;--text-primary:#fff;--text-secondary:#c3c2b7;--grid:#33332f;--axis:#5b5a54;
+ --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500}}
+:root[data-theme="dark"] .viz-root{color-scheme:dark;--surface-1:#1a1a19;--surface-2:#252523;--text-primary:#fff;--text-secondary:#c3c2b7;--grid:#33332f;--axis:#5b5a54;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500}
+*{box-sizing:border-box} body{margin:0;background:var(--surface-1)}
+.viz-root{background:var(--surface-1);color:var(--text-primary);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;padding:20px 16px 40px;max-width:900px;margin:0 auto}
+h1{font-size:20px;margin:0 0 4px} .sub{color:var(--text-secondary);font-size:13px;margin:0 0 24px;line-height:1.5}
+h2{font-size:16px;margin:28px 0 4px} .cap{color:var(--text-secondary);font-size:12.5px;margin:0 0 10px;line-height:1.5}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--text-secondary);margin:0 0 8px}
+.legend span{display:inline-flex;align-items:center;gap:6px} .legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.chart{position:relative} svg{display:block;width:100%;height:auto;overflow:visible}
+.tick{fill:var(--text-secondary);font-size:11px} .gl{stroke:var(--grid);stroke-width:1} .ax{stroke:var(--axis);stroke-width:1}
+.lbl{font-size:11.5px;font-weight:600;fill:var(--text-primary)}
+.tip{position:absolute;pointer-events:none;background:var(--surface-2);color:var(--text-primary);border:1px solid var(--grid);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.55;box-shadow:0 4px 14px rgba(0,0,0,.15);display:none;white-space:nowrap;z-index:2}
+.tip b{font-size:12.5px} .tip i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+details{margin-top:10px;font-size:12.5px;color:var(--text-secondary)} summary{cursor:pointer}
+table{border-collapse:collapse;margin-top:8px;font-size:12px;color:var(--text-primary)} td,th{padding:3px 8px;text-align:right;border-bottom:1px solid var(--grid)} th{color:var(--text-secondary);font-weight:600}
+</style></head><body><div class="viz-root">
+<h1>커리어 모드 오버롤 분포</h1>
+<p class="sub">현재 밸런스로 10,000 커리어 시뮬레이션(이벤트·이적 무작위, 34세 은퇴). 재능은 18세에 정해진다.</p>
+<h2>① 최고 오버롤 분포</h2><p class="cap">최고 오버롤별 선수 수, 재능 등급별로 쌓음</p>
+<div class="legend" id="lg1"></div><div class="chart" id="c1"><div class="tip"></div></div>
+<details><summary>표로 보기</summary><div id="t1"></div></details>
+<h2>② 재능별 나이에 따른 평균 오버롤</h2><p class="cap">각 나이 시즌이 끝난 시점의 평균(15세는 시작 오버롤 54)</p>
+<div class="legend" id="lg2"></div><div class="chart" id="c2"><div class="tip"></div></div>
+<details><summary>표로 보기</summary><div id="t2"></div></details>
+</div>
+<script>
+const D={"N":10000,"LV":["보통","유망주","원더키드","세대급"],"hist":[[66,8,0,0,0],[67,57,1,0,0],[68,135,2,0,0],[69,264,23,0,0],[70,372,55,0,0],[71,450,85,0,0],[72,473,97,3,0],[73,529,137,4,0],[74,542,149,15,0],[75,485,179,21,0],[76,501,170,26,0],[77,465,175,41,0],[78,316,176,47,0],[79,316,169,53,0],[80,297,181,54,1],[81,203,139,68,1],[82,204,128,65,0],[83,113,106,67,1],[84,105,99,81,5],[85,67,79,72,7],[86,67,74,82,3],[87,41,55,72,7],[88,32,36,73,4],[89,22,35,67,13],[90,12,18,61,9],[91,7,19,68,13],[92,4,17,60,19],[93,4,8,45,24],[94,2,8,33,22],[95,2,2,32,23],[96,0,1,23,21],[97,0,1,11,16],[98,0,0,6,26],[99,0,0,0,16]],"ages":[15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35],"byAge":[[54,56.5,59,61.5,63.4,65.2,67,68.7,70.2,71.5,72.7,73.8,74.6,75.3,75.5,75,74.1,72.6,70.7,68.4,65.5],[54,56.5,59,61.5,63.8,65.9,68.2,70.3,72.1,73.8,75.3,76.6,77.6,78.5,78.7,78.3,77.4,76,74.1,71.7,68.9],[54,56.4,59,61.4,64.5,67.4,70.5,73.5,76.2,78.7,80.8,82.7,84.1,85.2,85.5,85.1,84.2,82.9,81.1,78.9,76.2],[54,56.4,58.9,61.4,65.7,69.9,74.4,78.9,82.7,86,88.7,90.6,92.1,93,93.3,92.9,92.2,91,89.3,87.3,84.8]],"counts":[6095,2424,1250,231],"avgPeak":[75.5,78.7,85.5,93.3]}, COL=['var(--s1)','var(--s2)','var(--s3)','var(--s4)'];
+const NS='http://www.w3.org/2000/svg', el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e;};
+['lg1','lg2'].forEach(id=>document.getElementById(id).innerHTML=D.LV.map((n,i)=>'<span><i style="background:'+COL[i]+'"></i>'+n+' '+D.counts[i]+'명 · 평균 최고 '+D.avgPeak[i]+'</span>').join(''));
+// ① 누적 막대
+(function(){ const box=document.getElementById('c1'), tip=box.querySelector('.tip'), W=Math.max(320,box.clientWidth), H=W<500?240:300, m={l:34,r:6,t:10,b:30}, step=W<500?4:2;
+ const svg=el('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':'최고 오버롤 분포'},box);
+ const tot=D.hist.map(r=>r[1]+r[2]+r[3]+r[4]), raw=Math.max(...tot)/5, mag=Math.pow(10,Math.floor(Math.log10(raw))), ts=[1,2,5,10].map(k=>k*mag).find(k=>k>=raw), ymax=Math.ceil(Math.max(...tot)/ts)*ts, n=D.hist.length, bw=(W-m.l-m.r)/n;
+ const y=v=>H-m.b-(v/ymax)*(H-m.t-m.b);
+ for(let v=0;v<=ymax;v+=ts){ el('line',{x1:m.l,x2:W-m.r,y1:y(v),y2:y(v),class:'gl'},svg); el('text',{x:m.l-6,y:y(v)+4,'text-anchor':'end',class:'tick'},svg).textContent=v; }
+ el('line',{x1:m.l,x2:W-m.r,y1:y(0),y2:y(0),class:'ax'},svg);
+ D.hist.forEach((r,i)=>{ const x=m.l+i*bw; let acc=0;
+   if(r[0]%step===0) el('text',{x:x+bw/2,y:H-m.b+16,'text-anchor':'middle',class:'tick'},svg).textContent=r[0];
+   const segs=[1,2,3,4].filter(k=>r[k]>0), top=segs[segs.length-1];
+   segs.forEach(k=>{ const h=(r[k]/ymax)*(H-m.t-m.b), y0=y(acc+r[k]); acc+=r[k];
+     const isTop=k===top, gap=isTop?0:2, rr=isTop?Math.min(4,bw/2-1):0, x0=x+1, w=bw-2, hh=Math.max(0,h-gap);
+     if(rr>0&&hh>rr) el('path',{d:'M'+x0+','+(y0+hh)+'V'+(y0+rr)+'Q'+x0+','+y0+' '+(x0+rr)+','+y0+'H'+(x0+w-rr)+'Q'+(x0+w)+','+y0+' '+(x0+w)+','+(y0+rr)+'V'+(y0+hh)+'Z',fill:COL[k-1]},svg);
+     else el('rect',{x:x0,y:y0,width:w,height:hh,fill:COL[k-1]},svg); });
+   const hit=el('rect',{x,y:m.t,width:bw,height:H-m.t-m.b,fill:'transparent'},svg);
+   hit.addEventListener('mousemove',e=>{ const b=box.getBoundingClientRect(); tip.style.display='block';
+     tip.innerHTML='<b>최고 오버롤 '+r[0]+' · '+tot[i]+'명</b><br>'+D.LV.map((nm,k)=>r[k+1]?'<i style="background:'+COL[k]+'"></i>'+nm+' '+r[k+1]+'명':'').filter(Boolean).join('<br>');
+     let lx=e.clientX-b.left+12; if(lx>b.width-150) lx=e.clientX-b.left-150; tip.style.left=lx+'px'; tip.style.top=(e.clientY-b.top-20)+'px'; });
+   hit.addEventListener('mouseleave',()=>tip.style.display='none'); });
+ document.getElementById('t1').innerHTML='<table><tr><th>최고 OVR</th>'+D.LV.map(n=>'<th>'+n+'</th>').join('')+'<th>합계</th></tr>'+D.hist.map((r,i)=>'<tr><td>'+r[0]+'</td>'+[1,2,3,4].map(k=>'<td>'+r[k]+'</td>').join('')+'<td>'+tot[i]+'</td></tr>').join('')+'</table>';
+})();
+// ② 꺾은선
+(function(){ const box=document.getElementById('c2'), tip=box.querySelector('.tip'), W=Math.max(320,box.clientWidth), H=W<500?280:340, m={l:34,r:W<500?58:70,t:12,b:30};
+ const svg=el('svg',{viewBox:'0 0 '+W+' '+H,role:'img','aria-label':'재능별 나이에 따른 평균 오버롤'},box);
+ const ymin=50,ymax=95, A=D.ages, x=a=>m.l+(a-A[0])/(A[A.length-1]-A[0])*(W-m.l-m.r), y=v=>H-m.b-(v-ymin)/(ymax-ymin)*(H-m.t-m.b);
+ for(let v=ymin;v<=ymax;v+=5){ el('line',{x1:m.l,x2:W-m.r,y1:y(v),y2:y(v),class:'gl'},svg); el('text',{x:m.l-6,y:y(v)+4,'text-anchor':'end',class:'tick'},svg).textContent=v; }
+ A.forEach(a=>{ if(W<500?(a-15)%4===0:a%2===1) el('text',{x:x(a),y:H-m.b+16,'text-anchor':'middle',class:'tick'},svg).textContent=a+'세'; });
+ el('line',{x1:m.l,x2:W-m.r,y1:y(ymin),y2:y(ymin),class:'ax'},svg);
+ const ends=[];
+ D.byAge.forEach((s,k)=>{ const pts=A.map((a,i)=>s[i]==null?null:[x(a),y(s[i])]).filter(Boolean);
+   el('path',{d:'M'+pts.map(p=>p.join(',')).join('L'),fill:'none',stroke:COL[k],'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'},svg);
+   const pk=Math.max(...s.filter(v=>v!=null)), pi=s.indexOf(pk); el('circle',{cx:x(A[pi]),cy:y(pk),r:4,fill:COL[k],stroke:'var(--surface-1)','stroke-width':2},svg);
+   ends.push({k,yv:pts[pts.length-1][1],x:pts[pts.length-1][0]}); });
+ // 끝 라벨(겹치지 않게 아래로 밀기)
+ ends.sort((a,b)=>a.yv-b.yv); let last=-1e9; ends.forEach(e=>{ const yy=Math.max(e.yv+4,last+14); last=yy; el('text',{x:e.x+8,y:yy,class:'lbl'},svg).textContent=D.LV[e.k]; });
+ const cross=el('line',{y1:m.t,y2:H-m.b,stroke:'var(--axis)','stroke-width':1,'stroke-dasharray':'3 3',visibility:'hidden'},svg);
+ const dots=D.byAge.map((_,k)=>el('circle',{r:5,fill:COL[k],stroke:'var(--surface-1)','stroke-width':2,visibility:'hidden'},svg));
+ const hit=el('rect',{x:m.l,y:m.t,width:W-m.l-m.r,height:H-m.t-m.b,fill:'transparent'},svg);
+ hit.addEventListener('mousemove',e=>{ const b=svg.getBoundingClientRect(), sx=(e.clientX-b.left)/b.width*W; let i=Math.round((sx-m.l)/(W-m.l-m.r)*(A.length-1)); i=Math.max(0,Math.min(A.length-1,i));
+   const xx=x(A[i]); cross.setAttribute('x1',xx); cross.setAttribute('x2',xx); cross.setAttribute('visibility','visible');
+   dots.forEach((d,k)=>{ const v=D.byAge[k][i]; if(v==null){d.setAttribute('visibility','hidden');return;} d.setAttribute('cx',xx); d.setAttribute('cy',y(v)); d.setAttribute('visibility','visible'); });
+   const bb=box.getBoundingClientRect(); tip.style.display='block';
+   tip.innerHTML='<b>'+A[i]+'세</b><br>'+[3,2,1,0].map(k=>D.byAge[k][i]==null?'':'<i style="background:'+COL[k]+'"></i>'+D.LV[k]+' '+D.byAge[k][i]).filter(Boolean).join('<br>');
+   let lx=e.clientX-bb.left+14; if(lx>bb.width-130) lx=e.clientX-bb.left-130; tip.style.left=lx+'px'; tip.style.top='20px'; });
+ hit.addEventListener('mouseleave',()=>{ tip.style.display='none'; cross.setAttribute('visibility','hidden'); dots.forEach(d=>d.setAttribute('visibility','hidden')); });
+ document.getElementById('t2').innerHTML='<table><tr><th>나이</th>'+D.LV.map(n=>'<th>'+n+'</th>').join('')+'</tr>'+A.map((a,i)=>'<tr><td>'+a+'</td>'+D.byAge.map(s=>'<td>'+(s[i]==null?'—':s[i])+'</td>').join('')+'</tr>').join('')+'</table>';
+})();
+</script></body></html>

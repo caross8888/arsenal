@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22273A"/><stop offset="1" stop-color="#11131B"/></linearGradient>
+<radialGradient id="glow" cx=".5" cy=".38" r=".55"><stop offset="0" stop-color="#EF0107" stop-opacity=".28"/><stop offset="1" stop-color="#EF0107" stop-opacity="0"/></radialGradient>
+<radialGradient id="badge" cx=".5" cy=".3" r=".75"><stop offset="0" stop-color="#EF0107"/><stop offset="1" stop-color="#EF0107" stop-opacity=".35"/></radialGradient>
+</defs>
+<rect width="300" height="300" rx="26" fill="url(#bg)"/>
+<rect width="300" height="300" rx="26" fill="url(#glow)"/>
+<rect x="1.5" y="1.5" width="297" height="297" rx="24.5" fill="none" stroke="#EF0107" stroke-opacity=".55" stroke-width="3"/>
+<circle cx="150" cy="124" r="78" fill="url(#badge)"/>
+<circle cx="150" cy="124" r="78" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="2"/>
+<g transform="translate(103 77) scale(.94)" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><circle cx="50" cy="54" r="11"/><polygon points="50.0,49.8 54.0,52.7 52.5,57.4 47.5,57.4 46.0,52.7" fill="#fff"/><path d="M50.0,49.8 L50.0,43.0 M54.0,52.7 L60.5,50.6 M52.5,57.4 L56.5,62.9 M47.5,57.4 L43.5,62.9 M46.0,52.7 L39.5,50.6"/><path d="M10,14 L34,38 M21.2,36.0 L34,38 L32.0,25.2"/><path d="M90,14 L66,38 M68.0,25.2 L66,38 L78.8,36.0"/><path d="M50,96 L50,74 M57.6,84.5 L50,74 L42.4,84.5"/></g>
+<text x="150" y="258" text-anchor="middle" font-family="Pretendard, 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif" font-size="32" font-weight="800" fill="#F0F2F7">적극적 압박</text>
+</svg>
