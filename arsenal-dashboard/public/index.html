@@ -9174,6 +9174,8 @@ function crPrep(){
    +topts.map(function(t){ return '<button class="cr-chip" aria-pressed="'+(CR.train===t)+'" onclick="CR.train=\''+t+'\';crPrep()">'+t+'</button>'; }).join('')+'</div>'
    +(pr.late?'<div class="cr-note" style="margin-top:6px">'+({'몸 관리':'출전을 줄이고 몸을 아껴요. 하락·부상이 줄어 더 오래 뛰어요.','균형':'평소대로 시즌을 보내요.','주전 경쟁':'더 많이 뛰는 대신 몸이 빨리 닳아요. 하락·부상이 늘어요.'})[CR.train]+'</div>'
      :pr.keyMax?'<div class="cr-note" style="margin-top:6px">주요 능력이 모두 최고치예요. 강점 강화로는 더 오를 데가 없어요.</div>'
+     // 나이에 맞는 훈련(서버 TRAIN_AGE와 같은 기준): 20세까지 약점 보완, 21세부터 강점 강화가 더 크게 큰다
+     :!pr.late&&(p.age<=20?CR.train==='강점 강화':CR.train==='약점 보완')?'<div class="cr-note" style="margin-top:6px">'+(p.age<=20?'아직 어려요. 지금은 기본기(약점 보완)를 다질수록 더 크게 성장해요.':'기본기는 충분해요. 이제는 장점(강점 강화)을 살릴수록 더 크게 성장해요.')+'</div>'
      :pr.keyCapped&&pr.keyCapped.length?'<div class="cr-note" style="margin-top:6px">'+gmEsc(pr.keyCapped.join('·'))+'은(는) 이미 최고치라 강점 강화 효율이 절반으로 떨어져요.</div>':'')+'</div>'
    +(iv?'':'<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(ev.t)+'</b><span>이벤트</span></div><div style="font-size:14px;line-height:1.5">'+d
    // 임대: 구단 카드를 눌러 "간다"(evPick 0 + loanPick), 아래 버튼은 "남는다"만
