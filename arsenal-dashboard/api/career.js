@@ -11,7 +11,7 @@
 //   POST ?a=retire  {token}                                       → {token, card}
 //   POST ?a=view    {token}                                       → 지금 단계 화면(이어 하기)
 //   POST ?a=submit  {token} + Authorization: Bearer <승부예측 토큰> → {registered, rank, best, improved, key}
-//   GET  ?a=board[&p=FW|MF|DF]                                    → 역대 TOP 100(30초 CDN 캐시). p 없으면 전체(계정당 최고 하나)
+//   GET  ?a=board[&p=FW|MF|DF]                                    → 역대 TOP 100(30초 CDN 캐시). p 없으면 전체(세 포지션 기록을 점수순으로)
 //   GET  ?a=card&k=<계정 키>&p=<포지션>                           → 그 계정의 그 포지션 대표 은퇴 카드
 //   GET  ?a=meta                                                  → 화면용 고정 데이터(국가·카드·스탯·이름·구단 이름/id, 명성 없음)
 
@@ -36,7 +36,7 @@ const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 // career:board:v2:{FW|MF|DF}  정렬 집합, 멤버 '@{계정 키}', 점수 = 커리어 점수. 계정당 포지션별 최고 하나, 포지션마다 상위 1,000개.
 // career:card:{키}:{포지션}   그 기록의 은퇴 카드(cardView) JSON — 랭킹에서 눌러 열어 본다.
 // career:sum:{포지션}         해시 {키: 랭킹 한 줄 요약 JSON} — 100줄을 HMGET 한 번으로 그린다.
-// 전체 탭은 세 판의 상위 100을 합쳐 계정당 최고 하나만 남긴다(저장은 따로 안 한다).
+// 전체 탭은 세 판의 상위 100을 합쳐 점수순으로 — 한 계정이 포지션마다 한 줄씩 나올 수 있다(저장은 따로 안 한다).
 // 옛 한 판(career:board:v1 · career:card:{키} · career:sum)은 처음 읽을 때 한 번 포지션별로 옮긴다(career:mig:v2 NX).
 //   옛 카드는 옮기지 않고 career:card:{키}로 그대로 읽는다(새 키가 없을 때, 그 카드의 포지션이 맞으면).
 // career:done:{id}  같은 커리어 두 번 등록 방지(30일) / career:reg:{YYYY-MM} 월 등록 수(무료 한도 보호).
@@ -97,9 +97,8 @@ async function readBoard(pos){
   let top;
   if(id !== 'ALL') top = await readPos(id, BOARD_SHOW);
   else {
-    // 전체: 세 판의 상위 100을 합쳐 계정당 최고 하나
-    const all = (await Promise.all(POSS.map(p => readPos(p, BOARD_SHOW)))).flat().sort((a, b) => b.score - a.score), seen = new Set();
-    top = all.filter(r => !seen.has(r.key) && seen.add(r.key)).slice(0, BOARD_SHOW);
+    // 전체: 세 판의 상위 100을 합쳐 점수순(사용자 지정 — 한 계정의 공격수·미드필더 기록이 둘 다 나온다)
+    top = (await Promise.all(POSS.map(p => readPos(p, BOARD_SHOW)))).flat().sort((a, b) => b.score - a.score).slice(0, BOARD_SHOW);
   }
   if(top.length){
     const names = await kv('HMGET', 'pk:names', ...top.map(r => r.key)) || [];
