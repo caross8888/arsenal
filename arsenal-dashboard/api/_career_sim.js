@@ -18,7 +18,16 @@ export const BASE = 40, POOL = 50, MAXADD = 20, YOUTH_GAP = 30;
 // 골·도움 비율(G_RATE·A_RATE)·기여 점수·발롱 배율로 맞춘다. 54는 맞추기 전 재능별 정점이 그대로 나오는 값.
 export const START_OVR = 54;
 // 29~30세는 정체(0), 31세부터 매년 −0.5씩 커지는 하락(사용자 지정 — 정점을 몇 시즌 유지하게. 예전엔 29세부터 −0.5·−1·…).
-const AGE_BASE = {15:4,16:4,17:4,18:4.5,19:4.5,20:4.5,21:4,22:4,23:3.5,24:3,25:2.5,26:2,27:1.5,28:0.5,29:0,30:0,31:-0.5,32:-1,33:-1.5,34:-2,35:-2.5,36:-3,37:-3.5};
+const AGE_BASE = {15:4,16:4,17:4,18:3.7,19:3.7,20:3.7,21:3.3,22:4,23:3.5,24:3,25:2.5,26:2,27:1.5,28:0.5,29:0,30:0,31:-0.5,32:-1,33:-1.5,34:-2,35:-2.5,36:-3,37:-3.5};
+// 소속 단계(사용자 지정 — 예전엔 18세가 되면 누구나 1군): U-16 → U-18 → U-21 → 1군. 나이 기본 단계(15세 U-16, 16~17세 U-18, 18~21세 U-21,
+// 22세부터 1군)보다 실력이 앞서면 시즌 끝에 월반한다(구단 수준 − 오버롤이 문턱 이하, 문턱엔 시즌마다 ±2 운).
+// gap: 그 단계의 상대 수준(구단 수준에서 뺀다), games: 시즌 경기 수, up: 그 단계로 올라가는 "구단 수준 − 오버롤" 문턱(null = 나이로만).
+const STAGE = [{n:'U-16', gap:30, games:26, up:null}, {n:'U-18', gap:30, games:26, up:null}, {n:'U-21', gap:16, games:30, up:13}, {n:'', gap:0, games:42, up:8}];
+// 성장: 유스 단계는 출전 비율의 영향이 작고(0.9~1.2 — 유스 경기는 많이 뛰어도 1군만큼 크지 않다), 1군은 예전 출전 계수 그대로.
+// 나이 기본 단계보다 한 단계 높을 때마다 ×(1+STAGE_UP) — 또래보다 높은 무대에서 부딪히는 효과. 1군 벤치 ≈ U-21 주전, 1군에서 뛰면 그 이상.
+const STAGE_UP = 0.2, YPLAY = [0.9, 0.3];
+// 어린 나이 월반은 문턱을 더 낮춘다(16세 1군 데뷔는 드물게): [U-21 문턱 −, 1군 문턱 −] 나이별
+const EARLY = {16:[8,14], 17:[4,7]};
 // 몸의 소모(사용자 지정): 부상 이력만큼 28세 이후 나이 커브를 그 햇수만큼 앞당긴다 — 잦은 부상·큰 부상이면 정체·하락이 일찍 온다.
 // 일반 부상 +WEAR[0], 서둘러 복귀하다 재부상 +WEAR[1] 더, 큰 부상 +WEAR[2], 최대 WEAR[3]년.
 const WEAR = [0.3, 0.3, 1.0, 3];
@@ -89,7 +98,7 @@ function traitMods(){
     m.g *= e.g||1; m.a *= e.a||1; m.cs *= e.cs||1; m.r += e.r||0; m.st += e.st||0; m.inj += e.inj||0; m.goty *= e.goty||1; }
   return m;
 }
-const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련)
+const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95, LOAN_GO_Y = 1.1;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련). U-21에서 가는 임대는 첫 성인 무대 경험이라 ↑(_Y)
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 // 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
 const G_RATE = {FW:0.41, MF:0.126, DF:0.031}, A_RATE = {FW:0.181, MF:0.168, DF:0.052};
@@ -196,7 +205,7 @@ export function createCareer(input, clubIdx, seed){
   C = {v:1, seed:seed>>>0, name, nation, pos, card, foot, want:num, num:null, dream:dream||null,
        st, ovr, off:st.map(v => v-ovr), age:15, club:o.club, fame:0, wf:2, phase:'prep', train:'균형', ev:null, evPick:null,
        hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, boost:1, peak:ovr, clubs:[o.club.n],
-       talent:1, youthPts:0, awoken:false, last:null, offers:null};
+       talent:1, youthPts:0, awoken:false, last:null, offers:null, lv:0};
   newEvent();
   return C;
 }
@@ -204,15 +213,26 @@ export function createCareer(input, clubIdx, seed){
 // ── 계산 도우미 ────────────────────────────────────────────────────────
 const cOvr = () => Math.round(C.ovr);
 const cRep = () => cOvr() + 3 + C.fame;
-const youth = () => C.age < 18;
-const teamName = club => club.n + (C.age<16 ? ' U-16' : C.age<18 ? ' U-18' : '');
+// 소속 단계(0 U-16 · 1 U-18 · 2 U-21 · 3 1군). lv가 없는 옛 토큰은 예전 규칙(18세부터 1군)으로 읽는다.
+const lvOf = () => C.lv ?? (C.age<16 ? 0 : C.age<18 ? 1 : 3);
+const defLv = age => age<16 ? 0 : age<18 ? 1 : age<22 ? 2 : 3;
+const youth = () => lvOf() < 3;
+const teamName = (club, lv) => club.n + (STAGE[lv ?? lvOf()].n ? ' '+STAGE[lv ?? lvOf()].n : '');
+// 다음 시즌 단계: 나이 기본 단계와, 같은 구단이면 지금 단계 아래로는 내려가지 않는다. 이적하면 새 구단 기준으로 다시 정한다.
+function stageFor(club, keep){
+  let lv = Math.max(defLv(C.age), keep ? lvOf() : 0);
+  const g = club.r - cOvr() + (mulberry(C.seed ^ hashStr('stage|'+C.age+'|'+club.n))()-0.5)*4;
+  const e = EARLY[C.age] || [0,0];
+  if(C.age >= 16) for(let i=3; i>lv; i--) if(g <= STAGE[i].up - e[i-2]){ lv = i; break; }
+  return lv;
+}
 const clubCoef = r => r>=91 ? CLUB_C[0] : r>=86 ? CLUB_C[1] : r>=76 ? CLUB_C[2] : r>=61 ? CLUB_C[3] : CLUB_C[4];
 // 출전 계수: 21세까지는 벤치여도 큰 구단 훈련으로 크고(바닥 높음), 22세부터는 뛰어야 큰다(바닥 낮음 — 벤치에 머물면 정체).
 // "어릴 땐 큰 구단, 그 뒤엔 뛸 곳"(사용자 지정)과 "출전 못 하면 망하는 커리어도 있게"를 같이 만족시키려는 것. 선발 100%면 둘 다 1.3.
 const playCoef = ratio => { const f = C.age <= 21 ? PLAY_C[0] : PLAY_C[1]; return f + (1.3 - f)*ratio; };
 function syncSt(){ C.st = C.off.map(o => Math.max(20, Math.min(99, C.ovr+o))); }
 function pStart(club, opt){
-  const gap = youth() ? (club.r-YOUTH_GAP)-cRep() : club.r-cRep();
+  const gap = (club.r-STAGE[club===C.club ? lvOf() : 3].gap)-cRep();   // 다른 구단(임대·이적 제안)은 1군 기준
   return Math.max(0.02, Math.min(0.97, 1/(1+Math.exp(gap/7)) + (opt||0)));
 }
 
@@ -222,7 +242,7 @@ export const EVENTS = [
   {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑ · 출전 ↓ · 부상 위험 ↑)','지금은 괜찮다 (부상 위험 ↓)'], ok:() => C.age<=27},   // 28세부터는 성장 폭이 거의 없어 어색하다(사용자 지적)
   {id:'tour', t:'프리시즌 투어', d:'감독이 투어 전 경기 출전을 원해요. 컨디션이 걱정돼요.', a:['모두 뛴다 (눈도장)','컨디션 관리'], ok:() => !youth()},
   {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 있게 (명성 ↑↑ 또는 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:() => C.age>=17},
-  {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:() => C.age>=17 && C.age<=22 && C.last && C.last.starts/Math.max(1,C.last.games) < 0.35},
+  {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:() => C.age>=17 && C.age<=22 && (lvOf()===2 && C.age>=18 || lvOf()===3 && C.last && C.last.starts/Math.max(1,C.last.games) < 0.35)},   // U-21에 머문 18세 이상은 1군 경험을 위해
   {id:'weak', t:'약발 훈련', d:'', a:['약발 집중 훈련','주발 강점 살리기'], ok:() => false},   // newEvent가 가끔 따로 띄운다
   {id:'extra', t:'유스 특별 훈련', d:'유스 코치가 방과 후 특별 훈련을 제안했어요.', a:['참가한다 (성장 ↑ · 부상 위험 ↑)','쉬면서 회복 (부상 위험 ↓)'], ok:() => youth()}];
 const evById = id => EVENTS.find(e => e.id === id);
@@ -283,12 +303,13 @@ export function prepView(state){
     ['기자들이 이번 시즌 각오를 묻고 있어요.','스포츠 매체에서 단독 인터뷰를 요청했어요.','개막 전 기자회견에 나서게 됐어요.','팬 채널에서 인터뷰를 하고 싶대요.'][C.age % 4];
   if(ev.id === 'weak') d = '코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. 양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요. 대신 이번 시즌 다른 훈련 시간이 줄어요.';
   let goal;
-  if(C.age < 16) goal = '유스 무대에 적응하기';
-  else if(C.age < 18) goal = cOvr() >= C.club.r-22 ? '1군 데뷔 노리기' : 'U-18 주전 자리 잡기';
+  const lv = lvOf();
+  if(lv === 0) goal = '유스 무대에 적응하기';
+  else if(lv < 3) goal = C.club.r - cOvr() <= STAGE[3].up+4 ? '1군 데뷔 노리기' : lv===1 && C.club.r - cOvr() <= STAGE[2].up+3 ? 'U-21로 월반하기' : STAGE[lv].n+' 주전 자리 잡기';
   else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 완화)' : ' (감독 신뢰 ↑)')];
-  return {goal, youth: youth(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
+  return {goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
     loanClub: C.ev==='loan' && C.loanClub ? {...pub(C.loanClub), chance: chanceOf(pStart(C.loanClub))} : null};
 }
 
@@ -329,12 +350,13 @@ export function playSeason(state, choice){
     C.injPick = choice.injPick;
   }
   const rng = seasonRng(C.train+'|'+C.ev+'|'+C.evPick+'|'+C.club.n+'|inj'+(C.inj ? C.injPick : ''));
-  if(C.age >= 18) C.lastGoal = seniorGoal();
+  if(!youth()) C.lastGoal = seniorGoal();
   const ev = C.ev, pick = C.evPick, card = CARDS[C.pos][C.card], notes = [];
+  delete C.stageNote;   // 승격 알림은 준비 화면에서만(prepView.promo)
   let club = C.club, onLoan = false, startAdj = 0, growMul = 1, declMul = 1;
-  if(ev==='loan' && pick===0 && C.loanClub){ club = C.loanClub; onLoan = true; growMul *= LOAN_GO; notes.push(C.loanClub.n+'로 1시즌 임대를 떠났어요.'); }
+  if(ev==='loan' && pick===0 && C.loanClub){ club = C.loanClub; onLoan = true; growMul *= youth() ? LOAN_GO_Y : LOAN_GO; notes.push(C.loanClub.n+'로 1시즌 임대를 떠났어요.'); }
   // 남아서 경쟁: 1군 선수들과 훈련하는 효과(성장 ↑)와 감독의 관심(출전 ↑ 조금). 예전엔 효과가 없어 "임대 간다"가 늘 정답이었다(전략 검사).
-  if(ev==='loan' && pick===1){ growMul *= LOAN_STAY[0]; startAdj += LOAN_STAY[1]; notes.push('남아서 1군 선수들과 부딪히며 훈련했어요.'); }
+  if(ev==='loan' && pick===1){ growMul *= LOAN_STAY[0]; startAdj += LOAN_STAY[1]; notes.push(youth() ? '남아서 U-21에서 1군 데뷔를 기다렸어요.' : '남아서 1군 선수들과 부딪히며 훈련했어요.'); }
   if(ev==='talk'){ if(pick===0){ if(rng()<0.75){ startAdj+=0.12; notes.push('면담 후 출전 시간이 늘었어요.'); } else { startAdj-=0.1; notes.push('감독이 불쾌해해서 한동안 벤치였어요.'); } } else if(ageBase() > 0) growMul*=EV_GROW.talk; else if(ageBase() < 0){ declMul*=0.8; notes.push('묵묵히 훈련한 덕분에 하락 폭이 줄었어요.'); } else { startAdj+=0.03; notes.push('묵묵히 훈련하는 모습에 감독의 신뢰가 쌓였어요.'); } }   // 성장기엔 성장 ↑, 하락기엔 하락 완화, 정체기(29~30세, ageBase 0)엔 감독 신뢰
   // 대가: 개인 훈련에 치중해 팀 훈련이 소홀 → 선발 −10%p. 부상 위험만으로는 대가가 안 됐다(+20%p여도 늘 고용이 이득).
   // 그래서 상황마다 정답이 갈린다: 21세까지(벤치여도 크는 시기)는 고용, 22세부터(뛰어야 크는 시기)는 거절(전략 검사 ±1.1%).
@@ -347,13 +369,12 @@ export function playSeason(state, choice){
   if(ev==='tour' && pick===0) startAdj+=0.06;
   if(ev==='media'){ C.mediaN = (C.mediaN||0) + 1; if(pick===1) startAdj+=0.03; }   // 겸손: 감독 신뢰. 자신감은 시즌 평점을 보고 아래에서 정산
 
-  const row0Youth = youth() && !onLoan, games = row0Youth ? 26 : 42;
+  const lv = onLoan ? 3 : lvOf(), row0Youth = lv < 3, games = STAGE[lv].games;
   // 새 영입 효과: 이적 첫 시즌엔 구단이 기회를 더 준다(돈을 주고 데려왔으니). 없으면 큰 구단으로 가는 게 늘 손해였다(전략 검사).
   const lastSr = [...C.hist].reverse().find(r => !r.youth && !r.loan);
   if(!onLoan && lastSr) startAdj += lastSr.club !== club.n ? NEW_SIGNING[0] : NEW_SIGNING[1];
   const TM = traitMods(); startAdj += TM.st;
   const p = pStart(club, startAdj);
-  if(youth() && !onLoan && C.age===17 && cOvr()>=club.r-22) notes.push('1군 데뷔 기회를 받았어요!');
   // 부상
   let injured = 0; const inj = C.inj; C.injNext = 0;
   if(inj){
@@ -401,7 +422,7 @@ export function playSeason(state, choice){
   const cs = row0Youth ? Math.round(apps*pCS*0.8) : Math.round(apps*pCS*(0.85+rng()*0.3));
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
   // 평점: 실력 + 팀 안 위치 + 포지션별 활약 + 운. 기본값 6.42(예전 6.45 — 정체기를 29~30세로 늘려 상위 시즌이 많아진 만큼 내림)
-  const clubLv = club.r - (youth()&&!onLoan ? YOUTH_GAP : 0), ap = Math.max(apps,1);
+  const clubLv = club.r - STAGE[lv].gap, ap = Math.max(apps,1);
   // MF 0.85(예전 0.6): 같은 오버롤의 수비수와 평점 분포를 맞춘 값 — 낮으면 평점 기반 상·발롱에서 미드필더 고점이 눌렸다(사용자 지적)
   // FW 도움 1.0(예전 0.6): 도움형 공격수(펄스나인·윙어)가 평점 기반 상을 못 받아 상위권 천장이 가장 낮았다(사용자 지적)
   const perfBonus = {FW:(goals+ast*1.0)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.85, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.3+0.065}[C.pos];
@@ -410,7 +431,7 @@ export function playSeason(state, choice){
   // 성장 / 하락
   const base = ageBase(), ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
   if(!C.wearNote && base < AGE_BASE[Math.min(37, C.age)] && base <= 0){ C.wearNote = true; notes.push('부상 이력 탓에 몸이 예전 같지 않아요. 또래보다 일찍 내리막이 시작됐어요.'); }
-  if(row0Youth){ if(ev==='extra' && pick===0) C.youthPts++; if(ratio>=0.6) C.youthPts++; }
+  if(row0Youth && C.age<18){ if(ev==='extra' && pick===0) C.youthPts++; if(ratio>=0.6) C.youthPts++; }
   if(C.age>=18 && !C.awoken){
     const tr = mulberry(C.seed ^ hashStr('talent'))(), b = Math.min(6, C.youthPts);
     const pG = 0.02+b*0.0017, pW = pG+0.11+b*0.005, pP = pW+0.25;   // 세대급 2~3% / 원더키드 11~14% / 유망주 25% / 보통 62~58%(사용자 지정 — 처음 8~11% / 20% / 70~66%)
@@ -423,7 +444,8 @@ export function playSeason(state, choice){
   if(base > 0){
     // 99 근처 감속: 최소값 없이 99.6에 다가갈수록 0에 가깝게 줄어든다. 예전엔 최소 40%라 상위권이 계속 커서 99 상한에 부딪혀 쌓였다(사용자 지적).
     const dmp = Math.min(1, Math.max(DAMP[0], (99.6-C.ovr)/DAMP[1]));
-    C.ovr = Math.min(99, C.ovr + C.boost*base*playCoef(ratio)*clubCoef(club.r + (row0Youth && club.nat===C.nation ? ACAD[C.nation]||0 : 0))*luck*growMul*C.talent*devOf()*K_GROW*dmp);
+    const play = (row0Youth ? YPLAY[0]+YPLAY[1]*ratio : playCoef(ratio)) * (1 + STAGE_UP*Math.max(0, lv-defLv(C.age)));
+    C.ovr = Math.min(99, C.ovr + C.boost*base*play*clubCoef(club.r + (C.age<18 && !onLoan && club.nat===C.nation ? ACAD[C.nation]||0 : 0))*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
     declMul *= (commonOf()||{}).decl || 1;
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
@@ -537,7 +559,7 @@ export function playSeason(state, choice){
   if(ev==='media' && pick===0){ if(rating>=7.0){ fg+=2; notes.push('큰소리친 만큼 해내서 주목받았어요.'); } else { fg-=1; notes.push('인터뷰에서 한 말이 부메랑이 됐어요.'); } }
   C.fame = Math.max(-5, Math.min(12, C.fame-Math.sign(C.fame)+fg));
   // 1군 승격 때 등번호
-  if(!C.num && C.age>=17 && (!youth()||onLoan||apps>0&&C.age===17&&cOvr()>=club.r-22)){
+  if(!C.num && !row0Youth){
     if(rng()<0.6){ C.num = C.want; notes.push('원하던 '+C.want+'번을 받았어요.'); }
     else { C.num = [28,31,35,41,44,47][Math.floor(rng()*6)]; notes.push(C.want+'번은 주인이 있어서 '+C.num+'번을 받았어요.'); }
   }
@@ -547,7 +569,7 @@ export function playSeason(state, choice){
   if(C.age===18) coach = ['gen','wonder'].includes(C.tier) ? '이런 재능은 쉽게 나오지 않아요. 큰 무대를 노려 봐도 돼요.'
     : C.tier==='prospect' ? '성장 속도가 좋아요. 꾸준히만 하면 1군 주전감이에요.'
     : '아직은 평범해요. 출전 시간과 노력으로 메워야 해요.';
-  const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club), games, starts, apps, goals, ast, cs, rating:Math.round(rating*100)/100, rank,
+  const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(rating*100)/100, rank,
                youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(coach ? {coach} : {})};
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg;
@@ -654,7 +676,12 @@ export function nextSeason(state, pick, traitPick){
   }
   // 지난 시즌 줄에서 결과 화면에만 쓰는 값은 버린다(토큰 크기 — 은퇴 카드엔 필요 없다)
   const r = C.hist[C.hist.length-1]; delete r.notes; delete r.coach; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
+  const moved = pick != null, lv0 = lvOf();
   C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
+  C.lv = stageFor(C.club, !moved);
+  // 승격 알림: 다음 시즌 준비 화면 맨 위에 한 번(prepView.promo)
+  if(C.lv > Math.max(lv0, defLv(C.age)) || moved && C.lv===3 && C.age<22 && lv0<3) C.stageNote = C.lv===3 ? (C.age<=18 ? '1군에 합류했어요! 또래보다 빠른 데뷔예요.' : '1군에 합류했어요!') : STAGE[C.lv].n+'로 월반했어요! 형들과 부딪히며 더 크게 성장해요.';
+  else if(C.lv===3 && lv0<3) C.stageNote = '1군에 합류했어요.';
   newEvent();
   return C;
 }

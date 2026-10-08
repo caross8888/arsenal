@@ -1846,6 +1846,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hist .cr-rc-row.ars{background:linear-gradient(90deg,rgba(239,1,7,.18),var(--surface2) 70%)}
 .cr-goal{border:1px solid var(--border-accent);background:linear-gradient(135deg,rgba(200,168,75,.16),rgba(200,168,75,.04));border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .cr-goal-tag{align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:var(--gold);border-radius:999px;padding:3px 9px}
+.cr-promo{border:1px solid rgba(34,197,94,.45);background:rgba(34,197,94,.12);color:var(--green);border-radius:14px;padding:11px 14px;font-size:14px;font-weight:700}
 .cr-goal-t{font-size:17px;font-weight:700}
 .cr-tsel{display:flex;align-items:center;gap:12px;margin-top:4px}
 .cr-tsel img{width:56px;height:56px;flex-shrink:0}
@@ -8991,8 +8992,9 @@ function crPrep(){
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
   crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'
    +crHead()
+   +(pr.promo?'<div class="cr-promo">⬆ '+gmEsc(pr.promo)+'</div>':'')
    +'<div class="cr-goal"><span class="cr-goal-tag">SEASON GOAL · 이번 시즌 목표</span><div class="cr-goal-t">'+gmEsc(pr.goal)+'</div>'
-   +'<div class="cr-note">'+(pr.youth?'유스 시즌이라 출전 기회는 유스팀 기준이에요.':'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
+   +'<div class="cr-note">'+(pr.youth?(pr.stage?pr.stage+' 시즌이에요. 실력이 팀 수준에 가까워지면 시즌 끝에 '+(pr.stage==='U-21'?'1군에 합류':'월반')+'하고, 높은 무대일수록 더 크게 성장해요.':'유스 시즌이라 출전 기회는 유스팀 기준이에요.'):'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
    +'<div class="cr-panel"><div class="cr-lbl"><b>훈련 방향</b><span>오른 만큼이 스탯에 나뉘는 방식</span></div><div class="cr-seg" style="--n:3">'
    +['강점 강화','균형','약점 보완'].map(function(t){ return '<button class="cr-chip" aria-pressed="'+(CR.train===t)+'" onclick="CR.train=\''+t+'\';crPrep()">'+t+'</button>'; }).join('')+'</div>'
    +(pr.keyMax?'<div class="cr-note" style="margin-top:6px">주요 능력이 모두 최고치예요. 강점 강화로는 더 오를 데가 없어요.</div>'
