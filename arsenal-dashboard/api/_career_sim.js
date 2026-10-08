@@ -45,11 +45,13 @@ const YOUTH_CUT = 0.4, YOUTH_CUT_P = 0.5, YOUTH_CUT_TO = 6, YOUTH_CUT_BEHIND = -
 // 명성 차로 계산해서 큰 구단 유스는 거의 못 뛰고 → 성장 낮고 → 17세에 거의 자동 방출됐다). 또래 수준 = 나이별 기준 + 구단 수준 차의 20%.
 const COHORT = {15:50, 16:53, 17:56}, COHORT_K = 0.2;
 const cohortLv = (club, age) => (COHORT[Math.min(17, Math.max(15, age))]) + (club.r - 75)*COHORT_K;
-// 아카데미 등급(★1~3, 실제 평가 자료 — _career_data.js ACADEMY, CIES 2025). 유스 단계(U-16~U-21) 성장에 ACAD_G를 곱한다.
-// 구단 수준(코칭 계수)과 따로 — 벤피카·아약스·벨레스처럼 "구단은 중상위인데 유스는 최상위"인 곳이 실제로 더 키우게(사용자 지정).
-const acadOf = club => ACADEMY[club.n] || 1;
+// 아카데미 등급(★1~5). 실제 자료(_career_data.js ACADEMY, CIES 2025 상위 100 = ★4·5)가 없으면 명성·리그로 추정(최대 ★3, 사용자 지정):
+// 구단 수준 84+ 또는 유망주 강국 리그(ARG·BRA·POR·NED·BEL·ESP·FRA) 74+ 또는 잉글랜드 72+(EPPP 1등급 다수) → ★3, 1부 중위(66+) → ★2, 나머지 ★1.
+// 유스 단계(U-16~U-21) 성장에 ACAD_G를 곱한다 — 구단 수준(코칭 계수)과 따로, 실제로 잘 키워 내는 곳이 더 키우게.
+const ACAD_PROD = new Set(['ARG','BRA','POR','NED','BEL','ESP','FRA']);
+const acadOf = club => ACADEMY[club.n] || (club.r >= 84 || (ACAD_PROD.has(club.nat) && club.r >= 74) || (club.nat==='ENG' && club.r >= 72) ? 3 : club.r >= 66 ? 2 : 1);
 const acadStars = club => acadOf(club);
-const ACAD_G = {1:1, 2:1.06, 3:1.12};
+const ACAD_G = {1:1, 2:1.03, 3:1.06, 4:1.09, 5:1.12};
 const YOUTH_CC = 0.35;
 // 어린 나이 월반은 문턱을 더 낮춘다(16세 1군 데뷔는 드물게): [U-21 문턱 −, 1군 문턱 −] 나이별
 const EARLY = {16:[8,14], 17:[4,7]};

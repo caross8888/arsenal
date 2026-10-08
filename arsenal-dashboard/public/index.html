@@ -9006,7 +9006,7 @@ function crPage3Render(){
    +'<div class="cr-list">'+list.map(function(o,k){
      return '<button class="cr-club" aria-pressed="'+(CR.firstPick===k)+'" onclick="CR.firstPick='+k+';crPage3Render()">'+crCrest(o,44)
       +'<div>'+(o.kind==='해외'||S.dream===o.n?'<div class="tag">'+[o.kind==='해외'?'✈ 해외 유스':'',S.dream===o.n?'♥ 꿈의 구단':''].filter(Boolean).join(' · ')+'</div>':'')+'<div class="nm">'+gmEsc(o.n)+' U-16</div>'
-      +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+'</div><div class="cr-acad">아카데미 <b>'+'★★★'.slice(0,o.acad||1)+'<i>'+'★★★'.slice(0,3-(o.acad||1))+'</i></b></div></div>'
+      +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+'</div><div class="cr-acad">아카데미 <b>'+'★★★★★'.slice(0,o.acad||1)+'<i>'+'★★★★★'.slice(0,5-(o.acad||1))+'</i></b></div></div>'
       +'<div>'+crChance(o.chance)+'</div></button>'; }).join('')+'</div>',
    '<button class="gm-btn" '+(CR.firstPick!=null?'':'disabled')+' onclick="crJoin(this)">입단 · 커리어 시작</button>');
 }
