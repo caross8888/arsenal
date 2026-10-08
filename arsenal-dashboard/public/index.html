@@ -8264,6 +8264,26 @@ function openGames(fromHistory){
   window.scrollTo(0,0);
   gameList();
 }
+// 게임 안 뒤로 가기(사용자 지정 — 폰·브라우저 뒤로 가기가 좌측 상단 "← …" 버튼처럼 동작해야 하는데 일정 탭으로 나갔다).
+// 게임 화면은 주소가 늘 #games 하나라 기록이 없었다. 좌측 상단 뒤로 버튼(.gm-back)이 있는 화면이면 #games 기록을 하나 더
+// 쌓아 두고(가드), 뒤로 가기로 그 가드가 빠지면 그 버튼을 대신 누른다. 새 화면에도 뒤로 버튼이 있으면 가드를 다시 쌓는다.
+// 버튼으로 직접 게임 목록(뒤로 버튼 없음)까지 나오면 남은 가드를 걷어 낸다 — 안 그러면 다음 뒤로 가기가 한 번 헛돈다.
+var _gmIgnorePop=false;
+function gmSyncBack(){
+  if(!inGames()) return;
+  var has=!!document.querySelector('#gameRoot .gm-back'), top=!!(history.state && history.state.gsub);
+  if(has && !top) history.pushState({tab:'games', gsub:1}, '', '#games');
+  else if(!has && top){ _gmIgnorePop=true; history.back(); }
+}
+function gmBackPop(){
+  if(_gmIgnorePop){ _gmIgnorePop=false; return true; }
+  if(!inGames() || location.hash!=='#games') return false;
+  var b=document.querySelector('#gameRoot .gm-back'); if(!b) return false;
+  b.click(); return true;
+}
+document.addEventListener('DOMContentLoaded', function(){
+  var r=gmRoot(); if(r && window.MutationObserver) new MutationObserver(function(){ setTimeout(gmSyncBack, 0); }).observe(r, {childList:true});
+});
 function gmEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function gmRoot(){ return document.getElementById('gameRoot'); }
 function gmBest(v){
@@ -9612,6 +9632,7 @@ function showSec(id,btn,fromHistory){
     if(gmProfileModal && gmProfileModal.classList.contains('open')){
       closeGameProfile(true); return;
     }
+    if(gmBackPop()) return;   // 게임 안이면 좌측 상단 뒤로 버튼처럼
     var hash = location.hash.replace('#','').trim();
     if(hash === 'news' || hash === 'sns') hash = 'media';
     // 해시 없는 기록(첫 방문 진입점, 모달 닫으며 해시를 지운 기록)은 일정 탭이다 —
