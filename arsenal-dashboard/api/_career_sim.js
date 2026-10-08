@@ -150,19 +150,30 @@ const chanceOf = p => p<0.3 ? 'low' : p<0.65 ? 'mid' : 'high';
 const growLv = r => Math.max(1, Math.min(5, Math.round((r-40)/11)));
 
 // 첫 구단: 자국 구단 3곳 — 도전 / 적정 / 안정. 리그 구단이 16개 이상이면 3칸 간격.
-export function firstClubs(nation, pos, card){
+// 해외 유스(사용자 지정): 부모님과 함께 해외로 건너가 현지 유스팀에서 시작하는 길. 시드에 따라 가끔 네 번째 선택지로 나온다 —
+// 자국 리그가 약한 나라일수록 자주. 5대 리그(자국 제외)에서 수준 80~92 구단 하나. 해외 유스엔 유스 아카데미 보정(ACAD)이 붙지 않는다.
+const ABROAD_P = {KOR:0.3, JPN:0.3, NGA:0.35, USA:0.25, NOR:0.25, ARG:0.2, BEL:0.2, BRA:0.15, NED:0.15, POR:0.15};
+const ABROAD_LEAGUES = ['ENG','ESP','ITA','GER','FRA'];
+export function firstClubs(nation, pos, card, seed){
   const myRep = START_OVR + 5, me = myRep + YOUTH_GAP;
   const home = (CLUBS[nation]||[]).map(c => clubByName(c[0])).sort((a,b) => b.r-a.r);
   let mid = 0; home.forEach((c,i) => { if(Math.abs(c.r-me) < Math.abs(home[mid].r-me)) mid = i; });
   const step = home.length >= 16 ? 3 : 1;
   mid = Math.max(step, Math.min(home.length-1-step, mid));
-  return [[home[mid-step],'도전'],[home[mid],'적정'],[home[mid+step],'안정']].filter(x => x[0]).map(([c,kind]) => ({
-    club: c, kind, chance: chanceOf(1/(1+Math.exp(((c.r-YOUTH_GAP)-myRep)/7))), grow: growLv(c.r)}));
+  const list = [[home[mid-step],'도전'],[home[mid],'적정'],[home[mid+step],'안정']].filter(x => x[0]);
+  if(seed != null){
+    const r = mulberry((seed>>>0) ^ hashStr('abroad'));
+    if(r() < (ABROAD_P[nation] ?? 0.1)){
+      const pool = ABROAD_LEAGUES.filter(n => n !== nation).flatMap(n => (CLUBS[n]||[]).map(c => clubByName(c[0]))).filter(c => c.r >= 80 && c.r <= 92);
+      if(pool.length) list.push([pool[Math.floor(r()*pool.length)], '해외']);
+    }
+  }
+  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp(((c.r-YOUTH_GAP)-myRep)/7))), grow: growLv(c.r)}));
 }
 
 export function createCareer(input, clubIdx, seed){
   const {name, nation, foot, pos, card, num, dream} = input;
-  const o = firstClubs(nation, pos, card)[clubIdx];
+  const o = firstClubs(nation, pos, card, seed)[clubIdx];
   if(!o) throw new Error('bad club');
   const st = startStats(pos, card), ovr = START_OVR;
   C = {v:1, seed:seed>>>0, name, nation, pos, card, foot, want:num, num:null, dream:dream||null,
@@ -395,7 +406,7 @@ export function playSeason(state, choice){
   if(base > 0){
     // 99 근처 감속: 최소값 없이 99.6에 다가갈수록 0에 가깝게 줄어든다. 예전엔 최소 40%라 상위권이 계속 커서 99 상한에 부딪혀 쌓였다(사용자 지적).
     const dmp = Math.min(1, Math.max(DAMP[0], (99.6-C.ovr)/DAMP[1]));
-    C.ovr = Math.min(99, C.ovr + C.boost*base*playCoef(ratio)*clubCoef(club.r + (row0Youth ? ACAD[C.nation]||0 : 0))*luck*growMul*C.talent*devOf()*K_GROW*dmp);
+    C.ovr = Math.min(99, C.ovr + C.boost*base*playCoef(ratio)*clubCoef(club.r + (row0Youth && club.nat===C.nation ? ACAD[C.nation]||0 : 0))*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
     declMul *= (commonOf()||{}).decl || 1;
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);

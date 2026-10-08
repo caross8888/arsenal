@@ -97,7 +97,7 @@ function load(token, phases){
 }
 
 const clubView = c => ({n: c.n, id: c.id, nat: c.nat});
-const firstView = input => S.firstClubs(input.nation, input.pos, input.card).map(o => ({...clubView(o.club), kind: o.kind, chance: o.chance, grow: o.grow}));
+const firstView = (input, seed) => S.firstClubs(input.nation, input.pos, input.card, seed).map(o => ({...clubView(o.club), kind: o.kind, chance: o.chance, grow: o.grow}));
 // 시즌 결과 화면(숨김 값 없음). 지난 결과(last)는 토큰에 결과 화면용으로 남겨 둔다 — 이어 하기에서 다시 그린다.
 const resultView = C => {
   const r = C.hist[C.hist.length - 1];
@@ -107,7 +107,7 @@ const resultView = C => {
 
 // 지금 단계에 맞는 화면 데이터
 function view(C){
-  if(C.phase === 'pick') return {phase: 'pick', clubs: firstView(C.input)};
+  if(C.phase === 'pick') return {phase: 'pick', clubs: firstView(C.input, C.seed)};
   if(C.phase === 'retired') return {phase: 'retired', card: S.cardView(C)};
   const player = S.playerView(C);
   if(C.phase === 'prep') return {phase: 'prep', player, prep: S.prepView(C)};
@@ -160,7 +160,7 @@ export default async function handler(req, res){
 
     if(a === 'join'){
       const P = load(body.token, ['pick']), pick = Number(body.pick);
-      if(![0, 1, 2].includes(pick)) bad('구단을 골라 주세요.');
+      if(!(Number.isInteger(pick) && pick >= 0 && pick < S.firstClubs(P.input.nation, P.input.pos, P.input.card, P.seed).length)) bad('구단을 골라 주세요.');
       const C = S.createCareer(P.input, pick, P.seed);
       Object.assign(C, {v: FORMAT, id: P.id});
       return res.json({token: seal(C), ...view(C)});
