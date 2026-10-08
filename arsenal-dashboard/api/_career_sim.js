@@ -650,11 +650,14 @@ const REPEAT_PTS = [1, 0.8, 0.65, 0.5, 0.4, 0.35], REPEAT_AW = /^(발롱도르|F
 const DF_BONUS = [[/리그 베스트 11$/, 2.2], [/^월드 베스트 11$/, 2], [/^이달의 선수/, 1.5], [/^발롱도르$/, 2]];
 // 미드필더도 발롱 반복 감점 때문에 최상위가 얇아 발롱 점수만 ×1.2(사용자 지정 — 1.4는 과하다)
 const MF_BONUS = [[/리그 베스트 11$/, 1.8], [/^월드 베스트 11$/, 1.6], [/^이달의 선수/, 1.3], [/^발롱도르$/, 1.2]];
+// 우승 점수(커리어 점수에서만, 등급·성장 보너스는 그대로): 상위권 우승 몫이 골·도움 몫의 1/3이라 기록 쪽으로 기울었다(사용자 지정)
+const TROPHY_PTS = [[/^챔피언스리그 우승$/, 150], [/^(?!유스).+ 리그 우승$/, 80], [/^월드컵 우승$/, 300]];   // 유스 리그 우승은 0점 그대로
 export function careerScore(state){
   const seen = {};
   const hp = honorsOf(state).reduce((t,h) => {
     const bon = {DF:DF_BONUS, MF:MF_BONUS}[state.pos], mul = bon ? ((bon.find(b => b[0].test(h.n))||[0,1])[1]) : 1;
-    const base = (HONOR_TIER[h.tier]||{p:0}).p*mul, n = +(String(h.n).split('×')[1])||1;
+    const tp = TROPHY_PTS.find(x => x[0].test(String(h.n).split(' ×')[0]));
+    const base = (tp ? tp[1] : (HONOR_TIER[h.tier]||{p:0}).p)*mul, n = +(String(h.n).split('×')[1])||1;
     if(!REPEAT_AW.test(h.n)) return t + base*n;
     const k = seen[h.n] = (seen[h.n]||0) + 1;
     return t + base*REPEAT_PTS[Math.min(k, REPEAT_PTS.length)-1];
