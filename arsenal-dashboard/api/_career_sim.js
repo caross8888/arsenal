@@ -783,6 +783,8 @@ export function playSeason(state, choice){
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
   // 점수용 가중 기록(리그 수준 반비례). 옛 토큰은 지금까지 기록을 가중 1로 시작한다.
   if(C.tot.wg == null){ C.tot.wg = C.tot.goals; C.tot.wa = C.tot.ast; C.tot.wcs = C.tot.cs; }
+  if(C.tot.wap == null) C.tot.wap = C.tot.apps;
+  C.tot.wap += apps*LG_PTS[LT];   // 출전 점수도 리그 수준으로 — 하위 리그는 주전 자리를 쉽게 잡아 출전이 쌓인다
   C.tot.wg += goals*LG_PTS[LT]; C.tot.wa += ast*LG_PTS[LT]; C.tot.wcs += cs*LG_PTS[LT];
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg; C.tot.ca = (C.tot.ca||0) + ca; C.tot.ccs = (C.tot.ccs||0) + ccs;
   C.peak = Math.max(C.peak, cOvr());
@@ -961,7 +963,7 @@ export function careerScore(state){
     const k = seen[h.n] = (seen[h.n]||0) + 1;
     return t + base*REPEAT_PTS[Math.min(k, REPEAT_PTS.length)-1];
   }, 0);
-  return Math.round(state.tot.apps + contribScore(state) + state.tot.caps*2 + state.peak*10 + hp);
+  return Math.round((state.tot.wap ?? state.tot.apps) + contribScore(state) + state.tot.caps*2 + state.peak*10 + hp);
 }
 
 // 시장가치(€M, 재미용): 오버롤과 나이로
