@@ -8,7 +8,7 @@
 // 난수는 커리어 시드 + (나이·선택)으로 정해져서, 같은 시즌에 같은 선택을 하면 결과가 같다.
 // 함수들은 모듈 변수 C에 상태를 걸어 두고 계산한다(요청 하나 안에서만 쓰므로 안전).
 
-import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS } from './_career_data.js';
+import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS, ACADEMY } from './_career_data.js';
 
 export { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS };
 
@@ -45,8 +45,11 @@ const YOUTH_CUT = 0.4, YOUTH_CUT_P = 0.5, YOUTH_CUT_TO = 6, YOUTH_CUT_BEHIND = -
 // 명성 차로 계산해서 큰 구단 유스는 거의 못 뛰고 → 성장 낮고 → 17세에 거의 자동 방출됐다). 또래 수준 = 나이별 기준 + 구단 수준 차의 20%.
 const COHORT = {15:50, 16:53, 17:56}, COHORT_K = 0.2;
 const cohortLv = (club, age) => (COHORT[Math.min(17, Math.max(15, age))]) + (club.r - 75)*COHORT_K;
-// 첫 구단 화면의 아카데미 수준(★1~3) — 유스 성장에 쓰는 코칭 계수(clubCoef, ACAD 포함)의 단계 그대로
-const acadStars = (club, nation) => { const r = club.r + (club.nat===nation ? ACAD[nation]||0 : 0); return r >= 86 ? 3 : r >= 76 ? 2 : 1; };
+// 아카데미 등급(★1~3, 실제 평가 자료 — _career_data.js ACADEMY, CIES 2025). 유스 단계(U-16~U-21) 성장에 ACAD_G를 곱한다.
+// 구단 수준(코칭 계수)과 따로 — 벤피카·아약스·벨레스처럼 "구단은 중상위인데 유스는 최상위"인 곳이 실제로 더 키우게(사용자 지정).
+const acadOf = club => ACADEMY[club.n] || 1;
+const acadStars = club => acadOf(club);
+const ACAD_G = {1:1, 2:1.06, 3:1.12};
 const YOUTH_CC = 0.35;
 // 어린 나이 월반은 문턱을 더 낮춘다(16세 1군 데뷔는 드물게): [U-21 문턱 −, 1군 문턱 −] 나이별
 const EARLY = {16:[8,14], 17:[4,7]};
@@ -201,7 +204,7 @@ export function firstClubs(nation, pos, card, seed){
     }
   }
   // 출전 경쟁은 첫 시즌(15세, 시작 오버롤) 실제 계산과 같게 — 또래 수준과 비교
-  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp((cohortLv(c, 15) - START_OVR)/7))), acad: acadStars(c, nation)}));
+  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp((cohortLv(c, 15) - START_OVR)/7))), acad: acadStars(c)}));
 }
 
 // 첫 구단 무작위 배정 — 지금은 게임에서 쓰지 않고(사용자가 셋 중 고른다) 분석 스크립트의 "아무거나 고르는 사람"용으로 남겨 둔다.
@@ -464,7 +467,7 @@ export function playSeason(state, choice){
     const kid = row0Youth && C.age < 18, yp = kid ? YPLAY_KID : YPLAY;
     if(kid && club.nat !== C.nation) growMul *= ABROAD_G;   // 해외 유스: 큰 리그 아카데미의 경쟁·훈련(자국 유스의 ACAD 보정 대신)
     const play = (row0Youth ? yp[0]+yp[1]*ratio : playCoef(ratio)) * (1 + STAGE_UP*Math.max(0, lv-defLv(C.age)));
-    const cc0 = clubCoef(club.r + (C.age<18 && !onLoan && club.nat===C.nation ? ACAD[C.nation]||0 : 0)), cc = kid ? 1 + (cc0-1)*YOUTH_CC : cc0;
+    const cc0 = clubCoef(club.r + (C.age<18 && !onLoan && club.nat===C.nation ? ACAD[C.nation]||0 : 0)), cc = (kid ? 1 + (cc0-1)*YOUTH_CC : cc0) * (row0Youth && !onLoan ? ACAD_G[acadOf(club)] : 1);
     C.ovr = Math.min(99, C.ovr + C.boost*base*play*cc*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
     declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1);
