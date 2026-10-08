@@ -28,6 +28,9 @@ const STAGE = [{n:'U-16', gap:30, games:26, up:null}, {n:'U-18', gap:30, games:2
 const STAGE_UP = 0.2, YPLAY = [0.9, 0.3];
 // 어린 나이 월반은 문턱을 더 낮춘다(16세 1군 데뷔는 드물게): [U-21 문턱 −, 1군 문턱 −] 나이별
 const EARLY = {16:[8,14], 17:[4,7]};
+// 빅클럽(수준 85+) 16~17세 1군 데뷔(사용자 지정 — 은와네리·야말처럼 극히 드물게, 1만 커리어에 1명꼴): 위 문턱으론 불가능하다(17세에 84+ 필요).
+// 그 나이 빅클럽 유스 중 오버롤 최상위(min)만 후보, 후보 시즌마다 p — 실측 70만 커리어로 맞춘 값(약 1/10,000).
+const PRODIGY = {r:85, min:{16:59, 17:63}, p:0.008};
 // 몸의 소모(사용자 지정): 부상 이력만큼 28세 이후 나이 커브를 그 햇수만큼 앞당긴다 — 잦은 부상·큰 부상이면 정체·하락이 일찍 온다.
 // 일반 부상 +WEAR[0], 서둘러 복귀하다 재부상 +WEAR[1] 더, 큰 부상 +WEAR[2], 최대 WEAR[3]년.
 const WEAR = [0.3, 0.3, 1.0, 3];
@@ -224,6 +227,7 @@ function stageFor(club, keep){
   const g = club.r - cOvr() + (mulberry(C.seed ^ hashStr('stage|'+C.age+'|'+club.n))()-0.5)*4;
   const e = EARLY[C.age] || [0,0];
   if(C.age >= 16) for(let i=3; i>lv; i--) if(g <= STAGE[i].up - e[i-2]){ lv = i; break; }
+  if(lv < 3 && club.r >= PRODIGY.r && cOvr() >= (PRODIGY.min[C.age] ?? 99) && mulberry(C.seed ^ hashStr('prodigy|'+C.age))() < PRODIGY.p){ lv = 3; C.prodigy = true; }
   return lv;
 }
 const clubCoef = r => r>=91 ? CLUB_C[0] : r>=86 ? CLUB_C[1] : r>=76 ? CLUB_C[2] : r>=61 ? CLUB_C[3] : CLUB_C[4];
@@ -680,7 +684,7 @@ export function nextSeason(state, pick, traitPick){
   C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
   C.lv = stageFor(C.club, !moved);
   // 승격 알림: 다음 시즌 준비 화면 맨 위에 한 번(prepView.promo)
-  if(C.lv > Math.max(lv0, defLv(C.age)) || moved && C.lv===3 && C.age<22 && lv0<3) C.stageNote = C.lv===3 ? (C.age<=18 ? '1군에 합류했어요! 또래보다 빠른 데뷔예요.' : '1군에 합류했어요!') : STAGE[C.lv].n+'로 월반했어요! 형들과 부딪히며 더 크게 성장해요.';
+  if(C.lv > Math.max(lv0, defLv(C.age)) || moved && C.lv===3 && C.age<22 && lv0<3) C.stageNote = C.prodigy && C.age<18 ? C.club.n+' 1군에 '+C.age+'세로 데뷔! 구단 역사에 남을 최연소급 데뷔예요.' : C.lv===3 ? (C.age<=18 ? '1군에 합류했어요! 또래보다 빠른 데뷔예요.' : '1군에 합류했어요!') : STAGE[C.lv].n+'로 월반했어요! 형들과 부딪히며 더 크게 성장해요.';
   else if(C.lv===3 && lv0<3) C.stageNote = '1군에 합류했어요.';
   newEvent();
   return C;
