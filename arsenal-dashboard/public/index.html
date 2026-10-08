@@ -1716,12 +1716,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-card[aria-pressed=true]{border-color:var(--gold);background:rgba(200,168,75,.1)}
 .cr-card .t{font-weight:700;font-size:15px}
 .cr-card .d{font-size:12px;color:var(--text-secondary);line-height:1.45;min-height:35px}
-.cr-wbar{display:grid;grid-template-columns:44px 1fr 30px;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary)}
+.cr-wbar{display:grid;grid-template-columns:60px 1fr 30px;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);white-space:nowrap}
 .cr-wbar i{height:5px;border-radius:3px;background:var(--surface3);position:relative;overflow:hidden}
 .cr-wbar i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--c,var(--gold));border-radius:3px}
 .cr-wbar span{text-align:right;font-variant-numeric:tabular-nums}
-.cr-stat{display:grid;grid-template-columns:76px 1fr 40px;align-items:center;gap:8px}
-.cr-stat .n{font-size:13px;font-weight:700}
+.cr-stat{display:grid;grid-template-columns:84px 1fr 40px;align-items:center;gap:8px}
+.cr-stat .n{font-size:13px;font-weight:700;white-space:nowrap}
 .cr-stat .n small{display:block;font-weight:400;font-size:11px;color:var(--gold)}
 .cr-stat .bar{height:8px;border-radius:4px;background:var(--surface3);position:relative;overflow:hidden}
 .cr-stat .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--text-secondary);border-radius:4px}
@@ -1760,8 +1760,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hc-o.age b{color:#fff}
 .cr-hc-o.age{padding-right:12px;border-right:1px solid rgba(255,255,255,.2)}
 .cr-hc-st{display:grid;gap:5px}
-.cr-hc-st>div{display:grid;grid-template-columns:62px 1fr 48px;align-items:center;gap:8px;font-size:12px}
-.cr-hc-st span{color:rgba(255,255,255,.85)}
+.cr-hc-st>div{display:grid;grid-template-columns:74px 1fr 48px;align-items:center;gap:8px;font-size:12px}
+.cr-hc-st span{color:rgba(255,255,255,.85);white-space:nowrap}
 .cr-hc-st i{height:6px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;position:relative}
 .cr-hc-st u{position:absolute;top:0;bottom:0;text-decoration:none}
 .cr-hc-st u.up{background:#4ADE80;border-radius:0 3px 3px 0;transform-origin:left center;min-width:6px;box-shadow:0 0 6px rgba(74,222,128,.8)}
@@ -9287,14 +9287,15 @@ function crAnimStart(from, resumed){
   var p=CR.v.player, df=p.pos==='DF', yth=p.age<18;
   if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf);   // 루프가 둘 돌면 프레임마다 두 번 움직인다
   // 부상 뒤 이어 갈 때는 멈췄던 숫자부터(부상 응답의 최소 기록 × 멈춘 지점), 처음엔 0부터
-  var pre0=resumed && CR.injPre ? CR.injPre.map(function(f){ return Math.round(f*from); }) : [0,0,0];
+  var lbs=df?['경기','골','도움','클린시트']:['경기','골','도움'];   // 수비수는 도움도 함께(풀백·윙백은 도움이 본업)
+  var pre0=resumed && CR.injPre ? CR.injPre.map(function(f){ return Math.round(f*from); }) : lbs.map(function(){ return 0; });
   if(!resumed) CR.injPre=null;
   CR.anim={t:from, from:from, target:null, v:null, stopAt:null, raf:null, resumed:!!resumed, last:null, shown:pre0.slice()};
   crRender('<div class="cr-top"><div></div><div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
     +'<div class="cr-panel cr-anim"><div class="cr-lbl"><b>'+crSeasonLabel(p.age)+' 시즌 · '+gmEsc(p.club.team)+'</b><span id="crAnTick">'+(yth?'유스 리그':'리그')+'</span></div>'
     +'<div class="cr-months">'+CR_MONTHS.map(function(m,i){ return '<span data-i="'+i+'">'+m+'</span>'; }).join('')+'</div>'
     +'<div class="cr-anbar" id="crAnTrack"><i id="crAnBar"></i><em id="crAnKnob"></em></div>'
-    +'<div class="cr-rs" style="grid-template-columns:repeat(3,1fr)"><div><b id="crAn0">'+pre0[0]+'</b><span>경기</span></div><div><b id="crAn1">'+pre0[1]+'</b><span>골</span></div><div><b id="crAn2">'+pre0[2]+'</b><span>'+(df?'클린시트':'도움')+'</span></div></div>'
+    +'<div class="cr-rs" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l,i){ return '<div><b id="crAn'+i+'">'+pre0[i]+'</b><span>'+l+'</span></div>'; }).join('')+'</div>'
     +'<div class="cr-anmsg" id="crAnMsg"></div></div>',
     '<button class="gm-btn ghost" style="flex:1" onclick="crAnimSkip()">건너뛰기</button>');
   window.scrollTo(0,0);
@@ -9327,8 +9328,8 @@ function crAnimFrame(){
   // 숫자는 시즌 진행률만큼 기록에 비례해 올린다. 결과가 오면 최종 기록, 부상 응답이면 그 "최소 기록"(pre)으로
   // 부상 시점까지 올리고, 이어 갈 땐 앞서 보인 숫자 밑으로 내려가지 않게 한다.
   var R=A.v && A.v.result, dfp=CR.v.player.pos==='DF', fin=null;
-  if(R) fin=[R.row.apps, R.row.goals, dfp?R.row.cs:R.row.ast];
-  else if(A.v && A.v.pre){ fin=[A.v.pre.apps, A.v.pre.goals, dfp?A.v.pre.cs:A.v.pre.ast]; CR.injPre=fin; }
+  if(R) fin=[R.row.apps, R.row.goals, R.row.ast].concat(dfp?[R.row.cs]:[]);
+  else if(A.v && A.v.pre){ fin=[A.v.pre.apps, A.v.pre.goals, A.v.pre.ast].concat(dfp?[A.v.pre.cs]:[]); CR.injPre=fin; }
   else if(A.resumed && CR.injPre) fin=CR.injPre;
   if(fin){
     fin.forEach(function(f,i){
@@ -9380,7 +9381,7 @@ function crResult(){
   var dCls=r.dOvr>0?'up':r.dOvr<0?'down':'', lg=r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그';
   var h='<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+p.seasons+' 결과</div></div>'+crHead()
    +'<div class="cr-panel"><div class="cr-lbl"><b>'+r.age+'세 시즌 · '+gmEsc(r.team)+(r.loan?' (임대)':'')+'</b><span>'+lg+' '+r.rank+'위</span></div>'
-   +'<div class="cr-rs">'+[[r.apps,'경기'],[r.starts,'선발'],[r.goals,'골'],p.pos==='DF'?[r.cs,'클린시트']:[r.ast,'도움'],[r.apps?r.rating.toFixed(2):'—','평점']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
+   +'<div class="cr-rs"'+(p.pos==='DF'?' style="grid-template-columns:repeat(6,1fr)"':'')+'>'+[[r.apps,'경기'],[r.starts,'선발'],[r.goals,'골'],[r.ast,'도움']].concat(p.pos==='DF'?[[r.cs,'클린시트']]:[]).concat([[r.apps?r.rating.toFixed(2):'—','평점']]).map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
    +'<div class="cr-dovr '+dCls+'"><span>오버롤</span><b>'+r.ovrBefore+' → <span id="crOvrTo">'+(CR.fresh?r.ovrBefore:r.ovr)+'</span></b><em>'+(r.dOvr>0?'+':'')+r.dOvr+'</em></div>'
    +(r.hon.length?'<div class="cr-badges'+(CR.fresh?' pop':'')+'">'+r.hon.map(function(h,i){ return crHonBadge(h).replace('<span class="','<span style="animation-delay:'+(0.3+i*0.12)+'s" class="'); }).join('')+'</div>':'')
    +(r.notes.length||R.forced?'<ul class="cr-notes">'+r.notes.map(function(t){ return '<li>'+gmEsc(t)+'</li>'; }).join('')
