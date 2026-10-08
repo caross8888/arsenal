@@ -8739,7 +8739,7 @@ function gameBoard(){
 // 선수 한 명을 15세 유스부터 은퇴까지 키운다. 계산(성장·기록·수상·이적)은 전부 서버가 하고 여기는 받은 화면 데이터를
 // 그리고 고른 것을 보낼 뿐이다. 진행 상태는 서버가 준 암호화 토큰을 이 기기 localStorage에 둔다(같은 기기에서 이어 하기).
 // 화면은 목업(docs/career-mode/mockup.html)을 옮긴 것이고, 클래스는 다른 화면과 겹치지 않게 cr- 접두어.
-var CR = {meta:null, S:null, tok:null, v:null, train:'균형', evPick:null, pick:null, busy:false, armed:null, firstClubs:null, firstPick:null};
+var CR = {meta:null, S:null, tok:null, v:null, train:'균형', evPick:null, pick:null, busy:false, armed:null, firstClubs:null};
 var CR_KEY='careerToken', CR_INFO='careerInfo';
 function crSaved(){
   try{ var t=localStorage.getItem(CR_KEY); return t ? {tok:t, info:JSON.parse(localStorage.getItem(CR_INFO)||'null')||{}} : null; }catch(e){ return null; }
@@ -8837,7 +8837,7 @@ function crResume(){
 var CR_POS=[{id:'FW',n:'공격수',d:'골과 찬스를 만든다'},{id:'MF',n:'미드필더',d:'경기를 조율한다'},{id:'DF',n:'수비수',d:'골문을 지킨다'}];
 function crNew(){
   CR.S={step:1, name:'', nation:null, foot:null, pos:null, num:null, dream:null, card:null};
-  CR.firstClubs=null; CR.firstPick=null; CR.tok=null; CR.train='균형';
+  CR.firstClubs=null; CR.tok=null; CR.train='균형';
   crPage1(); window.scrollTo(0,0);
 }
 function crRandName(){
@@ -8905,32 +8905,32 @@ function crPage2(){
   window.scrollTo(0,0);
 }
 
-// ── 3페이지: 첫 구단(자국 유스팀 세 곳) ────────────────────────────────
+// ── 3페이지: 첫 구단(배정) ────────────────────────────────────────────
 function crPage3(btn){
   var S=CR.S;
   if(CR.firstClubs) return crPage3Render();
   if(!crBusy(btn,'불러오는 중...')) return;
   crApi('new', {name:S.name.trim(), nation:S.nation, foot:S.foot, pos:S.pos, card:S.card, num:S.num, dream:S.dream}).then(function(d){
-    CR.busy=false; CR.tok=d.token; CR.firstClubs=d.clubs; CR.firstPick=null; crPage3Render(); window.scrollTo(0,0);
+    CR.busy=false; CR.tok=d.token; CR.firstClubs=d.clubs; crPage3Render(); window.scrollTo(0,0);
   }).catch(function(e){ CR.busy=false; if(btn){ btn.disabled=false; btn.textContent='다음 · 첫 구단'; } gameToast(e.message); });
 }
 function crPage3Render(){
-  var S=CR.S, c0=CR.meta.cards[S.pos][S.card], list=CR.firstClubs;
+  // 첫 구단은 배정된다(서버가 커리어 시드로 정함) — 고르게 하면 "도전"이 늘 정답이었다
+  var S=CR.S, c0=CR.meta.cards[S.pos][S.card], o=CR.firstClubs[0];
+  var why={'도전':'명문 유스팀에 뽑혔어요. 출전 기회는 적지만, 뛰기만 하면 크게 성장해요.','적정':'수준에 맞는 유스팀에 들어갔어요. 꾸준히 뛰면서 성장할 수 있어요.','안정':'작은 유스팀에서 시작해요. 자주 뛸 수 있는 대신 성장 폭은 작아요.','해외':'부모님과 함께 해외로 건너가 현지 유스팀에서 시작해요.'}[o.kind]||'';
   crRender('<div class="cr-top"><button class="gm-back" onclick="crPage2()">← 이전</button>'+crSteps(3)+'</div>'
-   +'<h1 class="cr-h1">FIRST <span>CLUB</span></h1><p class="cr-sub">3 / 3 · 유스팀 '+list.length+'곳에서 제안이 왔어요</p>'
+   +'<h1 class="cr-h1">FIRST <span>CLUB</span></h1><p class="cr-sub">3 / 3 · 첫 구단이 정해졌어요</p>'
    +'<div class="cr-me"><div><div class="v">'+c0.ovr+'</div><div class="l">오버롤</div></div><div><div class="v" style="font-family:var(--fb);font-size:15px;font-weight:700;line-height:1.9">'+gmEsc(c0.n)+'</div><div class="l">유형</div></div><div><div class="v">15</div><div class="l">나이</div></div></div>'
-   +'<p class="cr-note">큰 구단일수록 출전 기회는 적지만, 뛰기만 하면 훨씬 크게 성장해요. 작은 구단은 자주 뛰는 대신 성장 폭이 작아요.'
-     +(list.some(function(o){ return o.kind==='해외'; })?' 부모님과 함께 해외로 건너가 현지 유스팀에서 시작하는 길도 열렸어요.':'')+'</p>'
-   +'<div class="cr-list">'+list.map(function(o,k){
-     return '<button class="cr-club" aria-pressed="'+(CR.firstPick===k)+'" onclick="CR.firstPick='+k+';crPage3Render()">'+crCrest(o,44)
+   +'<div class="cr-list"><div class="cr-club" aria-pressed="true">'+crCrest(o,44)
       +'<div><div class="tag">'+(o.kind==='해외'?'✈ 해외 유스':o.kind)+(S.dream===o.n?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+gmEsc(o.n)+' U-16</div>'
       +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+'</div>'+crGrow(o.grow)+'</div>'
-      +'<div>'+crChance(o.chance)+'</div></button>'; }).join('')+'</div>',
-   '<div class="sum">선택<br>'+(CR.firstPick!=null?gmEsc(list[CR.firstPick].n):'—')+'</div><button class="gm-btn" '+(CR.firstPick!=null?'':'disabled')+' onclick="crJoin(this)">입단 · 커리어 시작</button>');
+      +'<div>'+crChance(o.chance)+'</div></div></div>'
+   +'<p class="cr-note">'+why+'</p>',
+   '<button class="gm-btn" onclick="crJoin(this)">입단 · 커리어 시작</button>');
 }
 function crJoin(btn){
   if(!crBusy(btn,'입단 중...')) return;
-  crApi('join', {token:CR.tok, pick:CR.firstPick}).then(crShow).catch(crErr);
+  crApi('join', {token:CR.tok}).then(crShow).catch(crErr);
 }
 
 // ── 서버 응답 → 화면 ──────────────────────────────────────────────────

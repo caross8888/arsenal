@@ -180,6 +180,14 @@ export function firstClubs(nation, pos, card, seed){
   return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp(((c.r-YOUTH_GAP)-myRep)/7))), grow: growLv(c.r + (c.nat===nation ? ACAD[nation]||0 : 0))}));
 }
 
+// 첫 구단은 고르지 않고 시드로 배정한다(사용자 지정): 고르게 하면 "도전"이 하위 10%까지 늘 유리한 정답이었다(점수 평균 +18% vs 적정, +43% vs 안정).
+// 도전·적정·안정 중 하나를 같은 확률로, 해외 유스 선택지가 나온 커리어는 절반 확률로 해외 유스.
+export function assignedFirst(nation, pos, card, seed){
+  const list = firstClubs(nation, pos, card, seed), r = mulberry((seed>>>0) ^ hashStr('assign'));
+  const abroad = list.findIndex(o => o.kind === '해외');
+  if(abroad >= 0 && r() < 0.5) return abroad;
+  return Math.floor(r() * Math.min(3, list.length));
+}
 export function createCareer(input, clubIdx, seed){
   const {name, nation, foot, pos, card, num, dream} = input;
   const o = firstClubs(nation, pos, card, seed)[clubIdx];
