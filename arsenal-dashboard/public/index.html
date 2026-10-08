@@ -1916,6 +1916,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-sf-tot{display:grid;text-align:center;color:#F0F2F7;animation:crIvUp .45s .5s ease-out both}
 .cr-sf-tot b{display:block;font-family:var(--fd);font-size:30px;font-weight:400;line-height:1.1}.cr-sf-tot span{font-size:11px;color:rgba(255,255,255,.75)}
 .cr-sf-tot b.bump{animation:gmScoreBump .45s ease-out}
+.cr-sf-feed{display:flex;flex-direction:column;gap:6px;height:146px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent);mask-image:linear-gradient(180deg,#000 62%,transparent)}
+.cr-sf-feed.mini{height:60px;-webkit-mask-image:none;mask-image:none}
+.cr-sf-post{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;padding:8px 11px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#F0F2F7;animation:crSfPost .35s cubic-bezier(.2,1.3,.4,1) both}
+.cr-sf-post>i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;color:#fff}
+.cr-sf-post b{display:block;font-size:11px;color:rgba(255,255,255,.6);font-weight:600}.cr-sf-post span{display:block;font-size:13.5px;line-height:1.35}
+.cr-sf-post em{font-style:normal;font-size:11px;color:#FCA5A5;white-space:nowrap}
+@keyframes crSfPost{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
 .cr-sf-flash{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;font-family:var(--fd);font-size:64px;line-height:1;color:#FFE38A;text-shadow:0 0 24px rgba(255,200,80,.7),0 4px 0 rgba(0,0,0,.4);opacity:0}
 .cr-sf-flash.a{color:#86EFAC;text-shadow:0 0 24px rgba(34,197,94,.7),0 4px 0 rgba(0,0,0,.4)}
 .cr-sf-flash.on{animation:crSfFlash .75s ease-out both}
@@ -9428,9 +9435,65 @@ function crSfOpen(still){
     +'<div class="cr-sf-wall" id="crSfWall"></div>'
     +'<div class="cr-sf-leg">'+[['#16a34a','선발'],['rgba(34,197,94,.45)','교체'],['rgba(255,255,255,.25)','출전 없음'],['#b91c1c','부상']].map(function(x){ return '<span><i style="background:'+x[0]+'"></i>'+x[1]+'</span>'; }).join('')+'</div>'
     +'<div class="cr-sf-tot" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l){ return '<div><b id="crSfN_'+l[0]+'">0</b><span>'+l[1]+'</span></div>'; }).join('')+'</div>'
+    +'<div class="cr-sf-feed" id="crSfFeed" aria-live="off"></div>'
     +'<div id="crSfExtra"><button class="cr-ss-skip" id="crSfSkip" onclick="crSfSkip()">건너뛰기 ›</button></div>'
     +'<div class="cr-sf-flash" id="crSfFlash" aria-hidden="true"></div></div></div>');
-  CR.sf.t0=Date.now();
+  CR.sf.t0=Date.now(); crSfFeedStart();
+}
+// ── 팬 반응 피드(사용자 지정 — SNS 한마디가 빠르게 올라와 관심받는 느낌) ── 선수 상황(유스·어린 1군·전성기·베테랑·스타·해외·유리몸)에 맞는
+// 문구가 0.4초마다 하나씩 올라오고(최근 3개만 보인다), 골·도움·무실점·벤치 연속·부상·시즌 끝엔 그 반응이 먼저 끼어든다.
+var CR_FAN={
+  youth:['우리 유스에 이런 선수가 있었다고??','다치지 말고 잘 커다오 🙏','{n} 1군 콜업 언제냐','유스 경기 직관 가야 하나','벌써 에이전트들 붙었다던데','이 나이에 저 볼터치 실화?','제발 다른 팀에 뺏기지 말자','유스 영상 돌려보는 중 ㅋㅋ'],
+  young:['이 나이에 이 정도면 미래 확정','재계약 빨리 해라 진짜','성장 속도 무섭다','국대 감독 보고 있나?','유니폼에 {n} 마킹했음 ㅋㅋ','{n} 아직 어린 거 실화?'],
+  prime:['{n} 경기는 믿고 본다','오늘도 {n} 보러 왔다','폼 미쳤다 진짜','{club}의 핵심','이 선수 없었으면 어쩔 뻔','{n} 클래스 여전하네'],
+  vet:['아직 죽지 않았다 {n}','레전드 대우 해줘라','은퇴하지 마 제발 ㅠㅠ','노련미 뭔데','{n} 끝까지 함께하자','관리 잘하는 거 보소'],
+  star:['월드클래스 맞네','발롱 각 아니냐','{n} 이적설 또 떴던데… 제발 남아줘','{n} 보려고 시즌권 끊음'],
+  low:['기회 좀 줘봐라 감독','벤치에만 두기 아깝다','{n} 언제 터지냐','훈련장에선 제일 잘한다던데'],
+  abroad:['{nat}에서 온 그 선수 맞지?','{nat} 팬들도 보고 있다 👀','적응 잘하는 듯','언어는 좀 늘었으려나 ㅋㅋ'],
+  glass:['제발 이번 시즌은 안 다치길…','몸 관리만 하면 되는데'],
+  goal:['골!!! {n}!!!','또 넣었냐 ㅋㅋㅋ','{n} 미쳤다','이번 시즌 득점왕 가자','골 냄새 맡는 거 봐라','오늘 MOM 확정','소리 질렀다 지금'],
+  brace:['멀티골 ㄷㄷ','두 골은 기본이지','오늘 {n} 날이네'],
+  hat:['해트트릭 실화??','공 집에 가져가라 ㅋㅋ','{n} 미쳤다 진짜로'],
+  assist:['패스 센스 뭐냐','어시 각도 미쳤다','{n} 킬패스 ㄷㄷ','이타적인 거 봐라'],
+  cs:['뒷문 단단하다','{n} 있으면 안 뚫림','통곡의 벽','오늘 수비 미쳤다'],
+  bench:['왜 {n} 안 씀?','감독 {n} 좀 써라','벤치 실화냐','{n} 몸 상태 안 좋나?'],
+  injury:['아… 제발 큰 부상 아니길','다치지 말라고 했잖아 ㅠㅠ','{n} 빨리 돌아와','의료진 일 좀 해라','가슴이 철렁했다'],
+  win:['우승이다!!!!','{club} 챔피언!!','{n} 우승 축하해 ㅠㅠ'],
+  end:['수고했다 {n}','다음 시즌도 기대한다','{n} 이번 시즌 정리 ㄷㄷ','시즌 끝나니까 허전하네']};
+var CR_FAN_ID=['직관러','시즌권12년차','유스덕후','전술충','새벽축구','north_bank','gooner_1886','축구는과학','원정팬','치킨각','kop_kr','ultras_09','라인브레이커','풀백장인','하이라이트봇아님'];
+function crSfFeedStart(){
+  var S=CR.sf, p=CR.v.player, yth=p.age<18 || /U-\d+$/.test(p.club.team||''), pool=[];
+  var add=function(k, w){ for(var i=0;i<(w||1);i++) pool=pool.concat(CR_FAN[k]); };
+  if(yth) add('youth',2); else if(p.age<=21) add('young',2); else if(p.age>=31) add('vet',2); else add('prime',2);
+  if(p.ovr>=86 || p.peak>=88) add('star');
+  if(!yth && p.ovr<68) add('low');
+  if(p.club.nat!==p.nation) add('abroad');
+  if(p.glass) add('glass');
+  S.fan={pool:pool, q:[], last:[], bench:0};
+  var tick=function(){
+    if(CR.sf!==S || !document.getElementById('crSfFeed')) return;
+    var t=S.fan.q.shift();
+    var src=S.fan.hurt?CR_FAN.injury:pool;   // 부상 질문 중엔 걱정하는 반응만
+    if(!t && !S.fan.hold){ var k=0; do { t=src[Math.floor(Math.random()*src.length)]; } while(S.fan.last.indexOf(t)>=0 && ++k<8); }
+    if(t) crSfSay(t);
+    S.fan.timer=setTimeout(tick, 380+Math.random()*180);
+  };
+  S.fan.timer=setTimeout(tick, 350);
+}
+function crSfReact(k){   // 사건 반응은 줄 맨 앞으로(밀려 있던 건 하나만 남긴다)
+  var S=CR.sf; if(!S || !S.fan) return;
+  var a=CR_FAN[k]; S.fan.q=[a[Math.floor(Math.random()*a.length)]].concat(S.fan.q.slice(0,1));
+}
+function crSfSay(t){
+  var S=CR.sf, f=document.getElementById('crSfFeed'); if(!f) return;
+  var p=CR.v.player;
+  S.fan.last=[t].concat(S.fan.last).slice(0,6);
+  var txt=t.replace(/\{n\}/g, p.name).replace(/\{club\}/g, p.club.n.replace(/ U-\d+$/,'')).replace(/\{nat\}/g, crNat(p.nation).n);
+  var id=CR_FAN_ID[Math.floor(Math.random()*CR_FAN_ID.length)], hue=Math.floor(Math.random()*360);
+  var el=document.createElement('div'); el.className='cr-sf-post';
+  el.innerHTML='<i style="background:hsl('+hue+',55%,45%)">'+gmEsc(id.slice(0,1).toUpperCase())+'</i><div><b>@'+gmEsc(id)+'</b><span>'+gmEsc(txt)+'</span></div><em>♥ '+(1+Math.floor(Math.random()*480))+'</em>';
+  f.insertBefore(el, f.firstChild);
+  while(f.children.length>3) f.removeChild(f.lastChild);
 }
 function crSfClose(){ if(CR.sf) clearTimeout(CR.sf.timer); CR.sf=null; crTovSet(''); }
 // 합계를 from..to 경기 칸에 나눈다(시드 고정). out: 이 구간 앞쪽 몇 칸은 부상 결장.
@@ -9497,6 +9560,10 @@ function crSfRun(list, done){
 function crSfMatch(m, quiet){   // 한 경기: 전광판·칸·합계. 골/도움이면 true(조금 더 머문다)
   var S=CR.sf, p=CR.v.player, cell=document.querySelector('#crSfWall i[data-k="'+m.k+'"]'), b=document.getElementById('crSfBoard');
   if(m.pl){ S.n.apps++; S.n.goals+=m.g; S.n.ast+=m.a; S.n.cs+=m.cs; }
+  if(!quiet && S.fan){
+    S.fan.bench=m.pl||m.inj ? 0 : S.fan.bench+1;
+    if(m.g) crSfReact(m.g>2?'hat':m.g>1?'brace':'goal'); else if(m.a) crSfReact('assist'); else if(m.cs && p.pos==='DF' && Math.random()<0.5) crSfReact('cs'); else if(S.fan.bench===3) crSfReact('bench');
+  }
   S.i=m.k+1;
   if(cell){ cell.className=(m.inj?'inj':m.pl||'off')+(quiet?'':' pop'); cell.innerHTML=m.inj?'':(m.g?'<em>⚽'+(m.g>1?m.g:'')+'</em>':m.a?'<em>🅰</em>':m.cs&&p.pos==='DF'?'<em>🧤</em>':''); }
   S.lbs.forEach(function(l){ var el=document.getElementById('crSfN_'+l[0]); if(el && el.textContent!=String(S.n[l[0]])){ el.textContent=S.n[l[0]]; if(!quiet){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } } });
@@ -9512,6 +9579,7 @@ function crSfSkip(){ if(CR.sf){ CR.sf.skip=true; clearTimeout(CR.sf.timer); var 
 function crSfEnd(v){
   var S=CR.sf, r=v.result.row, b=document.getElementById('crSfBoard'), x=document.getElementById('crSfExtra');
   if(S) S.done=null;
+  if(S && S.fan){ crSfReact(r.rank===1&&!r.youth?'win':'end'); S.fan.hold=true; }
   if(b) b.innerHTML='<div class="md">FULL TIME · 시즌 종료</div><div class="ft"><b>'+r.rank+'위</b><span>'+(r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그')+(r.apps?' · 평점 '+r.rating.toFixed(2):'')+'</span></div>';
   if(b){ b.classList.remove('end'); void b.offsetWidth; b.classList.add('end'); }
   if(x) x.innerHTML='';
@@ -9523,6 +9591,7 @@ function crSfInjury(v){
   var j=v.injury, b=document.getElementById('crSfBoard'), cell=document.querySelector('#crSfWall i[data-k="'+S.injAt+'"]'), x=document.getElementById('crSfExtra');
   CR.busy=false; S.done=null;
   if(cell) cell.className='inj pop';
+  crSfReact('injury'); var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('mini'); if(S.fan) S.fan.hurt=true;   // 부상 카드 자리 확보: 피드는 한 줄만
   if(b){ b.innerHTML='<div class="md">MATCHDAY '+(S.injAt+1)+'</div><div class="inj"><span aria-hidden="true">🚑</span><b>'+gmEsc(j.name)+'</b></div><div class="ln"><span class="x">'+(j.major?'큰 부상 · ':'')+'예상 결장 '+j.games+'경기</span></div>'; b.classList.add('hurt'); }
   var opt=function(k, ic, t, d){ return '<button class="cr-inj-c" style="--from:'+(k?'60px':'-60px')+';--d:'+(0.25+k*0.12)+'s" onclick="crInjPick('+k+',this)"><span class="e" aria-hidden="true">'+ic+'</span><b>'+t+'</b><span class="d">'+d+'</span></button>'; };
   if(x) x.innerHTML='<div class="cr-inj"><div class="hd"><span>'+(j.major?'시즌 대부분을 쉬어야 해요. 어떻게 할까요?':'복귀 시점을 정해 주세요.')+'</span></div><div class="cr-inj-row">'+(j.major
@@ -9542,6 +9611,7 @@ function crInjPick(k, btn){
   var go=function(){
     if(err){ CR.busy=false; crSfInjury(CR.v); return crErr(err); }
     var b=document.getElementById('crSfBoard'), x=document.getElementById('crSfExtra');
+    var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.remove('mini'); if(S.fan) S.fan.hurt=false;
     if(b) b.classList.remove('hurt'); if(x) x.innerHTML='<button class="cr-ss-skip" onclick="crSfSkip()">건너뛰기 ›</button>';
     S.skip=false; S.t0=Date.now()-450; crSfData(res);
   };
