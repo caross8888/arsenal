@@ -1873,18 +1873,54 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-anbar em{position:absolute;top:50%;left:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(239,1,7,.2);will-change:transform}
 .cr-anim .cr-rs b{transition:color .2s}
 .cr-anim .cr-rs b.bump{animation:gmScoreBump .45s ease-out}
-.cr-ss{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;
-  background:radial-gradient(110% 70% at 50% 110%,rgba(20,70,40,.55),transparent 60%),radial-gradient(120% 80% at 50% 0%,rgba(18,22,40,.95),rgba(5,6,12,.97) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
-.cr-ss.still,.cr-ss.still *{animation-duration:0s!important;animation-delay:0s!important}
-.cr-ss .beam{position:absolute;top:-10%;width:46%;height:90%;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,240,.16),rgba(255,255,240,0) 80%);filter:blur(6px);opacity:0;animation:crSsBeam 1.2s .15s ease-out both}
-.cr-ss .beam.l{left:-6%;transform:skewX(18deg);transform-origin:top}.cr-ss .beam.r{right:-6%;transform:skewX(-18deg);transform-origin:top;animation-delay:.35s}
-@keyframes crSsBeam{0%{opacity:0}40%{opacity:1}55%{opacity:.6}100%{opacity:1}}
-.cr-ss-box{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px;margin:auto 0}
-.cr-ss .tag{align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .1s ease-out both}
-.cr-ss-club{display:flex;align-items:center;justify-content:center;gap:12px;color:#F0F2F7;animation:crIvUp .45s .25s ease-out both}
-.cr-ss-club b{display:block;font-size:18px}.cr-ss-club span{font-size:12.5px;color:rgba(255,255,255,.75)}
-.cr-ss .cr-anim{margin:0;box-shadow:0 12px 34px rgba(0,0,0,.45);animation:crIvUp .45s .4s ease-out both}
+#crSfExtra{display:flex;flex-direction:column}
 .cr-ss-skip{align-self:center;border:0;background:none;color:rgba(255,255,255,.75);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer}
+.cr-sf{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px 16px;overflow:hidden auto;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.022) 0 40px,transparent 40px 80px),radial-gradient(120% 70% at 50% 100%,rgba(16,74,40,.75),rgba(6,14,10,.96) 65%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
+.cr-sf.still,.cr-sf.still *{animation-duration:0s!important;animation-delay:0s!important}
+.cr-sf .glow{position:absolute;left:50%;top:-30%;width:140%;height:70%;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(255,255,230,.18),transparent);pointer-events:none;animation:crSfLights 1.1s .1s ease-out both}
+@keyframes crSfLights{0%{opacity:0}30%{opacity:1}45%{opacity:.4}60%{opacity:1}}
+.cr-sf-box{position:relative;width:100%;max-width:460px;display:flex;flex-direction:column;gap:12px;margin:auto 0}
+.cr-sf-top{display:flex;flex-direction:column;align-items:center;gap:6px;color:#F0F2F7;animation:crIvUp .4s .1s ease-out both}
+.cr-sf-top .tag{font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px}
+.cr-sf-top .club{display:flex;align-items:center;gap:8px}.cr-sf-top .club b{font-size:16px}.cr-sf-top .club span{font-size:12px;color:rgba(255,255,255,.75)}
+.cr-sf-board{position:relative;min-height:118px;display:flex;flex-direction:column;justify-content:center;gap:8px;text-align:center;border-radius:16px;padding:12px 14px;color:#F0F2F7;
+  background:linear-gradient(180deg,#14161d,#0b0c11);border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 0 0 4px rgba(0,0,0,.35),0 14px 34px rgba(0,0,0,.5);animation:crIvUp .45s .25s ease-out both}
+.cr-sf-board .md{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#C8A84B}
+.cr-sf-board .ko{font-size:14px;color:rgba(255,255,255,.75)}.cr-sf-board .ko b{color:#F0F2F7}
+.cr-sf-board .whistle{display:block;font-size:30px;margin-bottom:4px;animation:crTrBounce .7s .2s cubic-bezier(.2,1.5,.4,1) both}
+.cr-sf-board .sc{display:grid;grid-template-columns:1fr auto auto auto 1fr;align-items:center;gap:8px}
+.cr-sf-board .sc .t{font-size:13px;line-height:1.25;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis}
+.cr-sf-board .sc .t:first-child{text-align:right}.cr-sf-board .sc .t:last-child{text-align:left}.cr-sf-board .sc .t.me{color:#F0F2F7;font-weight:700}
+.cr-sf-board .sc b{font-family:var(--fd);font-size:38px;font-weight:400;line-height:1;color:#FFE38A;text-shadow:0 0 12px rgba(255,200,80,.45);min-width:26px}
+.cr-sf-board .sc i{font-style:normal;color:rgba(255,255,255,.4);font-size:22px}
+.cr-sf-board .ln{display:flex;justify-content:center;flex-wrap:wrap;gap:5px;min-height:22px}
+.cr-sf-board .c{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:rgba(255,255,255,.1);color:#F0F2F7}
+.cr-sf-board .c.g{background:rgba(200,168,75,.22);color:#FFE38A}.cr-sf-board .c.a{background:rgba(34,197,94,.18);color:#4ADE80}.cr-sf-board .c.s{background:rgba(96,165,250,.18);color:#93C5FD}
+.cr-sf-board .x{font-size:12px;color:rgba(255,255,255,.6)}
+.cr-sf-board .ft b{display:block;font-family:var(--fd);font-size:46px;font-weight:400;line-height:1;color:#FFE38A}.cr-sf-board .ft span{font-size:13px;color:rgba(255,255,255,.75)}
+.cr-sf-board.end{animation:crPkPop .5s cubic-bezier(.2,1.6,.4,1)}
+.cr-sf-board.hurt{border-color:rgba(239,68,68,.6);box-shadow:inset 0 0 0 4px rgba(0,0,0,.35),0 0 0 3px rgba(239,68,68,.25),0 14px 34px rgba(0,0,0,.5);animation:crSfHurt .5s ease-out}
+.cr-sf-board .inj{display:flex;align-items:center;justify-content:center;gap:8px;font-size:22px}.cr-sf-board .inj b{color:#FCA5A5}
+@keyframes crSfHurt{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+.cr-sf-wall{display:grid;grid-template-columns:repeat(var(--cols,10),1fr);gap:5px;padding:10px;border-radius:14px;background:rgba(0,0,0,.28);animation:crIvUp .45s .4s ease-out both}
+.cr-sf-wall i{position:relative;aspect-ratio:1;border-radius:6px;background:transparent;border:1px dashed rgba(255,255,255,.14)}
+.cr-sf-wall i.start{background:#16a34a;border-color:#22C55E}.cr-sf-wall i.sub{background:rgba(34,197,94,.35);border-color:rgba(34,197,94,.5)}
+.cr-sf-wall i.start,.cr-sf-wall i.sub,.cr-sf-wall i.off,.cr-sf-wall i.inj{border-style:solid}
+.cr-sf-wall i.off{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.2)}.cr-sf-wall i.inj{background:#b91c1c;border-color:#EF4444}
+.cr-sf-wall i.pop{animation:crSfPop .3s cubic-bezier(.2,1.8,.4,1)}
+.cr-sf-wall em{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-size:11px;line-height:1;white-space:nowrap}
+@keyframes crSfPop{from{transform:scale(.3)}to{transform:none}}
+.cr-sf-leg{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 12px;margin-top:-4px;font-size:11px;color:rgba(255,255,255,.75)}
+.cr-sf-leg span{display:inline-flex;align-items:center;gap:5px}.cr-sf-leg i{width:10px;height:10px;border-radius:3px}
+.cr-sf-tot{display:grid;text-align:center;color:#F0F2F7;animation:crIvUp .45s .5s ease-out both}
+.cr-sf-tot b{display:block;font-family:var(--fd);font-size:30px;font-weight:400;line-height:1.1}.cr-sf-tot span{font-size:11px;color:rgba(255,255,255,.75)}
+.cr-sf-tot b.bump{animation:gmScoreBump .45s ease-out}
+.cr-sf-flash{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;font-family:var(--fd);font-size:64px;line-height:1;color:#FFE38A;text-shadow:0 0 24px rgba(255,200,80,.7),0 4px 0 rgba(0,0,0,.4);opacity:0}
+.cr-sf-flash.a{color:#86EFAC;text-shadow:0 0 24px rgba(34,197,94,.7),0 4px 0 rgba(0,0,0,.4)}
+.cr-sf-flash.on{animation:crSfFlash .75s ease-out both}
+@keyframes crSfFlash{0%{opacity:0;transform:scale(.4) rotate(-6deg)}25%{opacity:1;transform:scale(1.08) rotate(-3deg)}70%{opacity:1;transform:scale(1) rotate(-3deg)}100%{opacity:0;transform:scale(1.15) rotate(-3deg)}}
+@media (prefers-reduced-motion: reduce){.cr-sf,.cr-sf *{animation:none!important}}
 .cr-inj{display:flex;flex-direction:column;gap:10px;animation:crIvUp .35s ease-out both}
 .cr-inj .hd{text-align:center;color:#F0F2F7}.cr-inj .hd b{display:block;font-size:17px;color:#FCA5A5}.cr-inj .hd span{font-size:13px;color:rgba(255,255,255,.75)}
 .cr-pk-on{position:relative;border-color:#C8A84B!important;background:rgba(200,168,75,.18)!important;box-shadow:0 0 0 3px rgba(200,168,75,.3),0 10px 26px rgba(0,0,0,.35);animation:crPkPop .4s cubic-bezier(.2,1.6,.4,1) both!important;opacity:1!important}
@@ -1897,7 +1933,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-inj-c .e{font-size:30px;line-height:1}.cr-inj-c b{font-size:15px;line-height:1.35}.cr-inj-c .d{font-size:12px;line-height:1.45;color:rgba(255,255,255,.75)}
 .cr-inj-c:hover,.cr-inj-c:focus-visible,.cr-inj-c[aria-pressed="true"]{border-color:#C8A84B;transform:translateY(-3px)}
 @keyframes crInjIn{from{opacity:0;transform:translateX(var(--from)) scale(.94)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion: reduce){.cr-ss,.cr-ss *{animation:none!important}}
 .cr-anmsg{min-height:30px;text-align:center;font-family:var(--fd);font-size:26px;letter-spacing:1px}
 .cr-anmsg span{display:inline-block;animation:crPop .45s cubic-bezier(.3,1.6,.5,1) both}
 .cr-anmsg .inj{color:var(--loss);font-family:var(--fb);font-size:18px;font-weight:700}
@@ -9369,122 +9404,146 @@ function crIvGo(){
 }
 function crSeason(btn){
   if(!crBusy(btn,'시즌 진행 중...')) return;
-  var age=CR.v.player.age;
-  crAnimStart(0);
-  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick, loanPick:CR.loanPick||0}).then(function(v){
-    // 부상이면 시즌 중간(부상 시점)까지만 진행하고 멈춘다. 결과면 끝까지.
-    if(v.phase==='injury') crAnimTo(0.3+((v.injury.games*7+age)%25)/100, v, true);
-    else crAnimTo(1, v);
-  }).catch(function(e){ crAnimStop(); crPrep(); crErr(e); });
-}
-// ── 부상(시즌 중간 질문) ───────────────────────────────────────────────
-function crInjury(){   // 시즌 진행 오버레이를 멈춘 자리 그대로 두고, 아래에 좌우 카드 두 장(사용자 지정)
-  var p=CR.v.player, j=CR.v.injury, at=(CR.anim && CR.anim.stopAt) || 0.4;
-  var opt=function(k, ic, t, d){ return '<button class="cr-inj-c" style="--from:'+(k?'60px':'-60px')+';--d:'+(0.15+k*0.12)+'s" onclick="crInjPick('+k+',this)"><span class="e" aria-hidden="true">'+ic+'</span><b>'+t+'</b><span class="d">'+d+'</span></button>'; };
-  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead(), '<div class="sum" style="flex:1">부상 처리 방법을 골라 주세요</div>');
-  crTovSet(crSsHtml((CR.injPre||[]).map(function(f){ return Math.round(f*at); }), true,
-    '<div class="cr-inj"><div class="hd"><b>🚑 '+(j.major?'큰 부상':'부상')+' — '+gmEsc(j.name)+'</b><span>'+(j.major?'시즌 대부분을 쉬어야 해요. 예상 결장 '+j.games+'경기':'예상 결장 '+j.games+'경기. 복귀 시점을 정해 주세요.')+'</span></div>'
-    +'<div class="cr-inj-row">'+(j.major
-      ? opt(0,'🏥','수술 후 재활 집중','회복은 확실해요. 대신 스피드·체력 영구 −2')+opt(1,'🩹','보존 치료','스탯 손해 없음. 대신 다음 2시즌 부상 위험 ↑')
-      : opt(0,'⚡','빨리 복귀','결장 절반. 대신 30% 확률로 재부상(추가 결장 + 이번 시즌 성장 ↓)')+opt(1,'🛌','완전히 회복','결장 그대로. 다음 시즌 부상 위험 ↓'))
-    +'</div></div>'));
-  crSsPaint(at);
-  var m=document.getElementById('crAnMsg'); if(m) m.innerHTML='<span class="inj">🚑 '+gmEsc(j.name)+'!</span>';
-}
-function crInjPick(k, btn){
-  if(CR.busy) return; CR.busy=true;
-  var from=CR.anim && CR.anim.stopAt || 0.4, res=null, err=null, shown=false;
-  // 고른 카드를 보여 주는 동안 응답을 받아 두고, 표시가 끝나면 이어서 진행
-  crApi('season', {token:CR.tok, injPick:k}).then(function(v){ res=v; if(shown) crAnimTo(1, v); }).catch(function(e){ err=e; if(shown){ crAnimStop(); crInjury(); crErr(e); } });
-  crPickFx(btn, '#crTov .cr-inj-c', function(){
-    shown=true; if(err){ crInjury(); return crErr(err); }
-    crAnimStart(from, true); if(res) crAnimTo(1, res);
-  });
+  crSfOpen();
+  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick, loanPick:CR.loanPick||0}).then(crSfData)
+    .catch(function(e){ crSfClose(); crPrep(); crErr(e); });
 }
 
-// ── 시즌 진행 애니메이션 ───────────────────────────────────────────────
-// 결과는 서버가 한 번에 주지만, 바로 결과 화면으로 넘기면 시즌이 "지나간" 느낌이 없어서
-// 8월→5월 달력이 차오르며 경기·골·도움 숫자가 올라가는 화면을 2초 남짓 보여 준다(누르면 건너뛰기).
-// 응답이 오기 전엔 15%까지만 가고 기다린다. 부상이면 그 시점에서 멈추고 부상 질문으로.
+// ── 시즌 진행(사용자 지정 — "섹션을 떼어 온 게 아니라 새로") ─────────────────────────
+// 매치데이 월: 전광판이 한 경기씩 넘어가며 상대·스코어·내 기록을 보여 주고, 그 아래 시즌 경기 수만큼의 칸이
+// 한 칸씩 채워진다(선발 초록 · 교체 연두 · 결장 회색 · 부상 빨강, 골 ⚽ · 도움 🅰 · 클린시트 🧤 표시). 골·도움엔 화면 가운데 큰 글자가 터진다.
+// 서버는 시즌 합계만 주므로 경기별 내용(어느 경기에 뛰고 넣었는지·상대·스코어)은 합계를 시드 고정으로 나눠 그린 연출이다.
+// 부상이면 그 경기 칸이 빨갛게 멈추고 같은 오버레이에 좌우 카드 두 장 → 고르면 결장 칸을 건너 이어서 진행.
 var CR_MONTHS=['8월','9월','10월','11월','12월','1월','2월','3월','4월','5월'];
-var CR_TICK=[[0,'개막전을 앞두고 있어요'],[.12,'시즌 초반 일정'],[.35,'빡빡한 겨울 일정'],[.5,'겨울 이적시장'],[.65,'시즌 후반 레이스'],[.88,'마지막 라운드']];
-var CR_TICK_Y=[[0,'유스 리그 개막'],[.12,'시즌 초반'],[.4,'겨울 휴식기'],[.6,'시즌 후반'],[.88,'마지막 라운드']];
 function crSeasonLabel(age){ var y=2026+age-15; return y+'-'+String(y+1).slice(-2); }
-function crAnimStart(from, resumed){
-  var p=CR.v.player, df=p.pos==='DF', yth=p.age<18;
-  if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf);   // 루프가 둘 돌면 프레임마다 두 번 움직인다
-  // 부상 뒤 이어 갈 때는 멈췄던 숫자부터(부상 응답의 최소 기록 × 멈춘 지점), 처음엔 0부터
-  var lbs=df?['경기','골','도움','클린시트']:['경기','골','도움'];   // 수비수는 도움도 함께(풀백·윙백은 도움이 본업)
-  var pre0=resumed && CR.injPre ? CR.injPre.map(function(f){ return Math.round(f*from); }) : lbs.map(function(){ return 0; });
-  if(!resumed) CR.injPre=null;
-  CR.anim={t:from, from:from, target:null, v:null, stopAt:null, raf:null, resumed:!!resumed, last:null, shown:pre0.slice()};
-  crTovSet(crSsHtml(pre0, resumed, ''));
-  crAnimFrame();
+function crSfRng(seed){ var a=seed>>>0; return function(){ a=(a+0x6D2B79F5)>>>0; var t=a; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
+function crSfSeed(){ var p=CR.v.player, s=String(p.name)+'|'+p.age+'|'+p.club.n, h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function crSfOpen(still){
+  var p=CR.v.player, df=p.pos==='DF', yth=p.age<18 || /U-\d+$/.test(p.club.team||'');
+  var lbs=df?[['apps','경기'],['goals','골'],['ast','도움'],['cs','클린시트']]:[['apps','경기'],['goals','골'],['ast','도움']];
+  CR.sf={n:{apps:0,goals:0,ast:0,cs:0}, i:0, G:0, timer:null, q:[], lbs:lbs};
+  crTovSet('<div class="cr-sf'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행"><i class="glow"></i><div class="cr-sf-box">'
+    +'<div class="cr-sf-top"><span class="tag">SEASON '+crSeasonLabel(p.age)+'</span><div class="club">'+crCrest(p.club,28)+'<b>'+gmEsc(p.club.team)+'</b><span>'+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div></div>'
+    +'<div class="cr-sf-board" id="crSfBoard"><div class="md" id="crSfMd">KICK OFF</div><div class="ko" id="crSfKo"><span class="whistle" aria-hidden="true">📣</span><b>'+gmEsc(p.name)+'</b>의 '+(p.seasons+1)+'번째 시즌이 시작돼요</div></div>'
+    +'<div class="cr-sf-wall" id="crSfWall"></div>'
+    +'<div class="cr-sf-leg">'+[['#16a34a','선발'],['rgba(34,197,94,.45)','교체'],['rgba(255,255,255,.25)','출전 없음'],['#b91c1c','부상']].map(function(x){ return '<span><i style="background:'+x[0]+'"></i>'+x[1]+'</span>'; }).join('')+'</div>'
+    +'<div class="cr-sf-tot" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l){ return '<div><b id="crSfN_'+l[0]+'">0</b><span>'+l[1]+'</span></div>'; }).join('')+'</div>'
+    +'<div id="crSfExtra"><button class="cr-ss-skip" id="crSfSkip" onclick="crSfSkip()">건너뛰기 ›</button></div>'
+    +'<div class="cr-sf-flash" id="crSfFlash" aria-hidden="true"></div></div></div>');
+  CR.sf.t0=Date.now();
 }
-// 시즌 진행 오버레이(사용자 지정 — 화면 대신 오버레이로). 밤 경기장 조명 아래 달력·진행 막대·기록 숫자. 부상이면 같은 오버레이에 좌우 카드 두 장.
-// still: 부상 질문처럼 다시 그릴 때 들어오는 애니메이션을 생략한다.
-function crSsHtml(vals, still, extra){
-  var p=CR.v.player, df=p.pos==='DF', yth=p.age<18 || /U-\d+$/.test(p.club.team||''), lbs=df?['경기','골','도움','클린시트']:['경기','골','도움'];
-  return '<div class="cr-ss'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행"><i class="beam l"></i><i class="beam r"></i><div class="cr-ss-box">'
-    +'<span class="tag">SEASON '+crSeasonLabel(p.age)+' · 시즌 '+(p.seasons+1)+'</span>'
-    +'<div class="cr-ss-club">'+crCrest(p.club,46)+'<div><b>'+gmEsc(p.club.team)+'</b><span>'+p.age+'세 · '+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div></div>'
-    +'<div class="cr-panel cr-anim"><div class="cr-lbl"><b>'+gmEsc(p.name)+'</b><span id="crAnTick">'+(yth?'유스 리그':'리그')+'</span></div>'
-    +'<div class="cr-months">'+CR_MONTHS.map(function(m,i){ return '<span data-i="'+i+'">'+m+'</span>'; }).join('')+'</div>'
-    +'<div class="cr-anbar" id="crAnTrack"><i id="crAnBar"></i><em id="crAnKnob"></em></div>'
-    +'<div class="cr-rs" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l,i){ return '<div><b id="crAn'+i+'">'+(vals[i]||0)+'</b><span>'+l+'</span></div>'; }).join('')+'</div>'
-    +'<div class="cr-anmsg" id="crAnMsg"></div></div>'
-    +(extra||'<button class="cr-ss-skip" onclick="crAnimSkip()">건너뛰기 ›</button>')+'</div></div>';
+function crSfClose(){ if(CR.sf) clearTimeout(CR.sf.timer); CR.sf=null; crTovSet(''); }
+// 합계를 from..to 경기 칸에 나눈다(시드 고정). out: 이 구간 앞쪽 몇 칸은 부상 결장.
+function crSfPlan(from, to, tot, out){
+  var p=CR.v.player, R=crSfRng(crSfSeed()+from*7919), G=CR.sf.G;
+  var opp=((CR.meta.clubs||{})[p.club.nat]||[]).map(function(c){ return c[0]; }).filter(function(n){ return n!==p.club.n; });
+  var sfx=(p.club.team.match(/ (U-\d+)$/)||[])[1];
+  var slots=[], list=[];
+  for(var k=from;k<to;k++) slots.push(k);
+  var free=slots.slice(out||0), apps=Math.min(tot.apps, free.length);
+  // 뛴 경기: 남은 칸에서 고르게 흩어 고른다(앞쪽 몰림 없이)
+  var played={}; free.map(function(k){ return [R(), k]; }).sort(function(a,b){ return a[0]-b[0]; }).slice(0, apps).forEach(function(x){ played[x[1]]=R()<0.78?'start':'sub'; });
+  var pk=Object.keys(played).map(Number);
+  var put=function(n, key, cap){ for(var t=0;t<n && pk.length;t++){ var m=pk[Math.floor(R()*pk.length)]; list[m]=list[m]||{}; if(cap && list[m][key]) continue; list[m][key]=(list[m][key]||0)+1; } };
+  slots.forEach(function(k){ list[k]={}; });
+  put(tot.goals,'g'); put(tot.ast,'a'); put(Math.min(tot.cs, pk.length),'cs',true);
+  return slots.map(function(k, j){
+    var m=list[k], pl=played[k]||null, inj=j<(out||0), o=opp.length?opp[Math.floor(R()*opp.length)]:'상대 팀';
+    var our=pl ? (m.g||0)+(m.a||0)+Math.floor(R()*2) : Math.floor(R()*3), their=m.cs ? 0 : Math.floor(R()*(pl?2.6:3));
+    if(pl && m.cs && our===0) our=1;
+    return {k:k, md:k+1, mon:CR_MONTHS[Math.min(9, Math.floor(k/Math.max(1,G)*10))], opp:o+(sfx?' '+sfx:''), home:R()<0.5, pl:pl, inj:inj, g:m.g||0, a:m.a||0, cs:m.cs?1:0, our:our, their:their};
+  });
 }
-function crSsPaint(t){   // 진행 막대·달·안내 문구를 t(0~1) 지점으로
-  var bar=document.getElementById('crAnBar'), knob=document.getElementById('crAnKnob'), tr=document.getElementById('crAnTrack');
-  if(bar) bar.style.transform='scaleX('+t+')';
-  if(knob && tr) knob.style.transform='translateX('+(t*tr.clientWidth)+'px)';
-  var mi=Math.min(9, Math.floor(t*10));
-  document.querySelectorAll('#crTov .cr-months span').forEach(function(el,i){ el.className=i<mi?'done':i===mi?'on':''; });
-  var tk=''; (CR.v.player.age<18?CR_TICK_Y:CR_TICK).forEach(function(x){ if(t>=x[0]) tk=x[1]; }); var te=document.getElementById('crAnTick'); if(te) te.textContent=tk;
-}
-function crAnimTo(target, v, injury){
-  if(!CR.anim) return;
-  CR.anim.target=target; CR.anim.v=v; CR.anim.injury=!!injury;
-  if(injury) CR.anim.stopAt=target;
-  // 동작 줄이기 설정이면 바로 끝으로
-  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) CR.anim.t=target;
-}
-function crAnimSkip(){ var A=CR.anim; if(A && A.target!=null) A.t=A.target; }
-function crAnimStop(){ if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf); CR.anim=null; crTovSet(''); }
-function crAnimFrame(){
-  var A=CR.anim; if(!A) return;
-  var bar=document.getElementById('crAnBar'); if(!bar){ CR.anim=null; return; }   // 다른 화면으로 나감
-  var now=performance.now(), dt=A.last ? Math.min(64, now-A.last) : 16; A.last=now;
-  // 한 시즌 약 2.4초. 응답 전에는 시작점+20%에 다가갈수록 천천히(멈췄다 튀지 않게), 응답이 오면 목표까지 같은 속도로.
-  var step=dt/2400;
-  if(A.target==null) A.t=Math.min(A.from+0.2, A.t+step*Math.max(0.05, 1-(A.t-A.from)/0.2));
-  else A.t=Math.min(A.target, A.t+step);
-  crSsPaint(A.t);
-  // 숫자는 시즌 진행률만큼 기록에 비례해 올린다. 결과가 오면 최종 기록, 부상 응답이면 그 "최소 기록"(pre)으로
-  // 부상 시점까지 올리고, 이어 갈 땐 앞서 보인 숫자 밑으로 내려가지 않게 한다.
-  var R=A.v && A.v.result, dfp=CR.v.player.pos==='DF', fin=null;
-  if(R) fin=[R.row.apps, R.row.goals, R.row.ast].concat(dfp?[R.row.cs]:[]);
-  else if(A.v && A.v.pre){ fin=[A.v.pre.apps, A.v.pre.goals, A.v.pre.ast].concat(dfp?[A.v.pre.cs]:[]); CR.injPre=fin; }
-  else if(A.resumed && CR.injPre) fin=CR.injPre;
-  if(fin){
-    fin.forEach(function(f,i){
-      var val=Math.max(A.shown[i], Math.round(f*A.t)), el=document.getElementById('crAn'+i);
-      if(el && val!==A.shown[i]){ el.textContent=val; if(i>0 && A.shown[i]>=0 && val>A.shown[i]){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } A.shown[i]=val; }
-    });
+function crSfData(v){
+  if(!CR.sf) crSfOpen(true);
+  var S=CR.sf, A=v.phase==='injury';
+  CR.v=v; CR.tok=v.token; crStore(v);   // 진행 중에 새로고침해도 이어지게(부상이면 부상 단계로)
+  if(A){
+    S.G=v.pre.games||38;
+    var frac=0.3+((v.injury.games*7+v.player.age)%25)/100, at=Math.max(1, Math.round(frac*S.G));
+    var tot={}; ['apps','goals','ast','cs'].forEach(function(x){ tot[x]=Math.round((v.pre[x]||0)*frac); });
+    S.injAt=at; S.injGames=v.injury.games;
+    crSfWall(); crSfRun(crSfPlan(0, at, tot, 0), function(){ crSfInjury(v); });
+  } else {
+    var r=v.result.row; S.G=S.G||r.games;
+    if(!S.wall) crSfWall();
+    var from=S.injAt!=null ? S.injAt+1 : 0, out=S.injAt!=null ? Math.min(S.G-from, S.quick?Math.ceil(S.injGames/2):S.injGames) : 0;
+    var rest={apps:Math.max(0,r.apps-S.n.apps), goals:Math.max(0,r.goals-S.n.goals), ast:Math.max(0,r.ast-S.n.ast), cs:Math.max(0,(r.cs||0)-S.n.cs)};
+    crSfRun(crSfPlan(from, S.G, rest, out), function(){ crSfEnd(v); });
   }
-  if(A.target!=null && A.t>=A.target){
-    var msg=document.getElementById('crAnMsg'), v=A.v;
-    if(A.injury){
-      if(msg) msg.innerHTML='<span class="inj">🚑 '+gmEsc(v.injury.name)+'!</span>';
-      A.raf=null; setTimeout(function(){ if(CR.anim===A){ A.stopAt=A.target; crShow(v); CR.anim={stopAt:A.target}; } }, 900);
-      return;
-    }
-    if(msg) msg.innerHTML='<span>시즌 종료</span>';
-    A.raf=null; setTimeout(function(){ if(CR.anim===A){ CR.anim=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, 650);   // crShow가 오버레이를 닫는다
-    return;
-  }
-  A.raf=requestAnimationFrame(crAnimFrame);
+}
+function crSfWall(){
+  var S=CR.sf, w=document.getElementById('crSfWall'); if(!w) return; S.wall=true;
+  var h=''; for(var k=0;k<S.G;k++) h+='<i data-k="'+k+'"></i>'; w.innerHTML=h;
+  w.style.setProperty('--cols', S.G>34?10:S.G>24?8:6);
+}
+function crSfRun(list, done){
+  var S=CR.sf; if(!S) return;
+  var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var step=Math.max(55, Math.min(120, 2600/Math.max(1,S.G))), i=0, wait=Math.max(0, 650-(Date.now()-S.t0));   // 킥오프 문구는 최소 0.65초
+  S.q=list; S.done=done;
+  var tick=function(){
+    if(CR.sf!==S) return;
+    if(!document.getElementById('crSfWall')){ CR.sf=null; return; }   // 다른 화면으로 나감
+    if(S.skip || reduce){ while(i<list.length) crSfMatch(list[i++], true); return done(); }
+    if(i>=list.length) return done();
+    var m=list[i++], big=crSfMatch(m, false);
+    S.timer=setTimeout(tick, step+(big?260:0));
+  };
+  S.timer=setTimeout(tick, wait);
+}
+function crSfMatch(m, quiet){   // 한 경기: 전광판·칸·합계. 골/도움이면 true(조금 더 머문다)
+  var S=CR.sf, p=CR.v.player, cell=document.querySelector('#crSfWall i[data-k="'+m.k+'"]'), b=document.getElementById('crSfBoard');
+  if(m.pl){ S.n.apps++; S.n.goals+=m.g; S.n.ast+=m.a; S.n.cs+=m.cs; }
+  S.i=m.k+1;
+  if(cell){ cell.className=(m.inj?'inj':m.pl||'off')+(quiet?'':' pop'); cell.innerHTML=m.inj?'':(m.g?'<em>⚽'+(m.g>1?m.g:'')+'</em>':m.a?'<em>🅰</em>':m.cs&&p.pos==='DF'?'<em>🧤</em>':''); }
+  S.lbs.forEach(function(l){ var el=document.getElementById('crSfN_'+l[0]); if(el && el.textContent!=String(S.n[l[0]])){ el.textContent=S.n[l[0]]; if(!quiet){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } } });
+  if(quiet || !b) return false;
+  var me=gmEsc(p.club.team), op=gmEsc(m.opp), L=m.home?[me,m.our,m.their,op]:[op,m.their,m.our,me];
+  var line=m.inj?'<span class="x">🚑 부상으로 결장</span>':!m.pl?'<span class="x">출전 없음</span>'
+    :'<span class="c">'+(m.pl==='start'?'선발':'교체')+'</span>'+(m.g?'<span class="c g">⚽ '+m.g+'골</span>':'')+(m.a?'<span class="c a">🅰 '+m.a+'도움</span>':'')+(m.cs&&p.pos==='DF'?'<span class="c s">🧤 무실점</span>':'');
+  b.innerHTML='<div class="md">MATCHDAY '+m.md+' · '+m.mon+'</div><div class="sc"><span class="t'+(m.home?' me':'')+'">'+L[0]+'</span><b>'+L[1]+'</b><i>:</i><b>'+L[2]+'</b><span class="t'+(m.home?'':' me')+'">'+L[3]+'</span></div><div class="ln">'+line+'</div>';
+  if(m.g || m.a){ var f=document.getElementById('crSfFlash'); if(f){ f.className='cr-sf-flash'; void f.offsetWidth; f.textContent=m.g?(m.g>1?(m.g>2?'HAT-TRICK!':'BRACE!'):'GOAL!'):'ASSIST!'; f.className='cr-sf-flash on'+(m.g?'':' a'); } return true; }
+  return false;
+}
+function crSfSkip(){ if(CR.sf){ CR.sf.skip=true; clearTimeout(CR.sf.timer); var S=CR.sf; var rest=S.q.filter(function(m){ return m.k>=S.i; }); rest.forEach(function(m){ crSfMatch(m, true); }); S.q=[]; if(S.done) S.done(); } }
+function crSfEnd(v){
+  var S=CR.sf, r=v.result.row, b=document.getElementById('crSfBoard'), x=document.getElementById('crSfExtra');
+  if(S) S.done=null;
+  if(b) b.innerHTML='<div class="md">FULL TIME · 시즌 종료</div><div class="ft"><b>'+r.rank+'위</b><span>'+(r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그')+(r.apps?' · 평점 '+r.rating.toFixed(2):'')+'</span></div>';
+  if(b){ b.classList.remove('end'); void b.offsetWidth; b.classList.add('end'); }
+  if(x) x.innerHTML='';
+  setTimeout(function(){ if(CR.sf===S && document.getElementById('crSfWall')){ CR.sf=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, S && S.skip ? 500 : 1300);   // crShow가 오버레이를 닫는다
+}
+// 부상: 그 경기 칸이 빨갛게, 전광판에 부상 이름, 아래에 좌우 카드 두 장(사용자 지정)
+function crSfInjury(v){
+  var S=CR.sf; if(!S) return;
+  var j=v.injury, b=document.getElementById('crSfBoard'), cell=document.querySelector('#crSfWall i[data-k="'+S.injAt+'"]'), x=document.getElementById('crSfExtra');
+  CR.busy=false; S.done=null;
+  if(cell) cell.className='inj pop';
+  if(b){ b.innerHTML='<div class="md">MATCHDAY '+(S.injAt+1)+'</div><div class="inj"><span aria-hidden="true">🚑</span><b>'+gmEsc(j.name)+'</b></div><div class="ln"><span class="x">'+(j.major?'큰 부상 · ':'')+'예상 결장 '+j.games+'경기</span></div>'; b.classList.add('hurt'); }
+  var opt=function(k, ic, t, d){ return '<button class="cr-inj-c" style="--from:'+(k?'60px':'-60px')+';--d:'+(0.25+k*0.12)+'s" onclick="crInjPick('+k+',this)"><span class="e" aria-hidden="true">'+ic+'</span><b>'+t+'</b><span class="d">'+d+'</span></button>'; };
+  if(x) x.innerHTML='<div class="cr-inj"><div class="hd"><span>'+(j.major?'시즌 대부분을 쉬어야 해요. 어떻게 할까요?':'복귀 시점을 정해 주세요.')+'</span></div><div class="cr-inj-row">'+(j.major
+      ? opt(0,'🏥','수술 후 재활 집중','회복은 확실해요. 대신 스피드·체력 영구 −2')+opt(1,'🩹','보존 치료','스탯 손해 없음. 대신 다음 2시즌 부상 위험 ↑')
+      : opt(0,'⚡','빨리 복귀','결장 절반. 대신 30% 확률로 재부상(추가 결장 + 이번 시즌 성장 ↓)')+opt(1,'🛌','완전히 회복','결장 그대로. 다음 시즌 부상 위험 ↓'))+'</div></div>';
+}
+function crInjury(){   // 새로고침 등으로 부상 단계에서 들어오면 매치데이 월을 그 지점까지 바로 채우고 부상 질문
+  var p=CR.v.player;
+  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead(), '<div class="sum" style="flex:1">부상 처리 방법을 골라 주세요</div>');
+  crSfOpen(true); CR.sf.skip=true; crSfData(CR.v);
+}
+function crInjPick(k, btn){
+  if(CR.busy || !CR.sf) return; CR.busy=true;
+  var S=CR.sf, res=null, err=null, shown=false;
+  S.quick=!CR.v.injury.major && k===0;   // 빨리 복귀면 결장 칸이 절반
+  crApi('season', {token:CR.tok, injPick:k}).then(function(v){ res=v; if(shown) go(); }).catch(function(e){ err=e; if(shown) go(); });
+  var go=function(){
+    if(err){ CR.busy=false; crSfInjury(CR.v); return crErr(err); }
+    var b=document.getElementById('crSfBoard'), x=document.getElementById('crSfExtra');
+    if(b) b.classList.remove('hurt'); if(x) x.innerHTML='<button class="cr-ss-skip" onclick="crSfSkip()">건너뛰기 ›</button>';
+    S.skip=false; S.t0=Date.now()-650; crSfData(res);
+  };
+  crPickFx(btn, '#crTov .cr-inj-c', function(){ shown=true; if(res||err) go(); });
 }
 
 // ── 시즌 결과 · 이적시장 ──────────────────────────────────────────────
