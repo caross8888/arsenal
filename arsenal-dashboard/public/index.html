@@ -1875,47 +1875,39 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-anim .cr-rs b.bump{animation:gmScoreBump .45s ease-out}
 #crSfExtra{display:flex;flex-direction:column}
 .cr-ss-skip{align-self:center;border:0;background:none;color:rgba(255,255,255,.75);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer}
-.cr-sf{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px 16px;overflow:hidden auto;
-  background:repeating-linear-gradient(90deg,rgba(255,255,255,.022) 0 40px,transparent 40px 80px),radial-gradient(120% 70% at 50% 100%,rgba(16,74,40,.75),rgba(6,14,10,.96) 65%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
+.cr-sf{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px 18px;overflow:hidden auto;
+  background:radial-gradient(90% 55% at 50% 0%,rgba(200,168,75,.16),transparent 70%),radial-gradient(120% 90% at 50% 100%,rgba(239,1,7,.10),transparent 60%),#07080c;animation:crTovIn .35s ease-out both}
 .cr-sf.still,.cr-sf.still *{animation-duration:0s!important;animation-delay:0s!important}
-.cr-sf .glow{position:absolute;left:50%;top:-30%;width:140%;height:70%;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(255,255,230,.18),transparent);pointer-events:none;animation:crSfLights 1.1s .1s ease-out both}
-@keyframes crSfLights{0%{opacity:0}30%{opacity:1}45%{opacity:.4}60%{opacity:1}}
-.cr-sf-box{position:relative;width:100%;max-width:460px;display:flex;flex-direction:column;gap:12px;margin:auto 0}
-.cr-sf-top{display:flex;flex-direction:column;align-items:center;gap:6px;color:#F0F2F7;animation:crIvUp .4s .1s ease-out both}
-.cr-sf-top .tag{font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px}
-.cr-sf-top .club{display:flex;align-items:center;gap:8px}.cr-sf-top .club b{font-size:16px}.cr-sf-top .club span{font-size:12px;color:rgba(255,255,255,.75)}
-.cr-sf-board{position:relative;min-height:118px;display:flex;flex-direction:column;justify-content:center;gap:8px;text-align:center;border-radius:16px;padding:12px 14px;color:#F0F2F7;
-  background:linear-gradient(180deg,#14161d,#0b0c11);border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 0 0 4px rgba(0,0,0,.35),0 14px 34px rgba(0,0,0,.5);animation:crIvUp .45s .25s ease-out both}
-.cr-sf-board .md{font-size:11px;font-weight:700;letter-spacing:1.4px;color:#C8A84B}
-.cr-sf-board .ko{font-size:14px;color:rgba(255,255,255,.75)}.cr-sf-board .ko b{color:#F0F2F7}
-.cr-sf-board .whistle{display:block;font-size:30px;margin-bottom:4px;animation:crTrBounce .7s .2s cubic-bezier(.2,1.5,.4,1) both}
-.cr-sf-board .sc{display:grid;grid-template-columns:1fr auto auto auto 1fr;align-items:center;gap:8px}
-.cr-sf-board .sc .t{font-size:13px;line-height:1.25;color:rgba(255,255,255,.75);overflow:hidden;text-overflow:ellipsis}
-.cr-sf-board .sc .t:first-child{text-align:right}.cr-sf-board .sc .t:last-child{text-align:left}.cr-sf-board .sc .t.me{color:#F0F2F7;font-weight:700}
-.cr-sf-board .sc b{font-family:var(--fd);font-size:38px;font-weight:400;line-height:1;color:#FFE38A;text-shadow:0 0 12px rgba(255,200,80,.45);min-width:26px}
-.cr-sf-board .sc i{font-style:normal;color:rgba(255,255,255,.4);font-size:22px}
-.cr-sf-board .ln{display:flex;justify-content:center;flex-wrap:wrap;gap:5px;min-height:22px}
-.cr-sf-board .c{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 9px;background:rgba(255,255,255,.1);color:#F0F2F7}
-.cr-sf-board .c.g{background:rgba(200,168,75,.22);color:#FFE38A}.cr-sf-board .c.a{background:rgba(34,197,94,.18);color:#4ADE80}.cr-sf-board .c.s{background:rgba(96,165,250,.18);color:#93C5FD}
-.cr-sf-board .x{font-size:12px;color:rgba(255,255,255,.6)}
-.cr-sf-board .ft b{display:block;font-family:var(--fd);font-size:46px;font-weight:400;line-height:1;color:#FFE38A}.cr-sf-board .ft span{font-size:13px;color:rgba(255,255,255,.75)}
-.cr-sf-board.end{animation:crPkPop .5s cubic-bezier(.2,1.6,.4,1)}
-.cr-sf-board.hurt{border-color:rgba(239,68,68,.6);box-shadow:inset 0 0 0 4px rgba(0,0,0,.35),0 0 0 3px rgba(239,68,68,.25),0 14px 34px rgba(0,0,0,.5);animation:crSfHurt .5s ease-out}
-.cr-sf-board .inj{display:flex;align-items:center;justify-content:center;gap:8px;font-size:22px}.cr-sf-board .inj b{color:#FCA5A5}
+.cr-sf .bgm{position:absolute;left:50%;top:50%;transform:translate(-50%,-62%);font-family:var(--fd);font-size:min(62vw,300px);line-height:1;color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.05);white-space:nowrap;pointer-events:none;user-select:none}
+.cr-sf-box{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;gap:16px;margin:auto 0;color:#F0F2F7}
+.cr-sf-hd{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;animation:crIvUp .4s .05s ease-out both}
+.cr-sf-hd b{display:block;font-size:16px;line-height:1.25}.cr-sf-hd span{font-size:12px;color:rgba(255,255,255,.6);letter-spacing:.2px}
+.cr-sf-hd .mon{font-family:var(--fd);font-size:22px;color:#C8A84B;letter-spacing:.5px}
+.cr-sf-prog{height:3px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:-6px}
+.cr-sf-prog i{display:block;height:100%;background:linear-gradient(90deg,#C8A84B,#FFE38A);transform-origin:left;transform:scaleX(0);transition:transform .12s linear}
+.cr-sf-hero{position:relative;display:grid;grid-template-columns:1fr 1fr;padding:6px 0 0;animation:crIvUp .45s .15s ease-out both}
+.cr-sf-hero .big{text-align:center}
+.cr-sf-hero .big b{display:block;font-family:var(--fd);font-weight:400;font-size:96px;line-height:.95;color:#F0F2F7;font-variant-numeric:tabular-nums}
+.cr-sf-hero .big:first-child b{color:#FFE38A;text-shadow:0 0 30px rgba(255,200,80,.25)}
+.cr-sf-hero .big span{font-size:12px;letter-spacing:2px;color:rgba(255,255,255,.6)}
+.cr-sf-hero .big+.big{border-left:1px solid rgba(255,255,255,.08)}
+.cr-sf-hero .sub{grid-column:1/-1;text-align:center;margin-top:10px;font-size:13px;color:rgba(255,255,255,.6)}.cr-sf-hero .sub b{color:#F0F2F7;font-size:15px;margin-right:3px}
+.cr-sf-hero b.bump{animation:crSfBump .45s cubic-bezier(.2,1.6,.4,1)}
+.cr-sf-hero b.glow{animation:crSfBump .45s cubic-bezier(.2,1.6,.4,1),crSfGlow .9s ease-out}
+@keyframes crSfGlow{0%{text-shadow:0 0 0 rgba(255,215,120,0)}25%{text-shadow:0 0 34px rgba(255,215,120,.95),0 0 70px rgba(255,180,60,.6)}100%{text-shadow:0 0 30px rgba(255,200,80,.25)}}
+@keyframes crSfBump{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+.cr-sf-box.hurt .cr-sf-hero{opacity:.45;filter:saturate(.3)}
+.cr-sf-lt{display:grid;grid-template-columns:auto 1fr auto;align-items:stretch;min-height:44px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);animation:crIvUp .45s .25s ease-out both}
+.cr-sf-lt em{display:flex;align-items:center;padding:0 12px;font-style:normal;font-size:11px;font-weight:800;letter-spacing:1px;color:#14161C;background:#F0F2F7;white-space:nowrap}
+.cr-sf-lt span{display:flex;align-items:center;gap:4px;padding:0 12px;font-size:13.5px;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cr-sf-lt span b{color:#fff;font-weight:700;margin:0 3px}
+.cr-sf-lt i{display:flex;align-items:center;padding:0 12px;font-style:normal;font-size:12px;font-weight:700;color:rgba(255,255,255,.75);white-space:nowrap}
+.cr-sf-lt.gold em{background:#C8A84B;color:#2a1e04}.cr-sf-lt.gold{border-color:rgba(200,168,75,.45);background:rgba(200,168,75,.12)}.cr-sf-lt.gold i{color:#FFE38A}
+.cr-sf-lt.green em{background:#22C55E;color:#052e14}.cr-sf-lt.green i{color:#86EFAC}
+.cr-sf-lt.red em{background:#EF4444;color:#fff}.cr-sf-lt.red{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.1);animation:crSfHurt .5s ease-out}.cr-sf-lt.red i{color:#FCA5A5}
+.cr-sf-lt.dim span{color:rgba(255,255,255,.5)}
+.cr-sf-lt.end{animation:crPkPop .5s cubic-bezier(.2,1.6,.4,1)}
 @keyframes crSfHurt{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
-.cr-sf-wall{display:grid;grid-template-columns:repeat(var(--cols,10),1fr);gap:5px;padding:10px;border-radius:14px;background:rgba(0,0,0,.28);animation:crIvUp .45s .4s ease-out both}
-.cr-sf-wall i{position:relative;aspect-ratio:1;border-radius:6px;background:transparent;border:1px dashed rgba(255,255,255,.14)}
-.cr-sf-wall i.start{background:#16a34a;border-color:#22C55E}.cr-sf-wall i.sub{background:rgba(34,197,94,.35);border-color:rgba(34,197,94,.5)}
-.cr-sf-wall i.start,.cr-sf-wall i.sub,.cr-sf-wall i.off,.cr-sf-wall i.inj{border-style:solid}
-.cr-sf-wall i.off{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.2)}.cr-sf-wall i.inj{background:#b91c1c;border-color:#EF4444}
-.cr-sf-wall i.pop{animation:crSfPop .3s cubic-bezier(.2,1.8,.4,1)}
-.cr-sf-wall em{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-size:11px;line-height:1;white-space:nowrap}
-@keyframes crSfPop{from{transform:scale(.3)}to{transform:none}}
-.cr-sf-leg{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 12px;margin-top:-4px;font-size:11px;color:rgba(255,255,255,.75)}
-.cr-sf-leg span{display:inline-flex;align-items:center;gap:5px}.cr-sf-leg i{width:10px;height:10px;border-radius:3px}
-.cr-sf-tot{display:grid;text-align:center;color:#F0F2F7;animation:crIvUp .45s .5s ease-out both}
-.cr-sf-tot b{display:block;font-family:var(--fd);font-size:30px;font-weight:400;line-height:1.1}.cr-sf-tot span{font-size:11px;color:rgba(255,255,255,.75)}
-.cr-sf-tot b.bump{animation:gmScoreBump .45s ease-out}
 .cr-sf-feed{display:flex;flex-direction:column;gap:6px;height:146px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent);mask-image:linear-gradient(180deg,#000 62%,transparent)}
 .cr-sf-feed.mini{height:60px;-webkit-mask-image:none;mask-image:none}
 .cr-sf-post{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;padding:8px 11px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#F0F2F7;animation:crSfPost .35s cubic-bezier(.2,1.3,.4,1) both}
@@ -1923,10 +1915,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-sf-post b{display:block;font-size:11px;color:rgba(255,255,255,.6);font-weight:600}.cr-sf-post span{display:block;font-size:13.5px;line-height:1.35}
 .cr-sf-post em{font-style:normal;font-size:11px;color:#FCA5A5;white-space:nowrap}
 @keyframes crSfPost{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
-.cr-sf-flash{position:absolute;left:0;right:0;top:34%;text-align:center;pointer-events:none;font-family:var(--fd);font-size:64px;line-height:1;color:#FFE38A;text-shadow:0 0 24px rgba(255,200,80,.7),0 4px 0 rgba(0,0,0,.4);opacity:0}
-.cr-sf-flash.a{color:#86EFAC;text-shadow:0 0 24px rgba(34,197,94,.7),0 4px 0 rgba(0,0,0,.4)}
-.cr-sf-flash.on{animation:crSfFlash .75s ease-out both}
-@keyframes crSfFlash{0%{opacity:0;transform:scale(.4) rotate(-6deg)}25%{opacity:1;transform:scale(1.08) rotate(-3deg)}70%{opacity:1;transform:scale(1) rotate(-3deg)}100%{opacity:0;transform:scale(1.15) rotate(-3deg)}}
 @media (prefers-reduced-motion: reduce){.cr-sf,.cr-sf *{animation:none!important}}
 .cr-inj{display:flex;flex-direction:column;gap:10px;animation:crIvUp .35s ease-out both}
 .cr-inj .hd{text-align:center;color:#F0F2F7}.cr-inj .hd b{display:block;font-size:17px;color:#FCA5A5}.cr-inj .hd span{font-size:13px;color:rgba(255,255,255,.75)}
@@ -9427,17 +9415,18 @@ function crSfRng(seed){ var a=seed>>>0; return function(){ a=(a+0x6D2B79F5)>>>0;
 function crSfSeed(){ var p=CR.v.player, s=String(p.name)+'|'+p.age+'|'+p.club.n, h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function crSfOpen(still){
   var p=CR.v.player, df=p.pos==='DF', yth=p.age<18 || /U-\d+$/.test(p.club.team||'');
-  var lbs=df?[['apps','경기'],['goals','골'],['ast','도움'],['cs','클린시트']]:[['apps','경기'],['goals','골'],['ast','도움']];
-  CR.sf={n:{apps:0,goals:0,ast:0,cs:0}, i:0, G:0, timer:null, q:[], lbs:lbs};
-  crTovSet('<div class="cr-sf'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행"><i class="glow"></i><div class="cr-sf-box">'
-    +'<div class="cr-sf-top"><span class="tag">SEASON '+crSeasonLabel(p.age)+'</span><div class="club">'+crCrest(p.club,28)+'<b>'+gmEsc(p.club.team)+'</b><span>'+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div></div>'
-    +'<div class="cr-sf-board" id="crSfBoard"><div class="md" id="crSfMd">KICK OFF</div><div class="ko" id="crSfKo"><span class="whistle" aria-hidden="true">📣</span><b>'+gmEsc(p.name)+'</b>의 '+(p.seasons+1)+'번째 시즌이 시작돼요</div></div>'
-    +'<div class="cr-sf-wall" id="crSfWall"></div>'
-    +'<div class="cr-sf-leg">'+[['#16a34a','선발'],['rgba(34,197,94,.45)','교체'],['rgba(255,255,255,.25)','출전 없음'],['#b91c1c','부상']].map(function(x){ return '<span><i style="background:'+x[0]+'"></i>'+x[1]+'</span>'; }).join('')+'</div>'
-    +'<div class="cr-sf-tot" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l){ return '<div><b id="crSfN_'+l[0]+'">0</b><span>'+l[1]+'</span></div>'; }).join('')+'</div>'
+  // 큰 숫자 둘(공격·미드: 골·도움 / 수비: 클린시트·도움) + 작은 줄에 출전
+  var big=df?[['cs','클린시트'],['ast','도움']]:[['goals','골'],['ast','도움']];
+  CR.sf={n:{apps:0,goals:0,ast:0,cs:0}, i:0, G:0, timer:null, q:[], lbs:big.concat([['apps','경기']])};
+  crTovSet('<div class="cr-sf'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행"><div class="bgm" id="crSfBg" aria-hidden="true">8월</div><div class="cr-sf-box" id="crSfBox">'
+    +'<div class="cr-sf-hd">'+crCrest(p.club,34)+'<div><b>'+gmEsc(p.club.team)+'</b><span>'+crSeasonLabel(p.age)+' · '+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div><span class="mon" id="crSfMon">8월</span></div>'
+    +'<div class="cr-sf-prog"><i id="crSfProg"></i></div>'
+    +'<div class="cr-sf-hero" id="crSfHero">'+big.map(function(l){ return '<div class="big"><b id="crSfN_'+l[0]+'">0</b><span>'+l[1]+'</span></div>'; }).join('')
+    +'<div class="sub"><b id="crSfN_apps">0</b>경기 출전</div></div>'
+    +'<div class="cr-sf-lt" id="crSfLt"><em>KICK OFF</em><span>'+gmEsc(p.name)+'의 '+(p.seasons+1)+'번째 시즌</span></div>'
     +'<div class="cr-sf-feed" id="crSfFeed" aria-live="off"></div>'
     +'<div id="crSfExtra"><button class="cr-ss-skip" id="crSfSkip" onclick="crSfSkip()">건너뛰기 ›</button></div>'
-    +'<div class="cr-sf-flash" id="crSfFlash" aria-hidden="true"></div></div></div>');
+    +'</div></div>');
   CR.sf.t0=Date.now(); crSfFeedStart();
 }
 // ── 팬 반응 피드(사용자 지정 — SNS 한마디가 빠르게 올라와 관심받는 느낌) ── 선수 상황(유스·어린 1군·전성기·베테랑·스타·해외·유리몸)에 맞는
@@ -9535,11 +9524,7 @@ function crSfData(v){
     crSfRun(crSfPlan(from, S.G, rest, out), function(){ crSfEnd(v); });
   }
 }
-function crSfWall(){
-  var S=CR.sf, w=document.getElementById('crSfWall'); if(!w) return; S.wall=true;
-  var h=''; for(var k=0;k<S.G;k++) h+='<i data-k="'+k+'"></i>'; w.innerHTML=h;
-  w.style.setProperty('--cols', S.G>34?10:S.G>24?8:6);
-}
+function crSfWall(){ if(CR.sf) CR.sf.wall=true; }
 function crSfRun(list, done){
   var S=CR.sf; if(!S) return;
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -9549,7 +9534,7 @@ function crSfRun(list, done){
   S.q=list; S.done=done;
   var tick=function(){
     if(CR.sf!==S) return;
-    if(!document.getElementById('crSfWall')){ CR.sf=null; return; }   // 다른 화면으로 나감
+    if(!document.getElementById('crSfHero')){ CR.sf=null; return; }   // 다른 화면으로 나감
     if(S.skip || reduce){ while(i<list.length) crSfMatch(list[i++], true); return done(); }
     if(i>=list.length) return done();
     var m=list[i++], big=crSfMatch(m, false);
@@ -9557,42 +9542,44 @@ function crSfRun(list, done){
   };
   S.timer=setTimeout(tick, wait);
 }
-function crSfMatch(m, quiet){   // 한 경기: 전광판·칸·합계. 골/도움이면 true(조금 더 머문다)
-  var S=CR.sf, p=CR.v.player, cell=document.querySelector('#crSfWall i[data-k="'+m.k+'"]'), b=document.getElementById('crSfBoard');
+function crSfMatch(m, quiet){   // 한 경기: 진행 막대·달·큰 숫자·하단 자막. 골/도움이면 true(조금 더 머문다)
+  var S=CR.sf, p=CR.v.player, lt=document.getElementById('crSfLt');
   if(m.pl){ S.n.apps++; S.n.goals+=m.g; S.n.ast+=m.a; S.n.cs+=m.cs; }
   if(!quiet && S.fan){
     S.fan.bench=m.pl||m.inj ? 0 : S.fan.bench+1;
     if(m.g) crSfReact(m.g>2?'hat':m.g>1?'brace':'goal'); else if(m.a) crSfReact('assist'); else if(m.cs && p.pos==='DF' && Math.random()<0.5) crSfReact('cs'); else if(S.fan.bench===3) crSfReact('bench');
   }
   S.i=m.k+1;
-  if(cell){ cell.className=(m.inj?'inj':m.pl||'off')+(quiet?'':' pop'); cell.innerHTML=m.inj?'':(m.g?'<em>⚽'+(m.g>1?m.g:'')+'</em>':m.a?'<em>🅰</em>':m.cs&&p.pos==='DF'?'<em>🧤</em>':''); }
+  var pr=document.getElementById('crSfProg'); if(pr) pr.style.transform='scaleX('+(S.i/Math.max(1,S.G))+')';
+  ['crSfMon','crSfBg'].forEach(function(id){ var e=document.getElementById(id); if(e && e.textContent!==m.mon) e.textContent=m.mon; });
   S.lbs.forEach(function(l){ var el=document.getElementById('crSfN_'+l[0]); if(el && el.textContent!=String(S.n[l[0]])){ el.textContent=S.n[l[0]]; if(!quiet){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } } });
-  if(quiet || !b) return false;
-  var me=gmEsc(p.club.team), op=gmEsc(m.opp), L=m.home?[me,m.our,m.their,op]:[op,m.their,m.our,me];
-  var line=m.inj?'<span class="x">🚑 부상으로 결장</span>':!m.pl?'<span class="x">출전 없음</span>'
-    :'<span class="c">'+(m.pl==='start'?'선발':'교체')+'</span>'+(m.g?'<span class="c g">⚽ '+m.g+'골</span>':'')+(m.a?'<span class="c a">🅰 '+m.a+'도움</span>':'')+(m.cs&&p.pos==='DF'?'<span class="c s">🧤 무실점</span>':'');
-  b.innerHTML='<div class="md">MATCHDAY '+m.md+' · '+m.mon+'</div><div class="sc"><span class="t'+(m.home?' me':'')+'">'+L[0]+'</span><b>'+L[1]+'</b><i>:</i><b>'+L[2]+'</b><span class="t'+(m.home?'':' me')+'">'+L[3]+'</span></div><div class="ln">'+line+'</div>';
-  if(m.g || m.a){ var f=document.getElementById('crSfFlash'); if(f){ f.className='cr-sf-flash'; void f.offsetWidth; f.textContent=m.g?(m.g>1?(m.g>2?'HAT-TRICK!':'BRACE!'):'GOAL!'):'ASSIST!'; f.className='cr-sf-flash on'+(m.g?'':' a'); } return true; }
+  if(quiet || !lt) return false;
+  var me=gmEsc(p.club.team.replace(/ U-\d+$/,'')), op=gmEsc(m.opp.replace(/ U-\d+$/,'')), sc=m.home?me+' <b>'+m.our+' : '+m.their+'</b> '+op:op+' <b>'+m.their+' : '+m.our+'</b> '+me;
+  var ev=m.g?(m.g>2?'HAT-TRICK':m.g>1?'BRACE':'GOAL'):m.a?'ASSIST':'';
+  var st=m.inj?'부상':!m.pl?'결장':m.g?'⚽ '+m.g+'골':m.a?'🅰 도움':m.cs&&p.pos==='DF'?'무실점':m.pl==='start'?'선발':'교체';
+  lt.className='cr-sf-lt'+(m.g?' gold':m.a?' green':!m.pl?' dim':'');
+  lt.innerHTML='<em>'+(ev||'MD '+m.md)+'</em><span>'+sc+'</span><i>'+st+'</i>';
+  if(ev){ var hb=document.getElementById('crSfN_'+(m.g?'goals':'ast')); if(hb){ hb.classList.remove('glow'); void hb.offsetWidth; hb.classList.add('glow'); } return true; }   // 큰 글자 대신 숫자에 빛
   return false;
 }
 function crSfSkip(){ if(CR.sf){ CR.sf.skip=true; clearTimeout(CR.sf.timer); var S=CR.sf; var rest=S.q.filter(function(m){ return m.k>=S.i; }); rest.forEach(function(m){ crSfMatch(m, true); }); S.q=[]; if(S.done) S.done(); } }
 function crSfEnd(v){
-  var S=CR.sf, r=v.result.row, b=document.getElementById('crSfBoard'), x=document.getElementById('crSfExtra');
+  var S=CR.sf, r=v.result.row, lt=document.getElementById('crSfLt'), x=document.getElementById('crSfExtra');
   if(S) S.done=null;
   if(S && S.fan){ crSfReact(r.rank===1&&!r.youth?'win':'end'); S.fan.hold=true; }
-  if(b) b.innerHTML='<div class="md">FULL TIME · 시즌 종료</div><div class="ft"><b>'+r.rank+'위</b><span>'+(r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그')+(r.apps?' · 평점 '+r.rating.toFixed(2):'')+'</span></div>';
-  if(b){ b.classList.remove('end'); void b.offsetWidth; b.classList.add('end'); }
+  var pr=document.getElementById('crSfProg'); if(pr) pr.style.transform='scaleX(1)';
+  if(lt){ lt.className='cr-sf-lt gold end'; lt.innerHTML='<em>FULL TIME</em><span>'+(r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그')+' <b>'+r.rank+'위</b></span><i>'+(r.apps?'평점 '+r.rating.toFixed(2):'출전 없음')+'</i>'; }
   if(x) x.innerHTML='';
-  setTimeout(function(){ if(CR.sf===S && document.getElementById('crSfWall')){ CR.sf=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, S && S.skip ? 400 : 900);   // crShow가 오버레이를 닫는다
+  setTimeout(function(){ if(CR.sf===S && document.getElementById('crSfHero')){ CR.sf=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, S && S.skip ? 400 : 900);   // crShow가 오버레이를 닫는다
 }
 // 부상: 그 경기 칸이 빨갛게, 전광판에 부상 이름, 아래에 좌우 카드 두 장(사용자 지정)
 function crSfInjury(v){
   var S=CR.sf; if(!S) return;
-  var j=v.injury, b=document.getElementById('crSfBoard'), cell=document.querySelector('#crSfWall i[data-k="'+S.injAt+'"]'), x=document.getElementById('crSfExtra');
+  var j=v.injury, lt=document.getElementById('crSfLt'), x=document.getElementById('crSfExtra'), box=document.getElementById('crSfBox');
   CR.busy=false; S.done=null;
-  if(cell) cell.className='inj pop';
+  if(box) box.classList.add('hurt');
   crSfReact('injury'); var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('mini'); if(S.fan) S.fan.hurt=true;   // 부상 카드 자리 확보: 피드는 한 줄만
-  if(b){ b.innerHTML='<div class="md">MATCHDAY '+(S.injAt+1)+'</div><div class="inj"><span aria-hidden="true">🚑</span><b>'+gmEsc(j.name)+'</b></div><div class="ln"><span class="x">'+(j.major?'큰 부상 · ':'')+'예상 결장 '+j.games+'경기</span></div>'; b.classList.add('hurt'); }
+  if(lt){ lt.className='cr-sf-lt red'; lt.innerHTML='<em>🚑 INJURY</em><span><b>'+gmEsc(j.name)+'</b></span><i>'+(j.major?'큰 부상 · ':'')+'결장 '+j.games+'경기</i>'; }
   var opt=function(k, ic, t, d){ return '<button class="cr-inj-c" style="--from:'+(k?'60px':'-60px')+';--d:'+(0.25+k*0.12)+'s" onclick="crInjPick('+k+',this)"><span class="e" aria-hidden="true">'+ic+'</span><b>'+t+'</b><span class="d">'+d+'</span></button>'; };
   if(x) x.innerHTML='<div class="cr-inj"><div class="hd"><span>'+(j.major?'시즌 대부분을 쉬어야 해요. 어떻게 할까요?':'복귀 시점을 정해 주세요.')+'</span></div><div class="cr-inj-row">'+(j.major
       ? opt(0,'🏥','수술 후 재활 집중','회복은 확실해요. 대신 스피드·체력 영구 −2')+opt(1,'🩹','보존 치료','스탯 손해 없음. 대신 다음 2시즌 부상 위험 ↑')
@@ -9610,9 +9597,9 @@ function crInjPick(k, btn){
   crApi('season', {token:CR.tok, injPick:k}).then(function(v){ res=v; if(shown) go(); }).catch(function(e){ err=e; if(shown) go(); });
   var go=function(){
     if(err){ CR.busy=false; crSfInjury(CR.v); return crErr(err); }
-    var b=document.getElementById('crSfBoard'), x=document.getElementById('crSfExtra');
+    var box=document.getElementById('crSfBox'), x=document.getElementById('crSfExtra');
     var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.remove('mini'); if(S.fan) S.fan.hurt=false;
-    if(b) b.classList.remove('hurt'); if(x) x.innerHTML='<button class="cr-ss-skip" onclick="crSfSkip()">건너뛰기 ›</button>';
+    if(box) box.classList.remove('hurt'); if(x) x.innerHTML='<button class="cr-ss-skip" onclick="crSfSkip()">건너뛰기 ›</button>';
     S.skip=false; S.t0=Date.now()-450; crSfData(res);
   };
   crPickFx(btn, '#crTov .cr-inj-c', function(){ shown=true; if(res||err) go(); });
