@@ -71,14 +71,22 @@ const ageBase = () => C.age < 28 ? AGE_BASE[C.age] : Math.min(AGE_BASE[Math.min(
 // 키·몸무게는 국적 평균 + 포지션 + 체형 + 시드 흔들림, 18세까지 자란다(화면 표시용, 계산엔 안 씀).
 export const BODIES = ['경량','표준','강골','장신'];
 const BODY = {
-  '경량':{FW:{'드리블':1,'스피드':1,'결정력':-1,'오프더볼':-1}, MF:{'체력':1,'패스':1,'태클':-2}, DF:{'스피드':1,'빌드업':1,'공중볼':-2}, inj:0.005, decl:1.02, h:-6, bmi:21,
+  '경량':{FW:{'드리블':1,'스피드':1,'결정력':-1,'오프더볼':-1}, MF:{'체력':1,'패스':1,'태클':-2}, DF:{'스피드':1,'패스':1,'공중볼':-2}, inj:0.005, decl:1.02, h:-6, bmi:21,
     d:'가볍고 빨라요. 30대엔 스피드와 함께 빨리 꺾이고 부상이 조금 잦아요.'},
   '표준':{FW:{}, MF:{}, DF:{}, inj:-0.01, decl:0.99, h:0, bmi:22.6, d:'모든 스탯이 고르게 크고, 몸 관리가 쉬워 부상·30대 하락이 조금 덜해요.'},
   '강골':{FW:{'결정력':1,'오프더볼':1,'스피드':-1,'드리블':-1}, MF:{'태클':1,'볼키핑':1,'체력':-2}, DF:{'대인마크':1,'태클':1,'스피드':-2}, inj:-0.01, decl:1, h:-1, bmi:24.4,
     d:'몸싸움에 강하고 잘 다치지 않아요. 대신 느려요.'},
-  '장신':{FW:{'결정력':2,'드리블':-1,'스피드':-1}, MF:{'태클':1,'시야':1,'볼키핑':-2}, DF:{'공중볼':2,'스피드':-1,'빌드업':-1}, inj:0, decl:0.97, h:8, bmi:22.8,
+  '장신':{FW:{'결정력':2,'드리블':-1,'스피드':-1}, MF:{'태클':1,'시야':1,'볼키핑':-2}, DF:{'공중볼':2,'스피드':-1,'패스':-1}, inj:0, decl:0.97, h:8, bmi:22.8,
     d:'공중볼·리치가 무기예요. 민첩함은 떨어지지만 30대에도 오래 버텨요.'}};
-const BODY_U = [1.2, 0.12], BODY_FIT = 0.015;
+const BODY_U = [1.2, 0.12], BODY_FIT = 0.015, TRAIN_AGE = [20, 0.18];
+// 리그 수준 5단계(사용자 지정): 리그 평균 구단 수준 기준 — 1 잉·스·독·이·프 / 2 브라질·포르투갈·네덜란드·벨기에·아르헨티나 / 3 노르웨이·미국 / 4 일본·한국 / 5 나이지리아.
+// 하위 리그일수록 골·도움·클린시트가 더 나오고(LG_OUT·LG_CS — 상대 수비·공격이 약하다), 대신 그 리그에서 낸 기록과 리그 개인상·우승의 점수는 반비례로 깎는다(LG_PTS).
+// 출력 × 점수 = 1 · 0.95 · 0.9 · 0.84 · 0.75 — 약한 리그에서 숫자는 화려해도 점수로는 큰 리그가 낫게.
+const LG_TIER = {ENG:1,ESP:1,GER:1,ITA:1,FRA:1, BRA:2,POR:2,NED:2,BEL:2,ARG:2, NOR:3,USA:3, JPN:4,KOR:4, NGA:5};
+const LG_OUT = [0,1,1.12,1.25,1.35,1.5], LG_CS = [0,1,1.08,1.16,1.22,1.3], LG_PTS = [0,1,0.85,0.72,0.62,0.5];
+const lgTier = nat => LG_TIER[nat] || 3;
+const SCOUT = {18:[-55.63, 1.881, 7.919], 21:[-12.67, 1.18, 4.435]};   // 잠재력 평가: 예상 정점 = a + b×오버롤 + c×재능 배율(아래 playSeason)
+const SCOUT_G = [[86,'S'],[80,'A'],[75,'B'],[70,'C'],[-99,'D']];
 // 카드 궁합: 체형이 키우는 스탯이 카드의 핵심 스탯(가중치 > 1)이면 +, 약한 스탯이면 −. Σ 체형 이동 × (가중치 − 1) — 예) 포처·장신 +1.4, 윙어·장신 −0.9.
 // 성장 배율 1 + BODY_FIT × 궁합(약 ±3.5%). 표준은 0.
 const bodyFit = (pos, card, body) => { const w = CARDS[pos][card].w; return bodyShift(pos, body).reduce((t,x,i) => t + x*(w[i]-1), 0); };
@@ -95,7 +103,7 @@ function bodyHW(age){
   const w = Math.round(b.bmi * (h/100)**2 * (age>=18 ? 1 : 0.86 + (age-15)*0.045) + (r()-0.5)*3);
   return [h, w];
 }
-const DECLINE = {'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5,'빌드업':0.5};
+const DECLINE = {'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5};
 const NAT_BAR = {ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
 const NAT_STR = {BRA:.18,FRA:.18,ESP:.16,ARG:.16,ENG:.14,GER:.12,POR:.10,NED:.08,ITA:.08,BEL:.06,NOR:.03,JPN:.03,USA:.02,KOR:.02,NGA:.02};
 const CONT_CUP = {ENG:'유로',ESP:'유로',GER:'유로',ITA:'유로',FRA:'유로',POR:'유로',NED:'유로',BEL:'유로',NOR:'유로',BRA:'코파 아메리카',ARG:'코파 아메리카',KOR:'아시안컵',JPN:'아시안컵',USA:'골드컵',NGA:'아프리카 네이션스컵'};
@@ -114,7 +122,8 @@ const BALLON_PTS = [[/챔피언스리그 우승/,45],[/월드컵 우승/,50],[/(
 const NEW_SIGNING = [0.08, -0.04];   // 선발 확률: [이적 첫 시즌 +, 같은 팀 2시즌째부터 −] — 평균이 0 근처가 되게(전체 성장이 빨라지지 않게)
 const AW_PRESTIGE = [0.2, 105];   // 수상용 평점의 구단 수준 보정: [15 차이마다 ±, 기준 명성(1군 시즌 평균 구단 명성 근처)]
 // 이벤트 성장 효과(선택 차이를 키움 — 사용자 지정). 성장 쪽을 고르면 부상 위험도 같이 커진다.
-const EV_GROW = {coach:1.15, coachInj:0.05, coachStart:0.10, extra:1.15, extraInj:0.07, talk:1.1};
+// 선택 강화(사용자 지정 — "재능 비중 ↓, 선택 비중 ↑"): 이벤트 효과·대가를 예전의 2배로(트레이너·특별 훈련 +15% → +30%, 대가도 2배, 면담 +10% → +20%)
+const EV_GROW = {coach:1.3, coachInj:0.10, coachStart:0.20, extra:1.3, extraInj:0.14, talk:1.2};
 // 특성: 18세부터 시즌 끝에 조건 스탯을 넘은 특성이 있으면 이 확률로 제안(최대 3개 제시, 하나 고름), 선수당 최대 TRAIT_MAX개
 const TRAIT_P = 0.3, TRAIT_MAX = 3, POS_TRAITS_ON = false;
 const TRAIT_BY_ID = new Map([...TRAITS, ...CTRAITS.map(t => ({...t, pos:'공통'}))].map(t => [t.id, t]));
@@ -126,7 +135,7 @@ const CT_AGE = 17, CT_SHIFT = 0.8, CT_CAP = 10;
 const CT_BONUS = {
   FW:{'스피드':{g:.01, a:.01}, '패스':{g:.007, a:.013}, '드리블':{g:.007}, '오프더볼':{g:.006}},
   MF:{'태클':{r:.005}, '체력':{g:.002, a:.003}, '볼키핑':{g:.002, r:.004}},
-  DF:{'스피드':{r:.003}, '빌드업':{a:.005, r:.007}, '공중볼':{r:.007}}};   // 태클·대인마크의 클린시트·평점은 이제 DEF_FX가 모든 선수에게 준다
+  DF:{'스피드':{r:.003}, '패스':{a:.005, r:.007}, '공중볼':{r:.007}}};   // 태클·대인마크의 클린시트·평점은 이제 DEF_FX가 모든 선수에게 준다
 // 수비 스탯 효과(사용자 지정 — 모든 스탯이 어딘가에 쓰이게): 시작 모양보다 오버롤 대비 얼마나 올랐는지(1점당)로 클린시트 배율·평점을 더한다.
 // 시작 모양을 기준으로 삼아 카드끼리의 기본값은 그대로(같은 카드·같은 오버롤이면 평균 0), 훈련·특성·하락으로 바뀐 몫만 효과가 난다.
 const DEF_FX = {
@@ -147,7 +156,7 @@ function defFx(){
 const CT_LABEL = {
   FW:{'결정력':'골','드리블':'골·도움','스피드':'골·도움','오프더볼':'골','패스':'골·도움'},
   MF:{'패스':'도움','시야':'골·도움','볼키핑':'골·평점','체력':'골·도움·평점','태클':'클린시트·평점'},
-  DF:{'태클':'클린시트·평점','대인마크':'클린시트·평점','공중볼':'골·클린시트·평점','스피드':'도움·클린시트','빌드업':'도움·평점'}};
+  DF:{'태클':'클린시트·평점','대인마크':'클린시트·평점','공중볼':'골·클린시트·평점','스피드':'도움·클린시트','패스':'도움·평점'}};
 function ctBonus(){
   const t = commonOf(), b = t && (CT_BONUS[C.pos]||{})[t.s[C.pos]], n = C.ctg||0;
   return {g:1+(b&&b.g||0)*n, a:1+(b&&b.a||0)*n, cs:1+(b&&b.cs||0)*n, r:(b&&b.r||0)*n};
@@ -172,23 +181,30 @@ const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 // 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
 const G_RATE = {FW:0.41, MF:0.126, DF:0.031}, A_RATE = {FW:0.181, MF:0.168, DF:0.052};
 // 클린시트를 출전 경기 전체로 세면서(약 1.5배) cs 점수는 그만큼 낮췄다(예전 MF 0.5 · DF 3.5 — DF는 포지션 점수 중앙을 맞추느라 조금 더 낮춤).
-const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:6,a:5,cs:0.33}, DF:{g:8,a:5,cs:2.2}};
+const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:5.4,a:4.5,cs:0.33}, DF:{g:8,a:5,cs:2.2}};
+// 측면 수비 카드는 도움이 본업이라 도움 비중을 키우고 클린시트 비중을 줄인다(사용자 지정 — "윙백·풀백은 클린시트보다 도움").
+const CONTRIB_CARD = {'풀백':{g:8,a:6.5,cs:1.8}, '윙백':{g:8,a:7.5,cs:1.5}, '인버티드 풀백':{g:8,a:6.5,cs:1.8}};
 // 카드별 기여 보정(사용자 지정): 같은 포지션 안에서도 카드마다 골·도움·클린시트 기대치가 달라
 // (포처는 골, 펄스나인·수비형은 적게) 기여 점수 평균이 같아지게 곱한다. 순서는 CARDS와 같음.
 // 포지션 몫도 함께 곱해져 있다: 공격수 ×1.13(시작 오버롤 54 통일로 줄어든 점수를 되돌린 몫), 수비수 ×1.09(미드필더와 점수 중앙을 맞춘 몫 — 사용자 지적).
 // 결과 포지션별 점수 중앙 공격 2,160 · 미드 2,121 · 수비 2,113(공격수가 약간 높은 건 득점왕 같은 공격수 전용 상 몫).
 // scripts/sim_career.mjs와 같은 전략으로 카드당 3,000 커리어를 돌려 잰 값 — 카드·출력 공식을 바꾸면 다시 잴 것.
 // 득점왕 같은 수상은 보정하지 않는다(포처가 득점왕을 더 받는 건 자연스럽다).
-const CARD_CONTRIB = {FW:[1.25,0.95,0.86,0.96,1.08], MF:[1.15,0.8,0.92,0.91,1.34], DF:[1.23,1.19,1.13,1.17,1.06,1.17]};
+const CARD_CONTRIB = {FW:[1.25,0.95,0.86,0.96,1.08], MF:[1.15,0.8,0.92,0.91,1.34], DF:[1.23,1.19,1.13,1.24,1.02,1.04]};
 // 숨은 재능(18세에 정해짐): 등급을 뽑은 뒤 등급 안에서 배율을 연속으로 뽑는다(평균은 예전 고정값 1.0/1.18/1.58/2.05 근처).
 // 고정값 넷이면 분포가 등급별 덩어리로 끊기고 사이가 비었다(사용자 지적). 등급 이름은 힌트·통계용으로 C.tier에 남긴다.
-const TALENT = {gen:[2.05,2.5], wonder:[1.4,1.85], prospect:[1.08,1.3], normal:[0.85,1.15]};
+// 성장 하향(사용자 지정 — "보통 재능도 하한이 너무 높다, 80이면 상당한 고오버롤"): K_GROW ×0.75, 재능 배율은 등급 간 격차를 조금 넓혀(보통 ×0.97 · 유망주 ×1.08 · 원더키드 ×1.18 · 세대급 ×1.12)
+// 정점 평균 보통 79→71.5 · 유망주 82→75 · 원더키드 89→83 · 세대급 95→91, 90+ 12%→3.8%. 구단 수준·수상·대표팀 기준은 그대로 둬서, 빅클럽 주전·수상은 여전히 85~90대가 하고 그 수가 줄었다.
+// 재능 압축(같은 요청): 1과의 차이를 0.9배로(처음 0.8배 → 사용자 지정 "아주 살짝만 올리고") — 등급 간 격차가 줄고, 선택(훈련·이벤트·출전)에 따른 차이가 커진다.
+const TALENT = {gen:[2.17,2.62], wonder:[1.59,2.06], prospect:[1.15,1.36], normal:[0.84,1.11]};
 // 발전 운: 커리어마다 하나, 성장에 곱한다(같은 재능이라도 선수마다 다르게 — 사용자 지적: "재능이 결과를 다 정한다")
 const DEV = [0.8, 1.2];
 // K_GROW 0.47 → 0.445: 유스 아카데미 보정으로 늘어난 유스 성장만큼 낮춰 재능별 정점을 예전대로(75.9/79.0/85.6/92.8)
-const K_GROW = 0.445, DAMP = [0.02, 24], PLAY_C = [0.75, 0.45], CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
+const K_GROW = 0.297, DAMP = [0.02, 24], PLAY_C = [0.5, 0.2],   // 출전 계수 바닥 0.75/0.45 → 0.5/0.2: 뛰는 곳을 고르는 게 더 중요해졌다(선택 강화)
+  CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-const BALLON = {mu:138, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.08, DF:0.95}, top:4, inc:10, recW:0.7, fat:{FW:0, MF:5, DF:25}};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점.
+// mu 138 → 126(사용자 지정 — 성장 하향 뒤 발롱이 반토막 나서 상위권 공격수·미드필더가 수비수 아래로 밀렸다. 상위 1% 공격수 발롱 3.0 → 4.2개)
+const BALLON = {mu:126, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.08, DF:0.95}, top:4, inc:10, recW:0.7, fat:{FW:0, MF:5, DF:25}};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점.
 // fat: 받은 횟수당 감점, 포지션별 — 공격수는 10회도 자연스럽지만 미드필더는 메시·호날두급이어도 5~6회, 수비수는 세대급이어도 2회 안팎이 상식선(사용자 지정)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
@@ -570,19 +586,20 @@ export function playSeason(state, choice){
   const effG = FX.g.reduce((t,w,i)=>t+w*C.st[i],0), effA = FX.a.reduce((t,w,i)=>t+w*C.st[i],0);
   const teamF = Math.max(0.8, Math.min(1.2, 0.8+0.4*(club.r-50)/45));
   const cardG = Math.sqrt({'포처':1.35,'타깃맨':1.05,'윙어':0.8,'펄스나인':0.85,'공격형 미드필더':1.4,'메짤라':1.2,'수비형 미드필더':0.5,'윙백':1.3,'인버티드 풀백':1.2}[card.n]||1);
-  const cardA = Math.sqrt({'윙어':1.5,'펄스나인':1.5,'공격형 미드필더':1.4,'딥라잉 플레이메이커':1.2,'윙백':1.6,'풀백':1.3,'포처':0.6}[card.n]||1);
+  const cardA = Math.sqrt({'윙어':1.5,'펄스나인':1.5,'공격형 미드필더':1.4,'딥라잉 플레이메이커':1.2,'윙백':2.4,'풀백':1.7,'인버티드 풀백':1.5,'포처':0.6}[card.n]||1);
   // 약발 보너스(골·도움): ★3까지는 작고 ★4부터 커진다 — 훈련 비용(그 시즌 성장 ×0.92) 대비 ★3은 약간 손해, ★4부터 약간 이득(사용자 지정)
   const wfF = (C.pos==='FW'||C.pos==='MF') ? 1+WF_BONUS[C.wf] : 1;
   const CB = ctBonus();
-  const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF*TM.g*CB.g;
-  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a*CB.a;
+  const LT = lgTier(club.nat);   // 리그 수준(하위 리그일수록 기록이 더 나온다)
+  const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF*TM.g*CB.g*LG_OUT[LT];
+  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a*CB.a*LG_OUT[LT];
   const minsEq = starts + subs*0.3;
   const hot = !row0Youth && starts>=15 && rng()<0.02;   // 커리어 하이 시즌
   // 커리어 하이 ×1.3(예전 ×1.6 — 88 오버롤로 79골이 나왔다), 골 45·도움 25를 넘는 몫은 절반만(60골 넘는 시즌은 전설급에서만 드물게).
   const soft = (x, k) => x <= k ? x : k + (x-k)*0.5;
   const goals = Math.round(soft(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.3:1), 45)), ast = Math.round(soft(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.3:1), 25));
   const DF_ = defFx();
-  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*CB.cs*DF_.cs));
+  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*CB.cs*DF_.cs*LG_CS[LT]));
   // 클린시트는 출전 경기 전체로 센다(교체 출전 포함). 예전엔 선발만 세서 출전 대비 25%로 너무 적게 보였다(사용자 지적).
   const cs = row0Youth ? Math.round(apps*pCS*0.8) : Math.round(apps*pCS*(0.85+rng()*0.3));
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
@@ -599,7 +616,7 @@ export function playSeason(state, choice){
   if(row0Youth && C.age<18){ if(ev==='extra' && pick===0) C.youthPts++; if(ratio>=0.6) C.youthPts++; }
   if(C.age>=18 && !C.awoken){
     const tr = mulberry(C.seed ^ hashStr('talent'))(), b = Math.min(6, C.youthPts);
-    const pG = 0.02+b*0.0017, pW = pG+0.11+b*0.005, pP = pW+0.25;   // 세대급 2~3% / 원더키드 11~14% / 유망주 25% / 보통 62~58%(사용자 지정 — 처음 8~11% / 20% / 70~66%)
+    const pG = 0.02+b*0.0017, pW = pG+0.15+b*0.005, pP = pW+0.32;   // 보통 비중 ↓, 유망주·원더키드 ↑(사용자 지정 — 보통 약 50%: 유망주 25→32%, 원더키드 기본 11→15%)   // 세대급 2~3% / 원더키드 11~14% / 유망주 25% / 보통 62~58%(사용자 지정 — 처음 8~11% / 20% / 70~66%)
     C.tier = tr<pG ? 'gen' : tr<pW ? 'wonder' : tr<pP ? 'prospect' : 'normal';
     const [a, b2] = TALENT[C.tier], u = mulberry(C.seed ^ hashStr('talent2'))();
     C.talent = a + (b2-a)*u;
@@ -611,7 +628,10 @@ export function playSeason(state, choice){
     const dmp = Math.min(1, Math.max(DAMP[0], (99.6-C.ovr)/DAMP[1]));
     const kid = row0Youth && C.age < 18;
     if(kid && club.nat !== C.nation) growMul *= ABROAD_G;
-    if(C.body) growMul *= 1 + BODY_FIT*bodyFit(C.pos, C.card, C.body);   // 체형·카드 궁합   // 해외 유스: 큰 리그 아카데미의 경쟁·훈련(자국 유스의 ACAD 보정 대신)
+    if(C.body) growMul *= 1 + BODY_FIT*bodyFit(C.pos, C.card, C.body);
+    // 나이에 맞는 훈련(선택 강화): 20세까지는 약점 보완(기본기), 21세부터는 강점 강화가 성장 +18%, 반대로 하면 −9%. 균형은 그대로.
+    if(C.train==='약점 보완') growMul *= C.age <= TRAIN_AGE[0] ? 1+TRAIN_AGE[1] : 1-TRAIN_AGE[1]/2;
+    else if(C.train==='강점 강화') growMul *= C.age <= TRAIN_AGE[0] ? 1-TRAIN_AGE[1]/2 : 1+TRAIN_AGE[1];   // 체형·카드 궁합   // 해외 유스: 큰 리그 아카데미의 경쟁·훈련(자국 유스의 ACAD 보정 대신)
     // 출전 × 구단 계수(유스 단계면 유스 출전 계수·월반 보너스·아카데미 포함)
     const comp = (cl, lvx, rt) => {
       const yRow = lvx < 3, kd = yRow && C.age < 18, ypp = kd ? YPLAY_KID : YPLAY;
@@ -719,7 +739,7 @@ export function playSeason(state, choice){
 
   // 발롱도르·FIFA 올해의 선수: 시즌 활약 점수 vs 그해 세계 경쟁자
   if(senior && apps>=20){
-    const recRaw = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos], rec = BALLON.recW*recRaw;   // recW: 공격 포인트 비중(우승 비중을 키운 만큼 낮춤)
+    const recRaw = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos]*LG_PTS[LT], rec = BALLON.recW*recRaw;   // 하위 리그 기록은 발롱에서도 덜 쳐준다   // recW: 공격 포인트 비중(우승 비중을 키운 만큼 낮춤)
     let hp2 = 0; hon.forEach(x => { const m = BALLON_PTS.find(r => r[0].test(x.n)); if(m) hp2 += m[1]; });
     const star = Math.max(0,ov-85)*2 + Math.max(0,ov-94)*BALLON.top + (C.lastBallon===C.age-1 ? BALLON.inc : 0) - (C.ballonN||0)*BALLON.fat[C.pos];
     // 압도적 시즌(공격 포인트가 아주 많은 시즌)은 따로 더 친다 — 62골을 넣고도 "후보 30인"에 그치던 문제(사용자 지적)
@@ -750,15 +770,26 @@ export function playSeason(state, choice){
     if(rng()<0.6){ C.num = C.want; notes.push('원하던 '+C.want+'번을 받았어요.'); }
     else { C.num = [28,31,35,41,44,47][Math.floor(rng()*6)]; notes.push(C.want+'번은 주인이 있어서 '+C.num+'번을 받았어요.'); }
   }
-  // 코치 평가(재능이 정해지는 18세 시즌 끝, 한 번): 3구간 — 세대급·원더키드를 한 구간으로 묶는다.
-  // 4구간으로 알려 주면 18세마다 최상위 코멘트가 뜰 때까지 다시 시작하게 된다(사용자 지정). 19·20세 힌트는 없앴다.
-  let coach = null;
-  if(C.age===18) coach = ['gen','wonder'].includes(C.tier) ? '이런 재능은 쉽게 나오지 않아요. 큰 무대를 노려 봐도 돼요.'
-    : C.tier==='prospect' ? '성장 속도가 좋아요. 꾸준히만 하면 1군 주전감이에요.'
-    : '아직은 평범해요. 출전 시간과 노력으로 메워야 해요.';
+  // 잠재력 평가(사용자 지정 — 18세·21세 시즌 끝, 결과 화면 위에 오버레이): 재능 등급만이 아니라 지금 오버롤까지 합친 예상 정점으로 5등급.
+  // 예상 정점 = SCOUT[나이] 회귀식(오버롤·재능 배율 → 실제 정점, 12,000커리어로 맞춤. 오차 표준편차 18세 1.8 · 21세 1.3)에 시드 흔들림 ±2.
+  // 흔들림은 등급이 재능을 그대로 드러내지 않게 하려는 것(재능만 보고 리셋하는 걸 줄인다). 실측: S 평가의 실제 정점 중앙 91 · A 83 · B 77 · C 73 · D 68.
+  let scout = null;
+  if(SCOUT[C.age]){
+    const sr = mulberry(C.seed ^ hashStr('scout|'+C.age)), [k0, k1, k2] = SCOUT[C.age], est = k0 + k1*C.ovr + k2*C.talent + (sr()-0.5)*4;
+    // S와 A는 경계를 ±6 흐리게(사용자 지정 — S만 노리고 새로 시작하는 리롤을 막으려고). 예상 정점 80 이상이면 86 ± 6을 넘을 때 S라서 두 등급의 실제 정점이 크게 겹친다.
+    let g = SCOUT_G.find(x => est >= x[0])[1];
+    if(est >= 80) g = est + (sr()-0.5)*12 >= 86 ? 'S' : 'A';
+    scout = {age:C.age, g, ...(C.age === 21 && C.scout18 ? {prev:C.scout18} : {})};
+    if(C.age === 18) C.scout18 = g;
+  }
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(rating*100)/100, rank,
-               youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(coach ? {coach} : {})};
+               youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(scout ? {scout} : {})};
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
+  // 점수용 가중 기록(리그 수준 반비례). 옛 토큰은 지금까지 기록을 가중 1로 시작한다.
+  if(C.tot.wg == null){ C.tot.wg = C.tot.goals; C.tot.wa = C.tot.ast; C.tot.wcs = C.tot.cs; }
+  if(C.tot.wap == null) C.tot.wap = C.tot.apps;
+  C.tot.wap += apps*LG_PTS[LT];   // 출전 점수도 리그 수준으로 — 하위 리그는 주전 자리를 쉽게 잡아 출전이 쌓인다
+  C.tot.wg += goals*LG_PTS[LT]; C.tot.wa += ast*LG_PTS[LT]; C.tot.wcs += cs*LG_PTS[LT];
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg; C.tot.ca = (C.tot.ca||0) + ca; C.tot.ccs = (C.tot.ccs||0) + ccs;
   C.peak = Math.max(C.peak, cOvr());
   C.bodyOut = bodyEnd();
@@ -872,7 +903,7 @@ export function nextSeason(state, pick, traitPick){
     C.club = o.c; if(!C.clubs.includes(o.c.n)) C.clubs.push(o.c.n);
   }
   // 지난 시즌 줄에서 결과 화면에만 쓰는 값은 버린다(토큰 크기 — 은퇴 카드엔 필요 없다)
-  const r = C.hist[C.hist.length-1]; delete r.notes; delete r.coach; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
+  const r = C.hist[C.hist.length-1]; delete r.notes; delete r.coach; delete r.scout; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
   const moved = pick != null, lv0 = lvOf();
   C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
   // 유스 계약 만료(18세가 되는 여름): 첫 구단 유스에서 구단 수준에 한참 못 미치면 재계약 없이 내보낸다 → 실력에 맞는 자국 구단으로.
@@ -907,32 +938,36 @@ export function retire(state){
 }
 // 통산 수상 목록 — 시즌 줄의 hon을 이어 붙인 것(토큰에 따로 두지 않는다)
 export const honorsOf = state => state.hist.flatMap(r => r.hon);
-export function contribScore(state){ const w = CONTRIB[state.pos], t = state.tot; return (t.goals*w.g + t.ast*w.a + (t.cs||0)*w.cs) * ((CARD_CONTRIB[state.pos]||[])[state.card] || 1); }
+export function contribScore(state){ const w = CONTRIB_CARD[(CARDS[state.pos][state.card]||{}).n] || CONTRIB[state.pos], t = state.tot; return ((t.wg ?? t.goals)*w.g + (t.wa ?? t.ast)*w.a + (t.wcs ?? t.cs ?? 0)*w.cs) * ((CARD_CONTRIB[state.pos]||[])[state.card] || 1); }
 // 발롱도르·FIFA 올해의 선수는 받을수록 한 번의 점수가 줄어든다(n번째: 200 × REPEAT_PTS[n−1], 마지막 값 이후 고정).
 // 수상 자체는 그대로 두고 점수만 관리한다(사용자 지정 — 연속 수상 12회면 S 등급만 2,400점이 쌓여 점수가 튀었다).
 const REPEAT_PTS = [1, 0.8, 0.65, 0.5, 0.4, 0.35], REPEAT_AW = /^(발롱도르|FIFA 올해의 선수)$/;
 // 수비수 가점(사용자 지정): 수비수는 발롱을 여러 번 받기 어려워 통합 최상위에서 사라졌다 — 수비수의 대표 상과 발롱을 더 쳐 준다.
 // 리그 올해의 미드필더·수비수, 챔스 올해의 공격수·미드필더·수비수는 실제와 달라 뺐다(사용자 지정) — 그 몫을 베스트 11 가점으로 메운다.
-const DF_BONUS = [[/리그 베스트 11$/, 2.2], [/^월드 베스트 11$/, 2], [/^이달의 선수/, 1.5], [/^발롱도르$/, 2]];
+// 베스트11 2.2 → 1.95, 월드 베스트11 2 → 1.8, 발롱 2 → 1.8(사용자 지정 — 성장 하향 뒤 최상단 1·2위를 수비수가 차지해 살짝 낮춤)
+const DF_BONUS = [[/리그 베스트 11$/, 1.75], [/^월드 베스트 11$/, 1.8], [/^이달의 선수/, 1.5], [/^발롱도르$/, 1.8]];
 // 미드필더도 발롱 반복 감점 때문에 최상위가 얇아 발롱 점수만 ×1.2(사용자 지정 — 1.4는 과하다)
 const MF_BONUS = [[/리그 베스트 11$/, 1.8], [/^월드 베스트 11$/, 1.6], [/^이달의 선수/, 1.3], [/^발롱도르$/, 1.2]];
 // 우승 점수(커리어 점수에서만, 등급·성장 보너스는 그대로): 상위권 우승 몫이 골·도움 몫의 1/3이라 기록 쪽으로 기울었다(사용자 지정)
 const TROPHY_PTS = [[/^챔피언스리그 우승$/, 150], [/^(?!유스).+ 리그 우승$/, 80], [/^월드컵 우승$/, 300]];   // 유스 리그 우승은 0점 그대로
 // 카드별 개인상 점수 배율(사용자 지정 — 카드마다 상위 1% 점수가 최소 8,300은 되게). 개인상(득점왕·베스트 11·올해의 선수·발롱 등, 팀 우승·대표팀 제외)에만 곱한다.
 // 개인상은 상위권에 몰려 있어(상위 1% 1,100~2,800점, 점수 중앙 선수는 3~40점) 보통 선수 점수는 거의 그대로 두고 상한만 올린다. 순서는 CARDS와 같음.
-const CARD_HON = {FW:[1.17,0.97,0.92,1,1.12], MF:[1.3,1.1,1.2,1.3,1.25], DF:[1.25,1.35,1.3,1.35,1.3,1.2]};
+const CARD_HON = {FW:[1.17,0.97,0.92,1,1.12], MF:[1.3,1.1,1.2,1.3,1.25], DF:[1.25,1.35,1.3,1.35,1.3,1.1]};
+// 리그 개인상·리그 우승 점수도 리그 수준 반비례("잉글랜드 리그 득점왕"처럼 국가 이름으로 시작하는 리그 수상)
+const LG_HON = new Map(NATIONS.map(n => [n.n+' 리그', LG_PTS[lgTier(n.id)]]));
+const lgHonMul = name => { const k = String(name).split(' ').slice(0,2).join(' '); return LG_HON.get(k) ?? 1; };
 export function careerScore(state){
   const ch = (CARD_HON[state.pos]||[])[state.card] || 1;
   const seen = {};
   const hp = honorsOf(state).reduce((t,h) => {
     const bon = {DF:DF_BONUS, MF:MF_BONUS}[state.pos], mul = bon ? ((bon.find(b => b[0].test(h.n))||[0,1])[1]) : 1;
     const tp = TROPHY_PTS.find(x => x[0].test(String(h.n).split(' ×')[0]));
-    const base = (tp ? tp[1] : (HONOR_TIER[h.tier]||{p:0}).p)*mul*(h.m||1)*(h.kind==='ind' ? ch : 1), n = +(String(h.n).split('×')[1])||1;
+    const base = (tp ? tp[1] : (HONOR_TIER[h.tier]||{p:0}).p)*mul*(h.m||1)*(h.kind==='ind' ? ch : 1)*lgHonMul(h.n), n = +(String(h.n).split('×')[1])||1;
     if(!REPEAT_AW.test(h.n)) return t + base*n;
     const k = seen[h.n] = (seen[h.n]||0) + 1;
     return t + base*REPEAT_PTS[Math.min(k, REPEAT_PTS.length)-1];
   }, 0);
-  return Math.round(state.tot.apps + contribScore(state) + state.tot.caps*2 + state.peak*10 + hp);
+  return Math.round((state.tot.wap ?? state.tot.apps) + contribScore(state) + state.tot.caps*2 + state.peak*10 + hp);
 }
 
 // 시장가치(€M, 재미용): 오버롤과 나이로
