@@ -9330,7 +9330,7 @@ function crCardHtml(c){
   var natHon=honors.filter(function(x){ return x.kind==='nat' && /우승/.test(x.n); });
   if(t.caps) h+='<div class="cr-rc-row nat"><span class="a">'+nat.f+'</span><span class="c"><em>'+nat.n+' 대표팀</em>'
      +(natHon.length?'<span class="ic">'+natHon.map(function(x){ return crTrophy(x.n,20); }).join('')+'</span>':'')+'</span>'
-     +'<span></span><span>'+t.caps+'</span><span>'+t.cg+'</span><span>—</span></div>';
+     +'<span></span><span>'+t.caps+'</span><span>'+t.cg+'</span><span>'+((c.pos==='DF'?t.ccs:t.ca)!=null?(c.pos==='DF'?t.ccs:t.ca):'—')+'</span></div>';   /* 대표팀 도움(수비수는 클린시트) — 예전 커리어 기록엔 없어서 "—" */
   h+='</div>';
   var grp={}, order=[];
   honors.forEach(function(x){ var nm=String(x.n).split(' ×')[0], n=+(String(x.n).split('×')[1])||1;

@@ -537,7 +537,7 @@ export function playSeason(state, choice){
   C.uclNext = rank<=4 && club.r>=78 ? club.n : null;
 
   // 대표팀·국제 대회(2030년부터 4년마다 월드컵, 그 사이 2년마다 대륙컵)
-  let caps = 0, cg = 0; const year = 2026+(C.age-15)+1;
+  let caps = 0, cg = 0, ca = 0, ccs = 0; const year = 2026+(C.age-15)+1;
   if(C.age>=18 && ov>=NAT_BAR[C.nation]-2){
     caps = Math.round(4+rng()*6);
     notes.push(natInfo(C.nation).n+' 대표팀에 뽑혔어요.');
@@ -557,6 +557,11 @@ export function playSeason(state, choice){
     const gpa = apps >= 5 ? goals/apps : {FW:0.3, MF:0.1, DF:0.03}[C.pos];
     const xg = caps*Math.min(0.9, gpa*0.8)*(0.6+rng()*0.8);
     cg = Math.floor(xg) + (rng() < xg-Math.floor(xg) ? 1 : 0);   // 확률 반올림 — 수비수처럼 기대값이 1 미만인 시즌이 늘 0이 되지 않게
+    // 대표팀 도움·클린시트(사용자 지적 — 은퇴 카드 대표팀 줄에 도움이 "—"였다): 골과 같은 방식(소속팀 경기당 × 0.8). 기록용이라 점수엔 안 들어간다.
+    // 따로 뽑은 난수열을 쓴다 — 시즌 난수열에 끼우면 뒤따르는 발롱·수상 결과가 바뀐다.
+    const nr = mulberry(C.seed ^ hashStr('natx|'+C.age)), rnd = x => Math.floor(x) + (nr() < x-Math.floor(x) ? 1 : 0);
+    ca = rnd(caps*Math.min(0.6, (apps >= 5 ? ast/apps : {FW:0.12, MF:0.12, DF:0.04}[C.pos])*0.8)*(0.6+nr()*0.8));
+    ccs = rnd(caps*Math.min(0.6, apps >= 5 ? cs/apps : 0.3)*(0.8+nr()*0.4));
   } else if(C.age>=16 && C.age<18 && ov>=NAT_BAR[C.nation]-22) notes.push(natInfo(C.nation).n+' 연령별 대표팀에 뽑혔어요.');
 
   // 발롱도르·FIFA 올해의 선수: 시즌 활약 점수 vs 그해 세계 경쟁자
@@ -601,7 +606,7 @@ export function playSeason(state, choice){
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(rating*100)/100, rank,
                youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(coach ? {coach} : {})};
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
-  C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg;
+  C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg; C.tot.ca = (C.tot.ca||0) + ca; C.tot.ccs = (C.tot.ccs||0) + ccs;
   C.peak = Math.max(C.peak, cOvr());
   C.bodyOut = bodyEnd();
   C.offers = makeOffers(rng, row);
