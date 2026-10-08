@@ -32,6 +32,7 @@ const STAGE = [{n:'U-16', gap:30, games:26, up:null}, {n:'U-18', gap:24, games:2
 const LATE = {'몸 관리':{st:-0.12, decl:0.75, inj:-0.03}, '주전 경쟁':{st:0.1, decl:1.15, inj:0.03}};
 const lateTrain = () => ageBase() <= 0;
 export const trainOpts = () => lateTrain() ? ['몸 관리','균형','주전 경쟁'] : ['강점 강화','균형','약점 보완'];
+const MENTOR_P = 0.2;
 const STAGE_UP = 0.2, YPLAY = [0.9, 0.3], YPLAY_KID = [0.6, 0.8];   // 유스 출전 계수: 18세 이상 U-21 / 17세까지(첫 구단 시절)
 // 유스 단계(U-16~U-21)의 구단 수준 효과는 1군의 35%만(사용자 지정 — 첫 구단 3곳 중 "도전"이 늘 정답이던 것): 예전엔 맨시티 유스 ×1.85 vs 브라이튼 ×1.12로
 // 구단 수준이 유스 성장을 다 정해서 출전 기회 손해가 의미 없었다(점수 평균 도전 3,817 · 적정 3,263 · 안정 2,672). 대신 유스는 뛰는 만큼 크게(YPLAY_KID 0.6~1.4).
@@ -485,6 +486,12 @@ export function playSeason(state, choice){
       C.off = C.off.map((o2,i) => open.includes(i) ? Math.min(15, o2+each) : w[i]<=0.9 ? o2-0.7 : o2); }
   }
   if(C.train==='약점 보완') C.off = C.off.map((o2,i) => Math.max(-25, o2+(w[i]>=1.2?-0.5:w[i]<=0.9?1:0)));
+  // 특별 멘토링(사용자 지정): 유스(17세까지) 시즌마다 20%로 구단이 1군 베테랑에게 멘토를 맡긴다 — 고르는 게 아니라 가끔 일어나는 일, 오버롤 +1.
+  // 시드·나이로만 정한다(시즌 선택과 무관하게 같은 커리어면 같은 시즌에 뜬다).
+  if(C.age < 18 && mulberry(C.seed ^ hashStr('mentor|'+C.age))() < MENTOR_P){
+    C.ovr = Math.min(99, C.ovr + 1); C.mentor = (C.mentor||0) + 1;
+    notes.push('🤝 특별 멘토링 — 구단이 1군 베테랑에게 멘토를 맡겼어요. 오버롤 +1');
+  }
   syncSt();
   const deltas = C.st.map((v,i) => Math.round(v)-Math.round(before[i]));
 
