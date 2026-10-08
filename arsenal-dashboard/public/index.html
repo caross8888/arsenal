@@ -1887,6 +1887,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-ss-skip{align-self:center;border:0;background:none;color:rgba(255,255,255,.75);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer}
 .cr-inj{display:flex;flex-direction:column;gap:10px;animation:crIvUp .35s ease-out both}
 .cr-inj .hd{text-align:center;color:#F0F2F7}.cr-inj .hd b{display:block;font-size:17px;color:#FCA5A5}.cr-inj .hd span{font-size:13px;color:rgba(255,255,255,.75)}
+.cr-pk-on{position:relative;border-color:#C8A84B!important;background:rgba(200,168,75,.18)!important;box-shadow:0 0 0 3px rgba(200,168,75,.3),0 10px 26px rgba(0,0,0,.35);animation:crPkPop .4s cubic-bezier(.2,1.6,.4,1) both!important;opacity:1!important}
+.cr-pk-on::after{content:"✓ 선택";position:absolute;top:-9px;right:10px;font-size:11px;font-weight:800;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:2px 8px;animation:crIvUp .25s ease-out both}
+.cr-pk-off{opacity:.3!important;transform:scale(.95)!important;filter:grayscale(.6);transition:opacity .3s,transform .3s!important}
+.cr-tr-o:disabled,.cr-tm-c:disabled,.cr-inj-c:disabled{cursor:default}
+@keyframes crPkPop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1.02)}}
 .cr-inj-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .cr-inj-c{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;font:inherit;color:#F0F2F7;cursor:pointer;border-radius:16px;padding:16px 10px 14px;border:1.5px solid rgba(255,255,255,.14);background:rgba(24,20,28,.88);animation:crInjIn .5s cubic-bezier(.2,1.3,.4,1) both;animation-delay:var(--d);transition:border-color .15s,transform .15s}
 .cr-inj-c .e{font-size:30px;line-height:1}.cr-inj-c b{font-size:15px;line-height:1.35}.cr-inj-c .d{font-size:12px;line-height:1.45;color:rgba(255,255,255,.75)}
@@ -9318,7 +9323,7 @@ function crTrShow(ev){
    +'<div class="cr-tr-say"><div class="who">'+gmEsc(T.who)+'</div><div class="t" id="crTrQ">'+(reduce?gmEsc(T.say||ev.d):'<span class="cur"></span>')+'</div></div>'
    +'<div class="cr-tr-opts" id="crTrA" hidden>'
    +ev.a.map(function(t,i){ var m=String(t).match(/^(.*?)\s*\((.*)\)$/);
-      return '<button class="cr-tr-o" style="--d:'+(0.1+i*0.16)+'s" aria-pressed="false" onclick="crTrPick('+i+')"><span class="e" aria-hidden="true">'+T.opt[i]+'</span>'
+      return '<button class="cr-tr-o" style="--d:'+(0.1+i*0.16)+'s" aria-pressed="false" onclick="crTrPick('+i+',this)"><span class="e" aria-hidden="true">'+T.opt[i]+'</span>'
         +'<b>'+gmEsc(m?m[1]:t)+'</b>'+(m?'<span class="fxs">'+crTrFx(m[2])+'</span>':'')+'</button>'; }).join('')
    +'</div></div></div>');
   var show=function(){ var el=document.getElementById('crTrA'); if(el) el.hidden=false; };
@@ -9329,11 +9334,10 @@ function crTrShow(ev){
     k++; t.innerHTML=gmEsc(q.slice(0,k))+'<span class="cur"></span>'; if(k>=q.length){ clearInterval(CR.trTimer); show(); }
   }, 38); }, 700);
 }
-function crTrPick(i){   // 고르는 즉시 반영(사용자 지정) — 눌린 카드를 잠깐 보여 주고 닫는다
+function crTrPick(i, btn){   // 고르는 즉시 반영(사용자 지정) — 고른 카드를 표시하고 잠깐 뒤 닫는다
   if(CR.trSel!=null) return;
   CR.trSel=i;
-  document.querySelectorAll('#crTov .cr-tr-o').forEach(function(b,j){ b.setAttribute('aria-pressed', String(j===i)); });
-  setTimeout(function(){ CR.evPick=i; clearInterval(CR.trTimer); crTovSet(''); crPrep(); }, 320);
+  crPickFx(btn, '#crTov .cr-tr-o', function(){ CR.evPick=i; clearInterval(CR.trTimer); crTovSet(''); crPrep(); });
 }
 // ── 인터뷰 오버레이(사용자 지정) ── 시즌 준비 화면에 인터뷰 이벤트가 뜨면 바로 띄운다. 기자 질문을 타자 치듯 보여 주고,
 // 끝나면 내 답변 두 문장(자신감·겸손 — 이름표·효과는 안 보인다, 문장만 보고 고른다)이 차례로 들어온다. 고른 답의 k가 evPick.
@@ -9388,12 +9392,14 @@ function crInjury(){   // 시즌 진행 오버레이를 멈춘 자리 그대로 
   var m=document.getElementById('crAnMsg'); if(m) m.innerHTML='<span class="inj">🚑 '+gmEsc(j.name)+'!</span>';
 }
 function crInjPick(k, btn){
-  if(!crBusy(btn)) return;
-  if(btn) btn.setAttribute('aria-pressed','true');
-  var from=CR.anim && CR.anim.stopAt || 0.4;
-  crAnimStart(from, true);
-  crApi('season', {token:CR.tok, injPick:k}).then(function(v){ crAnimTo(1, v); })
-    .catch(function(e){ crAnimStop(); crInjury(); crErr(e); });
+  if(CR.busy) return; CR.busy=true;
+  var from=CR.anim && CR.anim.stopAt || 0.4, res=null, err=null, shown=false;
+  // 고른 카드를 보여 주는 동안 응답을 받아 두고, 표시가 끝나면 이어서 진행
+  crApi('season', {token:CR.tok, injPick:k}).then(function(v){ res=v; if(shown) crAnimTo(1, v); }).catch(function(e){ err=e; if(shown){ crAnimStop(); crInjury(); crErr(e); } });
+  crPickFx(btn, '#crTov .cr-inj-c', function(){
+    shown=true; if(err){ crInjury(); return crErr(err); }
+    crAnimStart(from, true); if(res) crAnimTo(1, res);
+  });
 }
 
 // ── 시즌 진행 애니메이션 ───────────────────────────────────────────────
@@ -9560,9 +9566,15 @@ function crResult(){
 // ── 이적시장 오버레이(사용자 지정) ── 제안 알림이 뜨고 구단 카드가 한 장씩 날아 들어온다. 카드를 누르면 바로 반영:
 // 잔류는 곧장 다음 시즌, 이적은 "OFFICIAL · HERE WE GO" 이적 완료 연출을 보여 주면서 다음 시즌을 불러온다.
 // 방출이면 하위 구단 제안 + 은퇴 카드. ✕로 닫으면 결과 화면으로 돌아간다(선택 전).
+// 바로 반영되는 오버레이 카드의 선택 표시(사용자 지정 — 눌렀는지 보이게): 고른 카드는 금색 테두리·✓ 선택 배지로 튀어 오르고
+// 나머지는 흐려진 뒤 잠깐(0.65초) 있다가 다음으로 넘어간다.
+function crPickFx(btn, sel, fn){
+  document.querySelectorAll(sel).forEach(function(b){ b.disabled=true; b.classList.add(b===btn?'cr-pk-on':'cr-pk-off'); if(b===btn) b.setAttribute('aria-pressed','true'); });
+  setTimeout(fn, 650);
+}
 function crTmShow(){
   var p=CR.v.player, R=CR.v.result, n=R.offers.length, d=0;
-  var card=function(on, crest, tag, nm, meta, right){ d+=0.12; return '<button class="cr-tm-c" style="--d:'+(0.55+d)+'s" onclick="'+on+'">'+crest+'<div class="b"><div class="tg">'+tag+'</div><div class="nm">'+nm+'</div><div class="mt">'+meta+'</div></div><div>'+right+'</div></button>'; };
+  var card=function(on, crest, tag, nm, meta, right){ d+=0.12; return '<button class="cr-tm-c" style="--d:'+(0.55+d)+'s" onclick="'+on.replace(')',',this)')+'">'+crest+'<div class="b"><div class="tg">'+tag+'</div><div class="nm">'+nm+'</div><div class="mt">'+meta+'</div></div><div>'+right+'</div></button>'; };
   var h=(R.released?'':card('crTmPick(-1)', crCrest(p.club,40), '잔류', gmEsc(p.club.n), crFlag(p.club.nat)+crNat(p.club.nat).n, R.stay?crChance(R.stay.chance):''))
     +R.offers.map(function(o,k){ return card('crTmPick('+k+')', crCrest(o,40), gmEsc(o.kind)+(o.dream?' · ♥ 꿈의 구단':''), gmEsc(o.n), crFlag(o.nat)+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':''), crChance(o.chance)); }).join('')
     +(R.released?card('crTmPick(-2)', '<div class="cr-tm-ret" aria-hidden="true">🏁</div>', '커리어 마무리', '은퇴', '여기서 축구화를 벗어요', ''):'');
@@ -9571,12 +9583,12 @@ function crTmShow(){
     +'<div class="cr-tm-note"><span class="ic" aria-hidden="true">📩</span><div><b>'+(n?'제안 '+n+'건 도착':'제안 없음')+'</b><span>'+(R.released?gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 다음 행선지를 골라 주세요.':'에이전트가 받은 제안이에요. 남을지 떠날지 골라 주세요.')+'</span></div></div>'
     +'<div class="cr-tm-list">'+h+'</div></div></div>');
 }
-function crTmPick(k){
+function crTmPick(k, btn){
   if(CR.busy || CR.tmGo) return;
   var R=CR.v.result;
-  if(k<0){ CR.pick=null; if(k===-2 || !R.released){ crTovSet(''); crNext(null); } return; }
-  CR.pick=k; CR.tmGo=true; crTmDone(R.offers[k]);
-  var t0=Date.now(), MIN=2600, fin=function(fn){ setTimeout(function(){ CR.tmGo=false; crTovSet(''); fn(); }, Math.max(0, MIN-(Date.now()-t0))); };
+  if(k<0){ if(k===-1 && R.released) return; CR.pick=null; CR.tmGo=true; return crPickFx(btn, '#crTov .cr-tm-c', function(){ CR.tmGo=false; crNext(null); }); }   // 오버레이는 crShow가 닫는다
+  CR.pick=k; CR.tmGo=true; crPickFx(btn, '#crTov .cr-tm-c', function(){ crTmDone(R.offers[k]); });
+  var t0=Date.now(), MIN=3250, fin=function(fn){ setTimeout(function(){ CR.tmGo=false; crTovSet(''); fn(); }, Math.max(0, MIN-(Date.now()-t0))); };
   CR.busy=true;
   crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ fin(function(){ crShow(v); window.scrollTo(0,0); }); }).catch(function(e){ fin(function(){ crErr(e); }); });
 }
