@@ -1873,6 +1873,81 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-anbar em{position:absolute;top:50%;left:0;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(239,1,7,.2);will-change:transform}
 .cr-anim .cr-rs b{transition:color .2s}
 .cr-anim .cr-rs b.bump{animation:gmScoreBump .45s ease-out}
+#crSfExtra{display:flex;flex-direction:column}
+.cr-ss-skip{align-self:center;border:0;background:none;color:rgba(255,255,255,.75);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer}
+.cr-sf{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(40,12,14,.94),rgba(5,6,10,.96) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
+.cr-sf .ic{align-self:center;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:linear-gradient(145deg,#2a2d36,#15171d);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);animation:crTrBounce .7s .05s cubic-bezier(.2,1.5,.4,1) both}
+.cr-sf .tag{align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .2s ease-out both}
+.cr-sf.still,.cr-sf.still *{animation-duration:0s!important;animation-delay:0s!important}
+.cr-sf-box{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;gap:10px;margin:auto 0;color:#F0F2F7}
+.cr-sf-card{border-radius:16px;padding:12px 14px 10px;background:#F0F2F7;color:#14161C;border:2px solid transparent;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crIvUp .45s .35s ease-out both;transition:border-color .3s}
+.cr-sf-card .hd{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center}
+.cr-sf-card .hd b{display:block;font-size:16px;line-height:1.25}.cr-sf-card .hd span{font-size:12px;color:#5b6070}
+.cr-sf-card .md{text-align:right;white-space:nowrap}.cr-sf-card .md b{display:inline;font-family:var(--fd);font-size:24px;font-weight:400;color:#b50004}.cr-sf-card .md span{font-size:12px;color:#5b6070;margin-left:3px}
+.cr-sf-prog{height:4px;border-radius:2px;background:#dde0e8;overflow:hidden;margin:10px 0}
+.cr-sf-prog i{display:block;height:100%;background:linear-gradient(90deg,#b50004,#EF0107);transform-origin:left;transform:scaleX(0);transition:transform .15s linear}
+.cr-sf-card .st{display:grid;text-align:center}
+.cr-sf-card .st b{display:block;font-family:var(--fd);font-weight:400;font-size:28px;line-height:1.05;font-variant-numeric:tabular-nums}
+.cr-sf-card .st span{font-size:11px;color:#5b6070}
+.cr-sf-card .st b.bump{animation:crSfBump .45s cubic-bezier(.2,1.6,.4,1);color:#b50004}
+@keyframes crSfBump{0%{transform:scale(1)}40%{transform:scale(1.2)}100%{transform:scale(1)}}
+.cr-sf-card .fm{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid #dde0e8}
+.cr-sf-card .fm>span{font-size:11.5px;color:#5b6070}
+.cr-sf-card .fm div{display:flex;gap:4px;min-height:22px}
+.cr-sf-card .fm i{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800;color:#fff;animation:crSfPop .25s cubic-bezier(.2,1.6,.4,1)}
+.cr-sf-card .fm i.W{background:#22C55E}.cr-sf-card .fm i.D{background:#F59E0B}.cr-sf-card .fm i.L{background:#EF4444}
+@keyframes crSfPop{from{transform:scale(.4)}to{transform:none}}
+.cr-sf-card.done{border-color:#C8A84B}
+.cr-sf-box.hurt .cr-sf-card{border-color:#EF4444;animation:crSfHurt .5s ease-out}
+@keyframes crSfHurt{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+.cr-sf-log{display:flex;flex-direction:column;gap:5px;height:134px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent);animation:crIvUp .45s .5s ease-out both}
+.cr-sf-log .r{display:grid;grid-template-columns:30px 22px 1fr auto auto;gap:8px;align-items:center;min-height:34px;flex:none;padding:0 11px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(20,24,40,.85);font-size:13px}
+.cr-sf-log .r.new{animation:crSfRowIn .32s cubic-bezier(.2,.9,.3,1)}
+@keyframes crSfRowIn{from{opacity:0;max-height:0;min-height:0;margin-top:-5px;transform:translateX(18px)}to{opacity:1;max-height:40px;min-height:34px;margin-top:0;transform:none}}
+.cr-sf-log .m{font-size:11px;color:rgba(255,255,255,.5)}
+.cr-sf-log .wdl{width:21px;height:21px;border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;background:rgba(255,255,255,.12)}
+.cr-sf-log .wdl.W{background:#22C55E}.cr-sf-log .wdl.D{background:#F59E0B}.cr-sf-log .wdl.L{background:#EF4444}
+.cr-sf-log .o{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.cr-sf-log .o small{font-size:10.5px;color:rgba(255,255,255,.5);margin-left:2px}
+.cr-sf-log .s{font-variant-numeric:tabular-nums;font-weight:700;color:rgba(255,255,255,.85)}
+.cr-sf-log .me{display:flex;gap:4px;justify-content:flex-end;min-width:44px}
+.cr-sf-log .me em{font-style:normal;font-size:12px;font-weight:700;white-space:nowrap}
+.cr-sf-log .me em.g{color:#FFE38A}.cr-sf-log .me em.a{color:#86EFAC}.cr-sf-log .me em.c{color:#93C5FD}.cr-sf-log .me em.x{color:rgba(255,255,255,.45);font-weight:500;font-size:11.5px}
+.cr-sf-log .r.off{opacity:.55}
+.cr-sf-log .r.hi{background:rgba(200,168,75,.14);box-shadow:inset 3px 0 0 #C8A84B}
+.cr-sf-log .r.inj{background:rgba(239,68,68,.14);box-shadow:inset 3px 0 0 #EF4444}.cr-sf-log .r.inj .wdl{background:none;font-size:15px}.cr-sf-log .r.inj .me em.x{color:#FCA5A5}
+.cr-sf-log .r.ko,.cr-sf-log .r.ft{background:rgba(200,168,75,.1)}.cr-sf-log .r.ko .wdl,.cr-sf-log .r.ft .wdl{background:none;font-size:15px}
+.cr-sf-end{display:grid;grid-template-columns:1fr 1fr;gap:10px;cursor:pointer;animation:crIvUp .45s ease-out both}
+.cr-sf-end .hn{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:0!important;background:none!important;border:0!important}
+.cr-sf-end .hn span{font-size:12px;font-weight:700;border-radius:999px;padding:4px 10px;background:rgba(200,168,75,.18);color:#FFE38A;animation:crSfPop .35s cubic-bezier(.2,1.6,.4,1) both}
+.cr-sf-end .go{grid-column:1/-1;padding:0!important;background:none!important;border:0!important}
+.cr-sf-end .go i{display:block;height:3px;border-radius:2px;background:#C8A84B;transform-origin:left;animation:crSfGo linear both}
+.cr-sf-end .go span{display:block;margin-top:6px;font-size:11.5px;color:rgba(255,255,255,.6)}
+@keyframes crSfGo{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.cr-sf-end>div{border-radius:14px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);text-align:center}
+.cr-sf-end>div>span{display:block;font-size:11.5px;color:rgba(255,255,255,.6)}.cr-sf-end>div>b{font-family:var(--fd);font-size:28px;font-weight:400;color:#FFE38A}
+.cr-sf-end .cr-iv-go{grid-column:1/-1;animation:none}
+.cr-sf-feed{display:flex;flex-direction:column;gap:6px;height:112px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent);mask-image:linear-gradient(180deg,#000 62%,transparent)}
+.cr-sf-feed.mini{height:54px;-webkit-mask-image:none;mask-image:none}
+.cr-sf-feed.gone{display:none}
+.cr-sf-post{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;padding:6px 11px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#F0F2F7;animation:crSfPost .35s cubic-bezier(.2,1.3,.4,1) both}
+.cr-sf-post>i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;color:#fff}
+.cr-sf-post b{display:block;font-size:11px;color:rgba(255,255,255,.6);font-weight:600}.cr-sf-post span{display:block;font-size:13.5px;line-height:1.35}
+.cr-sf-post em{font-style:normal;font-size:11px;color:#FCA5A5;white-space:nowrap}
+@keyframes crSfPost{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.cr-sf,.cr-sf *{animation:none!important}}
+.cr-inj{display:flex;flex-direction:column;gap:10px;animation:crIvUp .35s ease-out both}
+.cr-inj .hd{text-align:center;color:#F0F2F7}.cr-inj .hd b{display:block;font-size:17px;color:#FCA5A5}.cr-inj .hd span{font-size:13px;color:rgba(255,255,255,.75)}
+.cr-pk-on{position:relative;border-color:#C8A84B!important;background:rgba(200,168,75,.18)!important;box-shadow:0 0 0 3px rgba(200,168,75,.3),0 10px 26px rgba(0,0,0,.35);animation:crPkPop .4s cubic-bezier(.2,1.6,.4,1) both!important;opacity:1!important}
+.cr-pk-on::after{content:"✓ 선택";position:absolute;top:-9px;right:10px;font-size:11px;font-weight:800;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:2px 8px;animation:crIvUp .25s ease-out both}
+.cr-pk-off{opacity:.3!important;transform:scale(.95)!important;filter:grayscale(.6);transition:opacity .3s,transform .3s!important}
+.cr-tr-o:disabled,.cr-tm-c:disabled,.cr-inj-c:disabled{cursor:default}
+@keyframes crPkPop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1.02)}}
+.cr-inj-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cr-inj-c{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;font:inherit;color:#F0F2F7;cursor:pointer;border-radius:16px;padding:16px 10px 14px;border:1.5px solid rgba(255,255,255,.14);background:rgba(24,20,28,.88);animation:crInjIn .5s cubic-bezier(.2,1.3,.4,1) both;animation-delay:var(--d);transition:border-color .15s,transform .15s}
+.cr-inj-c .e{font-size:30px;line-height:1}.cr-inj-c b{font-size:15px;line-height:1.35}.cr-inj-c .d{font-size:12px;line-height:1.45;color:rgba(255,255,255,.75)}
+.cr-inj-c:hover,.cr-inj-c:focus-visible,.cr-inj-c[aria-pressed="true"]{border-color:#C8A84B;transform:translateY(-3px)}
+@keyframes crInjIn{from{opacity:0;transform:translateX(var(--from)) scale(.94)}to{opacity:1;transform:none}}
 .cr-anmsg{min-height:30px;text-align:center;font-family:var(--fd);font-size:26px;letter-spacing:1px}
 .cr-anmsg span{display:inline-block;animation:crPop .45s cubic-bezier(.3,1.6,.5,1) both}
 .cr-anmsg .inj{color:var(--loss);font-family:var(--fb);font-size:18px;font-weight:700}
@@ -9298,7 +9373,7 @@ function crTrShow(ev){
    +'<div class="cr-tr-say"><div class="who">'+gmEsc(T.who)+'</div><div class="t" id="crTrQ">'+(reduce?gmEsc(T.say||ev.d):'<span class="cur"></span>')+'</div></div>'
    +'<div class="cr-tr-opts" id="crTrA" hidden>'
    +ev.a.map(function(t,i){ var m=String(t).match(/^(.*?)\s*\((.*)\)$/);
-      return '<button class="cr-tr-o" style="--d:'+(0.1+i*0.16)+'s" aria-pressed="false" onclick="crTrPick('+i+')"><span class="e" aria-hidden="true">'+T.opt[i]+'</span>'
+      return '<button class="cr-tr-o" style="--d:'+(0.1+i*0.16)+'s" aria-pressed="false" onclick="crTrPick('+i+',this)"><span class="e" aria-hidden="true">'+T.opt[i]+'</span>'
         +'<b>'+gmEsc(m?m[1]:t)+'</b>'+(m?'<span class="fxs">'+crTrFx(m[2])+'</span>':'')+'</button>'; }).join('')
    +'</div></div></div>');
   var show=function(){ var el=document.getElementById('crTrA'); if(el) el.hidden=false; };
@@ -9309,11 +9384,10 @@ function crTrShow(ev){
     k++; t.innerHTML=gmEsc(q.slice(0,k))+'<span class="cur"></span>'; if(k>=q.length){ clearInterval(CR.trTimer); show(); }
   }, 38); }, 700);
 }
-function crTrPick(i){   // 고르는 즉시 반영(사용자 지정) — 눌린 카드를 잠깐 보여 주고 닫는다
+function crTrPick(i, btn){   // 고르는 즉시 반영(사용자 지정) — 고른 카드를 표시하고 잠깐 뒤 닫는다
   if(CR.trSel!=null) return;
   CR.trSel=i;
-  document.querySelectorAll('#crTov .cr-tr-o').forEach(function(b,j){ b.setAttribute('aria-pressed', String(j===i)); });
-  setTimeout(function(){ CR.evPick=i; clearInterval(CR.trTimer); crTovSet(''); crPrep(); }, 320);
+  crPickFx(btn, '#crTov .cr-tr-o', function(){ CR.evPick=i; clearInterval(CR.trTimer); crTovSet(''); crPrep(); });
 }
 // ── 인터뷰 오버레이(사용자 지정) ── 시즌 준비 화면에 인터뷰 이벤트가 뜨면 바로 띄운다. 기자 질문을 타자 치듯 보여 주고,
 // 끝나면 내 답변 두 문장(자신감·겸손 — 이름표·효과는 안 보인다, 문장만 보고 고른다)이 차례로 들어온다. 고른 답의 k가 evPick.
@@ -9345,109 +9419,283 @@ function crIvGo(){
 }
 function crSeason(btn){
   if(!crBusy(btn,'시즌 진행 중...')) return;
-  var age=CR.v.player.age;
-  crAnimStart(0);
-  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick, loanPick:CR.loanPick||0}).then(function(v){
-    // 부상이면 시즌 중간(부상 시점)까지만 진행하고 멈춘다. 결과면 끝까지.
-    if(v.phase==='injury') crAnimTo(0.3+((v.injury.games*7+age)%25)/100, v, true);
-    else crAnimTo(1, v);
-  }).catch(function(e){ crAnimStop(); crPrep(); crErr(e); });
-}
-// ── 부상(시즌 중간 질문) ───────────────────────────────────────────────
-function crInjury(){
-  var p=CR.v.player, j=CR.v.injury;
-  var opt=function(k, ic, t, d){ return '<button class="cr-club" onclick="crInjPick('+k+',this)"><div style="font-size:22px;text-align:center">'+ic+'</div><div><div class="nm">'+t+'</div><div class="meta">'+d+'</div></div><div></div></button>'; };
-  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
-   +'<div class="cr-panel"><div class="cr-lbl"><b>🚑 '+(j.major?'큰 부상':'부상')+' — '+gmEsc(j.name)+'</b><span>'+p.age+'세 시즌</span></div>'
-   +'<div style="font-size:14px;line-height:1.6">'+(j.major?'시즌 대부분을 쉬어야 해요. 예상 결장 <b>'+j.games+'경기</b>.':'예상 결장 <b>'+j.games+'경기</b>. 복귀 시점을 정해 주세요.')+'</div>'
-   +'<div class="cr-list">'+(j.major
-      ? opt(0,'🏥','수술 후 재활 집중','회복은 확실해요. 대신 스피드·체력 영구 −2')+opt(1,'🩹','보존 치료','스탯 손해 없음. 대신 다음 2시즌 부상 위험 ↑')
-      : opt(0,'⚡','빨리 복귀','결장 절반. 대신 30% 확률로 재부상(추가 결장 + 이번 시즌 성장 ↓)')+opt(1,'🛌','완전히 회복','결장 그대로. 다음 시즌 부상 위험 ↓'))
-   +'</div></div>', '<div class="sum" style="flex:1">부상 처리 방법을 골라 주세요</div>');
-  window.scrollTo(0,0);
-}
-function crInjPick(k, btn){
-  if(!crBusy(btn)) return;
-  var from=CR.anim && CR.anim.stopAt || 0.4;
-  crAnimStart(from, true);
-  crApi('season', {token:CR.tok, injPick:k}).then(function(v){ crAnimTo(1, v); })
-    .catch(function(e){ crAnimStop(); crInjury(); crErr(e); });
+  crSfOpen();
+  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick, loanPick:CR.loanPick||0}).then(crSfData)
+    .catch(function(e){ crSfClose(); crPrep(); crErr(e); });
 }
 
-// ── 시즌 진행 애니메이션 ───────────────────────────────────────────────
-// 결과는 서버가 한 번에 주지만, 바로 결과 화면으로 넘기면 시즌이 "지나간" 느낌이 없어서
-// 8월→5월 달력이 차오르며 경기·골·도움 숫자가 올라가는 화면을 2초 남짓 보여 준다(누르면 건너뛰기).
-// 응답이 오기 전엔 15%까지만 가고 기다린다. 부상이면 그 시점에서 멈추고 부상 질문으로.
+// ── 시즌 진행(사용자 지정 — "섹션을 떼어 온 게 아니라 새로") ─────────────────────────
+// 매치데이 월: 전광판이 한 경기씩 넘어가며 상대·스코어·내 기록을 보여 주고, 그 아래 시즌 경기 수만큼의 칸이
+// 한 칸씩 채워진다(선발 초록 · 교체 연두 · 결장 회색 · 부상 빨강, 골 ⚽ · 도움 🅰 · 클린시트 🧤 표시). 골·도움엔 화면 가운데 큰 글자가 터진다.
+// 서버는 시즌 합계만 주므로 경기별 내용(어느 경기에 뛰고 넣었는지·상대·스코어)은 합계를 시드 고정으로 나눠 그린 연출이다.
+// 부상이면 그 경기 칸이 빨갛게 멈추고 같은 오버레이에 좌우 카드 두 장 → 고르면 결장 칸을 건너 이어서 진행.
 var CR_MONTHS=['8월','9월','10월','11월','12월','1월','2월','3월','4월','5월'];
-var CR_TICK=[[0,'개막전을 앞두고 있어요'],[.12,'시즌 초반 일정'],[.35,'빡빡한 겨울 일정'],[.5,'겨울 이적시장'],[.65,'시즌 후반 레이스'],[.88,'마지막 라운드']];
-var CR_TICK_Y=[[0,'유스 리그 개막'],[.12,'시즌 초반'],[.4,'겨울 휴식기'],[.6,'시즌 후반'],[.88,'마지막 라운드']];
 function crSeasonLabel(age){ var y=2026+age-15; return y+'-'+String(y+1).slice(-2); }
-function crAnimStart(from, resumed){
-  var p=CR.v.player, df=p.pos==='DF', yth=p.age<18;
-  if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf);   // 루프가 둘 돌면 프레임마다 두 번 움직인다
-  // 부상 뒤 이어 갈 때는 멈췄던 숫자부터(부상 응답의 최소 기록 × 멈춘 지점), 처음엔 0부터
-  var lbs=df?['경기','골','도움','클린시트']:['경기','골','도움'];   // 수비수는 도움도 함께(풀백·윙백은 도움이 본업)
-  var pre0=resumed && CR.injPre ? CR.injPre.map(function(f){ return Math.round(f*from); }) : lbs.map(function(){ return 0; });
-  if(!resumed) CR.injPre=null;
-  CR.anim={t:from, from:from, target:null, v:null, stopAt:null, raf:null, resumed:!!resumed, last:null, shown:pre0.slice()};
-  crRender('<div class="cr-top"><div></div><div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()
-    +'<div class="cr-panel cr-anim"><div class="cr-lbl"><b>'+crSeasonLabel(p.age)+' 시즌 · '+gmEsc(p.club.team)+'</b><span id="crAnTick">'+(yth?'유스 리그':'리그')+'</span></div>'
-    +'<div class="cr-months">'+CR_MONTHS.map(function(m,i){ return '<span data-i="'+i+'">'+m+'</span>'; }).join('')+'</div>'
-    +'<div class="cr-anbar" id="crAnTrack"><i id="crAnBar"></i><em id="crAnKnob"></em></div>'
-    +'<div class="cr-rs" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l,i){ return '<div><b id="crAn'+i+'">'+pre0[i]+'</b><span>'+l+'</span></div>'; }).join('')+'</div>'
-    +'<div class="cr-anmsg" id="crAnMsg"></div></div>',
-    '<button class="gm-btn ghost" style="flex:1" onclick="crAnimSkip()">건너뛰기</button>');
-  window.scrollTo(0,0);
-  crAnimFrame();
+function crSfRng(seed){ var a=seed>>>0; return function(){ a=(a+0x6D2B79F5)>>>0; var t=a; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
+function crSfSeed(){ var p=CR.v.player, s=String(p.name)+'|'+p.age+'|'+p.club.n, h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function crSfOpen(still){
+  var p=CR.v.player, df=p.pos==='DF', yth=p.age<18 || /U-\d+$/.test(p.club.team||'');
+  var lbs=[['apps','경기'],['goals','골'],['ast','도움']].concat(df?[['cs','클린시트']]:[]);
+  CR.sf={n:{apps:0,goals:0,ast:0,cs:0}, i:0, G:0, timer:null, q:[], lbs:lbs, form:[]};
+  // 다른 오버레이(인터뷰·훈련 제안·이적시장)와 같은 틀: 흐린 배경 + 튀어 들어오는 아이콘 + 알약 태그 + 밝은 말풍선 카드 + 어두운 반투명 줄
+  crTovSet('<div class="cr-sf'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행"><div class="cr-sf-box" id="crSfBox">'
+    +'<div class="ic" aria-hidden="true">🏟️</div><span class="tag">SEASON '+crSeasonLabel(p.age)+' · 시즌 '+(p.seasons+1)+'</span>'
+    // 시즌 카드: 구단·시즌, 진행(몇 번째 경기 / 전체), 내 기록, 최근 5경기 결과
+    +'<div class="cr-sf-card" id="crSfCard"><div class="hd">'+crCrest(p.club,32)+'<div><b>'+gmEsc(p.club.team)+'</b><span>'+gmEsc(p.name)+' · '+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div>'
+    +'<div class="md"><b id="crSfMd">0</b><span id="crSfG">/ –</span></div></div>'
+    +'<div class="cr-sf-prog"><i id="crSfProg"></i></div>'
+    +'<div class="st" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l){ return '<div><b id="crSfN_'+l[0]+'">0</b><span>'+l[1]+'</span></div>'; }).join('')+'</div>'
+    +'<div class="fm"><span>최근 경기</span><div id="crSfForm"></div></div></div>'
+    // 경기 기록: 새 경기가 맨 위로 들어온다
+    +'<div class="cr-sf-log" id="crSfLog"><div class="r ko"><span class="m">8월</span><b class="wdl">⚽</b><span class="o">'+gmEsc(p.name)+'의 '+(p.seasons+1)+'번째 시즌 개막</span><span class="s"></span><span class="me"></span></div></div>'
+    +'<div class="cr-sf-feed" id="crSfFeed" aria-live="off"></div>'
+    +'<div id="crSfExtra"><button class="cr-ss-skip" id="crSfSkip" onclick="crSfSkip()">건너뛰기 ›</button></div>'
+    +'</div></div>');
+  CR.sf.t0=Date.now(); crSfFeedStart();
 }
-function crAnimTo(target, v, injury){
-  if(!CR.anim) return;
-  CR.anim.target=target; CR.anim.v=v; CR.anim.injury=!!injury;
-  if(injury) CR.anim.stopAt=target;
-  // 동작 줄이기 설정이면 바로 끝으로
-  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) CR.anim.t=target;
+// ── 팬 반응 피드(사용자 지정 — SNS 한마디가 빠르게 올라와 관심받는 느낌) ── 선수 상황(유스·어린 1군·전성기·베테랑·스타·해외·유리몸)에 맞는
+// 문구가 0.4초마다 하나씩 올라오고(최근 3개만 보인다), 골·도움·무실점·벤치 연속·부상·시즌 끝엔 그 반응이 먼저 끼어든다.
+var CR_FAN={
+  youth:['우리 유스에 이런 선수가 있었다고??','다치지 말고 잘 커다오 🙏','{n} 1군 콜업 언제냐','유스 경기 직관 가야 하나','벌써 에이전트들 붙었다던데','이 나이에 저 볼터치 실화?','제발 다른 팀에 뺏기지 말자','유스 영상 돌려보는 중 ㅋㅋ',
+    '유스 경기 하이라이트에 {n}만 나옴','이 친구 이름 외워둬라','10년 뒤에 레전드 될 듯','유스 코치들 표정이 다르다던데','1군 형들보다 낫다는 말 있음','{n} 유니폼 벌써 팔아야 함','아직 학생인 거 실화냐',
+    '빅클럽 스카우트 왔다는 소문 ㄷㄷ','성장 일기 쓰는 중','첫 프로계약 언제 하냐','유스 리그 씹어먹는 중','부모님 직관 오셨다던데 ㅠ','{n} 키 더 크면 끝난다','이 나이 때 메시 같다는 말은 오바지?','유스 경기 보러 처음 와봄','제발 꽃길만 걷자'],
+  young:['이 나이에 이 정도면 미래 확정','재계약 빨리 해라 진짜','성장 속도 무섭다','국대 감독 보고 있나?','유니폼에 {n} 마킹했음 ㅋㅋ','{n} 아직 어린 거 실화?',
+    '신인상 각 아니냐','1군 적응 끝났네','경험만 쌓이면 무서울 듯','어린 놈이 겁이 없어 ㅋㅋ','형들이 엄청 챙겨준다던데','바이아웃 올려라 빨리','{n} 데뷔골 아직도 생생함','이 선수 땜에 경기 챙겨 봄',
+    '{club} 미래는 밝다','실수해도 괜찮다 기죽지 마','언론이 너무 띄우는 것 같아 걱정','팬서비스도 잘하더라','다음 시즌엔 주전 확정이지','감독이 믿고 쓰는 게 보임'],
+  prime:['{n} 경기는 믿고 본다','오늘도 {n} 보러 왔다','폼 미쳤다 진짜','{club}의 핵심','이 선수 없었으면 어쩔 뻔','{n} 클래스 여전하네',
+    '전성기 맞네 진짜','주장 완장 줘도 될 듯','몸값 지금 얼마임?','이적설 나오면 마음 아프다','경기 읽는 눈이 다름','{n} 있으면 마음이 편함','이번 시즌 MVP 후보','꾸준함이 최고 장점',
+    '{n} 없으면 팀이 안 돌아감','상대 팀 감독도 인정하더라','{n} 팬 된 지 5년째','오늘 직관 개이득','이 맛에 축구 본다','시즌권 산 보람 있다'],
+  vet:['아직 죽지 않았다 {n}','레전드 대우 해줘라','은퇴하지 마 제발 ㅠㅠ','노련미 뭔데','{n} 끝까지 함께하자','관리 잘하는 거 보소',
+    '나이는 숫자에 불과','후배들 이끄는 거 멋있다','은퇴하면 코치로 남아줘','{n} 처음 봤을 때가 엊그제 같은데','클래스는 영원하다','체력 관리 비결 좀','라커룸 리더 그 자체','마지막 시즌일까봐 무섭다',
+    '이 선수 보며 축구 시작했음','{n} 은퇴식 무조건 간다','아직 스피드 안 죽었네?','경험이 다르다 경험이','젊은 애들보다 많이 뜀 ㅋㅋ','기념 유니폼 사놔야겠다'],
+  star:['월드클래스 맞네','발롱 각 아니냐','{n} 이적설 또 떴던데… 제발 남아줘','{n} 보려고 시즌권 끊음',
+    '세계 최고 맞다','해외 팬들도 난리 났음','광고 또 찍었더라 ㅋㅋ','{n} 유니폼 품절이래','올해의 선수 확정','레알이 노린다는 소문…','몸값 1억 유로 넘는다며','이 선수 동시대에 보는 게 행운'],
+  low:['기회 좀 줘봐라 감독','벤치에만 두기 아깝다','{n} 언제 터지냐','훈련장에선 제일 잘한다던데',
+    '임대라도 보내서 뛰게 해라','{n} 아직 포기 안 했다','후반 교체로라도 보고 싶다','언젠간 터진다 믿는다','출전 시간만 주면 증명할 듯','감독이 왜 안 쓰는지 모르겠음','묵묵히 하는 거 멋있다','한 번만 기회 오면 돼'],
+  abroad:['{nat}에서 온 그 선수 맞지?','{nat} 팬들도 보고 있다 👀','적응 잘하는 듯','언어는 좀 늘었으려나 ㅋㅋ',
+    '{nat} 커뮤니티에서도 난리던데','현지 음식은 입에 맞나','{nat} 국기 들고 온 팬 봄','해외파의 자존심','타지에서 고생 많다','{nat}에서 새벽에 보는 중 ㅋㅋ','현지 언론 평점 좋더라','동료들이랑 잘 지내는 듯'],
+  glass:['제발 이번 시즌은 안 다치길…','몸 관리만 하면 되는데','부상만 없으면 월클인데','보호대 꼭 차라','의료진 {n} 좀 잘 챙겨줘','건강이 최고다 진짜'],
+  nat:['국대에서도 잘하더라','A매치 끝나고 컨디션 괜찮나','국대 경기 보고 팬 됨','{nat} 대표팀 에이스'],
+  honor:['작년 수상자의 클래스','트로피 수집가 ㅋㅋ','수상 커리어 미쳤다','또 상 받을 듯'],
+  FW:['박스 안에서 여우','슈팅 각 나오면 무조건 골','라인 깨는 움직임 봐라','수비수들 {n} 무서워함','골문 앞 침착함 뭔데'],
+  MF:['중원 장악 미쳤다','패스 한 방에 경기 바뀜','{n} 없으면 빌드업 안 됨','시야가 다르다','활동량 미쳤다 진짜'],
+  DF:['수비 리딩 좋다','{n} 태클 각 예술','뒷공간 커버 완벽','공중볼 다 따냄','수비 안정감이 다름'],
+  goal:['골!!! {n}!!!','또 넣었냐 ㅋㅋㅋ','{n} 미쳤다','이번 시즌 득점왕 가자','골 냄새 맡는 거 봐라','오늘 MOM 확정','소리 질렀다 지금',
+    '와 이걸 넣네','침착하게 마무리 ㄷㄷ','골 세리머니 귀엽다 ㅋㅋ','이 골은 하이라이트 감','키퍼 꼼짝도 못함','{n} 골 넣을 때가 제일 좋아','방금 소름 돋음','역시 믿고 보는 {n}','오늘 치킨 시킨다','진짜 미친 골이다','골대 맞고 들어간 거 실화?','이 장면 백 번 돌려봄','{n} 응원가 부르는 중'],
+  brace:['멀티골 ㄷㄷ','두 골은 기본이지','오늘 {n} 날이네','한 골 더 넣어서 해트트릭 가자','멀티골은 이제 놀랍지도 않음','{n} 오늘 컨디션 최상'],
+  hat:['해트트릭 실화??','공 집에 가져가라 ㅋㅋ','{n} 미쳤다 진짜로','해트트릭 기념 유니폼 사야지','경기장 난리 났다','이 경기 평생 기억할 듯'],
+  assist:['패스 센스 뭐냐','어시 각도 미쳤다','{n} 킬패스 ㄷㄷ','이타적인 거 봐라','골보다 패스가 더 멋있음','시야 진짜 넓다','택배 크로스 ㅋㅋ','이 패스는 못 막음','{n} 도움왕 가자'],
+  cs:['뒷문 단단하다','{n} 있으면 안 뚫림','통곡의 벽','오늘 수비 미쳤다','무실점 경기 사랑해','상대 공격수 지워버림','클린시트 장인','수비가 이렇게 재밌는 거였나',
+    '오늘도 무실점 ㄷㄷ','수비진 MOM {n}','슈팅 하나도 못 때리게 함','클린시트 몇 경기째냐','수비가 공격보다 재밌음','골키퍼가 할 일이 없었다 ㅋㅋ'],
+  csast:['도움에 무실점까지 완벽','공수 다 해버리네','수비수가 어시까지?? 미쳤다','오늘 {n} 혼자 다 함'],
+  bench:['왜 {n} 안 씀?','감독 {n} 좀 써라','벤치 실화냐','{n} 몸 상태 안 좋나?','로테이션이라 믿는다','다음 경기엔 나오겠지','벤치 대기만 몇 경기째냐'],
+  milestone:['시즌 {g}호골!! 미쳤다','벌써 {g}골이라고?','{g}골 돌파 축하해','이 페이스면 기록 깬다'],
+  injury:['아… 제발 큰 부상 아니길','다치지 말라고 했잖아 ㅠㅠ','{n} 빨리 돌아와','의료진 일 좀 해라','가슴이 철렁했다',
+    '부상 소식 보고 밥이 안 넘어감','무리하지 말고 천천히 와','상대 태클 너무 거칠었다','시즌 아웃만 아니길 제발','쾌유를 빕니다 🙏','{n} 없으면 어떡하냐','재활 잘해서 더 강해져 돌아와'],
+  back:['돌아왔다!!!','{n} 복귀 기다렸다','부상 털고 컴백 ㅠㅠ','복귀전 직관 간다','역시 {n} 있어야 해','몸 상태 괜찮아 보임'],
+  // 카드별(사용자 지적 — 윙백 같은 카드 색이 안 보였다)
+  '포처':['골 냄새 맡는 데는 1등','박스 안에선 못 막는다','원터치 마무리 장인'],
+  '타깃맨':['공중볼 다 이김 ㅋㅋ','등지는 플레이 미쳤다','헤더 하나는 월클','수비 둘 달고도 버팀'],
+  '윙어':['측면 돌파 시원하다','1대1 붙으면 무조건 제침','스텝오버 보는 맛','사이드 라인 타는 거 예술'],
+  '펄스나인':['내려와서 연계하는 거 봐','가짜 9번의 정석','공간 만드는 움직임 미쳤다'],
+  '인사이드 포워드':['안으로 접고 감아차기 국룰','컷인 슈팅 각 나왔다','측면에서 안으로 들어오는 거 못 막음'],
+  '공격형 미드필더':['라인 사이에서 받는 거 봐','킬패스 장인','10번의 품격'],
+  '딥라잉 플레이메이커':['후방에서 경기 조율 미쳤다','롱패스 한 방에 찬스','템포 조절이 다르다'],
+  '메짤라':['하프스페이스 침투 예술','중앙에서 박스까지 순간이동','공격 가담 타이밍 미쳤다'],
+  '수비형 미드필더':['중원 청소기','인터셉트 장인','{n} 있으면 수비가 편함','궂은일 다 하는 선수'],
+  '박스투박스':['박스에서 박스까지 다 뜀','활동량 괴물','공수 다 되는 육각형'],
+  '센터백':['몸싸움 지는 걸 못 봄','헤더 클리어링 시원하다','수비 라인 리더','{n} 태클은 깔끔 그 자체'],
+  '볼플레잉 센터백':['센터백이 전진 패스를 저렇게?','빌드업 시작은 {n}부터','압박 와도 침착하게 풀어냄'],
+  '스위퍼':['뒷공간 커버 미쳤다','라인 뒤 다 정리함','리베로 감성 ㅋㅋ'],
+  '풀백':['측면 수비 단단하다','오버래핑 타이밍 좋다','윙어 지워버림','크로스도 쏠쏠함'],
+  '윙백':['오버래핑 미쳤다 체력 괴물','측면 끝까지 오르내림','크로스 택배 ㅋㅋ','윙백이 윙어보다 공격적임','90분 내내 뛰는 거 실화?'],
+  '인버티드 풀백':['안으로 좁혀서 미드필더처럼','풀백이 빌드업을 하네','인버티드 역할 완벽 이해','중원 숫자 싸움 이기게 해줌'],
+  win:['우승이다!!!!','{club} 챔피언!!','{n} 우승 축하해 ㅠㅠ','우승 퍼레이드 간다','이 순간을 위해 응원했다','올해는 우리가 최고'],
+  end:['수고했다 {n}','다음 시즌도 기대한다','{n} 이번 시즌 정리 ㄷㄷ','시즌 끝나니까 허전하네','한 시즌 동안 고생 많았다','휴가 잘 보내고 와','다음 시즌 개막 언제냐','이번 시즌 {n} 덕에 즐거웠다']};
+var CR_FAN_ID=['직관러','시즌권12년차','유스덕후','전술충','새벽축구','north_bank','gooner_1886','축구는과학','원정팬','치킨각','kop_kr','ultras_09','라인브레이커','풀백장인','하이라이트봇아님',
+  '응원가장인','축구보는회사원','주말은축구','90분풀타임','오프사이드트랩','중계새로고침','유니폼수집가','통계충','직관3회차','골대뒤N석','원정버스','하프라인','축구고인물','오늘도본방','킥오프5분전'];
+function crSfFeedStart(){
+  var S=CR.sf, p=CR.v.player, yth=p.age<18 || /U-\d+$/.test(p.club.team||''), pool=[];
+  var add=function(k, w){ for(var i=0;i<(w||1);i++) pool=pool.concat(CR_FAN[k]); };
+  if(yth) add('youth',2); else if(p.age<=21) add('young',2); else if(p.age>=31) add('vet',2); else add('prime',2);
+  if(p.ovr>=86 || p.peak>=88) add('star');
+  if(!yth && p.ovr<68) add('low');
+  if(p.club.nat!==p.nation) add('abroad');
+  if(p.glass) add('glass');
+  if(!yth) add(p.pos);
+  var cn=((CR.meta.cards[p.pos]||[])[p.card]||{}).n; if(CR_FAN[cn]) add(cn, 2);
+  if(p.tot && p.tot.caps>0) add('nat');
+  if((p.hist||[]).some(function(h){ return (h[9]||[]).length; })) add('honor');
+  S.fan={pool:pool, q:[], last:[], bench:0};
+  var tick=function(){
+    if(CR.sf!==S || !document.getElementById('crSfFeed')) return;
+    var t=S.fan.q.shift();
+    var src=S.fan.hurt?CR_FAN.injury:pool;   // 부상 질문 중엔 걱정하는 반응만 — 3개까지 올리고 멈춘다(선택을 미뤄도 끝없이 바뀌지 않게, 사용자 지적)
+    if(S.fan.hurt && (S.fan.hurtN||0)>=3) t=null;
+    else if(!t && !S.fan.hold){ var k=0; do { t=src[Math.floor(Math.random()*src.length)]; } while(S.fan.last.indexOf(t)>=0 && ++k<8); }
+    if(t){ crSfSay(t); if(S.fan.hurt) S.fan.hurtN=(S.fan.hurtN||0)+1; }
+    S.fan.timer=setTimeout(tick, 650+Math.random()*250);   // 사용자 지적 — 피드가 너무 빨라 읽을 틈이 없었다(예전 0.38~0.56초)
+  };
+  S.fan.timer=setTimeout(tick, 350);
 }
-function crAnimSkip(){ var A=CR.anim; if(A && A.target!=null) A.t=A.target; }
-function crAnimStop(){ if(CR.anim && CR.anim.raf) cancelAnimationFrame(CR.anim.raf); CR.anim=null; }
-function crAnimFrame(){
-  var A=CR.anim; if(!A) return;
-  var bar=document.getElementById('crAnBar'); if(!bar){ CR.anim=null; return; }   // 다른 화면으로 나감
-  var now=performance.now(), dt=A.last ? Math.min(64, now-A.last) : 16; A.last=now;
-  // 한 시즌 약 2.4초. 응답 전에는 시작점+20%에 다가갈수록 천천히(멈췄다 튀지 않게), 응답이 오면 목표까지 같은 속도로.
-  var step=dt/2400;
-  if(A.target==null) A.t=Math.min(A.from+0.2, A.t+step*Math.max(0.05, 1-(A.t-A.from)/0.2));
-  else A.t=Math.min(A.target, A.t+step);
-  bar.style.transform='scaleX('+A.t+')';
-  var knob=document.getElementById('crAnKnob'), tr=document.getElementById('crAnTrack');
-  if(knob && tr) knob.style.transform='translateX('+(A.t*tr.clientWidth)+'px)';
-  // 달 글자는 바뀔 때만 건드린다(매 프레임 class를 다시 쓰지 않는다)
-  var mi=Math.min(9, Math.floor(A.t*10));
-  if(mi!==A.mi){ A.mi=mi; document.querySelectorAll('#gameRoot .cr-months span').forEach(function(el,i){ el.className=i<mi?'done':i===mi?'on':''; }); }
-  var tk=''; (CR.v.player.age<18?CR_TICK_Y:CR_TICK).forEach(function(x){ if(A.t>=x[0]) tk=x[1]; }); var te=document.getElementById('crAnTick'); if(te) te.textContent=tk;
-  // 숫자는 시즌 진행률만큼 기록에 비례해 올린다. 결과가 오면 최종 기록, 부상 응답이면 그 "최소 기록"(pre)으로
-  // 부상 시점까지 올리고, 이어 갈 땐 앞서 보인 숫자 밑으로 내려가지 않게 한다.
-  var R=A.v && A.v.result, dfp=CR.v.player.pos==='DF', fin=null;
-  if(R) fin=[R.row.apps, R.row.goals, R.row.ast].concat(dfp?[R.row.cs]:[]);
-  else if(A.v && A.v.pre){ fin=[A.v.pre.apps, A.v.pre.goals, A.v.pre.ast].concat(dfp?[A.v.pre.cs]:[]); CR.injPre=fin; }
-  else if(A.resumed && CR.injPre) fin=CR.injPre;
-  if(fin){
-    fin.forEach(function(f,i){
-      var val=Math.max(A.shown[i], Math.round(f*A.t)), el=document.getElementById('crAn'+i);
-      if(el && val!==A.shown[i]){ el.textContent=val; if(i>0 && A.shown[i]>=0 && val>A.shown[i]){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } A.shown[i]=val; }
-    });
+function crSfReact(k){   // 사건 반응은 줄 맨 앞으로(밀려 있던 건 하나만 남긴다)
+  var S=CR.sf; if(!S || !S.fan) return;
+  var a=CR_FAN[k]; S.fan.q=[a[Math.floor(Math.random()*a.length)]].concat(S.fan.q.slice(0,1));
+}
+function crSfSay(t){
+  var S=CR.sf, f=document.getElementById('crSfFeed'); if(!f) return;
+  var p=CR.v.player;
+  S.fan.last=[t].concat(S.fan.last).slice(0,6);
+  var txt=t.replace(/\{g\}/g, S.n.goals).replace(/\{n\}/g, p.name).replace(/\{club\}/g, p.club.n.replace(/ U-\d+$/,'')).replace(/\{nat\}/g, crNat(p.nation).n);
+  var id=CR_FAN_ID[Math.floor(Math.random()*CR_FAN_ID.length)], hue=Math.floor(Math.random()*360);
+  var el=document.createElement('div'); el.className='cr-sf-post';
+  el.innerHTML='<i style="background:hsl('+hue+',55%,45%)">'+gmEsc(id.slice(0,1).toUpperCase())+'</i><div><b>@'+gmEsc(id)+'</b><span>'+gmEsc(txt)+'</span></div><em>♥ '+(1+Math.floor(Math.random()*480))+'</em>';
+  f.insertBefore(el, f.firstChild);
+  while(f.children.length>3) f.removeChild(f.lastChild);
+}
+function crSfClose(){ if(CR.sf) clearTimeout(CR.sf.timer); CR.sf=null; crTovSet(''); }
+// 합계를 from..to 경기 칸에 나눈다(시드 고정). out: 이 구간 앞쪽 몇 칸은 부상 결장.
+function crSfPlan(from, to, tot, out){
+  var p=CR.v.player, R=crSfRng(crSfSeed()+from*7919), G=CR.sf.G;
+  var opp=((CR.meta.clubs||{})[p.club.nat]||[]).map(function(c){ return c[0]; }).filter(function(n){ return n!==p.club.n; });
+  var sfx=(p.club.team.match(/ (U-\d+)$/)||[])[1];
+  var slots=[], list=[];
+  for(var k=from;k<to;k++) slots.push(k);
+  var free=slots.slice(out||0), apps=Math.min(tot.apps, free.length);
+  // 뛴 경기: 남은 칸에서 고르게 흩어 고른다(앞쪽 몰림 없이)
+  var played={}; free.map(function(k){ return [R(), k]; }).sort(function(a,b){ return a[0]-b[0]; }).slice(0, apps).forEach(function(x){ played[x[1]]=R()<0.78?'start':'sub'; });
+  var pk=Object.keys(played).map(Number);
+  var put=function(n, key, cap){ for(var t=0;t<n && pk.length;t++){ var m=pk[Math.floor(R()*pk.length)]; list[m]=list[m]||{}; if(cap && list[m][key]) continue; list[m][key]=(list[m][key]||0)+1; } };
+  slots.forEach(function(k){ list[k]={}; });
+  put(tot.goals,'g'); put(tot.ast,'a'); put(Math.min(tot.cs, pk.length),'cs',true);
+  var prevOpp=null;
+  return slots.map(function(k, j){
+    var m=list[k], pl=played[k]||null, inj=j<(out||0), o=opp.length?opp[Math.floor(R()*opp.length)]:'상대 팀';
+    if(opp.length>1 && o===prevOpp) o=opp[(opp.indexOf(o)+1)%opp.length]; prevOpp=o;   // 같은 상대 연속은 피한다
+    // 승·무·패는 리그 순위를 따른다(1위면 승이 많고 하위권이면 패가 많게). 순위를 모르는 부상 전 구간은 중위권으로.
+    var rk=CR.sf.rank||10, pW=Math.max(0.15, Math.min(0.75, 0.74-(rk-1)*0.035)), u=R(), res=u<pW?'W':u<pW+0.26?'D':'L';
+    var their=m.cs ? 0 : Math.floor(R()*2.4), our=res==='W'?their+1+(R()<0.4?1:0):res==='D'?their:Math.max(0, their-1);
+    if(res==='L' && our>=their){ if(m.cs) our=their+1; else their=our+1; }   // 무실점이면 질 수 없다
+    if(pl && m.g>our){ our=m.g; if(res==='L' && !m.cs) their=our+1; }
+    if(pl && m.cs && our===0) our=1;
+    return {k:k, md:k+1, mon:CR_MONTHS[Math.min(9, Math.floor(k/Math.max(1,G)*10))], opp:o+(sfx?' '+sfx:''), home:R()<0.5, pl:pl, inj:inj, g:m.g||0, a:m.a||0, cs:m.cs?1:0, our:our, their:their};
+  });
+}
+function crSfData(v){
+  if(!CR.sf) crSfOpen(true);
+  var S=CR.sf, A=v.phase==='injury';
+  CR.v=v; CR.tok=v.token; crStore(v);   // 진행 중에 새로고침해도 이어지게(부상이면 부상 단계로)
+  if(A){
+    S.G=v.pre.games||38;
+    var frac=0.3+((v.injury.games*7+v.player.age)%25)/100, at=Math.max(1, Math.round(frac*S.G));
+    var tot={}; ['apps','goals','ast','cs'].forEach(function(x){ tot[x]=Math.round((v.pre[x]||0)*frac); });
+    S.injAt=at; S.injGames=v.injury.games; crSfSetG();
+    crSfWall(); crSfRun(crSfPlan(0, at, tot, 0), function(){ crSfInjury(v); });
+  } else {
+    var r=v.result.row; S.G=S.G||r.games; S.rank=r.youth?Math.min(r.rank,10):r.rank; crSfSetG();
+    if(!S.wall) crSfWall();
+    var from=S.injAt!=null ? S.injAt+1 : 0, out=S.injAt!=null ? Math.min(S.G-from, S.quick?Math.ceil(S.injGames/2):S.injGames) : 0;
+    var rest={apps:Math.max(0,r.apps-S.n.apps), goals:Math.max(0,r.goals-S.n.goals), ast:Math.max(0,r.ast-S.n.ast), cs:Math.max(0,(r.cs||0)-S.n.cs)};
+    crSfRun(crSfPlan(from, S.G, rest, out), function(){ crSfEnd(v); });
   }
-  if(A.target!=null && A.t>=A.target){
-    var msg=document.getElementById('crAnMsg'), v=A.v;
-    if(A.injury){
-      if(msg) msg.innerHTML='<span class="inj">🚑 '+gmEsc(v.injury.name)+'!</span>';
-      A.raf=null; setTimeout(function(){ if(CR.anim===A){ A.stopAt=A.target; crShow(v); CR.anim={stopAt:A.target}; } }, 900);
-      return;
-    }
-    if(msg) msg.innerHTML='<span>시즌 종료</span>';
-    A.raf=null; setTimeout(function(){ if(CR.anim===A){ CR.anim=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, 650);
-    return;
+}
+function crSfWall(){ if(CR.sf) CR.sf.wall=true; }
+function crSfSetG(){ var g=document.getElementById('crSfG'); if(g && CR.sf) g.textContent='/ '+CR.sf.G+'경기'; }
+function crSfRun(list, done){
+  var S=CR.sf; if(!S) return;
+  var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var nBig=list.filter(function(m){ return m.g||m.a; }).length;
+  // 속도(사용자 지정): 경기 전체 약 3초 + 골·도움 멈춤 합계 최대 0.6초, 끝 요약 2.4초 뒤 결과 화면
+  var step=Math.max(55, 3000/Math.max(1,S.G)), extra=nBig?Math.min(120, 600/nBig):0, i=0, wait=Math.max(0, 450-(Date.now()-S.t0));
+  S.q=list; S.done=done;
+  var tick=function(){
+    if(CR.sf!==S) return;
+    if(!document.getElementById('crSfLog')){ CR.sf=null; return; }   // 다른 화면으로 나감
+    if(S.skip || reduce){ while(i<list.length) crSfMatch(list[i++], true); return done(); }
+    if(i>=list.length) return done();
+    var m=list[i++], big=crSfMatch(m, false);
+    S.timer=setTimeout(tick, step+(big?extra:0));
+  };
+  S.timer=setTimeout(tick, wait);
+}
+function crSfMatch(m, quiet){   // 한 경기: 진행·기록·최근 결과·경기 기록 한 줄. 골/도움이면 true(조금 더 머문다)
+  var S=CR.sf, p=CR.v.player, df=p.pos==='DF';
+  if(m.pl){ S.n.apps++; S.n.goals+=m.g; S.n.ast+=m.a; S.n.cs+=m.cs; }
+  if(!quiet && S.fan){
+    S.fan.bench=m.pl||m.inj ? 0 : S.fan.bench+1;
+    if(m.g && Math.floor(S.n.goals/10)>Math.floor((S.n.goals-m.g)/10)) crSfReact('milestone');
+    else if(m.g) crSfReact(m.g>2?'hat':m.g>1?'brace':'goal');
+    else if(m.a && m.cs && df) crSfReact('csast');
+    else if(m.a) crSfReact('assist'); else if(m.cs && df) crSfReact('cs'); else if(S.fan.bench===3) crSfReact('bench');
   }
-  A.raf=requestAnimationFrame(crAnimFrame);
+  S.i=m.k+1;
+  var res=m.our>m.their?'W':m.our<m.their?'L':'D';
+  var md=document.getElementById('crSfMd'); if(md) md.textContent=S.i;
+  var pr=document.getElementById('crSfProg'); if(pr) pr.style.transform='scaleX('+(S.i/Math.max(1,S.G))+')';
+  S.lbs.forEach(function(l){ var el=document.getElementById('crSfN_'+l[0]); if(el && el.textContent!=String(S.n[l[0]])){ el.textContent=S.n[l[0]]; if(!quiet){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); } } });
+  S.form=S.form.concat(res).slice(-5);
+  var fm=document.getElementById('crSfForm'); if(fm) fm.innerHTML=S.form.map(function(x){ return '<i class="'+x+'">'+({W:'승',D:'무',L:'패'})[x]+'</i>'; }).join('');
+  var log=document.getElementById('crSfLog'); if(!log) return false;
+  var me=[]; if(m.g) me.push('<em class="g">⚽'+(m.g>1?'×'+m.g:'')+'</em>'); if(m.a) me.push('<em class="a">🅰'+(m.a>1?'×'+m.a:'')+'</em>'); if(m.cs && df) me.push('<em class="c">🧤</em>');
+  var tag=m.inj?'<em class="x">부상 결장</em>':!m.pl?'<em class="x">결장</em>':me.length?me.join(''):'<em class="x">'+(m.pl==='start'?'선발':'교체')+'</em>';
+  var row=document.createElement('div');
+  row.className='r'+(m.inj?' inj':!m.pl?' off':'')+(m.g?' hi':'')+(quiet?'':' new');
+  row.innerHTML='<span class="m">'+m.mon+'</span><b class="wdl '+res+'">'+({W:'승',D:'무',L:'패'})[res]+'</b><span class="o">'+gmEsc(m.opp.replace(/ U-\d+$/,''))+' <small>'+(m.home?'홈':'원정')+'</small></span><span class="s">'+m.our+' : '+m.their+'</span><span class="me">'+tag+'</span>';
+  log.insertBefore(row, log.firstChild);
+  while(log.children.length>14) log.removeChild(log.lastChild);
+  return !quiet && !!(m.g || m.a);
+}
+function crSfSkip(){ if(CR.sf){ CR.sf.skip=true; clearTimeout(CR.sf.timer); var S=CR.sf; var rest=S.q.filter(function(m){ return m.k>=S.i; }); rest.forEach(function(m){ crSfMatch(m, true); }); S.q=[]; if(S.done) S.done(); } }
+function crSfEnd(v){   // 끝 요약을 잠깐(약 2.4초) 보여 주고 결과 화면으로 저절로 넘어간다(사용자 지정 — 버튼 없이, 넘어가서 오버롤 오르는 연출까지). 누르면 바로.
+  var S=CR.sf, r=v.result.row, x=document.getElementById('crSfExtra'), card=document.getElementById('crSfCard'), log=document.getElementById('crSfLog');
+  if(!S) return;
+  S.done=null; S.v=v;
+  if(S.fan){ crSfReact(r.rank===1&&!r.youth?'win':'end'); S.fan.hold=true; }
+  var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('gone');   // 요약 자리
+  var pr=document.getElementById('crSfProg'); if(pr) pr.style.transform='scaleX(1)';
+  if(card) card.classList.add('done');
+  if(log){ var row=document.createElement('div'); row.className='r ft new'; row.innerHTML='<span class="m">5월</span><b class="wdl">🏁</b><span class="o">시즌 종료</span><span class="s"></span><span class="me"></span>'; log.insertBefore(row, log.firstChild); }
+  var lg=r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그';
+  // 이번 시즌 주요 수상(대표팀 제외, S·A·B) 최대 3개 — 결과 화면에서 다시 자세히 나온다
+  var hon=(r.hon||[]).filter(function(h){ return 'SAB'.indexOf(h.tier)>=0 && h.kind!=='nat'; }).slice(0,3);
+  var wait=S.skip?1600:2400;
+  if(x) x.innerHTML='<div class="cr-sf-end" onclick="crSfDone()"><div class="rk"><span>'+lg+'</span><b>'+r.rank+'위</b></div><div class="rt"><span>시즌 평점</span><b>'+(r.apps?r.rating.toFixed(2):'–')+'</b></div>'
+    +(hon.length?'<div class="hn">'+hon.map(function(h){ return crHonBadge(h); }).join('')+'</div>':'')
+    +'<div class="go"><i style="animation-duration:'+wait+'ms"></i><span>시즌 결과로 넘어가요 · 누르면 바로</span></div></div>';
+  S.endT=setTimeout(crSfDone, wait);
+}
+function crSfDone(){ var S=CR.sf; if(!S || !S.v || !document.getElementById('crSfLog')){ if(S && !document.getElementById('crSfLog')) CR.sf=null; return; } clearTimeout(S.endT); var v=S.v; CR.sf=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); }   // crShow가 오버레이를 닫는다
+// 부상: 경기 기록에 빨간 줄, 시즌 카드가 빨갛게 흔들리고 아래에 좌우 카드 두 장(사용자 지정)
+function crSfInjury(v){
+  var S=CR.sf; if(!S) return;
+  var j=v.injury, x=document.getElementById('crSfExtra'), box=document.getElementById('crSfBox'), log=document.getElementById('crSfLog');
+  CR.busy=false; S.done=null;
+  if(box) box.classList.add('hurt');
+  if(log){ var row=document.createElement('div'); row.className='r inj new'; row.innerHTML='<span class="m">'+CR_MONTHS[Math.min(9, Math.floor(S.injAt/Math.max(1,S.G)*10))]+'</span><b class="wdl">🚑</b><span class="o">'+gmEsc(j.name)+'</span><span class="s"></span><span class="me"><em class="x">'+(j.major?'큰 부상 · ':'')+'결장 '+j.games+'경기</em></span>'; log.insertBefore(row, log.firstChild); }
+  crSfReact('injury'); var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('mini'); if(S.fan){ S.fan.hurt=true; S.fan.hurtN=0; }   // 부상 카드 자리 확보: 피드는 한 줄만(한 화면에 들어오게)
+  var opt=function(k, ic, t, d){ return '<button class="cr-inj-c" style="--from:'+(k?'60px':'-60px')+';--d:'+(0.25+k*0.12)+'s" onclick="crInjPick('+k+',this)"><span class="e" aria-hidden="true">'+ic+'</span><b>'+t+'</b><span class="d">'+d+'</span></button>'; };
+  if(x) x.innerHTML='<div class="cr-inj"><div class="hd"><b>🚑 '+gmEsc(j.name)+'</b><span>'+(j.major?'시즌 대부분을 쉬어야 해요. 어떻게 할까요?':'예상 결장 '+j.games+'경기. 복귀 시점을 정해 주세요.')+'</span></div><div class="cr-inj-row">'+(j.major
+      ? opt(0,'🏥','수술 후 재활 집중','회복은 확실해요. 대신 스피드·체력 영구 −2')+opt(1,'🩹','보존 치료','스탯 손해 없음. 대신 다음 2시즌 부상 위험 ↑')
+      : opt(0,'⚡','빨리 복귀','결장 절반. 대신 30% 확률로 재부상(추가 결장 + 이번 시즌 성장 ↓)')+opt(1,'🛌','완전히 회복','결장 그대로. 다음 시즌 부상 위험 ↓'))+'</div></div>';
+}
+function crInjury(){   // 새로고침 등으로 부상 단계에서 들어오면 매치데이 월을 그 지점까지 바로 채우고 부상 질문
+  var p=CR.v.player;
+  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead(), '<div class="sum" style="flex:1">부상 처리 방법을 골라 주세요</div>');
+  crSfOpen(true); CR.sf.skip=true; crSfData(CR.v);
+}
+function crInjPick(k, btn){
+  if(CR.busy || !CR.sf) return; CR.busy=true;
+  var S=CR.sf, res=null, err=null, shown=false;
+  S.quick=!CR.v.injury.major && k===0;   // 빨리 복귀면 결장 칸이 절반
+  crApi('season', {token:CR.tok, injPick:k}).then(function(v){ res=v; if(shown) go(); }).catch(function(e){ err=e; if(shown) go(); });
+  var go=function(){
+    if(err){ CR.busy=false; crSfInjury(CR.v); return crErr(err); }
+    var box=document.getElementById('crSfBox'), x=document.getElementById('crSfExtra');
+    var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.remove('mini'); if(S.fan) S.fan.hurt=false;
+    if(box) box.classList.remove('hurt'); if(x) x.innerHTML='<button class="cr-ss-skip" onclick="crSfSkip()">건너뛰기 ›</button>';
+    S.skip=false; S.t0=Date.now()-450; crSfData(res); crSfReact('back');
+  };
+  crPickFx(btn, '#crTov .cr-inj-c', function(){ shown=true; if(res||err) go(); });
 }
 
 // ── 시즌 결과 · 이적시장 ──────────────────────────────────────────────
@@ -9529,9 +9777,15 @@ function crResult(){
 // ── 이적시장 오버레이(사용자 지정) ── 제안 알림이 뜨고 구단 카드가 한 장씩 날아 들어온다. 카드를 누르면 바로 반영:
 // 잔류는 곧장 다음 시즌, 이적은 "OFFICIAL · HERE WE GO" 이적 완료 연출을 보여 주면서 다음 시즌을 불러온다.
 // 방출이면 하위 구단 제안 + 은퇴 카드. ✕로 닫으면 결과 화면으로 돌아간다(선택 전).
+// 바로 반영되는 오버레이 카드의 선택 표시(사용자 지정 — 눌렀는지 보이게): 고른 카드는 금색 테두리·✓ 선택 배지로 튀어 오르고
+// 나머지는 흐려진 뒤 잠깐(0.65초) 있다가 다음으로 넘어간다.
+function crPickFx(btn, sel, fn){
+  document.querySelectorAll(sel).forEach(function(b){ b.disabled=true; b.classList.add(b===btn?'cr-pk-on':'cr-pk-off'); if(b===btn) b.setAttribute('aria-pressed','true'); });
+  setTimeout(fn, 650);
+}
 function crTmShow(){
   var p=CR.v.player, R=CR.v.result, n=R.offers.length, d=0;
-  var card=function(on, crest, tag, nm, meta, right){ d+=0.12; return '<button class="cr-tm-c" style="--d:'+(0.55+d)+'s" onclick="'+on+'">'+crest+'<div class="b"><div class="tg">'+tag+'</div><div class="nm">'+nm+'</div><div class="mt">'+meta+'</div></div><div>'+right+'</div></button>'; };
+  var card=function(on, crest, tag, nm, meta, right){ d+=0.12; return '<button class="cr-tm-c" style="--d:'+(0.55+d)+'s" onclick="'+on.replace(')',',this)')+'">'+crest+'<div class="b"><div class="tg">'+tag+'</div><div class="nm">'+nm+'</div><div class="mt">'+meta+'</div></div><div>'+right+'</div></button>'; };
   var h=(R.released?'':card('crTmPick(-1)', crCrest(p.club,40), '잔류', gmEsc(p.club.n), crFlag(p.club.nat)+crNat(p.club.nat).n, R.stay?crChance(R.stay.chance):''))
     +R.offers.map(function(o,k){ return card('crTmPick('+k+')', crCrest(o,40), gmEsc(o.kind)+(o.dream?' · ♥ 꿈의 구단':''), gmEsc(o.n), crFlag(o.nat)+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':''), crChance(o.chance)); }).join('')
     +(R.released?card('crTmPick(-2)', '<div class="cr-tm-ret" aria-hidden="true">🏁</div>', '커리어 마무리', '은퇴', '여기서 축구화를 벗어요', ''):'');
@@ -9540,12 +9794,12 @@ function crTmShow(){
     +'<div class="cr-tm-note"><span class="ic" aria-hidden="true">📩</span><div><b>'+(n?'제안 '+n+'건 도착':'제안 없음')+'</b><span>'+(R.released?gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 다음 행선지를 골라 주세요.':'에이전트가 받은 제안이에요. 남을지 떠날지 골라 주세요.')+'</span></div></div>'
     +'<div class="cr-tm-list">'+h+'</div></div></div>');
 }
-function crTmPick(k){
+function crTmPick(k, btn){
   if(CR.busy || CR.tmGo) return;
   var R=CR.v.result;
-  if(k<0){ CR.pick=null; if(k===-2 || !R.released){ crTovSet(''); crNext(null); } return; }
-  CR.pick=k; CR.tmGo=true; crTmDone(R.offers[k]);
-  var t0=Date.now(), MIN=2600, fin=function(fn){ setTimeout(function(){ CR.tmGo=false; crTovSet(''); fn(); }, Math.max(0, MIN-(Date.now()-t0))); };
+  if(k<0){ if(k===-1 && R.released) return; CR.pick=null; CR.tmGo=true; return crPickFx(btn, '#crTov .cr-tm-c', function(){ CR.tmGo=false; crNext(null); }); }   // 오버레이는 crShow가 닫는다
+  CR.pick=k; CR.tmGo=true; crPickFx(btn, '#crTov .cr-tm-c', function(){ crTmDone(R.offers[k]); });
+  var t0=Date.now(), MIN=3250, fin=function(fn){ setTimeout(function(){ CR.tmGo=false; crTovSet(''); fn(); }, Math.max(0, MIN-(Date.now()-t0))); };
   CR.busy=true;
   crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ fin(function(){ crShow(v); window.scrollTo(0,0); }); }).catch(function(e){ fin(function(){ crErr(e); }); });
 }
