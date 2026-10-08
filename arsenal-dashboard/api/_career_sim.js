@@ -160,7 +160,15 @@ export function firstClubs(nation, pos, card, seed){
   let mid = 0; home.forEach((c,i) => { if(Math.abs(c.r-me) < Math.abs(home[mid].r-me)) mid = i; });
   const step = home.length >= 16 ? 3 : 1;
   mid = Math.max(step, Math.min(home.length-1-step, mid));
-  const list = [[home[mid-step],'도전'],[home[mid],'적정'],[home[mid+step],'안정']].filter(x => x[0]);
+  let pickIdx = [mid-step, mid, mid+step];
+  if(seed != null){
+    // 커리어마다 비슷한 수준 안에서 바뀌게(사용자 지적 — 국적마다 첫 구단이 늘 똑같았다): 도전·적정·안정 각자 이웃 구단 몇 곳 중 하나
+    const rr = mulberry((seed>>>0) ^ hashStr('first'));
+    const band = (lo, hi) => { lo = Math.max(0, lo); hi = Math.min(home.length-1, hi); return lo + Math.floor(rr()*(hi-lo+1)); };
+    const ch = band(mid-step-1, Math.max(mid-step, mid-2)), md = band(Math.max(ch+1, mid-1), mid+1), sf = band(Math.max(md+1, mid+step), mid+step+2);
+    pickIdx = [ch, md, sf];
+  }
+  const list = [[home[pickIdx[0]],'도전'],[home[pickIdx[1]],'적정'],[home[pickIdx[2]],'안정']].filter((x,i,arr) => x[0] && arr.findIndex(y => y[0]===x[0])===i);
   if(seed != null){
     const r = mulberry((seed>>>0) ^ hashStr('abroad'));
     if(r() < (ABROAD_P[nation] ?? 0.1)){
