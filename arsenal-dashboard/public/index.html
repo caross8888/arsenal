@@ -9480,7 +9480,9 @@ function crSfWall(){
 function crSfRun(list, done){
   var S=CR.sf; if(!S) return;
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var step=Math.max(55, Math.min(120, 2600/Math.max(1,S.G))), i=0, wait=Math.max(0, 650-(Date.now()-S.t0));   // 킥오프 문구는 최소 0.65초
+  // 시간 예산(사용자 지적 — 너무 길다): 경기 칸 전체 약 1.6초 + 골·도움 멈춤 합계 최대 0.6초, 킥오프 최소 0.45초
+  var nBig=list.filter(function(m){ return m.g||m.a; }).length;
+  var step=Math.max(30, 1600/Math.max(1,S.G)), extra=nBig?Math.min(110, 600/nBig):0, i=0, wait=Math.max(0, 450-(Date.now()-S.t0));
   S.q=list; S.done=done;
   var tick=function(){
     if(CR.sf!==S) return;
@@ -9488,7 +9490,7 @@ function crSfRun(list, done){
     if(S.skip || reduce){ while(i<list.length) crSfMatch(list[i++], true); return done(); }
     if(i>=list.length) return done();
     var m=list[i++], big=crSfMatch(m, false);
-    S.timer=setTimeout(tick, step+(big?260:0));
+    S.timer=setTimeout(tick, step+(big?extra:0));
   };
   S.timer=setTimeout(tick, wait);
 }
@@ -9513,7 +9515,7 @@ function crSfEnd(v){
   if(b) b.innerHTML='<div class="md">FULL TIME · 시즌 종료</div><div class="ft"><b>'+r.rank+'위</b><span>'+(r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그')+(r.apps?' · 평점 '+r.rating.toFixed(2):'')+'</span></div>';
   if(b){ b.classList.remove('end'); void b.offsetWidth; b.classList.add('end'); }
   if(x) x.innerHTML='';
-  setTimeout(function(){ if(CR.sf===S && document.getElementById('crSfWall')){ CR.sf=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, S && S.skip ? 500 : 1300);   // crShow가 오버레이를 닫는다
+  setTimeout(function(){ if(CR.sf===S && document.getElementById('crSfWall')){ CR.sf=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); } }, S && S.skip ? 400 : 900);   // crShow가 오버레이를 닫는다
 }
 // 부상: 그 경기 칸이 빨갛게, 전광판에 부상 이름, 아래에 좌우 카드 두 장(사용자 지정)
 function crSfInjury(v){
@@ -9541,7 +9543,7 @@ function crInjPick(k, btn){
     if(err){ CR.busy=false; crSfInjury(CR.v); return crErr(err); }
     var b=document.getElementById('crSfBoard'), x=document.getElementById('crSfExtra');
     if(b) b.classList.remove('hurt'); if(x) x.innerHTML='<button class="cr-ss-skip" onclick="crSfSkip()">건너뛰기 ›</button>';
-    S.skip=false; S.t0=Date.now()-650; crSfData(res);
+    S.skip=false; S.t0=Date.now()-450; crSfData(res);
   };
   crPickFx(btn, '#crTov .cr-inj-c', function(){ shown=true; if(res||err) go(); });
 }
