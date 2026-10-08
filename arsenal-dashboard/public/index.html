@@ -1915,6 +1915,33 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-iv-go{margin-top:4px;border:0;border-radius:14px;padding:14px;font:inherit;font-size:16px;font-weight:700;color:#fff;background:#EF0107;cursor:pointer;animation:crIvUp .35s .55s ease-out both}
 .cr-iv-go:disabled{background:#5a2124;color:rgba(255,255,255,.6);cursor:default}
 @media (prefers-reduced-motion: reduce){.cr-iv,.cr-iv *{animation:none!important}.cr-iv .fl{display:none}}
+/* 잠재력 평가 오버레이 — 카드가 올라오고 등급 도장이 찍힌다. 등급별 색(S 보라 · A 금 · B 하늘 · C 초록 · D 회색) */
+.cr-sc{--gc:#8A93A8;position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden;
+  background:radial-gradient(90% 60% at 50% 40%,color-mix(in srgb,var(--gc) 22%,rgba(5,6,10,.95)),rgba(5,6,10,.96) 70%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
+.cr-sc.gS{--gc:#C084FC}.cr-sc.gA{--gc:#E9C766}.cr-sc.gB{--gc:#60A5FA}.cr-sc.gC{--gc:#22C55E}.cr-sc.gD{--gc:#8A93A8}
+.cr-sc .ray{position:absolute;left:50%;top:42%;width:900px;height:900px;margin:-450px 0 0 -450px;pointer-events:none;opacity:0;
+  background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--gc) 26%,transparent) 0 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 60%);mask:radial-gradient(circle,#000 0,transparent 60%);
+  animation:crScRay 1.2s 1.05s ease-out forwards, crScSpin 30s 1.05s linear infinite}
+@keyframes crScRay{to{opacity:1}}@keyframes crScSpin{to{transform:rotate(360deg)}}
+.cr-sc-card{position:relative;width:100%;max-width:380px;background:#F3EFE4;color:#1d1b16;border-radius:14px;padding:18px 18px 16px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5);
+  animation:crScCard .6s .1s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes crScCard{from{opacity:0;transform:translateY(60px) rotate(-4deg)}to{opacity:1;transform:none}}
+.cr-sc-card .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px dashed rgba(0,0,0,.2);padding-bottom:10px;margin-bottom:6px;font-size:11px;letter-spacing:1.2px;color:#6b6250}
+.cr-sc-card .hd b{font-size:13px;letter-spacing:0;color:#1d1b16}
+.cr-sc .stamp{width:104px;height:124px;margin:12px auto 6px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--fd);font-size:84px;line-height:.9;color:var(--gc);
+  border:4px solid var(--gc);box-shadow:inset 0 0 0 3px #F3EFE4,inset 0 0 0 5px var(--gc);text-shadow:0 2px 0 rgba(0,0,0,.15);filter:saturate(1.2) brightness(.9);
+  animation:crScStamp .45s .75s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes crScStamp{0%{opacity:0;transform:scale(3) rotate(-25deg)}70%{opacity:1;transform:scale(.92) rotate(-8deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+.cr-sc .stamp small{font-size:13px;letter-spacing:2px;line-height:1;margin-bottom:4px;opacity:.85}
+.cr-sc-card .tt{font-size:20px;font-weight:800;margin-top:4px;animation:crIvUp .4s 1.15s ease-out both}
+.cr-sc-card .chg{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;animation:crIvUp .4s 1.3s ease-out both}
+.cr-sc-card .chg.up{color:#15803D;background:rgba(34,197,94,.16)}.cr-sc-card .chg.dn{color:#B91C1C;background:rgba(239,68,68,.14)}.cr-sc-card .chg.eq{color:#6b6250;background:rgba(0,0,0,.06)}
+.cr-sc-card .dd{margin:10px 2px 14px;font-size:14.5px;line-height:1.6;color:#3d382c;animation:crIvUp .4s 1.45s ease-out both}
+.cr-sc-card .cr-iv-go{width:100%;animation-delay:1.65s}
+@media (prefers-reduced-motion: reduce){.cr-sc,.cr-sc *{animation:none!important}.cr-sc .ray{opacity:.6}}
+.cr-scout-mini .g{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;font-family:var(--fd);font-size:18px;color:#fff;vertical-align:-3px;margin-right:4px}
+.cr-scout-mini .gS{background:#A855F7}.cr-scout-mini .gA{background:#C8A84B}.cr-scout-mini .gB{background:#3B82F6}.cr-scout-mini .gC{background:#16A34A}.cr-scout-mini .gD{background:#6B7280}
+.cr-scout-mini small{font-size:12px;color:var(--text-secondary)}
 .cr-tov{position:fixed;inset:0;z-index:10000;background:rgba(5,6,10,.86);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;animation:crTovIn .25s ease-out}
 .cr-tov .tag{font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:var(--gold);border-radius:999px;padding:3px 9px}
 .cr-tov h3{margin:6px 0 0;font-size:19px;color:#F0F2F7;text-align:center}
@@ -9328,6 +9355,26 @@ function crHonBadge(h){
   var ic=h.kind==='team'?'🏆':h.kind==='nat'?'🌍':'⭐';
   return '<span class="'+(h.kind==='ind'?'aw':h.kind==='nat'?'nt':'')+(h.tier==='S'?' s':'')+'">'+ic+' '+gmEsc(h.n)+'</span>';
 }
+// ── 잠재력 평가 오버레이(사용자 지정 — 18세·21세 시즌 끝, 인터뷰처럼 애니메이션) ──
+// 등급은 서버(_career_sim.js SCOUT)가 오버롤·재능으로 낸 예상 정점에서 정한다. 화면엔 등급과 문구만(숫자 범위는 안 보여 준다).
+var CR_SCOUT={
+  S:{t:'월드클래스 재목', d:'한 세대에 한 번 나올까 말까 한 재능이에요. 이대로 자라면 발롱도르를 다투는 무대에 설 수 있어요.'},
+  A:{t:'빅클럽 재목', d:'빅클럽이 눈독 들일 만한 그릇이에요. 지금 페이스를 지키면 정상급 무대가 열려요.'},
+  B:{t:'1부 리그 주전감', d:'1부 리그에서 주전으로 뛸 수 있는 선수예요. 확실한 무기 하나를 더 다듬으면 한 단계 위가 보여요.'},
+  C:{t:'로테이션 자원', d:'1부에서 경쟁할 수준은 돼요. 꾸준히 뛸 수 있는 팀을 고르는 게 성장의 열쇠예요.'},
+  D:{t:'다듬어지지 않은 원석', d:'아직 보여 준 게 많지 않아요. 출전 시간과 훈련으로 남들보다 한 발 더 뛰어야 해요.'}};
+var CR_SCOUT_ORD='DCBAS';
+function crScoutShow(sc, key){
+  var gi=CR_SCOUT[sc.g], re=!!sc.prev, diff=re?CR_SCOUT_ORD.indexOf(sc.g)-CR_SCOUT_ORD.indexOf(sc.prev):0;
+  var chg=!re?'':diff>0?'<div class="chg up">▲ '+sc.prev+' → '+sc.g+' · 지난 3년, 기대 이상으로 자랐어요</div>':diff<0?'<div class="chg dn">▼ '+sc.prev+' → '+sc.g+' · 기대만큼 크지 못했어요. 지금부터의 선택이 더 중요해요</div>':'<div class="chg eq">= '+sc.g+' 유지 · 예상한 길을 잘 걷고 있어요</div>';
+  crTovSet('<div class="cr-sc g'+sc.g+'" role="dialog" aria-modal="true" aria-label="잠재력 평가"><i class="ray"></i>'
+   +'<div class="cr-sc-card"><div class="hd"><span>SCOUTING REPORT</span><b>'+sc.age+'세 '+(re?'재평가':'잠재력 평가')+'</b></div>'
+   +'<div class="stamp" aria-hidden="true"><small>GRADE</small>'+sc.g+'</div>'
+   +'<div class="tt">'+gmEsc(gi.t)+'</div>'+chg
+   +'<p class="dd">'+gmEsc(gi.d)+'</p>'
+   +'<button class="cr-iv-go" onclick="CR.scoutSeen=\''+key.replace(/'/g,'')+'\';crTovSet(\'\');crResult()">확인</button></div></div>');
+  CR.scoutSeen=null; CR.scoutPend=key;
+}
 function crResult(){
   var p=CR.v.player, R=CR.v.result, r=R.row, st=CR.meta.stats[p.pos];
   var dCls=r.dOvr>0?'up':r.dOvr<0?'down':'', lg=r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그';
@@ -9339,15 +9386,21 @@ function crResult(){
    +(r.notes.length||R.forced?'<ul class="cr-notes">'+r.notes.map(function(t){ return '<li>'+gmEsc(t)+'</li>'; }).join('')
       +(R.forced?'<li>'+(R.forcedWhy==='body'?'몸이 더 이상 버텨 주지 않아요. 선수 생활을 마무리할 때가 됐어요.':p.age>=40?'40세 — 선수 생활을 마무리할 때가 됐어요.':gmEsc(p.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.')+'</li>':'')+'</ul>':'')
    +'</div>';
-  // 코치 평가(18세 시즌 끝 한 번, 재능 3구간)
+  // 예전 코치 평가(옛 토큰의 결과 화면용)
   if(r.coach) h+='<div class="cr-goal"><span class="cr-goal-tag">COACH · 코치 평가</span><div class="cr-goal-t">'+gmEsc(r.coach)+'</div></div>';
+  // 잠재력 평가(18·21세): 처음엔 오버레이로, 확인한 뒤엔 결과 화면에 작게 남는다
+  var SC=r.scout, scKey=SC?p.name+'|'+SC.age+'|'+p.seasons:null, scPending=SC && CR.scoutSeen!==scKey;
+  if(SC && !scPending){ var gi=CR_SCOUT[SC.g];
+    h+='<div class="cr-goal cr-scout-mini"><span class="cr-goal-tag">SCOUTING · '+SC.age+'세 '+(SC.prev?'재평가':'잠재력 평가')+'</span><div class="cr-goal-t"><b class="g g'+SC.g+'">'+SC.g+'</b> '+gmEsc(gi.t)
+      +(SC.prev&&SC.prev!==SC.g?' <small>('+SC.prev+' → '+SC.g+')</small>':'')+'</div><div class="cr-note">'+gmEsc(gi.d)+'</div></div>'; }
   // 특성 제안: 3개 중 하나를 골라야 다음 시즌으로(강제 은퇴 시즌은 없음)
   var TO=!R.forced && R.traitOffer && R.traitOffer.length ? R.traitOffer : null;
   // 공통 특성(17세, 반드시 하나)과 포지션 특성 모두 카드 3장 오버레이로 고른다. 고른 뒤엔 결과 화면에 작게 남고 다시 고를 수 있다.
   if(TO){
     var tCommon=!!TO[0].common, tImg=function(t){ return '<img src="/img/traits/'+t.id+'.svg" alt="'+gmEsc(t.n)+'">'; },
         tDesc=function(t){ return (t.common?gmEsc(t.d).replace(' · ','<br>'):gmEsc(t.d))+(t.stat?'<br>'+gmEsc(t.stat)+' '+t.min+' 이상':''); };
-    if(CR.traitPick==null) crTovSet('<div class="cr-tov" role="dialog" aria-modal="true"><span class="tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성 선택')+'</span>'
+    if(scPending){}   // 잠재력 평가 오버레이를 먼저 보여 주고, 닫으면 특성 선택이 뜬다
+    else if(CR.traitPick==null) crTovSet('<div class="cr-tov" role="dialog" aria-modal="true"><span class="tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성 선택')+'</span>'
       +'<h3>'+(tCommon?'어떤 재능을 타고났나요?':'새 플레이 스타일을 익혔어요')+'</h3>'
       +'<p>'+(tCommon?'하나를 고르면 그 능력이 커리어 내내 더 잘 자라요.':'하나를 골라 주세요. 특성은 최대 3개까지예요.')+'</p>'
       +'<div class="cr-tcards">'+TO.map(function(t,k){ return '<button class="cr-tc" onclick="CR.traitPick='+k+';crResult()">'+tImg(t)+'<span>'+tDesc(t)+'</span></button>'; }).join('')+'</div></div>');
@@ -9373,6 +9426,7 @@ function crResult(){
     : (R.canRetire?'<button class="gm-btn ghost" onclick="crRetire(this)">은퇴</button>':'')
       +'<button class="gm-btn" '+(TO&&CR.traitPick==null?'disabled ':'')+'onclick="crNext(this)">'+(TO&&CR.traitPick==null?'특성을 골라 주세요':CR.pick!=null?gmEsc(R.offers[CR.pick].n)+' 이적':R.released?'은퇴':'다음 시즌')+'</button>');
   window.scrollTo(0,y);   // 제안을 고를 때마다 다시 그려도 보던 자리 그대로
+  if(scPending && !document.querySelector('#crTov .cr-sc')) crScoutShow(SC, scKey);
   // 시즌을 막 끝낸 직후에만 오버롤 숫자가 올라가는 연출(제안을 고르며 다시 그릴 땐 안 한다)
   if(CR.fresh){
     CR.fresh=false;
