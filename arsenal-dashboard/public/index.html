@@ -8863,7 +8863,7 @@ function crApi(a, body){
 }
 // meta는 CDN에 하루 캐시된다(s-maxage). 모양이 바뀌면(체형 bodies 추가 등) CR_META_V를 올려 URL을 바꿔야 옛 캐시를 안 받는다
 // — 체형을 넣고 이걸 안 해서 배포 직후 옛 meta(체형 없음)가 내려와 1페이지 체형 칸이 안 보이고 진행이 막혔다(사용자 지적).
-var CR_META_V='2';
+var CR_META_V='3';   // 3: 시작 스탯·오버롤을 화면 눈금으로
 function crMeta(){
   if(CR.meta) return Promise.resolve(CR.meta);
   return fetch(FN+'/career?a=meta&v='+CR_META_V).then(function(r){ if(!r.ok) throw new Error('잠시 후 다시 시도해 주세요.'); return r.json(); }).then(function(m){

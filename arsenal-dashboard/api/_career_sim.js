@@ -269,6 +269,16 @@ export function createCareer(input, clubIdx, seed){
   return C;
 }
 
+// ── 화면 눈금(사용자 지정) ── 계산은 지금 눈금 그대로 두고, 화면에 나가는 오버롤·스탯만 이 눈금으로 바꾼다.
+// "보통 재능도 하한이 너무 높다, 80이면 상당한 고오버롤" — 보통 79→71, 유망주 82→76, 원더키드 89→84, 세대급 95→91, 90+ 12%→2~3%.
+// 구단 수준·대표팀·수상·방출 기준·커리어 점수(정점×10)가 전부 지금 눈금에 맞춰져 있어서, 그것들을 다 옮기는 대신 표시만 바꾼다(밸런스·랭킹 점수 그대로).
+// 구간 선형 + 단조 증가, 99는 99(스탯 최고치 표시가 그대로).
+const DISP = [[0,0],[20,20],[54,47],[80,72],[92,85],[99,99]];
+export function disp(x){
+  x = Math.max(0, Math.min(99, x));
+  for(let i=1; i<DISP.length; i++){ const [x1,y1] = DISP[i], [x0,y0] = DISP[i-1]; if(x <= x1) return Math.round(y0 + (y1-y0)*(x-x0)/(x1-x0)); }
+  return 99;
+}
 // ── 계산 도우미 ────────────────────────────────────────────────────────
 const cOvr = () => Math.round(C.ovr);
 const cRep = () => cOvr() + 3 + C.fame;
@@ -797,7 +807,7 @@ function rollTraits(){
 }
 export const traitView = (id, pos) => { const t = TRAIT_BY_ID.get(id); if(!t) return null;
   if(t.pos==='공통' && t.d) return {id:t.id, n:t.n, d:t.d, common:true};
-  return t.pos==='공통' ? {id:t.id, n:t.n, d:t.s[pos]+' 성장 ↑ · '+((CT_LABEL[pos]||{})[t.s[pos]]||'')+' ↑', common:true} : {id:t.id, n:t.n, d:t.d, stat:t.stat, min:t.min}; };
+  return t.pos==='공통' ? {id:t.id, n:t.n, d:t.s[pos]+' 성장 ↑ · '+((CT_LABEL[pos]||{})[t.s[pos]]||'')+' ↑', common:true} : {id:t.id, n:t.n, d:t.d, stat:t.stat, min:disp(t.min)}; };   // 조건 스탯도 화면 눈금으로
 
 // ── 이적 · 방출 ────────────────────────────────────────────────────────
 // 방출: 31세 이후 오버롤 66 미만이거나 소속팀 선발 확률 15% 미만이면 재계약 불가(잔류 불가) → 낮은 구단의 말년 제안만.
@@ -836,6 +846,11 @@ function makeOffers(rng, row){
 const forcedWhy = () => C.age>=40 ? 'age' : C.bodyOut ? 'body' : (C.released && !C.offers.length) ? 'contract' : null;
 const forcedRetire = () => C.age>=40 || !!C.bodyOut || (!!C.released && !C.offers.length);
 const pub = c => ({n:c.n, id:c.id, nat:c.nat});
+// 시즌 결과 줄을 화면 눈금으로(오버롤 전후·스탯 변화). 스탯 변화는 지금 스탯과 내부 변화량으로 시즌 전 값을 되짚어 화면 눈금끼리 뺀다.
+export function rowView(state, r){
+  const after = state.st.map(v => Math.round(v)), d = r.deltas ? after.map((v,i) => disp(v) - disp(v - r.deltas[i])) : r.deltas;
+  return {...r, ovr:disp(r.ovr), ...(r.ovrBefore != null ? {ovrBefore:disp(r.ovrBefore), dOvr:disp(r.ovr)-disp(r.ovrBefore)} : {}), ...(d ? {deltas:d} : {})};
+}
 export function offersView(state){ C = state; return offerView(); }
 // 이적시장 카드에 보이는 출전 기회는 다음 시즌 실제 계산과 같게(제안 구단은 새 영입 효과, 잔류는 같은 팀 몫 포함)
 // 지금 단계가 아니라 다음 시즌 단계로 본다(사용자 지적: 21세 U-21 잔류가 "높음"으로 떴는데 22세엔 1군이라 실제론 낮았다).
@@ -945,11 +960,11 @@ export function marketValue(ovr, age){
 export function playerView(state){
   C = state;
   const hw = bodyHW(C.age);
-  return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:cOvr(),
-    st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(C.club), team:teamName(C.club)}, phase:C.phase, seasons:C.hist.length,
-    glass:!!C.glass, tot:C.tot, peak:C.peak, traits:(C.traits||[]).map(id => traitView(id, C.pos)),
+  return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:disp(cOvr()),
+    st:C.st.map(v => disp(Math.round(v))), wf:C.wf, club:{...pub(C.club), team:teamName(C.club)}, phase:C.phase, seasons:C.hist.length,
+    glass:!!C.glass, tot:C.tot, peak:disp(C.peak), traits:(C.traits||[]).map(id => traitView(id, C.pos)),
     // 커리어 기록 접이식 표: [나이, 팀, 임대, 경기, 골, 도움(수비수는 클린시트), 오버롤, 구단, 유스, 그 시즌 주요 수상(S·A·B, 대표팀 제외)]
-    hist: C.hist.map(r => [r.age, r.team, r.loan?1:0, r.apps, r.goals, C.pos==='DF' ? r.cs : r.ast, r.ovr, r.club, r.youth?1:0,
+    hist: C.hist.map(r => [r.age, r.team, r.loan?1:0, r.apps, r.goals, C.pos==='DF' ? r.cs : r.ast, disp(r.ovr), r.club, r.youth?1:0,
       r.hon.filter(h => 'SAB'.includes(h.tier) && h.kind!=='nat').sort((a,b) => 'SAB'.indexOf(a.tier)-'SAB'.indexOf(b.tier)).map(h => h.n)])};
 }
 // 은퇴 카드(랭킹에도 이 모양으로 저장한다)
@@ -957,10 +972,10 @@ export function cardView(state){
   C = state;
   let peakVal = 0; C.hist.forEach(r => { peakVal = Math.max(peakVal, marketValue(r.ovr, r.age)); });
   const hw = bodyHW(Math.max(18, C.age));
-  return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
+  return {sc:2, name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:disp(C.peak), score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
     peakValue: Math.round(peakVal*10)/10, traits:(C.traits||[]).map(id => (TRAIT_BY_ID.get(id)||{}).n).filter(Boolean), traitIds:(C.traits||[]).filter(id => TRAIT_BY_ID.has(id)), oneClub:!!C.oneClub, farewell:!!C.farewell, glass:!!C.glass, iron:!!C.iron,
     tot:C.tot, clubs:C.clubs,
-    seasons: C.hist.map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:r.ovr,
+    seasons: C.hist.map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:disp(r.ovr),
       apps:r.apps, goals:r.goals, ast:r.ast, cs:r.cs, hon:r.hon.filter(h => h.tier!=='C' && h.tier!=='-').map(h => [h.n, h.tier, h.kind])})),
     honors: honorsOf(C).filter(h => h.tier!=='-').map(h => [h.n, h.tier, h.kind])};
 }
