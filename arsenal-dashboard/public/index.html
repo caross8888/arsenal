@@ -1877,35 +1877,36 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-ss-skip{align-self:center;border:0;background:none;color:rgba(255,255,255,.75);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer}
 .cr-sf{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;
   background:radial-gradient(120% 80% at 50% 0%,rgba(40,12,14,.94),rgba(5,6,10,.96) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
-.cr-sf .ic{align-self:center;width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:28px;background:linear-gradient(145deg,#2a2d36,#15171d);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);animation:crTrBounce .7s .05s cubic-bezier(.2,1.5,.4,1) both}
+.cr-sf .ic{align-self:center;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:linear-gradient(145deg,#2a2d36,#15171d);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);animation:crTrBounce .7s .05s cubic-bezier(.2,1.5,.4,1) both}
 .cr-sf .tag{align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .2s ease-out both}
 .cr-sf.still,.cr-sf.still *{animation-duration:0s!important;animation-delay:0s!important}
-.cr-sf-box{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px;margin:auto 0;color:#F0F2F7}
-.cr-sf-card{border-radius:16px;padding:14px 16px 12px;background:#F0F2F7;color:#14161C;border:2px solid transparent;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crIvUp .45s .35s ease-out both;transition:border-color .3s}
+.cr-sf-box{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;gap:10px;margin:auto 0;color:#F0F2F7}
+.cr-sf-card{border-radius:16px;padding:12px 14px 10px;background:#F0F2F7;color:#14161C;border:2px solid transparent;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crIvUp .45s .35s ease-out both;transition:border-color .3s}
 .cr-sf-card .hd{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center}
 .cr-sf-card .hd b{display:block;font-size:16px;line-height:1.25}.cr-sf-card .hd span{font-size:12px;color:#5b6070}
-.cr-sf-card .md{text-align:right;white-space:nowrap}.cr-sf-card .md b{display:inline;font-family:var(--fd);font-size:28px;font-weight:400;color:#b50004}.cr-sf-card .md span{font-size:12px;color:#5b6070;margin-left:3px}
-.cr-sf-prog{height:4px;border-radius:2px;background:#dde0e8;overflow:hidden;margin:12px 0 12px}
+.cr-sf-card .md{text-align:right;white-space:nowrap}.cr-sf-card .md b{display:inline;font-family:var(--fd);font-size:24px;font-weight:400;color:#b50004}.cr-sf-card .md span{font-size:12px;color:#5b6070;margin-left:3px}
+.cr-sf-prog{height:4px;border-radius:2px;background:#dde0e8;overflow:hidden;margin:10px 0}
 .cr-sf-prog i{display:block;height:100%;background:linear-gradient(90deg,#b50004,#EF0107);transform-origin:left;transform:scaleX(0);transition:transform .15s linear}
 .cr-sf-card .st{display:grid;text-align:center}
-.cr-sf-card .st b{display:block;font-family:var(--fd);font-weight:400;font-size:34px;line-height:1.05;font-variant-numeric:tabular-nums}
+.cr-sf-card .st b{display:block;font-family:var(--fd);font-weight:400;font-size:28px;line-height:1.05;font-variant-numeric:tabular-nums}
 .cr-sf-card .st span{font-size:11px;color:#5b6070}
 .cr-sf-card .st b.bump{animation:crSfBump .45s cubic-bezier(.2,1.6,.4,1);color:#b50004}
 @keyframes crSfBump{0%{transform:scale(1)}40%{transform:scale(1.2)}100%{transform:scale(1)}}
-.cr-sf-card .fm{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #dde0e8}
+.cr-sf-card .fm{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid #dde0e8}
 .cr-sf-card .fm>span{font-size:11.5px;color:#5b6070}
 .cr-sf-card .fm div{display:flex;gap:4px;min-height:22px}
-.cr-sf-card .fm i{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800;color:#fff;animation:crSfPop .25s cubic-bezier(.2,1.6,.4,1)}
+.cr-sf-card .fm i{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800;color:#fff;animation:crSfPop .25s cubic-bezier(.2,1.6,.4,1)}
 .cr-sf-card .fm i.W{background:#22C55E}.cr-sf-card .fm i.D{background:#F59E0B}.cr-sf-card .fm i.L{background:#EF4444}
 @keyframes crSfPop{from{transform:scale(.4)}to{transform:none}}
 .cr-sf-card.done{border-color:#C8A84B}
 .cr-sf-box.hurt .cr-sf-card{border-color:#EF4444;animation:crSfHurt .5s ease-out}
 @keyframes crSfHurt{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
-.cr-sf-log{display:flex;flex-direction:column;gap:6px;height:212px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent);animation:crIvUp .45s .5s ease-out both}
-.cr-sf-log .r{display:grid;grid-template-columns:30px 24px 1fr auto auto;gap:8px;align-items:center;min-height:36px;padding:0 11px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(20,24,40,.85);font-size:13px}
-.cr-sf-log .r.new{animation:crTmIn .45s cubic-bezier(.2,1.25,.4,1)}
+.cr-sf-log{display:flex;flex-direction:column;gap:5px;height:134px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent);animation:crIvUp .45s .5s ease-out both}
+.cr-sf-log .r{display:grid;grid-template-columns:30px 22px 1fr auto auto;gap:8px;align-items:center;min-height:34px;flex:none;padding:0 11px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(20,24,40,.85);font-size:13px}
+.cr-sf-log .r.new{animation:crSfRowIn .32s cubic-bezier(.2,.9,.3,1)}
+@keyframes crSfRowIn{from{opacity:0;max-height:0;min-height:0;margin-top:-5px;transform:translateX(18px)}to{opacity:1;max-height:40px;min-height:34px;margin-top:0;transform:none}}
 .cr-sf-log .m{font-size:11px;color:rgba(255,255,255,.5)}
-.cr-sf-log .wdl{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;background:rgba(255,255,255,.12)}
+.cr-sf-log .wdl{width:21px;height:21px;border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;background:rgba(255,255,255,.12)}
 .cr-sf-log .wdl.W{background:#22C55E}.cr-sf-log .wdl.D{background:#F59E0B}.cr-sf-log .wdl.L{background:#EF4444}
 .cr-sf-log .o{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.cr-sf-log .o small{font-size:10.5px;color:rgba(255,255,255,.5);margin-left:2px}
 .cr-sf-log .s{font-variant-numeric:tabular-nums;font-weight:700;color:rgba(255,255,255,.85)}
@@ -1916,14 +1917,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-sf-log .r.hi{background:rgba(200,168,75,.14);box-shadow:inset 3px 0 0 #C8A84B}
 .cr-sf-log .r.inj{background:rgba(239,68,68,.14);box-shadow:inset 3px 0 0 #EF4444}.cr-sf-log .r.inj .wdl{background:none;font-size:15px}.cr-sf-log .r.inj .me em.x{color:#FCA5A5}
 .cr-sf-log .r.ko,.cr-sf-log .r.ft{background:rgba(200,168,75,.1)}.cr-sf-log .r.ko .wdl,.cr-sf-log .r.ft .wdl{background:none;font-size:15px}
-.cr-sf-end{display:grid;grid-template-columns:1fr 1fr;gap:10px;animation:crIvUp .45s ease-out both}
-.cr-sf-end>div{border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);text-align:center}
-.cr-sf-end span{display:block;font-size:11.5px;color:rgba(255,255,255,.6)}.cr-sf-end b{font-family:var(--fd);font-size:32px;font-weight:400;color:#FFE38A}
+.cr-sf-end{display:grid;grid-template-columns:1fr 1fr;gap:10px;cursor:pointer;animation:crIvUp .45s ease-out both}
+.cr-sf-end .hn{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:0!important;background:none!important;border:0!important}
+.cr-sf-end .hn span{font-size:12px;font-weight:700;border-radius:999px;padding:4px 10px;background:rgba(200,168,75,.18);color:#FFE38A;animation:crSfPop .35s cubic-bezier(.2,1.6,.4,1) both}
+.cr-sf-end .go{grid-column:1/-1;padding:0!important;background:none!important;border:0!important}
+.cr-sf-end .go i{display:block;height:3px;border-radius:2px;background:#C8A84B;transform-origin:left;animation:crSfGo linear both}
+.cr-sf-end .go span{display:block;margin-top:6px;font-size:11.5px;color:rgba(255,255,255,.6)}
+@keyframes crSfGo{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.cr-sf-end>div{border-radius:14px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);text-align:center}
+.cr-sf-end>div>span{display:block;font-size:11.5px;color:rgba(255,255,255,.6)}.cr-sf-end>div>b{font-family:var(--fd);font-size:28px;font-weight:400;color:#FFE38A}
 .cr-sf-end .cr-iv-go{grid-column:1/-1;animation:none}
-.cr-sf-feed{display:flex;flex-direction:column;gap:6px;height:146px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent);mask-image:linear-gradient(180deg,#000 62%,transparent)}
-.cr-sf-feed.mini{height:60px;-webkit-mask-image:none;mask-image:none}
-.cr-sf-post{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;padding:8px 11px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#F0F2F7;animation:crSfPost .35s cubic-bezier(.2,1.3,.4,1) both}
-.cr-sf-post>i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;color:#fff}
+.cr-sf-feed{display:flex;flex-direction:column;gap:6px;height:112px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent);mask-image:linear-gradient(180deg,#000 62%,transparent)}
+.cr-sf-feed.mini{height:54px;-webkit-mask-image:none;mask-image:none}
+.cr-sf-feed.gone{display:none}
+.cr-sf-post{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;padding:6px 11px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);color:#F0F2F7;animation:crSfPost .35s cubic-bezier(.2,1.3,.4,1) both}
+.cr-sf-post>i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;color:#fff}
 .cr-sf-post b{display:block;font-size:11px;color:rgba(255,255,255,.6);font-weight:600}.cr-sf-post span{display:block;font-size:13.5px;line-height:1.35}
 .cr-sf-post em{font-style:normal;font-size:11px;color:#FCA5A5;white-space:nowrap}
 @keyframes crSfPost{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
@@ -9433,7 +9441,7 @@ function crSfOpen(still){
   crTovSet('<div class="cr-sf'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행"><div class="cr-sf-box" id="crSfBox">'
     +'<div class="ic" aria-hidden="true">🏟️</div><span class="tag">SEASON '+crSeasonLabel(p.age)+' · 시즌 '+(p.seasons+1)+'</span>'
     // 시즌 카드: 구단·시즌, 진행(몇 번째 경기 / 전체), 내 기록, 최근 5경기 결과
-    +'<div class="cr-sf-card" id="crSfCard"><div class="hd">'+crCrest(p.club,38)+'<div><b>'+gmEsc(p.club.team)+'</b><span>'+gmEsc(p.name)+' · '+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div>'
+    +'<div class="cr-sf-card" id="crSfCard"><div class="hd">'+crCrest(p.club,32)+'<div><b>'+gmEsc(p.club.team)+'</b><span>'+gmEsc(p.name)+' · '+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div>'
     +'<div class="md"><b id="crSfMd">0</b><span id="crSfG">/ –</span></div></div>'
     +'<div class="cr-sf-prog"><i id="crSfProg"></i></div>'
     +'<div class="st" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l){ return '<div><b id="crSfN_'+l[0]+'">0</b><span>'+l[1]+'</span></div>'; }).join('')+'</div>'
@@ -9597,8 +9605,8 @@ function crSfRun(list, done){
   var S=CR.sf; if(!S) return;
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var nBig=list.filter(function(m){ return m.g||m.a; }).length;
-  // 더 느리게(사용자 지정 — 0.8배로도 빠르다): 경기 전체 약 4.2초(한 줄씩 읽힐 만큼) + 골·도움 멈춤 합계 최대 1초
-  var step=Math.max(70, 4200/Math.max(1,S.G)), extra=nBig?Math.min(180, 1000/nBig):0, i=0, wait=Math.max(0, 450-(Date.now()-S.t0));
+  // 속도(사용자 지정): 경기 전체 약 3초 + 골·도움 멈춤 합계 최대 0.6초, 끝 요약 2.4초 뒤 결과 화면
+  var step=Math.max(55, 3000/Math.max(1,S.G)), extra=nBig?Math.min(120, 600/nBig):0, i=0, wait=Math.max(0, 450-(Date.now()-S.t0));
   S.q=list; S.done=done;
   var tick=function(){
     if(CR.sf!==S) return;
@@ -9638,20 +9646,25 @@ function crSfMatch(m, quiet){   // 한 경기: 진행·기록·최근 결과·�
   return !quiet && !!(m.g || m.a);
 }
 function crSfSkip(){ if(CR.sf){ CR.sf.skip=true; clearTimeout(CR.sf.timer); var S=CR.sf; var rest=S.q.filter(function(m){ return m.k>=S.i; }); rest.forEach(function(m){ crSfMatch(m, true); }); S.q=[]; if(S.done) S.done(); } }
-function crSfEnd(v){   // 끝나도 바로 닫지 않는다(사용자 지적) — 시즌 요약을 보여 주고 버튼으로 결과 화면
+function crSfEnd(v){   // 끝 요약을 잠깐(약 2.4초) 보여 주고 결과 화면으로 저절로 넘어간다(사용자 지정 — 버튼 없이, 넘어가서 오버롤 오르는 연출까지). 누르면 바로.
   var S=CR.sf, r=v.result.row, x=document.getElementById('crSfExtra'), card=document.getElementById('crSfCard'), log=document.getElementById('crSfLog');
   if(!S) return;
   S.done=null; S.v=v;
   if(S.fan){ crSfReact(r.rank===1&&!r.youth?'win':'end'); S.fan.hold=true; }
-  var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('mini');   // 요약·버튼이 한 화면에 들어오게 피드는 한 줄
+  var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('gone');   // 요약 자리
   var pr=document.getElementById('crSfProg'); if(pr) pr.style.transform='scaleX(1)';
   if(card) card.classList.add('done');
   if(log){ var row=document.createElement('div'); row.className='r ft new'; row.innerHTML='<span class="m">5월</span><b class="wdl">🏁</b><span class="o">시즌 종료</span><span class="s"></span><span class="me"></span>'; log.insertBefore(row, log.firstChild); }
   var lg=r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그';
-  if(x) x.innerHTML='<div class="cr-sf-end"><div class="rk"><span>'+lg+'</span><b>'+r.rank+'위</b></div><div class="rt"><span>시즌 평점</span><b>'+(r.apps?r.rating.toFixed(2):'–')+'</b></div>'
-    +'<button class="cr-iv-go" onclick="crSfDone()">시즌 결과 보기 ›</button></div>';
+  // 이번 시즌 주요 수상(대표팀 제외, S·A·B) 최대 3개 — 결과 화면에서 다시 자세히 나온다
+  var hon=(r.hon||[]).filter(function(h){ return 'SAB'.indexOf(h.tier)>=0 && h.kind!=='nat'; }).slice(0,3);
+  var wait=S.skip?1600:2400;
+  if(x) x.innerHTML='<div class="cr-sf-end" onclick="crSfDone()"><div class="rk"><span>'+lg+'</span><b>'+r.rank+'위</b></div><div class="rt"><span>시즌 평점</span><b>'+(r.apps?r.rating.toFixed(2):'–')+'</b></div>'
+    +(hon.length?'<div class="hn">'+hon.map(function(h){ return crHonBadge(h); }).join('')+'</div>':'')
+    +'<div class="go"><i style="animation-duration:'+wait+'ms"></i><span>시즌 결과로 넘어가요 · 누르면 바로</span></div></div>';
+  S.endT=setTimeout(crSfDone, wait);
 }
-function crSfDone(){ var S=CR.sf; if(!S || !S.v) return; var v=S.v; CR.sf=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); }   // crShow가 오버레이를 닫는다
+function crSfDone(){ var S=CR.sf; if(!S || !S.v || !document.getElementById('crSfLog')){ if(S && !document.getElementById('crSfLog')) CR.sf=null; return; } clearTimeout(S.endT); var v=S.v; CR.sf=null; CR.animDone=true; crShow(v); window.scrollTo(0,0); }   // crShow가 오버레이를 닫는다
 // 부상: 경기 기록에 빨간 줄, 시즌 카드가 빨갛게 흔들리고 아래에 좌우 카드 두 장(사용자 지정)
 function crSfInjury(v){
   var S=CR.sf; if(!S) return;
@@ -9659,7 +9672,7 @@ function crSfInjury(v){
   CR.busy=false; S.done=null;
   if(box) box.classList.add('hurt');
   if(log){ var row=document.createElement('div'); row.className='r inj new'; row.innerHTML='<span class="m">'+CR_MONTHS[Math.min(9, Math.floor(S.injAt/Math.max(1,S.G)*10))]+'</span><b class="wdl">🚑</b><span class="o">'+gmEsc(j.name)+'</span><span class="s"></span><span class="me"><em class="x">'+(j.major?'큰 부상 · ':'')+'결장 '+j.games+'경기</em></span>'; log.insertBefore(row, log.firstChild); }
-  crSfReact('injury'); var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('mini'); if(S.fan){ S.fan.hurt=true; S.fan.hurtN=0; }   // 부상 카드 자리 확보: 피드는 한 줄만
+  crSfReact('injury'); var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('mini'); if(S.fan){ S.fan.hurt=true; S.fan.hurtN=0; }   // 부상 카드 자리 확보: 피드는 한 줄만(한 화면에 들어오게)
   var opt=function(k, ic, t, d){ return '<button class="cr-inj-c" style="--from:'+(k?'60px':'-60px')+';--d:'+(0.25+k*0.12)+'s" onclick="crInjPick('+k+',this)"><span class="e" aria-hidden="true">'+ic+'</span><b>'+t+'</b><span class="d">'+d+'</span></button>'; };
   if(x) x.innerHTML='<div class="cr-inj"><div class="hd"><b>🚑 '+gmEsc(j.name)+'</b><span>'+(j.major?'시즌 대부분을 쉬어야 해요. 어떻게 할까요?':'예상 결장 '+j.games+'경기. 복귀 시점을 정해 주세요.')+'</span></div><div class="cr-inj-row">'+(j.major
       ? opt(0,'🏥','수술 후 재활 집중','회복은 확실해요. 대신 스피드·체력 영구 −2')+opt(1,'🩹','보존 치료','스탯 손해 없음. 대신 다음 2시즌 부상 위험 ↑')
