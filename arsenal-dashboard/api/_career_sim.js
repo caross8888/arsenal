@@ -463,7 +463,9 @@ export function playSeason(state, choice){
     if(wc || cont){
       const cup = wc ? '월드컵' : CONT_CUP[C.nation], str = Math.min(0.4, NAT_STR[C.nation]*0.55*(wc?1:CONT_MUL[C.nation]));
       caps += Math.round(3+rng()*4);
-      if(rng()<str){ add(cup+' 우승', wc?'S':'A', 'nat'); if(rng()<0.3) add(cup+' 골든볼', wc?'A':'B', 'nat'); }
+      // 약체국 가점(사용자 지정): 우승 확률이 낮은 나라일수록 우승 점수 배율이 크다 — √(10% ÷ 그 대회 우승 확률), 1~3배.
+      // 브라질 월드컵 ×1.0 · 잉글랜드 ×1.1 · 네덜란드 ×1.5 · 노르웨이 ×2.5 · 한국 ×3.0. 기대 점수(확률 × 점수)는 여전히 강국이 높다.
+      if(rng()<str){ add(cup+' 우승', wc?'S':'A', 'nat'); hon[hon.length-1].m = Math.round(Math.min(3, Math.max(1, Math.sqrt(0.1/str)))*100)/100; if(rng()<0.3) add(cup+' 골든볼', wc?'A':'B', 'nat'); }
       if(C.pos!=='DF' && rng()<0.08*Math.pow(ov/85,3)) add(cup+' 득점왕','B','nat');
       notes.push(year+' '+cup+'에 출전했어요.');
     }
@@ -657,7 +659,7 @@ export function careerScore(state){
   const hp = honorsOf(state).reduce((t,h) => {
     const bon = {DF:DF_BONUS, MF:MF_BONUS}[state.pos], mul = bon ? ((bon.find(b => b[0].test(h.n))||[0,1])[1]) : 1;
     const tp = TROPHY_PTS.find(x => x[0].test(String(h.n).split(' ×')[0]));
-    const base = (tp ? tp[1] : (HONOR_TIER[h.tier]||{p:0}).p)*mul, n = +(String(h.n).split('×')[1])||1;
+    const base = (tp ? tp[1] : (HONOR_TIER[h.tier]||{p:0}).p)*mul*(h.m||1), n = +(String(h.n).split('×')[1])||1;
     if(!REPEAT_AW.test(h.n)) return t + base*n;
     const k = seen[h.n] = (seen[h.n]||0) + 1;
     return t + base*REPEAT_PTS[Math.min(k, REPEAT_PTS.length)-1];
