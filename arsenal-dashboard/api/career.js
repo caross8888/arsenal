@@ -11,8 +11,8 @@
 //   POST ?a=retire  {token}                                       → {token, card}
 //   POST ?a=view    {token}                                       → 지금 단계 화면(이어 하기)
 //   POST ?a=submit  {token} + Authorization: Bearer <승부예측 토큰> → {registered, rank, best, improved, key}
-//   GET  ?a=board                                                 → 역대 TOP 100(30초 CDN 캐시)
-//   GET  ?a=card&k=<계정 키>                                      → 그 계정의 대표 은퇴 카드
+//   GET  ?a=board[&p=FW|MF|DF]                                    → 역대 TOP 100(30초 CDN 캐시). p 없으면 전체(계정당 최고 하나)
+//   GET  ?a=card&k=<계정 키>&p=<포지션>                           → 그 계정의 그 포지션 대표 은퇴 카드
 //   GET  ?a=meta                                                  → 화면용 고정 데이터(국가·카드·스탯·이름·구단 이름/id, 명성 없음)
 
 import crypto from 'crypto';
@@ -31,11 +31,17 @@ const KV_URL = process.env.KV_REST_API_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 
 // ── 랭킹(KV) ─────────────────────────────────────────────────────────
-// career:board:v1  정렬 집합, 멤버 '@{계정 키}', 점수 = 커리어 점수. 계정당 최고 커리어 하나, 상위 1,000개만.
-// career:card:{키}  그 계정 대표 커리어의 은퇴 카드(cardView) JSON — 랭킹에서 눌러 열어 본다.
-// career:sum        해시 {키: 랭킹 한 줄 요약 JSON} — 랭킹 100줄을 HMGET 한 번으로 그린다.
+// 포지션별로 따로 저장한다(사용자 지정 — 전체 상위권은 결국 공격수가 차지해서, 랭킹을 전체/공격수/미드필더/수비수로 나눈다).
+// 한 판(전체 1,000개)에 같이 두면 수비수는 상위 1,000 안에 30%만 남고, 계정당 하나라 공격수 기록이 수비수 기록을 지웠다.
+// career:board:v2:{FW|MF|DF}  정렬 집합, 멤버 '@{계정 키}', 점수 = 커리어 점수. 계정당 포지션별 최고 하나, 포지션마다 상위 1,000개.
+// career:card:{키}:{포지션}   그 기록의 은퇴 카드(cardView) JSON — 랭킹에서 눌러 열어 본다.
+// career:sum:{포지션}         해시 {키: 랭킹 한 줄 요약 JSON} — 100줄을 HMGET 한 번으로 그린다.
+// 전체 탭은 세 판의 상위 100을 합쳐 계정당 최고 하나만 남긴다(저장은 따로 안 한다).
+// 옛 한 판(career:board:v1 · career:card:{키} · career:sum)은 처음 읽을 때 한 번 포지션별로 옮긴다(career:mig:v2 NX).
+//   옛 카드는 옮기지 않고 career:card:{키}로 그대로 읽는다(새 키가 없을 때, 그 카드의 포지션이 맞으면).
 // career:done:{id}  같은 커리어 두 번 등록 방지(30일) / career:reg:{YYYY-MM} 월 등록 수(무료 한도 보호).
-const BOARD_KEY = 'career:board:v1', BOARD_KEEP = 1000, BOARD_SHOW = 100, MONTHLY_REG_CAP = 20000, ACCT = '@';
+const POSS = ['FW', 'MF', 'DF'], BOARD_V1 = 'career:board:v1', boardKey = p => `career:board:v2:${p}`, sumKey = p => `career:sum:${p}`;
+const BOARD_KEEP = 1000, BOARD_SHOW = 100, MONTHLY_REG_CAP = 20000, ACCT = '@';
 async function kv(...args){
   const r = await fetch(KV_URL, {
     method: 'POST',
@@ -52,19 +58,55 @@ const kvReady = () => !!(KV_URL && KV_TOKEN);
 const TOP_HON = [['발롱도르', /^발롱도르$/], ['월드컵 우승', /월드컵 우승/], ['챔피언스리그 우승', /챔피언스리그 우승/], ['리그 우승', /리그 우승$/], ['득점왕', /득점왕/]];
 const summaryOf = card => ({nm: card.name, nat: card.nation, pos: card.pos, card: card.card, peak: card.peak,
   hon: TOP_HON.map(([n, re]) => [n, card.honors.filter(h => re.test(h[0])).length]).filter(x => x[1]).slice(0, 3)});
-let _board = null, _boardAt = 0;
-async function readBoard(){
-  if(_board && Date.now() - _boardAt < 30 * 1000) return _board;
-  const flat = await kv('ZRANGE', BOARD_KEY, 0, BOARD_SHOW - 1, 'REV', 'WITHSCORES') || [];
-  const top = [];
-  for(let i = 0; i + 1 < flat.length; i += 2) top.push({key: String(flat[i]).slice(1), score: Number(flat[i + 1])});
-  if(top.length){
-    const keys = top.map(r => r.key);
-    const [names, sums] = await Promise.all([kv('HMGET', 'pk:names', ...keys), kv('HMGET', 'career:sum', ...keys)]);
-    top.forEach((r, i) => { r.nick = (names || [])[i] || r.key; try { Object.assign(r, JSON.parse((sums || [])[i] || '{}')); } catch(_){} });
+// 옛 한 판 → 포지션별(한 번만). 옛 요약에 포지션이 있어서 그걸로 나눈다.
+let _migrated = false;
+async function migrateV1(){
+  if(_migrated) return;
+  if(await kv('SET', 'career:mig:v2', '1', 'NX') === 'OK'){
+    const flat = await kv('ZRANGE', BOARD_V1, 0, -1, 'WITHSCORES') || [];
+    if(flat.length){
+      const sums = await kv('HGETALL', 'career:sum') || [], sum = {};
+      for(let i = 0; i + 1 < sums.length; i += 2) sum[sums[i]] = sums[i + 1];
+      const by = {FW: [], MF: [], DF: []}, hs = {FW: [], MF: [], DF: []};
+      for(let i = 0; i + 1 < flat.length; i += 2){
+        const k = String(flat[i]).slice(1); let pos = null;
+        try { pos = JSON.parse(sum[k] || '{}').pos; } catch(_){}
+        if(!by[pos]) continue;
+        by[pos].push(Number(flat[i + 1]), flat[i]); hs[pos].push(k, sum[k]);
+      }
+      for(const p of POSS) if(by[p].length){ await kv('ZADD', boardKey(p), ...by[p]); await kv('HSET', sumKey(p), ...hs[p]); }
+    }
   }
-  _board = {top}; _boardAt = Date.now();
-  return _board;
+  _migrated = true;
+}
+const _boards = {}, _boardAt = {};
+async function readPos(p, n){
+  const flat = await kv('ZRANGE', boardKey(p), 0, n - 1, 'REV', 'WITHSCORES') || [];
+  const top = [];
+  for(let i = 0; i + 1 < flat.length; i += 2) top.push({key: String(flat[i]).slice(1), score: Number(flat[i + 1]), p});
+  if(top.length){
+    const sums = await kv('HMGET', sumKey(p), ...top.map(r => r.key)) || [];
+    top.forEach((r, i) => { try { Object.assign(r, JSON.parse(sums[i] || '{}')); } catch(_){} r.p = p; });
+  }
+  return top;
+}
+async function readBoard(pos){
+  const id = POSS.includes(pos) ? pos : 'ALL';
+  if(_boards[id] && Date.now() - _boardAt[id] < 30 * 1000) return _boards[id];
+  await migrateV1();
+  let top;
+  if(id !== 'ALL') top = await readPos(id, BOARD_SHOW);
+  else {
+    // 전체: 세 판의 상위 100을 합쳐 계정당 최고 하나
+    const all = (await Promise.all(POSS.map(p => readPos(p, BOARD_SHOW)))).flat().sort((a, b) => b.score - a.score), seen = new Set();
+    top = all.filter(r => !seen.has(r.key) && seen.add(r.key)).slice(0, BOARD_SHOW);
+  }
+  if(top.length){
+    const names = await kv('HMGET', 'pk:names', ...top.map(r => r.key)) || [];
+    top.forEach((r, i) => { r.nick = names[i] || r.key; });
+  }
+  _boards[id] = {top}; _boardAt[id] = Date.now();
+  return _boards[id];
 }
 
 class Bad extends Error {}
@@ -151,12 +193,16 @@ export default async function handler(req, res){
     if(a === 'board'){
       if(!kvReady()) return res.json({top: []});
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=30');
-      return res.json(await readBoard());
+      return res.json(await readBoard(String(req.query.p || '')));
     }
     if(a === 'card'){
-      const k = String(req.query.k || '').slice(0, 64);
+      const k = String(req.query.k || '').slice(0, 64), p = String(req.query.p || '');
       if(!k || !kvReady()) return res.status(404).json({error: '카드를 찾을 수 없어요.'});
-      const [raw, nick] = await Promise.all([kv('GET', `career:card:${k}`), kv('HGET', 'pk:names', k)]);
+      let [raw, nick] = await Promise.all([POSS.includes(p) ? kv('GET', `career:card:${k}:${p}`) : null, kv('HGET', 'pk:names', k)]);
+      if(!raw){   // 포지션별로 나누기 전에 등록한 기록(옛 카드 키)
+        const old = await kv('GET', `career:card:${k}`);
+        try { if(old && (!POSS.includes(p) || JSON.parse(old).pos === p)) raw = old; } catch(_){}
+      }
       if(!raw) return res.status(404).json({error: '랭킹에서 내려간 기록이에요.'});
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=30');
       return res.json({nick: nick || k, card: JSON.parse(raw)});
@@ -230,26 +276,27 @@ export default async function handler(req, res){
       const used = await kv('INCR', `career:reg:${month}`);
       if(used === 1) await kv('EXPIRE', `career:reg:${month}`, 40 * 86400);
       if(used > MONTHLY_REG_CAP) return res.status(429).json({error: '이번 달 랭킹 등록이 마감됐어요. 다음 달에 다시 열려요.'});
-      const member = ACCT + acct.k, score = C.score;
-      const prev = Number(await kv('ZSCORE', BOARD_KEY, member)) || 0;
+      await migrateV1();
+      const member = ACCT + acct.k, score = C.score, pos = C.pos, BK = boardKey(pos);
+      const prev = Number(await kv('ZSCORE', BK, member)) || 0;
       if(score > prev){
         const card = S.cardView(C);
-        await kv('SET', `career:card:${acct.k}`, JSON.stringify(card));
-        await kv('HSET', 'career:sum', acct.k, JSON.stringify(summaryOf(card)));
-        await kv('ZADD', BOARD_KEY, score, member);
-        // 1,000위 밖으로 밀린 계정은 카드·요약도 지운다
-        const out = await kv('ZRANGE', BOARD_KEY, 0, -(BOARD_KEEP + 1)) || [];
+        await kv('SET', `career:card:${acct.k}:${pos}`, JSON.stringify(card));
+        await kv('HSET', sumKey(pos), acct.k, JSON.stringify(summaryOf(card)));
+        await kv('ZADD', BK, score, member);
+        // 그 포지션 1,000위 밖으로 밀린 계정은 그 포지션 카드·요약도 지운다
+        const out = await kv('ZRANGE', BK, 0, -(BOARD_KEEP + 1)) || [];
         if(out.length){
           const ks = out.map(m => String(m).slice(1));
-          await kv('ZREM', BOARD_KEY, ...out);
-          await kv('DEL', ...ks.map(k => `career:card:${k}`));
-          await kv('HDEL', 'career:sum', ...ks);
+          await kv('ZREM', BK, ...out);
+          await kv('DEL', ...ks.map(k => `career:card:${k}:${pos}`));
+          await kv('HDEL', sumKey(pos), ...ks);
         }
-        _board = null;
+        delete _boards[pos]; delete _boards.ALL;
       }
-      const rank = await kv('ZREVRANK', BOARD_KEY, member);
-      return res.json(rank == null ? {registered: false, outside: true}
-        : {registered: true, rank: rank + 1, key: acct.k, score, best: Math.max(prev, score), improved: score > prev});
+      const rank = await kv('ZREVRANK', BK, member);
+      return res.json(rank == null ? {registered: false, outside: true, pos}
+        : {registered: true, pos, rank: rank + 1, key: acct.k, score, best: Math.max(prev, score), improved: score > prev});
     }
 
     if(a === 'view'){

@@ -1669,6 +1669,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-acad{font-size:12px;color:var(--text-secondary);margin-top:4px}.cr-acad b{color:var(--gold);letter-spacing:1px;font-weight:400}.cr-acad i{font-style:normal;opacity:.25}
 .cr-why{font-size:12.5px;color:var(--text-secondary);line-height:1.4;margin-top:4px}
 .cr-dream{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cr-rk-tabs{margin:2px 0 12px}.cr-rk-tabs .cr-chip{padding:9px 4px;font-size:14px}
 .cr-body-up{color:var(--green);font-weight:600}.cr-body-dn{color:var(--loss);font-weight:600}
 .cr-fit{display:inline-block;margin:2px 0 6px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
 .cr-fit.good{color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent)}.cr-fit.bad{color:var(--loss);background:color-mix(in srgb,var(--loss) 12%,transparent)}
@@ -8518,7 +8519,7 @@ function gameProfileRender(d){
     +'<div class="gm-h">Who Am I?</div>'
     +'<div class="pk-sum" style="grid-template-columns:repeat(2,1fr)">'+cell(w?w.best:'—','최고 기록')+cell(w?w.rank+'위':'—','역대 순위')+'</div>'
     +'<div class="gm-h">커리어 모드'+(d.career&&d.career.name?' · '+gmEsc(d.career.name):'')+'</div>'
-    +'<div class="pk-sum" style="grid-template-columns:repeat(2,1fr)">'+cell(d.career?Number(d.career.best).toLocaleString():'—','최고 점수')+cell(d.career?d.career.rank+'위':'—','역대 순위')+'</div>'
+    +'<div class="pk-sum" style="grid-template-columns:repeat(2,1fr)">'+cell(d.career?Number(d.career.best).toLocaleString():'—','최고 점수')+cell(d.career?d.career.rank+'위':'—',d.career&&d.career.pos?({FW:'공격수',MF:'미드필더',DF:'수비수'})[d.career.pos]+' 순위':'역대 순위')+'</div>'
     +'<form class="gm-panel" id="gmRename"><div style="font-weight:700">닉네임 변경</div>'
       +'<div class="pk-field"><label for="gmNewNick">새 닉네임 (최대 12자)</label><div class="gm-inrow"><input id="gmNewNick" maxlength="12" autocomplete="off"'+(waitRename?' disabled':'')+'><button type="button" class="gm-btn ghost" id="gmNickChk"'+(waitRename?' disabled':'')+'>중복 확인</button></div></div>'
       +'<div class="pk-field"><label for="gmRnPw">지금 비밀번호</label><input id="gmRnPw" type="password" maxlength="20" autocomplete="current-password"'+(waitRename?' disabled':'')+'></div>'
@@ -9420,7 +9421,7 @@ function crRetired(){
     +'<div id="crShotBox">'+crCardHtml(CR.v.card)+'</div><button class="cr-shot-btn" onclick="crShot(this)">📷 이미지로 저장</button>'
     +(reg?'':'<div class="gm-best">'+(PK.tok?'<b style="color:var(--text)">'+gmEsc(PK.nick||'')+'</b> 계정으로 랭킹에 등록돼요 · 계정당 최고 커리어 하나':'랭킹 등록은 승부예측 계정으로 해요 · 처음이면 가입부터')+'</div>'),
     '<button class="gm-btn ghost" onclick="crNew()">새 커리어</button>'
-    +(reg?'<button class="gm-btn" onclick="crBoard(\'retired\')">랭킹 보기</button>'
+    +(reg?'<button class="gm-btn" onclick="crBoard(\'retired\',(CR.v&&CR.v.player&&CR.v.player.pos)||\'\')">랭킹 보기</button>'
          :'<button class="gm-btn" onclick="crSubmit(this)">'+(PK.tok?'랭킹 등록':'로그인하고 랭킹 등록')+'</button>'));
 }
 // 은퇴 카드 이미지 저장(사용자 지정). html-to-image를 처음 누를 때만 불러온다(번들러가 없어서 CDN, hls.js와 같은 방식).
@@ -9487,34 +9488,40 @@ function crSubmit(btn){
       if(!x.ok) throw new Error(x.j.error||'잠시 후 다시 시도해 주세요.');
       crMarkReg(x.j.key);
       CR.lastReg=x.j;
-      crBoard('retired');
+      crBoard('retired', x.j.pos||'');   // 등록한 포지션 탭으로
     }).catch(crErr);
 }
 
 // ── 랭킹(역대 TOP 100) ─────────────────────────────────────────────────
 // from: 돌아갈 곳('retired' 내 은퇴 카드 / 'intro' 시작 화면)
-function crBoard(from){
+// 랭킹은 전체/공격수/미드필더/수비수 탭(사용자 지정 — 전체 상위권은 결국 공격수가 차지한다). 포지션 탭은 계정당 그 포지션 최고 하나, 전체는 계정당 최고 하나.
+var CR_RK_TABS=[['','전체'],['FW','공격수'],['MF','미드필더'],['DF','수비수']];
+function crBoard(from, pos){
   if(from) CR.boardFrom=from;
+  if(pos!=null) CR.boardPos=pos;
   crTrophyDefs();
-  var back=CR.boardFrom==='retired'?'은퇴 카드':'커리어 모드';
+  var back=CR.boardFrom==='retired'?'은퇴 카드':'커리어 모드', bp=CR.boardPos||'';
   var reg=CR.lastReg; CR.lastReg=null;
+  var pn=function(p){ return ({FW:'공격수',MF:'미드필더',DF:'수비수'})[p]||''; };
   crRender('<div class="cr-top"><button class="gm-back" onclick="crBoardBack()">← '+back+'</button><div class="cr-season">역대 TOP 100</div></div>'
-    +'<h1 class="cr-h1">CAREER <span>RANKING</span></h1><p class="cr-sub">계정당 최고 커리어 하나 · 커리어 점수 순</p>'
-    +(reg?'<div class="gm-best">'+(reg.registered?(reg.improved?'등록했어요! 지금 <b style="color:var(--text)">'+reg.rank+'위</b>예요.':'이번 커리어('+Number(reg.score).toLocaleString()+'점)보다 높은 최고 기록 '+Number(reg.best).toLocaleString()+'점이 그대로 유지돼요. 지금 '+reg.rank+'위예요.'):'1,000위 밖이라 랭킹에 남지 않았어요.')+'</div>':'')
+    +'<h1 class="cr-h1">CAREER <span>RANKING</span></h1><p class="cr-sub">'+(bp?pn(bp)+' · 계정당 최고 기록 하나':'모든 포지션 · 계정당 최고 기록 하나')+' · 커리어 점수 순</p>'
+    +'<div class="cr-seg cr-rk-tabs" style="--n:4">'+CR_RK_TABS.map(function(t){ return '<button class="cr-chip" aria-pressed="'+(bp===t[0])+'" onclick="crBoard(null,\''+t[0]+'\')">'+t[1]+'</button>'; }).join('')+'</div>'
+    +(reg?'<div class="gm-best">'+(reg.registered?(reg.improved?'등록했어요! '+pn(reg.pos)+' 랭킹 <b style="color:var(--text)">'+reg.rank+'위</b>예요.':'이번 커리어('+Number(reg.score).toLocaleString()+'점)보다 높은 '+pn(reg.pos)+' 최고 기록 '+Number(reg.best).toLocaleString()+'점이 그대로 유지돼요. 지금 '+pn(reg.pos)+' '+reg.rank+'위예요.'):pn(reg.pos)+' 1,000위 밖이라 랭킹에 남지 않았어요.')+'</div>':'')
     +'<div class="cr-rk-list" id="crRk">'+loadingHtml('랭킹 불러오는 중...','padding:32px 0')+'</div>',
     '<button class="gm-btn" onclick="crBoardBack()">'+(CR.boardFrom==='retired'?'은퇴 카드로':'돌아가기')+'</button>');
   window.scrollTo(0,0);
   var myKey=null; try{ myKey=localStorage.getItem('careerMyKey'); }catch(e){}
-  Promise.all([crMeta(), fetch(FN+'/career?a=board').then(function(r){ return r.json(); })]).then(function(res){
+  Promise.all([crMeta(), fetch(FN+'/career?a=board'+(bp?'&p='+bp:'')).then(function(r){ return r.json(); })]).then(function(res){
+    if((CR.boardPos||'')!==bp) return;   // 그사이 다른 탭을 눌렀다
     var top=res[1].top||[], el=document.getElementById('crRk'); if(!el) return;
     CR.boardRows=top;
-    if(!top.length){ el.innerHTML='<div class="gm-empty">아직 등록된 커리어가 없어요. 첫 기록의 주인공이 되어 보세요.</div>'; return; }
+    if(!top.length){ el.innerHTML='<div class="gm-empty">아직 등록된 '+(bp?pn(bp)+' ':'')+'커리어가 없어요. 첫 기록의 주인공이 되어 보세요.</div>'; return; }
     // 1~3위는 크기는 그대로, 테두리·배경·메달로만 꾸민다(사용자 지정 — 크게 만든 시상대 카드는 원한 게 아니었다)
     el.innerHTML=top.map(function(r,i){
       var me=myKey && r.key===myKey, nat=crNat(r.nat), card=(CR.meta.cards[r.pos]||[])[r.card]||{n:''};
       return '<button class="cr-rk-row'+(me?' me':'')+(i<3?' top'+(i+1):'')+'"'+(me?' id="crRkMe"':'')+' onclick="crViewCard('+i+')">'
        +'<span class="n">'+(i+1)+'</span>'
-       +'<span class="m"><b>'+crFlag(r.nat)+gmEsc(r.nm||'')+'</b><em>'+gmEsc(r.nick)+' · '+gmEsc(card.n)+'</em></span>'
+       +'<span class="m"><b>'+crFlag(r.nat)+gmEsc(r.nm||'')+'</b><em>'+gmEsc(r.nick)+' · '+(bp?'':pn(r.pos||r.p)+' ')+gmEsc(card.n)+'</em></span>'
        +'<span class="cr-rk-hon">'+(r.hon||[]).map(function(x){ return '<i>'+crTrophy(x[0],18)+(x[1]>1?'<small>'+x[1]+'</small>':'')+'</i>'; }).join('')+'</span>'
        +'<span class="cr-rk-o '+crOvrCls(r.peak)+'">'+r.peak+'</span>'
        +'<span class="cr-rk-sc">'+Number(r.score).toLocaleString()+'</span></button>'; }).join('');
@@ -9528,7 +9535,7 @@ function crViewCard(i){
   crRender('<div class="cr-top"><button class="gm-back" onclick="crBoard()">← 랭킹</button><div class="cr-season">'+gmEsc(r.nick)+'</div></div>'+loadingHtml('불러오는 중...','padding:60px 20px'),
     '<button class="gm-btn" onclick="crBoard()">랭킹으로 돌아가기</button>');
   window.scrollTo(0,0);
-  fetch(FN+'/career?a=card&k='+encodeURIComponent(r.key)).then(function(x){ return x.json().then(function(j){ if(!x.ok) throw new Error(j.error); return j; }); }).then(function(d){
+  fetch(FN+'/career?a=card&k='+encodeURIComponent(r.key)+'&p='+(r.p||r.pos||'')).then(function(x){ return x.json().then(function(j){ if(!x.ok) throw new Error(j.error); return j; }); }).then(function(d){
     var box=document.querySelector('#gameRoot .cr'); if(!box) return;
     box.innerHTML='<div class="cr-top"><button class="gm-back" onclick="crBoard()">← 랭킹</button><div class="cr-season">'+gmEsc(d.nick)+'</div></div>'+crCardHtml(d.card);
   }).catch(function(e){ var box=document.querySelector('#gameRoot .cr'); if(box) box.insertAdjacentHTML('beforeend','<div class="gm-empty">'+gmEsc(e.message||'카드를 불러오지 못했어요.')+'</div>'); var l=box&&box.querySelector('.loading-state'); if(l) l.remove(); });
