@@ -9536,7 +9536,9 @@ function crShot(btn){
   var done0=done; done=function(){ box.classList.remove('shooting'); done0(); };
   Promise.all(imgs.map(function(i){ return i.complete ? 0 : new Promise(function(r){ i.onload=i.onerror=r; }); }))
     .then(function(){ return Promise.all([crLoadH2I(), crShotFonts()]); })
-    .then(function(x){ return x[0].toBlob(box, {pixelRatio:2, backgroundColor:bg, fontEmbedCSS:x[1]}); })
+    // includeQueryParams: html-to-image는 이미지 캐시 키에서 쿼리를 떼어 내서, 엠블럼 프록시(…/career?a=logo&id=N)가 전부 같은 키가 됐다
+    // — 저장한 사진에서 모든 구단 엠블럼이 처음 받은 하나로 통일되던 버그(사용자 제보).
+    .then(function(x){ return x[0].toBlob(box, {pixelRatio:2, backgroundColor:bg, fontEmbedCSS:x[1], includeQueryParams:true}); })
     .then(function(blob){
       done();
       var name='career-'+String(((box.dataset.board?CR.shotCard:CR.v&&CR.v.card)||{}).name||'card').replace(/[^\w가-힣]+/g,'_')+'.png';
