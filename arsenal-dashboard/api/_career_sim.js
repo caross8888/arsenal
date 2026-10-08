@@ -717,12 +717,16 @@ const DF_BONUS = [[/리그 베스트 11$/, 2.2], [/^월드 베스트 11$/, 2], [
 const MF_BONUS = [[/리그 베스트 11$/, 1.8], [/^월드 베스트 11$/, 1.6], [/^이달의 선수/, 1.3], [/^발롱도르$/, 1.2]];
 // 우승 점수(커리어 점수에서만, 등급·성장 보너스는 그대로): 상위권 우승 몫이 골·도움 몫의 1/3이라 기록 쪽으로 기울었다(사용자 지정)
 const TROPHY_PTS = [[/^챔피언스리그 우승$/, 150], [/^(?!유스).+ 리그 우승$/, 80], [/^월드컵 우승$/, 300]];   // 유스 리그 우승은 0점 그대로
+// 카드별 개인상 점수 배율(사용자 지정 — 카드마다 상위 1% 점수가 최소 8,300은 되게). 개인상(득점왕·베스트 11·올해의 선수·발롱 등, 팀 우승·대표팀 제외)에만 곱한다.
+// 개인상은 상위권에 몰려 있어(상위 1% 1,100~2,800점, 점수 중앙 선수는 3~40점) 보통 선수 점수는 거의 그대로 두고 상한만 올린다. 순서는 CARDS와 같음.
+const CARD_HON = {FW:[1.08,1,1,1,1], MF:[1,1,1.2,1,1.25], DF:[1.25,1.47,1.12,1.15,1.15,1.12]};
 export function careerScore(state){
+  const ch = (CARD_HON[state.pos]||[])[state.card] || 1;
   const seen = {};
   const hp = honorsOf(state).reduce((t,h) => {
     const bon = {DF:DF_BONUS, MF:MF_BONUS}[state.pos], mul = bon ? ((bon.find(b => b[0].test(h.n))||[0,1])[1]) : 1;
     const tp = TROPHY_PTS.find(x => x[0].test(String(h.n).split(' ×')[0]));
-    const base = (tp ? tp[1] : (HONOR_TIER[h.tier]||{p:0}).p)*mul*(h.m||1), n = +(String(h.n).split('×')[1])||1;
+    const base = (tp ? tp[1] : (HONOR_TIER[h.tier]||{p:0}).p)*mul*(h.m||1)*(h.kind==='ind' ? ch : 1), n = +(String(h.n).split('×')[1])||1;
     if(!REPEAT_AW.test(h.n)) return t + base*n;
     const k = seen[h.n] = (seen[h.n]||0) + 1;
     return t + base*REPEAT_PTS[Math.min(k, REPEAT_PTS.length)-1];
