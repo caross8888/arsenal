@@ -9461,13 +9461,19 @@ function crShot(btn){
     .then(function(x){ return x[0].toBlob(box, {pixelRatio:2, backgroundColor:bg, fontEmbedCSS:x[1]}); })
     .then(function(blob){
       done();
-      var name='career-'+String((CR.v.card||{}).name||'card').replace(/[^\w가-힣]+/g,'_')+'.png';
+      var name='career-'+String(((box.dataset.board?CR.shotCard:CR.v&&CR.v.card)||{}).name||'card').replace(/[^\w가-힣]+/g,'_')+'.png';
       var file=new File([blob], name, {type:'image/png'});
       // 모바일은 공유 시트(사진 저장·메신저), 안 되면 파일로 내려받기
       if(navigator.canShare && navigator.canShare({files:[file]})) return navigator.share({files:[file], title:'은퇴 카드'}).catch(function(){});
       var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     })
     .catch(function(){ done(); gameToast('이미지를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.'); });
+}
+// 내 계정 키: 로그인 토큰 앞부분(base64url JSON {k,n,e})에서 읽는다 — 다른 기기에서 등록한 기록도 "내 카드"로 알아보게.
+// 서명 확인은 서버 몫이고 여기선 화면 표시(강조·저장 버튼)에만 쓴다. 로그인 전이면 이 기기에서 등록할 때 저장한 키.
+function crMyKey(){
+  try{ if(PK.tok){ var b=PK.tok.split('.')[0].replace(/-/g,'+').replace(/_/g,'/'); var t=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b), function(c){ return c.charCodeAt(0); }))); if(t&&t.k) return t.k; } }catch(e){}
+  try{ return localStorage.getItem('careerMyKey'); }catch(e){ return null; }
 }
 function crMarkReg(key){
   try{ var i=JSON.parse(localStorage.getItem(CR_INFO)||'{}'); i.reg=true; localStorage.setItem(CR_INFO, JSON.stringify(i)); if(key) localStorage.setItem('careerMyKey', key); }catch(e){}
@@ -9510,7 +9516,7 @@ function crBoard(from, pos){
     +'<div class="cr-rk-list" id="crRk">'+loadingHtml('랭킹 불러오는 중...','padding:32px 0')+'</div>',
     '<button class="gm-btn" onclick="crBoardBack()">'+(CR.boardFrom==='retired'?'은퇴 카드로':'돌아가기')+'</button>');
   window.scrollTo(0,0);
-  var myKey=null; try{ myKey=localStorage.getItem('careerMyKey'); }catch(e){}
+  var myKey=crMyKey();
   Promise.all([crMeta(), fetch(FN+'/career?a=board'+(bp?'&p='+bp:'')).then(function(r){ return r.json(); })]).then(function(res){
     if((CR.boardPos||'')!==bp) return;   // 그사이 다른 탭을 눌렀다
     var top=res[1].top||[], el=document.getElementById('crRk'); if(!el) return;
@@ -9537,7 +9543,11 @@ function crViewCard(i){
   window.scrollTo(0,0);
   fetch(FN+'/career?a=card&k='+encodeURIComponent(r.key)+'&p='+(r.p||r.pos||'')).then(function(x){ return x.json().then(function(j){ if(!x.ok) throw new Error(j.error); return j; }); }).then(function(d){
     var box=document.querySelector('#gameRoot .cr'); if(!box) return;
-    box.innerHTML='<div class="cr-top"><button class="gm-back" onclick="crBoard()">← 랭킹</button><div class="cr-season">'+gmEsc(d.nick)+'</div></div>'+crCardHtml(d.card);
+    // 내 카드면 은퇴 화면처럼 이미지로 저장할 수 있게(사용자 지정). 내 카드 판별은 crMyKey(로그인 계정 키).
+    var myKey=crMyKey();
+    var mine=!!myKey && r.key===myKey; CR.shotCard=mine?d.card:null;
+    box.innerHTML='<div class="cr-top"><button class="gm-back" onclick="crBoard()">← 랭킹</button><div class="cr-season">'+gmEsc(d.nick)+'</div></div>'
+      +(mine?'<div id="crShotBox" data-board="1">'+crCardHtml(d.card)+'</div><button class="cr-shot-btn" onclick="crShot(this)">📷 이미지로 저장</button>':crCardHtml(d.card));
   }).catch(function(e){ var box=document.querySelector('#gameRoot .cr'); if(box) box.insertAdjacentHTML('beforeend','<div class="gm-empty">'+gmEsc(e.message||'카드를 불러오지 못했어요.')+'</div>'); var l=box&&box.querySelector('.loading-state'); if(l) l.remove(); });
 }
 
