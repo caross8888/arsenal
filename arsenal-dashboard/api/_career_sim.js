@@ -168,7 +168,8 @@ export function firstClubs(nation, pos, card, seed){
       if(pool.length) list.push([pool[Math.floor(r()*pool.length)], '해외']);
     }
   }
-  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp(((c.r-YOUTH_GAP)-myRep)/7))), grow: growLv(c.r)}));
+  // 성장 보너스 표시도 실제 유스 성장 계산처럼 자국 유스엔 아카데미 보정을 더한다
+  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp(((c.r-YOUTH_GAP)-myRep)/7))), grow: growLv(c.r + (c.nat===nation ? ACAD[nation]||0 : 0))}));
 }
 
 export function createCareer(input, clubIdx, seed){
