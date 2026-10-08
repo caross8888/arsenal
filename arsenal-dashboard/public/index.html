@@ -1875,34 +1875,35 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-anim .cr-rs b.bump{animation:gmScoreBump .45s ease-out}
 #crSfExtra{display:flex;flex-direction:column}
 .cr-ss-skip{align-self:center;border:0;background:none;color:rgba(255,255,255,.75);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer}
-.cr-sf{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden auto;
-  background:radial-gradient(100% 60% at 50% 0%,rgba(239,1,7,.14),transparent 70%),#08090d;animation:crTovIn .35s ease-out both}
+.cr-sf{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(40,12,14,.94),rgba(5,6,10,.96) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
+.cr-sf .ic{align-self:center;width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:28px;background:linear-gradient(145deg,#2a2d36,#15171d);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);animation:crTrBounce .7s .05s cubic-bezier(.2,1.5,.4,1) both}
+.cr-sf .tag{align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .2s ease-out both}
 .cr-sf.still,.cr-sf.still *{animation-duration:0s!important;animation-delay:0s!important}
 .cr-sf-box{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px;margin:auto 0;color:#F0F2F7}
-.cr-sf-card{border-radius:18px;padding:14px 16px 12px;background:linear-gradient(160deg,#1b1e28,#12141b);border:1px solid rgba(255,255,255,.08);box-shadow:0 14px 34px rgba(0,0,0,.45);animation:crIvUp .4s .05s ease-out both;transition:border-color .3s}
+.cr-sf-card{border-radius:16px;padding:14px 16px 12px;background:#F0F2F7;color:#14161C;border:2px solid transparent;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crIvUp .45s .35s ease-out both;transition:border-color .3s}
 .cr-sf-card .hd{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center}
-.cr-sf-card .hd b{display:block;font-size:16px;line-height:1.25}.cr-sf-card .hd span{font-size:12px;color:rgba(255,255,255,.6)}
-.cr-sf-card .md{text-align:right;white-space:nowrap}.cr-sf-card .md b{display:inline;font-family:var(--fd);font-size:28px;font-weight:400;color:#C8A84B}.cr-sf-card .md span{font-size:12px;color:rgba(255,255,255,.6);margin-left:3px}
-.cr-sf-prog{height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;margin:12px 0 12px}
+.cr-sf-card .hd b{display:block;font-size:16px;line-height:1.25}.cr-sf-card .hd span{font-size:12px;color:#5b6070}
+.cr-sf-card .md{text-align:right;white-space:nowrap}.cr-sf-card .md b{display:inline;font-family:var(--fd);font-size:28px;font-weight:400;color:#b50004}.cr-sf-card .md span{font-size:12px;color:#5b6070;margin-left:3px}
+.cr-sf-prog{height:4px;border-radius:2px;background:#dde0e8;overflow:hidden;margin:12px 0 12px}
 .cr-sf-prog i{display:block;height:100%;background:linear-gradient(90deg,#b50004,#EF0107);transform-origin:left;transform:scaleX(0);transition:transform .15s linear}
 .cr-sf-card .st{display:grid;text-align:center}
 .cr-sf-card .st b{display:block;font-family:var(--fd);font-weight:400;font-size:34px;line-height:1.05;font-variant-numeric:tabular-nums}
-.cr-sf-card .st span{font-size:11px;color:rgba(255,255,255,.6)}
-.cr-sf-card .st b.bump{animation:crSfBump .45s cubic-bezier(.2,1.6,.4,1);color:#FFE38A}
+.cr-sf-card .st span{font-size:11px;color:#5b6070}
+.cr-sf-card .st b.bump{animation:crSfBump .45s cubic-bezier(.2,1.6,.4,1);color:#b50004}
 @keyframes crSfBump{0%{transform:scale(1)}40%{transform:scale(1.2)}100%{transform:scale(1)}}
-.cr-sf-card .fm{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07)}
-.cr-sf-card .fm>span{font-size:11.5px;color:rgba(255,255,255,.6)}
+.cr-sf-card .fm{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #dde0e8}
+.cr-sf-card .fm>span{font-size:11.5px;color:#5b6070}
 .cr-sf-card .fm div{display:flex;gap:4px;min-height:22px}
 .cr-sf-card .fm i{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800;color:#fff;animation:crSfPop .25s cubic-bezier(.2,1.6,.4,1)}
 .cr-sf-card .fm i.W{background:#22C55E}.cr-sf-card .fm i.D{background:#F59E0B}.cr-sf-card .fm i.L{background:#EF4444}
 @keyframes crSfPop{from{transform:scale(.4)}to{transform:none}}
-.cr-sf-card.done{border-color:rgba(200,168,75,.5)}
-.cr-sf-box.hurt .cr-sf-card{border-color:rgba(239,68,68,.6);animation:crSfHurt .5s ease-out}
+.cr-sf-card.done{border-color:#C8A84B}
+.cr-sf-box.hurt .cr-sf-card{border-color:#EF4444;animation:crSfHurt .5s ease-out}
 @keyframes crSfHurt{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
-.cr-sf-log{display:flex;flex-direction:column;gap:5px;height:206px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent);animation:crIvUp .4s .15s ease-out both}
-.cr-sf-log .r{display:grid;grid-template-columns:30px 24px 1fr auto auto;gap:8px;align-items:center;min-height:34px;padding:0 10px;border-radius:10px;background:rgba(255,255,255,.045);font-size:13px}
-.cr-sf-log .r.new{animation:crSfRow .3s cubic-bezier(.2,1.2,.4,1)}
-@keyframes crSfRow{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.cr-sf-log{display:flex;flex-direction:column;gap:6px;height:212px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 70%,transparent);mask-image:linear-gradient(180deg,#000 70%,transparent);animation:crIvUp .45s .5s ease-out both}
+.cr-sf-log .r{display:grid;grid-template-columns:30px 24px 1fr auto auto;gap:8px;align-items:center;min-height:36px;padding:0 11px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(20,24,40,.85);font-size:13px}
+.cr-sf-log .r.new{animation:crTmIn .45s cubic-bezier(.2,1.25,.4,1)}
 .cr-sf-log .m{font-size:11px;color:rgba(255,255,255,.5)}
 .cr-sf-log .wdl{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;background:rgba(255,255,255,.12)}
 .cr-sf-log .wdl.W{background:#22C55E}.cr-sf-log .wdl.D{background:#F59E0B}.cr-sf-log .wdl.L{background:#EF4444}
@@ -9428,9 +9429,11 @@ function crSfOpen(still){
   var p=CR.v.player, df=p.pos==='DF', yth=p.age<18 || /U-\d+$/.test(p.club.team||'');
   var lbs=[['apps','경기'],['goals','골'],['ast','도움']].concat(df?[['cs','클린시트']]:[]);
   CR.sf={n:{apps:0,goals:0,ast:0,cs:0}, i:0, G:0, timer:null, q:[], lbs:lbs, form:[]};
+  // 다른 오버레이(인터뷰·훈련 제안·이적시장)와 같은 틀: 흐린 배경 + 튀어 들어오는 아이콘 + 알약 태그 + 밝은 말풍선 카드 + 어두운 반투명 줄
   crTovSet('<div class="cr-sf'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행"><div class="cr-sf-box" id="crSfBox">'
+    +'<div class="ic" aria-hidden="true">🏟️</div><span class="tag">SEASON '+crSeasonLabel(p.age)+' · 시즌 '+(p.seasons+1)+'</span>'
     // 시즌 카드: 구단·시즌, 진행(몇 번째 경기 / 전체), 내 기록, 최근 5경기 결과
-    +'<div class="cr-sf-card" id="crSfCard"><div class="hd">'+crCrest(p.club,38)+'<div><b>'+gmEsc(p.club.team)+'</b><span>'+crSeasonLabel(p.age)+' 시즌 · '+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div>'
+    +'<div class="cr-sf-card" id="crSfCard"><div class="hd">'+crCrest(p.club,38)+'<div><b>'+gmEsc(p.club.team)+'</b><span>'+gmEsc(p.name)+' · '+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div>'
     +'<div class="md"><b id="crSfMd">0</b><span id="crSfG">/ –</span></div></div>'
     +'<div class="cr-sf-prog"><i id="crSfProg"></i></div>'
     +'<div class="st" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l){ return '<div><b id="crSfN_'+l[0]+'">0</b><span>'+l[1]+'</span></div>'; }).join('')+'</div>'
@@ -9640,6 +9643,7 @@ function crSfEnd(v){   // 끝나도 바로 닫지 않는다(사용자 지적) �
   if(!S) return;
   S.done=null; S.v=v;
   if(S.fan){ crSfReact(r.rank===1&&!r.youth?'win':'end'); S.fan.hold=true; }
+  var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('mini');   // 요약·버튼이 한 화면에 들어오게 피드는 한 줄
   var pr=document.getElementById('crSfProg'); if(pr) pr.style.transform='scaleX(1)';
   if(card) card.classList.add('done');
   if(log){ var row=document.createElement('div'); row.className='r ft new'; row.innerHTML='<span class="m">5월</span><b class="wdl">🏁</b><span class="o">시즌 종료</span><span class="s"></span><span class="me"></span>'; log.insertBefore(row, log.firstChild); }
