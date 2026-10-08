@@ -79,6 +79,12 @@ const BODY = {
   '장신':{FW:{'결정력':2,'드리블':-1,'스피드':-1}, MF:{'태클':1,'시야':1,'볼키핑':-2}, DF:{'공중볼':2,'스피드':-1,'빌드업':-1}, inj:0, decl:0.97, h:8, bmi:22.8,
     d:'공중볼·리치가 무기예요. 민첩함은 떨어지지만 30대에도 오래 버텨요.'}};
 const BODY_U = [1.2, 0.12], BODY_FIT = 0.015, TRAIN_AGE = [20, 0.18];
+// 리그 수준 5단계(사용자 지정): 리그 평균 구단 수준 기준 — 1 잉·스·독·이·프 / 2 브라질·포르투갈·네덜란드·벨기에·아르헨티나 / 3 노르웨이·미국 / 4 일본·한국 / 5 나이지리아.
+// 하위 리그일수록 골·도움·클린시트가 더 나오고(LG_OUT·LG_CS — 상대 수비·공격이 약하다), 대신 그 리그에서 낸 기록과 리그 개인상·우승의 점수는 반비례로 깎는다(LG_PTS).
+// 출력 × 점수 = 1 · 0.95 · 0.9 · 0.84 · 0.75 — 약한 리그에서 숫자는 화려해도 점수로는 큰 리그가 낫게.
+const LG_TIER = {ENG:1,ESP:1,GER:1,ITA:1,FRA:1, BRA:2,POR:2,NED:2,BEL:2,ARG:2, NOR:3,USA:3, JPN:4,KOR:4, NGA:5};
+const LG_OUT = [0,1,1.12,1.25,1.35,1.5], LG_CS = [0,1,1.08,1.16,1.22,1.3], LG_PTS = [0,1,0.85,0.72,0.62,0.5];
+const lgTier = nat => LG_TIER[nat] || 3;
 const SCOUT = {18:[-55.63, 1.881, 7.919], 21:[-12.67, 1.18, 4.435]};   // 잠재력 평가: 예상 정점 = a + b×오버롤 + c×재능 배율(아래 playSeason)
 const SCOUT_G = [[86,'S'],[80,'A'],[75,'B'],[70,'C'],[-99,'D']];
 // 카드 궁합: 체형이 키우는 스탯이 카드의 핵심 스탯(가중치 > 1)이면 +, 약한 스탯이면 −. Σ 체형 이동 × (가중치 − 1) — 예) 포처·장신 +1.4, 윙어·장신 −0.9.
@@ -582,15 +588,16 @@ export function playSeason(state, choice){
   // 약발 보너스(골·도움): ★3까지는 작고 ★4부터 커진다 — 훈련 비용(그 시즌 성장 ×0.92) 대비 ★3은 약간 손해, ★4부터 약간 이득(사용자 지정)
   const wfF = (C.pos==='FW'||C.pos==='MF') ? 1+WF_BONUS[C.wf] : 1;
   const CB = ctBonus();
-  const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF*TM.g*CB.g;
-  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a*CB.a;
+  const LT = lgTier(club.nat);   // 리그 수준(하위 리그일수록 기록이 더 나온다)
+  const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF*TM.g*CB.g*LG_OUT[LT];
+  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a*CB.a*LG_OUT[LT];
   const minsEq = starts + subs*0.3;
   const hot = !row0Youth && starts>=15 && rng()<0.02;   // 커리어 하이 시즌
   // 커리어 하이 ×1.3(예전 ×1.6 — 88 오버롤로 79골이 나왔다), 골 45·도움 25를 넘는 몫은 절반만(60골 넘는 시즌은 전설급에서만 드물게).
   const soft = (x, k) => x <= k ? x : k + (x-k)*0.5;
   const goals = Math.round(soft(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.3:1), 45)), ast = Math.round(soft(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.3:1), 25));
   const DF_ = defFx();
-  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*CB.cs*DF_.cs));
+  const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*CB.cs*DF_.cs*LG_CS[LT]));
   // 클린시트는 출전 경기 전체로 센다(교체 출전 포함). 예전엔 선발만 세서 출전 대비 25%로 너무 적게 보였다(사용자 지적).
   const cs = row0Youth ? Math.round(apps*pCS*0.8) : Math.round(apps*pCS*(0.85+rng()*0.3));
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
@@ -730,7 +737,7 @@ export function playSeason(state, choice){
 
   // 발롱도르·FIFA 올해의 선수: 시즌 활약 점수 vs 그해 세계 경쟁자
   if(senior && apps>=20){
-    const recRaw = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos], rec = BALLON.recW*recRaw;   // recW: 공격 포인트 비중(우승 비중을 키운 만큼 낮춤)
+    const recRaw = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos]*LG_PTS[LT], rec = BALLON.recW*recRaw;   // 하위 리그 기록은 발롱에서도 덜 쳐준다   // recW: 공격 포인트 비중(우승 비중을 키운 만큼 낮춤)
     let hp2 = 0; hon.forEach(x => { const m = BALLON_PTS.find(r => r[0].test(x.n)); if(m) hp2 += m[1]; });
     const star = Math.max(0,ov-85)*2 + Math.max(0,ov-94)*BALLON.top + (C.lastBallon===C.age-1 ? BALLON.inc : 0) - (C.ballonN||0)*BALLON.fat[C.pos];
     // 압도적 시즌(공격 포인트가 아주 많은 시즌)은 따로 더 친다 — 62골을 넣고도 "후보 30인"에 그치던 문제(사용자 지적)
@@ -774,6 +781,9 @@ export function playSeason(state, choice){
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(rating*100)/100, rank,
                youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(scout ? {scout} : {})};
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
+  // 점수용 가중 기록(리그 수준 반비례). 옛 토큰은 지금까지 기록을 가중 1로 시작한다.
+  if(C.tot.wg == null){ C.tot.wg = C.tot.goals; C.tot.wa = C.tot.ast; C.tot.wcs = C.tot.cs; }
+  C.tot.wg += goals*LG_PTS[LT]; C.tot.wa += ast*LG_PTS[LT]; C.tot.wcs += cs*LG_PTS[LT];
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg; C.tot.ca = (C.tot.ca||0) + ca; C.tot.ccs = (C.tot.ccs||0) + ccs;
   C.peak = Math.max(C.peak, cOvr());
   C.bodyOut = bodyEnd();
@@ -922,7 +932,7 @@ export function retire(state){
 }
 // 통산 수상 목록 — 시즌 줄의 hon을 이어 붙인 것(토큰에 따로 두지 않는다)
 export const honorsOf = state => state.hist.flatMap(r => r.hon);
-export function contribScore(state){ const w = CONTRIB[state.pos], t = state.tot; return (t.goals*w.g + t.ast*w.a + (t.cs||0)*w.cs) * ((CARD_CONTRIB[state.pos]||[])[state.card] || 1); }
+export function contribScore(state){ const w = CONTRIB[state.pos], t = state.tot; return ((t.wg ?? t.goals)*w.g + (t.wa ?? t.ast)*w.a + (t.wcs ?? t.cs ?? 0)*w.cs) * ((CARD_CONTRIB[state.pos]||[])[state.card] || 1); }
 // 발롱도르·FIFA 올해의 선수는 받을수록 한 번의 점수가 줄어든다(n번째: 200 × REPEAT_PTS[n−1], 마지막 값 이후 고정).
 // 수상 자체는 그대로 두고 점수만 관리한다(사용자 지정 — 연속 수상 12회면 S 등급만 2,400점이 쌓여 점수가 튀었다).
 const REPEAT_PTS = [1, 0.8, 0.65, 0.5, 0.4, 0.35], REPEAT_AW = /^(발롱도르|FIFA 올해의 선수)$/;
@@ -937,13 +947,16 @@ const TROPHY_PTS = [[/^챔피언스리그 우승$/, 150], [/^(?!유스).+ 리그
 // 카드별 개인상 점수 배율(사용자 지정 — 카드마다 상위 1% 점수가 최소 8,300은 되게). 개인상(득점왕·베스트 11·올해의 선수·발롱 등, 팀 우승·대표팀 제외)에만 곱한다.
 // 개인상은 상위권에 몰려 있어(상위 1% 1,100~2,800점, 점수 중앙 선수는 3~40점) 보통 선수 점수는 거의 그대로 두고 상한만 올린다. 순서는 CARDS와 같음.
 const CARD_HON = {FW:[1.17,0.97,0.92,1,1.12], MF:[1.3,1.1,1.2,1.3,1.25], DF:[1.25,1.35,1.3,1.35,1.3,1.2]};
+// 리그 개인상·리그 우승 점수도 리그 수준 반비례("잉글랜드 리그 득점왕"처럼 국가 이름으로 시작하는 리그 수상)
+const LG_HON = new Map(NATIONS.map(n => [n.n+' 리그', LG_PTS[lgTier(n.id)]]));
+const lgHonMul = name => { const k = String(name).split(' ').slice(0,2).join(' '); return LG_HON.get(k) ?? 1; };
 export function careerScore(state){
   const ch = (CARD_HON[state.pos]||[])[state.card] || 1;
   const seen = {};
   const hp = honorsOf(state).reduce((t,h) => {
     const bon = {DF:DF_BONUS, MF:MF_BONUS}[state.pos], mul = bon ? ((bon.find(b => b[0].test(h.n))||[0,1])[1]) : 1;
     const tp = TROPHY_PTS.find(x => x[0].test(String(h.n).split(' ×')[0]));
-    const base = (tp ? tp[1] : (HONOR_TIER[h.tier]||{p:0}).p)*mul*(h.m||1)*(h.kind==='ind' ? ch : 1), n = +(String(h.n).split('×')[1])||1;
+    const base = (tp ? tp[1] : (HONOR_TIER[h.tier]||{p:0}).p)*mul*(h.m||1)*(h.kind==='ind' ? ch : 1)*lgHonMul(h.n), n = +(String(h.n).split('×')[1])||1;
     if(!REPEAT_AW.test(h.n)) return t + base*n;
     const k = seen[h.n] = (seen[h.n]||0) + 1;
     return t + base*REPEAT_PTS[Math.min(k, REPEAT_PTS.length)-1];
