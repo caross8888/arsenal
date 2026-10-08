@@ -40,8 +40,14 @@ const STAGE_UP = 0.2, YPLAY = [0.9, 0.3], YPLAY_KID = [0.6, 0.8];   // 유스 �
 const ABROAD_G = 1.2;   // 해외 유스 성장 배율(17세까지) — 큰 리그 아카데미라 자국 작은 구단보다 출전·1군 데뷔가 늦다. 없으면 같은 선수의 적정보다 점수 −13%
 // 유스 계약 만료(18세가 되는 여름): 17세 시즌 선발 40% 미만이면 80% 확률로 재계약 없이 "내 오버롤 + 6" 근처 자국 구단으로(nextSeason).
 // 구단 수준이 아니라 출전 비율로 정한다 — 수준으로 정했더니 리그 전체가 강한 잉글랜드·독일 선수만 줄줄이 방출됐다.
-const YOUTH_CUT = 0.4, YOUTH_CUT_P = 0.8, YOUTH_CUT_TO = 6;   // 해외 유스 성장 배율(17세까지) — 큰 리그 아카데미는 자국 작은 구단보다 1군 데뷔가 늦어(월반 보너스 손해) 없으면 적정보다 점수 −22%였다
-const YOUTH_CC = 0.35;   // U21_CC: 18세 이상 U-21도 큰 구단(계수 1 초과) 몫은 25%만 — 큰 구단 U-21에 남는 게 작은 구단 1군보다 크게 크면 첫 구단 "도전"이 다시 정답이 된다
+const YOUTH_CUT = 0.4, YOUTH_CUT_P = 0.5, YOUTH_CUT_TO = 6, YOUTH_CUT_BEHIND = -4;   // 17세 선발 40% 미만 && 오버롤이 또래 수준 + 4 미만이면 50%로 방출
+// 유스(U-16·U-18) 출전은 구단 명성이 아니라 "또래 수준"과 비교한다(사용자 지적 — 큰 구단도 같은 나이끼리 뛰는 유소년팀인데
+// 명성 차로 계산해서 큰 구단 유스는 거의 못 뛰고 → 성장 낮고 → 17세에 거의 자동 방출됐다). 또래 수준 = 나이별 기준 + 구단 수준 차의 20%.
+const COHORT = {15:50, 16:53, 17:56}, COHORT_K = 0.2;
+const cohortLv = (club, age) => (COHORT[Math.min(17, Math.max(15, age))]) + (club.r - 75)*COHORT_K;
+// 첫 구단 화면의 아카데미 수준(★1~3) — 유스 성장에 쓰는 코칭 계수(clubCoef, ACAD 포함)의 단계 그대로
+const acadStars = (club, nation) => { const r = club.r + (club.nat===nation ? ACAD[nation]||0 : 0); return r >= 86 ? 3 : r >= 76 ? 2 : 1; };
+const YOUTH_CC = 0.35;
 // 어린 나이 월반은 문턱을 더 낮춘다(16세 1군 데뷔는 드물게): [U-21 문턱 −, 1군 문턱 −] 나이별
 const EARLY = {16:[8,14], 17:[4,7]};
 // 빅클럽(수준 85+) 16~17세 1군 데뷔(사용자 지정 — 은와네리·야말처럼 극히 드물게, 1만 커리어에 1명꼴): 위 문턱으론 불가능하다(17세에 84+ 필요).
@@ -183,29 +189,20 @@ const growLv = r => Math.max(1, Math.min(5, Math.round((r-40)/11)));
 const ABROAD_P = {KOR:0.3, JPN:0.3, NGA:0.35, USA:0.25, NOR:0.25, ARG:0.2, BEL:0.2, BRA:0.15, NED:0.15, POR:0.15};
 const ABROAD_LEAGUES = ['ENG','ESP','ITA','GER','FRA'];
 export function firstClubs(nation, pos, card, seed){
-  const myRep = START_OVR + 5, me = myRep + YOUTH_GAP;
-  const home = (CLUBS[nation]||[]).map(c => clubByName(c[0])).sort((a,b) => b.r-a.r);
-  let mid = 0; home.forEach((c,i) => { if(Math.abs(c.r-me) < Math.abs(home[mid].r-me)) mid = i; });
-  const step = home.length >= 16 ? 3 : 1;
-  mid = Math.max(step, Math.min(home.length-1-step, mid));
-  let pickIdx = [mid-step, mid, mid+step];
-  if(seed != null){
-    // 커리어마다 비슷한 수준 안에서 바뀌게(사용자 지적 — 국적마다 첫 구단이 늘 똑같았다): 도전·적정·안정 각자 이웃 구단 몇 곳 중 하나
-    const rr = mulberry((seed>>>0) ^ hashStr('first'));
-    const band = (lo, hi) => { lo = Math.max(0, lo); hi = Math.min(home.length-1, hi); return lo + Math.floor(rr()*(hi-lo+1)); };
-    const ch = band(mid-step-1, Math.max(mid-step, mid-2)), md = band(Math.max(ch+1, mid-1), mid+1), sf = band(Math.max(md+1, mid+step), mid+step+2);
-    pickIdx = [ch, md, sf];
-  }
-  const list = [[home[pickIdx[0]],'도전'],[home[pickIdx[1]],'적정'],[home[pickIdx[2]],'안정']].filter((x,i,arr) => x[0] && arr.findIndex(y => y[0]===x[0])===i);
+  // 자국 구단 중 무작위 3곳(사용자 지정 — 도전·적정·안정 틀 없이). 시드로 정해서 같은 커리어면 같은 3곳. 표시는 구단 수준 순.
+  const home = (CLUBS[nation]||[]).map(c => clubByName(c[0]));
+  const rr = mulberry(((seed ?? 0)>>>0) ^ hashStr('first')), pool = home.slice(), pick = [];
+  while(pick.length < 3 && pool.length) pick.push(pool.splice(Math.floor(rr()*pool.length), 1)[0]);
+  const list = pick.sort((a,b) => b.r-a.r).map(c => [c, null]);
   if(seed != null){
     const r = mulberry((seed>>>0) ^ hashStr('abroad'));
     if(r() < (ABROAD_P[nation] ?? 0.1)){
-      const pool = ABROAD_LEAGUES.filter(n => n !== nation).flatMap(n => (CLUBS[n]||[]).map(c => clubByName(c[0]))).filter(c => c.r >= 80 && c.r <= 92);
-      if(pool.length) list.push([pool[Math.floor(r()*pool.length)], '해외']);
+      const pool2 = ABROAD_LEAGUES.filter(n => n !== nation).flatMap(n => (CLUBS[n]||[]).map(c => clubByName(c[0]))).filter(c => c.r >= 80 && c.r <= 92);
+      if(pool2.length) list.push([pool2[Math.floor(r()*pool2.length)], '해외']);
     }
   }
-  // 성장 보너스 표시도 실제 유스 성장 계산처럼 자국 유스엔 아카데미 보정을 더한다
-  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp(((c.r-STAGE[1].gap)-myRep)/7))),   /* 출전 기회는 U-18 기준(16~17세 실제 성장·방출 판단에 쓰는 값) — U-16 기준이면 약한 리그는 셋 다 "높음" */ grow: growLv(c.r + (c.nat===nation ? ACAD[nation]||0 : 0))}));
+  // 출전 경쟁은 첫 시즌(15세, 시작 오버롤) 실제 계산과 같게 — 또래 수준과 비교
+  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp((cohortLv(c, 15) - START_OVR)/7))), acad: acadStars(c, nation)}));
 }
 
 // 첫 구단 무작위 배정 — 지금은 게임에서 쓰지 않고(사용자가 셋 중 고른다) 분석 스크립트의 "아무거나 고르는 사람"용으로 남겨 둔다.
@@ -252,7 +249,8 @@ const clubCoef = r => r>=91 ? CLUB_C[0] : r>=86 ? CLUB_C[1] : r>=76 ? CLUB_C[2] 
 const playCoef = ratio => { const f = C.age <= 21 ? PLAY_C[0] : PLAY_C[1]; return f + (1.3 - f)*ratio; };
 function syncSt(){ C.st = C.off.map(o => Math.max(20, Math.min(99, C.ovr+o))); }
 function pStart(club, opt){
-  const gap = (club.r-STAGE[club===C.club ? lvOf() : 3].gap)-cRep();   // 다른 구단(임대·이적 제안)은 1군 기준
+  const lv = club===C.club ? lvOf() : 3;   // 다른 구단(임대·이적 제안)은 1군 기준
+  const gap = lv < 2 ? cohortLv(club, C.age) - cOvr() : (club.r-STAGE[lv].gap)-cRep();   // U-16·U-18은 또래 수준과 비교
   return Math.max(0.02, Math.min(0.97, 1/(1+Math.exp(gap/7)) + (opt||0)));
 }
 
@@ -714,7 +712,7 @@ export function nextSeason(state, pick, traitPick){
   C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
   // 유스 계약 만료(18세가 되는 여름): 첫 구단 유스에서 구단 수준에 한참 못 미치면 재계약 없이 내보낸다 → 실력에 맞는 자국 구단으로.
   // 큰 구단 유스(첫 구단 "도전")의 대가 — 없으면 출전 기회가 적어도 잃을 게 없어서 도전이 늘 정답이었다.
-  if(!moved && C.age === 18 && lv0 < 3 && C.last && C.last.starts/Math.max(1,C.last.games) < YOUTH_CUT && mulberry(C.seed ^ hashStr('cut'))() < YOUTH_CUT_P){
+  if(!moved && C.age === 18 && lv0 < 2 && C.last && C.last.starts/Math.max(1,C.last.games) < YOUTH_CUT && cOvr() < cohortLv(C.club, 17) - YOUTH_CUT_BEHIND && mulberry(C.seed ^ hashStr('cut'))() < YOUTH_CUT_P){
     const near = ALL.filter(c => c.nat === C.club.nat && c.n !== C.club.n && Math.abs(c.r - (cOvr() + YOUTH_CUT_TO)) <= 4);
     const to = near.length ? near[Math.floor(mulberry(C.seed ^ hashStr('cutto'))()*near.length)] : null;
     if(to){ C.cutFrom = C.club.n; C.club = to; if(!C.clubs.includes(to.n)) C.clubs.push(to.n); }

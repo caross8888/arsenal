@@ -97,7 +97,7 @@ function load(token, phases){
 }
 
 const clubView = c => ({n: c.n, id: c.id, nat: c.nat});
-const firstView = (input, seed) => S.firstClubs(input.nation, input.pos, input.card, seed).map(o => ({...clubView(o.club), kind: o.kind, chance: o.chance, grow: o.grow}));
+const firstView = (input, seed) => S.firstClubs(input.nation, input.pos, input.card, seed).map(o => ({...clubView(o.club), kind: o.kind, chance: o.chance, acad: o.acad}));
 // 시즌 결과 화면(숨김 값 없음). 지난 결과(last)는 토큰에 결과 화면용으로 남겨 둔다 — 이어 하기에서 다시 그린다.
 const resultView = C => {
   const r = C.hist[C.hist.length - 1];
