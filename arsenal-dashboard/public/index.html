@@ -1675,6 +1675,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-dock .gm-btn{flex:1}
 .cr-dock .gm-btn.ghost{flex:0 0 32%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:8px;padding-right:8px}
 @media (min-width:900px){.cr-dock{bottom:0}}   /* 모바일 56px = 하단 탭 높이(실측). PC는 탭이 사이드바라 0 */
+/* 게임 모드(모바일): 하단 탭을 아래로 내려 숨기고, 탭 자리만큼 띄워 둔 여백·하단 독도 같이 내린다. 나가면 거꾸로 스르륵 올라온다. */
+@media (max-width:899px){
+  .bottom-nav{transition:transform .3s ease}
+  body{transition:padding-bottom .3s ease}
+  .cr-dock{transition:bottom .3s ease}
+  body.game-mode{padding-bottom:var(--safe-bottom)}
+  body.game-mode .bottom-nav{transform:translateY(100%);pointer-events:none}
+  body.game-mode .cr-dock{bottom:var(--safe-bottom)}
+  /* 내용이 화면보다 짧으면 하단 독이 내용 끝에 떠 있고 그 아래가 비어 보인다(예전엔 하단 탭이 그 자리를 가렸다) —
+     커리어 화면(하단 독 있음)일 때만 세로로 채워 독을 화면 맨 아래에 붙인다. */
+  body.game-mode:has(#gameRoot > .cr-dock){display:flex;flex-direction:column}
+  body.game-mode:has(#gameRoot > .cr-dock) .page{flex:1;display:flex;flex-direction:column;width:100%}
+  body.game-mode #games.active:has(#gameRoot > .cr-dock){flex:1;display:flex;flex-direction:column;width:100%;box-sizing:border-box}
+  body.game-mode #gameRoot:has(> .cr-dock){flex:1;display:flex;flex-direction:column}
+  body.game-mode #gameRoot > .cr{flex:1}
+}
 /* 2페이지 카드 */
 .cr-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .cr-card{font:inherit;text-align:left;color:var(--text);background:var(--surface2);border:1.5px solid var(--border-bright);border-radius:14px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,transform .15s;-webkit-tap-highlight-color:transparent}
@@ -8188,7 +8204,10 @@ setGameIcon(false);
 function inGames(){ var g=document.getElementById('games'); return !!(g && g.classList.contains('active')); }
 function gameStopTimer(){ if(GAME.timer){ clearInterval(GAME.timer); GAME.timer=null; } }
 // showSec가 부른다 — 다른 탭으로 나가면 진행 중이던 문제 타이머를 멈춘다.
-function gameLeave(){ gameStopTimer(); setGameIcon(false); }
+// 게임 모드 표시(모바일: 하단 탭을 내린다). 섹션을 바꾸는 곳은 openGames와 showSec 둘뿐이라 여기 두 곳에서만 켜고 끈다 —
+// 홈 버튼·하단 탭·뒤로 가기(popstate → showSec) 어느 길로 나가도 showSec → gameLeave를 지나므로 하단 탭이 늘 복구된다.
+function gameModeUi(on){ document.body.classList.toggle('game-mode', !!on); }
+function gameLeave(){ gameStopTimer(); setGameIcon(false); gameModeUi(false); }
 function toggleGameMode(){
   if(inGames()){
     var btn=document.querySelector('.nav-btn[onclick*="\''+GAME.prev+'\'"]');
@@ -8203,7 +8222,7 @@ function openGames(fromHistory){
   document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.remove('active'); });
   document.getElementById('games').classList.add('active');
   document.getElementById('headerTabTitle').textContent='게임';
-  setGameIcon(true);
+  setGameIcon(true); gameModeUi(true);
   if(!fromHistory) window.history.pushState({tab:'games'},'','#games');
   window.scrollTo(0,0);
   gameList();
