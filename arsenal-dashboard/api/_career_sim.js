@@ -197,7 +197,7 @@ export function firstClubs(nation, pos, card, seed){
     }
   }
   // 성장 보너스 표시도 실제 유스 성장 계산처럼 자국 유스엔 아카데미 보정을 더한다
-  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp(((c.r-YOUTH_GAP)-myRep)/7))), grow: growLv(c.r + (c.nat===nation ? ACAD[nation]||0 : 0))}));
+  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp(((c.r-STAGE[1].gap)-myRep)/7))),   /* 출전 기회는 U-18 기준(16~17세 실제 성장·방출 판단에 쓰는 값) — U-16 기준이면 약한 리그는 셋 다 "높음" */ grow: growLv(c.r + (c.nat===nation ? ACAD[nation]||0 : 0))}));
 }
 
 // 첫 구단 무작위 배정 — 지금은 게임에서 쓰지 않고(사용자가 셋 중 고른다) 분석 스크립트의 "아무거나 고르는 사람"용으로 남겨 둔다.

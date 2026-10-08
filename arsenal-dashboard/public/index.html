@@ -1666,6 +1666,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-fd{display:flex;flex-direction:column;gap:10px;padding:14px 0}
 .cr-fd+.cr-fd{border-top:1px solid var(--border)}
 .cr-fd.off{opacity:.5}
+.cr-why{font-size:12.5px;color:var(--text-secondary);line-height:1.4;margin-top:4px}
 .cr-dream{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .cr .cr-dream select:disabled{opacity:.5}
 .cr-f2{display:grid;grid-template-columns:1fr 110px;gap:12px}
@@ -8938,7 +8939,7 @@ function crPage2(){
      +'<div class="cr-ovr"><div class="cr-note">시작 오버롤<br>최대 99까지 성장</div><div class="big">'+c.ovr+'</div></div></div>';
   }
   var ok=S.card!=null;
-  crRender(h, '<div class="sum">오버롤<b>'+(ok?cards[S.card].ovr:'—')+'</b></div><button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage3(this)">'+(ok?'다음 · 첫 구단':'카드를 골라 주세요')+'</button>');
+  crRender(h, '<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage3(this)">'+(ok?'다음 · 첫 구단':'카드를 골라 주세요')+'</button>');
   window.scrollTo(0,0);
 }
 
@@ -8951,19 +8952,22 @@ function crPage3(btn){
     CR.busy=false; CR.tok=d.token; CR.firstClubs=d.clubs; CR.firstPick=null; crPage3Render(); window.scrollTo(0,0);
   }).catch(function(e){ CR.busy=false; if(btn){ btn.disabled=false; btn.textContent='다음 · 첫 구단'; } gameToast(e.message); });
 }
+// 첫 구단 종류별 한 줄 — 예전 "성장 보너스" 칸 대신(사용자 지정). 칸수는 실제 성장(유스는 출전, 18세 이후는 구단 수준, 방출 위험)과 안 맞았고
+// 숨기기로 한 구단 수준을 대신 드러냈다. 결과는 도전 = 고점·위험 큼, 안정 = 바닥 높음(docs/career-mode/career-mode.md).
+var CR_FIRST_WHY={'도전':'큰 구단 · 자리 못 잡으면 17세에 방출 위험','적정':'균형 잡힌 선택','안정':'많이 뛰며 크고 1군 데뷔가 빨라요 · 구단 규모는 작아요','해외':'큰 리그 아카데미 · 낯선 환경에서 출전 경쟁'};
 function crPage3Render(){
   var S=CR.S, c0=CR.meta.cards[S.pos][S.card], list=CR.firstClubs;
   crRender('<div class="cr-top"><button class="gm-back" onclick="crPage2()">← 이전</button>'+crSteps(3)+'</div>'
    +'<h1 class="cr-h1">FIRST <span>CLUB</span></h1><p class="cr-sub">3 / 3 · 유스팀 '+list.length+'곳에서 제안이 왔어요</p>'
    +'<div class="cr-me"><div><div class="v">'+c0.ovr+'</div><div class="l">오버롤</div></div><div><div class="v" style="font-family:var(--fb);font-size:15px;font-weight:700;line-height:1.9">'+gmEsc(c0.n)+'</div><div class="l">유형</div></div><div><div class="v">15</div><div class="l">나이</div></div></div>'
-   +'<p class="cr-note">큰 구단은 훈련 환경이 좋지만 유스팀에서도 자리 잡기 어렵고, 17세까지 못 뛰면 재계약 없이 내보내질 수 있어요. 작은 구단은 자주 뛰며 크고 1군 데뷔도 빨라요.'
+   +'<p class="cr-note">유스 시절엔 뛰는 만큼 크고, 18세 이후엔 큰 구단일수록 훈련 환경이 좋아요.'
      +(list.some(function(o){ return o.kind==='해외'; })?' 부모님과 함께 해외로 건너가 현지 유스팀에서 시작하는 길도 열렸어요.':'')+'</p>'
    +'<div class="cr-list">'+list.map(function(o,k){
      return '<button class="cr-club" aria-pressed="'+(CR.firstPick===k)+'" onclick="CR.firstPick='+k+';crPage3Render()">'+crCrest(o,44)
       +'<div><div class="tag">'+(o.kind==='해외'?'✈ 해외 유스':o.kind)+(S.dream===o.n?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+gmEsc(o.n)+' U-16</div>'
-      +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+'</div>'+crGrow(o.grow)+'</div>'
+      +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+'</div><div class="cr-why">'+(CR_FIRST_WHY[o.kind]||'')+'</div></div>'
       +'<div>'+crChance(o.chance)+'</div></button>'; }).join('')+'</div>',
-   '<div class="sum">선택<br>'+(CR.firstPick!=null?gmEsc(list[CR.firstPick].n):'—')+'</div><button class="gm-btn" '+(CR.firstPick!=null?'':'disabled')+' onclick="crJoin(this)">입단 · 커리어 시작</button>');
+   '<button class="gm-btn" '+(CR.firstPick!=null?'':'disabled')+' onclick="crJoin(this)">입단 · 커리어 시작</button>');
 }
 function crJoin(btn){
   if(!crBusy(btn,'입단 중...')) return;
