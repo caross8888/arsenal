@@ -1896,30 +1896,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rk-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto 34px 56px;gap:8px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:9px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .cr-rk-row.me{border-color:var(--gold);background:rgba(200,168,75,.12)}
 .cr-rk-row.top1 .n{color:#E9C766}.cr-rk-row.top2 .n{color:#C7CDD6}.cr-rk-row.top3 .n{color:#C98A4B}
-/* 랭킹 1~3위 시상대 카드 — 금·은·동 테두리와 은은한 그라데이션, 1위는 빛이 지나간다 */
-.cr-podium{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
-.cr-pd{--c:#E9C766;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font:inherit;color:var(--text);cursor:pointer;
-  border:1.5px solid var(--c);border-radius:16px;padding:14px 10px 12px;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 30%,transparent),color-mix(in srgb,var(--c) 5%,transparent) 60%),var(--surface);
-  box-shadow:0 0 18px color-mix(in srgb,var(--c) 25%,transparent)}
-.cr-pd.p1{grid-column:1/-1;padding:18px 14px 16px}
-.cr-pd.p2{--c:#C7CDD6}.cr-pd.p3{--c:#C98A4B}
-.cr-pd.me{outline:2px solid var(--gold);outline-offset:2px}
-.cr-pd-rank{position:relative;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:22px;color:#1a1408;
-  background:radial-gradient(circle at 35% 30%,#fff8 0,transparent 45%),var(--c);box-shadow:0 2px 8px color-mix(in srgb,var(--c) 50%,transparent)}
-.cr-pd.p1 .cr-pd-rank{width:44px;height:44px;font-size:28px;margin-top:8px}
-.cr-pd-rank i{position:absolute;top:-19px;font-style:normal;font-size:20px}
-.cr-pd-nm{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
-.cr-pd.p1 .cr-pd-nm{font-size:18px}
-.cr-pd-sub{font-style:normal;font-size:11px;color:var(--text-secondary);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cr-pd-hon{min-height:22px;margin-top:2px}
-.cr-pd-foot{display:flex;align-items:center;gap:8px;margin-top:2px}
-.cr-pd-foot .cr-rk-o{padding:1px 7px}
-.cr-pd-sc{font-family:var(--fd);font-size:22px;color:var(--c);line-height:1}
-.cr-pd.p1 .cr-pd-sc{font-size:30px}
-.cr-pd.p1::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);transform:translateX(-100%);animation:crPdShine 3.2s ease-in-out infinite;pointer-events:none}
+/* 랭킹 1~3위: 크기는 다른 줄과 같게, 금·은·동 테두리·그라데이션 배경·메달 번호. 1위는 빛이 지나간다 */
+.cr-rk-row.top1{--c:#E9C766}.cr-rk-row.top2{--c:#C7CDD6}.cr-rk-row.top3{--c:#C98A4B}
+:root[data-theme="light"] .cr-rk-row.top2{--c:#9AA3B0}
+.cr-rk-row.top1,.cr-rk-row.top2,.cr-rk-row.top3{position:relative;overflow:hidden;border:1.5px solid var(--c);
+  background:linear-gradient(110deg,color-mix(in srgb,var(--c) 28%,transparent),color-mix(in srgb,var(--c) 6%,transparent) 55%,color-mix(in srgb,var(--c) 16%,transparent)),var(--surface);
+  box-shadow:0 0 14px color-mix(in srgb,var(--c) 22%,transparent)}
+.cr-rk-medal{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-style:normal;font-size:17px;color:#1a1408;
+  background:radial-gradient(circle at 35% 30%,#fff9 0,transparent 45%),var(--c);box-shadow:0 2px 6px color-mix(in srgb,var(--c) 45%,transparent)}
+.cr-rk-row.top1 .cr-rk-sc,.cr-rk-row.top2 .cr-rk-sc,.cr-rk-row.top3 .cr-rk-sc{color:var(--c)}
+:root[data-theme="light"] .cr-rk-row.top1 .cr-rk-sc{filter:brightness(.72)}:root[data-theme="light"] .cr-rk-row.top2 .cr-rk-sc,:root[data-theme="light"] .cr-rk-row.top3 .cr-rk-sc{filter:brightness(.8)}
+.cr-rk-row.top1::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.25) 50%,transparent 65%);transform:translateX(-100%);animation:crPdShine 3.2s ease-in-out infinite;pointer-events:none}
 @keyframes crPdShine{0%,55%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-@media (prefers-reduced-motion:reduce){.cr-pd.p1::after{animation:none;display:none}}
-:root[data-theme="light"] .cr-pd.p2{--c:#9AA3B0}:root[data-theme="light"] .cr-pd-sc{filter:brightness(.85)}
+@media (prefers-reduced-motion:reduce){.cr-rk-row.top1::after{animation:none;display:none}}
 .cr-rk-row .n{font-family:var(--fd);font-size:22px;text-align:center;color:var(--text-secondary)}
 .cr-rk-row .m{min-width:0;display:flex;flex-direction:column}
 .cr-rk-row .m b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -9465,19 +9454,11 @@ function crBoard(from){
     var top=res[1].top||[], el=document.getElementById('crRk'); if(!el) return;
     CR.boardRows=top;
     if(!top.length){ el.innerHTML='<div class="gm-empty">아직 등록된 커리어가 없어요. 첫 기록의 주인공이 되어 보세요.</div>'; return; }
-    // 1~3위는 시상대 카드(사용자 지정 — 화려하게): 1위 크게 한 줄, 2·3위 나란히. 4위부터 기존 줄.
-    var pod=top.slice(0,3).map(function(r,i){
-      var me=myKey && r.key===myKey, nat=crNat(r.nat), card=(CR.meta.cards[r.pos]||[])[r.card]||{n:''};
-      return '<button class="cr-pd p'+(i+1)+(me?' me':'')+'"'+(me?' id="crRkMe"':'')+' onclick="crViewCard('+i+')">'
-       +'<span class="cr-pd-rank">'+(i===0?'<i>👑</i>':'')+(i+1)+'</span>'
-       +'<b class="cr-pd-nm">'+nat.f+' '+gmEsc(r.nm||'')+'</b><em class="cr-pd-sub">'+gmEsc(r.nick)+' · '+gmEsc(card.n)+'</em>'
-       +'<span class="cr-rk-hon cr-pd-hon">'+(r.hon||[]).slice(0,i?3:5).map(function(x){ return '<i>'+crTrophy(x[0],i?20:26)+(x[1]>1?'<small>'+x[1]+'</small>':'')+'</i>'; }).join('')+'</span>'
-       +'<span class="cr-pd-foot"><span class="cr-rk-o '+crOvrCls(r.peak)+'">'+r.peak+'</span><span class="cr-pd-sc">'+Number(r.score).toLocaleString()+'</span></span></button>';
-    }).join('');
-    el.innerHTML='<div class="cr-podium">'+pod+'</div>'+top.slice(3).map(function(r,j){ var i=j+3;
+    // 1~3위는 크기는 그대로, 테두리·배경·메달로만 꾸민다(사용자 지정 — 크게 만든 시상대 카드는 원한 게 아니었다)
+    el.innerHTML=top.map(function(r,i){
       var me=myKey && r.key===myKey, nat=crNat(r.nat), card=(CR.meta.cards[r.pos]||[])[r.card]||{n:''};
       return '<button class="cr-rk-row'+(me?' me':'')+(i<3?' top'+(i+1):'')+'"'+(me?' id="crRkMe"':'')+' onclick="crViewCard('+i+')">'
-       +'<span class="n">'+(i+1)+'</span>'
+       +'<span class="n">'+(i<3?'<i class="cr-rk-medal">'+(i+1)+'</i>':(i+1))+'</span>'
        +'<span class="m"><b>'+nat.f+' '+gmEsc(r.nm||'')+'</b><em>'+gmEsc(r.nick)+' · '+gmEsc(card.n)+'</em></span>'
        +'<span class="cr-rk-hon">'+(r.hon||[]).map(function(x){ return '<i>'+crTrophy(x[0],18)+(x[1]>1?'<small>'+x[1]+'</small>':'')+'</i>'; }).join('')+'</span>'
        +'<span class="cr-rk-o '+crOvrCls(r.peak)+'">'+r.peak+'</span>'
