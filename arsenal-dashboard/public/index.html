@@ -1666,6 +1666,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-fd{display:flex;flex-direction:column;gap:10px;padding:14px 0}
 .cr-fd+.cr-fd{border-top:1px solid var(--border)}
 .cr-fd.off{opacity:.5}
+.cr-dream{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cr .cr-dream select:disabled{opacity:.5}
 .cr-f2{display:grid;grid-template-columns:1fr 110px;gap:12px}
 .cr-f2>div{display:flex;flex-direction:column;gap:10px;min-width:0}
 .cr-sub-age{color:var(--gold);font-weight:700}
@@ -8856,7 +8858,7 @@ function crResume(){
 // ── 1페이지: 선수 만들기 ───────────────────────────────────────────────
 var CR_POS=[{id:'FW',n:'공격수',d:'골과 찬스를 만든다'},{id:'MF',n:'미드필더',d:'경기를 조율한다'},{id:'DF',n:'수비수',d:'골문을 지킨다'}];
 function crNew(){
-  CR.S={step:1, name:'', nation:null, foot:null, pos:null, num:null, dream:null, card:null};
+  CR.S={step:1, name:'', nation:null, foot:null, pos:null, num:null, dream:null, dreamNat:null, card:null};
   CR.firstClubs=null; CR.firstPick=null; CR.tok=null; CR.train='균형';
   crPage1(); window.scrollTo(0,0);
 }
@@ -8878,10 +8880,10 @@ function crSetNation(v){
   crPage1();
 }
 function crPage1(){
-  var S=CR.S, m=CR.meta, dreamOpts='';
-  m.nations.forEach(function(n){
-    dreamOpts+='<optgroup label="'+gmEsc(n.f+' '+n.n)+'">'+(m.clubs[n.id]||[]).map(function(c){ return '<option'+(S.dream===c[0]?' selected':'')+' value="'+gmEsc(c[0])+'">'+gmEsc(c[0])+'</option>'; }).join('')+'</optgroup>';
-  });
+  var S=CR.S, m=CR.meta;
+  // 꿈의 구단: 국가 → 구단 두 단계(사용자 지정 — 한 목록에 국가별로 묶어 두니 고르기 불편했다). 고른 구단이 있으면 그 나라를 되살린다.
+  if(S.dream && !S.dreamNat) m.nations.forEach(function(n){ if((m.clubs[n.id]||[]).some(function(c){ return c[0]===S.dream; })) S.dreamNat=n.id; });
+  var dreamClubs=S.dreamNat ? (m.clubs[S.dreamNat]||[]) : [];
   // 한 패널 안에 항목을 줄로 나눠 담는다(예전엔 항목마다 패널 6개 — 사용자 지적). 주발·등번호는 한 줄에 나란히.
   var dis=S.nation?'':' disabled';
   crRender('<div class="cr-top"><button class="gm-back" onclick="crIntro()">← 커리어 모드</button>'+crSteps(1)+'</div>'
@@ -8897,21 +8899,18 @@ function crPage1(){
    +'<div class="cr-fd'+(S.nation?'':' off')+'"><div class="cr-lbl"><b>이름</b><span>'+(S.nation?'최대 12자 · 랜덤은 국적에 맞는 이름':'국적을 먼저 골라 주세요')+'</span></div>'
    +'<div class="cr-row"><input type="text" id="crName" maxlength="12" placeholder="선수 이름" value="'+gmEsc(S.name)+'" oninput="CR.S.name=this.value;CR.S.nameAuto=false;crDock1()"'+dis+'>'
    +'<button class="cr-chip" onclick="CR.S.name=crRandName();CR.S.nameAuto=true;crPage1()"'+dis+'>🎲 랜덤</button>'
-   +'<button class="cr-chip" onclick="crUseNick()"'+dis+'>내 계정명</button></div></div>'
+   +(PK.tok&&PK.nick?'<button class="cr-chip" onclick="CR.S.name=PK.nick;CR.S.nameAuto=false;crPage1()"'+dis+'>내 계정명</button>':'')+'</div></div>'
    +'<div class="cr-fd cr-f2"><div><div class="cr-lbl"><b>주발</b></div><div class="cr-seg">'
    +['오른발','왼발'].map(function(f){ return '<button class="cr-chip" aria-pressed="'+(S.foot===f)+'" onclick="crSet(\'foot\',\''+f+'\')">'+f+'</button>'; }).join('')+'</div></div>'
    +'<div><div class="cr-lbl"><b>등번호</b><span>1~99</span></div>'
    +'<input type="text" inputmode="numeric" maxlength="2" placeholder="예: 7" value="'+(S.num||'')+'" oninput="this.value=this.value.replace(/\\D/g,\'\');var n=+this.value;CR.S.num=n>=1&&n<=99?n:null;CR.S.numAuto=false;crDock1()"></div></div>'
    +'<div class="cr-fd"><div class="cr-lbl"><b>꿈의 구단</b><span>선택 · 가끔 이 구단에서 제안이 와요</span></div>'
-   +'<select onchange="CR.S.dream=this.value||null"><option value="">고르지 않음</option>'+dreamOpts+'</select></div>'
+   +'<div class="cr-dream"><select aria-label="꿈의 구단 국가" onchange="CR.S.dreamNat=this.value||null;CR.S.dream=null;crPage1()"><option value="">선택 안 함</option>'
+   +m.nations.map(function(n){ return '<option value="'+n.id+'"'+(S.dreamNat===n.id?' selected':'')+'>'+n.f+' '+n.n+'</option>'; }).join('')+'</select>'
+   +'<select aria-label="꿈의 구단" onchange="CR.S.dream=this.value||null"'+(S.dreamNat?'':' disabled')+'><option value="">'+(S.dreamNat?'구단 선택':'국가 먼저')+'</option>'
+   +dreamClubs.map(function(c){ return '<option'+(S.dream===c[0]?' selected':'')+' value="'+gmEsc(c[0])+'">'+gmEsc(c[0])+'</option>'; }).join('')+'</select></div></div>'
    +'</div>', ' ');
   crDock1();
-}
-// 내 계정명: 로그인 안 했으면 로그인부터(로그인 뒤 이 화면으로 돌아와 이름을 채운다 — 입력한 값은 CR.S에 그대로 남아 있다)
-function crUseNick(){
-  var fill=function(){ CR.S.name=PK.nick||CR.S.name; CR.S.nameAuto=false; crPage1(); };
-  if(PK.tok&&PK.nick) return fill();
-  PK.after=fill; PK.afterLabel='커리어 모드'; PK.afterBack=crPage1; pkAuth('login');
 }
 function crDock1(){
   var S=CR.S, ok=S.name.trim() && S.nation && S.foot && S.pos && S.num;
