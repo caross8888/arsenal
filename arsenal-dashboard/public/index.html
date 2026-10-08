@@ -1669,6 +1669,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-acad{font-size:12px;color:var(--text-secondary);margin-top:4px}.cr-acad b{color:var(--gold);letter-spacing:1px;font-weight:400}.cr-acad i{font-style:normal;opacity:.25}
 .cr-why{font-size:12.5px;color:var(--text-secondary);line-height:1.4;margin-top:4px}
 .cr-dream{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cr-body-up{color:var(--green);font-weight:600}.cr-body-dn{color:var(--loss);font-weight:600}
+.cr-fit{display:inline-block;margin:2px 0 6px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.cr-fit.good{color:var(--green);background:color-mix(in srgb,var(--green) 14%,transparent)}.cr-fit.bad{color:var(--loss);background:color-mix(in srgb,var(--loss) 12%,transparent)}
 .cr-flag{width:20px;height:14px;object-fit:cover;border-radius:2px;vertical-align:-2px;margin-right:6px;box-shadow:0 0 0 1px var(--overlay-18)}
 .cr-rc-row.nat .a .cr-flag{margin:0}
 .cr-dd{position:relative}
@@ -8916,7 +8919,7 @@ function crResume(){
 // ── 1페이지: 선수 만들기 ───────────────────────────────────────────────
 var CR_POS=[{id:'FW',n:'공격수',d:'골과 찬스를 만든다'},{id:'MF',n:'미드필더',d:'경기를 조율한다'},{id:'DF',n:'수비수',d:'골문을 지킨다'}];
 function crNew(){
-  CR.S={step:1, name:'', nation:null, foot:null, pos:null, num:null, dream:null, dreamNat:null, card:null};
+  CR.S={step:1, name:'', nation:null, foot:null, body:null, pos:null, num:null, dream:null, dreamNat:null, card:null};
   CR.firstClubs=null; CR.firstPick=null; CR.tok=null; CR.train='균형';
   crPage1(); window.scrollTo(0,0);
 }
@@ -8939,6 +8942,7 @@ function crSetNation(v){
 }
 function crPage1(){
   var S=CR.S, m=CR.meta;
+  CR.firstClubs=null;   // 1페이지 값(이름·국적·체형 등)이 바뀌면 첫 구단 제안(토큰)도 다시 받는다
   // 꿈의 구단: 국가 → 구단 두 단계(사용자 지정 — 한 목록에 국가별로 묶어 두니 고르기 불편했다). 고른 구단이 있으면 그 나라를 되살린다.
   if(S.dream && !S.dreamNat) m.nations.forEach(function(n){ if((m.clubs[n.id]||[]).some(function(c){ return c[0]===S.dream; })) S.dreamNat=n.id; });
   var dreamClubs=S.dreamNat ? (m.clubs[S.dreamNat]||[]) : [];
@@ -8961,6 +8965,7 @@ function crPage1(){
    +['오른발','왼발'].map(function(f){ return '<button class="cr-chip" aria-pressed="'+(S.foot===f)+'" onclick="crSet(\'foot\',\''+f+'\')">'+f+'</button>'; }).join('')+'</div></div>'
    +'<div><div class="cr-lbl"><b>등번호</b><span>1~99</span></div>'
    +'<input type="text" inputmode="numeric" maxlength="2" placeholder="예: 7" value="'+(S.num||'')+'" oninput="this.value=this.value.replace(/\\D/g,\'\');var n=+this.value;CR.S.num=n>=1&&n<=99?n:null;CR.S.numAuto=false;crDock1()"></div></div>'
+   +crBodyField()
    +'<div class="cr-fd"><div class="cr-lbl"><b>꿈의 구단</b><span>선택 · 가끔 이 구단에서 제안이 와요</span></div>'
    +'<div class="cr-dream">'+crNatDD('dream', S.dreamNat, '선택 안 함', 'crSetDreamNat')
    +'<select aria-label="꿈의 구단" onchange="CR.S.dream=this.value||null"'+(S.dreamNat?'':' disabled')+'><option value="">'+(S.dreamNat?'구단 선택':'국가 먼저')+'</option>'
@@ -8968,11 +8973,33 @@ function crPage1(){
    +'</div>', ' ');
   crDock1();
 }
+// 체형(경량/표준/강골/장신): 스탯 ↑↓는 포지션별, 성인 예상 키·몸무게는 국적·포지션 평균(실제는 커리어 시드로 ±3cm)
+function crBodyInfo(b, pos){
+  var bi=CR.meta.bodies, st=CR.meta.stats[pos], sh=bi.info[b].start[pos];
+  var up=st.filter(function(n,i){ return sh[i]>0; }), dn=st.filter(function(n,i){ return sh[i]<0; });
+  return {up:up, dn:dn};
+}
+function crBodyField(){
+  var S=CR.S, bi=CR.meta.bodies; if(!bi) return '';
+  var info=S.body?bi.info[S.body]:null, hw='';
+  if(info && S.nation && S.pos){ var h=(bi.natH[S.nation]||178)+bi.posH[S.pos]+info.h, w=function(x){ return Math.round(info.bmi*(x/100)*(x/100)); };
+    hw='성인 예상 '+(h-3)+'~'+(h+3)+'cm · '+w(h-3)+'~'+w(h+3)+'kg'; }
+  var fx=info&&S.pos&&S.body!=='표준'?crBodyInfo(S.body,S.pos):null;
+  return '<div class="cr-fd"><div class="cr-lbl"><b>체형</b><span>'+(hw||'키·몸무게는 국적·포지션에 따라 정해져요')+'</span></div>'
+   +'<div class="cr-seg" style="--n:4">'+bi.list.map(function(b){ return '<button class="cr-chip" aria-pressed="'+(S.body===b)+'" onclick="crSet(\'body\',\''+b+'\')">'+b+'</button>'; }).join('')+'</div>'
+   +(info?'<p class="cr-note">'+gmEsc(info.d)+(fx?' <b class="cr-body-up">'+fx.up.join('·')+' ↑</b> <b class="cr-body-dn">'+fx.dn.join('·')+' ↓</b>':S.body==='표준'?'':' (포지션을 고르면 스탯 변화가 보여요)')+'</p>':'')+'</div>';
+}
+// 체형·카드 궁합(서버 bodyFit과 같은 식): Σ 체형 이동 × (카드 가중치 − 1)
+function crBodyFit(b, pos, card){
+  if(!b||b==='표준'||!CR.meta.bodies) return 0;
+  var sh=CR.meta.bodies.info[b].start[pos], w=CR.meta.cards[pos][card].w;
+  return sh.reduce(function(t,x,i){ return t+x*(w[i]-1); },0);
+}
 function crDock1(){
-  var S=CR.S, ok=S.name.trim() && S.nation && S.foot && S.pos && S.num;
-  var miss=[!S.pos&&'포지션',!S.nation&&'국적',!S.name.trim()&&'이름',!S.foot&&'주발',!S.num&&'등번호'].filter(Boolean);
+  var S=CR.S, ok=S.name.trim() && S.nation && S.foot && S.body && S.pos && S.num;
+  var miss=[!S.pos&&'포지션',!S.nation&&'국적',!S.name.trim()&&'이름',!S.foot&&'주발',!S.num&&'등번호',!S.body&&'체형'].filter(Boolean);
   // 남은 항목은 버튼 글자로 알려 준다(옆에 요약 칸을 두지 않는다 — 사용자 지적)
-  crDock('<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage2()">'+(ok?'다음 · 선수 유형':({국적:'국적을 골라 주세요',이름:'이름을 입력해 주세요',주발:'주발을 골라 주세요',포지션:'포지션을 골라 주세요',등번호:'등번호를 입력해 주세요'})[miss[0]])+'</button>');
+  crDock('<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage2()">'+(ok?'다음 · 선수 유형':({국적:'국적을 골라 주세요',이름:'이름을 입력해 주세요',주발:'주발을 골라 주세요',포지션:'포지션을 골라 주세요',등번호:'등번호를 입력해 주세요',체형:'체형을 골라 주세요'})[miss[0]])+'</button>');
 }
 
 // ── 2페이지: 선수 유형 카드(시작 스탯은 카드로 자동) ───────────────────
@@ -8981,16 +9008,18 @@ function crPage2(){
   h='<div class="cr-top"><button class="gm-back" onclick="crPage1()">← 이전</button>'+crSteps(2)+'</div>'
    +'<h1 class="cr-h1">PLAYER <span>TYPE</span></h1><p class="cr-sub">2 / 3 · 카드마다 시작 스탯과 성장 속도가 달라요</p>'
    +'<div class="cr-cards">'+cards.map(function(c,k){
+     var ft=crBodyFit(S.body,S.pos,k), fl=ft>=0.8?['good','체형 궁합 좋음']:ft<=-0.8?['bad','체형 궁합 나쁨']:null;
      return '<button class="cr-card" aria-pressed="'+(S.card===k)+'" onclick="CR.S.card='+k+';CR.firstClubs=null;crPage2()"><div class="t">'+gmEsc(c.n)+'</div><div class="d">'+gmEsc(c.d)+'</div>'
+      +(fl?'<div class="cr-fit '+fl[0]+'">'+gmEsc(S.body)+' · '+fl[1]+'</div>':'')
       +c.w.map(function(w,i){ return '<div class="cr-wbar"><span style="text-align:left">'+st[i]+'</span><i style="--w:'+Math.round((w-0.5)/1.1*100)+'%;--c:'+(w>=1.3?'var(--gold)':w<=0.8?'var(--text-dim)':'var(--text-secondary)')+'"></i><span>×'+w.toFixed(1)+'</span></div>'; }).join('')
       +'</button>'; }).join('')+'</div>';
   if(S.card!=null){
-    var c=cards[S.card];
-    h+='<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(c.n)+' 시작 스탯</b><span>카드에 따라 정해져요</span></div>'
-     +st.map(function(n,i){ var v=c.st[i], base=Math.min(40,v), add=Math.max(0,v-40);   // 시작 오버롤을 맞추느라 약점 스탯이 40 아래일 수 있다
+    var c=cards[S.card], bsh=S.body&&CR.meta.bodies?CR.meta.bodies.info[S.body].start[S.pos]:[0,0,0,0,0];
+    h+='<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(c.n)+' 시작 스탯</b><span>카드'+(S.body&&S.body!=='표준'?'·체형('+gmEsc(S.body)+')':'')+'에 따라 정해져요</span></div>'
+     +st.map(function(n,i){ var v=Math.round(c.st[i]+bsh[i]), base=Math.min(40,v), add=Math.max(0,v-40);   // 시작 오버롤을 맞추느라 약점 스탯이 40 아래일 수 있다
        return '<div class="cr-stat"><div class="n">'+n+'<small>성장 ×'+c.w[i].toFixed(1)+'</small></div>'
         +'<div class="bar"><i style="width:'+base+'%"></i><i class="add" style="left:'+base+'%;width:'+add+'%"></i></div><div class="v">'+v+'</div></div>'; }).join('')
-     +'<p class="cr-note">시작 스탯도 성장 속도도 카드의 강점(금색)을 따라가요. 같은 카드면 누구나 같은 스탯으로 시작해요.</p>'
+     +'<p class="cr-note">시작 스탯도 성장 속도도 카드의 강점(금색)을 따라가요. 체형이 카드 강점을 키우면(궁합 좋음) 조금 더 빨리 커요.</p>'
      +'<div class="cr-ovr"><div class="cr-note">시작 오버롤<br>최대 99까지 성장</div><div class="big">'+c.ovr+'</div></div></div>';
   }
   var ok=S.card!=null;
@@ -9003,7 +9032,7 @@ function crPage3(btn){
   var S=CR.S;
   if(CR.firstClubs) return crPage3Render();
   if(!crBusy(btn,'불러오는 중...')) return;
-  crApi('new', {name:S.name.trim(), nation:S.nation, foot:S.foot, pos:S.pos, card:S.card, num:S.num, dream:S.dream}).then(function(d){
+  crApi('new', {name:S.name.trim(), nation:S.nation, foot:S.foot, body:S.body, pos:S.pos, card:S.card, num:S.num, dream:S.dream}).then(function(d){
     CR.busy=false; CR.tok=d.token; CR.firstClubs=d.clubs; CR.firstPick=null; crPage3Render(); window.scrollTo(0,0);
   }).catch(function(e){ CR.busy=false; if(btn){ btn.disabled=false; btn.textContent='다음 · 첫 구단'; } gameToast(e.message); });
 }
@@ -9051,6 +9080,7 @@ function crHead(){
    +'<div style="flex:1;min-width:0"><div class="cr-hc-n">'+gmEsc(p.name)+(p.num?' <span>#'+p.num+'</span>':'')+'</div>'
    +'<div class="cr-hc-s">'+gmEsc(p.club.team)+' · '+gmEsc(card.n)+'</div>'
    +'<div class="cr-hc-s">'+p.foot+(p.pos!=='DF'?' · 약발 '+crStars(p.wf):'')+(p.glass?' · 🩹 유리몸':'')+'</div>'
+   +(p.h?'<div class="cr-hc-s">'+gmEsc(p.body||'표준')+' · '+p.h+'cm · '+p.w+'kg</div>':'')
    +(p.traits&&p.traits.length?'<div class="cr-hc-tr">'+p.traits.map(function(t){ return '<span title="'+gmEsc(t.d)+'">'+crTraitIc(t.id)+gmEsc(t.n)+'</span>'; }).join('')+'</div>':'')+'</div>'
    +'<div class="cr-hc-o age"><b>'+p.age+'</b><span>AGE</span></div><div class="cr-hc-o"><b>'+p.ovr+'</b><span>OVR</span></div></div>'
    +'<div class="cr-hc-st">'+st.map(function(n,i){
@@ -9343,7 +9373,7 @@ function crCardHtml(c){
   var oc=crOvrCls(c.peak), honors=c.honors.map(function(x){ return {n:x[0], tier:x[1], kind:x[2]}; });
   var h='<div class="cr-rc-head">'
    +'<div class="cr-rc-ovr'+(oc==='p'?' purple':oc==='e'?' elite':oc==='n'?' plain':'')+'"><span>최고 OVR</span><b>'+c.peak+'</b></div>'
-   +'<div class="cr-rc-id"><div class="cr-rc-chips"><span class="cr-rc-chip">'+crFlag(c.nation)+nat.n+'</span><span class="cr-rc-chip gold">'+(c.num?'#'+c.num+' ':'')+c.pos+'</span>'
+   +'<div class="cr-rc-id"><div class="cr-rc-chips"><span class="cr-rc-chip">'+crFlag(c.nation)+nat.n+'</span>'+(c.h?'<span class="cr-rc-chip">'+gmEsc(c.body||'표준')+' · '+c.h+'cm</span>':'')+'<span class="cr-rc-chip gold">'+(c.num?'#'+c.num+' ':'')+c.pos+'</span>'
    +(c.traits||[]).map(function(t,i){ return '<span class="cr-rc-chip">'+crTraitIc((c.traitIds||[])[i]||(CR.meta.traitIds||{})[t])+gmEsc(t)+'</span>'; }).join('')
    +(c.oneClub?'<span class="cr-rc-chip" style="color:var(--gold)">🛡 원클럽맨</span>':'')
    +(c.farewell?'<span class="cr-rc-chip" style="color:var(--gold)">👏 레전드 고별전</span>':'')

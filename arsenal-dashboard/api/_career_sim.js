@@ -65,6 +65,36 @@ const PRODIGY = {r:85, min:{16:59, 17:63}, p:0.008};
 const WEAR = [0.3, 0.3, 1.0, 3];
 const ageAt = a => { a = Math.min(37, a); const f = Math.floor(a), t = a - f; return f >= 37 ? AGE_BASE[37] : AGE_BASE[f]*(1-t) + AGE_BASE[f+1]*t; };
 const ageBase = () => C.age < 28 ? AGE_BASE[C.age] : Math.min(AGE_BASE[Math.min(37, C.age)], ageAt(C.age + (C.wear||0)));
+// 체형(사용자 지정 — 경량/표준/강골/장신). 오버롤 총량은 같고 "어느 스탯으로 크는지"만 갈린다(합 0):
+// 시작 때 BODY_U[0], 성장하는 시즌마다 BODY_U[1]씩 +/− 스탯으로 옮긴다. 그 밖에 부상 위험(inj, 확률 +)·30대 하락 배율(decl).
+// 카드와 궁합이 맞으면(장신 타깃맨·센터백, 경량 윙어 등) 골·도움·클린시트로 이어지고, 안 맞으면 손해 — "카드에 맞는 체형 고르기".
+// 키·몸무게는 국적 평균 + 포지션 + 체형 + 시드 흔들림, 18세까지 자란다(화면 표시용, 계산엔 안 씀).
+export const BODIES = ['경량','표준','강골','장신'];
+const BODY = {
+  '경량':{FW:{'드리블':1,'스피드':1,'결정력':-1,'오프더볼':-1}, MF:{'체력':1,'패스':1,'태클':-2}, DF:{'스피드':1,'빌드업':1,'공중볼':-2}, inj:0.01, decl:1.04, h:-6, bmi:21,
+    d:'가볍고 빨라요. 30대엔 스피드와 함께 빨리 꺾이고 부상이 조금 잦아요.'},
+  '표준':{FW:{}, MF:{}, DF:{}, inj:0, decl:1, h:0, bmi:22.6, d:'모든 스탯이 고르게 커요.'},
+  '강골':{FW:{'결정력':1,'오프더볼':1,'스피드':-1,'드리블':-1}, MF:{'태클':1,'볼키핑':1,'체력':-2}, DF:{'대인마크':1,'태클':1,'스피드':-2}, inj:-0.01, decl:1, h:-1, bmi:24.4,
+    d:'몸싸움에 강하고 잘 다치지 않아요. 대신 느려요.'},
+  '장신':{FW:{'결정력':2,'드리블':-1,'스피드':-1}, MF:{'태클':1,'시야':1,'볼키핑':-2}, DF:{'공중볼':2,'스피드':-1,'빌드업':-1}, inj:0, decl:0.97, h:8, bmi:22.8,
+    d:'공중볼·리치가 무기예요. 민첩함은 떨어지지만 30대에도 오래 버텨요.'}};
+const BODY_U = [1.2, 0.12], BODY_FIT = 0.015;
+// 카드 궁합: 체형이 키우는 스탯이 카드의 핵심 스탯(가중치 > 1)이면 +, 약한 스탯이면 −. Σ 체형 이동 × (가중치 − 1) — 예) 포처·장신 +1.4, 윙어·장신 −0.9.
+// 성장 배율 1 + BODY_FIT × 궁합(약 ±3.5%). 표준은 0.
+const bodyFit = (pos, card, body) => { const w = CARDS[pos][card].w; return bodyShift(pos, body).reduce((t,x,i) => t + x*(w[i]-1), 0); };
+const NAT_H = {NED:183,NOR:182,GER:181,BEL:180,ENG:179,FRA:179,ITA:178,ESP:178,USA:178,ARG:177,BRA:177,NGA:177,POR:176,KOR:176,JPN:174};
+const bodyOf = () => BODY[C.body] || BODY['표준'];
+const bodyShift = (pos, body) => STATS[pos].map(n => (BODY[body]||BODY['표준'])[pos][n] || 0);
+export const bodyMeta = () => ({list: BODIES, natH: NAT_H, posH: {FW:1, MF:0, DF:3},
+  info: Object.fromEntries(BODIES.map(b => [b, {d: BODY[b].d, h: BODY[b].h, bmi: BODY[b].bmi, start: Object.fromEntries(['FW','MF','DF'].map(p => [p, bodyShift(p, b).map(x => x*BODY_U[0])]))}]))});
+// 키(cm)·몸무게(kg): 성인 키는 시드로 고정, 18세까지 자란다
+function bodyHW(age){
+  const b = bodyOf(), r = mulberry(C.seed ^ hashStr('body'));
+  const adult = (NAT_H[C.nation]||178) + ({FW:1, MF:0, DF:3})[C.pos] + b.h + Math.round((r()-0.5)*6);
+  const grow = ({15:7, 16:3.5, 17:1.2})[age] || 0, h = Math.round(adult - grow);
+  const w = Math.round(b.bmi * (h/100)**2 * (age>=18 ? 1 : 0.86 + (age-15)*0.045) + (r()-0.5)*3);
+  return [h, w];
+}
 const DECLINE = {'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5,'빌드업':0.5};
 const NAT_BAR = {ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
 const NAT_STR = {BRA:.18,FRA:.18,ESP:.16,ARG:.16,ENG:.14,GER:.12,POR:.10,NED:.08,ITA:.08,BEL:.06,NOR:.03,JPN:.03,USA:.02,KOR:.02,NGA:.02};
@@ -227,11 +257,11 @@ export function assignedFirst(nation, pos, card, seed){
   return Math.floor(r() * Math.min(3, list.length));
 }
 export function createCareer(input, clubIdx, seed){
-  const {name, nation, foot, pos, card, num, dream} = input;
+  const {name, nation, foot, pos, card, num, dream} = input, body = BODIES.includes(input.body) ? input.body : '표준';
   const o = firstClubs(nation, pos, card, seed)[clubIdx];
   if(!o) throw new Error('bad club');
-  const st = startStats(pos, card), ovr = START_OVR;
-  C = {v:1, seed:seed>>>0, name, nation, pos, card, foot, want:num, num:null, dream:dream||null,
+  const sh = bodyShift(pos, body), st = startStats(pos, card).map((v,i) => v + sh[i]*BODY_U[0]), ovr = START_OVR;
+  C = {v:1, seed:seed>>>0, name, nation, pos, card, foot, body, want:num, num:null, dream:dream||null,
        st, ovr, off:st.map(v => v-ovr), age:15, club:o.club, fame:0, wf:2, phase:'prep', train:'균형', ev:null, evPick:null,
        hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, boost:1, peak:ovr, clubs:[o.club.n],
        talent:1, youthPts:0, awoken:false, last:null, offers:null, lv:0};
@@ -359,7 +389,7 @@ function injRiskOf(){
   r -= C.injNext || 0;                                  // 지난 부상 때 완전히 회복했으면 −3%p
   if(C.injBoost && C.injBoost.n > 0) r += 0.08;         // 큰 부상을 보존 치료했으면 2시즌 +8%p
   if(C.glass) r += 0.04;                                // 유리몸
-  r += traitMods().inj + ((commonOf()||{}).inj||0) + ((LATE[C.train]||{}).inj||0);
+  r += traitMods().inj + ((commonOf()||{}).inj||0) + ((LATE[C.train]||{}).inj||0) + bodyOf().inj;
   return Math.max(0.03, r + Math.max(0, C.age-30)*0.01);
 }
 function rollInjury(){
@@ -487,7 +517,8 @@ export function playSeason(state, choice){
     // 99 근처 감속: 최소값 없이 99.6에 다가갈수록 0에 가깝게 줄어든다. 예전엔 최소 40%라 상위권이 계속 커서 99 상한에 부딪혀 쌓였다(사용자 지적).
     const dmp = Math.min(1, Math.max(DAMP[0], (99.6-C.ovr)/DAMP[1]));
     const kid = row0Youth && C.age < 18;
-    if(kid && club.nat !== C.nation) growMul *= ABROAD_G;   // 해외 유스: 큰 리그 아카데미의 경쟁·훈련(자국 유스의 ACAD 보정 대신)
+    if(kid && club.nat !== C.nation) growMul *= ABROAD_G;
+    if(C.body) growMul *= 1 + BODY_FIT*bodyFit(C.pos, C.card, C.body);   // 체형·카드 궁합   // 해외 유스: 큰 리그 아카데미의 경쟁·훈련(자국 유스의 ACAD 보정 대신)
     // 출전 × 구단 계수(유스 단계면 유스 출전 계수·월반 보너스·아카데미 포함)
     const comp = (cl, lvx, rt) => {
       const yRow = lvx < 3, kd = yRow && C.age < 18, ypp = kd ? YPLAY_KID : YPLAY;
@@ -498,7 +529,7 @@ export function playSeason(state, choice){
     const pc = onLoan ? comp(C.club, lvOf(), pStart(C.club)) * LOAN_Q * (LOAN_PLAY[0]+LOAN_PLAY[1]*ratio) * (1 + LOAN_LVL*(club.r - cRep())) : comp(club, lv, ratio);
     C.ovr = Math.min(99, C.ovr + C.boost*base*pc*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
-    declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1);
+    declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1) * bodyOf().decl;
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
     C.off = C.off.map((o2,i) => o2 + base*declMul*((DECLINE[st[i]]||1)-1));
   }
@@ -514,6 +545,7 @@ export function playSeason(state, choice){
       C.off = C.off.map((o2,i) => open.includes(i) ? Math.min(15, o2+each) : w[i]<=0.9 ? o2-0.7 : o2); }
   }
   if(C.train==='약점 보완') C.off = C.off.map((o2,i) => Math.max(-25, o2+(w[i]>=1.2?-0.5:w[i]<=0.9?1:0)));
+  if(base > 0 && C.body){ const sh = bodyShift(C.pos, C.body); C.off = C.off.map((o2,i) => o2 + sh[i]*BODY_U[1]); }   // 체형: 크는 시즌마다 +/− 스탯으로 조금씩
   // 특별 멘토링(사용자 지정): 유스(17세까지) 시즌마다 25%로 구단이 1군 베테랑에게 멘토를 맡긴다 — 고르는 게 아니라 가끔 일어나는 일, 오버롤 +1.
   // 시드·나이로만 정한다(시즌 선택과 무관하게 같은 커리어면 같은 시즌에 뜬다).
   if(C.age < 18 && mulberry(C.seed ^ hashStr('mentor|'+C.age))() < MENTOR_P){
@@ -819,7 +851,8 @@ export function marketValue(ovr, age){
 // 화면에 보여 줄 선수 정보(숨은 재능·명성·시드 같은 숨김 값은 빼고)
 export function playerView(state){
   C = state;
-  return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, num:C.num, want:C.want, age:C.age, ovr:cOvr(),
+  const hw = bodyHW(C.age);
+  return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:cOvr(),
     st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(C.club), team:teamName(C.club)}, phase:C.phase, seasons:C.hist.length,
     glass:!!C.glass, tot:C.tot, peak:C.peak, traits:(C.traits||[]).map(id => traitView(id, C.pos)),
     // 커리어 기록 접이식 표: [나이, 팀, 임대, 경기, 골, 도움(수비수는 클린시트), 오버롤, 구단, 유스, 그 시즌 주요 수상(S·A·B, 대표팀 제외)]
@@ -830,7 +863,8 @@ export function playerView(state){
 export function cardView(state){
   C = state;
   let peakVal = 0; C.hist.forEach(r => { peakVal = Math.max(peakVal, marketValue(r.ovr, r.age)); });
-  return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C),
+  const hw = bodyHW(Math.max(18, C.age));
+  return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
     peakValue: Math.round(peakVal*10)/10, traits:(C.traits||[]).map(id => (TRAIT_BY_ID.get(id)||{}).n).filter(Boolean), traitIds:(C.traits||[]).filter(id => TRAIT_BY_ID.has(id)), oneClub:!!C.oneClub, farewell:!!C.farewell, glass:!!C.glass, iron:!!C.iron,
     tot:C.tot, clubs:C.clubs,
     seasons: C.hist.map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:r.ovr,
