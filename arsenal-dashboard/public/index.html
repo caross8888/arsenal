@@ -9523,7 +9523,7 @@ function crSubmit(btn){
 
 // ── 랭킹(역대 TOP 100) ─────────────────────────────────────────────────
 // from: 돌아갈 곳('retired' 내 은퇴 카드 / 'intro' 시작 화면)
-// 랭킹은 전체/공격수/미드필더/수비수 탭(사용자 지정 — 전체 상위권은 결국 공격수가 차지한다). 포지션 탭은 계정당 그 포지션 최고 하나, 전체는 계정당 최고 하나.
+// 랭킹은 전체/공격수/미드필더/수비수 탭(사용자 지정 — 전체 상위권은 결국 공격수가 차지한다). 포지션 탭은 계정당 그 포지션 최고 하나, 전체는 그 기록들을 점수순으로(한 계정이 여러 줄).
 var CR_RK_TABS=[['','전체'],['FW','공격수'],['MF','미드필더'],['DF','수비수']];
 function crBoard(from, pos){
   if(from) CR.boardFrom=from;
@@ -9533,7 +9533,7 @@ function crBoard(from, pos){
   var reg=CR.lastReg; CR.lastReg=null;
   var pn=function(p){ return ({FW:'공격수',MF:'미드필더',DF:'수비수'})[p]||''; };
   crRender('<div class="cr-top"><button class="gm-back" onclick="crBoardBack()">← '+back+'</button><div class="cr-season">역대 TOP 100</div></div>'
-    +'<h1 class="cr-h1">CAREER <span>RANKING</span></h1><p class="cr-sub">'+(bp?pn(bp)+' · 계정당 최고 기록 하나':'모든 포지션 · 계정당 최고 기록 하나')+' · 커리어 점수 순</p>'
+    +'<h1 class="cr-h1">CAREER <span>RANKING</span></h1><p class="cr-sub">'+(bp?pn(bp)+' · 계정당 최고 기록 하나':'모든 포지션 · 계정당 포지션별 최고 기록')+' · 커리어 점수 순</p>'
     +'<div class="cr-seg cr-rk-tabs" style="--n:4">'+CR_RK_TABS.map(function(t){ return '<button class="cr-chip" aria-pressed="'+(bp===t[0])+'" onclick="crBoard(null,\''+t[0]+'\')">'+t[1]+'</button>'; }).join('')+'</div>'
     +(reg?'<div class="gm-best">'+(reg.registered?(reg.improved?'등록했어요! '+pn(reg.pos)+' 랭킹 <b style="color:var(--text)">'+reg.rank+'위</b>예요.':'이번 커리어('+Number(reg.score).toLocaleString()+'점)보다 높은 '+pn(reg.pos)+' 최고 기록 '+Number(reg.best).toLocaleString()+'점이 그대로 유지돼요. 지금 '+pn(reg.pos)+' '+reg.rank+'위예요.'):pn(reg.pos)+' 1,000위 밖이라 랭킹에 남지 않았어요.')+'</div>':'')
     +'<div class="cr-rk-list" id="crRk">'+loadingHtml('랭킹 불러오는 중...','padding:32px 0')+'</div>',
