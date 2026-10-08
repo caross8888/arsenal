@@ -32,7 +32,7 @@ const STAGE = [{n:'U-16', gap:30, games:26, up:null}, {n:'U-18', gap:24, games:2
 const LATE = {'몸 관리':{st:-0.12, decl:0.75, inj:-0.03}, '주전 경쟁':{st:0.1, decl:1.15, inj:0.03}};
 const lateTrain = () => ageBase() <= 0;
 export const trainOpts = () => lateTrain() ? ['몸 관리','균형','주전 경쟁'] : ['강점 강화','균형','약점 보완'];
-const MENTOR_P = 0.2;
+const MENTOR_P = 0.25;
 const STAGE_UP = 0.2, YPLAY = [0.9, 0.3], YPLAY_KID = [0.6, 0.8];   // 유스 출전 계수: 18세 이상 U-21 / 17세까지(첫 구단 시절)
 // 유스 단계(U-16~U-21)의 구단 수준 효과는 1군의 35%만(사용자 지정 — 첫 구단 3곳 중 "도전"이 늘 정답이던 것): 예전엔 맨시티 유스 ×1.85 vs 브라이튼 ×1.12로
 // 구단 수준이 유스 성장을 다 정해서 출전 기회 손해가 의미 없었다(점수 평균 도전 3,817 · 적정 3,263 · 안정 2,672). 대신 유스는 뛰는 만큼 크게(YPLAY_KID 0.6~1.4).
@@ -130,7 +130,14 @@ function traitMods(){
     m.g *= e.g||1; m.a *= e.a||1; m.cs *= e.cs||1; m.r += e.r||0; m.st += e.st||0; m.inj += e.inj||0; m.goty *= e.goty||1; }
   return m;
 }
-const LOAN_STAY = [1.0, 0.03], LOAN_GO = 0.95, LOAN_GO_Y = 1.1;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(새 팀 적응·낮은 수준의 훈련). U-21에서 가는 임대는 첫 성인 무대 경험이라 ↑(_Y)
+const LOAN_STAY = [1.0, 0.03], LOAN_GO = 1.0, LOAN_GO_Y = 1.0;   // 남기: [성장 배율, 선발 확률 +] / 가기: 성장 배율(1군 / U-21에서)
+// 임대 제안(사용자 지정): 지난 시즌 기록이 아니라 "지금 오버롤로 이번 시즌 소속팀에서 선발 확률"이 LOAN_P 미만일 때만 뜬다.
+// 구단 두 곳은 내 명성 기준 LOAN_R 범위(선발 확률 대략 25~95%)에서 위·아래 반씩.
+// 임대 성장은 "남았을 때 기대 성장(소속팀·지금 단계·예상 선발)" × 임대 배율 — 배율 = LOAN_Q × 출전(실제 선발 비율) × 수준(내 명성 대비 구단).
+// 출전과 수준이 서로 맞서서, 선발 보통~높음이면서 수준이 덜 떨어지는 곳을 고르면 잔류보다 크게 크고,
+// 벤치에 앉을 높은 팀이나 너무 낮은 팀을 고르면 잔류와 비슷하거나 손해(사용자 지정 — "잘 골라야 이득").
+// 남았을 때 기준으로 잡는 이유: 큰 구단 U-21(구단 계수 1.85 × 아카데미)과 작은 구단 1군은 성장 바탕이 2배 넘게 달라 고정 배율로는 어느 쪽에도 맞지 않는다.
+const LOAN_P = 0.35, LOAN_R = [-20, 6], LOAN_Q = 1.42, LOAN_PLAY = [0.3, 1.0], LOAN_LVL = 0.025;
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 // 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
 const G_RATE = {FW:0.41, MF:0.126, DF:0.031}, A_RATE = {FW:0.181, MF:0.168, DF:0.052};
@@ -266,7 +273,7 @@ export const EVENTS = [
   {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑ · 출전 ↓ · 부상 위험 ↑)','지금은 괜찮다 (부상 위험 ↓)'], ok:() => C.age<=27},   // 28세부터는 성장 폭이 거의 없어 어색하다(사용자 지적)
   {id:'tour', t:'프리시즌 투어', d:'감독이 투어 전 경기 출전을 원해요. 컨디션이 걱정돼요.', a:['모두 뛴다 (눈도장)','컨디션 관리'], ok:() => !youth()},
   {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 있게 (명성 ↑↑ 또는 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:() => C.age>=17},
-  {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:() => C.age>=17 && C.age<=22 && (lvOf()===2 && C.age>=18 || lvOf()===3 && C.last && C.last.starts/Math.max(1,C.last.games) < 0.35)},   // U-21에 머문 18세 이상은 1군 경험을 위해
+  {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:() => C.age>=17 && C.age<=22 && lvOf()>=2 && pStart(C.club) < LOAN_P},   // 지금 오버롤 기준 이번 시즌 선발 예상이 낮을 때만(사용자 지정 — 지난 시즌 기록 기준이면 그새 큰 선수에게도 떴다)
   {id:'weak', t:'약발 훈련', d:'', a:['약발 집중 훈련','주발 강점 살리기'], ok:() => false},   // newEvent가 가끔 따로 띄운다
   {id:'extra', t:'유스 특별 훈련', d:'유스 코치가 방과 후 특별 훈련을 제안했어요.', a:['참가한다 (성장 ↑ · 부상 위험 ↑)','쉬면서 회복 (부상 위험 ↓)'], ok:() => youth()}];
 const evById = id => EVENTS.find(e => e.id === id);
@@ -278,12 +285,16 @@ function newEvent(){
   // 약발 훈련: 공격수·미드필더, 20세까지, 시즌당 30% 확률
   const r2 = mulberry(C.seed ^ hashStr('wf'+C.age))();
   if(!loan && (C.pos==='FW'||C.pos==='MF') && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');
-  C.ev = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null;
+  C.ev = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null; delete C.loanClubs;
   if(ev.id === 'loan'){
-    let cands = ALL.filter(c => c.nat===C.club.nat && c.r<=C.club.r-10 && c.r>=C.club.r-22);
-    if(!cands.length) cands = ALL.filter(c => c.r < C.club.r-8);
-    C.loanClub = cands[Math.floor(r*cands.length)] || null;
-    if(!C.loanClub) C.ev = 'coach';
+    // 임대 구단은 두 곳 중 고른다(사용자 지정): 후보를 수준순으로 반으로 나눠 위쪽(덜 뛰지만 수준 높은 팀)·아래쪽(많이 뛰는 팀)에서 하나씩
+    const me = cRep(), inR = c => c.n!==C.club.n && c.r<=C.club.r-4 && c.r>=me+LOAN_R[0] && c.r<=me+LOAN_R[1];
+    let cands = ALL.filter(c => c.nat===C.club.nat && inR(c));
+    if(cands.length < 2) cands = ALL.filter(inR);
+    cands = [...cands].sort((a,b) => b.r-a.r);
+    const h = Math.ceil(cands.length/2), r3 = mulberry(C.seed ^ hashStr('loan2|'+C.age))();
+    const picks = [cands[Math.floor(r*h)], cands.length > 1 ? cands[h + Math.floor(r3*(cands.length-h))] : null].filter(Boolean);
+    if(picks.length) C.loanClubs = picks; else C.ev = 'coach';
   }
 }
 
@@ -325,6 +336,7 @@ export function prepView(state){
   let d = ev.d;
   if(ev.id === 'media' && (C.mediaN || C.age > 20)) d =   // "첫 인터뷰"는 어릴 때 처음 한 번만
     ['기자들이 이번 시즌 각오를 묻고 있어요.','스포츠 매체에서 단독 인터뷰를 요청했어요.','개막 전 기자회견에 나서게 됐어요.','팬 채널에서 인터뷰를 하고 싶대요.'][C.age % 4];
+  if(ev.id === 'loan' && loanList().length > 1) d = '두 구단에서 한 시즌 임대 제안이 왔어요. 갈 곳을 고르거나, 남아서 경쟁할 수 있어요.';
   if(ev.id === 'weak') d = '코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. 양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요. 대신 이번 시즌 다른 훈련 시간이 줄어요.';
   let goal;
   const lv = lvOf();
@@ -334,9 +346,10 @@ export function prepView(state){
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 완화)' : ' (감독 신뢰 ↑)')];
   return {goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
-    loanClub: C.ev==='loan' && C.loanClub ? {...pub(C.loanClub), chance: chanceOf(pStart(C.loanClub))} : null};
+    loanClubs: C.ev==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
 }
 
+const loanList = () => C.loanClubs || (C.loanClub ? [C.loanClub] : []);   // 옛 토큰은 임대 구단 하나(loanClub)
 // ── 부상 ──────────────────────────────────────────────────────────────
 function injRiskOf(){
   const k = C.evPick; let r = INJ[0];
@@ -358,7 +371,7 @@ function rollInjury(){
 }
 
 // ── 시즌 진행 ──────────────────────────────────────────────────────────
-// choice: {train, evPick, injPick}. 부상이 났는데 injPick이 없으면 {injury}만 돌려준다(상태는 그대로 두고
+// choice: {train, evPick, loanPick, injPick}. loanPick: 임대 이벤트에서 "간다"(evPick 0)일 때 고른 임대 구단 번호. 부상이 났는데 injPick이 없으면 {injury}만 돌려준다(상태는 그대로 두고
 // 부상 결과만 C.inj에 남김 — 같은 요청을 injPick과 함께 다시 부르면 이어서 계산한다).
 export function playSeason(state, choice){
   C = state;
@@ -367,6 +380,11 @@ export function playSeason(state, choice){
   if(C.phase === 'prep'){
     if(choice.evPick !== 0 && choice.evPick !== 1) throw new Error('evPick');
     C.evPick = choice.evPick;
+    if(C.ev === 'loan' && C.evPick === 0){
+      const lc = loanList()[choice.loanPick ?? 0];
+      if(!lc) throw new Error('loanPick');
+      C.loanClub = lc; delete C.loanClubs;
+    }
     rollInjury();
   }
   if(C.inj){
@@ -468,11 +486,17 @@ export function playSeason(state, choice){
   if(base > 0){
     // 99 근처 감속: 최소값 없이 99.6에 다가갈수록 0에 가깝게 줄어든다. 예전엔 최소 40%라 상위권이 계속 커서 99 상한에 부딪혀 쌓였다(사용자 지적).
     const dmp = Math.min(1, Math.max(DAMP[0], (99.6-C.ovr)/DAMP[1]));
-    const kid = row0Youth && C.age < 18, yp = kid ? YPLAY_KID : YPLAY;
+    const kid = row0Youth && C.age < 18;
     if(kid && club.nat !== C.nation) growMul *= ABROAD_G;   // 해외 유스: 큰 리그 아카데미의 경쟁·훈련(자국 유스의 ACAD 보정 대신)
-    const play = (row0Youth ? yp[0]+yp[1]*ratio : playCoef(ratio)) * (1 + STAGE_UP*Math.max(0, lv-defLv(C.age)));
-    const cc0 = clubCoef(club.r + (C.age<18 && !onLoan && club.nat===C.nation ? ACAD[C.nation]||0 : 0)), cc = (kid ? 1 + (cc0-1)*YOUTH_CC : cc0) * (row0Youth && !onLoan ? ACAD_G[acadOf(club)] : 1);
-    C.ovr = Math.min(99, C.ovr + C.boost*base*play*cc*luck*growMul*C.talent*devOf()*K_GROW*dmp);
+    // 출전 × 구단 계수(유스 단계면 유스 출전 계수·월반 보너스·아카데미 포함)
+    const comp = (cl, lvx, rt) => {
+      const yRow = lvx < 3, kd = yRow && C.age < 18, ypp = kd ? YPLAY_KID : YPLAY;
+      const pl = (yRow ? ypp[0]+ypp[1]*rt : playCoef(rt)) * (1 + STAGE_UP*Math.max(0, lvx-defLv(C.age)));
+      const c0 = clubCoef(cl.r + (C.age<18 && cl.nat===C.nation ? ACAD[C.nation]||0 : 0));
+      return pl * (kd ? 1 + (c0-1)*YOUTH_CC : c0) * (yRow ? ACAD_G[acadOf(cl)] : 1);
+    };
+    const pc = onLoan ? comp(C.club, lvOf(), pStart(C.club)) * LOAN_Q * (LOAN_PLAY[0]+LOAN_PLAY[1]*ratio) * (1 + LOAN_LVL*(club.r - cRep())) : comp(club, lv, ratio);
+    C.ovr = Math.min(99, C.ovr + C.boost*base*pc*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
     declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1);
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
@@ -490,7 +514,7 @@ export function playSeason(state, choice){
       C.off = C.off.map((o2,i) => open.includes(i) ? Math.min(15, o2+each) : w[i]<=0.9 ? o2-0.7 : o2); }
   }
   if(C.train==='약점 보완') C.off = C.off.map((o2,i) => Math.max(-25, o2+(w[i]>=1.2?-0.5:w[i]<=0.9?1:0)));
-  // 특별 멘토링(사용자 지정): 유스(17세까지) 시즌마다 20%로 구단이 1군 베테랑에게 멘토를 맡긴다 — 고르는 게 아니라 가끔 일어나는 일, 오버롤 +1.
+  // 특별 멘토링(사용자 지정): 유스(17세까지) 시즌마다 25%로 구단이 1군 베테랑에게 멘토를 맡긴다 — 고르는 게 아니라 가끔 일어나는 일, 오버롤 +1.
   // 시드·나이로만 정한다(시즌 선택과 무관하게 같은 커리어면 같은 시즌에 뜬다).
   if(C.age < 18 && mulberry(C.seed ^ hashStr('mentor|'+C.age))() < MENTOR_P){
     C.ovr = Math.min(99, C.ovr + 1); C.mentor = (C.mentor||0) + 1;

@@ -1669,6 +1669,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-acad{font-size:12px;color:var(--text-secondary);margin-top:4px}.cr-acad b{color:var(--gold);letter-spacing:1px;font-weight:400}.cr-acad i{font-style:normal;opacity:.25}
 .cr-why{font-size:12.5px;color:var(--text-secondary);line-height:1.4;margin-top:4px}
 .cr-dream{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cr-flag{width:20px;height:14px;object-fit:cover;border-radius:2px;vertical-align:-2px;margin-right:6px;box-shadow:0 0 0 1px var(--overlay-18)}
+.cr-rc-row.nat .a .cr-flag{margin:0}
+.cr-dd{position:relative}
+.cr-dd-btn{display:flex;align-items:center;width:100%;font:inherit;font-size:16px;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:10px;padding:11px;cursor:pointer;text-align:left}
+.cr-dd-btn span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-dd-btn i{font-style:normal;font-size:15px;color:var(--text-secondary);margin-left:6px}
+.cr-dd .ph{color:var(--text-secondary)}
+.cr-dd-list{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);max-height:300px;overflow:auto;background:var(--surface2);border:1px solid var(--border-bright);border-radius:10px;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.cr-dd-list button{display:flex;align-items:center;width:100%;font:inherit;font-size:15px;color:var(--text);background:none;border:0;border-radius:8px;padding:9px 10px;cursor:pointer;text-align:left}
+.cr-dd-list button:hover,.cr-dd-list button[aria-selected="true"]{background:color-mix(in srgb,var(--red) 14%,transparent)}
 .cr .cr-dream select:disabled{opacity:.5}
 .cr-f2{display:grid;grid-template-columns:1fr 110px;gap:12px}
 .cr-f2>div{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -1762,7 +1772,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hc-st em{display:block;height:100%;background:#fff;border-radius:3px;transition:width .5s}
 .cr-hc-st b{text-align:right;font-variant-numeric:tabular-nums}
 .cr-stars{color:#E9C766;letter-spacing:1px}
-.cr-loanc{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px}
+.cr-loanc{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px;width:100%;border:1.5px solid transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.cr-loanc[aria-pressed="true"]{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--surface2))}
 /* 시즌 결과 */
 .cr-rs{display:grid;grid-template-columns:repeat(5,1fr);text-align:center}
 .cr-rs b{display:block;font-family:var(--fd);font-size:26px;font-weight:400;line-height:1.1}
@@ -8809,6 +8820,20 @@ function crMeta(){
   });
 }
 function crNat(id){ return (CR.meta && CR.meta.nat[id]) || {n:id, f:''}; }
+// 국기는 이미지로(사용자 지적 — Windows는 국기 이모지를 못 그려서 PC에선 글자만 나왔다). 앱의 다른 국기(getNatFlag)와 같은 flagcdn.
+var CR_FLAG={ENG:'gb-eng',ESP:'es',GER:'de',ITA:'it',FRA:'fr',POR:'pt',NED:'nl',BEL:'be',BRA:'br',ARG:'ar',NOR:'no',KOR:'kr',JPN:'jp',USA:'us',NGA:'ng'};
+function crFlag(id){ var c=CR_FLAG[id]; return c?'<img class="cr-flag" src="https://flagcdn.com/w40/'+c+'.png" alt="" loading="lazy">':''; }
+// 국가 드롭다운(기본 <select>의 option엔 이미지를 못 넣어서 직접 만든다). key: 열린 드롭다운 이름(CR.dd)
+function crNatDD(key, val, ph, fn){
+  var m=CR.meta, cur=val&&m.nat[val], open=CR.dd===key;
+  return '<div class="cr-dd'+(open?' open':'')+'"><button type="button" class="cr-dd-btn" aria-expanded="'+open+'" onclick="event.stopPropagation();CR.dd=CR.dd===\''+key+'\'?null:\''+key+'\';crPage1()">'
+   +(cur?crFlag(val)+'<span>'+cur.n+'</span>':'<span class="ph">'+ph+'</span>')+'<i>▾</i></button>'
+   +(open?'<div class="cr-dd-list" role="listbox">'+(key==='dream'?'<button type="button" onclick="'+fn+'(\'\')"><span class="ph">선택 안 함</span></button>':'')
+     +m.nations.map(function(n){ return '<button type="button" role="option" aria-selected="'+(val===n.id)+'" onclick="'+fn+'(\''+n.id+'\')">'+crFlag(n.id)+'<span>'+n.n+'</span></button>'; }).join('')+'</div>':'')
+   +'</div>';
+}
+function crSetDreamNat(v){ CR.dd=null; CR.S.dreamNat=v||null; CR.S.dream=null; crPage1(); }
+document.addEventListener('click', function(){ if(CR.dd){ CR.dd=null; if(document.querySelector('#gameRoot .cr-dd.open')) crPage1(); } });
 function crRender(body, dock){
   gmRoot().innerHTML='<div class="cr">'+body+'</div>'+(dock?'<div class="cr-dock">'+dock+'</div>':'');
 }
@@ -8908,7 +8933,7 @@ function crSet(k, v){
 }
 // 국적을 고르면 그 나라 랜덤 이름을 채운다(직접 입력한 이름은 건드리지 않는다)
 function crSetNation(v){
-  CR.S.nation=v||null;
+  CR.dd=null; CR.S.nation=v||null;
   if(CR.S.nation && (!CR.S.name.trim()||CR.S.nameAuto)){ CR.S.name=crRandName(); CR.S.nameAuto=true; }
   crPage1();
 }
@@ -8926,8 +8951,7 @@ function crPage1(){
    +CR_POS.map(function(p){ return '<button class="cr-chip" aria-pressed="'+(S.pos===p.id)+'" onclick="crSet(\'pos\',\''+p.id+'\')">'+p.n+'</button>'; }).join('')+'</div>'
    +(S.pos?'<p class="cr-note">주요 스탯 · '+m.stats[S.pos].join(' / ')+'</p>':'')+'</div>'
    +'<div class="cr-fd"><div class="cr-lbl"><b>국적</b><span>첫 구단 리그 · 대표팀 경쟁이 달라져요</span></div>'
-   +'<select onchange="crSetNation(this.value)"><option value="">국적 선택</option>'
-   +m.nations.map(function(n){ return '<option value="'+n.id+'"'+(S.nation===n.id?' selected':'')+'>'+n.f+' '+n.n+'</option>'; }).join('')+'</select></div>'
+   +crNatDD('nat', S.nation, '국적 선택', 'crSetNation')+'</div>'
    // 이름은 국적을 고른 뒤에(랜덤 이름이 국적에 맞춰 나오므로)
    +'<div class="cr-fd'+(S.nation?'':' off')+'"><div class="cr-lbl"><b>이름</b><span>'+(S.nation?'최대 12자 · 랜덤은 국적에 맞는 이름':'국적을 먼저 골라 주세요')+'</span></div>'
    +'<div class="cr-row"><input type="text" id="crName" maxlength="12" placeholder="선수 이름" value="'+gmEsc(S.name)+'" oninput="CR.S.name=this.value;CR.S.nameAuto=false;crDock1()"'+dis+'>'
@@ -8938,8 +8962,7 @@ function crPage1(){
    +'<div><div class="cr-lbl"><b>등번호</b><span>1~99</span></div>'
    +'<input type="text" inputmode="numeric" maxlength="2" placeholder="예: 7" value="'+(S.num||'')+'" oninput="this.value=this.value.replace(/\\D/g,\'\');var n=+this.value;CR.S.num=n>=1&&n<=99?n:null;CR.S.numAuto=false;crDock1()"></div></div>'
    +'<div class="cr-fd"><div class="cr-lbl"><b>꿈의 구단</b><span>선택 · 가끔 이 구단에서 제안이 와요</span></div>'
-   +'<div class="cr-dream"><select aria-label="꿈의 구단 국가" onchange="CR.S.dreamNat=this.value||null;CR.S.dream=null;crPage1()"><option value="">선택 안 함</option>'
-   +m.nations.map(function(n){ return '<option value="'+n.id+'"'+(S.dreamNat===n.id?' selected':'')+'>'+n.f+' '+n.n+'</option>'; }).join('')+'</select>'
+   +'<div class="cr-dream">'+crNatDD('dream', S.dreamNat, '선택 안 함', 'crSetDreamNat')
    +'<select aria-label="꿈의 구단" onchange="CR.S.dream=this.value||null"'+(S.dreamNat?'':' disabled')+'><option value="">'+(S.dreamNat?'구단 선택':'국가 먼저')+'</option>'
    +dreamClubs.map(function(c){ return '<option'+(S.dream===c[0]?' selected':'')+' value="'+gmEsc(c[0])+'">'+gmEsc(c[0])+'</option>'; }).join('')+'</select></div></div>'
    +'</div>', ' ');
@@ -8995,7 +9018,7 @@ function crPage3Render(){
    +'<div class="cr-list">'+list.map(function(o,k){
      return '<button class="cr-club" aria-pressed="'+(CR.firstPick===k)+'" onclick="CR.firstPick='+k+';crPage3Render()">'+crCrest(o,44)
       +'<div>'+(o.kind==='해외'||S.dream===o.n?'<div class="tag">'+[o.kind==='해외'?'✈ 해외 유스':'',S.dream===o.n?'♥ 꿈의 구단':''].filter(Boolean).join(' · ')+'</div>':'')+'<div class="nm">'+gmEsc(o.n)+' U-16</div>'
-      +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+'</div><div class="cr-acad">아카데미 <b>'+'★★★★★'.slice(0,o.acad||1)+'<i>'+'★★★★★'.slice(0,5-(o.acad||1))+'</i></b></div></div>'
+      +'<div class="meta">'+crFlag(o.nat)+crNat(o.nat).n+'</div><div class="cr-acad">아카데미 <b>'+'★★★★★'.slice(0,o.acad||1)+'<i>'+'★★★★★'.slice(0,5-(o.acad||1))+'</i></b></div></div>'
       +'<div>'+crChance(o.chance)+'</div></button>'; }).join('')+'</div>',
    '<button class="gm-btn" '+(CR.firstPick!=null?'':'disabled')+' onclick="crJoin(this)">입단 · 커리어 시작</button>');
 }
@@ -9015,7 +9038,7 @@ function crTovSet(html){
 function crShow(v){
   crTovSet('');
   CR.busy=false; CR.v=v; CR.tok=v.token; CR.armed=null; crStore(v);
-  if(v.phase==='prep'){ CR.evPick=null; return crPrep(); }
+  if(v.phase==='prep'){ CR.evPick=null; CR.loanPick=null; return crPrep(); }
   if(v.phase==='injury') return crInjury();
   if(v.phase==='result'){ CR.traitPick=null; CR.pick=v.result.released && v.result.offers.length ? 0 : null; CR.fresh=!!CR.animDone; CR.animDone=false; return crResult(); }
   if(v.phase==='retired') return crRetired();
@@ -9058,7 +9081,7 @@ function crBack(){ return '<button class="gm-back" onclick="gameList()">← 게�
 
 // ── 시즌 준비 ──────────────────────────────────────────────────────────
 function crPrep(){
-  var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lc=pr.loanClub;
+  var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lcs=pr.loanClubs||(pr.loanClub?[pr.loanClub]:[]);
   // 성장이 멈춘 뒤엔 훈련 방향 대신 시즌 운영(몸 관리·균형·주전 경쟁) — 서버가 지금 고를 수 있는 것을 준다
   var topts=pr.trainOpts||['강점 강화','균형','약점 보완']; if(topts.indexOf(CR.train)<0) CR.train='균형';
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
@@ -9073,8 +9096,10 @@ function crPrep(){
      :pr.keyMax?'<div class="cr-note" style="margin-top:6px">주요 능력이 모두 최고치예요. 강점 강화로는 더 오를 데가 없어요.</div>'
      :pr.keyCapped&&pr.keyCapped.length?'<div class="cr-note" style="margin-top:6px">'+gmEsc(pr.keyCapped.join('·'))+'은(는) 이미 최고치라 강점 강화 효율이 절반으로 떨어져요.</div>':'')+'</div>'
    +'<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(ev.t)+'</b><span>이벤트</span></div><div style="font-size:14px;line-height:1.5">'+d
-   +(lc?'<div class="cr-loanc">'+crCrest(lc,30)+'<div><b>'+gmEsc(lc.n)+'</b><div class="cr-note">'+crNat(lc.nat).f+' '+crNat(lc.nat).n+' · 1시즌 임대</div></div>'+crChance(lc.chance)+'</div>':'')
-   +'</div><div class="cr-seg">'+ev.a.map(function(t,k){
+   // 임대: 구단 카드를 눌러 "간다"(evPick 0 + loanPick), 아래 버튼은 "남는다"만
+   +(lcs.length?lcs.map(function(lc,k){ return '<button class="cr-loanc" aria-pressed="'+(CR.evPick===0&&CR.loanPick===k)+'" onclick="CR.evPick=0;CR.loanPick='+k+';crPrep()">'+crCrest(lc,30)+'<div><b>'+gmEsc(lc.n)+'</b><div class="cr-note">'+crFlag(lc.nat)+crNat(lc.nat).n+' · 1시즌 임대</div></div>'+crChance(lc.chance)+'</button>'; }).join(''):'')
+   +'</div><div class="cr-seg"'+(lcs.length?' style="--n:1"':'')+'>'+ev.a.map(function(t,k){
+     if(lcs.length&&k===0) return '';
      // "고용한다 (성장 ↑ · 부상 위험 ↑)" → 굵은 한 줄 + 작은 효과 줄(버튼이 길어지지 않게)
      var m=String(t).match(/^(.*?)\s*\((.*)\)$/);
      return '<button class="cr-chip cr-opt" aria-pressed="'+(CR.evPick===k)+'" onclick="CR.evPick='+k+';crPrep()"><b>'+gmEsc(m?m[1]:t)+'</b>'+(m?'<small>'+crFx(m[2])+'</small>':'')+'</button>'; }).join('')+'</div></div>'
@@ -9085,7 +9110,7 @@ function crSeason(btn){
   if(!crBusy(btn,'시즌 진행 중...')) return;
   var age=CR.v.player.age;
   crAnimStart(0);
-  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick}).then(function(v){
+  crApi('season', {token:CR.tok, train:CR.train, evPick:CR.evPick, loanPick:CR.loanPick||0}).then(function(v){
     // 부상이면 시즌 중간(부상 시점)까지만 진행하고 멈춘다. 결과면 끝까지.
     if(v.phase==='injury') crAnimTo(0.3+((v.injury.games*7+age)%25)/100, v, true);
     else crAnimTo(1, v);
@@ -9224,10 +9249,10 @@ function crResult(){
     if(r.age<17) h+='<div class="cr-note">17세부터 다른 구단 제안을 받을 수 있어요.</div>';
     if(R.released) h+='<div class="cr-note">'+gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 낮은 수준의 구단에서 커리어를 이어 가거나 은퇴할 수 있어요.</div>';
     h+='<div class="cr-list">'
-     +(R.released?'':'<button class="cr-club" aria-pressed="'+(CR.pick==null)+'" onclick="CR.pick=null;crResult()">'+crCrest(p.club)+'<div><div class="tag">잔류</div><div class="nm">'+gmEsc(p.club.n)+'</div><div class="meta">'+crNat(p.club.nat).f+' '+crNat(p.club.nat).n+'</div>'+'</div><div>'+(R.stay?crChance(R.stay.chance):'')+'</div></button>')
+     +(R.released?'':'<button class="cr-club" aria-pressed="'+(CR.pick==null)+'" onclick="CR.pick=null;crResult()">'+crCrest(p.club)+'<div><div class="tag">잔류</div><div class="nm">'+gmEsc(p.club.n)+'</div><div class="meta">'+crFlag(p.club.nat)+crNat(p.club.nat).n+'</div>'+'</div><div>'+(R.stay?crChance(R.stay.chance):'')+'</div></button>')
      +R.offers.map(function(o,k){
         return '<button class="cr-club" aria-pressed="'+(CR.pick===k)+'" onclick="CR.pick='+k+';crResult()">'+crCrest(o)+'<div><div class="tag">'+o.kind+(o.dream?' · ♥ 꿈의 구단':'')+'</div><div class="nm">'+gmEsc(o.n)+'</div>'
-          +'<div class="meta">'+crNat(o.nat).f+' '+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':'')+'</div>'+'</div><div>'+crChance(o.chance)+'</div></button>'; }).join('')
+          +'<div class="meta">'+crFlag(o.nat)+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':'')+'</div>'+'</div><div>'+crChance(o.chance)+'</div></button>'; }).join('')
      +'</div></div>';
   }
   h+=crHist();
@@ -9318,7 +9343,7 @@ function crCardHtml(c){
   var oc=crOvrCls(c.peak), honors=c.honors.map(function(x){ return {n:x[0], tier:x[1], kind:x[2]}; });
   var h='<div class="cr-rc-head">'
    +'<div class="cr-rc-ovr'+(oc==='p'?' purple':oc==='e'?' elite':oc==='n'?' plain':'')+'"><span>최고 OVR</span><b>'+c.peak+'</b></div>'
-   +'<div class="cr-rc-id"><div class="cr-rc-chips"><span class="cr-rc-chip">'+nat.f+' '+nat.n+'</span><span class="cr-rc-chip gold">'+(c.num?'#'+c.num+' ':'')+c.pos+'</span>'
+   +'<div class="cr-rc-id"><div class="cr-rc-chips"><span class="cr-rc-chip">'+crFlag(c.nation)+nat.n+'</span><span class="cr-rc-chip gold">'+(c.num?'#'+c.num+' ':'')+c.pos+'</span>'
    +(c.traits||[]).map(function(t,i){ return '<span class="cr-rc-chip">'+crTraitIc((c.traitIds||[])[i]||(CR.meta.traitIds||{})[t])+gmEsc(t)+'</span>'; }).join('')
    +(c.oneClub?'<span class="cr-rc-chip" style="color:var(--gold)">🛡 원클럽맨</span>':'')
    +(c.farewell?'<span class="cr-rc-chip" style="color:var(--gold)">👏 레전드 고별전</span>':'')
@@ -9336,7 +9361,7 @@ function crCardHtml(c){
      +'<span class="o '+(r.youth?'y':crOvrCls(r.ovr))+'">'+r.ovr+'</span><span>'+r.apps+'</span><span>'+r.goals+'</span><span>'+(c.pos==='DF'?(r.cs||0):r.ast)+'</span></div>';
   });
   var natHon=honors.filter(function(x){ return x.kind==='nat' && /우승/.test(x.n); });
-  if(t.caps) h+='<div class="cr-rc-row nat"><span class="a">'+nat.f+'</span><span class="c"><em>'+nat.n+' 대표팀</em>'
+  if(t.caps) h+='<div class="cr-rc-row nat"><span class="a">'+crFlag(c.nation)+'</span><span class="c"><em>'+nat.n+' 대표팀</em>'
      +(natHon.length?'<span class="ic">'+natHon.map(function(x){ return crTrophy(x.n,20); }).join('')+'</span>':'')+'</span>'
      +'<span></span><span>'+t.caps+'</span><span>'+t.cg+'</span><span>'+((c.pos==='DF'?t.ccs:t.ca)!=null?(c.pos==='DF'?t.ccs:t.ca):'—')+'</span></div>';   /* 대표팀 도움(수비수는 클린시트) — 예전 커리어 기록엔 없어서 "—" */
   h+='</div>';
@@ -9459,7 +9484,7 @@ function crBoard(from){
       var me=myKey && r.key===myKey, nat=crNat(r.nat), card=(CR.meta.cards[r.pos]||[])[r.card]||{n:''};
       return '<button class="cr-rk-row'+(me?' me':'')+(i<3?' top'+(i+1):'')+'"'+(me?' id="crRkMe"':'')+' onclick="crViewCard('+i+')">'
        +'<span class="n">'+(i+1)+'</span>'
-       +'<span class="m"><b>'+nat.f+' '+gmEsc(r.nm||'')+'</b><em>'+gmEsc(r.nick)+' · '+gmEsc(card.n)+'</em></span>'
+       +'<span class="m"><b>'+crFlag(r.nat)+gmEsc(r.nm||'')+'</b><em>'+gmEsc(r.nick)+' · '+gmEsc(card.n)+'</em></span>'
        +'<span class="cr-rk-hon">'+(r.hon||[]).map(function(x){ return '<i>'+crTrophy(x[0],18)+(x[1]>1?'<small>'+x[1]+'</small>':'')+'</i>'; }).join('')+'</span>'
        +'<span class="cr-rk-o '+crOvrCls(r.peak)+'">'+r.peak+'</span>'
        +'<span class="cr-rk-sc">'+Number(r.score).toLocaleString()+'</span></button>'; }).join('');
