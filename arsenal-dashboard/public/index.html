@@ -1890,6 +1890,31 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tsel img{width:56px;height:56px;flex-shrink:0}
 .cr-tsel div{flex:1;min-width:0;display:flex;flex-direction:column} .cr-tsel b{font-size:14px} .cr-tsel span{font-size:12.5px;color:var(--text-secondary)}
 .cr-tsel button{font:inherit;font-size:12px;color:var(--text-secondary);background:none;border:1px solid var(--border-bright);border-radius:999px;padding:5px 10px;cursor:pointer;flex-shrink:0}
+/* 인터뷰 오버레이 — 늘 어두운 배경이라 글자색은 테마와 무관하게 고정(.cr-tov와 같은 방식) */
+.cr-iv{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(40,10,12,.93),rgba(5,6,10,.95) 60%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
+.cr-iv .fl{position:absolute;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,255,255,0) 60%);opacity:0;pointer-events:none;animation:crIvFlash 1.6s ease-out both}
+.cr-iv .fl:nth-child(1){left:-40px;top:8%;animation-delay:.25s}.cr-iv .fl:nth-child(2){right:-50px;top:22%;animation-delay:.55s}
+.cr-iv .fl:nth-child(3){left:12%;bottom:6%;animation-delay:.85s}.cr-iv .fl:nth-child(4){right:6%;bottom:18%;animation-delay:1.15s}
+@keyframes crIvFlash{0%{opacity:0;transform:scale(.4)}8%{opacity:.9;transform:scale(1)}30%{opacity:0;transform:scale(1.25)}100%{opacity:0}}
+@keyframes crIvUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes crIvIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes crIvMic{from{opacity:0;transform:translateY(30px) scale(.6)}to{opacity:1;transform:none}}
+@keyframes crIvCur{50%{opacity:0}}
+.cr-iv-box{position:relative;width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
+.cr-iv .mic{align-self:center;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:28px;background:linear-gradient(145deg,#2a2d36,#15171d);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 30px rgba(0,0,0,.5);animation:crIvMic .55s .1s cubic-bezier(.2,1.4,.4,1) both}
+.cr-iv .tag{align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .2s ease-out both}
+.cr-iv-q{background:#F0F2F7;color:#14161C;border-radius:16px 16px 16px 4px;padding:14px 16px 15px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crIvUp .45s .45s ease-out both}
+.cr-iv-q .who{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#6b7080;margin-bottom:6px}.cr-iv-q .who b{color:#EF0107}
+.cr-iv-q .t{font-size:16px;font-weight:700;line-height:1.5;min-height:48px}
+.cr-iv-q .cur{display:inline-block;width:2px;height:1em;background:#14161C;vertical-align:-2px;margin-left:1px;animation:crIvCur .7s steps(1) infinite}
+.cr-iv-ans{display:flex;flex-direction:column;gap:12px}.cr-iv-ans[hidden]{display:none}
+.cr-iv-ans .me{font-size:11.5px;color:rgba(255,255,255,.75);text-align:right;margin:4px 2px -4px;animation:crIvUp .3s ease-out both}
+.cr-iv-a{display:block;width:100%;text-align:left;font:inherit;font-size:15px;line-height:1.55;cursor:pointer;color:#F0F2F7;border-radius:16px 16px 4px 16px;padding:14px 15px;border:1.5px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);animation:crIvIn .45s cubic-bezier(.2,1.2,.4,1) both;animation-delay:var(--d);transition:border-color .15s,background .15s}
+.cr-iv-a[aria-pressed="true"]{border-color:#C8A84B;background:rgba(200,168,75,.14)}
+.cr-iv-go{margin-top:4px;border:0;border-radius:14px;padding:14px;font:inherit;font-size:16px;font-weight:700;color:#fff;background:#EF0107;cursor:pointer;animation:crIvUp .35s .55s ease-out both}
+.cr-iv-go:disabled{background:#5a2124;color:rgba(255,255,255,.6);cursor:default}
+@media (prefers-reduced-motion: reduce){.cr-iv,.cr-iv *{animation:none!important}.cr-iv .fl{display:none}}
 .cr-tov{position:fixed;inset:0;z-index:10000;background:rgba(5,6,10,.86);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;animation:crTovIn .25s ease-out}
 .cr-tov .tag{font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:var(--gold);border-radius:999px;padding:3px 9px}
 .cr-tov h3{margin:6px 0 0;font-size:19px;color:#F0F2F7;text-align:center}
@@ -8595,6 +8620,7 @@ function gameProfileRender(d){
 
 function gameList(){
   gameStopTimer();
+  if(typeof crTovSet==="function") crTovSet("");   // 커리어 오버레이(인터뷰·특성)가 떠 있던 채로 목록으로 오면 닫는다(뒤로 가기 등)
   gmRoot().innerHTML =
     '<div class="gm-hrow"><div class="gm-h">게임 목록</div>'
     // 로그아웃 상태면 "내 정보" 대신 로그인·가입 입구를 보여 준다(로그인하면 게임 목록으로 돌아온다).
@@ -9135,7 +9161,7 @@ function crBack(){ return '<button class="gm-back" onclick="gameList()">← 게�
 
 // ── 시즌 준비 ──────────────────────────────────────────────────────────
 function crPrep(){
-  var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lcs=pr.loanClubs||(pr.loanClub?[pr.loanClub]:[]);
+  var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lcs=pr.loanClubs||(pr.loanClub?[pr.loanClub]:[]), iv=pr.interview;   // 인터뷰는 이벤트 칸 없이 오버레이로
   // 성장이 멈춘 뒤엔 훈련 방향 대신 시즌 운영(몸 관리·균형·주전 경쟁) — 서버가 지금 고를 수 있는 것을 준다
   var topts=pr.trainOpts||['강점 강화','균형','약점 보완']; if(topts.indexOf(CR.train)<0) CR.train='균형';
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
@@ -9149,16 +9175,45 @@ function crPrep(){
    +(pr.late?'<div class="cr-note" style="margin-top:6px">'+({'몸 관리':'출전을 줄이고 몸을 아껴요. 하락·부상이 줄어 더 오래 뛰어요.','균형':'평소대로 시즌을 보내요.','주전 경쟁':'더 많이 뛰는 대신 몸이 빨리 닳아요. 하락·부상이 늘어요.'})[CR.train]+'</div>'
      :pr.keyMax?'<div class="cr-note" style="margin-top:6px">주요 능력이 모두 최고치예요. 강점 강화로는 더 오를 데가 없어요.</div>'
      :pr.keyCapped&&pr.keyCapped.length?'<div class="cr-note" style="margin-top:6px">'+gmEsc(pr.keyCapped.join('·'))+'은(는) 이미 최고치라 강점 강화 효율이 절반으로 떨어져요.</div>':'')+'</div>'
-   +'<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(ev.t)+'</b><span>이벤트</span></div><div style="font-size:14px;line-height:1.5">'+d
+   +(iv?'':'<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(ev.t)+'</b><span>이벤트</span></div><div style="font-size:14px;line-height:1.5">'+d
    // 임대: 구단 카드를 눌러 "간다"(evPick 0 + loanPick), 아래 버튼은 "남는다"만
    +(lcs.length?lcs.map(function(lc,k){ return '<button class="cr-loanc" aria-pressed="'+(CR.evPick===0&&CR.loanPick===k)+'" onclick="CR.evPick=0;CR.loanPick='+k+';crPrep()">'+crCrest(lc,30)+'<div><b>'+gmEsc(lc.n)+'</b><div class="cr-note">'+crFlag(lc.nat)+crNat(lc.nat).n+' · 1시즌 임대</div></div>'+crChance(lc.chance)+'</button>'; }).join(''):'')
    +'</div><div class="cr-seg"'+(lcs.length?' style="--n:1"':'')+'>'+ev.a.map(function(t,k){
      if(lcs.length&&k===0) return '';
      // "고용한다 (성장 ↑ · 부상 위험 ↑)" → 굵은 한 줄 + 작은 효과 줄(버튼이 길어지지 않게)
      var m=String(t).match(/^(.*?)\s*\((.*)\)$/);
-     return '<button class="cr-chip cr-opt" aria-pressed="'+(CR.evPick===k)+'" onclick="CR.evPick='+k+';crPrep()"><b>'+gmEsc(m?m[1]:t)+'</b>'+(m?'<small>'+crFx(m[2])+'</small>':'')+'</button>'; }).join('')+'</div></div>'
+     return '<button class="cr-chip cr-opt" aria-pressed="'+(CR.evPick===k)+'" onclick="CR.evPick='+k+';crPrep()"><b>'+gmEsc(m?m[1]:t)+'</b>'+(m?'<small>'+crFx(m[2])+'</small>':'')+'</button>'; }).join('')+'</div></div>')
    +crHist(),
    '<div class="sum">'+p.age+'세<b>'+p.ovr+'</b></div><button class="gm-btn" '+(CR.evPick!=null?'':'disabled')+' onclick="crSeason(this)">'+(CR.evPick!=null?'시즌 시작':'이벤트를 골라 주세요')+'</button>');
+  if(iv && CR.evPick==null && !document.querySelector('#crTov .cr-iv')) crIvShow(iv);
+}
+// ── 인터뷰 오버레이(사용자 지정) ── 시즌 준비 화면에 인터뷰 이벤트가 뜨면 바로 띄운다. 기자 질문을 타자 치듯 보여 주고,
+// 끝나면 내 답변 두 문장(자신감·겸손 — 이름표·효과는 안 보인다, 문장만 보고 고른다)이 차례로 들어온다. 고른 답의 k가 evPick.
+function crIvShow(iv){
+  CR.ivSel=null; CR.iv=iv; clearInterval(CR.ivTimer);
+  var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  crTovSet('<div class="cr-iv" role="dialog" aria-modal="true" aria-label="인터뷰"><i class="fl"></i><i class="fl"></i><i class="fl"></i><i class="fl"></i>'
+   +'<div class="cr-iv-box"><div class="mic" aria-hidden="true">🎤</div><span class="tag">'+gmEsc(iv.tag)+'</span>'
+   +'<div class="cr-iv-q"><div class="who">📰 <b>'+gmEsc(iv.who)+'</b></div><div class="t" id="crIvQ">'+(reduce?gmEsc(iv.q):'<span class="cur"></span>')+'</div></div>'
+   +'<div class="cr-iv-ans" id="crIvA" hidden><div class="me">내 답변</div>'
+   +iv.a.map(function(a,i){ return '<button class="cr-iv-a" style="--d:'+(0.15+i*0.18)+'s" aria-pressed="false" onclick="crIvPick('+i+')">“'+gmEsc(a.t)+'”</button>'; }).join('')
+   +'<button class="cr-iv-go" id="crIvGo" disabled onclick="crIvGo()">답변을 골라 주세요</button></div></div></div>');
+  var show=function(){ var el=document.getElementById('crIvA'); if(el) el.hidden=false; };
+  if(reduce) return show();
+  var t=document.getElementById('crIvQ'), q=iv.q, k=0;
+  setTimeout(function(){ CR.ivTimer=setInterval(function(){
+    if(!document.getElementById('crIvQ')) return clearInterval(CR.ivTimer);
+    k++; t.innerHTML=gmEsc(q.slice(0,k))+'<span class="cur"></span>'; if(k>=q.length){ clearInterval(CR.ivTimer); show(); }
+  }, 38); }, 800);
+}
+function crIvPick(i){
+  CR.ivSel=i;
+  document.querySelectorAll('#crTov .cr-iv-a').forEach(function(b,j){ b.setAttribute('aria-pressed', String(j===i)); });
+  var g=document.getElementById('crIvGo'); if(g){ g.disabled=false; g.textContent='이렇게 답한다'; }
+}
+function crIvGo(){
+  if(CR.ivSel==null || !CR.iv) return;
+  CR.evPick=CR.iv.a[CR.ivSel].k; clearInterval(CR.ivTimer); crTovSet(''); crPrep();
 }
 function crSeason(btn){
   if(!crBusy(btn,'시즌 진행 중...')) return;
@@ -9481,7 +9536,9 @@ function crShot(btn){
   var done0=done; done=function(){ box.classList.remove('shooting'); done0(); };
   Promise.all(imgs.map(function(i){ return i.complete ? 0 : new Promise(function(r){ i.onload=i.onerror=r; }); }))
     .then(function(){ return Promise.all([crLoadH2I(), crShotFonts()]); })
-    .then(function(x){ return x[0].toBlob(box, {pixelRatio:2, backgroundColor:bg, fontEmbedCSS:x[1]}); })
+    // includeQueryParams: html-to-image는 이미지 캐시 키에서 쿼리를 떼어 내서, 엠블럼 프록시(…/career?a=logo&id=N)가 전부 같은 키가 됐다
+    // — 저장한 사진에서 모든 구단 엠블럼이 처음 받은 하나로 통일되던 버그(사용자 제보).
+    .then(function(x){ return x[0].toBlob(box, {pixelRatio:2, backgroundColor:bg, fontEmbedCSS:x[1], includeQueryParams:true}); })
     .then(function(blob){
       done();
       var name='career-'+String(((box.dataset.board?CR.shotCard:CR.v&&CR.v.card)||{}).name||'card').replace(/[^\w가-힣]+/g,'_')+'.png';
