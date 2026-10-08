@@ -8894,7 +8894,7 @@ function crIntro(){
 }
 // 진행 중인 커리어가 있으면 두 번 눌러야 새로 시작한다(지금 커리어는 사라진다)
 function crNewConfirm(btn){
-  if(CR.armed!=='new'){ CR.armed='new'; btn.textContent='한 번 더 누르면 지금 커리어는 사라져요'; btn.style.color='var(--gold)'; return; }
+  if(CR.armed!=='new'){ CR.armed='new'; btn.textContent='한 번 더 누르면 삭제'; btn.style.color='var(--gold)'; return; }
   crNew();
 }
 function crResume(){
