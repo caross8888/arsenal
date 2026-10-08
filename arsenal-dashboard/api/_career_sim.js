@@ -8,7 +8,7 @@
 // 난수는 커리어 시드 + (나이·선택)으로 정해져서, 같은 시즌에 같은 선택을 하면 결과가 같다.
 // 함수들은 모듈 변수 C에 상태를 걸어 두고 계산한다(요청 하나 안에서만 쓰므로 안전).
 
-import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS } from './_career_data.js';
+import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS, ACADEMY } from './_career_data.js';
 
 export { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS };
 
@@ -45,8 +45,15 @@ const YOUTH_CUT = 0.4, YOUTH_CUT_P = 0.5, YOUTH_CUT_TO = 6, YOUTH_CUT_BEHIND = -
 // 명성 차로 계산해서 큰 구단 유스는 거의 못 뛰고 → 성장 낮고 → 17세에 거의 자동 방출됐다). 또래 수준 = 나이별 기준 + 구단 수준 차의 20%.
 const COHORT = {15:50, 16:53, 17:56}, COHORT_K = 0.2;
 const cohortLv = (club, age) => (COHORT[Math.min(17, Math.max(15, age))]) + (club.r - 75)*COHORT_K;
-// 첫 구단 화면의 아카데미 수준(★1~3) — 유스 성장에 쓰는 코칭 계수(clubCoef, ACAD 포함)의 단계 그대로
-const acadStars = (club, nation) => { const r = club.r + (club.nat===nation ? ACAD[nation]||0 : 0); return r >= 86 ? 3 : r >= 76 ? 2 : 1; };
+// 아카데미 등급(★1~5). 실제 자료(_career_data.js ACADEMY, CIES 2025 상위 100 = ★4·5)가 없으면 명성·리그로 추정(최대 ★3, 사용자 지정):
+// 구단 수준 84+ 또는 유망주 강국 리그(ARG·BRA·POR·NED·BEL·ESP·FRA) 74+ 또는 잉글랜드 72+(EPPP 1등급 다수) → ★3, 66+ 또는 자국 상위권(NAT_TOP) → ★2, 나머지 ★1.
+// 유스 단계(U-16~U-21) 성장에 ACAD_G를 곱한다 — 구단 수준(코칭 계수)과 따로, 실제로 잘 키워 내는 곳이 더 키우게.
+const ACAD_PROD = new Set(['ARG','BRA','POR','NED','BEL','ESP','FRA']);
+// 자국 리그 상위권(명성 순 상위 1/4, 최소 3팀)은 최소 ★2(사용자 지정 — 리그가 약한 나라도 그 나라 명문 유스는 낫다).
+const NAT_TOP = new Set(Object.keys(CLUBS).flatMap(k => CLUBS[k].map(c => [c[0], c[1]]).sort((a,b) => b[1]-a[1]).slice(0, Math.max(3, Math.round(CLUBS[k].length/4))).map(c => c[0])));
+const acadOf = club => ACADEMY[club.n] || (club.r >= 84 || (ACAD_PROD.has(club.nat) && club.r >= 74) || (club.nat==='ENG' && club.r >= 72) ? 3 : club.r >= 66 || NAT_TOP.has(club.n) ? 2 : 1);
+const acadStars = club => acadOf(club);
+const ACAD_G = {1:1, 2:1.03, 3:1.06, 4:1.09, 5:1.12};
 const YOUTH_CC = 0.35;
 // 어린 나이 월반은 문턱을 더 낮춘다(16세 1군 데뷔는 드물게): [U-21 문턱 −, 1군 문턱 −] 나이별
 const EARLY = {16:[8,14], 17:[4,7]};
@@ -181,7 +188,6 @@ export function startStats(pos, card){
 export function ovrOf(st, w){ let t=0, sw=0; for(let i=0;i<5;i++){ const w3=w[i]**3; t+=st[i]*w3; sw+=w3; } return Math.round(t/sw); }
 
 const chanceOf = p => p<0.3 ? 'low' : p<0.65 ? 'mid' : 'high';
-const growLv = r => Math.max(1, Math.min(5, Math.round((r-40)/11)));
 
 // 첫 구단: 자국 구단 3곳 — 도전 / 적정 / 안정. 리그 구단이 16개 이상이면 3칸 간격.
 // 해외 유스(사용자 지정): 부모님과 함께 해외로 건너가 현지 유스팀에서 시작하는 길. 시드에 따라 가끔 네 번째 선택지로 나온다 —
@@ -202,7 +208,7 @@ export function firstClubs(nation, pos, card, seed){
     }
   }
   // 출전 경쟁은 첫 시즌(15세, 시작 오버롤) 실제 계산과 같게 — 또래 수준과 비교
-  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp((cohortLv(c, 15) - START_OVR)/7))), acad: acadStars(c, nation)}));
+  return list.map(([c,kind]) => ({club: c, kind, chance: chanceOf(1/(1+Math.exp((cohortLv(c, 15) - START_OVR)/7))), acad: acadStars(c)}));
 }
 
 // 첫 구단 무작위 배정 — 지금은 게임에서 쓰지 않고(사용자가 셋 중 고른다) 분석 스크립트의 "아무거나 고르는 사람"용으로 남겨 둔다.
@@ -465,7 +471,7 @@ export function playSeason(state, choice){
     const kid = row0Youth && C.age < 18, yp = kid ? YPLAY_KID : YPLAY;
     if(kid && club.nat !== C.nation) growMul *= ABROAD_G;   // 해외 유스: 큰 리그 아카데미의 경쟁·훈련(자국 유스의 ACAD 보정 대신)
     const play = (row0Youth ? yp[0]+yp[1]*ratio : playCoef(ratio)) * (1 + STAGE_UP*Math.max(0, lv-defLv(C.age)));
-    const cc0 = clubCoef(club.r + (C.age<18 && !onLoan && club.nat===C.nation ? ACAD[C.nation]||0 : 0)), cc = kid ? 1 + (cc0-1)*YOUTH_CC : cc0;
+    const cc0 = clubCoef(club.r + (C.age<18 && !onLoan && club.nat===C.nation ? ACAD[C.nation]||0 : 0)), cc = (kid ? 1 + (cc0-1)*YOUTH_CC : cc0) * (row0Youth && !onLoan ? ACAD_G[acadOf(club)] : 1);
     C.ovr = Math.min(99, C.ovr + C.boost*base*play*cc*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
     declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1);
@@ -684,9 +690,9 @@ const forcedRetire = () => C.age>=40 || !!C.bodyOut || (!!C.released && !C.offer
 const pub = c => ({n:c.n, id:c.id, nat:c.nat});
 export function offersView(state){ C = state; return offerView(); }
 // 이적시장 카드에 보이는 출전 기회는 다음 시즌 실제 계산과 같게(제안 구단은 새 영입 효과, 잔류는 같은 팀 몫 포함)
-export function stayView(state){ C = state; return {chance: chanceOf(pStart(C.club, NEW_SIGNING[1])), grow: growLv(C.club.r)}; }
+export function stayView(state){ C = state; return {chance: chanceOf(pStart(C.club, NEW_SIGNING[1]))}; }
 function offerView(){
-  return C.offers.map(o => ({...pub(o.c), kind:o.kind, dream:!!o.dream, chance:chanceOf(pStart(o.c, NEW_SIGNING[0])), grow:growLv(o.c.r)}));
+  return C.offers.map(o => ({...pub(o.c), kind:o.kind, dream:!!o.dream, chance:chanceOf(pStart(o.c, NEW_SIGNING[0]))}));   // 성장 보너스 칸은 없앴다(사용자 지정 — 첫 구단과 같은 이유)
 }
 
 // pick: 제안 번호(없으면 잔류). 방출됐는데 고르지 않으면 은퇴.
