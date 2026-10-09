@@ -2071,6 +2071,30 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media (prefers-reduced-motion: reduce){.cr-tr,.cr-tr *{animation:none!important}}
 @media (prefers-reduced-motion: reduce){.cr-iv,.cr-iv *{animation:none!important}.cr-iv .fl{display:none}}
 /* 잠재력 평가 오버레이 — 카드가 올라오고 등급 도장이 찍힌다. 등급별 색(S 보라 · A 금 · B 하늘 · C 초록 · D 회색) */
+.cr-bd{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden;cursor:pointer;
+  background:radial-gradient(70% 50% at 50% 40%,rgba(120,96,30,.35),transparent 70%),#050505;animation:crTovIn .4s ease-out both;transition:opacity .28s}
+.cr-bd.out{opacity:0}
+.cr-bd-box{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;color:#F0F2F7}
+.cr-bd .ray{transform-box:fill-box;transform-origin:center;animation:crBdRay .7s cubic-bezier(.2,.9,.3,1) both;animation-delay:calc(.15s + var(--i)*.05s)}
+@keyframes crBdRay{from{opacity:0;transform:scaleY(0)}to{opacity:1;transform:none}}
+.cr-bd .ball{transform-box:fill-box;transform-origin:center;animation:crBdBall 1.1s .55s cubic-bezier(.2,1.1,.3,1) both;filter:drop-shadow(0 0 10px rgba(255,215,120,.55))}
+@keyframes crBdBall{from{opacity:0;transform:translateY(-40px) rotate(-200deg) scale(.4)}to{opacity:1;transform:none}}
+.cr-bd .ttl{display:flex;flex-direction:column;align-items:center;gap:2px;animation:crBdTtl .8s 1.35s ease-out both}
+.cr-bd .ttl b{font-size:34px;font-weight:300;letter-spacing:6px;color:#E4C766;text-shadow:0 0 18px rgba(255,210,110,.35)}
+.cr-bd .ttl span{font-size:13px;letter-spacing:4px;color:rgba(228,199,102,.75)}
+@keyframes crBdTtl{from{opacity:0;letter-spacing:18px}to{opacity:1}}
+.cr-bd .who{animation:crIvUp .5s 2s ease-out both}.cr-bd .who b{display:block;font-size:22px;font-weight:800}
+.cr-bd .who span{font-size:13px;color:rgba(255,255,255,.7)}.cr-bd .who em{font-style:normal;color:#E4C766;font-weight:700}
+.cr-bd .go{width:220px;animation:crIvUp .4s 2.3s ease-out both}.cr-bd .go i{display:block;height:2px;background:#C8A84B;transform-origin:left;animation:crSfGo linear both}
+.cr-bd .go span{display:block;margin-top:6px;font-size:11.5px;color:rgba(255,255,255,.5)}
+.cr-bd.wc .cup{transform-box:fill-box;transform-origin:center bottom;animation:crWcRise 1.2s .2s cubic-bezier(.2,1.1,.3,1) both}
+.cr-bd.wc .art svg{overflow:visible;filter:drop-shadow(0 0 18px rgba(255,215,120,.4))}
+@keyframes crWcRise{from{opacity:0;transform:translateY(60px) scale(.6)}to{opacity:1;transform:none}}
+.cr-bd.wc .ttl b{font-size:26px;letter-spacing:4px}
+.cr-bd.wc .who b{display:flex;align-items:center;justify-content:center;gap:6px}
+.cr-bd .conf{position:absolute;inset:0;pointer-events:none}
+.cr-bd .conf i{position:absolute;top:-12px;left:var(--x);width:6px;height:11px;border-radius:1px;background:linear-gradient(#FFF1B0,#C8A84B);opacity:0;animation:crTmConf 2.4s var(--d) ease-in both}
+@media (prefers-reduced-motion: reduce){.cr-bd,.cr-bd *{animation:none!important}.cr-bd .conf{display:none}}
 .cr-sc{--gc:#8A93A8;position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden;
   background:radial-gradient(90% 60% at 50% 40%,color-mix(in srgb,var(--gc) 22%,rgba(5,6,10,.95)),rgba(5,6,10,.96) 70%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
 .cr-sc.gS{--gc:#C084FC}.cr-sc.gA{--gc:#E9C766}.cr-sc.gB{--gc:#60A5FA}.cr-sc.gC{--gc:#22C55E}.cr-sc.gD{--gc:#8A93A8}
@@ -9791,6 +9815,68 @@ var CR_SCOUT={
   C:{t:'로테이션 자원', d:'1부에서 경쟁할 수준은 돼요. 꾸준히 뛸 수 있는 팀을 고르는 게 성장의 열쇠예요.'},
   D:{t:'다듬어지지 않은 원석', d:'아직 보여 준 게 많지 않아요. 출전 시간과 훈련으로 남들보다 한 발 더 뛰어야 해요.'}};
 var CR_SCOUT_ORD='DCBAS';
+// ── 발롱도르 시상 오버레이(사용자 지정) ── 공식 로고는 상표라 쓰지 않고, 비슷한 느낌(금빛 공 + 위아래 빛줄기 + 얇은 글자)을 직접 그린다.
+// 빛줄기가 가운데서 위아래로 뻗고 → 공이 돌며 내려앉고 → 글자 → 선수 이름·몇 번째 수상. 약 5초 뒤 저절로, 누르면 바로.
+function crBallonSvg(){
+  var cx=60, cy=60, R=34, pt=function(r,a){ return (cx+r*Math.cos(a)).toFixed(1)+' '+(cy+r*Math.sin(a)).toFixed(1); }, d='';
+  var a0=-Math.PI/2, A=function(i){ return a0+i*2*Math.PI/5; };
+  d+='M'+[0,1,2,3,4].map(function(i){ return pt(12,A(i)); }).join(' L')+' Z';                       // 가운데 오각형
+  for(var i=0;i<5;i++){ d+=' M'+pt(12,A(i))+' L'+pt(22,A(i));                                      // 바퀴살
+    d+=' M'+pt(22,A(i))+' L'+pt(R,A(i)-0.42)+' M'+pt(22,A(i))+' L'+pt(R,A(i)+0.42); }               // 바깥 패널
+  var rays=function(y0, up){ var h=''; for(var k=-6;k<=6;k++){ var x=cx+k*5, len=(up?26:40)-Math.abs(k)*(up?3:4.2); if(len<6) continue;
+    h+='<rect class="ray" x="'+(x-0.9)+'" y="'+(up?y0-len:y0)+'" width="1.8" height="'+len.toFixed(1)+'" style="--i:'+Math.abs(k)+'"/>'; } return h; };
+  return '<svg viewBox="0 0 120 142" width="160" height="189" aria-hidden="true"><defs><linearGradient id="crBdG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF1B0"/><stop offset=".5" stop-color="#D8B84E"/><stop offset="1" stop-color="#6E5A1C"/></linearGradient></defs>'
+    +'<g fill="url(#crBdG)">'+rays(cy-R-4,true)+rays(cy+R+4,false)+'</g>'
+    +'<g class="ball"><circle cx="60" cy="60" r="'+R+'" fill="none" stroke="url(#crBdG)" stroke-width="2.2"/><path d="'+d+'" fill="none" stroke="url(#crBdG)" stroke-width="1.8" stroke-linejoin="round"/></g></svg>';
+}
+function crBallonShow(key){
+  var p=CR.v.player, n=(p.hist||[]).reduce(function(t,h){ return t+((h[9]||[]).filter(function(x){ return /^발롱도르/.test(x); }).length); },0)||1;
+  var yr=2026+p.age-15, wait=5200, conf='';
+  for(var i=0;i<34;i++) conf+='<i style="--x:'+((i*29)%100)+'%;--d:'+(1.4+(i%9)*0.12)+'s;--r:'+((i*61)%360)+'deg"></i>';
+  crTovSet('<div class="cr-bd" role="dialog" aria-modal="true" aria-label="발롱도르 수상" onclick="crBallonGo()"><div class="conf" aria-hidden="true">'+conf+'</div><div class="cr-bd-box">'
+    +'<div class="art">'+crBallonSvg()+'</div>'
+    +'<div class="ttl"><b>BALLON D\'OR</b><span>'+yr+'</span></div>'
+    +'<div class="who"><b>'+gmEsc(p.name)+'</b><span>'+gmEsc(p.club.team)+(n>1?' · <em>'+n+'번째 수상</em>':' · 첫 수상')+'</span></div>'
+    +'<div class="go"><i style="animation-duration:'+wait+'ms"></i><span>누르면 넘어가요</span></div></div></div>');
+  CR.bd={key:key, t:setTimeout(crBallonGo, wait)};
+}
+// 월드컵 트로피: 사용자가 준 그림(지구본을 받쳐 든 두 사람이 나선으로 올라가고, 받침에 초록 띠 두 줄)을 같은 구도로 직접 그린 SVG
+function crWorldCupSvg(){
+  return '<svg viewBox="0 0 120 250" width="128" height="267" aria-hidden="true"><defs>'
+    +'<linearGradient id="crWcG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B8891E"/><stop offset=".35" stop-color="#FFE48A"/><stop offset=".65" stop-color="#E7B83E"/><stop offset="1" stop-color="#9A6E12"/></linearGradient>'
+    +'<radialGradient id="crWcB" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FFF0B0"/><stop offset=".55" stop-color="#E9BE48"/><stop offset="1" stop-color="#A97A16"/></radialGradient></defs>'
+    +'<g class="cup">'
+    // 몸통: 위로 갈수록 벌어지며 지구본을 받친다
+    +'<path d="M38 238 L40 196 Q30 160 26 120 Q22 92 34 74 L86 74 Q98 92 94 120 Q90 160 80 196 L82 238 Z" fill="url(#crWcG)"/>'
+    // 나선으로 감아 올라가는 두 사람(밝은 띠·어두운 띠)
+    +'<path d="M40 200 Q60 170 46 140 Q34 112 52 88 Q60 78 66 72" fill="none" stroke="#FFF2C0" stroke-width="5" stroke-linecap="round" opacity=".55"/>'
+    +'<path d="M80 200 Q58 172 72 142 Q86 112 66 88 Q58 78 52 72" fill="none" stroke="#8A6212" stroke-width="4" stroke-linecap="round" opacity=".45"/>'
+    +'<path d="M30 92 Q22 70 34 52 M90 92 Q98 70 86 52" fill="none" stroke="url(#crWcG)" stroke-width="7" stroke-linecap="round"/>'
+    // 지구본
+    +'<circle cx="60" cy="46" r="38" fill="url(#crWcB)"/>'
+    +'<path d="M36 34 q8-8 18-4 q6 6 0 12 q-8 4-10 12 q-6-2-8-10 z M66 22 q10-2 16 6 q-2 8-10 8 q-8-4-6-14 z M70 52 q10 0 12 8 q-4 10-12 8 q-4-8 0-16 z" fill="#B8891E" opacity=".45"/>'
+    // 받침: 초록 띠 두 줄
+    +'<path d="M34 206 L86 206 L90 246 L30 246 Z" fill="url(#crWcG)"/>'
+    +'<rect x="33" y="210" width="54" height="8" rx="2" fill="#1F8A3A"/><rect x="31" y="232" width="58" height="8" rx="2" fill="#1F8A3A"/>'
+    +'<path d="M40 221 h40 M47 221 v9 M60 221 v9 M73 221 v9" stroke="#9A6E12" stroke-width="1" opacity=".6"/>'
+    +'</g></svg>';
+}
+function crWorldCupShow(key){
+  var p=CR.v.player, n=(p.hist||[]).reduce(function(t,h){ return t+((h[9]||[]).filter(function(x){ return /^월드컵 우승/.test(x); }).length); },0)||1;
+  var yr=2026+p.age-15+1, wait=5200, conf='', cols=['#FFF1B0','#C8A84B','#1F8A3A','#F0F2F7'];
+  for(var i=0;i<34;i++) conf+='<i style="--x:'+((i*29)%100)+'%;--d:'+(1.4+(i%9)*0.12)+'s;--r:'+((i*61)%360)+'deg;background:'+cols[i%4]+'"></i>';
+  crTovSet('<div class="cr-bd wc" role="dialog" aria-modal="true" aria-label="월드컵 우승" onclick="crBallonGo()"><div class="conf" aria-hidden="true">'+conf+'</div><div class="cr-bd-box">'
+    +'<div class="art">'+crWorldCupSvg()+'</div>'
+    +'<div class="ttl"><b>WORLD CHAMPIONS</b><span>'+yr+' · 월드컵 우승</span></div>'
+    +'<div class="who"><b>'+crFlag(p.nation)+' '+gmEsc(crNat(p.nation).n)+'</b><span>'+gmEsc(p.name)+(n>1?' · <em>'+n+'번째 우승</em>':' · 첫 우승')+'</span></div>'
+    +'<div class="go"><i style="animation-duration:'+wait+'ms"></i><span>누르면 넘어가요</span></div></div></div>');
+  CR.bd={key:key, t:setTimeout(crBallonGo, wait)};
+}
+function crBallonGo(){
+  var B=CR.bd; if(!B) return; CR.bd=null; clearTimeout(B.t); CR.bdSeen=B.key;
+  var o=document.querySelector('#crTov .cr-bd'); if(o) o.classList.add('out');
+  setTimeout(function(){ crTovSet(''); if(CR.v && CR.v.phase==='result') crResult(); }, 280);   // 잠재력 평가·특성 선택이 있으면 이어서
+}
 function crScoutShow(sc, key){
   var gi=CR_SCOUT[sc.g], re=!!sc.prev, diff=re?CR_SCOUT_ORD.indexOf(sc.g)-CR_SCOUT_ORD.indexOf(sc.prev):0;
   var chg=!re?'':diff>0?'<div class="chg up">▲ '+sc.prev+' → '+sc.g+' · 지난 3년, 기대 이상으로 자랐어요</div>':diff<0?'<div class="chg dn">▼ '+sc.prev+' → '+sc.g+' · 기대만큼 크지 못했어요. 지금부터의 선택이 더 중요해요</div>':'<div class="chg eq">= '+sc.g+' 유지 · 예상한 길을 잘 걷고 있어요</div>';
@@ -9816,6 +9902,8 @@ function crResult(){
   // 예전 코치 평가(옛 토큰의 결과 화면용)
   if(r.coach) h+='<div class="cr-goal"><span class="cr-goal-tag">COACH · 코치 평가</span><div class="cr-goal-t">'+gmEsc(r.coach)+'</div></div>';
   // 잠재력 평가(18·21세): 처음엔 오버레이로, 확인한 뒤엔 결과 화면에 작게 남는다
+  // 발롱도르 수상 시즌: 결과 화면 위로 시상 오버레이를 먼저(사용자 지정). 닫으면 잠재력 평가·특성 선택이 이어서 뜬다.
+  var BD=(r.hon||[]).some(function(h){ return /^발롱도르/.test(h.n); }), WCX=(r.hon||[]).some(function(h){ return /^월드컵 우승/.test(h.n); }), bdKey=BD?p.name+'|bd|'+p.seasons:null, bdPending=(BD && CR.bdSeen!==bdKey) || (!BD && WCX && CR.bdSeen!==p.name+'|wc|'+p.seasons);
   var SC=r.scout, scKey=SC?p.name+'|'+SC.age+'|'+p.seasons:null, scPending=SC && CR.scoutSeen!==scKey;
   if(SC && !scPending){ var gi=CR_SCOUT[SC.g];
     h+='<div class="cr-goal cr-scout-mini"><span class="cr-goal-tag">SCOUTING · '+SC.age+'세 '+(SC.prev?'재평가':'잠재력 평가')+'</span><div class="cr-goal-t"><b class="g g'+SC.g+'">'+SC.g+'</b> '+gmEsc(gi.t)
@@ -9826,7 +9914,7 @@ function crResult(){
   if(TO){
     var tCommon=!!TO[0].common, tImg=function(t){ return '<img src="/img/traits/'+t.id+'.svg" alt="'+gmEsc(t.n)+'">'; },
         tDesc=function(t){ return (t.common?gmEsc(t.d).replace(' · ','<br>'):gmEsc(t.d))+(t.stat?'<br>'+gmEsc(t.stat)+' '+t.min+' 이상':''); };
-    if(scPending){}   // 잠재력 평가 오버레이를 먼저 보여 주고, 닫으면 특성 선택이 뜬다
+    if(scPending || bdPending){}   // 발롱도르·잠재력 평가 오버레이를 먼저 보여 주고, 닫으면 특성 선택이 뜬다
     else if(CR.traitPick==null) crTovSet('<div class="cr-tov" role="dialog" aria-modal="true"><span class="tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성 선택')+'</span>'
       +'<h3>'+(tCommon?'어떤 재능을 타고났나요?':'새 플레이 스타일을 익혔어요')+'</h3>'
       +'<p>'+(tCommon?'하나를 고르면 그 능력이 커리어 내내 더 잘 자라요.':'하나를 골라 주세요. 특성은 최대 3개까지예요.')+'</p>'
@@ -9844,7 +9932,11 @@ function crResult(){
     : (R.canRetire?'<button class="gm-btn ghost" onclick="crRetire(this)">은퇴</button>':'')
       +'<button class="gm-btn" '+(TO&&CR.traitPick==null?'disabled ':'')+'onclick="'+(tm?'crTmShow()':'crNext(this)')+'">'+(TO&&CR.traitPick==null?'특성을 골라 주세요':tm?(R.released?'계약 만료 · 다음 행선지':'이적시장 열기'):'다음 시즌')+'</button>');
   window.scrollTo(0,y);   // 제안을 고를 때마다 다시 그려도 보던 자리 그대로
-  if(scPending && !document.querySelector('#crTov .cr-sc')) crScoutShow(SC, scKey);
+  // 월드컵 우승도 같은 시상 오버레이(사용자 지정). 같은 시즌에 발롱도르도 받았으면 발롱도르만(둘 다 띄우면 너무 길다).
+  var WC=!BD && (r.hon||[]).some(function(h){ return /^월드컵 우승/.test(h.n); }), wcKey=WC?p.name+'|wc|'+p.seasons:null, wcPending=WC && CR.bdSeen!==wcKey;
+  if(wcPending){ bdPending=true; if(!document.querySelector('#crTov .cr-bd')) crWorldCupShow(wcKey); }
+  else if(bdPending){ if(!document.querySelector('#crTov .cr-bd')) crBallonShow(bdKey); }
+  else if(scPending && !document.querySelector('#crTov .cr-sc')) crScoutShow(SC, scKey);
   // 시즌을 막 끝낸 직후에만 오버롤 숫자가 올라가는 연출(제안을 고르며 다시 그릴 땐 안 한다)
   if(CR.fresh){
     CR.fresh=false;
