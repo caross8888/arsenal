@@ -1934,9 +1934,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-wl .tag{font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .05s ease-out both}
 .cr-wl .crest{filter:drop-shadow(0 0 22px rgba(255,215,120,.35));animation:crTmNew .7s .15s cubic-bezier(.2,1.6,.4,1) both}
 .cr-wl .team{font-size:17px;font-weight:800;animation:crIvUp .4s .45s ease-out both}
-.cr-wl .shirt{width:150px;perspective:600px;animation:crWlShirt .8s .6s cubic-bezier(.2,1.2,.4,1) both;filter:drop-shadow(0 12px 24px rgba(0,0,0,.5))}
-.cr-wl .shirt svg{display:block;width:100%;height:auto}
-@keyframes crWlShirt{from{opacity:0;transform:rotateY(90deg) scale(.8)}to{opacity:1;transform:none}}
+.cr-wl .shirt{width:150px;height:150px;flex:none;animation:crWlShirt .7s .6s cubic-bezier(.2,1.3,.4,1) both}
+.cr-wl .shirt svg{display:block;width:150px;height:150px}
+@keyframes crWlShirt{0%{opacity:0;transform:scaleX(0)}60%{opacity:1;transform:scaleX(1.06)}100%{opacity:1;transform:scaleX(1)}}
 .cr-wl .chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;animation:crIvUp .4s 1s ease-out both}
 .cr-wl .chips span{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:rgba(255,255,255,.1)}
 .cr-wl .say{width:100%;text-align:left;background:#F0F2F7;color:#14161C;border-radius:16px 16px 16px 4px;padding:10px 14px 11px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crIvUp .4s 1.15s ease-out both}
@@ -9295,8 +9295,10 @@ function crWelcome(v){
   CR.wl={v:v}; CR.v=v; CR.tok=v.token; crStore(v);   // 인트로 중에 나가도 이어 하기가 되게
   var p=v.player, card=((CR.meta.cards[p.pos]||[])[p.card]||{}).n||'', club=p.club.n.replace(/ U-\d+$/,''), reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var say=CR_WL_COACH[Math.floor(Math.random()*CR_WL_COACH.length)], wait=reduce?1800:4200;
-  var shirt='<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="crWlG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EF0107"/><stop offset="1" stop-color="#9b0005"/></linearGradient></defs>'
-    +'<path d="M30 10 L50 4 Q60 12 70 4 L90 10 L114 32 L100 46 L92 40 L92 116 L28 116 L28 40 L20 46 L6 32 Z" fill="url(#crWlG)" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>'
+  // 사파리(아이폰)에서 안 보였다(사용자 지적): 크기를 속성으로 박고, url(#그라데이션)·3D 회전·filter를 빼서 단순하게 그린다
+  var shirt='<svg width="150" height="150" viewBox="0 0 120 120" aria-hidden="true">'
+    +'<path d="M30 10 L50 4 Q60 12 70 4 L90 10 L114 32 L100 46 L92 40 L92 116 L28 116 L28 40 L20 46 L6 32 Z" fill="#D0010A" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>'
+    +'<path d="M28 78 L92 78 L92 116 L28 116 Z" fill="#000" opacity=".14"/>'
     +'<text x="60" y="44" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" letter-spacing="1">'+gmEsc(p.name)+'</text>'
     +'<text x="60" y="94" text-anchor="middle" font-size="44" fill="#fff" style="font-family:var(--fd)">'+(p.num||p.want||'')+'</text></svg>';
   crTovSet('<div class="cr-wl" role="dialog" aria-modal="true" aria-label="입단" onclick="crWelcomeGo()"><div class="cr-wl-box">'
