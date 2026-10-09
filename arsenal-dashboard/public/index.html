@@ -1877,7 +1877,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-anim .cr-rs b{transition:color .2s}
 .cr-anim .cr-rs b.bump{animation:gmScoreBump .45s ease-out}
 #crSfExtra{display:flex;flex-direction:column}
-.cr-ss-skip{align-self:center;border:0;background:none;color:rgba(255,255,255,.75);font:inherit;font-size:14px;padding:8px 14px;cursor:pointer}
+.cr-ss-skip{align-self:center;border:0;background:none;color:rgba(255,255,255,.6);font:inherit;font-size:13px;padding:8px 14px}
+.cr-sf{cursor:pointer}
 .cr-sf{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;
   background:radial-gradient(120% 80% at 50% 0%,rgba(40,12,14,.94),rgba(5,6,10,.96) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
 .cr-sf .ic{align-self:center;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:linear-gradient(145deg,#2a2d36,#15171d);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);animation:crTrBounce .7s .05s cubic-bezier(.2,1.5,.4,1) both}
@@ -9573,7 +9574,7 @@ function crSfOpen(still){
   var lbs=[['apps','경기'],['goals','골'],['ast','도움']].concat(df?[['cs','클린시트']]:[]);
   CR.sf={n:{apps:0,goals:0,ast:0,cs:0}, i:0, G:0, timer:null, q:[], lbs:lbs, form:[]};
   // 다른 오버레이(인터뷰·훈련 제안·이적시장)와 같은 틀: 흐린 배경 + 튀어 들어오는 아이콘 + 알약 태그 + 밝은 말풍선 카드 + 어두운 반투명 줄
-  crTovSet('<div class="cr-sf'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행"><div class="cr-sf-box" id="crSfBox">'
+  crTovSet('<div class="cr-sf'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행" onclick="crSfTap(event)"><div class="cr-sf-box" id="crSfBox">'
     +'<div class="ic" aria-hidden="true">🏟️</div><span class="tag">SEASON '+crSeasonLabel(p.age)+' · 시즌 '+(p.seasons+1)+'</span>'
     // 시즌 카드: 구단·시즌, 진행(몇 번째 경기 / 전체), 내 기록, 최근 5경기 결과
     +'<div class="cr-sf-card" id="crSfCard"><div class="hd">'+crCrest(p.club,32)+'<div><b>'+gmEsc(p.club.team)+'</b><span>'+gmEsc(p.name)+' · '+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div>'
@@ -9584,7 +9585,7 @@ function crSfOpen(still){
     // 경기 기록: 새 경기가 맨 위로 들어온다
     +'<div class="cr-sf-log" id="crSfLog"><div class="r ko"><span class="m">8월</span><b class="wdl">⚽</b><span class="o">'+gmEsc(p.name)+'의 '+(p.seasons+1)+'번째 시즌 개막</span><span class="s"></span><span class="me"></span></div></div>'
     +'<div class="cr-sf-feed" id="crSfFeed" aria-live="off"></div>'
-    +'<div id="crSfExtra"><button class="cr-ss-skip" id="crSfSkip" onclick="crSfSkip()">건너뛰기 ›</button></div>'
+    +'<div id="crSfExtra"><div class="cr-ss-skip" id="crSfSkip">화면을 누르면 건너뛰기 ›</div></div>'
     +'</div></div>');
   CR.sf.t0=Date.now(); crSfFeedStart();
 }
@@ -9780,6 +9781,15 @@ function crSfMatch(m, quiet){   // 한 경기: 진행·기록·최근 결과·�
   while(log.children.length>14) log.removeChild(log.lastChild);
   return !quiet && !!(m.g || m.a);
 }
+// 화면 아무 데나 누르면(사용자 지정 — 아래 건너뛰기 버튼만 되던 게 불편했다): 진행 중엔 건너뛰기, 끝 요약에선 바로 결과 화면.
+// 부상 질문 중엔 카드만 누를 수 있다(빈 곳을 눌러도 아무 일 없음).
+function crSfTap(e){
+  var S=CR.sf; if(!S) return;
+  if(e && e.target.closest && e.target.closest('.cr-inj-c')) return;
+  if(S.v) return crSfDone();
+  if(S.hurtWait) return;
+  crSfSkip();
+}
 function crSfSkip(){ if(CR.sf){ CR.sf.skip=true; clearTimeout(CR.sf.timer); var S=CR.sf; var rest=S.q.filter(function(m){ return m.k>=S.i; }); rest.forEach(function(m){ crSfMatch(m, true); }); S.q=[]; if(S.done) S.done(); } }
 function crSfEnd(v){   // 끝 요약을 잠깐(약 2.4초) 보여 주고 결과 화면으로 저절로 넘어간다(사용자 지정 — 버튼 없이, 넘어가서 오버롤 오르는 연출까지). 누르면 바로.
   var S=CR.sf, r=v.result.row, x=document.getElementById('crSfExtra'), card=document.getElementById('crSfCard'), log=document.getElementById('crSfLog');
@@ -9794,7 +9804,7 @@ function crSfEnd(v){   // 끝 요약을 잠깐(약 2.4초) 보여 주고 결과 
   // 이번 시즌 주요 수상(대표팀 제외, S·A·B) 최대 3개 — 결과 화면에서 다시 자세히 나온다
   var hon=(r.hon||[]).filter(function(h){ return 'SAB'.indexOf(h.tier)>=0 && h.kind!=='nat'; }).slice(0,3);
   var wait=S.skip?1600:2400;
-  if(x) x.innerHTML='<div class="cr-sf-end" onclick="crSfDone()"><div class="rk"><span>'+lg+'</span><b>'+r.rank+'위</b></div><div class="rt"><span>시즌 평점</span><b>'+(r.apps?r.rating.toFixed(2):'–')+'</b></div>'
+  if(x) x.innerHTML='<div class="cr-sf-end"><div class="rk"><span>'+lg+'</span><b>'+r.rank+'위</b></div><div class="rt"><span>시즌 평점</span><b>'+(r.apps?r.rating.toFixed(2):'–')+'</b></div>'
     +(hon.length?'<div class="hn">'+hon.map(function(h){ return crHonBadge(h); }).join('')+'</div>':'')
     +'<div class="go"><i style="animation-duration:'+wait+'ms"></i><span>시즌 결과로 넘어가요 · 누르면 바로</span></div></div>';
   S.endT=setTimeout(crSfDone, wait);
@@ -9804,7 +9814,7 @@ function crSfDone(){ var S=CR.sf; if(!S || !S.v || !document.getElementById('crS
 function crSfInjury(v){
   var S=CR.sf; if(!S) return;
   var j=v.injury, x=document.getElementById('crSfExtra'), box=document.getElementById('crSfBox'), log=document.getElementById('crSfLog');
-  CR.busy=false; S.done=null;
+  CR.busy=false; S.done=null; S.hurtWait=true;
   if(box) box.classList.add('hurt');
   if(log){ var row=document.createElement('div'); row.className='r inj new'; row.innerHTML='<span class="m">'+CR_MONTHS[Math.min(9, Math.floor(S.injAt/Math.max(1,S.G)*10))]+'</span><b class="wdl">🚑</b><span class="o">'+gmEsc(j.name)+'</span><span class="s"></span><span class="me"><em class="x">'+(j.major?'큰 부상 · ':'')+'결장 '+j.games+'경기</em></span>'; log.insertBefore(row, log.firstChild); }
   crSfReact('injury'); var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('mini'); if(S.fan){ S.fan.hurt=true; S.fan.hurtN=0; }   // 부상 카드 자리 확보: 피드는 한 줄만(한 화면에 들어오게)
@@ -9825,9 +9835,9 @@ function crInjPick(k, btn){
   crApi('season', {token:CR.tok, injPick:k}).then(function(v){ res=v; if(shown) go(); }).catch(function(e){ err=e; if(shown) go(); });
   var go=function(){
     if(err){ CR.busy=false; crSfInjury(CR.v); return crErr(err); }
-    var box=document.getElementById('crSfBox'), x=document.getElementById('crSfExtra');
+    S.hurtWait=false; var box=document.getElementById('crSfBox'), x=document.getElementById('crSfExtra');
     var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.remove('mini'); if(S.fan) S.fan.hurt=false;
-    if(box) box.classList.remove('hurt'); if(x) x.innerHTML='<button class="cr-ss-skip" onclick="crSfSkip()">건너뛰기 ›</button>';
+    if(box) box.classList.remove('hurt'); if(x) x.innerHTML='<div class="cr-ss-skip">화면을 누르면 건너뛰기 ›</div>';
     S.skip=false; S.t0=Date.now()-450; crSfData(res); crSfReact('back');
   };
   crPickFx(btn, '#crTov .cr-inj-c', function(){ shown=true; if(res||err) go(); });
