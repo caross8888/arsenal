@@ -1945,6 +1945,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-wl .go{width:100%}.cr-wl .go i{display:block;height:3px;border-radius:2px;background:#C8A84B;transform-origin:left;animation:crSfGo linear both}
 .cr-wl .go span{display:block;margin-top:6px;font-size:11.5px;color:rgba(255,255,255,.6)}
 @media (prefers-reduced-motion: reduce){.cr-wl,.cr-wl *{animation:none!important}}
+.cr-dock .gm-btn.cr-preset{flex:0 0 auto;width:auto;padding-left:14px;padding-right:14px;font-size:13.5px}
+.cr-dock .gm-btn.cr-preset.on{color:var(--text-secondary)}
+.cr-dock .gm-btn.cr-preset:disabled{opacity:.45}
 .cr-sf-feed{display:flex;flex-direction:column;gap:6px;height:112px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent);mask-image:linear-gradient(180deg,#000 62%,transparent)}
 .cr-sf-feed.mini{height:54px;-webkit-mask-image:none;mask-image:none}
 .cr-sf-feed.gone{display:none}
@@ -9179,7 +9182,23 @@ function crNew(){
   CR.firstClubs=null; CR.firstPick=null; CR.tok=null; CR.train='균형';
   // 잠재력 평가·시상 오버레이를 "이미 봤다"는 표시는 이름·나이·시즌 수로 구분해서, 같은 이름으로 새 커리어를 시작하면 18세 평가가 이전 커리어 것으로 잘못 처리돼 안 떴다(사용자 제보). 새 커리어마다 비운다.
   CR.scoutSeen=null; CR.bdSeen=null;
+  var pr=crPreset(); if(pr) Object.keys(CR_PRESET_KEYS).forEach(function(k){ if(pr[k]!=null) CR.S[k]=pr[k]; });   // 저장해 둔 1페이지 설정이 있으면 채워서 시작(리롤용)
   crPage1(); window.scrollTo(0,0);
+}
+// ── 1페이지 설정 저장(사용자 지정 — 리롤할 때마다 다시 입력하지 않게) ── 이 기기(localStorage)에만 둔다. 필수 항목을 다 채웠을 때만 저장할 수 있다.
+var CR_PRESET_LS='cr_preset_v1', CR_PRESET_KEYS={name:1, nation:1, foot:1, body:1, pos:1, num:1, dream:1, dreamNat:1};
+function crPreset(){ try{ var v=JSON.parse(localStorage.getItem(CR_PRESET_LS)||'null'); return v && typeof v==='object' ? v : null; }catch(e){ return null; } }
+function crPresetCur(){ var o={}; Object.keys(CR_PRESET_KEYS).forEach(function(k){ o[k]=CR.S[k]==null||CR.S[k]===''?null:CR.S[k]; }); o.name=String(o.name||'').trim(); return o; }
+function crPresetSame(){ var a=crPreset(), b=crPresetCur(); return !!a && Object.keys(CR_PRESET_KEYS).every(function(k){ return (a[k]==null?null:a[k])===(b[k]==null?null:b[k]); }); }
+function crPresetToggle(){
+  try{
+    if(crPresetSame()){   // "초기화"(사용자 지정): 저장한 설정을 지우고 입력칸도 비운다
+      localStorage.removeItem(CR_PRESET_LS); gameToast('설정을 초기화했어요');
+      Object.keys(CR_PRESET_KEYS).forEach(function(k){ CR.S[k]=k==='name'?'':null; }); CR.dd=null; crPage1(); return;
+    }
+    else { localStorage.setItem(CR_PRESET_LS, JSON.stringify(crPresetCur())); gameToast('저장했어요 · 새 커리어를 시작하면 자동으로 채워져요'); }
+  }catch(e){ gameToast('이 브라우저에선 저장할 수 없어요'); }
+  crDock1();
 }
 function crRandName(){
   var nm=CR.meta.names[CR.S.nation||'ENG'], pk=function(a){ return a[Math.floor(Math.random()*a.length)]; };
@@ -9226,7 +9245,7 @@ function crPage1(){
    +crBodyField()
    +'<div class="cr-fd"><div class="cr-lbl"><b>꿈의 구단</b><span>선택 · 가끔 이 구단에서 제안이 와요</span></div>'
    +'<div class="cr-dream">'+crNatDD('dream', S.dreamNat, '선택 안 함', 'crSetDreamNat')
-   +'<select aria-label="꿈의 구단" onchange="CR.S.dream=this.value||null"'+(S.dreamNat?'':' disabled')+'><option value="">'+(S.dreamNat?'구단 선택':'국가 먼저')+'</option>'
+   +'<select aria-label="꿈의 구단" onchange="CR.S.dream=this.value||null;crDock1()"'+(S.dreamNat?'':' disabled')+'><option value="">'+(S.dreamNat?'구단 선택':'국가 먼저')+'</option>'
    +dreamClubs.map(function(c){ return '<option'+(S.dream===c[0]?' selected':'')+' value="'+gmEsc(c[0])+'">'+gmEsc(c[0])+'</option>'; }).join('')+'</select></div></div>'
    +'</div>', ' ');
   crDock1();
@@ -9257,7 +9276,9 @@ function crDock1(){
   var S=CR.S, needBody=!!CR.meta.bodies, ok=S.name.trim() && S.nation && S.foot && (S.body||!needBody) && S.pos && S.num;   // 체형 정보가 없는 옛 meta면 표준으로 진행
   var miss=[!S.pos&&'포지션',!S.nation&&'국적',!S.name.trim()&&'이름',!S.foot&&'주발',!S.num&&'등번호',needBody&&!S.body&&'체형'].filter(Boolean);
   // 남은 항목은 버튼 글자로 알려 준다(옆에 요약 칸을 두지 않는다 — 사용자 지적)
-  crDock('<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage2()">'+(ok?'다음 · 선수 유형':({국적:'국적을 골라 주세요',이름:'이름을 입력해 주세요',주발:'주발을 골라 주세요',포지션:'포지션을 골라 주세요',등번호:'등번호를 입력해 주세요',체형:'체형을 골라 주세요'})[miss[0]])+'</button>');
+  var saved=ok && crPresetSame();
+  crDock('<button class="gm-btn ghost cr-preset'+(saved?' on':'')+'" '+(ok?'':'disabled ')+'onclick="crPresetToggle()" title="'+(saved?'저장한 설정을 지우고 입력칸 비우기':'지금 입력한 값을 이 기기에 저장')+'">'+(saved?'초기화':'설정 저장')+'</button>'
+    +'<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage2()">'+(ok?'다음 · 선수 유형':({국적:'국적을 골라 주세요',이름:'이름을 입력해 주세요',주발:'주발을 골라 주세요',포지션:'포지션을 골라 주세요',등번호:'등번호를 입력해 주세요',체형:'체형을 골라 주세요'})[miss[0]])+'</button>');
 }
 
 // ── 2페이지: 선수 유형 카드(시작 스탯은 카드로 자동) ───────────────────
