@@ -2024,6 +2024,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tr-say{background:#F0F2F7;color:#14161C;border-radius:16px 16px 16px 4px;padding:13px 16px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crIvUp .45s .45s ease-out both}
 .cr-tr-say .who{font-size:11.5px;font-weight:700;color:#15803d;margin-bottom:5px}
 .cr-tr-say .t{font-size:16px;font-weight:700;line-height:1.5;min-height:48px}
+.cr-tr-say .wf{margin-top:6px;padding-top:6px;border-top:1px solid #dde0e8;font-size:12.5px;font-weight:700;color:#5b6070}.cr-tr-say .wf .cr-stars{color:#b8860b}
 .cr-tr-say .cur{display:inline-block;width:2px;height:1em;background:#14161C;vertical-align:-2px;margin-left:1px;animation:crIvCur .7s steps(1) infinite}
 .cr-tr-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cr-tr-opts[hidden]{display:none}
 .cr-tr-o{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font:inherit;color:#F0F2F7;cursor:pointer;border-radius:16px;padding:16px 10px 14px;border:1.5px solid rgba(255,255,255,.14);background:rgba(18,26,22,.82);animation:crTrCard .5s cubic-bezier(.2,1.3,.4,1) both;animation-delay:var(--d);transition:border-color .15s,background .15s,transform .15s}
@@ -9424,6 +9425,8 @@ function crPrep(){
 // 선택지 두 장이 아래에서 올라온다. 인터뷰와 달리 효과(성장·출전·부상)는 보여 준다. 고른 카드의 k가 evPick.
 var CR_TR={
   coach:{tag:'PERSONAL TRAINER · 개인 트레이너', ic:'🏋️', who:'에이전트', say:'개인 트레이너를 한 명 붙여 보는 건 어때? 따로 몸을 만들면 확 달라질 거야. 대신 일정이 빡빡해져.', opt:['💪','🙅']},
+  // 약발 훈련(사용자 지정 — 이것도 오버레이로): 말은 주발에 맞춰, 아래에 지금 약발 별점
+  weak:{tag:'WEAK FOOT · 약발 훈련', ic:'🦶', who:'코치', say:function(p){ var w=p.foot==='오른발'?'왼':'오른'; return w+'발도 쓸 줄 알아야 진짜다. 이번 시즌은 '+w+'발 집중 훈련 어때? 대신 다른 훈련 시간은 좀 줄어.'; }, opt:['🎯','💪']},
   extra:{tag:'YOUTH TRAINING · 유스 특별 훈련', ic:'⚽', who:'유스 코치', say:'정규 훈련 끝나고 남아서 특별 훈련 해 볼래? 실력은 쑥쑥 늘겠지만 몸은 좀 힘들 거다.', opt:['🏃','🛌']}};
 function crTrFx(txt){   // "성장 ↑ · 부상 위험 ↑" → 좋은 쪽(초록)·나쁜 쪽(빨강) 칩. 부상 위험은 ↑가 나쁜 쪽
   return String(txt).split(/\s*·\s*/).map(function(x){
@@ -9432,11 +9435,11 @@ function crTrFx(txt){   // "성장 ↑ · 부상 위험 ↑" → 좋은 쪽(초�
     return '<span class="fx '+(bad?'bad':'good')+'">'+gmEsc(m[1])+' '+m[2]+'</span>'; }).join('');
 }
 function crTrShow(ev){
-  var T=CR_TR[ev.id]; CR.trSel=null; clearInterval(CR.trTimer);
+  var T=CR_TR[ev.id], SAY=typeof T.say==='function'?T.say(CR.v.player):(T.say||ev.d); CR.trSel=null; clearInterval(CR.trTimer);
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   crTovSet('<div class="cr-tr" role="dialog" aria-modal="true" aria-label="'+gmEsc(ev.t)+'"><div class="pitch" aria-hidden="true"><i></i><i></i><i></i></div>'
    +'<div class="cr-tr-box"><div class="ic" aria-hidden="true">'+T.ic+'</div><span class="tag">'+T.tag+'</span>'
-   +'<div class="cr-tr-say"><div class="who">'+gmEsc(T.who)+'</div><div class="t" id="crTrQ">'+(reduce?gmEsc(T.say||ev.d):'<span class="cur"></span>')+'</div></div>'
+   +'<div class="cr-tr-say"><div class="who">'+gmEsc(T.who)+'</div><div class="t" id="crTrQ">'+(reduce?gmEsc(SAY):'<span class="cur"></span>')+'</div>'+(ev.id==='weak'?'<div class="wf">지금 약발 '+crStars(CR.v.player.wf)+'</div>':'')+'</div>'
    +'<div class="cr-tr-opts" id="crTrA" hidden>'
    +ev.a.map(function(t,i){ var m=String(t).match(/^(.*?)\s*\((.*)\)$/);
       return '<button class="cr-tr-o" style="--d:'+(0.1+i*0.16)+'s" aria-pressed="false" onclick="crTrPick('+i+',this)"><span class="e" aria-hidden="true">'+T.opt[i]+'</span>'
@@ -9444,7 +9447,7 @@ function crTrShow(ev){
    +'</div></div></div>');
   var show=function(){ var el=document.getElementById('crTrA'); if(el) el.hidden=false; };
   if(reduce) return show();
-  var t=document.getElementById('crTrQ'), q=T.say||ev.d, k=0;
+  var t=document.getElementById('crTrQ'), q=SAY, k=0;
   setTimeout(function(){ CR.trTimer=setInterval(function(){
     if(!document.getElementById('crTrQ')) return clearInterval(CR.trTimer);
     k++; t.innerHTML=gmEsc(q.slice(0,k))+'<span class="cur"></span>'; if(k>=q.length){ clearInterval(CR.trTimer); show(); }
