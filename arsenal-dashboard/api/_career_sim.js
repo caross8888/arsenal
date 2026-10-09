@@ -321,17 +321,34 @@ export const EVENTS = [
   {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 있게 (명성 ↑↑ 또는 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:() => C.age>=17},
   {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:() => C.age>=17 && C.age<=22 && lvOf()>=2 && pStart(C.club) < LOAN_P},   // 지금 오버롤 기준 이번 시즌 선발 예상이 낮을 때만(사용자 지정 — 지난 시즌 기록 기준이면 그새 큰 선수에게도 떴다)
   {id:'weak', t:'약발 훈련', d:'', a:['약발 집중 훈련 (약발 ↑ · 성장 ↓)','주발 강점 살리기 (성장 ↑)'], ok:() => false},   // newEvent가 가끔 따로 띄운다
-  {id:'extra', t:'유스 특별 훈련', d:'유스 코치가 방과 후 특별 훈련을 제안했어요.', a:['참가한다 (성장 ↑ · 부상 위험 ↑)','쉬면서 회복 (부상 위험 ↓)'], ok:() => youth()}];
+  {id:'extra', t:'유스 특별 훈련', d:'유스 코치가 방과 후 특별 훈련을 제안했어요.', a:['참가한다 (성장 ↑ · 부상 위험 ↑)','쉬면서 회복 (부상 위험 ↓)'], ok:() => youth()},
+  // 추가 이벤트(사용자 지정 — 유스 훈련·개인 훈련만 너무 자주 떴다)
+  {id:'ftcall', t:'1군 훈련 초대', d:'1군 감독이 이번 시즌 1군 훈련에 합류하라고 했어요.', a:['합류한다 (성장 ↑ · 유스 출전 ↓)','유스에서 뛴다 (출전 ↑)'], ok:() => youth() && C.age>=16},
+  {id:'scout', t:'빅클럽 스카우트', d:'', a:['옮긴다 (아카데미 ↑ · 데뷔 문턱 ↑)','남는다 (출전 안정)'], ok:() => youth() && C.age<=17 && !!scoutTarget()},
+  {id:'captain', t:'부주장 제안', d:'감독이 부주장 완장을 맡아 달라고 해요.', a:['수락한다 (출전 ↑ · 명성 ↑ 또는 ↓)','사양한다 (성장 ↑)'], ok:() => !youth() && C.age>=23 && C.age<=32},
+  {id:'natcall', t:'A매치 차출', d:'대표팀 감독이 이번 A매치 기간 소집을 원해요. 구단은 휴식을 바라고 있어요.', a:['차출에 응한다 (명성 ↑ · 부상 위험 ↑)','휴식을 요청한다 (출전 ↑ · 대표 경기 ↓)'], ok:() => !youth() && (C.tot.caps||0) > 0},
+  {id:'sns', t:'SNS 논란', d:'경기 뒤 했던 말이 SNS에서 퍼지며 논란이 됐어요.', a:['사과한다 (명성 조금 ↓ · 감독 신뢰)','정면 돌파 (명성 ↑↑ 또는 ↓↓)'], ok:() => !youth() && C.age>=19},
+  {id:'diet', t:'식단·회복 전문가', d:'에이전트가 식단·회복 전문가를 붙이자고 해요.', a:['고용한다 (하락 ↓ · 부상 위험 ↓ · 출전 ↓)','하던 대로 (출전 유지)'], ok:() => C.age>=30}];
+// 빅클럽 스카우트: 지금 유스보다 아카데미가 좋고 수준이 5~14 높은 구단(자국 우선, 없으면 5대 리그)
+function scoutTarget(){
+  const up = c => c.n!==C.club.n && c.r>=C.club.r+5 && c.r<=C.club.r+14 && acadOf(c)>acadOf(C.club);
+  let cs = ALL.filter(c => c.nat===C.club.nat && up(c));
+  if(!cs.length) cs = ALL.filter(c => ['ENG','ESP','GER','ITA','FRA'].includes(c.nat) && up(c));
+  if(!cs.length) return null;
+  return cs[Math.floor(mulberry(C.seed ^ hashStr('scout-to|'+C.age))()*cs.length)];
+}
 const evById = id => EVENTS.find(e => e.id === id);
 
 function newEvent(){
-  const r = mulberry(C.seed ^ hashStr('ev'+C.age))(), pool = EVENTS.filter(e => e.ok());
+  // 지난 시즌과 같은 이벤트는 빼고 고른다(사용자 지정 — 같은 이벤트 연속이 단조로웠다). 후보가 그것뿐이면 그대로.
+  const r = mulberry(C.seed ^ hashStr('ev'+C.age))(), okAll = EVENTS.filter(e => e.ok()), noRep = okAll.filter(e => e.id !== C.lastEv), pool = noRep.length ? noRep : okAll;
   const loan = pool.find(e => e.id === 'loan');
   let ev = loan || pool[Math.floor(r*pool.length)];
   // 약발 훈련: 공격수·미드필더, 20세까지, 시즌당 30% 확률
   const r2 = mulberry(C.seed ^ hashStr('wf'+C.age))();
   if(!loan && (C.pos==='FW'||C.pos==='MF') && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');
-  C.ev = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null; delete C.loanClubs;
+  C.ev = ev.id; C.lastEv = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null; delete C.loanClubs; delete C.scoutClub;
+  if(ev.id === 'scout'){ const t = scoutTarget(); if(t) C.scoutClub = t; else C.ev = C.lastEv = 'extra'; }
   if(ev.id === 'loan'){
     // 임대 구단은 두 곳 중 고른다(사용자 지정): 후보를 수준순으로 반으로 나눠 위쪽(덜 뛰지만 수준 높은 팀)·아래쪽(많이 뛰는 팀)에서 하나씩
     const me = cRep(), inR = c => c.n!==C.club.n && c.r<=C.club.r-4 && c.r>=me+LOAN_R[0] && c.r<=me+LOAN_R[1];
@@ -475,6 +492,7 @@ export function prepView(state){
   if(ev.id === 'media' && (C.mediaN || C.age > 20)) d =   // "첫 인터뷰"는 어릴 때 처음 한 번만
     ['기자들이 이번 시즌 각오를 묻고 있어요.','스포츠 매체에서 단독 인터뷰를 요청했어요.','개막 전 기자회견에 나서게 됐어요.','팬 채널에서 인터뷰를 하고 싶대요.'][C.age % 4];
   if(ev.id === 'loan' && loanList().length > 1) d = '두 구단에서 한 시즌 임대 제안이 왔어요. 갈 곳을 고르거나, 남아서 경쟁할 수 있어요.';
+  if(ev.id === 'scout' && C.scoutClub) d = C.scoutClub.n+' 스카우트가 찾아왔어요. 아카데미로 옮기면 더 좋은 환경에서 크지만, 1군 데뷔 문턱도 높아요.';
   if(ev.id === 'weak') d = '코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. 양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요. 대신 이번 시즌 다른 훈련 시간이 줄어요.';
   let goal;
   const lv = lvOf();
@@ -495,6 +513,8 @@ function injRiskOf(){
   if(C.ev==='coach') r += k===0 ? EV_GROW.coachInj : -0.03;
   if(C.ev==='extra') r += k===0 ? EV_GROW.extraInj : -0.05;
   if(C.ev==='tour') r += k===0 ? 0.07 : -0.05;
+  if(C.ev==='natcall' && k===0) r += 0.04;
+  if(C.ev==='diet' && k===0) r -= 0.03;
   r -= C.injNext || 0;                                  // 지난 부상 때 완전히 회복했으면 −3%p
   if(C.injBoost && C.injBoost.n > 0) r += 0.08;         // 큰 부상을 보존 치료했으면 2시즌 +8%p
   if(C.glass) r += 0.04;                                // 유리몸
@@ -548,6 +568,13 @@ export function playSeason(state, choice){
     else growMul*=1.03;
   }
   if(ev==='tour' && pick===0) startAdj+=0.06;
+  if(ev==='ftcall'){ if(pick===0){ growMul*=1.12; startAdj-=0.08; notes.push('1군 형들과 훈련하며 한 단계 성장했어요.'); } else startAdj+=0.05; }
+  if(ev==='scout' && pick===0 && C.scoutClub){ const from = C.club.n; club = C.club = C.scoutClub; if(!C.clubs.includes(club.n)) C.clubs.push(club.n); delete C.scoutClub; growMul*=0.96; startAdj-=0.05; notes.push(from+'에서 '+club.n+' 아카데미로 옮겼어요. 적응하느라 첫 시즌은 조금 애먹었어요.'); }
+  if(ev==='scout' && pick===1) startAdj+=0.04;
+  if(ev==='captain'){ if(pick===0) startAdj+=0.05; else growMul*=1.04; }
+  if(ev==='natcall' && pick===1) startAdj+=0.05;
+  if(ev==='sns' && pick===0) startAdj+=0.02;
+  if(ev==='diet'){ if(pick===0){ declMul*=0.8; startAdj-=0.04; notes.push('식단·회복 관리 덕에 몸이 가벼워졌어요.'); } }
   if(ev==='media'){ C.ivSeen = [...(C.ivSeen||[]), interviewOf().id].slice(-16); C.mediaN = (C.mediaN||0) + 1; if(pick===1) startAdj+=0.03; }   // 겸손: 감독 신뢰. 자신감은 시즌 평점을 보고 아래에서 정산
 
   const lv = onLoan ? 3 : lvOf(), row0Youth = lv < 3, games = STAGE[lv].games;
@@ -713,6 +740,7 @@ export function playSeason(state, choice){
   let caps = 0, cg = 0, ca = 0, ccs = 0; const year = 2026+(C.age-15)+1;
   if(C.age>=18 && ov>=NAT_BAR[C.nation]-2){
     caps = Math.round(4+rng()*6);
+    if(ev==='natcall' && pick===1) caps = Math.max(1, Math.round(caps/2));   // 휴식 요청: 대표 경기 절반
     notes.push(natInfo(C.nation).n+' 대표팀에 뽑혔어요.');
     if(ov>=NAT_BAR[C.nation]+7 && rating>=7.0 && rng()<0.35) add(natInfo(C.nation).n+' 올해의 선수','C','nat');
     const wc = year%4===2, cont = year%4===0;
@@ -764,6 +792,9 @@ export function playSeason(state, choice){
   // 명성: 1군 활약 보너스, 매 시즌 0 쪽으로 1씩 줄어든다
   let fg = row0Youth ? 0 : (rating>=7.3?2:rating>=6.9?1:rating<6.3&&apps>5?-1:0)+fameAdd;
   if(ev==='media' && pick===0){ if(rating>=7.0){ fg+=2; notes.push('큰소리친 만큼 해내서 주목받았어요.'); } else { fg-=1; notes.push('인터뷰에서 한 말이 부메랑이 됐어요.'); } }
+  if(ev==='captain' && pick===0){ if(rating>=7.0){ fg+=1; notes.push('부주장 완장의 무게를 이겨냈어요.'); } else if(rating<6.6){ fg-=1; notes.push('부주장인데 부진하다는 비판을 받았어요.'); } }
+  if(ev==='natcall' && pick===0){ fg+=1; notes.push('대표팀 일정까지 소화하며 이름을 알렸어요.'); }
+  if(ev==='sns'){ if(pick===0){ fg-=1; notes.push('빠르게 사과해 논란이 가라앉았어요.'); } else if(rating>=7.0){ fg+=2; notes.push('경기력으로 논란을 잠재우고 오히려 인기를 얻었어요.'); } else { fg-=2; notes.push('부진까지 겹쳐 비판이 거세졌어요.'); } }
   C.fame = Math.max(-5, Math.min(12, C.fame-Math.sign(C.fame)+fg));
   // 1군 승격 때 등번호
   if(!C.num && !row0Youth){

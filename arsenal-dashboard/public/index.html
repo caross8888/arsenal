@@ -9427,15 +9427,22 @@ var CR_TR={
   coach:{tag:'PERSONAL TRAINER · 개인 트레이너', ic:'🏋️', who:'에이전트', say:'개인 트레이너를 한 명 붙여 보는 건 어때? 따로 몸을 만들면 확 달라질 거야. 대신 일정이 빡빡해져.', opt:['💪','🙅']},
   // 약발 훈련(사용자 지정 — 이것도 오버레이로): 말은 주발에 맞춰, 아래에 지금 약발 별점
   weak:{tag:'WEAK FOOT · 약발 훈련', ic:'🦶', who:'코치', say:function(p){ var w=p.foot==='오른발'?'왼':'오른'; return w+'발도 쓸 줄 알아야 진짜다. 이번 시즌은 '+w+'발 집중 훈련 어때? 대신 다른 훈련 시간은 좀 줄어.'; }, opt:['⚖️','✨']},
+  // 추가 이벤트(사용자 지정)
+  ftcall:{tag:'FIRST TEAM · 1군 훈련 초대', ic:'🏟️', who:'1군 감독', say:'이번 시즌엔 1군 훈련에 합류해라. 형들 틈에서 버티면 한 단계 클 거다. 대신 유스 경기는 덜 뛰게 될 거야.', opt:['📈','⚽']},
+  scout:{tag:'SCOUTED · 빅클럽 스카우트', ic:'🔭', who:'에이전트', say:function(p, ev){ return ev.d; }, opt:['✈️','🏠']},
+  captain:{tag:'VICE-CAPTAIN · 부주장 제안', ic:'🎖️', who:'감독', say:'라커룸에서 네 목소리가 필요하다. 부주장 완장을 맡아 줄 수 있겠나? 책임이 따르는 자리다.', opt:['🫡','🙇']},
+  natcall:{tag:'INTERNATIONAL · A매치 차출', ic:'🌍', who:'대표팀 감독', say:'이번 A매치 기간에 꼭 함께하자. 구단은 쉬길 바라는 것 같지만, 대표팀엔 네가 필요하다.', opt:['🛫','🛋️']},
+  sns:{tag:'CONTROVERSY · SNS 논란', ic:'📱', who:'구단 홍보팀', say:'경기 뒤 인터뷰 한 마디가 SNS에서 퍼지고 있어요. 어떻게 대응할까요?', opt:['🙏','🔥']},
+  diet:{tag:'RECOVERY · 식단·회복 전문가', ic:'🥗', who:'에이전트', say:'이제 몸 관리가 곧 실력이야. 식단·회복 전문가를 붙이면 오래 뛸 수 있어. 대신 훈련 강도는 좀 낮춰야 해.', opt:['🧘','🏃']},
   extra:{tag:'YOUTH TRAINING · 유스 특별 훈련', ic:'⚽', who:'유스 코치', say:'정규 훈련 끝나고 남아서 특별 훈련 해 볼래? 실력은 쑥쑥 늘겠지만 몸은 좀 힘들 거다.', opt:['🏃','🛌']}};
 function crTrFx(txt){   // "성장 ↑ · 부상 위험 ↑" → 좋은 쪽(초록)·나쁜 쪽(빨강) 칩. 부상 위험은 ↑가 나쁜 쪽
   return String(txt).split(/\s*·\s*/).map(function(x){
     var m=x.match(/^(.+?)\s*([↑↓]+)$/); if(!m) return '<span class="fx">'+gmEsc(x)+'</span>';
-    var bad=(/부상/.test(m[1]))===(m[2][0]==='↑');
+    var bad=(/부상|하락|문턱|부담/.test(m[1]))===(m[2][0]==='↑');   // 오르면 나쁜 것: 부상 위험·하락·데뷔 문턱
     return '<span class="fx '+(bad?'bad':'good')+'">'+gmEsc(m[1])+' '+m[2]+'</span>'; }).join('');
 }
 function crTrShow(ev){
-  var T=CR_TR[ev.id], SAY=typeof T.say==='function'?T.say(CR.v.player):(T.say||ev.d); CR.trSel=null; clearInterval(CR.trTimer);
+  var T=CR_TR[ev.id], SAY=typeof T.say==='function'?T.say(CR.v.player, ev):(T.say||ev.d); CR.trSel=null; clearInterval(CR.trTimer);
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   crTovSet('<div class="cr-tr" role="dialog" aria-modal="true" aria-label="'+gmEsc(ev.t)+'"><div class="pitch" aria-hidden="true"><i></i><i></i><i></i></div>'
    +'<div class="cr-tr-box"><div class="ic" aria-hidden="true">'+T.ic+'</div><span class="tag">'+T.tag+'</span>'
