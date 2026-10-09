@@ -9177,6 +9177,8 @@ var CR_POS=[{id:'FW',n:'공격수',d:'골과 찬스를 만든다'},{id:'MF',n:'�
 function crNew(){
   CR.S={step:1, name:'', nation:null, foot:null, body:null, pos:null, num:null, dream:null, dreamNat:null, card:null};
   CR.firstClubs=null; CR.firstPick=null; CR.tok=null; CR.train='균형';
+  // 잠재력 평가·시상 오버레이를 "이미 봤다"는 표시는 이름·나이·시즌 수로 구분해서, 같은 이름으로 새 커리어를 시작하면 18세 평가가 이전 커리어 것으로 잘못 처리돼 안 떴다(사용자 제보). 새 커리어마다 비운다.
+  CR.scoutSeen=null; CR.bdSeen=null;
   crPage1(); window.scrollTo(0,0);
 }
 function crRandName(){
@@ -9309,6 +9311,7 @@ function crPage3Render(){
 }
 function crJoin(btn){
   if(!crBusy(btn,'입단 중...')) return;
+  CR.scoutSeen=null; CR.bdSeen=null;
   crApi('join', {token:CR.tok, pick:CR.firstPick}).then(crWelcome).catch(crErr);
 }
 // ── 입단 인트로(사용자 지정 — 만들자마자 훈련 제안이 튀어나와 어색했다) ── 엠블럼 → 유니폼 뒷면(이름·등번호) → 선수 정보 칩 →
