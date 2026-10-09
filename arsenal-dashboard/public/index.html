@@ -1643,6 +1643,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* ── 커리어 모드(#games 안, api/career.js) — 목업 docs/career-mode/mockup.html을 옮긴 것.
    다른 화면과 클래스가 겹치지 않게 전부 cr- 접두어. 색은 테마 변수, 빨간 머리 카드·오버롤 타일만 고정색. */
 .cr{display:flex;flex-direction:column;gap:14px}
+/* 커리어 모드 화면·오버레이 글자는 선택되지 않게(사용자 지적 — 길게 누르면 선택돼 크롬 검색 창이 떴다). 입력칸은 그대로 */
+.cr,.cr-dock,#crTov{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.cr input,.cr textarea,.cr select{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 .cr-top{display:flex;align-items:center;justify-content:space-between}
 .cr-top .gm-back{align-self:center}
 .cr-steps{display:flex;gap:6px}
