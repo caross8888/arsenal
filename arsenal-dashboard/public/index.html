@@ -9416,7 +9416,8 @@ function crBack(){ return '<button class="gm-back" onclick="gameList()">← 게�
 // ── 시즌 준비 ──────────────────────────────────────────────────────────
 function crPrep(){
   var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lcs=pr.loanClubs||(pr.loanClub?[pr.loanClub]:[]), iv=pr.interview;   // 인터뷰는 이벤트 칸 없이 오버레이로
-  var tr=!iv && CR_TR[ev.id] ? ev : null;   // 개인 트레이너·유스 특별 훈련도 이벤트 칸 없이 오버레이로
+  // 인터뷰·임대(구단 카드) 말고는 모든 이벤트를 오버레이로 — CR_TR에 없는 이벤트도 기본 틀로 띄운다(새 이벤트를 넣고 문구를 깜빡해도 이벤트 칸으로 새지 않게)
+  var tr=!iv && !lcs.length && ev.id!=='loan' ? ev : null;
   // 성장이 멈춘 뒤엔 훈련 방향 대신 시즌 운영(몸 관리·균형·주전 경쟁) — 서버가 지금 고를 수 있는 것을 준다
   var topts=pr.trainOpts||['강점 강화','균형','약점 보완']; if(topts.indexOf(CR.train)<0) CR.train='균형';
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
@@ -9469,7 +9470,7 @@ function crTrFx(txt){   // "성장 ↑ · 부상 위험 ↑" → 좋은 쪽(초�
     return '<span class="fx '+(bad?'bad':'good')+'">'+gmEsc(m[1])+' '+m[2]+'</span>'; }).join('');
 }
 function crTrShow(ev){
-  var T=CR_TR[ev.id], SAY=typeof T.say==='function'?T.say(CR.v.player, ev):(T.say||ev.d); CR.trSel=null; clearInterval(CR.trTimer);
+  var T=CR_TR[ev.id]||{tag:'EVENT · '+ev.t, ic:'📋', who:'구단', say:ev.d, opt:['✅','⏸️']}, SAY=typeof T.say==='function'?T.say(CR.v.player, ev):(T.say||ev.d); CR.trSel=null; clearInterval(CR.trTimer);
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   crTovSet('<div class="cr-tr" role="dialog" aria-modal="true" aria-label="'+gmEsc(ev.t)+'"><div class="pitch" aria-hidden="true"><i></i><i></i><i></i></div>'
    +'<div class="cr-tr-box"><div class="ic" aria-hidden="true">'+T.ic+'</div><span class="tag">'+T.tag+'</span>'
