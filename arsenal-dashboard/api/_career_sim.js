@@ -315,9 +315,9 @@ function pStart(club, opt, lvAt){
 
 // ── 시즌 이벤트 ────────────────────────────────────────────────────────
 export const EVENTS = [
-  {id:'talk', t:'감독 면담', d:'출전 시간이 부족하다고 느껴요. 어떻게 할까요?', a:['출전 시간을 요구한다','훈련으로 증명한다'], ok:() => !youth()},
+  {id:'talk', t:'감독 면담', d:'출전 시간이 부족하다고 느껴요. 어떻게 할까요?', a:['출전 시간을 요구한다 (출전 ↑ 또는 ↓)','훈련으로 증명한다'], ok:() => !youth()},
   {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑ · 출전 ↓ · 부상 위험 ↑)','지금은 괜찮다 (부상 위험 ↓)'], ok:() => C.age<=27},   // 28세부터는 성장 폭이 거의 없어 어색하다(사용자 지적)
-  {id:'tour', t:'프리시즌 투어', d:'감독이 투어 전 경기 출전을 원해요. 컨디션이 걱정돼요.', a:['모두 뛴다 (눈도장)','컨디션 관리'], ok:() => !youth()},
+  {id:'tour', t:'프리시즌 투어', d:'감독이 투어 전 경기 출전을 원해요. 컨디션이 걱정돼요.', a:['모두 뛴다 (출전 ↑ · 부상 위험 ↑)','컨디션 관리 (부상 위험 ↓)'], ok:() => !youth()},
   {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 있게 (명성 ↑↑ 또는 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:() => C.age>=17},
   {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:() => C.age>=17 && C.age<=22 && lvOf()>=2 && pStart(C.club) < LOAN_P},   // 지금 오버롤 기준 이번 시즌 선발 예상이 낮을 때만(사용자 지정 — 지난 시즌 기록 기준이면 그새 큰 선수에게도 떴다)
   {id:'weak', t:'약발 훈련', d:'', a:['약발 집중 훈련 (약발 ↑ · 성장 ↓)','주발 강점 살리기 (성장 ↑)'], ok:() => false},   // newEvent가 가끔 따로 띄운다
@@ -506,7 +506,7 @@ export function prepView(state){
   else if(lv < 3) goal = C.club.r - cOvr() <= STAGE[3].up+4 ? '1군 데뷔 노리기' : lv===1 && C.club.r - cOvr() <= STAGE[2].up+3 ? 'U-21로 월반하기' : STAGE[lv].n+' 주전 자리 잡기';
   else goal = seniorGoal();
   let a = ev.a;
-  if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 완화)' : ' (감독 신뢰 ↑)')];
+  if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 ↓)' : ' (감독 신뢰 ↑)')];
   return {goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
     interview: ev.id === 'media' ? interviewOf() : null,
     loanClubs: C.ev==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
