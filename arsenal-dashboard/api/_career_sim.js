@@ -324,16 +324,22 @@ export const EVENTS = [
   {id:'extra', t:'유스 특별 훈련', d:'유스 코치가 방과 후 특별 훈련을 제안했어요.', a:['참가한다 (성장 ↑ · 부상 위험 ↑)','쉬면서 회복 (부상 위험 ↓)'], ok:() => youth()},
   // 추가 이벤트(사용자 지정 — 유스 훈련·개인 훈련만 너무 자주 떴다)
   {id:'ftcall', t:'1군 훈련 초대', d:'1군 감독이 이번 시즌 1군 훈련에 합류하라고 했어요.', a:['합류한다 (성장 ↑ · 유스 출전 ↓)','유스에서 뛴다 (출전 ↑)'], ok:() => youth() && C.age>=16},
-  {id:'scout', t:'빅클럽 스카우트', d:'', a:['옮긴다 (아카데미 ↑ · 데뷔 문턱 ↑)','남는다 (출전 안정)'], ok:() => youth() && C.age<=17 && !!scoutTarget()},
+  {id:'scout', t:'빅클럽 스카우트', d:'', a:['옮긴다 (아카데미 ↑ · 데뷔 문턱 ↑)','남는다 (출전 안정)'], ok:() => youth() && C.age<=17 && scoutRoll() && !!scoutTarget()},
   {id:'captain', t:'부주장 제안', d:'감독이 부주장 완장을 맡아 달라고 해요.', a:['수락한다 (출전 ↑ · 명성 ↑ 또는 ↓)','사양한다 (성장 ↑)'], ok:() => !youth() && C.age>=23 && C.age<=32},
   {id:'natcall', t:'A매치 차출', d:'대표팀 감독이 이번 A매치 기간 소집을 원해요. 구단은 휴식을 바라고 있어요.', a:['차출에 응한다 (명성 ↑ · 부상 위험 ↑)','휴식을 요청한다 (출전 ↑ · 대표 경기 ↓)'], ok:() => !youth() && (C.tot.caps||0) > 0},
   {id:'sns', t:'SNS 논란', d:'경기 뒤 했던 말이 SNS에서 퍼지며 논란이 됐어요.', a:['사과한다 (명성 조금 ↓ · 감독 신뢰)','정면 돌파 (명성 ↑↑ 또는 ↓↓)'], ok:() => !youth() && C.age>=19},
   {id:'diet', t:'식단·회복 전문가', d:'에이전트가 식단·회복 전문가를 붙이자고 해요.', a:['고용한다 (하락 ↓ · 부상 위험 ↓ · 출전 ↓)','하던 대로 (출전 유지)'], ok:() => C.age>=30}];
-// 빅클럽 스카우트: 지금 유스보다 아카데미가 좋고 수준이 5~14 높은 구단(자국 우선, 없으면 5대 리그)
+// 빅클럽 스카우트(사용자 지정): 지금 아카데미 ★이 낮을수록 자주 온다(★5면 안 온다). 데려가려는 곳은 대부분 ★+1, 25%만 ★+2.
+const SCOUT_P = {1:0.5, 2:0.38, 3:0.25, 4:0.12, 5:0};   // 시즌마다 스카우트가 후보에 들어올 확률
+const scoutRoll = () => mulberry(C.seed ^ hashStr('scout-p|'+C.age))() < (SCOUT_P[acadOf(C.club)] || 0);
 function scoutTarget(){
-  const up = c => c.n!==C.club.n && c.r>=C.club.r+5 && c.r<=C.club.r+14 && acadOf(c)>acadOf(C.club);
-  let cs = ALL.filter(c => c.nat===C.club.nat && up(c));
-  if(!cs.length) cs = ALL.filter(c => ['ENG','ESP','GER','ITA','FRA'].includes(c.nat) && up(c));
+  const a0 = acadOf(C.club); if(a0 >= 5) return null;
+  const want = Math.min(5, a0 + (a0 <= 3 && mulberry(C.seed ^ hashStr('scout-up|'+C.age))() < 0.25 ? 2 : 1));
+  const find = a => { const ok = c => c.n!==C.club.n && c.r>=C.club.r && acadOf(c)===a;
+    let cs = ALL.filter(c => c.nat===C.club.nat && ok(c));                                   // 자국 우선
+    if(!cs.length) cs = ALL.filter(c => ['ENG','ESP','GER','ITA','FRA'].includes(c.nat) && ok(c));   // 없으면 5대 리그
+    return cs; };
+  let cs = find(want); if(!cs.length && want > a0+1) cs = find(a0+1);   // ★+2 자리가 없으면 ★+1
   if(!cs.length) return null;
   return cs[Math.floor(mulberry(C.seed ^ hashStr('scout-to|'+C.age))()*cs.length)];
 }
