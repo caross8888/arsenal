@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>승부차기 목업</title>
+<style>
+:root{--gold:#C8A84B;--red:#EF0107;--text:#F0F2F7}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#050608;color:var(--text);font-family:-apple-system,"Noto Sans KR","Noto Sans CJK KR",sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.pk{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;overflow:hidden;
+  background:radial-gradient(90% 55% at 50% 0%,rgba(255,255,230,.10),transparent 70%),linear-gradient(180deg,#07130c 0%,#0c2a17 55%,#0f3a1f 100%)}
+.pk .beam{position:absolute;top:-10%;width:40%;height:70%;background:linear-gradient(180deg,rgba(255,255,240,.13),transparent 80%);filter:blur(6px);pointer-events:none}
+.pk .beam.l{left:-4%;transform:skewX(16deg)}.pk .beam.r{right:-4%;transform:skewX(-16deg)}
+.hd{margin-top:max(18px,env(safe-area-inset-top));display:flex;flex-direction:column;align-items:center;gap:6px;z-index:2}
+.tag{font-size:10.5px;font-weight:800;letter-spacing:.8px;color:#3a2a06;background:var(--gold);border-radius:999px;padding:3px 10px}
+.title{font-size:17px;font-weight:800}
+.sub{font-size:12.5px;color:rgba(255,255,255,.7)}
+.score{display:flex;gap:10px;align-items:center;font-size:12px;color:rgba(255,255,255,.75)}
+.score i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.18);display:inline-block}
+.score i.o{background:#22C55E}.score i.x{background:#EF4444}.score i.me{outline:2px solid var(--gold);outline-offset:1px}
+.field{position:relative;width:min(100%,430px);flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+svg.goal{width:100%;height:100%;max-height:420px;overflow:visible}
+.zone{fill:rgba(255,255,255,0);stroke:none;transition:fill .12s}
+.zone.on{fill:rgba(200,168,75,.18)}
+.aim{transition:transform .14s cubic-bezier(.2,1.3,.4,1)}
+.keeper{transition:transform .38s cubic-bezier(.2,.9,.3,1)}
+.ball{transform-box:fill-box;transform-origin:center;transition:transform .42s cubic-bezier(.15,.8,.3,1)}
+.result{position:absolute;left:0;right:0;top:56%;text-align:center;font-weight:900;font-size:58px;letter-spacing:2px;opacity:0;pointer-events:none;text-shadow:0 4px 0 rgba(0,0,0,.35)}
+.result.on{animation:pop .9s ease-out both}
+.result.g{color:#FFE38A;text-shadow:0 0 24px rgba(255,200,80,.6),0 4px 0 rgba(0,0,0,.35)}.result.s{color:#93C5FD}.result.m{color:#FCA5A5}
+.result small{display:block;font-size:14px;font-weight:700;letter-spacing:0;color:rgba(255,255,255,.85);margin-top:4px}
+@keyframes pop{0%{opacity:0;transform:scale(.5)}30%{opacity:1;transform:scale(1.1)}60%{transform:scale(1)}100%{opacity:1}}
+.meter{width:min(86%,360px);margin:6px auto 0;z-index:2}
+.meter .lbl{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.6);margin-bottom:5px}
+.meter .bar{position:relative;height:14px;border-radius:8px;background:rgba(255,255,255,.12);overflow:hidden}
+.meter .sweet{position:absolute;top:0;bottom:0;background:rgba(34,197,94,.32);border-left:2px solid rgba(34,197,94,.8);border-right:2px solid rgba(34,197,94,.8)}
+.meter .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#FFE38A,#F59E0B 70%,#EF4444)}
+.meter .tick{position:absolute;top:-3px;bottom:-3px;width:3px;background:#fff;border-radius:2px;left:0;box-shadow:0 0 6px #fff}
+.ctrl{width:min(100%,430px);display:flex;justify-content:space-between;align-items:center;padding:14px 22px calc(18px + env(safe-area-inset-bottom));z-index:2}
+.dpad{position:relative;width:132px;height:132px}
+.dpad button{position:absolute;width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-size:18px;cursor:pointer}
+.dpad button:active{background:rgba(200,168,75,.35)}
+.dpad .u{left:44px;top:0}.dpad .d{left:44px;bottom:0}.dpad .l{left:0;top:44px}.dpad .r{right:0;top:44px}
+.dpad .c{left:44px;top:44px;border:0;background:none;font-size:11px;color:rgba(255,255,255,.5);pointer-events:none;display:grid;place-items:center}
+.shoot{width:104px;height:104px;border-radius:50%;border:0;color:#fff;font-weight:900;font-size:16px;cursor:pointer;
+  background:radial-gradient(circle at 35% 30%,#ff4d52,#b50004);box-shadow:0 8px 0 #6b0003,0 14px 24px rgba(0,0,0,.45);touch-action:none}
+.shoot.held{transform:translateY(5px);box-shadow:0 3px 0 #6b0003,0 6px 14px rgba(0,0,0,.45)}
+.shoot small{display:block;font-size:10.5px;font-weight:600;opacity:.8}
+.help{font-size:11.5px;color:rgba(255,255,255,.55);text-align:center;margin-top:2px}
+.again{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);border:0;border-radius:12px;padding:10px 18px;font-weight:800;background:var(--gold);color:#2a1e04;display:none;z-index:3}
+.again.on{display:block}
+</style></head>
+<body>
+<div class="pk" id="pk">
+  <i class="beam l"></i><i class="beam r"></i>
+  <div class="hd">
+    <span class="tag">PENALTY SHOOTOUT · 승부차기</span>
+    <div class="title">챔피언스리그 8강 · 2차전</div>
+    <div class="sub">아스날 vs 레알 마드리드 · 연장 끝 1 : 1</div>
+    <div class="score"><span>아스날</span><i class="o"></i><i class="o"></i><i class="x"></i><i class="o"></i><i class="me"></i><span>· 5번 키커</span></div>
+  </div>
+  <div class="field">
+    <svg class="goal" viewBox="0 0 320 290" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <!-- 잔디·페널티 라인 -->
+      <path d="M-60 150 L380 150 L420 290 L-100 290 Z" fill="#14502a"/>
+      <path d="M70 150 L250 150 L270 196 L50 196 Z" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>
+      <path d="M-40 150 L360 150" stroke="rgba(255,255,255,.55)" stroke-width="2"/>
+      <ellipse cx="160" cy="222" rx="3.5" ry="2" fill="#fff"/>
+      <!-- 골망 -->
+      <g stroke="rgba(255,255,255,.18)" stroke-width="1">
+        <path d="M40 30 L280 30 L280 150 L40 150 Z" fill="rgba(0,0,0,.25)"/>
+        <path id="net"/>
+      </g>
+      <!-- 조준 칸(3×2) -->
+      <g id="zones"></g>
+      <!-- 골대 -->
+      <path d="M40 150 L40 30 L280 30 L280 150" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>
+      <!-- 골키퍼 -->
+      <g class="keeper" id="keeper">
+        <g transform="translate(160 150)">
+          <rect x="-11" y="-44" width="22" height="30" rx="8" fill="#F59E0B"/>
+          <rect x="-9" y="-15" width="7" height="15" rx="3" fill="#111"/><rect x="2" y="-15" width="7" height="15" rx="3" fill="#111"/>
+          <path d="M-11 -40 L-26 -58 M11 -40 L26 -58" stroke="#F59E0B" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="-27" cy="-60" r="5" fill="#22C55E"/><circle cx="27" cy="-60" r="5" fill="#22C55E"/>
+          <circle cx="0" cy="-53" r="9" fill="#e9c7a3"/>
+        </g>
+      </g>
+      <!-- 조준점 -->
+      <g class="aim" id="aim"><circle r="14" fill="none" stroke="#FFE38A" stroke-width="2.5"/><path d="M-20 0h8M12 0h8M0 -20v8M0 12v8" stroke="#FFE38A" stroke-width="2.5"/></g>
+      <!-- 공 -->
+      <g class="ball" id="ball"><g transform="translate(160 222)"><circle r="9" fill="#fff" stroke="#111" stroke-width="1"/><path d="M0 -4 l3.8 2.8 -1.5 4.4h-4.6l-1.5-4.4z" fill="#111"/></g></g>
+    </svg>
+    <div class="result" id="res"></div>
+    <button class="again" id="again" onclick="reset()">다시 차 보기</button>
+  </div>
+  <div class="meter">
+    <div class="lbl"><span>약하게</span><span id="mtxt">슈팅 키를 누르고 있다가 떼세요</span><span>세게</span></div>
+    <div class="bar"><i class="sweet" id="sweet"></i><i class="fill" id="fill"></i><i class="tick" id="tick"></i></div>
+  </div>
+  <div class="ctrl">
+    <div class="dpad">
+      <button class="u" onclick="mv(0,-1)" aria-label="위">▲</button>
+      <button class="l" onclick="mv(-1,0)" aria-label="왼쪽">◀</button>
+      <span class="c">조준</span>
+      <button class="r" onclick="mv(1,0)" aria-label="오른쪽">▶</button>
+      <button class="d" onclick="mv(0,1)" aria-label="아래">▼</button>
+    </div>
+    <button class="shoot" id="shoot">SHOOT<small>누르고 떼기</small></button>
+  </div>
+  <div class="help">PC: 방향키로 조준 · 스페이스를 누르고 있다 떼기</div>
+</div>
+<script>
+// ── 목업: 3×2 조준 · 누르고 있으면 강도 게이지가 오르내림 · 떼면 슈팅 ──
+// 적정 구간: 아래쪽 55~82, 위쪽 60~78(좁음). 너무 세면 빗나감, 너무 약하면 골키퍼 선방, 적정이면 28% 선방.
+var COLS=[90,160,230], ROWS=[62,118], SWEET={0:[60,78],1:[55,82]};
+var st={c:1,r:1,p:0,dir:1,hold:false,done:false,raf:null,last:0};
+var zg=document.getElementById('zones'), net=document.getElementById('net');
+var nd=''; for(var x=40;x<=280;x+=16) nd+='M'+x+' 30 L'+x+' 150 '; for(var y=30;y<=150;y+=12) nd+='M40 '+y+' L280 '+y+' '; net.setAttribute('d',nd);
+var zh=''; for(var r=0;r<2;r++) for(var c=0;c<3;c++) zh+='<rect class="zone" data-c="'+c+'" data-r="'+r+'" x="'+(43+c*78)+'" y="'+(33+r*58)+'" width="76" height="'+(r?56:56)+'" rx="4"/>';
+zg.innerHTML=zh;
+function draw(){
+  document.getElementById('aim').style.transform='translate('+COLS[st.c]+'px,'+ROWS[st.r]+'px)';
+  document.querySelectorAll('.zone').forEach(function(z){ z.classList.toggle('on', +z.dataset.c===st.c && +z.dataset.r===st.r); });
+  var s=SWEET[st.r], sw=document.getElementById('sweet'); sw.style.left=s[0]+'%'; sw.style.width=(s[1]-s[0])+'%';
+}
+function mv(dc,dr){ if(st.done||st.hold) return; st.c=Math.max(0,Math.min(2,st.c+dc)); st.r=Math.max(0,Math.min(1,st.r+dr)); draw(); }
+function loop(ts){
+  if(!st.hold) return; var dt=st.last?ts-st.last:16; st.last=ts;
+  st.p+=st.dir*dt/9; if(st.p>=100){ st.p=100; st.dir=-1; } if(st.p<=0){ st.p=0; st.dir=1; }   // 한 번 오르는 데 약 0.9초, 꼭대기에서 다시 내려온다
+  document.getElementById('fill').style.width=st.p+'%'; document.getElementById('tick').style.left='calc('+st.p+'% - 1.5px)';
+  st.raf=requestAnimationFrame(loop);
+}
+function press(){ if(st.done||st.hold) return; st.hold=true; st.p=0; st.dir=1; st.last=0; document.getElementById('shoot').classList.add('held'); document.getElementById('mtxt').textContent='떼면 슈팅!'; st.raf=requestAnimationFrame(loop); }
+function release(){ if(!st.hold) return; st.hold=false; cancelAnimationFrame(st.raf); document.getElementById('shoot').classList.remove('held'); shoot(); }
+function shoot(){
+  st.done=true;
+  var s=SWEET[st.r], p=st.p, tx=COLS[st.c], ty=ROWS[st.r], out, kc;   // kc: 골키퍼가 뛰는 칸(0 왼 · 1 가만히 · 2 오른)
+  if(p>s[1]){ out='m'; kc=Math.random()<.5?(st.c===1?(Math.random()<.5?0:2):2-st.c):1;
+    // 빗나감: 위쪽이면 크로스바 위로, 옆이면 골대 밖으로
+    if(st.r===0 || st.c===1) ty=-6-Math.random()*16; else tx=st.c===0?16:304; }
+  else if(p<s[0]){ out='s'; kc=st.c; }
+  else if(Math.random()<.28){ out='s'; kc=st.c; }
+  else { out='g'; kc=st.c===1?(Math.random()<.5?0:2):(Math.random()<.5?1:2-st.c); }
+  var kx={0:-62,1:0,2:62}[kc], rot={0:-62,1:0,2:62}[kc], ky=kc===1?0:(st.r===0?-18:6);
+  var ball=document.getElementById('ball'), kp=document.getElementById('keeper');
+  if(out==='s'){ tx=160+kx*.9; ty=ROWS[st.r]+6; }   // 선방: 공이 골키퍼 손에 걸린다
+  setTimeout(function(){ kp.style.transform='translate('+kx+'px,'+ky+'px) rotate('+rot+'deg)'; kp.style.transformOrigin='160px 140px'; }, 90);
+  ball.style.transform='translate('+(tx-160)+'px,'+(ty-222)+'px) scale(.62)';
+  setTimeout(function(){
+    var el=document.getElementById('res');
+    el.className='result '+out; el.innerHTML=({g:'GOAL!',s:'SAVED',m:'MISS'})[out]+'<small>'+({g:'승부차기 성공 · 팬들이 열광해요',s:p<s[0]?'너무 약했어요 · 골키퍼 선방':'방향을 읽혔어요 · 골키퍼 선방',m:'너무 셌어요 · '+(ty<30?'크로스바 위로':'골대 밖으로')})[out]+'</small>';
+    void el.offsetWidth; el.classList.add('on');
+    var me=document.querySelector('.score i.me'); me.className=out==='g'?'o':'x';
+    document.getElementById('mtxt').textContent='강도 '+Math.round(p)+' · 적정 '+s[0]+'~'+s[1];
+    document.getElementById('again').classList.add('on');
+  }, 460);
+}
+function reset(){
+  st.done=false; st.p=0; document.getElementById('fill').style.width='0'; document.getElementById('tick').style.left='0';
+  document.getElementById('ball').style.transform=''; document.getElementById('keeper').style.transform='';
+  document.getElementById('res').className='result'; document.getElementById('again').classList.remove('on');
+  var sc=document.querySelectorAll('.score i'); sc[sc.length-1].className='me';
+  document.getElementById('mtxt').textContent='슈팅 키를 누르고 있다가 떼세요';
+}
+var sb=document.getElementById('shoot');
+sb.addEventListener('pointerdown', function(e){ e.preventDefault(); press(); });
+window.addEventListener('pointerup', release); window.addEventListener('pointercancel', release);
+window.addEventListener('keydown', function(e){
+  if(e.repeat) return;
+  if(e.key==='ArrowLeft') mv(-1,0); else if(e.key==='ArrowRight') mv(1,0); else if(e.key==='ArrowUp') mv(0,-1); else if(e.key==='ArrowDown') mv(0,1);
+  else if(e.key===' '){ e.preventDefault(); press(); }
+});
+window.addEventListener('keyup', function(e){ if(e.key===' ') release(); });
+draw();
+</script>
+</body></html>
