@@ -1927,6 +1927,24 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-sf-end>div{border-radius:14px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);text-align:center}
 .cr-sf-end>div>span{display:block;font-size:11.5px;color:rgba(255,255,255,.6)}.cr-sf-end>div>b{font-family:var(--fd);font-size:28px;font-weight:400;color:#FFE38A}
 .cr-sf-end .cr-iv-go{grid-column:1/-1;animation:none}
+.cr-wl{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;cursor:pointer;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(60,8,12,.94),rgba(5,6,10,.96) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both;transition:opacity .25s}
+.cr-wl.out{opacity:0}
+.cr-wl-box{position:relative;width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:10px;margin:auto 0;color:#F0F2F7;text-align:center}
+.cr-wl .tag{font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .05s ease-out both}
+.cr-wl .crest{filter:drop-shadow(0 0 22px rgba(255,215,120,.35));animation:crTmNew .7s .15s cubic-bezier(.2,1.6,.4,1) both}
+.cr-wl .team{font-size:17px;font-weight:800;animation:crIvUp .4s .45s ease-out both}
+.cr-wl .shirt{width:150px;perspective:600px;animation:crWlShirt .8s .6s cubic-bezier(.2,1.2,.4,1) both;filter:drop-shadow(0 12px 24px rgba(0,0,0,.5))}
+.cr-wl .shirt svg{display:block;width:100%;height:auto}
+@keyframes crWlShirt{from{opacity:0;transform:rotateY(90deg) scale(.8)}to{opacity:1;transform:none}}
+.cr-wl .chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;animation:crIvUp .4s 1s ease-out both}
+.cr-wl .chips span{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:rgba(255,255,255,.1)}
+.cr-wl .say{width:100%;text-align:left;background:#F0F2F7;color:#14161C;border-radius:16px 16px 16px 4px;padding:10px 14px 11px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crIvUp .4s 1.15s ease-out both}
+.cr-wl .say .who{font-size:11px;font-weight:700;color:#b50004;margin-bottom:3px}.cr-wl .say .t{font-size:14.5px;font-weight:700;line-height:1.45;min-height:42px}
+.cr-wl .cr-sf-feed{width:100%;height:108px;text-align:left}
+.cr-wl .go{width:100%}.cr-wl .go i{display:block;height:3px;border-radius:2px;background:#C8A84B;transform-origin:left;animation:crSfGo linear both}
+.cr-wl .go span{display:block;margin-top:6px;font-size:11.5px;color:rgba(255,255,255,.6)}
+@media (prefers-reduced-motion: reduce){.cr-wl,.cr-wl *{animation:none!important}}
 .cr-sf-feed{display:flex;flex-direction:column;gap:6px;height:112px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 62%,transparent);mask-image:linear-gradient(180deg,#000 62%,transparent)}
 .cr-sf-feed.mini{height:54px;-webkit-mask-image:none;mask-image:none}
 .cr-sf-feed.gone{display:none}
@@ -9266,7 +9284,48 @@ function crPage3Render(){
 }
 function crJoin(btn){
   if(!crBusy(btn,'입단 중...')) return;
-  crApi('join', {token:CR.tok, pick:CR.firstPick}).then(crShow).catch(crErr);
+  crApi('join', {token:CR.tok, pick:CR.firstPick}).then(crWelcome).catch(crErr);
+}
+// ── 입단 인트로(사용자 지정 — 만들자마자 훈련 제안이 튀어나와 어색했다) ── 엠블럼 → 유니폼 뒷면(이름·등번호) → 선수 정보 칩 →
+// 유스 코치 한마디(타자) → 팬 반응 3개(12개 중 무작위). 약 4.2초 뒤 저절로 첫 시즌 준비로, 누르면 바로. 이벤트 오버레이는 그 다음에 뜬다(crShow → crPrep).
+var CR_WL_COACH=['우리 아카데미에 온 걸 환영한다. 3년 뒤엔 1군 무대에서 보자.','재능은 확인했어. 이제 증명할 차례다.','여기선 누구도 거저 주지 않는다. 매일 증명해라.','네 이름이 이 유니폼 등에 오래 남길 바란다.','첫날부터 기대가 크다. 겁먹지 말고 네 축구를 해.'];
+var CR_WL_FAN=['새 유망주 왔다는데?','{n} 누구야? 기대된다','유스에 {nat} 출신 들어왔대','등번호 {num}번 ㄷㄷ 벌써 찜','{club} 아카데미 보는 눈 있네','스카우트 리포트 보니까 물건이던데','10년 뒤 레전드 예약','유스 경기 직관 가야겠다','{card} 유형이래 딱 우리 스타일','부디 다치지 말고 쑥쑥 크길','벌써 유니폼 마킹 각','이 친구 하이라이트 영상 있음?'];
+function crWelcome(v){
+  if(!v || v.phase!=='prep') return crShow(v);
+  CR.wl={v:v}; CR.v=v; CR.tok=v.token; crStore(v);   // 인트로 중에 나가도 이어 하기가 되게
+  var p=v.player, card=((CR.meta.cards[p.pos]||[])[p.card]||{}).n||'', club=p.club.n.replace(/ U-\d+$/,''), reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var say=CR_WL_COACH[Math.floor(Math.random()*CR_WL_COACH.length)], wait=reduce?1800:4200;
+  var shirt='<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="crWlG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EF0107"/><stop offset="1" stop-color="#9b0005"/></linearGradient></defs>'
+    +'<path d="M30 10 L50 4 Q60 12 70 4 L90 10 L114 32 L100 46 L92 40 L92 116 L28 116 L28 40 L20 46 L6 32 Z" fill="url(#crWlG)" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>'
+    +'<text x="60" y="44" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" letter-spacing="1">'+gmEsc(p.name)+'</text>'
+    +'<text x="60" y="94" text-anchor="middle" font-size="44" fill="#fff" style="font-family:var(--fd)">'+(p.num||p.want||'')+'</text></svg>';
+  crTovSet('<div class="cr-wl" role="dialog" aria-modal="true" aria-label="입단" onclick="crWelcomeGo()"><div class="cr-wl-box">'
+    +'<span class="tag">WELCOME TO THE ACADEMY</span>'
+    +'<div class="crest">'+crCrest(p.club,72)+'</div><div class="team">'+gmEsc(p.club.team)+'</div>'
+    +'<div class="shirt">'+shirt+'</div>'
+    +'<div class="chips"><span>'+crFlag(p.nation)+crNat(p.nation).n+'</span><span>'+gmEsc(card)+'</span><span>'+gmEsc(p.body||'표준')+'</span><span>'+p.age+'세</span></div>'
+    +'<div class="say"><div class="who">유스 코치</div><div class="t" id="crWlSay">'+(reduce?gmEsc(say):'')+'</div></div>'
+    +'<div class="cr-sf-feed" id="crWlFeed"></div>'
+    +'<div class="go"><i style="animation-duration:'+wait+'ms"></i><span>첫 시즌으로 넘어가요 · 누르면 바로</span></div></div></div>');
+  var W=CR.wl;
+  if(!reduce){ var t=document.getElementById('crWlSay'), k=0; setTimeout(function(){ W.ti=setInterval(function(){ if(CR.wl!==W || !t) return clearInterval(W.ti); k++; t.textContent=say.slice(0,k); if(k>=say.length) clearInterval(W.ti); }, 32); }, 1300); }
+  // 팬 반응: 12개 중 3개를 섞어 차례로
+  var pool=CR_WL_FAN.slice().sort(function(){ return Math.random()-0.5; }).slice(0,3);
+  pool.forEach(function(f,i){ setTimeout(function(){
+    if(CR.wl!==W) return; var box=document.getElementById('crWlFeed'); if(!box) return;
+    if(/\{nat\}/.test(f) && p.nation===p.club.nat) f='동네에서 소문난 유망주래';   // 자국 구단이면 "○○ 출신"이 어색하다
+    var txt=f.replace(/\{n\}/g,p.name).replace(/\{nat\}/g,crNat(p.nation).n).replace(/\{num\}/g,p.num||p.want||'').replace(/\{club\}/g,club).replace(/\{card\}/g,card);
+    var id=CR_FAN_ID[Math.floor(Math.random()*CR_FAN_ID.length)], el=document.createElement('div'); el.className='cr-sf-post';
+    el.innerHTML='<i style="background:hsl('+Math.floor(Math.random()*360)+',55%,45%)">'+gmEsc(id.slice(0,1).toUpperCase())+'</i><div><b>@'+gmEsc(id)+'</b><span>'+gmEsc(txt)+'</span></div><em>♥ '+(1+Math.floor(Math.random()*300))+'</em>';
+    box.insertBefore(el, box.firstChild); while(box.children.length>2) box.removeChild(box.lastChild);
+  }, reduce?0:1700+i*800); });
+  W.t=setTimeout(crWelcomeGo, wait);
+}
+function crWelcomeGo(){
+  var W=CR.wl; if(!W) return; CR.wl=null; clearTimeout(W.t); clearInterval(W.ti);
+  var o=document.querySelector('#crTov .cr-wl'); if(!o){ CR.busy=false; return; }   // 그새 다른 화면으로 나갔다(이어 하기로 돌아오면 준비 화면부터)
+  o.classList.add('out');
+  setTimeout(function(){ crShow(W.v); window.scrollTo(0,0); }, 260);   // crShow가 오버레이를 닫고 첫 시즌 준비(이벤트 오버레이는 그 다음)
 }
 
 // ── 서버 응답 → 화면 ──────────────────────────────────────────────────
