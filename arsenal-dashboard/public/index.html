@@ -9426,7 +9426,7 @@ function crPrep(){
 var CR_TR={
   coach:{tag:'PERSONAL TRAINER · 개인 트레이너', ic:'🏋️', who:'에이전트', say:'개인 트레이너를 한 명 붙여 보는 건 어때? 따로 몸을 만들면 확 달라질 거야. 대신 일정이 빡빡해져.', opt:['💪','🙅']},
   // 약발 훈련(사용자 지정 — 이것도 오버레이로): 말은 주발에 맞춰, 아래에 지금 약발 별점
-  weak:{tag:'WEAK FOOT · 약발 훈련', ic:'🦶', who:'코치', say:function(p){ var w=p.foot==='오른발'?'왼':'오른'; return w+'발도 쓸 줄 알아야 진짜다. 이번 시즌은 '+w+'발 집중 훈련 어때? 대신 다른 훈련 시간은 좀 줄어.'; }, opt:['⚖️','💪']},
+  weak:{tag:'WEAK FOOT · 약발 훈련', ic:'🦶', who:'코치', say:function(p){ var w=p.foot==='오른발'?'왼':'오른'; return w+'발도 쓸 줄 알아야 진짜다. 이번 시즌은 '+w+'발 집중 훈련 어때? 대신 다른 훈련 시간은 좀 줄어.'; }, opt:['⚖️','✨']},
   extra:{tag:'YOUTH TRAINING · 유스 특별 훈련', ic:'⚽', who:'유스 코치', say:'정규 훈련 끝나고 남아서 특별 훈련 해 볼래? 실력은 쑥쑥 늘겠지만 몸은 좀 힘들 거다.', opt:['🏃','🛌']}};
 function crTrFx(txt){   // "성장 ↑ · 부상 위험 ↑" → 좋은 쪽(초록)·나쁜 쪽(빨강) 칩. 부상 위험은 ↑가 나쁜 쪽
   return String(txt).split(/\s*·\s*/).map(function(x){
