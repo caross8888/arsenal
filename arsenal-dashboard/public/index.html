@@ -2119,6 +2119,37 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--gc) 26%,transparent) 0 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 60%);mask:radial-gradient(circle,#000 0,transparent 60%);
   animation:crScRay 1.2s 1.05s ease-out forwards, crScSpin 30s 1.05s linear infinite}
 @keyframes crScRay{to{opacity:1}}@keyframes crScSpin{to{transform:rotate(360deg)}}
+.cr-pro{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(6,8,12,.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);transition:opacity .28s;overflow-y:auto}
+.cr-pro.out{opacity:0}
+.cr-pro-doc{position:relative;width:100%;max-width:400px;background:#F5F1E6;color:#1d1b16;border-radius:10px;padding:18px 18px 16px;box-shadow:0 22px 60px rgba(0,0,0,.55);animation:crIvUp .45s ease-out both;
+  background-image:repeating-linear-gradient(0deg,transparent 0 27px,rgba(0,0,0,.025) 27px 28px)}
+.cr-pro-doc .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px solid #1d1b16;padding-bottom:9px;font-size:11px;letter-spacing:1.4px;color:#6b6250}
+.cr-pro-doc .hd b{font-size:14px;letter-spacing:0;color:#1d1b16}
+.cr-pro-doc .club{display:flex;align-items:center;gap:12px;margin:14px 0 10px}
+.cr-pro-doc .club b{display:block;font-size:18px;font-weight:800}.cr-pro-doc .club small{font-size:12px;color:#5a5446}
+.cr-pro-doc dl{margin:0;border-top:1px dashed rgba(0,0,0,.2);border-bottom:1px dashed rgba(0,0,0,.2);padding:6px 0}
+.cr-pro-doc dl>div{display:grid;grid-template-columns:62px 1fr;align-items:baseline;gap:8px;padding:4px 0}
+.cr-pro-doc dt{font-size:12px;color:#6b6250}.cr-pro-doc dd{margin:0;font-size:14.5px;font-weight:700}
+.cr-pro-doc dd small{display:block;font-size:11.5px;font-weight:400;color:#6b6250;margin-top:2px}.cr-pro-doc dd .num{font-family:var(--fd);font-size:24px;font-weight:400;color:#B8892A}
+.cr-pro-doc .txt{font-size:12.5px;line-height:1.55;color:#3d382c;margin:10px 0}
+.cr-pro-doc .sig{position:relative;height:118px;border-radius:8px;background:rgba(255,255,255,.55);border:1.5px dashed rgba(31,42,99,.35);margin-bottom:8px}
+.cr-pro-doc .sig canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.cr-pro-doc .sig .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:rgba(31,42,99,.4);pointer-events:none;transition:opacity .2s}
+.cr-pro-doc .sig.on .ph{opacity:0}
+.cr-pro-doc .sig .ln{position:absolute;left:14px;right:14px;bottom:26px;height:1px;background:rgba(0,0,0,.35);pointer-events:none}
+.cr-pro-doc .sig small{position:absolute;left:14px;bottom:7px;font-size:11px;color:#6b6250;pointer-events:none}
+.cr-pro-doc .sig .stamp{position:absolute;right:12px;top:10px;border:3px solid #C8102E;color:#C8102E;border-radius:8px;padding:2px 10px;font-family:var(--fd);font-size:26px;letter-spacing:2px;transform:rotate(-12deg) scale(2.2);opacity:0;pointer-events:none}
+.cr-pro.signed .sig .stamp{animation:crProStamp .35s cubic-bezier(.3,1.4,.5,1) forwards}
+@keyframes crProStamp{to{transform:rotate(-12deg) scale(1);opacity:.85}}
+.cr-pro-doc .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.cr-pro-doc .btns .gm-btn{margin:0;padding:10px;font-size:13.5px}
+.cr-pro-doc .cr-iv-go{width:100%;animation:none}.cr-pro-doc .cr-iv-go:disabled{opacity:.4;cursor:default}
+.cr-pro-doc .wel{text-align:center;font-weight:800;color:#B8892A;font-size:16px;height:0;overflow:hidden;opacity:0;transition:opacity .3s .35s}
+.cr-pro.signed .wel{height:auto;margin-top:10px;opacity:1}.cr-pro.signed .btns,.cr-pro.signed .cr-iv-go{display:none}
+.cr-rc-sig{display:flex;flex-direction:column;align-items:flex-end;margin:6px 4px 0;padding:6px 8px 4px}
+.cr-rc-sig img{width:180px;height:auto;max-height:70px;object-fit:contain}
+:root[data-theme="dark"] .cr-rc-sig img,:root:not([data-theme="light"]) .cr-rc-sig img{filter:invert(1) hue-rotate(180deg) brightness(1.4)}
+.cr-rc-sig span{font-size:11px;color:var(--text-secondary);border-top:1px solid var(--border-bright);padding-top:3px;min-width:140px;text-align:right}
+@media (prefers-reduced-motion: reduce){.cr-pro-doc,.cr-pro.signed .sig .stamp{animation:none!important}.cr-pro.signed .sig .stamp{transform:rotate(-12deg);opacity:.85}}
 .cr-sc-card{position:relative;width:100%;max-width:380px;background:#F3EFE4;color:#1d1b16;border-radius:14px;padding:18px 18px 16px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5);
   animation:crScCard .6s .1s cubic-bezier(.2,1.2,.4,1) both}
 @keyframes crScCard{from{opacity:0;transform:translateY(60px) rotate(-4deg)}to{opacity:1;transform:none}}
@@ -9515,8 +9546,58 @@ function crPrep(){
      return '<button class="cr-chip cr-opt" aria-pressed="'+(CR.evPick===k)+'" onclick="CR.evPick='+k+';crPrep()"><b>'+gmEsc(m?m[1]:t)+'</b>'+(m?'<small>'+crFx(m[2])+'</small>':'')+'</button>'; }).join('')+'</div></div>')
    +crHist(),
    '<div class="sum">'+p.age+'세<b>'+p.ovr+'</b></div><button class="gm-btn" '+(CR.evPick!=null?'':'disabled')+' onclick="crSeason(this)">'+(CR.evPick!=null?'시즌 시작':'이벤트를 골라 주세요')+'</button>');
+  // 첫 프로 계약(1군에 처음 올라온 시즌 준비 화면에서 한 번) — 사인하고 나면 이벤트 오버레이로 이어진다
+  var ctr=pr.contract, ctrKey=ctr?(p.id||p.name)+'|pro':null;
+  if(ctr && CR.proSeen!==ctrKey){ if(!document.querySelector('#crTov .cr-pro')) crProShow(ctr, ctrKey); return; }
   if(iv && CR.evPick==null && !document.querySelector('#crTov .cr-iv')) crIvShow(iv);
   if(tr && CR.evPick==null && !document.querySelector('#crTov .cr-tr')) crTrShow(tr);
+}
+// ── 첫 프로 계약 오버레이(사용자 지정) ── 계약서에 손가락으로 직접 사인한다. 사인은 이 기기에만(localStorage cr_sig_{커리어 id}) 두고
+// 은퇴 카드 아래에 찍는다(이미지 저장에도 들어간다). 서버·랭킹엔 올리지 않는다(KV 용량·부적절한 그림). 귀찮으면 "이름으로 서명"(손글씨 글꼴).
+var CR_SIG_FONT='Nanum Pen Script';
+function crSigKey(id){ return 'cr_sig_'+(id||''); }
+function crSigGet(id){ try{ return id ? localStorage.getItem(crSigKey(id)) : null; }catch(e){ return null; } }
+function crProShow(ct, key){
+  if(!document.getElementById('crSigFont')){ var l=document.createElement('link'); l.id='crSigFont'; l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap'; document.head.appendChild(l); }
+  var p=CR.v.player, card=CR.meta.cards[p.pos][p.card];
+  crTovSet('<div class="cr-pro" role="dialog" aria-modal="true" aria-label="첫 프로 계약"><div class="cr-pro-doc">'
+    +'<div class="hd"><span>PROFESSIONAL CONTRACT</span><b>첫 프로 계약</b></div>'
+    +'<div class="club">'+crCrest({n:ct.club, id:ct.id},46)+'<div><b>'+gmEsc(ct.team)+'</b><small>1군 · '+ct.from+'년 여름 – '+ct.until+'년 여름 (4+1년)</small></div></div>'
+    +'<dl><div><dt>선수</dt><dd>'+gmEsc(p.name)+' <small>'+ct.age+'세</small></dd></div><div><dt>포지션</dt><dd>'+gmEsc(card.n)+'</dd></div>'
+    +'<div><dt>등번호</dt><dd><b class="num">'+ct.num+'</b>'+(ct.num!==ct.want?'<small>원하던 '+ct.want+'번은 1군 선배가 달고 있어요 · 자리 잡으면 받아요</small>':'')+'</dd></div></dl>'
+    +'<p class="txt">위 선수는 '+gmEsc(ct.team)+'과(와) 프로 계약을 맺고, 구단의 1군 선수로 뛰는 데 동의합니다.</p>'
+    +'<div class="sig" id="crSig"><canvas id="crSigCv"></canvas><span class="ph">여기에 서명하세요</span><i class="ln"></i><small>서명 · '+gmEsc(p.name)+'</small><div class="stamp" aria-hidden="true">SIGNED</div></div>'
+    +'<div class="btns"><button type="button" class="gm-btn ghost" onclick="crSigClear()">다시 쓰기</button><button type="button" class="gm-btn ghost" onclick="crSigName()">이름으로 서명</button></div>'
+    +'<button class="cr-iv-go" id="crProGo" disabled onclick="crProDone(\''+key.replace(/'/g,'')+'\')">계약 완료</button>'
+    +'<div class="wel">Welcome to the first team!</div></div></div>');
+  CR.sig={dirty:false};
+  var cv=document.getElementById('crSigCv'), box=document.getElementById('crSig'), r=cv.getBoundingClientRect(), dpr=Math.max(1, window.devicePixelRatio||1);
+  cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr);
+  var g=cv.getContext('2d'); g.scale(dpr,dpr); g.lineCap='round'; g.lineJoin='round'; g.strokeStyle='#1f2a63';
+  CR.sig.g=g; CR.sig.cv=cv; CR.sig.w=r.width; CR.sig.h=r.height;
+  var last=null, mid=null, pt=function(e){ var b=cv.getBoundingClientRect(); return {x:e.clientX-b.left, y:e.clientY-b.top, t:Date.now()}; };
+  cv.addEventListener('pointerdown', function(e){ e.preventDefault(); cv.setPointerCapture(e.pointerId); last=pt(e); mid=last; g.beginPath(); g.arc(last.x,last.y,1.2,0,7); g.fillStyle='#1f2a63'; g.fill(); crSigMark(); });
+  cv.addEventListener('pointermove', function(e){ if(!last) return; e.preventDefault(); var q=pt(e), m={x:(last.x+q.x)/2, y:(last.y+q.y)/2};
+    var v=Math.hypot(q.x-last.x,q.y-last.y)/Math.max(1,q.t-last.t); g.lineWidth=Math.max(1.4, 3.2-v*1.1);   // 빨리 그으면 가늘게 — 펜 느낌
+    g.beginPath(); g.moveTo(mid.x,mid.y); g.quadraticCurveTo(last.x,last.y,m.x,m.y); g.stroke(); last=q; mid=m; });
+  var up=function(){ last=null; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', up);
+}
+function crSigMark(){ if(!CR.sig) return; CR.sig.dirty=true; var b=document.getElementById('crSig'); if(b) b.classList.add('on'); var go=document.getElementById('crProGo'); if(go) go.disabled=false; }
+function crSigClear(){ var S=CR.sig; if(!S) return; S.g.clearRect(0,0,S.w,S.h); S.dirty=false; var b=document.getElementById('crSig'); if(b) b.classList.remove('on'); var go=document.getElementById('crProGo'); if(go) go.disabled=true; }
+function crSigName(){
+  var S=CR.sig; if(!S) return; crSigClear();
+  var draw=function(){ var name=CR.v.player.name, fs=Math.min(S.h*0.5, S.w/Math.max(3,[...name].length)*1.3);
+    // 서명선(아래에서 26px) 바로 위에 글자 바닥을 맞춘다
+    S.g.save(); S.g.fillStyle='#1f2a63'; S.g.font=fs+'px "'+CR_SIG_FONT+'", cursive'; S.g.textBaseline='alphabetic'; S.g.translate(S.w/2, S.h-32); S.g.rotate(-0.05);
+    S.g.textAlign='center'; S.g.fillText(name, 0, 0); S.g.restore(); crSigMark(); };
+  if(document.fonts && document.fonts.load) document.fonts.load('40px "'+CR_SIG_FONT+'"', CR.v.player.name).then(draw, draw); else draw();
+}
+function crProDone(key){
+  var S=CR.sig; if(!S || !S.dirty) return;
+  try{ localStorage.setItem(crSigKey(CR.v.player.id), S.cv.toDataURL('image/png')); }catch(e){}
+  var doc=document.querySelector('#crTov .cr-pro'); if(doc) doc.classList.add('signed');
+  var go=document.getElementById('crProGo'); if(go) go.disabled=true;
+  setTimeout(function(){ CR.proSeen=key; CR.sig=null; var o=document.querySelector('#crTov .cr-pro'); if(o) o.classList.add('out'); setTimeout(function(){ crTovSet(''); crPrep(); }, 280); }, 1700);
 }
 // ── 훈련 제안 오버레이(사용자 지정 — 개인 트레이너·유스 특별 훈련) ── 훈련장 배경 위로 제안한 사람의 말이 타자 치듯 나오고,
 // 선택지 두 장이 아래에서 올라온다. 인터뷰와 달리 효과(성장·출전·부상)는 보여 준다. 고른 카드의 k가 evPick.
@@ -10185,10 +10266,12 @@ function crCardHtml(c){
 }
 // 내 은퇴 카드. 랭킹에서 남의 카드를 열 때는 CR.v(내 커리어)를 건드리지 않고 따로 그린다
 // (목업에서 내 커리어 변수를 남의 카드로 덮어써서, 랭킹 → 돌아가기에 남의 카드가 내 카드처럼 뜨던 버그가 있었다).
+// 은퇴 카드 아래 친필 사인(첫 프로 계약 때 쓴 것 — 이 기기에 있을 때만)
+function crSigBlock(c){ var d=crSigGet(c&&c.id); return d ? '<div class="cr-rc-sig"><img src="'+d+'" alt="'+gmEsc(c.name)+' 서명"><span>'+gmEsc(c.name)+'</span></div>' : ''; }
 function crRetired(){
   var sv=crSaved(), reg=sv && sv.info && sv.info.reg;
   crRender('<div class="cr-top"><button class="gm-back" onclick="crIntro()">← 커리어 모드</button><div class="cr-season">은퇴 카드</div></div>'
-    +'<div id="crShotBox">'+crCardHtml(CR.v.card)+'</div><button class="cr-shot-btn" onclick="crShot(this)">📷 이미지로 저장</button>'
+    +'<div id="crShotBox">'+crCardHtml(CR.v.card)+crSigBlock(CR.v.card)+'</div><button class="cr-shot-btn" onclick="crShot(this)">📷 이미지로 저장</button>'
     +(reg?'':'<div class="gm-best">'+(PK.tok?'<b style="color:var(--text)">'+gmEsc(PK.nick||'')+'</b> 계정으로 랭킹에 등록돼요 · 계정당 최고 커리어 하나':'랭킹 등록은 승부예측 계정으로 해요 · 처음이면 가입부터')+'</div>'),
     '<button class="gm-btn ghost" onclick="crNew()">새 커리어</button>'
     +(reg?'<button class="gm-btn" onclick="crBoard(\'retired\',(CR.v&&CR.v.player&&CR.v.player.pos)||\'\')">랭킹 보기</button>'
