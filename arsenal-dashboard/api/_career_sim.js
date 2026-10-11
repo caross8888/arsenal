@@ -844,8 +844,7 @@ export function playSeason(state, choice){
     // S와 A는 경계를 ±6 흐리게(사용자 지정 — S만 노리고 새로 시작하는 리롤을 막으려고). 예상 정점 80 이상이면 86 ± 6을 넘을 때 S라서 두 등급의 실제 정점이 크게 겹친다.
     let g = SCOUT_G.find(x => est >= x[0])[1];
     if(est >= 80) g = est + (sr()-0.5)*12 >= 86 ? 'S' : 'A';
-    // 18세 평가엔 유스 시절 활약(유스 포인트, 4점 만점)을 같이 보여 준다 — 재능 각성에 반영된다는 걸 알 수 있게(사용자 지정)
-    scout = {age:C.age, g, ...(C.age === 21 && C.scout18 ? {prev:C.scout18} : {}), ...(C.age === 18 ? {yp:Math.min(YP_MAX, C.youthPts||0), ypMax:YP_MAX} : {})};
+    scout = {age:C.age, g, ...(C.age === 21 && C.scout18 ? {prev:C.scout18} : {})};
     if(C.age === 18) C.scout18 = g;
   }
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(ratingShow*100)/100, rank,
