@@ -83,7 +83,7 @@ const BODY_U = [1.2, 0.12], BODY_FIT = 0.015, TRAIN_AGE = [20, 0.18];
 // 하위 리그일수록 골·도움·클린시트가 더 나오고(LG_OUT·LG_CS — 상대 수비·공격이 약하다), 대신 그 리그에서 낸 기록과 리그 개인상·우승의 점수는 반비례로 깎는다(LG_PTS).
 // 출력 × 점수 = 1 · 0.95 · 0.9 · 0.84 · 0.75 — 약한 리그에서 숫자는 화려해도 점수로는 큰 리그가 낫게.
 const LG_TIER = {ENG:1,ESP:1,GER:1,ITA:1,FRA:1, BRA:2,POR:2,NED:2,BEL:2,ARG:2, NOR:3,USA:3, JPN:4,KOR:4, NGA:5};
-const Y_OUT = {g:1.6, a:1.5, cs:1}, Y_REF = [62, 62, 65];   // Y_REF: 유스 표시 평점의 또래 기준 오버롤(U-16/U-18/U-21)   // 유스 무대 기록 보정(보이는 기록만 — 점수엔 안 들어감)
+const Y_OUT = {g:1.6, a:1.5, cs:1}, Y_REF = [62, 62, 65], Y_PERF = [2, 1.5];   // 유스 표시 평점: Y_REF 또래 기준 오버롤(U-16/U-18/U-21), Y_PERF [활약 가점 배율, 6.8 중심 폭 배율]   // 유스 무대 기록 보정(보이는 기록만 — 점수엔 안 들어감)
 const LG_OUT = [0,1,1.12,1.25,1.35,1.5], LG_CS = [0,1,1.08,1.16,1.22,1.3], LG_PTS = [0,1,0.85,0.72,0.62,0.5];
 const lgTier = nat => LG_TIER[nat] || 3;
 const SCOUT = {18:[-55.63, 1.881, 7.919], 21:[-12.67, 1.18, 4.435]};   // 잠재력 평가: 예상 정점 = a + b×오버롤 + c×재능 배율(아래 playSeason)
@@ -657,7 +657,10 @@ export function playSeason(state, choice){
   const perfShow = row0Youth ? {FW:(goals+ast*1.0)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.85, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.3+0.065}[C.pos] : perfBonus;
   // 실력 항목도 또래 기준으로: 1군 공식은 오버롤 70을 기준으로 깎아서 오버롤 54~62인 유스는 늘 5점대 후반~6점대 초반이었다.
   // 단계별 또래 기준(Y_REF)으로 바꿔 평범한 유스가 6.6 안팎, 잘하는 유스는 7점대가 나오게 한다.
-  const ratingShow = apps ? Math.max(5.6, Math.min(8.9, rating + perfShow - perfBonus + (row0Youth ? (70-Y_REF[lv])/17 : 0))) : 0;
+  // 활약 가점은 ×2(기록이 평점에 더 드러나게), 6.8을 중심으로 폭을 ×1.5로 넓힌다 — 오버롤이 고만고만한 유스는 그대로 두면
+  // 최고 시즌도 7.2 안팎이라(1군 상위 1%는 7.8) 잘해도 평점이 짜 보였다(사용자 지적).
+  const rawShow = rating + (row0Youth ? perfShow*Y_PERF[0] : perfShow) - perfBonus + (row0Youth ? (70-Y_REF[lv])/17 : 0);
+  const ratingShow = apps ? Math.max(5.6, Math.min(8.9, row0Youth ? 6.8 + (rawShow-6.8)*Y_PERF[1] : rawShow)) : 0;
 
   // 성장 / 하락
   const base = ageBase(), ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
@@ -813,7 +816,10 @@ export function playSeason(state, choice){
   if(inUCL) notes.push('챔스 '+uG+'골 '+uA+'도움');
   // 명성: 1군 활약 보너스, 매 시즌 0 쪽으로 1씩 줄어든다
   let fg = row0Youth ? 0 : (rating>=7.3?2:rating>=6.9?1:rating<6.3&&apps>5?-1:0)+fameAdd;
-  if(ev==='media' && pick===0){ if(rating>=7.0){ fg+=2; notes.push('큰소리친 만큼 해내서 주목받았어요.'); } else { fg-=1; notes.push('인터뷰에서 한 말이 부메랑이 됐어요.'); } }
+  // 자신감 인터뷰 판정은 그 나이·무대 기준으로: 1군 공식 평점으로 7.0을 재면 유스·20세 이하 1군은 성공률 0%였다(사용자 지적 — 첫 인터뷰는 무조건 부메랑).
+  // 유스는 표시 평점으로 7.35(21세 이상 U-21은 7.8), 20세 이하 1군은 한 살 어릴수록 문턱 −0.3 — 어느 쪽이든 성공률 20% 안팎(21세 이상 1군 17%와 비슷).
+  const rJudge = row0Youth ? ratingShow : rating, mediaBar = row0Youth ? (C.age<=20 ? 7.35 : 7.8) : 7.0 - Math.max(0, 21-C.age)*0.3;
+  if(ev==='media' && pick===0){ if(rJudge>=mediaBar){ fg+=2; notes.push('큰소리친 만큼 해내서 주목받았어요.'); } else { fg-=1; notes.push('인터뷰에서 한 말이 부메랑이 됐어요.'); } }
   if(ev==='captain' && pick===0){ if(rating>=7.0){ fg+=1; notes.push('부주장 완장의 무게를 이겨냈어요.'); } else if(rating<6.6){ fg-=1; notes.push('부주장인데 부진하다는 비판을 받았어요.'); } }
   if(ev==='natcall' && pick===0){ fg+=1; notes.push('대표팀 일정까지 소화하며 이름을 알렸어요.'); }
   if(ev==='sns'){ if(pick===0){ fg-=1; notes.push('빠르게 사과해 논란이 가라앉았어요.'); } else if(rating>=7.0){ fg+=2; notes.push('경기력으로 논란을 잠재우고 오히려 인기를 얻었어요.'); } else { fg-=2; notes.push('부진까지 겹쳐 비판이 거세졌어요.'); } }
