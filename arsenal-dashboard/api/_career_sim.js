@@ -318,7 +318,7 @@ function pStart(club, opt, lvAt){
 // ── 시즌 이벤트 ────────────────────────────────────────────────────────
 export const EVENTS = [
   {id:'talk', t:'감독 면담', d:'출전 시간이 부족하다고 느껴요. 어떻게 할까요?', a:['출전 시간을 요구한다 (출전 ↑ 또는 ↓)','훈련으로 증명한다'], ok:() => !youth()},
-  {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑ · 부상 위험 ↑)','지금은 괜찮다 (부상 위험 ↓)'], ok:() => C.age<=27},   // 28세부터는 성장 폭이 거의 없어 어색하다(사용자 지적)
+  {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑ · 부상 위험 ↑)','지금은 괜찮다 (부상 위험 ↓)'], ok:() => C.age<=27 && !youth()},   // 1군 데뷔 뒤에만(사용자 지정 — 유스 시절엔 같은 성격의 '유스 특별 훈련'과 겹쳤다)   // 28세부터는 성장 폭이 거의 없어 어색하다(사용자 지적)
   {id:'tour', t:'프리시즌 투어', d:'감독이 투어 전 경기 출전을 원해요. 컨디션이 걱정돼요.', a:['모두 뛴다 (출전 ↑ · 부상 위험 ↑)','컨디션 관리 (부상 위험 ↓)'], ok:() => !youth()},
   {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 있게 (명성 ↑↑ 또는 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:() => C.age>=17},
   {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:() => C.age>=17 && C.age<=22 && lvOf()>=2 && pStart(C.club) < LOAN_P},   // 지금 오버롤 기준 이번 시즌 선발 예상이 낮을 때만(사용자 지정 — 지난 시즌 기록 기준이면 그새 큰 선수에게도 떴다)
@@ -365,7 +365,7 @@ function newEvent(){
     cands = [...cands].sort((a,b) => b.r-a.r);
     const h = Math.ceil(cands.length/2), r3 = mulberry(C.seed ^ hashStr('loan2|'+C.age))();
     const picks = [cands[Math.floor(r*h)], cands.length > 1 ? cands[h + Math.floor(r3*(cands.length-h))] : null].filter(Boolean);
-    if(picks.length) C.loanClubs = picks; else C.ev = 'coach';
+    if(picks.length) C.loanClubs = picks; else C.ev = youth() ? 'extra' : 'coach';   // 임대 갈 곳이 없을 때 대신 뜨는 이벤트(유스면 특별 훈련)
   }
 }
 
