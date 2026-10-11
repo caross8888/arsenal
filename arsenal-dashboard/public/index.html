@@ -9006,9 +9006,38 @@ function gamePick(id){
     if(note) note.innerHTML=gmEsc(e.message)+' <button class="gm-back" onclick="gameIntro()">처음으로</button>';
   });
 }
+// 전부 클리어 오버레이 — 커리어 모드 발롱도르 연출(.cr-bd)을 그대로 쓴다. 결과 화면을 먼저 그려 두고 그 위에 띄운다.
+// 로그인하고 돌아올 때 등 gameOver가 다시 불려도 한 판에 한 번만(GAME.clearSeen = 그 판의 토큰).
+function gmClearSvg(n){
+  var cx=60, cy=62, R=34;
+  var rays=function(y0, up){ var h=''; for(var k=-6;k<=6;k++){ var x=cx+k*5, len=(up?24:34)-Math.abs(k)*(up?3:4); if(len<6) continue;
+    h+='<rect class="ray" x="'+(x-0.9)+'" y="'+(up?y0-len:y0)+'" width="1.8" height="'+len.toFixed(1)+'" style="--i:'+Math.abs(k)+'"/>'; } return h; };
+  return '<svg viewBox="0 0 120 140" width="160" height="187" aria-hidden="true"><defs><linearGradient id="gmClG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF1B0"/><stop offset=".5" stop-color="#D8B84E"/><stop offset="1" stop-color="#6E5A1C"/></linearGradient></defs>'
+    +'<g fill="url(#gmClG)">'+rays(cy-R-4,true)+rays(cy+R+4,false)+'</g>'
+    +'<g class="ball"><circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="rgba(200,168,75,.12)" stroke="url(#gmClG)" stroke-width="2.4"/>'
+    +'<circle cx="'+cx+'" cy="'+cy+'" r="'+(R-6)+'" fill="none" stroke="url(#gmClG)" stroke-width="1" opacity=".6"/>'
+    +'<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" font-size="26" font-weight="800" fill="url(#gmClG)">'+n+'</text>'
+    +'<text x="'+cx+'" y="'+(cy+17)+'" text-anchor="middle" font-size="7.5" letter-spacing="1.5" fill="#E4C766">PLAYERS</text></g></svg>';
+}
+function gmClearShow(d){
+  var wait=5200, conf='', cols=['#FFF1B0','#C8A84B','#EF0107','#F0F2F7'];
+  for(var i=0;i<34;i++) conf+='<i style="--x:'+((i*29)%100)+'%;--d:'+(1.4+(i%9)*0.12)+'s;--r:'+((i*61)%360)+'deg;background:'+cols[i%4]+'"></i>';
+  crTovSet('<div class="cr-bd" role="dialog" aria-modal="true" aria-label="Who Am I 전부 클리어" onclick="gmClearGo()"><div class="conf" aria-hidden="true">'+conf+'</div><div class="cr-bd-box">'
+    +'<div class="art">'+gmClearSvg(d.correct)+'</div>'
+    +'<div class="ttl"><b>ALL CLEAR</b><span>WHO AM I? · 전 문제 정답</span></div>'
+    +'<div class="who"><b>'+Number(d.score).toLocaleString()+'점</b><span>'+d.correct+'명을 모두 맞혔어요 · <em>클리어 보너스 +1,000</em></span></div>'
+    +'<div class="go"><i style="animation-duration:'+wait+'ms"></i><span>누르면 넘어가요</span></div></div></div>');
+  GAME.clearT=setTimeout(gmClearGo, wait);
+}
+function gmClearGo(){
+  clearTimeout(GAME.clearT); GAME.clearT=null;
+  var o=document.querySelector('#crTov .cr-bd'); if(!o) return;
+  o.classList.add('out'); setTimeout(function(){ crTovSet(''); }, 280);
+}
 function gameOver(d){
   gameStopTimer();
   GAME.last=d;
+  if(d.clear && GAME.clearSeen!==d.token){ GAME.clearSeen=d.token; setTimeout(function(){ gmClearShow(d); }, 0); }
   var best=gmBest(d.score);
   gmRoot().innerHTML =
     '<button class="gm-back" onclick="gameIntro()">← Who Am I?</button>'
