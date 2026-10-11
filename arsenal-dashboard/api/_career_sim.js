@@ -83,6 +83,7 @@ const BODY_U = [1.2, 0.12], BODY_FIT = 0.015, TRAIN_AGE = [20, 0.18];
 // 하위 리그일수록 골·도움·클린시트가 더 나오고(LG_OUT·LG_CS — 상대 수비·공격이 약하다), 대신 그 리그에서 낸 기록과 리그 개인상·우승의 점수는 반비례로 깎는다(LG_PTS).
 // 출력 × 점수 = 1 · 0.95 · 0.9 · 0.84 · 0.75 — 약한 리그에서 숫자는 화려해도 점수로는 큰 리그가 낫게.
 const LG_TIER = {ENG:1,ESP:1,GER:1,ITA:1,FRA:1, BRA:2,POR:2,NED:2,BEL:2,ARG:2, NOR:3,USA:3, JPN:4,KOR:4, NGA:5};
+const Y_OUT = {g:1.6, a:1.5, cs:1};   // 유스 무대 기록 보정(보이는 기록만 — 점수엔 안 들어감)
 const LG_OUT = [0,1,1.12,1.25,1.35,1.5], LG_CS = [0,1,1.08,1.16,1.22,1.3], LG_PTS = [0,1,0.85,0.72,0.62,0.5];
 const lgTier = nat => LG_TIER[nat] || 3;
 const SCOUT = {18:[-55.63, 1.881, 7.919], 21:[-12.67, 1.18, 4.435]};   // 잠재력 평가: 예상 정점 = a + b×오버롤 + c×재능 배율(아래 playSeason)
@@ -630,17 +631,26 @@ export function playSeason(state, choice){
   const hot = !row0Youth && starts>=15 && rng()<0.02;   // 커리어 하이 시즌
   // 커리어 하이 ×1.3(예전 ×1.6 — 88 오버롤로 79골이 나왔다), 골 45·도움 25를 넘는 몫은 절반만(60골 넘는 시즌은 전설급에서만 드물게).
   const soft = (x, k) => x <= k ? x : k + (x-k)*0.5;
-  const goals = Math.round(soft(minsEq*gRate*(0.7+rng()*0.6)*(hot?1.3:1), 45)), ast = Math.round(soft(minsEq*aRate*(0.7+rng()*0.6)*(hot?1.3:1), 25));
+  const rG = 0.7+rng()*0.6, rA = 0.7+rng()*0.6;
+  const goalsL = Math.round(soft(minsEq*gRate*rG*(hot?1.3:1), 45)), astL = Math.round(soft(minsEq*aRate*rA*(hot?1.3:1), 25));
   const DF_ = defFx();
   const pCS = Math.max(0.05, Math.min(0.6, (0.12+0.35*(club.r-50)/45+(o-75)/150)*TM.cs*CB.cs*DF_.cs*LG_CS[LT]));
   // 클린시트는 출전 경기 전체로 센다(교체 출전 포함). 예전엔 선발만 세서 출전 대비 25%로 너무 적게 보였다(사용자 지적).
-  const cs = row0Youth ? Math.round(apps*pCS*0.8) : Math.round(apps*pCS*(0.85+rng()*0.3));
+  const csL = row0Youth ? Math.round(apps*pCS*0.8) : Math.round(apps*pCS*(0.85+rng()*0.3));
+  // 유스 무대 보정: 상대도 또래라 실제 기록은 더 나온다(예전엔 U-16 공격수 19경기 3골, 수비수 클린시트 2개로 1군보다도 적었다 — 사용자 지적).
+  // 보여 주는 기록만 키우고, 점수(wg·wa·wcs)와 평점은 예전 값(…L)을 그대로 써서 밸런스는 그대로 둔다.
+  let goals = goalsL, ast = astL, cs = csL;
+  if(row0Youth){
+    goals = Math.round(minsEq*gRate*rG*Y_OUT.g); ast = Math.round(minsEq*aRate*rA*Y_OUT.a);
+    const pY = Math.max(0.1, Math.min(0.55, (0.12+0.35*(club.r-50)/45+(o+STAGE[lv].gap-75)/150)*TM.cs*CB.cs*DF_.cs*LG_CS[LT]));
+    cs = Math.round(apps*pY*Y_OUT.cs);
+  }
   if(hot) notes.unshift('🔥 커리어 하이 시즌! 뭘 차도 들어갔어요.');
   // 평점: 실력 + 팀 안 위치 + 포지션별 활약 + 운. 기본값 6.42(예전 6.45 — 정체기를 29~30세로 늘려 상위 시즌이 많아진 만큼 내림)
   const clubLv = club.r - STAGE[lv].gap, ap = Math.max(apps,1);
   // MF 0.85(예전 0.6): 같은 오버롤의 수비수와 평점 분포를 맞춘 값 — 낮으면 평점 기반 상·발롱에서 미드필더 고점이 눌렸다(사용자 지적)
   // FW 도움 1.0(예전 0.6): 도움형 공격수(펄스나인·윙어)가 평점 기반 상을 못 받아 상위권 천장이 가장 낮았다(사용자 지적)
-  const perfBonus = {FW:(goals+ast*1.0)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.85, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.3+0.065}[C.pos];
+  const perfBonus = {FW:(goalsL+astL*1.0)/ap*0.5, MF:(goalsL*1.5+astL*1.2)/ap*0.85, DF:csL/ap*0.6+(goalsL*2+astL*1.5)/ap*0.3+0.065}[C.pos];
   const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+DF_.r+(rng()-0.5)*0.5)) : 0;
 
   // 성장 / 하락
@@ -826,7 +836,7 @@ export function playSeason(state, choice){
   if(C.tot.wg == null){ C.tot.wg = C.tot.goals; C.tot.wa = C.tot.ast; C.tot.wcs = C.tot.cs; }
   if(C.tot.wap == null) C.tot.wap = C.tot.apps;
   C.tot.wap += apps*LG_PTS[LT];   // 출전 점수도 리그 수준으로 — 하위 리그는 주전 자리를 쉽게 잡아 출전이 쌓인다
-  C.tot.wg += goals*LG_PTS[LT]; C.tot.wa += ast*LG_PTS[LT]; C.tot.wcs += cs*LG_PTS[LT];
+  C.tot.wg += goalsL*LG_PTS[LT]; C.tot.wa += astL*LG_PTS[LT]; C.tot.wcs += csL*LG_PTS[LT];   // 유스 보정 전 값(점수 밸런스 유지)
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg; C.tot.ca = (C.tot.ca||0) + ca; C.tot.ccs = (C.tot.ccs||0) + ccs;
   C.peak = Math.max(C.peak, cOvr());
   C.bodyOut = bodyEnd();
