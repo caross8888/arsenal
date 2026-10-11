@@ -86,6 +86,8 @@ const LG_TIER = {ENG:1,ESP:1,GER:1,ITA:1,FRA:1, BRA:2,POR:2,NED:2,BEL:2,ARG:2, N
 const YP_MAX = 4;
 // 등번호: 신인 번호 / 이적생 번호(원하던 번호는 빼고 고른다), 원하던 번호를 바로 받을 확률(30번 미만일 때), 주전 기준 선발 비율
 const ROOKIE_NUM = [28,31,35,41,44,47], TRANSFER_NUM = [14,16,19,21,24,27,29,33], NUM_LUCK = 0.1, NUM_UP = 0.5, NUM_WAIT = 2, NUM_STAR = 3;   // NUM_WAIT: 그 번호로 뛴 시즌 수, NUM_STAR: 이적 때 (팀 수준 − 이 값) 이상이면 바로
+// 계약 기간(게임적 허용으로 실제보다 조금 길게 — 재계약이 너무 자주 뜨지 않게, 사용자 지정): 27세까지 5~6년 · 31세 4~5년 · 34세 3~4년 · 그 뒤 2~3년. 둘 중 하나는 커리어 시드+나이로 고정.
+const contractYears = a => (a <= 27 ? 5 : a <= 31 ? 4 : a <= 34 ? 3 : 2) + (mulberry(C.seed ^ hashStr('ct'+a))() < 0.5 ? 1 : 0);
 const pickNum = (list, r) => { const l = list.filter(n => n !== C.want); return l[Math.floor(r*l.length)]; };
 // 학업 병행: 이번 시즌 성장 ×g, 판단 계열 능력치 +iqAdd, 하락기 하락 ×decl(롱런) / 올인: 이번 시즌 성장 ×all
 const STUDY = {g:0.92, iqAdd:1.5, decl:0.75, all:1.06, iq:{FW:['오프더볼','패스'], MF:['패스','시야'], DF:['대인마크','패스']}};
@@ -986,7 +988,7 @@ export function nextSeason(state, pick, traitPick){
   C.traitOffer = null;
   if(forcedRetire()) return retire(state);
   if(C.released && (pick==null || !C.offers[pick])) return retire(state);
-  let newNum = null;
+  let newNum = null, prevClub = C.club.n, prevId = C.club.id;
   if(pick != null){
     const o = C.offers[pick]; if(!o) throw new Error('pick');
     C.club = o.c; if(!C.clubs.includes(o.c.n)) C.clubs.push(o.c.n);
@@ -1015,8 +1017,22 @@ export function nextSeason(state, pick, traitPick){
     C.proAt = C.age;
     const yr = 2026 + C.age - 15, r0 = mulberry(C.seed ^ hashStr('num'))();
     C.num = C.want >= 30 || r0 < NUM_LUCK ? C.want : pickNum(ROOKIE_NUM, r0);
-    C.contract = {club:C.club.n, id:C.club.id, team:teamName(C.club, 3), from:yr, until:yr+4, num:C.num, want:C.want, age:C.age};
-  } else if(newNum){
+    C.contract = {type:'pro', club:C.club.n, id:C.club.id, team:teamName(C.club, 3), from:yr, until:yr+4, years:'4+1', num:C.num, want:C.want, age:C.age};
+    C.cEnd = C.age + 4;
+  } else if(C.proAt && C.lv === 3){
+    // 이적·재계약도 계약서(사용자 지정 — 첫 계약 때 쓴 사인이 자동으로 들어가고, 이적은 OFFICIAL 발표로 이어진다).
+    // 기간은 나이로(contractYears). 임대는 계약이 아니라 뺀다.
+    const yr = 2026 + C.age - 15, L = contractYears(C.age);
+    if(!C.cEnd) C.cEnd = C.age + L;   // 계약 기간을 안 들고 있던 예전 토큰
+    if(moved){
+      C.contract = {type:'transfer', prev:prevClub, prevId, club:C.club.n, id:C.club.id, team:teamName(C.club, 3), from:yr, until:yr+L, years:String(L), num:C.num, want:C.want, age:C.age};
+      C.cEnd = C.age + L;
+    } else if(C.age >= C.cEnd){
+      C.contract = {type:'renew', club:C.club.n, id:C.club.id, team:teamName(C.club, 3), from:yr, until:yr+L, years:String(L), num:C.num, want:C.want, age:C.age};
+      C.cEnd = C.age + L;
+    }
+  }
+  if(newNum && !(C.contract && C.contract.type === 'pro')){
     C.stageNote = (C.stageNote ? C.stageNote+' ' : '') + (newNum === C.want ? '새 팀에서도 원하던 '+newNum+'번을 달아요.' : '새 팀에선 '+newNum+'번을 달아요. 주전으로 자리 잡으면 '+C.want+'번을 받을 수 있어요.');
   }
   newEvent();
