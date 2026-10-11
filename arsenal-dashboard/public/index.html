@@ -7161,7 +7161,7 @@ function openMatchModal(m, isAuto, opts){
   // 얹어서 내려준다. 예상 선발 XI·승부 예측이 보는 명단과 같은 캐시라 세 카드가 어긋나지 않는다.
   var _injMatchQ = _predTargetSkel ? ('&match='+encodeURIComponent(m.id)) : '';
   var oppInjPromise = oppNameSkel
-    ? fetch(FN+'/football?type=injuries&team='+encodeURIComponent(oppNameSkel)+_injMatchQ).then(function(r){ return r.json(); }).catch(function(){ return null; })
+    ? fetch(FN+'/football?type=injuries&team='+encodeURIComponent(oppNameSkel)+(oppTeamSkel&&oppTeamSkel.id?'&tid='+encodeURIComponent(oppTeamSkel.id):'')+_injMatchQ).then(function(r){ return r.json(); }).catch(function(){ return null; })
     : Promise.resolve(null);
   // 아스날 쪽도 같은 이유로 모달 전용 목록을 따로 받는다 — 전역 allInjuries(선수단 탭 공용)는
   // 특정 경기와 무관한 "지금 팀 상태"라 경기 기준 값으로 덮어쓰면 안 된다.

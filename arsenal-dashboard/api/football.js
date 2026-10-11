@@ -1348,8 +1348,10 @@ async function fetchMatchUnavailable(matchId){
   return out;
 }
 // 팀 이름으로 어느 쪽인지 고른다 — 프론트가 홈/원정을 따로 안 넘겨도 되게.
-function unavailSideFor(unavail, teamName){
+function unavailSideFor(unavail, teamName, teamId){
   if(!unavail) return null;
+  // 팀 id가 있으면 그걸로 — 이름은 소스마다 달라서(일정 "Nottm Forest" ↔ 경기 상세 "Nottingham Forest") 못 찾는 팀이 있었다
+  if(teamId) for(const side of ['home', 'away']) if(unavail[side] && String(unavail[side].id) === String(teamId)) return unavail[side];
   const n = normName(teamName || '');
   if(!n) return null;
   for(const side of ['home', 'away']){
@@ -1620,6 +1622,8 @@ export default async function handler(req, res) {
   // team을 같이 섞는다 — 안 그러면 아스날 조회 캐시를 상대팀 조회가 그대로
   // 돌려받거나 덮어써버린다.
   const teamParam = req.query.team || '';
+  // 상대 팀 Fotmob id(injuries) — 이름 검색(searchapi)·이름 비교 없이 바로 찾는다
+  const tidParam = /^\d{1,9}$/.test(String(req.query.tid || '')) ? String(req.query.tid) : '';
   // playerDetail은 선수마다 응답이 다르므로 id도 캐시 키에 섞는다 — 안 그러면
   // 첫 번째로 조회된 선수의 데이터를 다른 선수 조회가 그대로 돌려받는다.
   const idParam = req.query.id || '';
@@ -2329,11 +2333,12 @@ export default async function handler(req, res) {
       }
 
       if(isOpponentTeam){
-        const needle = teamParam.toLowerCase();
-        const match = (fplData.teams || []).find(t =>
-          t.name.toLowerCase().includes(needle) || needle.includes(t.name.toLowerCase()) ||
-          t.short_name.toLowerCase() === needle
-        );
+        // 글자·숫자만 남겨 비교한다 — FPL은 "Nott'm Forest", 일정은 "Nottm Forest"라 아포스트로피 하나로 못 찾았다
+        const az = x => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const needle = az(teamParam);
+        const match = needle ? (fplData.teams || []).find(t =>
+          az(t.name).includes(needle) || needle.includes(az(t.name)) || az(t.short_name) === needle
+        ) : null;
         targetFplId = match ? match.id : null;
       }
 
@@ -2342,20 +2347,21 @@ export default async function handler(req, res) {
       // 예측과 같은 캐시를 보므로 한 모달 안에서 세 카드의 명단이 항상 같다.
       const matchOut = matchParam ? await fetchMatchUnavailable(matchParam)
         .then(u => {
-          const side = unavailSideFor(u, isOpponentTeam ? teamParam : 'Arsenal');
+          const side = unavailSideFor(u, isOpponentTeam ? teamParam : 'Arsenal', isOpponentTeam ? tidParam : FIRST_TEAM_ID);
           return side ? side.out : [];
         }).catch(() => []) : [];
 
       // Fotmob 스쿼드 결장자 — FPL이 놓치는 선수를 메운다. 아스날은 팀 id로 바로 받고
       // (fetchTeamPayload가 60초 메모리 캐시), 상대는 이름으로 찾는다.
+      const oppFotmob = () => tidParam ? fetchTeamPayload(tidParam).then(fotmobInjuredFromPayload).catch(() => null) : fetchFotmobTeamInjuries(teamParam);
       const fmSquadOut = await (isOpponentTeam
-        ? fetchFotmobTeamInjuries(teamParam).then(v => v || [])
+        ? oppFotmob().then(v => v || [])
         : fetchTeamPayload(FIRST_TEAM_ID).then(fotmobInjuredFromPayload)
       ).catch(() => []);
 
       if(targetFplId === null){
         // 프리미어리그 소속이 아닌 상대 — FPL에 데이터 자체가 없어 Fotmob으로 폴백
-        const fotmobInjured = isOpponentTeam ? await fetchFotmobTeamInjuries(teamParam) : null;
+        const fotmobInjured = isOpponentTeam ? await oppFotmob() : null;
         result = fotmobInjured
           ? { injured: mergeMatchUnavailable(fotmobInjured, matchOut), availableCount: 0, teamFound: true, source: 'fotmob' }
           : (matchOut.length
