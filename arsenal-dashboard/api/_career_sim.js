@@ -672,9 +672,9 @@ export function playSeason(state, choice){
   if(row0Youth) growMul *= ratingShow>=Y_GROW[1] ? Y_GROW[3] : ratingShow>=Y_GROW[0] ? Y_GROW[2] : 1;
   if(C.age>=18 && !C.awoken){
     // 유스 포인트는 4점 만점(사용자 지정 — 6점은 최선으로 골라도 4%만 닿았다). 점당 효과를 키우되 기본값을 낮춰 평균(약 2.4점)에선 예전 확률과 같다:
-    // 0점 세대급 1.5% · 원더키드 12.6% → 4점 3.0% · 18.6% (예전 6점 만점: 2.0·15% → 3.0·18%).
+    // 0점 세대급 2.0% · 원더키드 13.1% → 4점 3.5% · 19.1% (예전 6점 만점: 2.0·15% → 3.0·18%).
     const tr = mulberry(C.seed ^ hashStr('talent'))(), b = Math.min(YP_MAX, C.youthPts);
-    const pG = 0.015+b*0.00375, pW = pG+0.126+b*0.015, pP = pW+0.32;   // 보통 비중 ↓, 유망주·원더키드 ↑(사용자 지정 — 보통 약 50%: 유망주 25→32%, 원더키드 기본 11→15%)   // 세대급 2~3% / 원더키드 11~14% / 유망주 25% / 보통 62~58%(사용자 지정 — 처음 8~11% / 20% / 70~66%)
+    const pG = 0.02+b*0.00375, pW = pG+0.131+b*0.015, pP = pW+0.33;   // 보통 −2%p → 세대급 +0.5 · 원더키드 +0.5 · 유망주 +1(사용자 지정)   // 보통 비중 ↓, 유망주·원더키드 ↑(사용자 지정 — 보통 약 50%: 유망주 25→32%, 원더키드 기본 11→15%)   // 세대급 2~3% / 원더키드 11~14% / 유망주 25% / 보통 62~58%(사용자 지정 — 처음 8~11% / 20% / 70~66%)
     C.tier = tr<pG ? 'gen' : tr<pW ? 'wonder' : tr<pP ? 'prospect' : 'normal';
     const [a, b2] = TALENT[C.tier], u = mulberry(C.seed ^ hashStr('talent2'))();
     C.talent = a + (b2-a)*u;
