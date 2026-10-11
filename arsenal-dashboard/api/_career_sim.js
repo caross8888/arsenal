@@ -83,6 +83,7 @@ const BODY_U = [1.2, 0.12], BODY_FIT = 0.015, TRAIN_AGE = [20, 0.18];
 // 하위 리그일수록 골·도움·클린시트가 더 나오고(LG_OUT·LG_CS — 상대 수비·공격이 약하다), 대신 그 리그에서 낸 기록과 리그 개인상·우승의 점수는 반비례로 깎는다(LG_PTS).
 // 출력 × 점수 = 1 · 0.95 · 0.9 · 0.84 · 0.75 — 약한 리그에서 숫자는 화려해도 점수로는 큰 리그가 낫게.
 const LG_TIER = {ENG:1,ESP:1,GER:1,ITA:1,FRA:1, BRA:2,POR:2,NED:2,BEL:2,ARG:2, NOR:3,USA:3, JPN:4,KOR:4, NGA:5};
+const YP_MAX = 4;   // 유스 포인트 만점(재능 각성 반영 상한)
 const Y_OUT = {g:1.6, a:1.5, cs:1}, Y_REF = [62, 62, 65], Y_PERF = [2, 1.5], Y_GROW = [7.2, 7.5, 1.05, 1.1], Y_POS = {FW:0.12, MF:-0.03, DF:-0.05};   // 유스 표시 평점: Y_REF 또래 기준 오버롤(U-16/U-18/U-21), Y_PERF [활약 가점 배율, 6.8 중심 폭 배율], Y_GROW [문턱1, 문턱2, 성장 배율1, 배율2] — 문턱1 이상이면 유스 포인트 +1(18세 전), Y_POS 포지션별 표시 평점 보정 — 없으면 유스 7.2+ 비율이 FW 17% / MF 25% / DF 28%로 갈려 성장 보너스가 미드·수비에 쏠렸다(사용자 지적: TOP50에서 공격수 감소)   // 유스 무대 기록 보정(보이는 기록만 — 점수엔 안 들어감)
 const LG_OUT = [0,1,1.12,1.25,1.35,1.5], LG_CS = [0,1,1.08,1.16,1.22,1.3], LG_PTS = [0,1,0.85,0.72,0.62,0.5];
 const lgTier = nat => LG_TIER[nat] || 3;
@@ -670,8 +671,10 @@ export function playSeason(state, choice){
   // 유스에서 잘한 시즌은 더 큰다(사용자 지정 — 예전엔 평점과 성장이 무관해 7.5 넘는 시즌도 평범한 시즌과 같았다). 표시 평점(또래 기준) 7.2+ ×1.05, 7.5+ ×1.1.
   if(row0Youth) growMul *= ratingShow>=Y_GROW[1] ? Y_GROW[3] : ratingShow>=Y_GROW[0] ? Y_GROW[2] : 1;
   if(C.age>=18 && !C.awoken){
-    const tr = mulberry(C.seed ^ hashStr('talent'))(), b = Math.min(6, C.youthPts);
-    const pG = 0.02+b*0.0017, pW = pG+0.15+b*0.005, pP = pW+0.32;   // 보통 비중 ↓, 유망주·원더키드 ↑(사용자 지정 — 보통 약 50%: 유망주 25→32%, 원더키드 기본 11→15%)   // 세대급 2~3% / 원더키드 11~14% / 유망주 25% / 보통 62~58%(사용자 지정 — 처음 8~11% / 20% / 70~66%)
+    // 유스 포인트는 4점 만점(사용자 지정 — 6점은 최선으로 골라도 4%만 닿았다). 점당 효과를 키우되 기본값을 낮춰 평균(약 2.4점)에선 예전 확률과 같다:
+    // 0점 세대급 1.5% · 원더키드 12.6% → 4점 3.0% · 18.6% (예전 6점 만점: 2.0·15% → 3.0·18%).
+    const tr = mulberry(C.seed ^ hashStr('talent'))(), b = Math.min(YP_MAX, C.youthPts);
+    const pG = 0.015+b*0.00375, pW = pG+0.126+b*0.015, pP = pW+0.32;   // 보통 비중 ↓, 유망주·원더키드 ↑(사용자 지정 — 보통 약 50%: 유망주 25→32%, 원더키드 기본 11→15%)   // 세대급 2~3% / 원더키드 11~14% / 유망주 25% / 보통 62~58%(사용자 지정 — 처음 8~11% / 20% / 70~66%)
     C.tier = tr<pG ? 'gen' : tr<pW ? 'wonder' : tr<pP ? 'prospect' : 'normal';
     const [a, b2] = TALENT[C.tier], u = mulberry(C.seed ^ hashStr('talent2'))();
     C.talent = a + (b2-a)*u;
@@ -841,7 +844,8 @@ export function playSeason(state, choice){
     // S와 A는 경계를 ±6 흐리게(사용자 지정 — S만 노리고 새로 시작하는 리롤을 막으려고). 예상 정점 80 이상이면 86 ± 6을 넘을 때 S라서 두 등급의 실제 정점이 크게 겹친다.
     let g = SCOUT_G.find(x => est >= x[0])[1];
     if(est >= 80) g = est + (sr()-0.5)*12 >= 86 ? 'S' : 'A';
-    scout = {age:C.age, g, ...(C.age === 21 && C.scout18 ? {prev:C.scout18} : {})};
+    // 18세 평가엔 유스 시절 활약(유스 포인트, 4점 만점)을 같이 보여 준다 — 재능 각성에 반영된다는 걸 알 수 있게(사용자 지정)
+    scout = {age:C.age, g, ...(C.age === 21 && C.scout18 ? {prev:C.scout18} : {}), ...(C.age === 18 ? {yp:Math.min(YP_MAX, C.youthPts||0), ypMax:YP_MAX} : {})};
     if(C.age === 18) C.scout18 = g;
   }
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(ratingShow*100)/100, rank,
