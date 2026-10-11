@@ -652,6 +652,10 @@ export function playSeason(state, choice){
   // FW 도움 1.0(예전 0.6): 도움형 공격수(펄스나인·윙어)가 평점 기반 상을 못 받아 상위권 천장이 가장 낮았다(사용자 지적)
   const perfBonus = {FW:(goalsL+astL*1.0)/ap*0.5, MF:(goalsL*1.5+astL*1.2)/ap*0.85, DF:csL/ap*0.6+(goalsL*2+astL*1.5)/ap*0.3+0.065}[C.pos];
   const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+DF_.r+(rng()-0.5)*0.5)) : 0;
+  // 유스: 화면에 보이는 평점은 보정된 기록으로 다시 매긴다(기록만 오르고 평점이 그대로면 어색하다 — 사용자 지적).
+  // 계산(이적 제안 수 등)엔 위의 rating을 그대로 써서 밸런스는 바뀌지 않는다.
+  const perfShow = row0Youth ? {FW:(goals+ast*1.0)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.85, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.3+0.065}[C.pos] : perfBonus;
+  const ratingShow = apps ? Math.max(5.6, Math.min(8.9, rating + perfShow - perfBonus)) : 0;
 
   // 성장 / 하락
   const base = ageBase(), ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
@@ -829,7 +833,7 @@ export function playSeason(state, choice){
     scout = {age:C.age, g, ...(C.age === 21 && C.scout18 ? {prev:C.scout18} : {})};
     if(C.age === 18) C.scout18 = g;
   }
-  const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(rating*100)/100, rank,
+  const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(ratingShow*100)/100, rank,
                youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(scout ? {scout} : {})};
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
   // 점수용 가중 기록(리그 수준 반비례). 옛 토큰은 지금까지 기록을 가중 1로 시작한다.
@@ -840,7 +844,7 @@ export function playSeason(state, choice){
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg; C.tot.ca = (C.tot.ca||0) + ca; C.tot.ccs = (C.tot.ccs||0) + ccs;
   C.peak = Math.max(C.peak, cOvr());
   C.bodyOut = bodyEnd();
-  C.offers = makeOffers(rng, row);
+  C.offers = makeOffers(rng, row, rating);
   C.traitOffer = rollTraits();   // 시즌 결과와 다른 난수열(시즌 결과가 바뀌지 않게)
   if(!C.glass && (C.injCount||0)>=4 && C.injCount/C.hist.length>=0.3){ C.glass = true; row.notes.push('잦은 부상으로 "유리몸" 꼬리표가 붙었어요. 구단들이 영입을 망설여요.'); }
   C.phase = 'result';
@@ -892,7 +896,7 @@ const bodyEnd = () => {
   const drop = Math.min(1, Math.max(0, (C.peak - cOvr() - BODY_END[2]) / BODY_END[3]));
   return mulberry(C.seed ^ hashStr('body|'+C.age))() < (BODY_END[0]*(C.age-34) + BODY_END[1]*(C.wear||0)) * drop;
 };
-function makeOffers(rng, row){
+function makeOffers(rng, row, rt){
   if(C.age < 17) return [];
   C.released = isReleased();
   if(C.released){
@@ -901,7 +905,7 @@ function makeOffers(rng, row){
     for(let i=0; i<k && lows.length; i++){ out0.push({c: lows.splice(Math.floor(rng()*Math.min(lows.length,6)),1)[0], kind:'말년'}); }
     return out0;
   }
-  let n = row.rating>=7.2 ? 3 : row.rating>=6.8 ? 2 : row.apps>5 ? 1 : 0;
+  let n = rt>=7.2 ? 3 : rt>=6.8 ? 2 : row.apps>5 ? 1 : 0;
   if(C.glass) n = Math.max(0, n-1);
   // 내 명성 ±8 구단만(유스 보정은 넣지 않는다 — 넣었다가 17세에 레알·인터 제안이 오는 버그가 있었다)
   const me = cRep(), out = [], pool = ALL.filter(c => c.n!==C.club.n && c.r>=me-8 && c.r<=me+8);
