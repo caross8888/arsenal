@@ -1849,6 +1849,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rc-row .ic{display:flex;gap:1px;flex:none;font-size:12px}
 .cr-rc-row .ic b{font-size:10px;color:var(--text-secondary);margin-left:2px;align-self:center}
 .cr-rc-row .ic svg{display:block}
+.cr-rc-row .c.stack .cn{display:flex;flex-direction:column;gap:2px;min-width:0}.cr-rc-row .c.stack .ic{flex-wrap:wrap;gap:2px}.cr-rc-row .c.stack .cn em{line-height:1.2}
 .cr-rc-row .o{display:inline-flex;justify-content:center;height:22px;align-items:center;border-radius:6px;font-family:var(--fd);font-size:17px;color:#3a2a06;background:#D9B24C}
 .cr-rc-row .o.e{background:linear-gradient(160deg,#C9E6FF,#7DB7F2);color:#0b2440}
 .cr-rc-row .o.p{background:linear-gradient(160deg,#E2C8FF,#9B6BEA);color:#24104a}
@@ -10246,9 +10247,11 @@ function crCardHtml(c){
   c.seasons.forEach(function(r){
     var ars=/아스날/.test(r.club)&&!r.youth;
     var hs=(r.hon||[]).filter(function(x){ return x[2]!=='nat'; }).sort(function(a,b){ return 'SAB'.indexOf(a[1])-'SAB'.indexOf(b[1]); });
-    var icons=hs.slice(0,1).map(function(x){ return crTrophy(x[0],20); }).join('')+(hs.length>1?'<b>+'+(hs.length-1)+'</b>':'');   // 대표 1개 + 개수(3개씩 붙이면 구단명이 "바이…"로 잘렸다)
+    // 큰 상(S·A·B — 발롱도르·챔스·리그 우승·득점왕 등)은 전부 아이콘으로, 작은 상(C)은 개수만(사용자 지정). 구단명 아래 줄에 두어 이름이 잘리지 않게.
+    var bigH=hs.filter(function(x){ return x[1]!=='C'; }), nC=hs.length-bigH.length;
+    var icons=bigH.map(function(x){ return crTrophy(x[0],18); }).join('')+(nC?'<b>+'+nC+'</b>':'');
     tableH+='<div class="cr-rc-row'+(r.youth?' youth':'')+(ars?' ars':'')+'"><span class="a">'+r.age+'</span>'
-     +'<span class="c">'+crCrest({n:r.club, id:r.id},24)+'<em>'+gmEsc(r.team)+(r.loan?' <small>임대</small>':'')+'</em>'+(icons?'<span class="ic">'+icons+'</span>':'')+'</span>'
+     +'<span class="c stack">'+crCrest({n:r.club, id:r.id},24)+'<span class="cn"><em>'+gmEsc(r.team)+(r.loan?' <small>임대</small>':'')+'</em>'+(icons?'<span class="ic">'+icons+'</span>':'')+'</span></span>'
      +'<span class="o '+(r.youth?'y':crOvrCls(r.ovr))+'">'+r.ovr+'</span><span>'+r.apps+'</span><span>'+r.goals+'</span><span>'+(c.pos==='DF'?(r.cs||0):r.ast)+'</span></div>';
   });
   var natHon=honors.filter(function(x){ return x.kind==='nat' && /우승/.test(x.n); });
