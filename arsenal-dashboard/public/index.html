@@ -2168,10 +2168,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-pro-doc .cr-iv-go{width:100%;animation:none}.cr-pro-doc .cr-iv-go:disabled{opacity:.4;cursor:default}
 .cr-pro-doc .wel{text-align:center;font-weight:800;color:#B8892A;font-size:16px;height:0;overflow:hidden;opacity:0;transition:opacity .3s .35s}
 .cr-pro.signed .wel{height:auto;margin-top:10px;opacity:1}.cr-pro.signed .btns,.cr-pro.signed .cr-iv-go{display:none}
-.cr-rc-sig{display:flex;flex-direction:column;align-items:flex-end;margin:6px 4px 0;padding:6px 8px 4px}
-.cr-rc-sig img{width:180px;height:auto;max-height:70px;object-fit:contain}
-:root[data-theme="dark"] .cr-rc-sig img,:root:not([data-theme="light"]) .cr-rc-sig img{filter:invert(1) hue-rotate(180deg) brightness(1.4)}
-.cr-rc-sig span{font-size:11px;color:var(--text-secondary);border-top:1px solid var(--border-bright);padding-top:3px;min-width:140px;text-align:right}
 @media (prefers-reduced-motion: reduce){.cr-pro-doc,.cr-pro.signed .sig .stamp{animation:none!important}.cr-pro.signed .sig .stamp{transform:rotate(-12deg);opacity:.85}}
 .cr-sc-card{position:relative;width:100%;max-width:380px;background:#F3EFE4;color:#1d1b16;border-radius:14px;padding:18px 18px 16px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5);
   animation:crScCard .6s .1s cubic-bezier(.2,1.2,.4,1) both}
@@ -10292,12 +10288,10 @@ function crCardHtml(c){
 }
 // 내 은퇴 카드. 랭킹에서 남의 카드를 열 때는 CR.v(내 커리어)를 건드리지 않고 따로 그린다
 // (목업에서 내 커리어 변수를 남의 카드로 덮어써서, 랭킹 → 돌아가기에 남의 카드가 내 카드처럼 뜨던 버그가 있었다).
-// 은퇴 카드 아래 친필 사인(첫 프로 계약 때 쓴 것 — 이 기기에 있을 때만)
-function crSigBlock(c){ var d=crSigGet(c&&c.id); return d ? '<div class="cr-rc-sig"><img src="'+d+'" alt="'+gmEsc(c.name)+' 서명"><span>'+gmEsc(c.name)+'</span></div>' : ''; }
 function crRetired(){
   var sv=crSaved(), reg=sv && sv.info && sv.info.reg;
   crRender('<div class="cr-top"><button class="gm-back" onclick="crIntro()">← 커리어 모드</button><div class="cr-season">은퇴 카드</div></div>'
-    +'<div id="crShotBox">'+crCardHtml(CR.v.card)+crSigBlock(CR.v.card)+'</div><div class="cr-shot-row"><button class="cr-shot-btn" onclick="crShot(this,1)">📷 공유 카드 저장</button><button class="cr-shot-btn ghost" onclick="crShot(this)">전체 카드 저장</button></div>'
+    +'<div id="crShotBox">'+crCardHtml(CR.v.card)+'</div><div class="cr-shot-row"><button class="cr-shot-btn" onclick="crShot(this,1)">📷 공유 카드 저장</button><button class="cr-shot-btn ghost" onclick="crShot(this)">전체 카드 저장</button></div>'
     +(reg?'':'<div class="gm-best">'+(PK.tok?'<b style="color:var(--text)">'+gmEsc(PK.nick||'')+'</b> 계정으로 랭킹에 등록돼요 · 계정당 최고 커리어 하나':'랭킹 등록은 승부예측 계정으로 해요 · 처음이면 가입부터')+'</div>'),
     '<button class="gm-btn ghost" onclick="crNew()">새 커리어</button>'
     +(reg?'<button class="gm-btn" onclick="crBoard(\'retired\',(CR.v&&CR.v.player&&CR.v.player.pos)||\'\')">랭킹 보기</button>'
