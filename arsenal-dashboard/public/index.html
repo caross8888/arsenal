@@ -1603,6 +1603,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pk-pick .nm{font-size:13px;font-weight:600;overflow-wrap:anywhere}
 .pk-pick.draw .nm{color:var(--text-secondary)}
 .pk-pick.sel.draw .nm{color:var(--gold)}
+.pk-pick.ans{border-color:var(--green)}
+.pk-pick.sel.ok{border-color:var(--green);background:rgba(34,197,94,.2)}
+.pk-pick.sel.ok .bar{background:rgba(34,197,94,.35)}
+.pk-pick.sel.ng{border-color:var(--loss);background:rgba(239,68,68,.16)}
+.pk-pick.sel.ng .bar{background:rgba(239,68,68,.3)}
+.pk-pick.sel.ok.draw .nm{color:var(--green)}
+.pk-pick.sel.ng.draw .nm{color:var(--loss)}
+.pk-fin{display:flex;align-items:center;gap:6px}
+.pk-fin b{color:var(--text);font-weight:700}
 .pk-pick .pc{font-size:10.5px;color:var(--text-secondary);font-variant-numeric:tabular-nums}
 .pk-crest{width:24px;height:24px;object-fit:contain;flex-shrink:0;position:relative}
 .pk-crest-ph{width:24px;height:24px;border-radius:50%;background:var(--surface3);display:grid;place-items:center;font-size:9px;font-weight:700;color:var(--text-secondary);flex-shrink:0;position:relative}
@@ -1638,6 +1647,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 :root[data-theme="light"] .pk-m.r-miss{border-color:rgba(220,38,38,.5);background:rgba(220,38,38,.06)}
 :root[data-theme="light"] .pk-pick.sel{background:rgba(184,146,58,.14)}
 :root[data-theme="light"] .pk-pick.sel .bar{background:rgba(184,146,58,.32)}
+:root[data-theme="light"] .pk-pick.sel.ok{background:rgba(22,163,74,.14)}
+:root[data-theme="light"] .pk-pick.sel.ok .bar{background:rgba(22,163,74,.28)}
+:root[data-theme="light"] .pk-pick.sel.ng{background:rgba(220,38,38,.1)}
+:root[data-theme="light"] .pk-pick.sel.ng .bar{background:rgba(220,38,38,.22)}
 
 @media (prefers-reduced-motion: reduce){.gm-timer i{transition:none!important}.gm-choice.right,.gm-choice.wrong,.gm-gain,.gm-choice.right::after,.gm-score.bump,.gm-lives .lose{animation:none}}
 /* ── 커리어 모드(#games 안, api/career.js) — 목업 docs/career-mode/mockup.html을 옮긴 것.
@@ -8667,15 +8680,20 @@ function pkRender(){
     var open=m.state==='open', ars=(m.home.id==='9825'||m.away.id==='9825');
     var show=m.pct && (hasSaved || !open);
     var top=m.pct?Math.max(m.pct.H,m.pct.D,m.pct.A):-1;
+    // 끝난 경기: 실제 결과 칸은 초록 테두리, 내 예측은 적중이면 초록·빗나갔으면 빨강(현재 라운드에서도 바로 티가 나게 — 사용자 지적)
+    var fin=m.state==='done' && m.result, mine=PK.saved[m.id], kind=fin?(!mine?'none':mine===m.result?'hit':'miss'):'';
     var btn=function(side){
       var sel=PK.picks[m.id]===side, cls=side==='H'?'home':side==='D'?'draw':'away', t=side==='H'?m.home:side==='A'?m.away:null;
+      if(fin){ if(side===m.result) cls+=' ans'; if(sel) cls+=side===m.result?' ok':' ng'; }
       var p=show?m.pct[side]:null;
       return '<button type="button" class="pk-pick '+cls+(sel?' sel':'')+'" data-mid="'+m.id+'" data-side="'+side+'" '+(open?'onclick="pkPick(\''+m.id+'\',\''+side+'\')"':'disabled')+' aria-pressed="'+sel+'">'
         +(p!=null?'<span class="bar'+(p===top?' top':'')+(PK.grow?' grow':'')+'" style="width:'+p+'%"></span>':'')
         +(t?pkCrest(t):'')+'<span class="tx"><span class="nm">'+(t?gmEsc(t.name):'무')+'</span>'+(p!=null?'<span class="pc">'+p+'%</span>':'')+'</span></button>';
     };
     var stTxt=m.state==='open'?'킥오프 전까지 수정 가능':m.state==='done'?'종료 '+gmEsc(m.score):m.state==='cancelled'?'취소·연기':'🔒 경기 시작 · 수정 불가';
-    return '<div class="pk-m'+(ars?' ars':'')+'"><div class="pk-mt"><span>'+pkWhen(m.kickoff)+'</span><span'+(open?'':' class="lock"')+'>'+stTxt+'</span></div>'
+    var stHtml=fin?'<span class="pk-fin">종료 <b>'+gmEsc(m.score)+'</b><span class="pk-badge '+kind+'">'+{hit:'✓ 적중',miss:'✗ 미적중',none:'예측 안 함'}[kind]+'</span></span>'
+      :'<span'+(open?'':' class="lock"')+'>'+stTxt+'</span>';
+    return '<div class="pk-m'+(ars?' ars':'')+(fin?' r-'+kind:'')+'"><div class="pk-mt"><span>'+pkWhen(m.kickoff)+'</span>'+stHtml+'</div>'
       +'<div class="pk-picks">'+btn('H')+btn('D')+btn('A')+'</div></div>';
   }).join('')+'</div>';
   var openN=d.matches.filter(function(m){return m.state==='open';}).length;
