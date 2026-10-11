@@ -1891,7 +1891,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-share .tro{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px}.cr-share .tro>div{position:relative;background:rgba(255,255,255,.06);border-radius:10px;padding:6px 2px 5px;text-align:center}
 .cr-share .tro i{display:block;height:38px}.cr-share .tro i svg{display:inline-block}.cr-share .tro b{position:absolute;top:4px;right:6px;font-size:11px;color:#E4C766}.cr-share .tro span{font-size:10.5px;line-height:1.2;display:block;word-break:keep-all}
 .cr-share .clubs{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:auto}.cr-share .clubs i{font-style:normal;color:rgba(255,255,255,.4);font-size:12px}
-.cr-share .foot{display:flex;justify-content:space-between;align-items:flex-end;font-size:10px;color:rgba(255,255,255,.5);min-height:20px}.cr-share .foot img{height:34px;max-width:150px;object-fit:contain;filter:invert(1) brightness(1.3)}
+.cr-share .foot{display:flex;justify-content:space-between;align-items:flex-end;font-size:10px;color:rgba(255,255,255,.5);min-height:20px}
 .cr-shot-btn{display:block;margin:12px auto 0;font:inherit;font-size:13px;font-weight:700;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:999px;padding:9px 16px;cursor:pointer}
 .cr-shot-btn:disabled{opacity:.6;cursor:default}
 .cr-rc-minor-t{font-size:12.5px;color:var(--text-secondary);text-align:center}
@@ -9571,11 +9571,9 @@ function crPrep(){
   if(iv && CR.evPick==null && !document.querySelector('#crTov .cr-iv')) crIvShow(iv);
   if(tr && CR.evPick==null && !document.querySelector('#crTov .cr-tr')) crTrShow(tr);
 }
-// ── 첫 프로 계약 오버레이(사용자 지정) ── 계약서에 손가락으로 직접 사인한다. 사인은 이 기기에만(localStorage cr_sig_{커리어 id}) 두고
-// 은퇴 카드 아래에 찍는다(이미지 저장에도 들어간다). 서버·랭킹엔 올리지 않는다(KV 용량·부적절한 그림). 귀찮으면 "이름으로 서명"(손글씨 글꼴).
+// ── 첫 프로 계약 오버레이(사용자 지정) ── 계약서에 손가락으로 직접 사인하는 연출. 귀찮으면 "이름으로 서명"(손글씨 글꼴).
+// 사인은 저장하지 않는다 — 은퇴 카드·공유 카드에 찍었다가 둘 다 뺐다(사용자 지정). 서버·랭킹에도 올리지 않는다.
 var CR_SIG_FONT='Nanum Pen Script';
-function crSigKey(id){ return 'cr_sig_'+(id||''); }
-function crSigGet(id){ try{ return id ? localStorage.getItem(crSigKey(id)) : null; }catch(e){ return null; } }
 function crProShow(ct, key){
   if(!document.getElementById('crSigFont')){ var l=document.createElement('link'); l.id='crSigFont'; l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap'; document.head.appendChild(l); }
   var p=CR.v.player, card=CR.meta.cards[p.pos][p.card];
@@ -9613,7 +9611,6 @@ function crSigName(){
 }
 function crProDone(key){
   var S=CR.sig; if(!S || !S.dirty) return;
-  try{ localStorage.setItem(crSigKey(CR.v.player.id), S.cv.toDataURL('image/png')); }catch(e){}
   var doc=document.querySelector('#crTov .cr-pro'); if(doc) doc.classList.add('signed');
   var go=document.getElementById('crProGo'); if(go) go.disabled=true;
   setTimeout(function(){ CR.proSeen=key; CR.sig=null; var o=document.querySelector('#crTov .cr-pro'); if(o) o.classList.add('out'); setTimeout(function(){ crTovSet(''); crPrep(); }, 280); }, 1700);
@@ -10319,7 +10316,7 @@ function crShotFonts(){
     }).then(function(fs){ return fs.join('\n'); }).catch(function(){ _crShotFonts=null; return ''; });
   return _crShotFonts;
 }
-// 공유 카드(사용자 지정): 은퇴 카드 전체는 너무 길어서 4:5 한 장 — 이름·PEAK·점수·통산·대표 수상 6개·거쳐 간 구단·사인.
+// 공유 카드(사용자 지정): 은퇴 카드 전체는 너무 길어서 4:5 한 장 — 이름·PEAK·점수·통산·대표 수상 6개·거쳐 간 구단(사인은 넣었다가 뺐다).
 // 화면 밖에 잠깐 그려서 캡처하고 지운다. 테마와 상관없이 어두운 배경 고정(공유했을 때 늘 같은 모양).
 function crShareHtml(c){
   crTrophyDefs();
@@ -10328,14 +10325,13 @@ function crShareHtml(c){
   order.sort(function(a,b){ return 'SABC'.indexOf(grp[a].tier)-'SABC'.indexOf(grp[b].tier) || grp[b].c-grp[a].c; });
   var nTro=c.honors.filter(function(x){ return x[2]!=='ind' && /우승/.test(x[0]); }).length;
   var clubs=[]; (c.seasons||[]).forEach(function(r){ if(r.youth) return; var L=clubs[clubs.length-1]; if(L && L.n===r.club) return; clubs.push({n:r.club, id:r.id}); });
-  var sig=crSigGet(c.id);
   return '<div class="cr-share"><div class="top"><span>CAREER</span><b>'+crFlag(c.nation)+gmEsc(crNat(c.nation).n)+'</b></div>'
    +'<div class="nm">'+gmEsc(c.name)+'</div><div class="sub">'+gmEsc(card.n)+' · #'+c.num+' · '+c.age+'세 은퇴</div>'
    +'<div class="row"><div class="pk"><small>PEAK</small><b>'+c.peak+'</b></div><div class="sc"><small>커리어 점수</small><b>'+Number(c.score).toLocaleString()+'</b>'
    +'<div class="st">'+t.apps+'경기 · '+t.goals+'골 · '+(DF?(t.cs||0)+'CS':t.ast+'도움')+' · '+nTro+'우승</div></div></div>'
    +(order.length?'<div class="tro">'+order.slice(0,6).map(function(k){ return '<div><i>'+crTrophy(k,38)+'</i>'+(grp[k].c>1?'<b>×'+grp[k].c+'</b>':'')+'<span>'+gmEsc(k)+'</span></div>'; }).join('')+'</div>':'')
    +'<div class="clubs">'+clubs.map(function(x){ return crCrest(x,26); }).join('<i>›</i>')+'</div>'
-   +'<div class="foot"><span>The Gunners Hub · 커리어 모드</span>'+(sig?'<img src="'+sig+'" alt="">':'')+'</div></div>';
+   +'<div class="foot"><span>The Gunners Hub · 커리어 모드</span></div></div>';
 }
 function crShot(btn, share){
   if(btn.disabled) return;
