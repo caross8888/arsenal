@@ -124,7 +124,7 @@ const NEW_SIGNING = [0.08, -0.04];   // 선발 확률: [이적 첫 시즌 +, 같
 const AW_PRESTIGE = [0.2, 105];   // 수상용 평점의 구단 수준 보정: [15 차이마다 ±, 기준 명성(1군 시즌 평균 구단 명성 근처)]
 // 이벤트 성장 효과(선택 차이를 키움 — 사용자 지정). 성장 쪽을 고르면 부상 위험도 같이 커진다.
 // 선택 강화(사용자 지정 — "재능 비중 ↓, 선택 비중 ↑"): 이벤트 효과·대가를 예전의 2배로(트레이너·특별 훈련 +15% → +30%, 대가도 2배, 면담 +10% → +20%)
-const EV_GROW = {coach:1.15, coachInj:0.10, coachStart:0, extra:1.3, extraInj:0.14, talk:1.2};
+const EV_GROW = {coach:1.17, coachInj:0.10, coachStart:0, extra:1.3, extraInj:0.14, talk:1.2};
 // 특성: 18세부터 시즌 끝에 조건 스탯을 넘은 특성이 있으면 이 확률로 제안(최대 3개 제시, 하나 고름), 선수당 최대 TRAIT_MAX개
 const TRAIT_P = 0.3, TRAIT_MAX = 3, POS_TRAITS_ON = false;
 const TRAIT_BY_ID = new Map([...TRAITS, ...CTRAITS.map(t => ({...t, pos:'공통'}))].map(t => [t.id, t]));
