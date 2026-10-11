@@ -83,7 +83,8 @@ const BODY_U = [1.2, 0.12], BODY_FIT = 0.015, TRAIN_AGE = [20, 0.18];
 // 하위 리그일수록 골·도움·클린시트가 더 나오고(LG_OUT·LG_CS — 상대 수비·공격이 약하다), 대신 그 리그에서 낸 기록과 리그 개인상·우승의 점수는 반비례로 깎는다(LG_PTS).
 // 출력 × 점수 = 1 · 0.95 · 0.9 · 0.84 · 0.75 — 약한 리그에서 숫자는 화려해도 점수로는 큰 리그가 낫게.
 const LG_TIER = {ENG:1,ESP:1,GER:1,ITA:1,FRA:1, BRA:2,POR:2,NED:2,BEL:2,ARG:2, NOR:3,USA:3, JPN:4,KOR:4, NGA:5};
-const YP_MAX = 4;   // 유스 포인트 만점(재능 각성 반영 상한)
+const YP_MAX = 4;
+const Y_NAT = [56, 3, 7.0, 0.3, 0.2];   // 연령별 대표: 오버롤 ≥ [0] + (A대표 기준−75)×[3] + (나이−16)×[1], 유스는 표시 평점 ≥ [2], 1군 10대는 선발 40%+ · 평점 + (21−나이)×[4] ≥ [2]   // 유스 포인트 만점(재능 각성 반영 상한)
 const Y_OUT = {g:1.6, a:1.5, cs:1}, Y_REF = [62, 62, 65], Y_PERF = [2, 1.5], Y_GROW = [7.2, 7.5, 1.05, 1.1], Y_POS = {FW:0.12, MF:-0.03, DF:-0.05};   // 유스 표시 평점: Y_REF 또래 기준 오버롤(U-16/U-18/U-21), Y_PERF [활약 가점 배율, 6.8 중심 폭 배율], Y_GROW [문턱1, 문턱2, 성장 배율1, 배율2] — 문턱1 이상이면 유스 포인트 +1(18세 전), Y_POS 포지션별 표시 평점 보정 — 없으면 유스 7.2+ 비율이 FW 17% / MF 25% / DF 28%로 갈려 성장 보너스가 미드·수비에 쏠렸다(사용자 지적: TOP50에서 공격수 감소)   // 유스 무대 기록 보정(보이는 기록만 — 점수엔 안 들어감)
 const LG_OUT = [0,1,1.12,1.25,1.35,1.5], LG_CS = [0,1,1.08,1.16,1.22,1.3], LG_PTS = [0,1,0.85,0.72,0.62,0.5];
 const lgTier = nat => LG_TIER[nat] || 3;
@@ -768,8 +769,8 @@ export function playSeason(state, choice){
   C.uclNext = rank<=4 && club.r>=78 ? club.n : null;
 
   // 대표팀·국제 대회(2030년부터 4년마다 월드컵, 그 사이 2년마다 대륙컵)
-  let caps = 0, cg = 0, ca = 0, ccs = 0; const year = 2026+(C.age-15)+1;
-  if(C.age>=18 && ov>=NAT_BAR[C.nation]-2){
+  let caps = 0, cg = 0, ca = 0, ccs = 0, ycall = false; const year = 2026+(C.age-15)+1;
+  if(C.age>=18 && ov>=NAT_BAR[C.nation]-2-(C.ycaps?1:0)){
     caps = Math.round(4+rng()*6);
     if(ev==='natcall' && pick===1) caps = Math.max(1, Math.round(caps/2));   // 휴식 요청: 대표 경기 절반
     notes.push(natInfo(C.nation).n+' 대표팀에 뽑혔어요.');
@@ -794,7 +795,13 @@ export function playSeason(state, choice){
     const nr = mulberry(C.seed ^ hashStr('natx|'+C.age)), rnd = x => Math.floor(x) + (nr() < x-Math.floor(x) ? 1 : 0);
     ca = rnd(caps*Math.min(0.6, (apps >= 5 ? ast/apps : {FW:0.12, MF:0.12, DF:0.04}[C.pos])*0.8)*(0.6+nr()*0.8));
     ccs = rnd(caps*Math.min(0.6, apps >= 5 ? cs/apps : 0.3)*(0.8+nr()*0.4));
-  } else if(C.age>=16 && C.age<18 && ov>=NAT_BAR[C.nation]-22) notes.push(natInfo(C.nation).n+' 연령별 대표팀에 뽑혔어요.');
+  } else if(C.age>=16 && C.age<=19 && !C.tot.caps && ov >= Y_NAT[0] + (NAT_BAR[C.nation]-75)*Y_NAT[3] + (C.age-16)*Y_NAT[1] && (row0Youth ? ratingShow >= Y_NAT[2] : starts >= games*0.4 && rating + Math.max(0, 21-C.age)*Y_NAT[4] >= Y_NAT[2])){
+    // 10대에 이미 1군에서 뛰는 선수(약소국에 많다)도 대상 — 유스만 보면 한국·나이지리아 발탁률이 노르웨이의 1/3이었다.
+    // 연령별 대표(사용자 지정 — 예전 기준 "A대표 기준 −22"는 16~17세 전원이 뽑혀 의미가 없었다). 그 나라 기준 + 그 시즌 유스 평점으로 잘하는 유스만.
+    // 보상: 그 시즌 명성 +1, 연령별 대표 경력이 있으면 A대표 첫 발탁 문턱 −1(아래 C.ycaps).
+    ycall = true; C.ycaps = (C.ycaps||0) + 1;
+    notes.push(natInfo(C.nation).n+' '+(C.age<=17 ? 'U-17' : 'U-19')+' 대표팀에 뽑혔어요.');
+  }
 
   // 발롱도르·FIFA 올해의 선수: 시즌 활약 점수 vs 그해 세계 경쟁자
   if(senior && apps>=20){
@@ -821,7 +828,7 @@ export function playSeason(state, choice){
   if(C.boost > 1) notes.push('수상 효과로 다음 시즌 성장 ×'+C.boost.toFixed(2)+(C.age>=28?'(하락 완화)':''));
   if(inUCL) notes.push('챔스 '+uG+'골 '+uA+'도움');
   // 명성: 1군 활약 보너스, 매 시즌 0 쪽으로 1씩 줄어든다
-  let fg = row0Youth ? 0 : (rating>=7.3?2:rating>=6.9?1:rating<6.3&&apps>5?-1:0)+fameAdd;
+  let fg = row0Youth ? (ycall ? 1 : 0) : (rating>=7.3?2:rating>=6.9?1:rating<6.3&&apps>5?-1:0)+fameAdd;
   // 자신감 인터뷰 판정은 그 나이·무대 기준으로: 1군 공식 평점으로 7.0을 재면 유스·20세 이하 1군은 성공률 0%였다(사용자 지적 — 첫 인터뷰는 무조건 부메랑).
   // 유스는 표시 평점으로 7.35(21세 이상 U-21은 7.8), 20세 이하 1군은 한 살 어릴수록 문턱 −0.3 — 어느 쪽이든 성공률 20% 안팎(21세 이상 1군 17%와 비슷).
   const rJudge = row0Youth ? ratingShow : rating, mediaBar = row0Youth ? (C.age<=20 ? 7.35 : 7.8) : 7.0 - Math.max(0, 21-C.age)*0.3;
