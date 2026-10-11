@@ -1726,25 +1726,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   body.game-mode #gameRoot > .cr{flex:1}
 }
 /* 2페이지 카드 */
-.cr-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.cr-card{font:inherit;text-align:left;color:var(--text);background:var(--surface2);border:1.5px solid var(--border-bright);border-radius:14px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,transform .15s;-webkit-tap-highlight-color:transparent}
-.cr-card:active{transform:scale(.98)}
-.cr-card[aria-pressed=true]{border-color:var(--gold);background:rgba(200,168,75,.1)}
-.cr-card .t{font-weight:700;font-size:15px}
-.cr-card .d{font-size:12px;color:var(--text-secondary);line-height:1.45;min-height:35px}
-.cr-wbar{display:grid;grid-template-columns:44px 1fr 30px;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);white-space:nowrap}
-.cr-wbar i{height:5px;border-radius:3px;background:var(--surface3);position:relative;overflow:hidden}
-.cr-wbar i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--c,var(--gold));border-radius:3px}
-.cr-wbar span{text-align:right;font-variant-numeric:tabular-nums}
-.cr-stat{display:grid;grid-template-columns:76px 1fr 40px;align-items:center;gap:8px}
-.cr-stat .n{font-size:13px;font-weight:700;white-space:nowrap}
-.cr-stat .n small{display:block;font-weight:400;font-size:11px;color:var(--gold)}
-.cr-stat .bar{height:8px;border-radius:4px;background:var(--surface3);position:relative;overflow:hidden}
-.cr-stat .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--text-secondary);border-radius:4px}
-.cr-stat .bar i.add{background:var(--gold)}
-.cr-stat .v{font-family:var(--fd);font-size:22px;text-align:right}
-.cr-ovr{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:12px;padding:10px 14px}
-.cr-ovr .big{font-family:var(--fd);font-size:44px;color:var(--gold);line-height:1}
+.cr-types{display:flex;flex-direction:column;gap:7px}
+.cr-type{font:inherit;text-align:left;color:var(--text);background:var(--surface2);border:1.5px solid var(--border-bright);border-radius:12px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,background-color .15s;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+.cr-type[aria-pressed=true]{border-color:var(--gold);background:rgba(200,168,75,.08)}
+.cr-type-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cr-type-h .t{font-weight:700;font-size:15px;margin-right:2px}
+.cr-type-h .tags{display:flex;gap:4px;flex-wrap:wrap}
+.cr-type-h .tags em{font-style:normal;font-size:11px;font-weight:600;color:var(--gold);border:1px solid var(--border-accent);padding:1px 7px;border-radius:999px}
+.cr-type-h .cr-fit{margin:0 0 0 auto}
+.cr-type-d{font-size:12.5px;color:var(--text-secondary);line-height:1.45}
+.cr-type-st{display:grid;grid-template-columns:auto 1fr 28px;gap:7px 10px;align-items:center;font-size:12.5px}
+.cr-type-st .n{color:var(--text-secondary)}.cr-type-st .n.g{color:var(--gold);font-weight:700}
+.cr-type-st i{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--text-secondary) var(--v),var(--surface3) var(--v))}
+.cr-type-st i.g{background:linear-gradient(90deg,var(--gold) var(--v),var(--surface3) var(--v))}
+.cr-type-st b{text-align:right;font-variant-numeric:tabular-nums}
+.cr-gold{color:var(--gold);font-weight:700}
 /* 3페이지 구단 · 이적시장 */
 .cr-me{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;background:var(--surface);border:1px solid var(--border-bright);border-radius:14px;padding:12px}
 .cr-me .v{font-family:var(--fd);font-size:28px;color:var(--gold);line-height:1.1}
@@ -9305,28 +9301,28 @@ function crDock1(){
 }
 
 // ── 2페이지: 선수 유형 카드(시작 스탯은 카드로 자동) ───────────────────
-function crPage2(){
+function crPage2(keep){
+  // 한 줄 리스트(사용자 지정 — 카드마다 성장 막대 + 아래 상세 패널로 같은 정보가 두 번 나왔다). 행엔 이름·강점 태그·체형 궁합만,
+  // 고른 행만 펼쳐서 설명과 시작 스탯을 보여 준다. 시작 오버롤은 카드와 상관없이 같아서 제목 아래 한 번만 적는다.
   var S=CR.S, st=CR.meta.stats[S.pos], cards=CR.meta.cards[S.pos], h='';
+  var bsh=S.body&&CR.meta.bodies?CR.meta.bodies.info[S.body].start[S.pos]:[0,0,0,0,0];
   h='<div class="cr-top"><button class="gm-back" onclick="crPage1()">← 이전</button>'+crSteps(2)+'</div>'
-   +'<h1 class="cr-h1">PLAYER <span>TYPE</span></h1><p class="cr-sub">2 / 3 · 카드마다 시작 스탯과 성장 속도가 달라요</p>'
-   +'<div class="cr-cards">'+cards.map(function(c,k){
-     var ft=crBodyFit(S.body,S.pos,k), fl=ft>=0.8?['good','체형 궁합 좋음']:ft<=-0.8?['bad','체형 궁합 나쁨']:null;
-     return '<button class="cr-card" aria-pressed="'+(S.card===k)+'" onclick="CR.S.card='+k+';CR.firstClubs=null;crPage2()"><div class="t">'+gmEsc(c.n)+'</div><div class="d">'+gmEsc(c.d)+'</div>'
-      +(fl?'<div class="cr-fit '+fl[0]+'">'+gmEsc(S.body)+' · '+fl[1]+'</div>':'')
-      +c.w.map(function(w,i){ return '<div class="cr-wbar"><span style="text-align:left">'+st[i]+'</span><i style="--w:'+Math.round((w-0.5)/1.1*100)+'%;--c:'+(w>=1.3?'var(--gold)':w<=0.8?'var(--text-dim)':'var(--text-secondary)')+'"></i><span>×'+w.toFixed(1)+'</span></div>'; }).join('')
-      +'</button>'; }).join('')+'</div>';
-  if(S.card!=null){
-    var c=cards[S.card], bsh=S.body&&CR.meta.bodies?CR.meta.bodies.info[S.body].start[S.pos]:[0,0,0,0,0];
-    h+='<div class="cr-panel"><div class="cr-lbl"><b>'+gmEsc(c.n)+' 시작 스탯</b><span>카드'+(S.body&&S.body!=='표준'?'·체형('+gmEsc(S.body)+')':'')+'에 따라 정해져요</span></div>'
-     +st.map(function(n,i){ var v=Math.round(c.st[i]+bsh[i]), base=Math.min(40,v), add=Math.max(0,v-40);   // 시작 오버롤을 맞추느라 약점 스탯이 40 아래일 수 있다
-       return '<div class="cr-stat"><div class="n">'+n+'<small>성장 ×'+c.w[i].toFixed(1)+'</small></div>'
-        +'<div class="bar"><i style="width:'+base+'%"></i><i class="add" style="left:'+base+'%;width:'+add+'%"></i></div><div class="v">'+v+'</div></div>'; }).join('')
-     +'<p class="cr-note">시작 스탯도 성장 속도도 카드의 강점(금색)을 따라가요. 체형이 카드 강점을 키우면(궁합 좋음) 조금 더 빨리 커요.</p>'
-     +'<div class="cr-ovr"><div class="cr-note">시작 오버롤<br>최대 99까지 성장</div><div class="big">'+c.ovr+'</div></div></div>';
-  }
+   +'<h1 class="cr-h1">PLAYER <span>TYPE</span></h1><p class="cr-sub">2 / 3 · 시작 오버롤 '+cards[0].ovr+' · <b class="cr-gold">금색</b>은 빨리 크는 능력치예요</p>'
+   +'<div class="cr-types">'+cards.map(function(c,k){
+     var on=S.card===k, ft=crBodyFit(S.body,S.pos,k), fl=ft>=0.8?['good','궁합 좋음']:ft<=-0.8?['bad','궁합 나쁨']:null;
+     var tags=c.w.map(function(w,i){ return [w,i]; }).filter(function(x){ return x[0]>=1.3; }).sort(function(a,b){ return b[0]-a[0]; })
+       .map(function(x){ return '<em>'+gmEsc(st[x[1]])+'</em>'; }).join('');
+     var body='';
+     if(on) body='<div class="cr-type-d">'+gmEsc(c.d)+'</div><div class="cr-type-st">'+st.map(function(n,i){
+       var v=Math.round(c.st[i]+bsh[i]), g=c.w[i]>=1.3;
+       return '<span class="n'+(g?' g':'')+'">'+gmEsc(n)+'</span><i class="'+(g?'g':'')+'" style="--v:'+Math.max(4,Math.min(100,Math.round((v-20)/50*100)))+'%"></i><b>'+v+'</b>'; }).join('')+'</div>';
+     return '<button type="button" class="cr-type" aria-pressed="'+on+'" onclick="CR.S.card='+k+';CR.firstClubs=null;crPage2(1)">'
+      +'<div class="cr-type-h"><span class="t">'+gmEsc(c.n)+'</span><span class="tags">'+tags+'</span>'+(fl?'<span class="cr-fit '+fl[0]+'">'+fl[1]+'</span>':'')+'</div>'+body+'</button>';
+   }).join('')+'</div>'
+   +(S.body&&S.body!=='표준'?'<p class="cr-note" style="margin-top:10px">체형('+gmEsc(S.body)+')이 카드 강점을 키우면 궁합 좋음 — 조금 더 빨리 커요. 시작 스탯엔 체형 보정이 들어가 있어요.</p>':'');
   var ok=S.card!=null;
-  crRender(h, '<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage3(this)">'+(ok?'다음 · 첫 구단':'카드를 골라 주세요')+'</button>');
-  window.scrollTo(0,0);
+  crRender(h, '<button class="gm-btn" '+(ok?'':'disabled')+' onclick="crPage3(this)">'+(ok?'다음 · 첫 구단':'유형을 골라 주세요')+'</button>');
+  if(!keep) window.scrollTo(0,0);   // 유형을 바꿀 땐 그 자리에 둔다
 }
 
 // ── 3페이지: 첫 구단(자국 유스팀 세 곳) ────────────────────────────────
