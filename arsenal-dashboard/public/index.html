@@ -2163,6 +2163,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-pro.signed .sig .stamp{animation:crProStamp .35s cubic-bezier(.3,1.4,.5,1) forwards}
 @keyframes crProStamp{to{transform:rotate(-12deg) scale(1);opacity:.85}}
 .cr-pro-doc .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.cr-pro-doc .btns .gm-btn{margin:0;padding:10px;font-size:13.5px}
+/* 계약서는 테마와 상관없이 크림색 종이라 버튼 색도 고정(다크 모드에서 흰 글자가 안 보였다 — 사용자 제보) */
+.cr-pro-doc .btns .gm-btn{color:#1d1b16;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.22)}
 .cr-pro-doc .cr-iv-go{width:100%;animation:none}.cr-pro-doc .cr-iv-go:disabled{opacity:.4;cursor:default}
 .cr-pro-doc .wel{text-align:center;font-weight:800;color:#B8892A;font-size:16px;height:0;overflow:hidden;opacity:0;transition:opacity .3s .35s}
 .cr-pro.signed .wel{height:auto;margin-top:10px;opacity:1}.cr-pro.signed .btns,.cr-pro.signed .cr-iv-go{display:none}
