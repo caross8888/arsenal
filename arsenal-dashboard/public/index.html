@@ -1863,6 +1863,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rc-tot b{font-family:var(--fd);font-size:28px;font-weight:400}
 .cr-rc-score{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
 .cr-rc-score span{font-size:12px;color:var(--text-secondary)} .cr-rc-score b{font-family:var(--fd);font-size:30px;font-weight:400;color:var(--gold)}
+.cr-pro-doc .club .prev{display:block;font-style:normal;font-size:12px;color:#6b6250;margin-bottom:1px}
+.cr-off{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;cursor:pointer;background:radial-gradient(90% 60% at 50% 40%,#5a0c10,#0B0D12 70%);color:#F0F2F7;transition:opacity .28s}
+.cr-off.out{opacity:0}
+.cr-off .box{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
+.cr-off .tag{font-family:var(--fd);font-size:54px;letter-spacing:6px;color:#fff;background:#EF0107;padding:2px 18px 0;transform:skewX(-8deg);animation:crOffTag .45s cubic-bezier(.2,1.3,.4,1) both}
+.cr-off .crest{margin-top:10px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;animation:crIvUp .45s .3s ease-out both}
+.cr-off .nm{font-size:28px;font-weight:900;margin-top:6px;animation:crIvUp .4s .55s ease-out both}
+.cr-off .line{font-size:17px;font-weight:700;color:#E4C766;animation:crIvUp .4s .7s ease-out both}
+.cr-off .meta{font-size:12.5px;color:rgba(255,255,255,.7);animation:crIvUp .4s .85s ease-out both}
+.cr-off .go{width:200px;margin-top:14px;animation:crIvUp .4s 1s ease-out both}.cr-off .go i{display:block;height:2px;background:#C8A84B;transform-origin:left;animation:crSfGo 2.8s linear both}
+.cr-off .go span{display:block;margin-top:6px;font-size:11.5px;color:rgba(255,255,255,.5)}
+@keyframes crOffTag{from{transform:skewX(-8deg) scale(2.2);opacity:0}to{transform:skewX(-8deg) scale(1);opacity:1}}
+@media (prefers-reduced-motion: reduce){.cr-off *{animation:none!important}}
 .cr-rc-shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
 .cr-rc-sum{display:grid;grid-template-columns:1.45fr repeat(4,1fr);align-items:center;text-align:center;background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:10px 4px}
 .cr-rc-sum>div{display:flex;flex-direction:column;gap:1px;min-width:0}
@@ -9566,27 +9579,34 @@ function crPrep(){
    +crHist(),
    '<div class="sum">'+p.age+'세<b>'+p.ovr+'</b></div><button class="gm-btn" '+(CR.evPick!=null?'':'disabled')+' onclick="crSeason(this)">'+(CR.evPick!=null?'시즌 시작':'이벤트를 골라 주세요')+'</button>');
   // 첫 프로 계약(1군에 처음 올라온 시즌 준비 화면에서 한 번) — 사인하고 나면 이벤트 오버레이로 이어진다
-  var ctr=pr.contract, ctrKey=ctr?(p.id||p.name)+'|pro':null;
+  var ctr=pr.contract, ctrKey=ctr?(p.id||p.name)+'|'+(ctr.type||'pro')+'|'+ctr.from:null;
   if(ctr && CR.proSeen!==ctrKey){ if(!document.querySelector('#crTov .cr-pro')) crProShow(ctr, ctrKey); return; }
   if(iv && CR.evPick==null && !document.querySelector('#crTov .cr-iv')) crIvShow(iv);
   if(tr && CR.evPick==null && !document.querySelector('#crTov .cr-tr')) crTrShow(tr);
 }
-// ── 첫 프로 계약 오버레이(사용자 지정) ── 계약서에 손가락으로 직접 사인하는 연출. 귀찮으면 "이름으로 서명"(손글씨 글꼴).
-// 사인은 저장하지 않는다 — 은퇴 카드·공유 카드에 찍었다가 둘 다 뺐다(사용자 지정). 서버·랭킹에도 올리지 않는다.
+// ── 계약서 오버레이(사용자 지정) ── 첫 프로 계약(pro)·이적(transfer)·재계약(renew). 손가락으로 직접 사인하고, 귀찮으면 "이름으로 서명"(손글씨 글꼴).
+// 사인은 이 기기에만(localStorage cr_sig_{커리어 id}) 두고 다음 계약서에 자동으로 써 넣는다(다시 쓸 수도 있다). 카드·서버·랭킹엔 넣지 않는다.
+// 이적·재계약은 사인 뒤 OFFICIAL 발표로 이어진다.
 var CR_SIG_FONT='Nanum Pen Script';
+var CR_CT={pro:['PROFESSIONAL CONTRACT','첫 프로 계약'], transfer:['TRANSFER AGREEMENT','이적 계약'], renew:['CONTRACT EXTENSION','재계약']};
+function crSigKey(id){ return 'cr_sig_'+(id||''); }
+function crSigGet(id){ try{ return id ? localStorage.getItem(crSigKey(id)) : null; }catch(e){ return null; } }
 function crProShow(ct, key){
+  var ty=ct.type||'pro', T=CR_CT[ty]||CR_CT.pro;
   if(!document.getElementById('crSigFont')){ var l=document.createElement('link'); l.id='crSigFont'; l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap'; document.head.appendChild(l); }
   var p=CR.v.player, card=CR.meta.cards[p.pos][p.card];
-  crTovSet('<div class="cr-pro" role="dialog" aria-modal="true" aria-label="첫 프로 계약"><div class="cr-pro-doc">'
-    +'<div class="hd"><span>PROFESSIONAL CONTRACT</span><b>첫 프로 계약</b></div>'
-    +'<div class="club">'+crCrest({n:ct.club, id:ct.id},46)+'<div><b>'+gmEsc(ct.team)+'</b><small>1군 · '+ct.from+'년 여름 – '+ct.until+'년 여름 (4+1년)</small></div></div>'
+  crTovSet('<div class="cr-pro" role="dialog" aria-modal="true" aria-label="'+T[1]+'"><div class="cr-pro-doc">'
+    +'<div class="hd"><span>'+T[0]+'</span><b>'+T[1]+'</b></div>'
+    +'<div class="club">'+crCrest({n:ct.club, id:ct.id},46)+'<div>'+(ty==='transfer'&&ct.prev?'<em class="prev">'+gmEsc(ct.prev)+' →</em>':'')+'<b>'+gmEsc(ct.team)+'</b><small>'+(ty==='renew'?'계약 연장 · ':'1군 · ')+ct.from+'년 여름 – '+ct.until+'년 여름 ('+(ct.years||'4+1')+'년)</small></div></div>'
     +'<dl><div><dt>선수</dt><dd>'+gmEsc(p.name)+' <small>'+ct.age+'세</small></dd></div><div><dt>포지션</dt><dd>'+gmEsc(card.n)+'</dd></div>'
-    +'<div><dt>등번호</dt><dd><b class="num">'+ct.num+'</b>'+(ct.num!==ct.want?'<small>원하던 '+ct.want+'번은 1군 선배가 달고 있어요 · 자리 잡으면 받아요</small>':'')+'</dd></div></dl>'
-    +'<p class="txt">위 선수는 '+gmEsc(ct.team)+'과(와) 프로 계약을 맺고, 구단의 1군 선수로 뛰는 데 동의합니다.</p>'
+    +'<div><dt>등번호</dt><dd><b class="num">'+ct.num+'</b>'+(ct.num!==ct.want?'<small>원하던 '+ct.want+'번은 '+(ty==='pro'?'1군 선배가':'팀 동료가')+' 달고 있어요 · 자리 잡으면 받아요</small>':'')+'</dd></div></dl>'
+    +'<p class="txt">'+(ty==='transfer'?'위 선수는 '+gmEsc(ct.prev||'')+'을(를) 떠나 '+gmEsc(ct.team)+'과(와) 계약을 맺고, 새 구단의 선수로 뛰는 데 동의합니다.'
+      :ty==='renew'?'위 선수와 '+gmEsc(ct.team)+'은(는) 계약을 '+ct.until+'년 여름까지 연장하는 데 동의합니다.'
+      :'위 선수는 '+gmEsc(ct.team)+'과(와) 프로 계약을 맺고, 구단의 1군 선수로 뛰는 데 동의합니다.')+'</p>'
     +'<div class="sig" id="crSig"><canvas id="crSigCv"></canvas><span class="ph">여기에 서명하세요</span><i class="ln"></i><small>서명 · '+gmEsc(p.name)+'</small><div class="stamp" aria-hidden="true">SIGNED</div></div>'
     +'<div class="btns"><button type="button" class="gm-btn ghost" onclick="crSigClear()">다시 쓰기</button><button type="button" class="gm-btn ghost" onclick="crSigName()">이름으로 서명</button></div>'
     +'<button class="cr-iv-go" id="crProGo" disabled onclick="crProDone(\''+key.replace(/'/g,'')+'\')">계약 완료</button>'
-    +'<div class="wel">Welcome to the first team!</div></div></div>');
+    +'<div class="wel">'+(ty==='pro'?'Welcome to the first team!':'')+'</div></div></div>');
   CR.sig={dirty:false};
   var cv=document.getElementById('crSigCv'), box=document.getElementById('crSig'), r=cv.getBoundingClientRect(), dpr=Math.max(1, window.devicePixelRatio||1);
   cv.width=Math.round(r.width*dpr); cv.height=Math.round(r.height*dpr);
@@ -9598,6 +9618,14 @@ function crProShow(ct, key){
     var v=Math.hypot(q.x-last.x,q.y-last.y)/Math.max(1,q.t-last.t); g.lineWidth=Math.max(1.4, 3.2-v*1.1);   // 빨리 그으면 가늘게 — 펜 느낌
     g.beginPath(); g.moveTo(mid.x,mid.y); g.quadraticCurveTo(last.x,last.y,m.x,m.y); g.stroke(); last=q; mid=m; });
   var up=function(){ last=null; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', up);
+  // 두 번째 계약부터는 저장해 둔 사인을 왼쪽부터 써 내려가듯 자동으로 넣는다(사용자 지정). 다른 기기라 없으면 직접 쓴다.
+  var saved=ty!=='pro' && crSigGet(p.id);
+  if(saved){ var im=new Image(); im.onload=function(){ var t0=null, W=CR.sig.w, H=CR.sig.h;
+      var step=function(ts){ if(!CR.sig || CR.sig.cv!==cv) return; if(t0==null) t0=ts; var k=Math.min(1,(ts-t0)/900);
+        g.save(); g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,cv.width,cv.height); g.beginPath(); g.rect(0,0,cv.width*k,cv.height); g.clip(); g.drawImage(im,0,0,cv.width,cv.height); g.restore();
+        if(k<1) requestAnimationFrame(step); else crSigMark(); };
+      setTimeout(function(){ requestAnimationFrame(step); }, 450); }; im.src=saved;
+    var ph=box.querySelector('.ph'); if(ph) ph.textContent='저장된 서명을 불러오는 중...'; }
 }
 function crSigMark(){ if(!CR.sig) return; CR.sig.dirty=true; var b=document.getElementById('crSig'); if(b) b.classList.add('on'); var go=document.getElementById('crProGo'); if(go) go.disabled=false; }
 function crSigClear(){ var S=CR.sig; if(!S) return; S.g.clearRect(0,0,S.w,S.h); S.dirty=false; var b=document.getElementById('crSig'); if(b) b.classList.remove('on'); var go=document.getElementById('crProGo'); if(go) go.disabled=true; }
@@ -9611,9 +9639,28 @@ function crSigName(){
 }
 function crProDone(key){
   var S=CR.sig; if(!S || !S.dirty) return;
+  try{ localStorage.setItem(crSigKey(CR.v.player.id), S.cv.toDataURL('image/png')); }catch(e){}   // 다음 계약서에 자동으로 넣는다
+  var ct=(CR.v.prep||{}).contract||{}, ty=ct.type||'pro';
   var doc=document.querySelector('#crTov .cr-pro'); if(doc) doc.classList.add('signed');
   var go=document.getElementById('crProGo'); if(go) go.disabled=true;
+  if(ty!=='pro'){ setTimeout(function(){ CR.proSeen=key; CR.sig=null; crOfficialShow(ct); }, 1100); return; }
   setTimeout(function(){ CR.proSeen=key; CR.sig=null; var o=document.querySelector('#crTov .cr-pro'); if(o) o.classList.add('out'); setTimeout(function(){ crTovSet(''); crPrep(); }, 280); }, 1700);
+}
+// OFFICIAL 발표(이적·재계약 사인 뒤) — 구단 공식 발표 그래픽 느낌. 약 2.8초 뒤 저절로, 누르면 바로.
+function crOfficialShow(ct){
+  var p=CR.v.player, tr=ct.type==='transfer';
+  crTovSet('<div class="cr-off" role="dialog" aria-modal="true" aria-label="공식 발표" onclick="crOfficialGo()"><div class="box">'
+    +'<div class="tag">OFFICIAL</div>'
+    +'<div class="crest">'+crCrest({n:ct.club, id:ct.id},86)+'</div>'
+    +'<div class="nm">'+gmEsc(p.name)+'</div>'
+    +'<div class="line">'+(tr?gmEsc(ct.team)+' 입단':gmEsc(ct.team)+'과(와) 재계약')+'</div>'
+    +'<div class="meta">#'+ct.num+' · '+ct.until+'년 여름까지 ('+ct.years+'년)'+(tr&&ct.prev?' · 전 소속 '+gmEsc(ct.prev):'')+'</div>'
+    +'<div class="go"><i></i><span>누르면 넘어가요</span></div></div></div>');
+  CR.offT=setTimeout(crOfficialGo, 2800);
+}
+function crOfficialGo(){
+  clearTimeout(CR.offT); CR.offT=null; var o=document.querySelector('#crTov .cr-off'); if(!o) return;
+  o.classList.add('out'); setTimeout(function(){ crTovSet(''); crPrep(); }, 280);
 }
 // ── 훈련 제안 오버레이(사용자 지정 — 개인 트레이너·유스 특별 훈련) ── 훈련장 배경 위로 제안한 사람의 말이 타자 치듯 나오고,
 // 선택지 두 장이 아래에서 올라온다. 인터뷰와 달리 효과(성장·출전·부상)는 보여 준다. 고른 카드의 k가 evPick.
