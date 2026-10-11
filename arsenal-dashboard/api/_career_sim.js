@@ -987,7 +987,7 @@ export function nextSeason(state, pick, traitPick){
   C.traitOffer = null;
   if(forcedRetire()) return retire(state);
   if(C.released && (pick==null || !C.offers[pick])) return retire(state);
-  let newNum = null, prevClub = C.club.n;
+  let newNum = null, prevClub = C.club.n, prevId = C.club.id;
   if(pick != null){
     const o = C.offers[pick]; if(!o) throw new Error('pick');
     C.club = o.c; if(!C.clubs.includes(o.c.n)) C.clubs.push(o.c.n);
@@ -1024,7 +1024,7 @@ export function nextSeason(state, pick, traitPick){
     const yr = 2026 + C.age - 15, L = contractYears(C.age);
     if(!C.cEnd) C.cEnd = C.age + L;   // 계약 기간을 안 들고 있던 예전 토큰
     if(moved){
-      C.contract = {type:'transfer', prev:prevClub, club:C.club.n, id:C.club.id, team:teamName(C.club, 3), from:yr, until:yr+L, years:String(L), num:C.num, want:C.want, age:C.age};
+      C.contract = {type:'transfer', prev:prevClub, prevId, club:C.club.n, id:C.club.id, team:teamName(C.club, 3), from:yr, until:yr+L, years:String(L), num:C.num, want:C.want, age:C.age};
       C.cEnd = C.age + L;
     } else if(C.age >= C.cEnd){
       C.contract = {type:'renew', club:C.club.n, id:C.club.id, team:teamName(C.club, 3), from:yr, until:yr+L, years:String(L), num:C.num, want:C.want, age:C.age};

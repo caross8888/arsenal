@@ -1864,18 +1864,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rc-score{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
 .cr-rc-score span{font-size:12px;color:var(--text-secondary)} .cr-rc-score b{font-family:var(--fd);font-size:30px;font-weight:400;color:var(--gold)}
 .cr-pro-doc .club .prev{display:block;font-style:normal;font-size:12px;color:#6b6250;margin-bottom:1px}
-.cr-off{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;cursor:pointer;background:radial-gradient(90% 60% at 50% 40%,#5a0c10,#0B0D12 70%);color:#F0F2F7;transition:opacity .28s}
-.cr-off.out{opacity:0}
-.cr-off .box{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
-.cr-off .tag{font-family:var(--fd);font-size:54px;letter-spacing:6px;color:#fff;background:#EF0107;padding:2px 18px 0;transform:skewX(-8deg);animation:crOffTag .45s cubic-bezier(.2,1.3,.4,1) both}
-.cr-off .crest{margin-top:10px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;animation:crIvUp .45s .3s ease-out both}
-.cr-off .nm{font-size:28px;font-weight:900;margin-top:6px;animation:crIvUp .4s .55s ease-out both}
-.cr-off .line{font-size:17px;font-weight:700;color:#E4C766;animation:crIvUp .4s .7s ease-out both}
-.cr-off .meta{font-size:12.5px;color:rgba(255,255,255,.7);animation:crIvUp .4s .85s ease-out both}
-.cr-off .go{width:200px;margin-top:14px;animation:crIvUp .4s 1s ease-out both}.cr-off .go i{display:block;height:2px;background:#C8A84B;transform-origin:left;animation:crSfGo 2.8s linear both}
-.cr-off .go span{display:block;margin-top:6px;font-size:11.5px;color:rgba(255,255,255,.5)}
-@keyframes crOffTag{from{transform:skewX(-8deg) scale(2.2);opacity:0}to{transform:skewX(-8deg) scale(1);opacity:1}}
-@media (prefers-reduced-motion: reduce){.cr-off *{animation:none!important}}
 .cr-rc-shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
 .cr-rc-sum{display:grid;grid-template-columns:1.45fr repeat(4,1fr);align-items:center;text-align:center;background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:10px 4px}
 .cr-rc-sum>div{display:flex;flex-direction:column;gap:1px;min-width:0}
@@ -2101,6 +2089,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tm-ret{width:40px;height:40px;display:grid;place-items:center;font-size:24px}
 @keyframes crTmIn{from{opacity:0;transform:translateX(70px) rotate(3deg)}to{opacity:1;transform:none}}
 .cr-tm.done{background:radial-gradient(90% 60% at 50% 45%,rgba(120,8,12,.92),rgba(5,6,12,.97) 70%)}
+.cr-tm.done{cursor:pointer;transition:opacity .28s}.cr-tm.done.out{opacity:0}.cr-tmd .who small{display:block;margin-top:4px;font-size:12px;color:rgba(255,255,255,.6)}
 .cr-tmd{position:relative;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;color:#F0F2F7}
 .cr-tmd-row{display:flex;align-items:center;gap:16px}
 .cr-tmd .old{opacity:.55;animation:crTmOld .6s .1s ease-out both}
@@ -9586,7 +9575,7 @@ function crPrep(){
 }
 // ── 계약서 오버레이(사용자 지정) ── 첫 프로 계약(pro)·이적(transfer)·재계약(renew). 손가락으로 직접 사인하고, 귀찮으면 "이름으로 서명"(손글씨 글꼴).
 // 사인은 이 기기에만(localStorage cr_sig_{커리어 id}) 두고 다음 계약서에 자동으로 써 넣는다(다시 쓸 수도 있다). 카드·서버·랭킹엔 넣지 않는다.
-// 이적·재계약은 사인 뒤 OFFICIAL 발표로 이어진다.
+// 이적·재계약은 사인 뒤 기존 이적 완료 연출(crTmDone — OFFICIAL · HERE WE GO / EXTENDED)로 이어진다.
 var CR_SIG_FONT='Nanum Pen Script';
 var CR_CT={pro:['PROFESSIONAL CONTRACT','첫 프로 계약'], transfer:['TRANSFER AGREEMENT','이적 계약'], renew:['CONTRACT EXTENSION','재계약']};
 function crSigKey(id){ return 'cr_sig_'+(id||''); }
@@ -9643,24 +9632,8 @@ function crProDone(key){
   var ct=(CR.v.prep||{}).contract||{}, ty=ct.type||'pro';
   var doc=document.querySelector('#crTov .cr-pro'); if(doc) doc.classList.add('signed');
   var go=document.getElementById('crProGo'); if(go) go.disabled=true;
-  if(ty!=='pro'){ setTimeout(function(){ CR.proSeen=key; CR.sig=null; crOfficialShow(ct); }, 1100); return; }
+  if(ty!=='pro'){ setTimeout(function(){ CR.proSeen=key; CR.sig=null; crTmDone(ct); }, 1100); return; }
   setTimeout(function(){ CR.proSeen=key; CR.sig=null; var o=document.querySelector('#crTov .cr-pro'); if(o) o.classList.add('out'); setTimeout(function(){ crTovSet(''); crPrep(); }, 280); }, 1700);
-}
-// OFFICIAL 발표(이적·재계약 사인 뒤) — 구단 공식 발표 그래픽 느낌. 약 2.8초 뒤 저절로, 누르면 바로.
-function crOfficialShow(ct){
-  var p=CR.v.player, tr=ct.type==='transfer';
-  crTovSet('<div class="cr-off" role="dialog" aria-modal="true" aria-label="공식 발표" onclick="crOfficialGo()"><div class="box">'
-    +'<div class="tag">OFFICIAL</div>'
-    +'<div class="crest">'+crCrest({n:ct.club, id:ct.id},86)+'</div>'
-    +'<div class="nm">'+gmEsc(p.name)+'</div>'
-    +'<div class="line">'+(tr?gmEsc(ct.team)+' 입단':gmEsc(ct.team)+'과(와) 재계약')+'</div>'
-    +'<div class="meta">#'+ct.num+' · '+ct.until+'년 여름까지 ('+ct.years+'년)'+(tr&&ct.prev?' · 전 소속 '+gmEsc(ct.prev):'')+'</div>'
-    +'<div class="go"><i></i><span>누르면 넘어가요</span></div></div></div>');
-  CR.offT=setTimeout(crOfficialGo, 2800);
-}
-function crOfficialGo(){
-  clearTimeout(CR.offT); CR.offT=null; var o=document.querySelector('#crTov .cr-off'); if(!o) return;
-  o.classList.add('out'); setTimeout(function(){ crTovSet(''); crPrep(); }, 280);
 }
 // ── 훈련 제안 오버레이(사용자 지정 — 개인 트레이너·유스 특별 훈련) ── 훈련장 배경 위로 제안한 사람의 말이 타자 치듯 나오고,
 // 선택지 두 장이 아래에서 올라온다. 인터뷰와 달리 효과(성장·출전·부상)는 보여 준다. 고른 카드의 k가 evPick.
@@ -10202,18 +10175,25 @@ function crTmPick(k, btn){
   if(CR.busy || CR.tmGo || Date.now() < (CR.tmReady||0)) return;
   var R=CR.v.result;
   if(k<0){ if(k===-1 && R.released) return; CR.pick=null; CR.tmGo=true; return crPickFx(btn, '#crTov .cr-tm-c', function(){ CR.tmGo=false; crNext(null); }); }   // 오버레이는 crShow가 닫는다
-  CR.pick=k; CR.tmGo=true; crPickFx(btn, '#crTov .cr-tm-c', function(){ crTmDone(R.offers[k]); });
-  var t0=Date.now(), MIN=3250, fin=function(fn){ setTimeout(function(){ CR.tmGo=false; crTovSet(''); fn(); }, Math.max(0, MIN-(Date.now()-t0))); };
+  // 이적 완료 연출(OFFICIAL · HERE WE GO)은 이제 다음 화면의 이적 계약서에 사인한 뒤에 나온다(계약 → 발표 순서, 사용자 지정)
+  CR.pick=k; CR.tmGo=true; crPickFx(btn, '#crTov .cr-tm-c', function(){});
+  var t0=Date.now(), MIN=700, fin=function(fn){ setTimeout(function(){ CR.tmGo=false; crTovSet(''); fn(); }, Math.max(0, MIN-(Date.now()-t0))); };
   CR.busy=true;
   crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ fin(function(){ crShow(v); window.scrollTo(0,0); }); }).catch(function(e){ fin(function(){ crErr(e); }); });
 }
-function crTmDone(o){   // 이적 완료 연출: 옛 구단 → 새 구단, OFFICIAL 도장, HERE WE GO
-  var p=CR.v.player, conf='';
+// 이적·재계약 완료 연출: (옛 구단 →) 새 구단, OFFICIAL 도장, HERE WE GO / 재계약. 계약서에 사인한 뒤에 띄우고, 약 3.6초 뒤(누르면 바로) 준비 화면으로.
+function crTmDone(ct){
+  var p=CR.v.player, conf='', tr=ct.type==='transfer';
   for(var i=0;i<26;i++) conf+='<i style="--x:'+((i*37)%100)+'%;--d:'+(0.9+(i%7)*0.09)+'s;--r:'+((i*53)%360)+'deg;--c:'+['#EF0107','#C8A84B','#F0F2F7','#22C55E'][i%4]+'"></i>';
-  crTovSet('<div class="cr-tm done" role="dialog" aria-modal="true" aria-label="이적 완료"><div class="conf" aria-hidden="true">'+conf+'</div><div class="cr-tmd">'
-    +'<div class="cr-tmd-row"><div class="old">'+crCrest(p.club,56)+'</div><div class="arr" aria-hidden="true">➜</div><div class="new">'+crCrest(o,96)+'</div></div>'
-    +'<div class="stamp">OFFICIAL</div><div class="hwg">HERE WE GO!</div>'
-    +'<div class="who"><b>'+gmEsc(p.name)+'</b> · '+gmEsc(o.n)+' 이적 완료</div></div></div>');
+  crTovSet('<div class="cr-tm done" role="dialog" aria-modal="true" aria-label="'+(tr?'이적 완료':'재계약')+'" onclick="crTmDoneGo()"><div class="conf" aria-hidden="true">'+conf+'</div><div class="cr-tmd">'
+    +'<div class="cr-tmd-row">'+(tr?'<div class="old">'+crCrest({n:ct.prev, id:ct.prevId},56)+'</div><div class="arr" aria-hidden="true">➜</div>':'')+'<div class="new">'+crCrest({n:ct.club, id:ct.id},96)+'</div></div>'
+    +'<div class="stamp">OFFICIAL</div><div class="hwg">'+(tr?'HERE WE GO!':'EXTENDED!')+'</div>'
+    +'<div class="who"><b>'+gmEsc(p.name)+'</b> · '+gmEsc(ct.team)+(tr?' 이적 완료':' 재계약')+'<br><small>#'+ct.num+' · '+ct.until+'년 여름까지 ('+ct.years+'년)</small></div></div></div>');
+  CR.offT=setTimeout(crTmDoneGo, 3600);
+}
+function crTmDoneGo(){
+  clearTimeout(CR.offT); CR.offT=null; var o=document.querySelector('#crTov .cr-tm.done'); if(!o) return;
+  o.classList.add('out'); setTimeout(function(){ crTovSet(''); crPrep(); }, 280);
 }
 function crNext(btn){
   if(!crBusy(btn,'다음 시즌 준비 중...')) return;
