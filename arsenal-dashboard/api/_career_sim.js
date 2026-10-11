@@ -83,7 +83,7 @@ const BODY_U = [1.2, 0.12], BODY_FIT = 0.015, TRAIN_AGE = [20, 0.18];
 // 하위 리그일수록 골·도움·클린시트가 더 나오고(LG_OUT·LG_CS — 상대 수비·공격이 약하다), 대신 그 리그에서 낸 기록과 리그 개인상·우승의 점수는 반비례로 깎는다(LG_PTS).
 // 출력 × 점수 = 1 · 0.95 · 0.9 · 0.84 · 0.75 — 약한 리그에서 숫자는 화려해도 점수로는 큰 리그가 낫게.
 const LG_TIER = {ENG:1,ESP:1,GER:1,ITA:1,FRA:1, BRA:2,POR:2,NED:2,BEL:2,ARG:2, NOR:3,USA:3, JPN:4,KOR:4, NGA:5};
-const Y_OUT = {g:1.6, a:1.5, cs:1};   // 유스 무대 기록 보정(보이는 기록만 — 점수엔 안 들어감)
+const Y_OUT = {g:1.6, a:1.5, cs:1}, Y_REF = [62, 62, 65];   // Y_REF: 유스 표시 평점의 또래 기준 오버롤(U-16/U-18/U-21)   // 유스 무대 기록 보정(보이는 기록만 — 점수엔 안 들어감)
 const LG_OUT = [0,1,1.12,1.25,1.35,1.5], LG_CS = [0,1,1.08,1.16,1.22,1.3], LG_PTS = [0,1,0.85,0.72,0.62,0.5];
 const lgTier = nat => LG_TIER[nat] || 3;
 const SCOUT = {18:[-55.63, 1.881, 7.919], 21:[-12.67, 1.18, 4.435]};   // 잠재력 평가: 예상 정점 = a + b×오버롤 + c×재능 배율(아래 playSeason)
@@ -655,7 +655,9 @@ export function playSeason(state, choice){
   // 유스: 화면에 보이는 평점은 보정된 기록으로 다시 매긴다(기록만 오르고 평점이 그대로면 어색하다 — 사용자 지적).
   // 계산(이적 제안 수 등)엔 위의 rating을 그대로 써서 밸런스는 바뀌지 않는다.
   const perfShow = row0Youth ? {FW:(goals+ast*1.0)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.85, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.3+0.065}[C.pos] : perfBonus;
-  const ratingShow = apps ? Math.max(5.6, Math.min(8.9, rating + perfShow - perfBonus)) : 0;
+  // 실력 항목도 또래 기준으로: 1군 공식은 오버롤 70을 기준으로 깎아서 오버롤 54~62인 유스는 늘 5점대 후반~6점대 초반이었다.
+  // 단계별 또래 기준(Y_REF)으로 바꿔 평범한 유스가 6.6 안팎, 잘하는 유스는 7점대가 나오게 한다.
+  const ratingShow = apps ? Math.max(5.6, Math.min(8.9, rating + perfShow - perfBonus + (row0Youth ? (70-Y_REF[lv])/17 : 0))) : 0;
 
   // 성장 / 하락
   const base = ageBase(), ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
