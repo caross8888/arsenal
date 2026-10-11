@@ -83,7 +83,13 @@ const BODY_U = [1.2, 0.12], BODY_FIT = 0.015, TRAIN_AGE = [20, 0.18];
 // 하위 리그일수록 골·도움·클린시트가 더 나오고(LG_OUT·LG_CS — 상대 수비·공격이 약하다), 대신 그 리그에서 낸 기록과 리그 개인상·우승의 점수는 반비례로 깎는다(LG_PTS).
 // 출력 × 점수 = 1 · 0.95 · 0.9 · 0.84 · 0.75 — 약한 리그에서 숫자는 화려해도 점수로는 큰 리그가 낫게.
 const LG_TIER = {ENG:1,ESP:1,GER:1,ITA:1,FRA:1, BRA:2,POR:2,NED:2,BEL:2,ARG:2, NOR:3,USA:3, JPN:4,KOR:4, NGA:5};
-const YP_MAX = 4;   // 유스 포인트 만점(재능 각성 반영 상한)
+const YP_MAX = 4;
+// 등번호: 신인 번호 / 이적생 번호(원하던 번호는 빼고 고른다), 원하던 번호를 바로 받을 확률(30번 미만일 때), 주전 기준 선발 비율
+const ROOKIE_NUM = [28,31,35,41,44,47], TRANSFER_NUM = [14,16,19,21,24,27,29,33], NUM_LUCK = 0.1, NUM_UP = 0.5, NUM_WAIT = 2, NUM_STAR = 3;   // NUM_WAIT: 그 번호로 뛴 시즌 수, NUM_STAR: 이적 때 (팀 수준 − 이 값) 이상이면 바로
+const pickNum = (list, r) => { const l = list.filter(n => n !== C.want); return l[Math.floor(r*l.length)]; };
+// 학업 병행: 이번 시즌 성장 ×g, 판단 계열 능력치 +iqAdd, 하락기 하락 ×decl(롱런) / 올인: 이번 시즌 성장 ×all
+const STUDY = {g:0.92, iqAdd:1.5, decl:0.75, all:1.06, iq:{FW:['오프더볼','패스'], MF:['패스','시야'], DF:['대인마크','패스']}};
+const Y_NAT = [56, 3, 7.0, 0.3, 0.2];   // 연령별 대표: 오버롤 ≥ [0] + (A대표 기준−75)×[3] + (나이−16)×[1], 유스는 표시 평점 ≥ [2], 1군 10대는 선발 40%+ · 평점 + (21−나이)×[4] ≥ [2]   // 유스 포인트 만점(재능 각성 반영 상한)
 const Y_OUT = {g:1.6, a:1.5, cs:1}, Y_REF = [62, 62, 65], Y_PERF = [2, 1.5], Y_GROW = [7.2, 7.5, 1.05, 1.1], Y_POS = {FW:0.12, MF:-0.03, DF:-0.05};   // 유스 표시 평점: Y_REF 또래 기준 오버롤(U-16/U-18/U-21), Y_PERF [활약 가점 배율, 6.8 중심 폭 배율], Y_GROW [문턱1, 문턱2, 성장 배율1, 배율2] — 문턱1 이상이면 유스 포인트 +1(18세 전), Y_POS 포지션별 표시 평점 보정 — 없으면 유스 7.2+ 비율이 FW 17% / MF 25% / DF 28%로 갈려 성장 보너스가 미드·수비에 쏠렸다(사용자 지적: TOP50에서 공격수 감소)   // 유스 무대 기록 보정(보이는 기록만 — 점수엔 안 들어감)
 const LG_OUT = [0,1,1.12,1.25,1.35,1.5], LG_CS = [0,1,1.08,1.16,1.22,1.3], LG_PTS = [0,1,0.85,0.72,0.62,0.5];
 const lgTier = nat => LG_TIER[nat] || 3;
@@ -318,11 +324,13 @@ function pStart(club, opt, lvAt){
 // ── 시즌 이벤트 ────────────────────────────────────────────────────────
 export const EVENTS = [
   {id:'talk', t:'감독 면담', d:'출전 시간이 부족하다고 느껴요. 어떻게 할까요?', a:['출전 시간을 요구한다 (출전 ↑ 또는 ↓)','훈련으로 증명한다'], ok:() => !youth()},
-  {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑ · 부상 위험 ↑)','지금은 괜찮다 (부상 위험 ↓)'], ok:() => C.age<=27},   // 28세부터는 성장 폭이 거의 없어 어색하다(사용자 지적)
+  {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑ · 부상 위험 ↑)','지금은 괜찮다 (부상 위험 ↓)'], ok:() => C.age<=27 && !youth()},   // 1군 데뷔 뒤에만(사용자 지정 — 유스 시절엔 같은 성격의 '유스 특별 훈련'과 겹쳤다)   // 28세부터는 성장 폭이 거의 없어 어색하다(사용자 지적)
   {id:'tour', t:'프리시즌 투어', d:'감독이 투어 전 경기 출전을 원해요. 컨디션이 걱정돼요.', a:['모두 뛴다 (출전 ↑ · 부상 위험 ↑)','컨디션 관리 (부상 위험 ↓)'], ok:() => !youth()},
   {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 있게 (명성 ↑↑ 또는 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:() => C.age>=17},
   {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:() => C.age>=17 && C.age<=22 && lvOf()>=2 && pStart(C.club) < LOAN_P},   // 지금 오버롤 기준 이번 시즌 선발 예상이 낮을 때만(사용자 지정 — 지난 시즌 기록 기준이면 그새 큰 선수에게도 떴다)
   {id:'weak', t:'약발 훈련', d:'', a:['약발 집중 훈련 (약발 ↑ · 성장 ↓)','주발 강점 살리기 (성장 ↑)'], ok:() => false},   // newEvent가 가끔 따로 띄운다
+  // 학업과 축구(사용자 지정 — 유스 시절에만, 커리어에 한 번). 학업: 이번 성장 ↓ 대신 판단 계열 능력치 +, 30대 하락이 늦어진다(머리로 하는 축구). 올인: 이번 성장 ↑.
+  {id:'study', t:'학업과 축구', d:'고등학교 진학을 앞두고 있어요. 학교 공부도 계속 병행할까요?', a:['학업 병행 (성장 ↓ · 축구 지능 ↑ · 30대 하락 ↓)','축구에 올인 (성장 ↑)'], ok:() => youth() && C.age>=16 && C.age<=17 && !C.studied},
   {id:'extra', t:'유스 특별 훈련', d:'유스 코치가 방과 후 특별 훈련을 제안했어요.', a:['참가한다 (성장 ↑ · 부상 위험 ↑)','쉬면서 회복 (부상 위험 ↓)'], ok:() => youth()},
   // 추가 이벤트(사용자 지정 — 유스 훈련·개인 훈련만 너무 자주 떴다)
   {id:'ftcall', t:'1군 훈련 초대', d:'1군 감독이 이번 시즌 1군 훈련에 합류하라고 했어요.', a:['합류한다 (성장 ↑ · 유스 출전 ↓)','유스에서 뛴다 (출전 ↑)'], ok:() => youth() && C.age>=16},
@@ -365,7 +373,7 @@ function newEvent(){
     cands = [...cands].sort((a,b) => b.r-a.r);
     const h = Math.ceil(cands.length/2), r3 = mulberry(C.seed ^ hashStr('loan2|'+C.age))();
     const picks = [cands[Math.floor(r*h)], cands.length > 1 ? cands[h + Math.floor(r3*(cands.length-h))] : null].filter(Boolean);
-    if(picks.length) C.loanClubs = picks; else C.ev = 'coach';
+    if(picks.length) C.loanClubs = picks; else C.ev = youth() ? 'extra' : 'coach';   // 임대 갈 곳이 없을 때 대신 뜨는 이벤트(유스면 특별 훈련)
   }
 }
 
@@ -509,7 +517,7 @@ export function prepView(state){
   else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 ↓)' : ' (감독 신뢰 ↑)')];
-  return {goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
+  return {goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, contract: C.contract || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
     interview: ev.id === 'media' ? interviewOf() : null,
     loanClubs: C.ev==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
 }
@@ -562,6 +570,7 @@ export function playSeason(state, choice){
   if(!youth()) C.lastGoal = seniorGoal();
   const ev = C.ev, pick = C.evPick, card = CARDS[C.pos][C.card], notes = [];
   delete C.stageNote;   // 승격 알림은 준비 화면에서만(prepView.promo)
+  delete C.contract;    // 첫 프로 계약 오버레이도 준비 화면에서 한 번만
   let club = C.club, onLoan = false, startAdj = 0, growMul = 1, declMul = 1;
   if(ev==='loan' && pick===0 && C.loanClub){ club = C.loanClub; onLoan = true; growMul *= youth() ? LOAN_GO_Y : LOAN_GO; notes.push(C.loanClub.n+'로 1시즌 임대를 떠났어요.'); }
   // 남아서 경쟁: 1군 선수들과 훈련하는 효과(성장 ↑)와 감독의 관심(출전 ↑ 조금). 예전엔 효과가 없어 "임대 간다"가 늘 정답이었다(전략 검사).
@@ -583,6 +592,9 @@ export function playSeason(state, choice){
   if(ev==='captain'){ if(pick===0) startAdj+=0.05; else growMul*=1.04; }
   if(ev==='natcall' && pick===1) startAdj+=0.05;
   if(ev==='sns' && pick===0) startAdj+=0.02;
+  if(ev==='study'){ C.studied = pick===0 ? 'yes' : 'no';
+    if(pick===0){ growMul*=STUDY.g; STUDY.iq[C.pos].forEach(n => { C.off[STATS[C.pos].indexOf(n)] += STUDY.iqAdd; }); notes.push('학업을 병행하며 경기를 읽는 눈이 생겼어요.'); }
+    else { growMul*=STUDY.all; notes.push('축구에만 집중해 한 단계 성장했어요.'); } }
   if(ev==='diet'){ if(pick===0){ declMul*=0.8; startAdj-=0.04; notes.push('식단·회복 관리 덕에 몸이 가벼워졌어요.'); } }
   if(ev==='media'){ C.ivSeen = [...(C.ivSeen||[]), interviewOf().id].slice(-16); C.mediaN = (C.mediaN||0) + 1; if(pick===1) startAdj+=0.03; }   // 겸손: 감독 신뢰. 자신감은 시즌 평점을 보고 아래에서 정산
 
@@ -700,7 +712,7 @@ export function playSeason(state, choice){
     const pc = onLoan ? comp(C.club, lvOf(), pStart(C.club)) * LOAN_Q * (LOAN_PLAY[0]+LOAN_PLAY[1]*ratio) * (1 + LOAN_LVL*(club.r - cRep())) : comp(club, lv, ratio);
     C.ovr = Math.min(99, C.ovr + C.boost*base*pc*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
-    declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1) * bodyOf().decl;
+    declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1) * bodyOf().decl * (C.studied==='yes' ? STUDY.decl : 1);
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
     C.off = C.off.map((o2,i) => o2 + base*declMul*((DECLINE[st[i]]||1)-1));
   }
@@ -768,8 +780,8 @@ export function playSeason(state, choice){
   C.uclNext = rank<=4 && club.r>=78 ? club.n : null;
 
   // 대표팀·국제 대회(2030년부터 4년마다 월드컵, 그 사이 2년마다 대륙컵)
-  let caps = 0, cg = 0, ca = 0, ccs = 0; const year = 2026+(C.age-15)+1;
-  if(C.age>=18 && ov>=NAT_BAR[C.nation]-2){
+  let caps = 0, cg = 0, ca = 0, ccs = 0, ycall = false; const year = 2026+(C.age-15)+1;
+  if(C.age>=18 && ov>=NAT_BAR[C.nation]-2-(C.ycaps?1:0)){
     caps = Math.round(4+rng()*6);
     if(ev==='natcall' && pick===1) caps = Math.max(1, Math.round(caps/2));   // 휴식 요청: 대표 경기 절반
     notes.push(natInfo(C.nation).n+' 대표팀에 뽑혔어요.');
@@ -794,7 +806,13 @@ export function playSeason(state, choice){
     const nr = mulberry(C.seed ^ hashStr('natx|'+C.age)), rnd = x => Math.floor(x) + (nr() < x-Math.floor(x) ? 1 : 0);
     ca = rnd(caps*Math.min(0.6, (apps >= 5 ? ast/apps : {FW:0.12, MF:0.12, DF:0.04}[C.pos])*0.8)*(0.6+nr()*0.8));
     ccs = rnd(caps*Math.min(0.6, apps >= 5 ? cs/apps : 0.3)*(0.8+nr()*0.4));
-  } else if(C.age>=16 && C.age<18 && ov>=NAT_BAR[C.nation]-22) notes.push(natInfo(C.nation).n+' 연령별 대표팀에 뽑혔어요.');
+  } else if(C.age>=16 && C.age<=19 && !C.tot.caps && ov >= Y_NAT[0] + (NAT_BAR[C.nation]-75)*Y_NAT[3] + (C.age-16)*Y_NAT[1] && (row0Youth ? ratingShow >= Y_NAT[2] : starts >= games*0.4 && rating + Math.max(0, 21-C.age)*Y_NAT[4] >= Y_NAT[2])){
+    // 10대에 이미 1군에서 뛰는 선수(약소국에 많다)도 대상 — 유스만 보면 한국·나이지리아 발탁률이 노르웨이의 1/3이었다.
+    // 연령별 대표(사용자 지정 — 예전 기준 "A대표 기준 −22"는 16~17세 전원이 뽑혀 의미가 없었다). 그 나라 기준 + 그 시즌 유스 평점으로 잘하는 유스만.
+    // 보상: 그 시즌 명성 +1, 연령별 대표 경력이 있으면 A대표 첫 발탁 문턱 −1(아래 C.ycaps).
+    ycall = true; C.ycaps = (C.ycaps||0) + 1;
+    notes.push(natInfo(C.nation).n+' '+(C.age<=17 ? 'U-17' : 'U-19')+' 대표팀에 뽑혔어요.');
+  }
 
   // 발롱도르·FIFA 올해의 선수: 시즌 활약 점수 vs 그해 세계 경쟁자
   if(senior && apps>=20){
@@ -821,7 +839,7 @@ export function playSeason(state, choice){
   if(C.boost > 1) notes.push('수상 효과로 다음 시즌 성장 ×'+C.boost.toFixed(2)+(C.age>=28?'(하락 완화)':''));
   if(inUCL) notes.push('챔스 '+uG+'골 '+uA+'도움');
   // 명성: 1군 활약 보너스, 매 시즌 0 쪽으로 1씩 줄어든다
-  let fg = row0Youth ? 0 : (rating>=7.3?2:rating>=6.9?1:rating<6.3&&apps>5?-1:0)+fameAdd;
+  let fg = row0Youth ? (ycall ? 1 : 0) : (rating>=7.3?2:rating>=6.9?1:rating<6.3&&apps>5?-1:0)+fameAdd;
   // 자신감 인터뷰 판정은 그 나이·무대 기준으로: 1군 공식 평점으로 7.0을 재면 유스·20세 이하 1군은 성공률 0%였다(사용자 지적 — 첫 인터뷰는 무조건 부메랑).
   // 유스는 표시 평점으로 7.35(21세 이상 U-21은 7.8), 20세 이하 1군은 한 살 어릴수록 문턱 −0.3 — 어느 쪽이든 성공률 20% 안팎(21세 이상 1군 17%와 비슷).
   const rJudge = row0Youth ? ratingShow : rating, mediaBar = row0Youth ? (C.age<=20 ? 7.35 : 7.8) : 7.0 - Math.max(0, 21-C.age)*0.3;
@@ -830,10 +848,15 @@ export function playSeason(state, choice){
   if(ev==='natcall' && pick===0){ fg+=1; notes.push('대표팀 일정까지 소화하며 이름을 알렸어요.'); }
   if(ev==='sns'){ if(pick===0){ fg-=1; notes.push('빠르게 사과해 논란이 가라앉았어요.'); } else if(rating>=7.0){ fg+=2; notes.push('경기력으로 논란을 잠재우고 오히려 인기를 얻었어요.'); } else { fg-=2; notes.push('부진까지 겹쳐 비판이 거세졌어요.'); } }
   C.fame = Math.max(-5, Math.min(12, C.fame-Math.sign(C.fame)+fg));
-  // 1군 승격 때 등번호
-  if(!C.num && !row0Youth){
-    if(rng()<0.6){ C.num = C.want; notes.push('원하던 '+C.want+'번을 받았어요.'); }
-    else { C.num = [28,31,35,41,44,47][Math.floor(rng()*6)]; notes.push(C.want+'번은 주인이 있어서 '+C.num+'번을 받았어요.'); }
+  // 등번호: 1군 데뷔(첫 프로 계약) 때 신인 번호로 정해지고(nextSeason), 주전(선발 60%+)으로 자리 잡으면 원하던 번호로 바꾼다(사용자 지정). 임대 중엔 그대로.
+  let numUp = null;
+  if(!C.num && !row0Youth) C.num = C.want;   // 1군 데뷔 전에 1군 경기를 뛴 경우(유스 시절 임대 등)·예전 토큰
+  else if(C.num && !row0Youth && !onLoan && C.num !== C.want){
+    C.numN = (C.numN||0) + 1;   // 지금 번호로 뛴 시즌 수 — 주전이 못 돼도 2시즌 버티면 받는다(그래도 은퇴 때 원하던 번호가 40%뿐이었다)
+    if(starts >= games*NUM_UP || C.numN >= NUM_WAIT){
+      C.num = C.want; numUp = C.want; delete C.numN;
+      notes.push((starts >= games*NUM_UP ? '주전으로 자리 잡아' : '팀에서 입지를 굳혀')+' 다음 시즌부터 원하던 '+C.want+'번을 달아요.');
+    }
   }
   // 잠재력 평가(사용자 지정 — 18세·21세 시즌 끝, 결과 화면 위에 오버레이): 재능 등급만이 아니라 지금 오버롤까지 합친 예상 정점으로 5등급.
   // 예상 정점 = SCOUT[나이] 회귀식(오버롤·재능 배율 → 실제 정점, 12,000커리어로 맞춤. 오차 표준편차 18세 1.8 · 21세 1.3)에 시드 흔들림 ±2.
@@ -848,7 +871,7 @@ export function playSeason(state, choice){
     if(C.age === 18) C.scout18 = g;
   }
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(ratingShow*100)/100, rank,
-               youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(scout ? {scout} : {})};
+               youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(scout ? {scout} : {}), ...(numUp ? {numUp} : {})};
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
   // 점수용 가중 기록(리그 수준 반비례). 옛 토큰은 지금까지 기록을 가중 1로 시작한다.
   if(C.tot.wg == null){ C.tot.wg = C.tot.goals; C.tot.wa = C.tot.ast; C.tot.wcs = C.tot.cs; }
@@ -963,12 +986,15 @@ export function nextSeason(state, pick, traitPick){
   C.traitOffer = null;
   if(forcedRetire()) return retire(state);
   if(C.released && (pick==null || !C.offers[pick])) return retire(state);
+  let newNum = null;
   if(pick != null){
     const o = C.offers[pick]; if(!o) throw new Error('pick');
     C.club = o.c; if(!C.clubs.includes(o.c.n)) C.clubs.push(o.c.n);
+    // 이적: 새 팀 수준 이상의 선수면 원하던 번호를 바로, 아니면 남는 번호로 시작(주전이 되면 원하던 번호)
+    if(C.proAt){ C.num = cOvr() >= o.c.r - NUM_STAR ? C.want : pickNum(TRANSFER_NUM, mulberry(C.seed ^ hashStr('tnum'+C.age))()); newNum = C.num; delete C.numN; }
   }
   // 지난 시즌 줄에서 결과 화면에만 쓰는 값은 버린다(토큰 크기 — 은퇴 카드엔 필요 없다)
-  const r = C.hist[C.hist.length-1]; delete r.notes; delete r.coach; delete r.scout; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
+  const r = C.hist[C.hist.length-1]; delete r.notes; delete r.numUp; delete r.coach; delete r.scout; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
   const moved = pick != null, lv0 = lvOf();
   C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
   // 유스 계약 만료(18세가 되는 여름): 첫 구단 유스에서 구단 수준에 한참 못 미치면 재계약 없이 내보낸다 → 실력에 맞는 자국 구단으로.
@@ -983,6 +1009,16 @@ export function nextSeason(state, pick, traitPick){
   if(C.lv > Math.max(lv0, defLv(C.age)) || moved && C.lv===3 && C.age<22 && lv0<3) C.stageNote = C.prodigy && C.age<18 ? C.club.n+' 1군에 '+C.age+'세로 데뷔! 구단 역사에 남을 최연소급 데뷔예요.' : C.lv===3 ? (C.age<=18 ? '1군에 합류했어요! 또래보다 빠른 데뷔예요.' : '1군에 합류했어요!') : STAGE[C.lv].n+'로 월반했어요! 형들과 부딪히며 더 크게 성장해요.';
   else if(C.lv===3 && lv0<3) C.stageNote = '1군에 합류했어요.';
   if(C.cutFrom){ C.stageNote = C.cutFrom+' 유스와 재계약하지 못했어요. '+C.club.n+(C.lv===3 ? ' 1군' : ' '+STAGE[C.lv].n)+'에서 새로 시작해요.'; delete C.cutFrom; }
+  // 첫 프로 계약(사용자 지정 — 1군에 처음 올라갈 때 계약서 오버레이에 직접 사인). 4+1년, 등번호는 원하던 번호가 30번대 이상이거나 운이 좋으면 바로,
+  // 아니면 신인 번호로 시작해 주전이 되면 원하던 번호(위 playSeason). 계약은 준비 화면(prepView.contract)에 한 번 보여 주고 지운다.
+  if(C.lv === 3 && !C.proAt){
+    C.proAt = C.age;
+    const yr = 2026 + C.age - 15, r0 = mulberry(C.seed ^ hashStr('num'))();
+    C.num = C.want >= 30 || r0 < NUM_LUCK ? C.want : pickNum(ROOKIE_NUM, r0);
+    C.contract = {club:C.club.n, id:C.club.id, team:teamName(C.club, 3), from:yr, until:yr+4, num:C.num, want:C.want, age:C.age};
+  } else if(newNum){
+    C.stageNote = (C.stageNote ? C.stageNote+' ' : '') + (newNum === C.want ? '새 팀에서도 원하던 '+newNum+'번을 달아요.' : '새 팀에선 '+newNum+'번을 달아요. 주전으로 자리 잡으면 '+C.want+'번을 받을 수 있어요.');
+  }
   newEvent();
   return C;
 }
@@ -1045,7 +1081,7 @@ export function marketValue(ovr, age){
 export function playerView(state){
   C = state;
   const hw = bodyHW(C.age);
-  return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:cOvr(),
+  return {id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:cOvr(),
     st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(C.club), team:teamName(C.club)}, phase:C.phase, seasons:C.hist.length,
     glass:!!C.glass, tot:C.tot, peak:C.peak, traits:(C.traits||[]).map(id => traitView(id, C.pos)),
     // 커리어 기록 접이식 표: [나이, 팀, 임대, 경기, 골, 도움(수비수는 클린시트), 오버롤, 구단, 유스, 그 시즌 주요 수상(S·A·B, 대표팀 제외)]
@@ -1057,7 +1093,7 @@ export function cardView(state){
   C = state;
   let peakVal = 0; C.hist.forEach(r => { peakVal = Math.max(peakVal, marketValue(r.ovr, r.age)); });
   const hw = bodyHW(Math.max(18, C.age));
-  return {name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
+  return {id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
     peakValue: Math.round(peakVal*10)/10, traits:(C.traits||[]).map(id => (TRAIT_BY_ID.get(id)||{}).n).filter(Boolean), traitIds:(C.traits||[]).filter(id => TRAIT_BY_ID.has(id)), oneClub:!!C.oneClub, farewell:!!C.farewell, glass:!!C.glass, iron:!!C.iron,
     tot:C.tot, clubs:C.clubs,
     seasons: C.hist.map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:r.ovr,
