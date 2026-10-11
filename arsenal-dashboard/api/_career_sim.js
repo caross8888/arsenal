@@ -813,7 +813,10 @@ export function playSeason(state, choice){
   if(inUCL) notes.push('챔스 '+uG+'골 '+uA+'도움');
   // 명성: 1군 활약 보너스, 매 시즌 0 쪽으로 1씩 줄어든다
   let fg = row0Youth ? 0 : (rating>=7.3?2:rating>=6.9?1:rating<6.3&&apps>5?-1:0)+fameAdd;
-  if(ev==='media' && pick===0){ if(rating>=7.0){ fg+=2; notes.push('큰소리친 만큼 해내서 주목받았어요.'); } else { fg-=1; notes.push('인터뷰에서 한 말이 부메랑이 됐어요.'); } }
+  // 자신감 인터뷰 판정은 그 나이·무대 기준으로: 1군 공식 평점(오버롤 70 기준)으로 재면 유스·20세 이하 1군은 성공률 0%였다(사용자 지적 — 첫 인터뷰는 무조건 부메랑).
+  // 유스는 또래 기준 표시 평점(20세 이하 +0.15, 21세 이상 U-21은 −0.1), 20세 이하 1군은 한 살 어릴수록 +0.3 — 어느 쪽이든 성공률 20% 안팎(21세 이상 1군 17%와 비슷).
+  const rJudge = row0Youth ? ratingShow + (C.age<=20 ? 0.15 : -0.1) : rating + Math.max(0, 21-C.age)*0.3;
+  if(ev==='media' && pick===0){ if(rJudge>=7.0){ fg+=2; notes.push('큰소리친 만큼 해내서 주목받았어요.'); } else { fg-=1; notes.push('인터뷰에서 한 말이 부메랑이 됐어요.'); } }
   if(ev==='captain' && pick===0){ if(rating>=7.0){ fg+=1; notes.push('부주장 완장의 무게를 이겨냈어요.'); } else if(rating<6.6){ fg-=1; notes.push('부주장인데 부진하다는 비판을 받았어요.'); } }
   if(ev==='natcall' && pick===0){ fg+=1; notes.push('대표팀 일정까지 소화하며 이름을 알렸어요.'); }
   if(ev==='sns'){ if(pick===0){ fg-=1; notes.push('빠르게 사과해 논란이 가라앉았어요.'); } else if(rating>=7.0){ fg+=2; notes.push('경기력으로 논란을 잠재우고 오히려 인기를 얻었어요.'); } else { fg-=2; notes.push('부진까지 겹쳐 비판이 거세졌어요.'); } }
