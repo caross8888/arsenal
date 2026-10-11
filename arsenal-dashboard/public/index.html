@@ -1862,10 +1862,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rc-tot b{font-family:var(--fd);font-size:28px;font-weight:400}
 .cr-rc-score{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
 .cr-rc-score span{font-size:12px;color:var(--text-secondary)} .cr-rc-score b{font-family:var(--fd);font-size:30px;font-weight:400;color:var(--gold)}
-.cr-rc-shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cr-rc-shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.cr-rc-sum{display:grid;grid-template-columns:1.45fr repeat(4,1fr);align-items:center;text-align:center;background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:10px 4px}
+.cr-rc-sum>div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.cr-rc-sum b{font-family:var(--fd);font-size:24px;font-weight:400;line-height:1}
+.cr-rc-sum span{font-size:11px;color:var(--text-secondary)}
+.cr-rc-sum .sc{border-right:1px solid var(--border-bright)}.cr-rc-sum .sc b{font-size:30px;color:var(--gold)}
+.cr-rc-trophies{background:var(--surface);border:1px solid var(--border-bright);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.cr-rc-h{font-size:13px;font-weight:800;display:flex;justify-content:space-between;align-items:baseline}.cr-rc-h span{font-weight:500;font-size:12px;color:var(--text-secondary)}
+.cr-rc-chips{gap:5px}.cr-rc-chips span{font-size:11.5px;padding:3px 9px 3px 6px;background:var(--surface2);color:var(--text)}.cr-rc-chips span.b{background:rgba(200,168,75,.15);color:var(--gold)}
 .cr-rc-tro{text-align:center;background:var(--surface2);border-radius:12px;padding:10px 4px 8px}
 .cr-rc-tro.tS{background:radial-gradient(circle at 50% 30%,rgba(233,199,102,.28),var(--surface2) 70%);outline:1px solid rgba(200,168,75,.5)}
-.cr-rc-tro .i{position:relative;display:inline-block;height:58px}
+.cr-rc-tro .i{position:relative;display:inline-block;height:46px}
 .cr-rc-tro .i svg{display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))}
 .cr-rc-tro .i em{position:absolute;right:-12px;bottom:6px;font-style:normal;font-size:11px;font-weight:700;background:var(--gold);color:#3a2a06;border-radius:999px;padding:0 5px}
 .cr-rc-tro .l{font-size:11px;color:var(--text-secondary);line-height:1.3;margin-top:5px;word-break:keep-all}
@@ -10233,36 +10241,37 @@ function crCardHtml(c){
    +'<div class="cr-rc-name">'+gmEsc(c.name)+'</div><div class="cr-rc-sub">'+gmEsc(card.n)+' · '+grade+'</div>'
    // 은퇴 나이·최고 가치도 카드 안에(사용자 지정 — 따로 오른쪽 칸에 두면 카드가 좁아져 칩이 여러 줄로 접혔다)
    +'<div class="cr-rc-sub"><b>'+c.age+'세</b> 은퇴 · 최고 가치 <b>'+crFmtVal(c.peakValue)+'</b></div></div></div>';
-  h+='<div class="cr-rc-table"><div class="cr-rc-row hd"><span>나이</span><span>구단</span><span>OVR</span><span>경기</span><span>골</span><span>'+(c.pos==='DF'?'CS':'도움')+'</span></div>';
+  var tableH='';
+  tableH+='<div class="cr-rc-table"><div class="cr-rc-row hd"><span>나이</span><span>구단</span><span>OVR</span><span>경기</span><span>골</span><span>'+(c.pos==='DF'?'CS':'도움')+'</span></div>';
   c.seasons.forEach(function(r){
     var ars=/아스날/.test(r.club)&&!r.youth;
     var hs=(r.hon||[]).filter(function(x){ return x[2]!=='nat'; }).sort(function(a,b){ return 'SAB'.indexOf(a[1])-'SAB'.indexOf(b[1]); });
-    var icons=hs.slice(0,3).map(function(x){ return crTrophy(x[0],20); }).join('')+(hs.length>3?'<b>+'+(hs.length-3)+'</b>':'');
-    h+='<div class="cr-rc-row'+(r.youth?' youth':'')+(ars?' ars':'')+'"><span class="a">'+r.age+'</span>'
+    var icons=hs.slice(0,1).map(function(x){ return crTrophy(x[0],20); }).join('')+(hs.length>1?'<b>+'+(hs.length-1)+'</b>':'');   // 대표 1개 + 개수(3개씩 붙이면 구단명이 "바이…"로 잘렸다)
+    tableH+='<div class="cr-rc-row'+(r.youth?' youth':'')+(ars?' ars':'')+'"><span class="a">'+r.age+'</span>'
      +'<span class="c">'+crCrest({n:r.club, id:r.id},24)+'<em>'+gmEsc(r.team)+(r.loan?' <small>임대</small>':'')+'</em>'+(icons?'<span class="ic">'+icons+'</span>':'')+'</span>'
      +'<span class="o '+(r.youth?'y':crOvrCls(r.ovr))+'">'+r.ovr+'</span><span>'+r.apps+'</span><span>'+r.goals+'</span><span>'+(c.pos==='DF'?(r.cs||0):r.ast)+'</span></div>';
   });
   var natHon=honors.filter(function(x){ return x.kind==='nat' && /우승/.test(x.n); });
-  if(t.caps) h+='<div class="cr-rc-row nat"><span class="a">'+crFlag(c.nation)+'</span><span class="c"><em>'+nat.n+' 대표팀</em>'
+  if(t.caps) tableH+='<div class="cr-rc-row nat"><span class="a">'+crFlag(c.nation)+'</span><span class="c"><em>'+nat.n+' 대표팀</em>'
      +(natHon.length?'<span class="ic">'+natHon.map(function(x){ return crTrophy(x.n,20); }).join('')+'</span>':'')+'</span>'
      +'<span></span><span>'+t.caps+'</span><span>'+t.cg+'</span><span>'+((c.pos==='DF'?t.ccs:t.ca)!=null?(c.pos==='DF'?t.ccs:t.ca):'—')+'</span></div>';   /* 대표팀 도움(수비수는 클린시트) — 예전 커리어 기록엔 없어서 "—" */
-  h+='</div>';
+  tableH+='</div>';
   var grp={}, order=[];
   honors.forEach(function(x){ var nm=String(x.n).split(' ×')[0], n=+(String(x.n).split('×')[1])||1;
     if(!grp[nm]){ grp[nm]={tier:x.tier, c:0}; order.push(nm); } grp[nm].c+=n; });
   order.sort(function(a,b){ return 'SABC'.indexOf(grp[a].tier)-'SABC'.indexOf(grp[b].tier) || grp[b].c-grp[a].c; });
   var nTro=honors.filter(function(x){ return x.kind!=='ind' && /우승/.test(x.n); }).length;
-  h+='<div class="cr-rc-end"><div class="cr-rc-end-t">커리어가 끝났어요</div>'
-   +'<div class="cr-rc-tot">'+[[t.apps,'경기'],[t.goals,'골'],c.pos==='DF'?[t.cs||0,'클린시트']:[t.ast,'도움'],[nTro,'우승']].map(function(x){ return '<div><span>'+x[1]+'</span><b>'+x[0]+'</b></div>'; }).join('')+'</div>'
-   +'<div class="cr-rc-score"><span>커리어 점수</span><b>'+Number(c.score).toLocaleString()+'</b></div>';
-  var main=order.filter(function(k){ return grp[k].tier!=='C'; }), minor=order.filter(function(k){ return grp[k].tier==='C'; });
-  if(main.length) h+='<div class="cr-rc-shelf">'+main.map(function(k){ var g=grp[k];
-      return '<div class="cr-rc-tro t'+g.tier+'"><div class="i">'+crTrophy(k,58)+(g.c>1?'<em>×'+g.c+'</em>':'')+'</div><div class="l">'+gmEsc(k)+'</div></div>'; }).join('')+'</div>';
-  // 기타 수상은 접지 않고 그대로 보여 준다(사용자 지정 — 은퇴 카드 스크린샷에도 들어가게)
-  if(minor.length) h+='<div class="cr-rc-minor"><div class="cr-rc-minor-t">기타 수상 '+minor.reduce(function(s,k){ return s+grp[k].c; },0)+'개</div><div class="cr-badges">'
-      +minor.map(function(k){ return '<span>'+crTrophy(k,16)+gmEsc(k)+(grp[k].c>1?' ×'+grp[k].c:'')+'</span>'; }).join('')+'</div></div>';
-  if(!order.length) h+='<div class="cr-note" style="text-align:center">트로피 없이 끝난 커리어예요.</div>';
-  return h+'</div>';
+  // 은퇴 카드 순서(사용자 지정 — 요약이 맨 아래라 표를 다 내려야 보였다): 머리 → 점수·통산 → 대표 수상(S·A 6개는 큰 아이콘, 나머지는 칩) → 시즌별 표.
+  // 트로피를 모두 큰 아이콘 4열로 두면 20종이 넘을 때 화면 두 장을 먹었다. 시즌별 표는 그대로(매 시즌 오버롤·기록을 보고 싶다 — 구단별로 묶는 안은 접었다).
+  var sum='<div class="cr-rc-sum"><div class="sc"><span>커리어 점수</span><b>'+Number(c.score).toLocaleString()+'</b></div>'
+   +[[t.apps,'경기'],[t.goals,'골'],c.pos==='DF'?[t.cs||0,'클린시트']:[t.ast,'도움'],[nTro,'우승']].map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>';
+  var big=order.filter(function(k){ return 'SA'.indexOf(grp[k].tier)>=0; }).slice(0,6), small=order.filter(function(k){ return big.indexOf(k)<0; });
+  var tro='';
+  if(big.length) tro+='<div class="cr-rc-shelf">'+big.map(function(k){ var g=grp[k];
+      return '<div class="cr-rc-tro t'+g.tier+'"><div class="i">'+crTrophy(k,46)+(g.c>1?'<em>×'+g.c+'</em>':'')+'</div><div class="l">'+gmEsc(k)+'</div></div>'; }).join('')+'</div>';
+  if(small.length) tro+='<div class="cr-badges cr-rc-chips">'+small.map(function(k){ return '<span'+(grp[k].tier==='B'?' class="b"':'')+'>'+crTrophy(k,16)+gmEsc(k)+(grp[k].c>1?' ×'+grp[k].c:'')+'</span>'; }).join('')+'</div>';
+  if(!order.length) tro='<div class="cr-note" style="text-align:center">트로피 없이 끝난 커리어예요.</div>';
+  return h+sum+'<div class="cr-rc-trophies"><div class="cr-rc-h">수상 <span>'+order.reduce(function(s2,k){ return s2+grp[k].c; },0)+'개</span></div>'+tro+'</div>'+tableH;
 }
 // 내 은퇴 카드. 랭킹에서 남의 카드를 열 때는 CR.v(내 커리어)를 건드리지 않고 따로 그린다
 // (목업에서 내 커리어 변수를 남의 카드로 덮어써서, 랭킹 → 돌아가기에 남의 카드가 내 카드처럼 뜨던 버그가 있었다).
