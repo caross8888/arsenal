@@ -9534,6 +9534,7 @@ var CR_TR={
   natcall:{tag:'INTERNATIONAL · A매치 차출', ic:'🌍', who:'대표팀 감독', say:'이번 A매치 기간에 꼭 함께하자. 구단은 쉬길 바라는 것 같지만, 대표팀엔 네가 필요하다.', opt:['🛫','🛋️']},
   sns:{tag:'CONTROVERSY · SNS 논란', ic:'📱', who:'구단 홍보팀', say:'경기 뒤 인터뷰 한 마디가 SNS에서 퍼지고 있어요. 어떻게 대응할까요?', opt:['🙏','🔥']},
   diet:{tag:'RECOVERY · 식단·회복 전문가', ic:'🥗', who:'에이전트', say:'이제 몸 관리가 곧 실력이야. 식단·회복 전문가를 붙이면 오래 뛸 수 있어. 대신 훈련 강도는 좀 낮춰야 해.', opt:['🧘','🏃']},
+  study:{tag:'SCHOOL · 학업과 축구', ic:'📚', who:'부모님', say:'고등학교 진학을 앞두고 있구나. 공부도 같이 해 두면 나중에 경기를 보는 눈이 달라질 거야. 그래도 지금은 축구에만 집중하고 싶니?', opt:['📖','⚽']},
   extra:{tag:'YOUTH TRAINING · 유스 특별 훈련', ic:'⚽', who:'유스 코치', say:'정규 훈련 끝나고 남아서 특별 훈련 해 볼래? 실력은 쑥쑥 늘겠지만 몸은 좀 힘들 거다.', opt:['🏃','🛌']}};
 function crTrFx(txt){   // "성장 ↑ · 부상 위험 ↑" → 좋은 쪽(초록)·나쁜 쪽(빨강) 칩. 부상 위험은 ↑가 나쁜 쪽
   return String(txt).split(/\s*·\s*/).map(function(x){

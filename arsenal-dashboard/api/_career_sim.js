@@ -84,6 +84,8 @@ const BODY_U = [1.2, 0.12], BODY_FIT = 0.015, TRAIN_AGE = [20, 0.18];
 // 출력 × 점수 = 1 · 0.95 · 0.9 · 0.84 · 0.75 — 약한 리그에서 숫자는 화려해도 점수로는 큰 리그가 낫게.
 const LG_TIER = {ENG:1,ESP:1,GER:1,ITA:1,FRA:1, BRA:2,POR:2,NED:2,BEL:2,ARG:2, NOR:3,USA:3, JPN:4,KOR:4, NGA:5};
 const YP_MAX = 4;
+// 학업 병행: 이번 시즌 성장 ×g, 판단 계열 능력치 +iqAdd, 하락기 하락 ×decl(롱런) / 올인: 이번 시즌 성장 ×all
+const STUDY = {g:0.92, iqAdd:1.5, decl:0.75, all:1.06, iq:{FW:['오프더볼','패스'], MF:['패스','시야'], DF:['대인마크','패스']}};
 const Y_NAT = [56, 3, 7.0, 0.3, 0.2];   // 연령별 대표: 오버롤 ≥ [0] + (A대표 기준−75)×[3] + (나이−16)×[1], 유스는 표시 평점 ≥ [2], 1군 10대는 선발 40%+ · 평점 + (21−나이)×[4] ≥ [2]   // 유스 포인트 만점(재능 각성 반영 상한)
 const Y_OUT = {g:1.6, a:1.5, cs:1}, Y_REF = [62, 62, 65], Y_PERF = [2, 1.5], Y_GROW = [7.2, 7.5, 1.05, 1.1], Y_POS = {FW:0.12, MF:-0.03, DF:-0.05};   // 유스 표시 평점: Y_REF 또래 기준 오버롤(U-16/U-18/U-21), Y_PERF [활약 가점 배율, 6.8 중심 폭 배율], Y_GROW [문턱1, 문턱2, 성장 배율1, 배율2] — 문턱1 이상이면 유스 포인트 +1(18세 전), Y_POS 포지션별 표시 평점 보정 — 없으면 유스 7.2+ 비율이 FW 17% / MF 25% / DF 28%로 갈려 성장 보너스가 미드·수비에 쏠렸다(사용자 지적: TOP50에서 공격수 감소)   // 유스 무대 기록 보정(보이는 기록만 — 점수엔 안 들어감)
 const LG_OUT = [0,1,1.12,1.25,1.35,1.5], LG_CS = [0,1,1.08,1.16,1.22,1.3], LG_PTS = [0,1,0.85,0.72,0.62,0.5];
@@ -324,6 +326,8 @@ export const EVENTS = [
   {id:'media', t:'인터뷰 요청', d:'첫 인터뷰 요청이 들어왔어요.', a:['자신감 있게 (명성 ↑↑ 또는 ↓)','겸손하게 (감독 신뢰 ↑)'], ok:() => C.age>=17},
   {id:'loan', t:'임대 제안', d:'출전 기회를 위해 한 시즌 임대를 다녀오라는 제안이 왔어요.', a:['임대 간다','남아서 경쟁한다'], ok:() => C.age>=17 && C.age<=22 && lvOf()>=2 && pStart(C.club) < LOAN_P},   // 지금 오버롤 기준 이번 시즌 선발 예상이 낮을 때만(사용자 지정 — 지난 시즌 기록 기준이면 그새 큰 선수에게도 떴다)
   {id:'weak', t:'약발 훈련', d:'', a:['약발 집중 훈련 (약발 ↑ · 성장 ↓)','주발 강점 살리기 (성장 ↑)'], ok:() => false},   // newEvent가 가끔 따로 띄운다
+  // 학업과 축구(사용자 지정 — 유스 시절에만, 커리어에 한 번). 학업: 이번 성장 ↓ 대신 판단 계열 능력치 +, 30대 하락이 늦어진다(머리로 하는 축구). 올인: 이번 성장 ↑.
+  {id:'study', t:'학업과 축구', d:'고등학교 진학을 앞두고 있어요. 학교 공부도 계속 병행할까요?', a:['학업 병행 (성장 ↓ · 축구 지능 ↑ · 30대 하락 ↓)','축구에 올인 (성장 ↑)'], ok:() => youth() && C.age>=16 && C.age<=17 && !C.studied},
   {id:'extra', t:'유스 특별 훈련', d:'유스 코치가 방과 후 특별 훈련을 제안했어요.', a:['참가한다 (성장 ↑ · 부상 위험 ↑)','쉬면서 회복 (부상 위험 ↓)'], ok:() => youth()},
   // 추가 이벤트(사용자 지정 — 유스 훈련·개인 훈련만 너무 자주 떴다)
   {id:'ftcall', t:'1군 훈련 초대', d:'1군 감독이 이번 시즌 1군 훈련에 합류하라고 했어요.', a:['합류한다 (성장 ↑ · 유스 출전 ↓)','유스에서 뛴다 (출전 ↑)'], ok:() => youth() && C.age>=16},
@@ -584,6 +588,9 @@ export function playSeason(state, choice){
   if(ev==='captain'){ if(pick===0) startAdj+=0.05; else growMul*=1.04; }
   if(ev==='natcall' && pick===1) startAdj+=0.05;
   if(ev==='sns' && pick===0) startAdj+=0.02;
+  if(ev==='study'){ C.studied = pick===0 ? 'yes' : 'no';
+    if(pick===0){ growMul*=STUDY.g; STUDY.iq[C.pos].forEach(n => { C.off[STATS[C.pos].indexOf(n)] += STUDY.iqAdd; }); notes.push('학업을 병행하며 경기를 읽는 눈이 생겼어요.'); }
+    else { growMul*=STUDY.all; notes.push('축구에만 집중해 한 단계 성장했어요.'); } }
   if(ev==='diet'){ if(pick===0){ declMul*=0.8; startAdj-=0.04; notes.push('식단·회복 관리 덕에 몸이 가벼워졌어요.'); } }
   if(ev==='media'){ C.ivSeen = [...(C.ivSeen||[]), interviewOf().id].slice(-16); C.mediaN = (C.mediaN||0) + 1; if(pick===1) startAdj+=0.03; }   // 겸손: 감독 신뢰. 자신감은 시즌 평점을 보고 아래에서 정산
 
@@ -701,7 +708,7 @@ export function playSeason(state, choice){
     const pc = onLoan ? comp(C.club, lvOf(), pStart(C.club)) * LOAN_Q * (LOAN_PLAY[0]+LOAN_PLAY[1]*ratio) * (1 + LOAN_LVL*(club.r - cRep())) : comp(club, lv, ratio);
     C.ovr = Math.min(99, C.ovr + C.boost*base*pc*luck*growMul*C.talent*devOf()*K_GROW*dmp);
   } else {
-    declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1) * bodyOf().decl;
+    declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1) * bodyOf().decl * (C.studied==='yes' ? STUDY.decl : 1);
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
     C.off = C.off.map((o2,i) => o2 + base*declMul*((DECLINE[st[i]]||1)-1));
   }
