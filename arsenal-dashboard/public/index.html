@@ -10961,6 +10961,18 @@ function crShareHtml(c){
    +'<div class="foot"><span class="clubs">'+clubs.map(function(x){ return crCrest(x, clubs.length>9?16:20); }).join('<i>›</i>')+'</span>'   // 거쳐 간 구단은 전부(사용자 지정 — 앱 이름을 아래로 내려서라도)
      +'<span class="cr">The Gunners Hub · 커리어 모드</span></div></div>';
 }
+// 캡처 전에 아이콘 세트(crIcon — 외부 icons.svg를 <use>로 참조)를 노드 안에 펼친다. html-to-image가 외부 <use href="파일#id">를
+// 선택자로 찾다가 예외를 던져 "전체 카드 저장"이 통째로 실패했다(원클럽맨·고별전 칩). 펼친 채로 둬도 화면은 같다.
+var _crIconSvg=null;
+function crInlineIcons(root){
+  var uses=[].slice.call(root.querySelectorAll('svg.cr-icon use')); if(!uses.length) return Promise.resolve();
+  _crIconSvg=_crIconSvg||fetch('/img/career-icons/icons.svg').then(function(r){ return r.text(); }).then(function(t){ return new DOMParser().parseFromString(t,'image/svg+xml'); });
+  return _crIconSvg.then(function(doc){
+    uses.forEach(function(u){ var id=(u.getAttribute('href')||u.getAttribute('xlink:href')||'').split('#')[1], sym=id&&doc.getElementById(id), svg=u.parentNode; if(!sym||!svg) return;
+      if(sym.getAttribute('viewBox')) svg.setAttribute('viewBox', sym.getAttribute('viewBox'));
+      var g=document.createElementNS('http://www.w3.org/2000/svg','g'); [].slice.call(sym.childNodes).forEach(function(n){ g.appendChild(document.importNode(n,true)); }); svg.replaceChild(g,u); });
+  }).catch(function(){ uses.forEach(function(u){ u.remove(); }); });   // 못 받으면 아이콘만 빼고 캡처
+}
 function crShot(btn, share){
   if(btn.disabled) return;
   var box;
@@ -10983,7 +10995,7 @@ function crShot(btn, share){
   imgs.forEach(function(i){ i.loading='eager'; });
   var avReady=share && CR._shareAv ? CR._shareAv.then(function(u){ var el=document.getElementById('crShareAv'); if(el && u) return new Promise(function(r){ el.onload=el.onerror=r; el.src=u; }); }) : Promise.resolve();
   var waitImgs=[].slice.call(box.querySelectorAll('img')).filter(function(i){ return i.id!=='crShareAv'; });
-  avReady.then(function(){ return Promise.race([Promise.all(waitImgs.map(function(i){ i.loading='eager'; return i.complete ? 0 : new Promise(function(r){ i.onload=i.onerror=r; }); })), new Promise(function(r){ setTimeout(r, 4000); })]); })
+  avReady.then(function(){ return crInlineIcons(box); }).then(function(){ return Promise.race([Promise.all(waitImgs.map(function(i){ i.loading='eager'; return i.complete ? 0 : new Promise(function(r){ i.onload=i.onerror=r; }); })), new Promise(function(r){ setTimeout(r, 4000); })]); })
     .then(function(){ return Promise.all([crLoadH2I(), crShotFonts()]); })
     // includeQueryParams: html-to-image는 이미지 캐시 키에서 쿼리를 떼어 내서, 엠블럼 프록시(…/career?a=logo&id=N)가 전부 같은 키가 됐다
     // — 저장한 사진에서 모든 구단 엠블럼이 처음 받은 하나로 통일되던 버그(사용자 제보).
