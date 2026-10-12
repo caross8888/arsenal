@@ -1,6 +1,7 @@
 // 커리어 모드 특성 카드(정사각 SVG) 생성기.
 //   node scripts/build_trait_cards.mjs
 // → arsenal-dashboard/public/img/traits/{id}.svg + docs/career-mode/traits.html(미리보기 시트)
+//   + img/traits/g/{id}.svg — 그림만(흰 선, 128×128). 게임 화면은 이걸 CSS 마스크로 칠해 쓴다(사용자 지정 — 빨간 배지 카드가 사이트와 겉돌았다)
 // 아이콘은 100×100 좌표에 흰 선으로 직접 그린 것. 카드엔 아이콘과 이름만 넣는다 — 효과·조건은 수치가 바뀌니 UI가 HTML로 얹는다.
 // 이름은 api/_career_data.js의 CTRAITS(공통)·TRAITS(포지션)에서 읽는다.
 
@@ -103,10 +104,13 @@ const cards = [
   ...CTRAITS.map(t => ({id:t.id, tag:'공통', n:t.n})),
   ...TRAITS.map(t => ({id:t.id, tag:t.pos, n:t.n}))];
 
-mkdirSync(OUT, {recursive:true});
+mkdirSync(new URL('g/', OUT), {recursive:true});
+// 그림만: 카드 배지 원(150,124 · r78) 둘레 128×128을 잘라 낸 것
+const glyph = ({id}) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="86 60 128 128" width="128" height="128"><g transform="translate(103 77) scale(.94)" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">${ICON[id]}</g></svg>\n`;
 for(const c of cards){
   if(!ICON[c.id]) throw new Error('아이콘 없음: ' + c.id);
   writeFileSync(new URL(c.id + '.svg', OUT), card(c));
+  writeFileSync(new URL('g/' + c.id + '.svg', OUT), glyph(c));
 }
 
 const group = (title, list) => `<h2>${title}</h2><div class="grid">${list.map(c => `<figure><img src="../../arsenal-dashboard/public/img/traits/${c.id}.svg" alt="${esc(c.n)}"><figcaption>${c.id}.svg</figcaption></figure>`).join('')}</div>`;

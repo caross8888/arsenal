@@ -2104,7 +2104,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-promo{border:1px solid rgba(34,197,94,.45);background:rgba(34,197,94,.12);color:var(--green);border-radius:14px;padding:11px 14px;font-size:14px;font-weight:700}
 .cr-goal-t{font-size:17px;font-weight:700}
 .cr-tsel{display:flex;align-items:center;gap:12px;margin-top:4px}
-.cr-tsel img{width:56px;height:56px;flex-shrink:0}
+.cr-tsel .cr-trc{width:56px;flex:none}
 .cr-tsel div{flex:1;min-width:0;display:flex;flex-direction:column} .cr-tsel b{font-size:14px} .cr-tsel span{font-size:12.5px;color:var(--text-secondary)}
 .cr-tsel button{font:inherit;font-size:12px;color:var(--text-secondary);background:none;border:1px solid var(--border-bright);border-radius:999px;padding:5px 10px;cursor:pointer;flex-shrink:0}
 /* 인터뷰 오버레이 — 늘 어두운 배경이라 글자색은 테마와 무관하게 고정(.cr-tov와 같은 방식) */
@@ -2317,14 +2317,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tc{font:inherit;color:#F0F2F7;background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;animation:crTcIn .45s cubic-bezier(.2,.8,.3,1.2) both;-webkit-tap-highlight-color:transparent}
 .cr-tc:nth-child(2){animation-delay:.08s} .cr-tc:nth-child(3){animation-delay:.16s}
 /* 모서리 라운드는 SVG 자체 모양을 쓴다 — img에 border-radius를 주면 작은 화면에서 카드 테두리 모서리가 잘려 각져 보였다 */
-.cr-tc img{width:100%;aspect-ratio:1;display:block;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45));transition:transform .15s}
-.cr-tc:hover img,.cr-tc:focus-visible img{transform:translateY(-4px) scale(1.03)}
+.cr-tc .cr-trc{transition:transform .15s}
+.cr-tc:hover .cr-trc,.cr-tc:focus-visible .cr-trc{transform:translateY(-4px) scale(1.03)}
 .cr-tc span{font-size:12px;line-height:1.4;color:rgba(255,255,255,.75);text-align:center}
 @keyframes crTovIn{from{opacity:0}to{opacity:1}}
 @keyframes crTcIn{from{opacity:0;transform:translateY(24px) scale(.9)}to{opacity:1;transform:none}}
 .cr-bl-card{position:relative;width:min(46vw,200px);margin:4px 0 10px;animation:crBlIn .8s cubic-bezier(.2,.8,.3,1.15) both}
-.cr-bl-card img{position:relative;width:100%;aspect-ratio:1;display:block;filter:drop-shadow(0 10px 24px rgba(0,0,0,.5))}
-.cr-bl-card i{position:absolute;inset:-35%;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,.55) 0%,rgba(200,168,75,.18) 40%,transparent 70%);animation:crBlGlow 2.4s ease-in-out infinite}
+.cr-bl-card .cr-trc{position:relative;box-shadow:0 10px 24px rgba(0,0,0,.5)}
+.cr-bl-card>i{position:absolute;inset:-35%;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,.55) 0%,rgba(200,168,75,.18) 40%,transparent 70%);animation:crBlGlow 2.4s ease-in-out infinite}
 .cr-bl-t{display:flex;flex-direction:column;align-items:center;gap:3px;margin-bottom:14px;text-align:center}
 .cr-bl-t b{font-size:17px;color:var(--gold)} .cr-bl-t span{font-size:13px;color:rgba(255,255,255,.75)}
 @keyframes crBlIn{0%{opacity:0;transform:rotateY(90deg) scale(.7)}60%{opacity:1}100%{opacity:1;transform:none}}
@@ -2385,7 +2385,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hc.city .cr-hc-o b,.cr-hc.city .cr-hc-st>div.max b{color:#fff}
 .cr-hc.lt .cr-hc-st>div{background:rgba(20,22,28,.06)}
 .cr-hc-tr > span{font-size:10.5px;font-weight:700;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px}
-.cr-tr-ic{display:inline-block;width:18px;height:18px;border-radius:50%;flex:none;vertical-align:-4px;background-repeat:no-repeat;background-size:176.5%;background-position:50% 30%}
+.cr-tr-ic{position:relative;display:inline-block;width:18px;height:18px;border-radius:50%;flex:none;vertical-align:-4px;color:var(--gold);box-shadow:0 0 0 1.5px currentColor inset}
+.cr-tr-ic::before,.cr-trc i::before{content:'';position:absolute;inset:17%;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
+.cr-hof .cr-tr-ic{color:#E9C766}
+.cr-hc .cr-tr-ic{color:#fff}.cr-hc.lt .cr-tr-ic{color:#14161C}
+/* 큰 특성 카드: 오버레이(늘 어두움)는 고정 색, 결과 화면 작은 카드(.cr-tsel)는 테마 색 */
+.cr-trc{--bg:linear-gradient(180deg,#1F2330,#14171F);--bd:rgba(255,255,255,.14);--fg:#F0F2F7;--ring:#C8A84B;--gl:#E9C766;width:100%;aspect-ratio:1;border-radius:14%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7%;container-type:inline-size;background:var(--bg);border:1px solid var(--bd);box-shadow:0 8px 18px rgba(0,0,0,.4)}
+.cr-trc i{position:relative;width:50%;aspect-ratio:1;border-radius:50%;color:var(--gl);box-shadow:0 0 0 max(1.5px,1.2cqw) var(--ring) inset}
+.cr-trc b{font-size:11cqw;font-weight:800;color:var(--fg);line-height:1.15;text-align:center;padding:0 6%;word-break:keep-all}
+.cr-tsel .cr-trc{--bg:var(--surface2);--bd:var(--border-bright);--ring:var(--gold);--gl:var(--gold);box-shadow:none}.cr-tsel .cr-trc i{width:62%}
 .cr-rc-chip .cr-tr-ic{margin-right:4px}
 .cr-rk-list{display:flex;flex-direction:column;gap:6px}
 .cr-rk-row{display:grid;grid-template-columns:28px 40px minmax(0,1fr) auto;gap:9px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border-bright);border-radius:12px;padding:8px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -9433,7 +9441,10 @@ function crCrest(club, size){
 var CR_CHANCE={low:'출전 기회 낮음', mid:'출전 기회 보통', high:'출전 기회 높음'};
 // 특성 아이콘: 특성 카드 이미지(img/traits/{id}.svg — scripts/build_trait_cards.mjs로 만든 것)를 작게. 예전엔 ✨/🎯 이모지였다(사용자 지적)
 // 카드 전체(아이콘+이름)를 줄이면 아이콘이 안 보여서 가운데 원형 배지만 잘라 쓴다 — 배지는 300×300 캔버스의 (150,124) 반지름 78.
-function crTraitIc(id){ return id ? '<span class="cr-tr-ic" style="background-image:url(/img/traits/'+id+'.svg)"></span>' : ''; }
+// 특성 표시는 전부 "얇은 금색 링 + 그림"(사용자 지정, 목업 C — 빨간 배지 카드 그림이 사이트와 겉돌았다). 그림은 img/traits/g/{id}.svg(흰 선)를 마스크로 칠한다.
+function crTraitIc(id){ return id ? '<span class="cr-tr-ic" style="--m:url(/img/traits/g/'+id+'.svg)"></span>' : ''; }
+// 큰 특성 카드(특성 선택·재능 개화·결과 화면): 어두운 카드 + 링 그림 + 이름(이름은 noName이면 뺀다 — 옆에 이름을 따로 적는 작은 카드)
+function crTraitCard(t, noName){ return '<div class="cr-trc"><i style="--m:url(/img/traits/g/'+t.id+'.svg)"></i>'+(noName?'':'<b>'+gmEsc(t.n)+'</b>')+'</div>'; }
 // 효과 줄 정리: 같은 방향끼리 묶는다 — "성장 ↑ · 출전 ↓ · 부상 위험 ↑" → "성장·부상 위험 ↑  출전 ↓"(사용자 지정).
 // 화살표 꼴이 아닌 조각("명성 ↑↑ 또는 ↓" 같은)이 섞여 있으면 손대지 않는다.
 function crFx(txt){
@@ -10622,7 +10633,7 @@ function crReactShow(){
 function crBloomShow(t, key){
   crTovSet('<div class="cr-tov cr-bl" role="dialog" aria-modal="true" aria-label="재능 개화"><span class="tag">TALENT BLOOM · 재능 개화</span>'
     +'<h3>재능이 꽃피었어요!</h3><p>이번 시즌 활약으로 새 플레이 스타일을 얻었어요.</p>'
-    +'<div class="cr-bl-card"><i aria-hidden="true"></i><img src="/img/traits/'+t.id+'.svg" alt="'+gmEsc(t.n)+'"></div>'
+    +'<div class="cr-bl-card"><i aria-hidden="true"></i>'+crTraitCard(t)+'</div>'
     +'<div class="cr-bl-t"><span>'+gmEsc(t.d)+'</span></div>'
     +'<button class="cr-iv-go" onclick="CR.bloomSeen=\''+key.replace(/'/g,'')+'\';crTovSet(\'\');crResult()">확인</button></div>');
 }
@@ -10649,13 +10660,13 @@ function crResult(){
       +(SC.prev&&SC.prev!==SC.g?' <small>('+SC.prev+' → '+SC.g+')</small>':'')+'</div><div class="cr-note">'+gmEsc(gi.d)+'</div></div>'; }
   // 재능 개화(21~28세, 고르는 게 아니라 얻는 특성): 처음엔 오버레이로, 확인한 뒤엔 결과 화면에 작게 남는다
   var BL=r.bloom?(p.traits||[]).filter(function(t){ return t.id===r.bloom; })[0]:null, blKey=BL?(p.id||p.name)+'|bl|'+p.seasons:null, blPending=BL && CR.bloomSeen!==blKey;
-  if(BL && !blPending) h+='<div class="cr-goal"><span class="cr-goal-tag">TALENT BLOOM · 재능 개화</span><div class="cr-tsel"><img src="/img/traits/'+BL.id+'.svg" alt="">'
+  if(BL && !blPending) h+='<div class="cr-goal"><span class="cr-goal-tag">TALENT BLOOM · 재능 개화</span><div class="cr-tsel">'+crTraitCard(BL,1)
     +'<div><b>'+gmEsc(BL.n)+'</b><span>'+gmEsc(BL.d)+'</span></div></div></div>';
   // 특성 제안: 3개 중 하나를 골라야 다음 시즌으로(강제 은퇴 시즌은 없음)
   var TO=!R.forced && R.traitOffer && R.traitOffer.length ? R.traitOffer : null;
   // 공통 특성(17세, 반드시 하나)과 포지션 특성 모두 카드 3장 오버레이로 고른다. 고른 뒤엔 결과 화면에 작게 남고 다시 고를 수 있다.
   if(TO){
-    var tCommon=!!TO[0].common, tImg=function(t){ return '<img src="/img/traits/'+t.id+'.svg" alt="'+gmEsc(t.n)+'">'; },
+    var tCommon=!!TO[0].common, tImg=function(t){ return crTraitCard(t); },
         tDesc=function(t){ return (t.common?gmEsc(t.d).replace(' · ','<br>'):gmEsc(t.d))+(t.stat?'<br>'+gmEsc(t.stat)+' '+t.min+' 이상':''); };
     if(scPending || bdPending){}   // 발롱도르·잠재력 평가 오버레이를 먼저 보여 주고, 닫으면 특성 선택이 뜬다
     else if(CR.traitPick==null) crTovSet('<div class="cr-tov" role="dialog" aria-modal="true"><span class="tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성 선택')+'</span>'
@@ -10663,7 +10674,7 @@ function crResult(){
       +'<p>'+(tCommon?'하나를 고르면 그 능력이 커리어 내내 더 잘 자라요.':'하나를 골라 주세요. 특성은 최대 3개까지예요.')+'</p>'
       +'<div class="cr-tcards">'+TO.map(function(t,k){ return '<button class="cr-tc" onclick="CR.traitPick='+k+';crResult()">'+tImg(t)+'<span>'+tDesc(t)+'</span></button>'; }).join('')+'</div></div>');
     else { crTovSet(''); var tp=TO[CR.traitPick];
-      h+='<div class="cr-goal"><span class="cr-goal-tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성')+'</span><div class="cr-tsel">'+tImg(tp)
+      h+='<div class="cr-goal"><span class="cr-goal-tag">'+(tCommon?'TALENT · 타고난 재능':'NEW TRAIT · 특성')+'</span><div class="cr-tsel">'+crTraitCard(tp,1)
         +'<div><b>'+gmEsc(tp.n)+'</b><span>'+gmEsc(tp.d)+'</span></div><button onclick="CR.traitPick=null;crResult()">다시 고르기</button></div></div>'; }
   }
   // 이적시장은 결과 화면 칸 대신 "이적시장 열기" 버튼 → 오버레이(crTmShow, 사용자 지정). 제안 없이 잔류뿐이면 버튼 없이 바로 다음 시즌.
