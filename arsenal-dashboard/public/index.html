@@ -2234,6 +2234,25 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* 특성은 아이콘만(사용자 지정 — 이름까지 나오면 선수 카드가 위아래로 너무 길어졌다). 누르면 이름·효과를 토스트로 — 칩을 펼치면 줄이 넘어가 다음 줄로 밀렸다(사용자 지적). */
 .cr-hc .cr-hc-tr{flex-wrap:nowrap;gap:4px;align-items:center}
 .cr-hc .cr-hc-tr > span{padding:2px;cursor:pointer}
+.cr-rx-btn{width:100%;display:flex;align-items:center;gap:10px;text-align:left;background:var(--surface);border:1px solid var(--border-bright);border-radius:14px;padding:12px 14px;color:var(--text);font:inherit;cursor:pointer;margin-top:12px}
+.cr-rx-btn .ic{font-size:22px;flex:none}.cr-rx-btn .t{flex:1;min-width:0}
+.cr-rx-btn .k{display:block;font-size:10.5px;font-weight:800;letter-spacing:.6px;color:var(--gold)}
+.cr-rx-btn b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-rx-btn small{display:block;font-size:11.5px;color:var(--text-secondary)}.cr-rx-btn .go{font-size:20px;color:var(--text-secondary);flex:none}
+.cr-rx .tag{background:#C8A84B;color:#2a1f05}
+.cr-rx-news{background:#F4EFE3;color:#1d1a14;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crTmDrop .5s .15s cubic-bezier(.2,1.2,.4,1) both}
+.cr-rx-news .mh{display:flex;justify-content:space-between;gap:8px;font-size:10px;letter-spacing:1px;font-weight:800;border-bottom:2px solid #1d1a14;padding-bottom:4px}.cr-rx-news .mh span{font-weight:600;letter-spacing:.3px}
+.cr-rx-news .hd{font-size:19px;font-weight:800;line-height:1.3;margin:8px 0 6px}
+.cr-rx-news p{margin:0;font-size:12.5px;line-height:1.6;color:#3d382c}
+.cr-rx-news .tg{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.cr-rx-news .tg span{font-size:10.5px;font-weight:700;border:1px solid #1d1a14;padding:1px 7px;border-radius:3px}.cr-rx-news .tg span.on{background:#1d1a14;color:#F4EFE3}
+.cr-rx-sec{font-size:11px;font-weight:800;letter-spacing:.6px;color:rgba(255,255,255,.65);margin:4px 2px -4px}
+.cr-rx .cr-sf-post{animation:none}.cr-rx .cr-sf-post .vf{display:inline;color:#60A5FA;font-size:11px}
+.cr-rx-comm{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
+.cr-rx-comm .bd{padding:9px 12px;font-size:12px;font-weight:700;color:#F0F2F7}
+.cr-rx-comm .r{display:flex;align-items:center;gap:8px;padding:9px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.cr-rx-comm .h{font-size:10.5px;font-weight:800;color:#FCA5A5;flex:none}
+.cr-rx-comm .tt{font-size:13px;color:#F0F2F7;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cr-rx-comm .tt b{color:#FCA5A5;font-size:11px}
+.cr-rx-comm .up{font-size:11px;color:rgba(255,255,255,.55);flex:none}
 .cr-tip{position:fixed;z-index:10001;max-width:calc(100vw - 24px);background:rgba(20,22,28,.96);color:#fff;font-size:12px;font-weight:600;line-height:1.4;padding:7px 11px;border-radius:9px;box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .15s,transform .15s;white-space:nowrap}
 .cr-tip::before{content:'';position:absolute;top:-5px;left:var(--ax,50%);margin-left:-5px;border:5px solid transparent;border-top:0;border-bottom-color:rgba(20,22,28,.96)}
 .cr-tip.on{opacity:1;transform:none}
@@ -10197,6 +10216,116 @@ function crScoutShow(sc, key){
    +'<button class="cr-iv-go" onclick="CR.scoutSeen=\''+key.replace(/'/g,'')+'\';crTovSet(\'\');crResult()">확인</button></div></div>');
   CR.scoutSeen=null; CR.scoutPend=key;
 }
+// ── 시즌 반응(사용자 지정) ── 결과 화면의 "시즌 반응" 줄을 누르면 오버레이로: 신문 1면 + SNS + 팬 커뮤니티(펨코·디시 말투, 매운맛 포함).
+// 그 시즌 기록(평점·골·도움·클린시트·순위·수상·부상·나이·유스)으로 상황을 고르고, 문구는 시드(이름·시즌)로 고정 — 다시 열어도 같다. 서버는 안 쓴다.
+// 템플릿 자리: {n}{n이}{n은}{n을}{n과}{n아} 이름(+조사), {club} 소속, {team} 팀명, {stat} 대표 기록, {g}{a}{cs} 골·도움·클린시트, {r} 평점, {rank} 순위, {age} 나이, {apps} 출전, {hon} 대표 수상
+var CR_RX={
+  news:{
+    ballon:['발롱도르 수상! {n}, 세계 최고에 서다','"이 시대의 주인공" {n}, 발롱도르 품었다'],
+    champ:['{club} 우승! {n}, {stat로} 정상 견인','우승 트로피 든 {n} "이 순간을 위해 뛰었다"'],
+    elite:['"{stat} 폭발" {n}, {club}의 새 에이스로','{n}, 시즌 평점 {r}… 리그 최정상급 활약','<24|이 선수 누구야? {n}, {club} 시즌 MVP 유력','{n} 원맨쇼… {club}, 그 없이는 설명 안 되는 시즌'],
+    good:['{n}, {stat로} 존재감 증명','{club} 주전 굳힌 {n} "다음 시즌이 더 기대된다"','꾸준함의 가치… {n}, 시즌 평점 {r} 기록'],
+    avg:['{n}, 무난했던 시즌… 한 단계 도약이 숙제','절반의 성공 {n}, 평점 {r}','"아쉬움 남는다" {n}, 다음 시즌 반등 다짐'],
+    bad:['"이대로는 안 된다" {n}, 평점 {r} 부진','{n} 향한 의문부호… 주전 경쟁 빨간불','실망스러운 한 해… {n}, 팬들 인내심 바닥'],
+    bench:['출전 {apps}경기… {n}, 벤치에 갇힌 한 시즌','기회가 없었다? {n}, 출전 시간 부족에 발목'],
+    injury:['부상에 발목 잡힌 {n}, {apps}경기 출전에 그쳐','"몸이 따라주지 않았다" {n}, 부상으로 얼룩진 시즌'],
+    decline:['세월 앞에 장사 없다… {n}, 하락세 뚜렷','베테랑 {n}의 황혼기… "경험으로 버틴 시즌"'],
+    youth:['{team}의 보석 {n}, 유스 무대 {stat}','"1군 콜업 머지않았다" {team} {n} 주목','{club} 아카데미가 키우는 {n}, 스카우트들 눈길'],
+    youthLow:['아직은 시간이 필요한 {n}, 유스 무대 {stat}','{team} {n}, 성장통 겪은 한 시즌']},
+  sns:{
+    elite:['<25|{n} 폼 미쳤다 진짜 ㅋㅋㅋ 이게 {age}살?','>29|{n} 나이 거꾸로 먹냐 ㅋㅋㅋ 폼 미쳤다','이 정도면 {club} 레전드 각 아님?','{n} 막을 수비수 리그에 없음 ㄹㅇ','발롱 얘기 슬슬 나와야 하는 거 아니냐','{n} 재계약 빨리 해라 제발','시즌 평점 {r} 실화냐 ㄷㄷ','{n} 경기 보려고 새벽에 일어나는 중','ㄹㅇ 이 선수 우리 팀 맞냐 ㅋㅋㅋ','이번 시즌 {n} 없었으면 {club} 어땠을지 생각만 해도 끔찍'],
+    good:['{n} 이번 시즌 잘했다 ㅇㅈ','꾸준한 게 최고임 {n} 믿는다','{stat이면} 충분히 밥값 했지','{n} 다음 시즌 한 단계만 더 가자','국대 감독 {n} 보고 있냐?','처음엔 의심했는데 {n} 인정함'],
+    avg:['나쁘진 않은데 한방이 없음','평점 {r}... 딱 밥값','{n} 다음 시즌이 진짜 증명할 시즌','기대치가 높아서 그렇지 못한 건 아님','솔직히 좀 애매했음 {n}','{n} 폼 들쭉날쭉한 거 고쳐야 함','ㄹㅇ 계륵... 팔기도 쓰기도 애매함'],
+    bad:['{n} 폼 왜 이럼?? 그냥 벤치 박자','주급 얼마 받는지 궁금하다 진짜','{n} 볼 잡으면 일단 불안함','이적시장 열리면 팔자 제발','평점 {r} ㅋㅋㅋ 이게 맞냐','에이전트가 일 하나는 잘했네 계약은 땄으니까','이 정도면 사기 계약 아님? 환불 되냐','볼 뺏기는 것도 재능임 ㅋㅋ','{n} 경기 보다가 리모컨 던질 뻔','{n} 쉴드치던 사람들 다 어디감?','감독이 {n} 계속 쓰는 이유 아는 사람?'],
+    bench:['{n} 경기에 좀 내보내라 감독아','벤치에서 뭘 보여줄 수 있냐고','임대라도 보내라 썩힌다','{n} 출전 {apps}경기가 말이 되냐','이럴 거면 왜 데려왔음?'],
+    injury:['또 부상이냐... 몸 관리 좀','{n} 복귀만 기다린다 ㅠ','의료진 뭐하냐 진짜','부상만 없었으면 이번 시즌 날아다녔을 듯','{n} 다치지 마라 제발 ㅠㅠ'],
+    decline:['에이징커브 왔다... 슬프다','{n}도 이제 나이 먹었네','재계약은 1년만 해라','그래도 라커룸 리더로는 필요함','전성기 {n} 그립다 ㅠ'],
+    youth:['유스에서 {n} 얘 물건임','{n} 1군 콜업 언제 함?','유스 리그 씹어먹는 중 ㄷㄷ','{team} 직관 갔는데 {n} 혼자 차원이 다름','{n} 팔지 마라 진짜 무조건 키워'],
+    youthLow:['{n} 기대했는데 아직은 좀 아쉽네','유스에서도 적응 중인 듯 천천히 크자','{n} 스카우트 리포트 과대평가였나...','유스 경기 봤는데 {n} 존재감 1도 없더라','아직 어리잖아 몇 년은 지켜봐야지']},
+  stat:{
+    elite:['{n} 이번 시즌 {stat} · 평점 {r}','{club} 내 평점 1위 {n} ({r})','<23|{age}세 이하 {stat}은 이번 시즌 리그 상위권'],
+    good:['{n} 시즌 기록: {stat} · 평점 {r}'],
+    avg:['{n} 시즌 기록: {stat} · 평점 {r}'],
+    bad:['{n} 시즌 평점 {r} — 팀 내 하위권'],
+    bench:['{n} 시즌 출전 {apps}경기'],
+    injury:['{n} 시즌 출전 {apps}경기 (부상)'],
+    decline:['{n} 시즌 기록: {stat} · 평점 {r}'],
+    youth:['{team} {n}: {stat}'],
+    youthLow:['{team} {n}: {stat} · 평점 {r}']},
+  comm:{
+    elite:['[분석] {n} 이번 시즌 기대득점 대비 +{x}... 결정력 미쳤음','[잡담] 솔직히 {n} 리그 탑3 아님?','[짤] {n} 이번 시즌 하이라이트.gif','[이적] 레알이 {n}한테 1억 준비 중이라는 썰 (출처X)','[잡담] {n} 재계약 안 하면 진짜 큰일남','[분석] {n} 히트맵 보면 그냥 사기임','[잡담] 우리 팀에 {n} 있다는 게 아직도 안 믿김','[잡담] {n} 까던 놈들 다 나와봐 ㅋㅋㅋ'],
+    good:['[잡담] {n} 이번 시즌 몇 점 줌?','<26|[분석] {n} 성장세 그래프 그려봄','>25|[분석] {n} 이번 시즌 기록 정리해봄','[잡담] {n} 국대 뽑혀야 하는 거 아니냐','[짤] {n} 세레머니 모음','[잡담] {n} 연봉 인상 해줘야 함'],
+    avg:['[잡담] {n} 기대치에 비하면 좀 아쉽지 않냐','[분석] {n} 장점/단점 정리해봄 (스압)','[잡담] {n} 다음 시즌 주전 확정임?','[잡담] {n} 이 정도면 평타 아님?'],
+    bad:['[잡담] {n} 이번 시즌 노답이었다 ㄹㅇ','[분석] {n} 문제는 결국 이거임 (스압)','[잡담] {n} 팔면 얼마 받을 수 있음?','[짤] {n} 이번 시즌 요약.jpg','[잡담] {n} 쉴드치던 애들 다 어디감?','[잡담] 솔직히 {n} 우리 팀 수준 아님','[잡담] {n} 영입한 놈 누구냐 진짜','[분석] {n} 볼터치 하나하나 뜯어봄... 답 없다'],
+    bench:['[잡담] {n} 왜 안 쓰냐 감독 경질해라','[잡담] {n} 임대 보내는 게 맞다고 봄','[분석] {n} 출전 시간 vs 경기력 비교해봄'],
+    injury:['[잡담] {n} 부상 또 길어진다네 ㅠㅠ','[분석] {n} 부상 이력 정리... 이거 맞냐','[잡담] {n} 복귀 시점 아는 사람?'],
+    decline:['[잡담] {n} 에이징커브 인정하자','[잡담] {n} 재계약 vs 이별, 너네는?','[짤] 전성기 {n} 모음.gif'],
+    youth:['[유스] {n} 유스 경기 직관 후기','[유스] 이번 유스 {n}이 진짜 물건이라던데','[잡담] {n} 1군 데뷔 언제쯤 보냐','[유스] {n} 성장 그래프 미쳤다'],
+    youthLow:['[유스] {n} 요즘 폼 어떰?','[잡담] {n} 기대치가 너무 높았나','[유스] {n} 유스 경기 직관 후기 (실망주의)','[잡담] 유스 유망주 거품 논란 또 시작이네']},
+  champ:['우승!!! {n} 고마워 ㅠㅠ','{club} 우승 실화냐 ㅠㅠㅠ','이번 우승 지분 {n}이 절반임'],
+  champComm:['[잡담] 우승 MVP 누구냐 투표함 → {n}','[짤] {club} 우승 세레머니 모음'],
+  // 우승은 했는데 본인은 부진한 시즌
+  champLow:['우승은 했는데 {n}은 묻어간 거 아님? ㅋㅋ','{club} 우승 ㅠㅠ 근데 {n}은 반성해라','팀이 우승시켜줬다 {n} 다음 시즌엔 지분 좀 챙겨'],
+  champLowComm:['[잡담] 우승 메달 {n}도 받음? ㅋㅋㅋ 버스 탑승 성공','[짤] {club} 우승 세레머니 모음']
+};
+var CR_RX_VERIFIED=['pitch_stats','transfer_talk','tactics_lab','football_daily','matchday_live'];
+// 로/으로: 받침 없거나 ㄹ 받침이면 로
+function crRo(w){ var c=String(w).slice(-1).charCodeAt(0), j=c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28:0; return w+(j===0||j===8?'로':'으로'); }
+function crJo(n, a, b){ var c=String(n).slice(-1).charCodeAt(0); var has=c>=0xAC00 && c<=0xD7A3 ? (c-0xAC00)%28>0 : false; return n+(has?a:b); }
+function crReact(){
+  var p=CR.v.player, r=CR.v.result.row, rg=crSfRng(crSfSeed()^0x5eed), pick=function(a){ return a[Math.floor(rg()*a.length)]; };
+  var hon=(r.hon||[]).map(function(h){ return String(h.n); }), R=r.apps?r.rating:0, Ra=R+Math.max(0,21-r.age)*0.15;   // 10대 1군은 평점이 낮은 게 보통이라 팬 반응 기준을 나이만큼 너그럽게
+  var champ=hon.some(function(h){ return / 리그 우승$|^챔피언스리그 우승/.test(h) && !/유스/.test(h); }), ballon=hon.some(function(h){ return /^발롱도르/.test(h); });
+  var k=r.youth?(R>=7.0?'youth':'youthLow'):(r.injured&&r.apps<15)?'injury':r.apps<8?'bench':(r.age>=31&&r.dOvr<0&&R<7.2)?'decline':Ra>=7.35?'elite':Ra>=7.0?'good':Ra>=6.6?'avg':'bad';
+  var club=String(p.club.n).replace(/ U-\d+$/,''), stat=p.pos==='DF'?'클린시트 '+r.cs+'회'+(r.ast?' · '+r.ast+'도움':''):r.goals+'골 '+r.ast+'도움';
+  var bigHon=hon.filter(function(h){ return /발롱|득점왕|도움왕|베스트 11|올해의 선수|우승|골든/.test(h) && !/유스/.test(h); });
+  var V={n:p.name, club:club, team:r.team, stat:stat, g:r.goals, a:r.ast, cs:r.cs, r:R?R.toFixed(2):'-', rank:r.rank, age:r.age, apps:r.apps, hon:bigHon[0]||'', x:(p.pos==='DF'?(2+Math.floor(rg()*4))+'실점 방어':(2+Math.floor(rg()*6))+'골')};
+  var fill=function(t){ return t.replace(/\{n([이은을과아])\}/g, function(_,j){ return crJo(p.name, {이:'이',은:'은',을:'을',과:'과',아:'아'}[j], {이:'가',은:'는',을:'를',과:'와',아:'야'}[j]); })
+      .replace(/\{stat로\}/g, crRo(stat)).replace(/\{stat이면\}/g, crJo(stat,'이면','면')).replace(/\{(\w+)\}/g, function(_,x){ return V[x]!=null?V[x]:''; }); };
+  // "<24|문구"는 24세 이하만, ">29|문구"는 30세 이상만(나이에 안 맞는 말 — "이 선수 누구야?"를 33세에게 하지 않게)
+  var ok=function(t){ var m=t.match(/^([<>])(\d+)\|/); return !m || (m[1]==='<' ? r.age<=+m[2] : r.age>+m[2]); }, strip=function(t){ return t.replace(/^[<>]\d+\|/,''); };
+  pick=function(a){ var b=a.filter(ok); if(!b.length) b=a; return strip(b[Math.floor(rg()*b.length)]); };
+  // 신문
+  // 우승은 트로피, 나머지는 수상 — 리그 우승은 순위 문장("정상에 올랐다")이 이미 말하니 뺀다
+  var award=bigHon.filter(function(h){ return !/우승/.test(h); }), trophy=bigHon.filter(function(h){ return /우승/.test(h) && !/ 리그 우승$/.test(h); });
+  var hk=ballon?'ballon':(champ&&!r.youth&&R>=6.8)?'champ':k, posKo={FW:'공격수',MF:'미드필더',DF:'수비수'}[p.pos], lg=r.youth?'유스 리그':crNat(((CR.meta.club[club])||{}).nat).n+' 리그';
+  var body=r.age+'세 '+posKo+' '+crJo(p.name,'이','가')+' '+lg+' '+r.apps+'경기 '+stat+'로 시즌을 마쳤다. '
+    +(r.rank===1?'팀은 리그 정상에 올랐다. ':r.rank<=4?'팀은 '+r.rank+'위로 상위권을 지켰다. ':r.rank>=16?'팀은 '+r.rank+'위로 힘겨운 시즌을 보냈다. ':'팀은 '+r.rank+'위로 시즌을 마감했다. ')
+    +(trophy.length?trophy.slice(0,2).join(' · ')+' 트로피도 들어 올렸다. ':'')+(award.length?award.slice(0,2).join(' · ')+' 수상의 기쁨도 누렸다. ':'')+(R?'시즌 평점은 '+R.toFixed(2)+'.':'');
+  var score=R?Math.max(3,Math.min(10,Math.round((5+(R-6)*2.4)*2)/2)):null;
+  var news={head:fill(pick(CR_RX.news[hk])), body:body, tags:(score!=null?['평점 '+score+'/10']:[]).concat(bigHon.slice(0,2)), date:(2027+r.age-15)+'년 5월 · 시즌 리뷰'};
+  // SNS 5개: 통계 계정 1 + 팬 4(우승이면 1개는 우승 반응)
+  var fans=CR_RX.sns[k].filter(ok).map(strip), sns=[], used={};
+  var fan=function(){ for(var t=0;t<20;t++){ var i=Math.floor(rg()*fans.length); if(!used[i]){ used[i]=1; return fans[i]; } } return pick(fans); };
+  sns.push({id:pick(CR_RX_VERIFIED), v:1, t:fill(pick(CR_RX.stat[k]))});
+  var hot=Ra>=6.8;   // 우승 시즌 반응: 본인이 잘했으면 고마움, 부진했으면 "묻어갔다"
+  if(champ && !r.youth) sns.push({id:pick(CR_FAN_ID), t:fill(pick(hot?CR_RX.champ:CR_RX.champLow))});
+  while(sns.length<5) sns.push({id:pick(CR_FAN_ID), t:fill(fan())});
+  var heat={elite:9,good:5,avg:2.5,bad:4,bench:1.5,injury:2,decline:2,youth:1,youthLow:0.6}[k]*(1+Math.max(0,(p.ovr-70)/15));
+  sns.forEach(function(s){ var v=Math.round(heat*(150+rg()*900)); s.lk=v>=1000?(v/1000).toFixed(1)+'k':v; s.c='hsl('+Math.floor(rg()*360)+',55%,45%)'; });
+  // 커뮤니티 4개
+  var cp=CR_RX.comm[k].filter(ok).map(strip), comm=[]; if(champ && !r.youth) cp=(hot?CR_RX.champComm:CR_RX.champLowComm).concat(cp);
+  while(comm.length<4 && cp.length){ var t=cp.splice(Math.floor(rg()*cp.length),1)[0]; comm.push({t:fill(t), c:Math.round(heat*(8+rg()*30)), up:Math.round(heat*(40+rg()*120))}); }
+  comm.sort(function(a,b){ return b.up-a.up; });
+  var board=rg()<0.5 ? club+' 갤러리 · 개념글' : '해외축구 게시판 · 인기글';
+  return {news:news, sns:sns, comm:comm, board:board};
+}
+function crReactBtn(){
+  var X=crReact();
+  return '<button class="cr-rx-btn" onclick="crReactShow()"><span class="ic" aria-hidden="true">📣</span><span class="t"><span class="k">SEASON REACTION · 시즌 반응</span><b>'+gmEsc(X.news.head)+'</b><small>기사 1 · SNS '+X.sns.length+' · 커뮤니티 '+X.comm.length+'</small></span><span class="go" aria-hidden="true">›</span></button>';
+}
+function crReactShow(){
+  var X=crReact(), N=X.news;
+  var post=function(s){ return '<div class="cr-sf-post"><i style="background:'+s.c+'">'+gmEsc(String(s.id).slice(0,1).toUpperCase())+'</i><div><b>@'+gmEsc(s.id)+(s.v?' <span class="vf">✔</span>':'')+'</b><span>'+gmEsc(s.t)+'</span></div><em>♥ '+s.lk+'</em></div>'; };
+  var row=function(c){ var m=c.t.match(/^(\[[^\]]+\])\s*(.*)$/); return '<div class="r"><span class="h">'+gmEsc(m?m[1]:'')+'</span><span class="tt">'+gmEsc(m?m[2]:c.t)+' <b>['+c.c+']</b></span><span class="up">👍 '+c.up+'</span></div>'; };
+  crTovSet('<div class="cr-tm cr-rx" role="dialog" aria-modal="true" aria-label="시즌 반응"><button class="cr-tm-x" onclick="crTovSet(\'\')" aria-label="닫기">✕</button><div class="cr-tm-box">'
+    +'<span class="tag">SEASON REACTION · 시즌 반응</span>'
+    +'<div class="cr-rx-news"><div class="mh">THE DAILY PITCH<span>'+gmEsc(N.date)+'</span></div><div class="hd">'+gmEsc(N.head)+'</div><p>'+gmEsc(N.body)+'</p>'
+    +(N.tags.length?'<div class="tg">'+N.tags.map(function(t,i){ return '<span'+(i?'':' class="on"')+'>'+gmEsc(t)+'</span>'; }).join('')+'</div>':'')+'</div>'
+    +'<div class="cr-rx-sec">SNS</div>'+X.sns.map(post).join('')
+    +'<div class="cr-rx-sec">커뮤니티</div><div class="cr-rx-comm"><div class="bd">'+gmEsc(X.board)+'</div>'+X.comm.map(row).join('')+'</div>'
+    +'</div></div>');
+}
 // 재능 개화 오버레이(사용자 지정 — 포지션 특성은 고르지 않고 시즌 활약으로 "얻는다"): 카드 한 장이 빛과 함께 뒤집혀 나온다
 function crBloomShow(t, key){
   crTovSet('<div class="cr-tov cr-bl" role="dialog" aria-modal="true" aria-label="재능 개화"><span class="tag">TALENT BLOOM · 재능 개화</span>'
@@ -10216,6 +10345,7 @@ function crResult(){
    +(r.notes.length||R.forced?'<ul class="cr-notes">'+r.notes.map(function(t){ return '<li>'+gmEsc(t)+'</li>'; }).join('')
       +(R.forced?'<li>'+(R.forcedWhy==='body'?'몸이 더 이상 버텨 주지 않아요. 선수 생활을 마무리할 때가 됐어요.':p.age>=40?'40세 — 선수 생활을 마무리할 때가 됐어요.':gmEsc(p.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.')+'</li>':'')+'</ul>':'')
    +'</div>';
+  h+=crReactBtn();   // 시즌 반응(신문·SNS·커뮤니티) — 누르면 오버레이
   // 예전 코치 평가(옛 토큰의 결과 화면용)
   if(r.coach) h+='<div class="cr-goal"><span class="cr-goal-tag">COACH · 코치 평가</span><div class="cr-goal-t">'+gmEsc(r.coach)+'</div></div>';
   // 잠재력 평가(18·21세): 처음엔 오버레이로, 확인한 뒤엔 결과 화면에 작게 남는다
