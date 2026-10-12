@@ -1697,6 +1697,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-dd-btn i{font-style:normal;font-size:15px;color:var(--text-secondary);margin-left:6px}
 .cr-dd .ph{color:var(--text-secondary)}
 .cr-dd-list{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);max-height:300px;overflow:auto;background:var(--surface2);border:1px solid var(--border-bright);border-radius:10px;padding:4px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.cr-dd.up .cr-dd-list{top:auto;bottom:calc(100% + 4px);box-shadow:0 -8px 24px rgba(0,0,0,.35)}
 .cr-dd-list button{display:flex;align-items:center;width:100%;font:inherit;font-size:15px;color:var(--text);background:none;border:0;border-radius:8px;padding:9px 10px;cursor:pointer;text-align:left}
 .cr-dd-list button:hover,.cr-dd-list button[aria-selected="true"]{background:color-mix(in srgb,var(--red) 14%,transparent)}
 .cr .cr-dream select:disabled{opacity:.5}
@@ -9385,6 +9386,17 @@ function crNatDD(key, val, ph, fn){
      +m.nations.map(function(n){ return '<button type="button" role="option" aria-selected="'+(val===n.id)+'" onclick="'+fn+'(\''+n.id+'\')">'+crFlag(n.id)+'<span>'+n.n+'</span></button>'; }).join('')+'</div>':'')
    +'</div>';
 }
+// 열린 드롭다운 목록 위치: 아래 공간(하단 버튼 바 위까지)이 모자라고 위가 더 넓으면 위로 펼친다(사용자 지정 — 맨 아래 꿈의 구단은 스크롤 위치에 따라 고르기 힘들었다)
+function crDDPlace(){
+  var dd=document.querySelector('#gameRoot .cr-dd.open'), L=dd && dd.querySelector('.cr-dd-list'); if(!L) return;
+  var b=dd.querySelector('.cr-dd-btn').getBoundingClientRect(), dock=document.querySelector('#gameRoot .cr-dock'), hdr=document.querySelector('.top-header');
+  var lo=dock ? dock.getBoundingClientRect().top : window.innerHeight, hi=hdr ? Math.max(0, hdr.getBoundingClientRect().bottom) : 0;
+  var below=lo-b.bottom-12, above=b.top-hi-12, want=Math.min(300, L.scrollHeight);
+  var up=below<want && above>below;
+  dd.classList.toggle('up', up);
+  L.style.maxHeight=Math.max(120, Math.min(300, up?above:below))+'px';
+  var sel=L.querySelector('[aria-selected="true"]'); if(sel) L.scrollTop=sel.offsetTop-L.clientHeight/2+sel.offsetHeight/2;
+}
 function crSetDreamNat(v){ CR.dd=null; CR.S.dreamNat=v||null; CR.S.dream=null; crPage1(); }
 document.addEventListener('click', function(){ if(CR.dd){ CR.dd=null; if(document.querySelector('#gameRoot .cr-dd.open')) crPage1(); } });
 function crRender(body, dock){
@@ -9541,6 +9553,7 @@ function crPage1(){
    +dreamClubs.map(function(c){ return '<option'+(S.dream===c[0]?' selected':'')+' value="'+gmEsc(c[0])+'">'+gmEsc(c[0])+'</option>'; }).join('')+'</select></div></div>'
    +'</div>', ' ');
   crDock1();
+  crDDPlace();
 }
 // 체형(경량/표준/강골/장신): 스탯 ↑↓는 포지션별, 성인 예상 키·몸무게는 국적·포지션 평균(실제는 커리어 시드로 ±3cm)
 function crBodyInfo(b, pos){
