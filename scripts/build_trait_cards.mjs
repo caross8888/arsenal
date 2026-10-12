@@ -52,9 +52,13 @@ const ICON = {
   shot:    `<circle cx="50" cy="50" r="34"/><circle cx="50" cy="50" r="13"/><circle cx="50" cy="50" r="3.5" fill="#fff"/><path d="M50,6 V28 M50,72 V94 M6,50 H28 M72,50 H94"/>`,
   runs:    `<path d="M50,6 V94" stroke-dasharray="8 8" opacity=".6"/>${arrow(14,76,84,28)}<circle cx="66" cy="68" r="7" fill="#fff" opacity=".5"/><circle cx="34" cy="30" r="7" fill="#fff" opacity=".5"/>`,
   fpass:   `<circle cx="20" cy="76" r="9"/><circle cx="80" cy="26" r="9" fill="#fff"/><path d="M30,68 Q38,30 66,28" stroke-dasharray="7 7"/>${head(68,28,54,26)}`,
-  wing:    `<path d="M88,6 V94" opacity=".6"/><path d="M72,92 V40 Q72,18 50,18 H26"/>${head(24,18,40,18)}<path d="M60,74 L72,66 M60,58 L72,50" stroke-width="3.5" opacity=".6"/>`,
+  wing:    `<path d="M90,6 V94" opacity=".6"/><path d="M26,94 Q26,66 52,66 H58 Q72,66 72,52 V20"/>${head(72,17,72,30)}<path d="M60,46 L50,40 M60,32 L50,26" stroke-width="3.5" opacity=".6"/>`,   // 가운데 아래에서 바로 측면으로 꺾여 터치라인을 타고 올라가는 화살표(사용자 지정 — 예전엔 안쪽으로 파고드는 모양이었다)
+  halfsp:  `<path d="M24,6 V94 M76,6 V94" stroke-dasharray="6 7" opacity=".45"/><path d="M93,90 Q66,74 62,24"/>${head(62,22,63,40)}<circle cx="38" cy="40" r="7" fill="#fff" opacity=".45"/>`,
+  hold:    `<path d="M50,6 V28" stroke-dasharray="7 7"/>${head(50,32,50,18)}<circle cx="68" cy="34" r="9" fill="#fff" opacity=".35"/><circle cx="50" cy="54" r="13" fill="#fff" opacity=".6"/><path d="M40,66 L22,84"/>${head(19,87,30,76)}`,   // 포스트 플레이: 수비를 등지고 받아 옆으로 떨궈 준다
+  link:    `<circle cx="50" cy="20" r="9" fill="#fff"/><circle cx="20" cy="76" r="9" fill="#fff" opacity=".55"/><circle cx="80" cy="76" r="9" fill="#fff" opacity=".55"/><path d="M44,32 L28,62"/>${head(26,66,36,48)}<path d="M33,78 H64"/>${head(68,78,50,78)}<path d="M74,64 L58,34"/>${head(56,30,66,48)}`,   // 연계 플레이: 내려와 받아 주고받으며 연결
+  fox:     `${goal(22,8,56,24)}<path d="M62,34 L72,52 L52,70" stroke-dasharray="6 6"/>${ball(46,74,9)}<circle cx="46" cy="74" r="19" stroke-width="3" opacity=".55"/><circle cx="24" cy="58" r="7" fill="#fff" opacity=".4"/><circle cx="82" cy="78" r="7" fill="#fff" opacity=".4"/>`,   // 위치 선정: 골대에 맞고 흘러나온 공이 서 있던 자리로
   flong:   longShot,
-  pace:    `<path d="M40,18 L68,50 L40,82"/><path d="M62,18 L90,50 L62,82"/><path d="M8,34 H28 M4,50 H30 M8,66 H28" opacity=".6"/>`,
+  pace:    `<path d="M4,60 H96" stroke-dasharray="6 7" opacity=".45"/><circle cx="14" cy="60" r="8" fill="#fff" opacity=".5"/><circle cx="38" cy="60" r="8" fill="#fff" opacity=".5"/><circle cx="90" cy="60" r="8" fill="#fff" opacity=".5"/><path d="M36,96 Q64,88 64,60 V28"/>${head(64,22,64,40,15)}<circle cx="86" cy="26" r="7" fill="#fff"/>`,   // 수비 라인 사이를 뚫고 뒷공간의 공으로(사용자 지정 — 예전 겹화살표는 뜻이 안 보였다)
   // MF
   kpass:   `<circle cx="28" cy="42" r="12" fill="#fff" opacity=".45"/><circle cx="72" cy="42" r="12" fill="#fff" opacity=".45"/>${arrow(50,92,50,10)}`,
   boxrun:  `<path d="M12,10 V56 H88 V10"/><path d="M34,10 V28 H66 V10" opacity=".6"/>${arrow(50,94,50,36)}`,

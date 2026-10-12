@@ -2203,6 +2203,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tc span{font-size:12px;line-height:1.4;color:rgba(255,255,255,.75);text-align:center}
 @keyframes crTovIn{from{opacity:0}to{opacity:1}}
 @keyframes crTcIn{from{opacity:0;transform:translateY(24px) scale(.9)}to{opacity:1;transform:none}}
+.cr-bl-card{position:relative;width:min(46vw,200px);margin:4px 0 10px;animation:crBlIn .8s cubic-bezier(.2,.8,.3,1.15) both}
+.cr-bl-card img{position:relative;width:100%;aspect-ratio:1;display:block;filter:drop-shadow(0 10px 24px rgba(0,0,0,.5))}
+.cr-bl-card i{position:absolute;inset:-35%;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,.55) 0%,rgba(200,168,75,.18) 40%,transparent 70%);animation:crBlGlow 2.4s ease-in-out infinite}
+.cr-bl-t{display:flex;flex-direction:column;align-items:center;gap:3px;margin-bottom:14px;text-align:center}
+.cr-bl-t b{font-size:17px;color:var(--gold)} .cr-bl-t span{font-size:13px;color:rgba(255,255,255,.75)}
+@keyframes crBlIn{0%{opacity:0;transform:rotateY(90deg) scale(.7)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes crBlGlow{0%,100%{opacity:.65;transform:scale(.92)}50%{opacity:1;transform:scale(1.05)}}
+.cr-blh summary{display:flex;align-items:baseline;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;font-size:14px}
+.cr-blh summary::-webkit-details-marker{display:none}
+.cr-blh summary span{font-size:12px;color:var(--text-secondary)} .cr-blh summary span::after{content:' ▾'} .cr-blh[open] summary span::after{content:' ▴'}
+.cr-blh-r{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px;padding:6px 0;border-top:1px solid var(--border)}
+.cr-blh-r>div{min-width:0;display:flex;flex-direction:column} .cr-blh-r b{font-size:13px} .cr-blh-r small{font-size:11.5px;color:var(--text-secondary)}
+.cr-blh-r .p{font-size:13px;font-weight:700;color:var(--gold)}
 .cr-hc-tr{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 .cr-hc-tr > span{font-size:10.5px;font-weight:700;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px}
 .cr-tr-ic{display:inline-block;width:18px;height:18px;border-radius:50%;flex:none;vertical-align:-4px;background-repeat:no-repeat;background-size:176.5%;background-position:50% 30%}
@@ -9538,6 +9551,14 @@ function crHist(){
 function crBack(){ return '<button class="gm-back" onclick="gameList()">← 게임 목록</button>'; }
 
 // ── 시즌 준비 ──────────────────────────────────────────────────────────
+// 재능 개화 안내(21~28세 1군, 사용자 지정 — 조건은 감추고 연관 능력치와 대략의 확률만). 접어 두고 요약만 보인다.
+function crBloomHint(b){
+  if(!b || !b.list || !b.list.length) return '';
+  var best=Math.max.apply(null, b.list.map(function(x){ return x.p; }))+10;   // 서버 p는 이번 시즌 기록 몫(+10%)을 뺀 확률 — 활약하면 닿는 최대치로 보여 준다
+  return '<details class="cr-panel cr-blh"><summary><b>재능 개화</b><span>획득 확률 최대 '+best+'%'+(b.n<2?' · 1개 더':'')+'</span></summary>'
+   +'<div class="cr-note" style="margin:6px 0 4px">시즌이 끝나면 재능이 꽃필 수 있어요. 연관 능력치가 높고 이번 시즌에 활약할수록 확률이 올라요.</div>'
+   +b.list.map(function(x){ return '<div class="cr-blh-r">'+crTraitIc(x.id)+'<div><b>'+gmEsc(x.n)+'</b><small>연관 능력치 · '+gmEsc(x.stat)+'</small></div><span class="p">~'+(x.p+10)+'%</span></div>'; }).join('')+'</details>';
+}
 function crPrep(){
   var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lcs=pr.loanClubs||(pr.loanClub?[pr.loanClub]:[]), iv=pr.interview;   // 인터뷰는 이벤트 칸 없이 오버레이로
   // 인터뷰·임대(구단 카드) 말고는 모든 이벤트를 오버레이로 — CR_TR에 없는 이벤트도 기본 틀로 띄운다(새 이벤트를 넣고 문구를 깜빡해도 이벤트 칸으로 새지 않게)
@@ -9565,6 +9586,7 @@ function crPrep(){
      // "고용한다 (성장 ↑ · 부상 위험 ↑)" → 굵은 한 줄 + 작은 효과 줄(버튼이 길어지지 않게)
      var m=String(t).match(/^(.*?)\s*\((.*)\)$/);
      return '<button class="cr-chip cr-opt" aria-pressed="'+(CR.evPick===k)+'" onclick="CR.evPick='+k+';crPrep()"><b>'+gmEsc(m?m[1]:t)+'</b>'+(m?'<small>'+crFx(m[2])+'</small>':'')+'</button>'; }).join('')+'</div></div>')
+   +crBloomHint(pr.bloom)
    +crHist(),
    '<div class="sum">'+p.age+'세<b>'+p.ovr+'</b></div><button class="gm-btn" '+(CR.evPick!=null?'':'disabled')+' onclick="crSeason(this)">'+(CR.evPick!=null?'시즌 시작':'이벤트를 골라 주세요')+'</button>');
   // 첫 프로 계약(1군에 처음 올라온 시즌 준비 화면에서 한 번) — 사인하고 나면 이벤트 오버레이로 이어진다
@@ -10091,6 +10113,14 @@ function crScoutShow(sc, key){
    +'<button class="cr-iv-go" onclick="CR.scoutSeen=\''+key.replace(/'/g,'')+'\';crTovSet(\'\');crResult()">확인</button></div></div>');
   CR.scoutSeen=null; CR.scoutPend=key;
 }
+// 재능 개화 오버레이(사용자 지정 — 포지션 특성은 고르지 않고 시즌 활약으로 "얻는다"): 카드 한 장이 빛과 함께 뒤집혀 나온다
+function crBloomShow(t, key){
+  crTovSet('<div class="cr-tov cr-bl" role="dialog" aria-modal="true" aria-label="재능 개화"><span class="tag">TALENT BLOOM · 재능 개화</span>'
+    +'<h3>재능이 꽃피었어요!</h3><p>이번 시즌 활약으로 새 플레이 스타일을 얻었어요.</p>'
+    +'<div class="cr-bl-card"><i aria-hidden="true"></i><img src="/img/traits/'+t.id+'.svg" alt="'+gmEsc(t.n)+'"></div>'
+    +'<div class="cr-bl-t"><span>'+gmEsc(t.d)+'</span></div>'
+    +'<button class="cr-iv-go" onclick="CR.bloomSeen=\''+key.replace(/'/g,'')+'\';crTovSet(\'\');crResult()">확인</button></div>');
+}
 function crResult(){
   var p=CR.v.player, R=CR.v.result, r=R.row, st=CR.meta.stats[p.pos];
   var dCls=r.dOvr>0?'up':r.dOvr<0?'down':'', lg=r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그';
@@ -10111,6 +10141,10 @@ function crResult(){
   if(SC && !scPending){ var gi=CR_SCOUT[SC.g];
     h+='<div class="cr-goal cr-scout-mini"><span class="cr-goal-tag">SCOUTING · '+SC.age+'세 '+(SC.prev?'재평가':'잠재력 평가')+'</span><div class="cr-goal-t"><b class="g g'+SC.g+'">'+SC.g+'</b> '+gmEsc(gi.t)
       +(SC.prev&&SC.prev!==SC.g?' <small>('+SC.prev+' → '+SC.g+')</small>':'')+'</div><div class="cr-note">'+gmEsc(gi.d)+'</div></div>'; }
+  // 재능 개화(21~28세, 고르는 게 아니라 얻는 특성): 처음엔 오버레이로, 확인한 뒤엔 결과 화면에 작게 남는다
+  var BL=r.bloom?(p.traits||[]).filter(function(t){ return t.id===r.bloom; })[0]:null, blKey=BL?(p.id||p.name)+'|bl|'+p.seasons:null, blPending=BL && CR.bloomSeen!==blKey;
+  if(BL && !blPending) h+='<div class="cr-goal"><span class="cr-goal-tag">TALENT BLOOM · 재능 개화</span><div class="cr-tsel"><img src="/img/traits/'+BL.id+'.svg" alt="">'
+    +'<div><b>'+gmEsc(BL.n)+'</b><span>'+gmEsc(BL.d)+'</span></div></div></div>';
   // 특성 제안: 3개 중 하나를 골라야 다음 시즌으로(강제 은퇴 시즌은 없음)
   var TO=!R.forced && R.traitOffer && R.traitOffer.length ? R.traitOffer : null;
   // 공통 특성(17세, 반드시 하나)과 포지션 특성 모두 카드 3장 오버레이로 고른다. 고른 뒤엔 결과 화면에 작게 남고 다시 고를 수 있다.
@@ -10140,6 +10174,7 @@ function crResult(){
   if(wcPending){ bdPending=true; if(!document.querySelector('#crTov .cr-bd')) crWorldCupShow(wcKey); }
   else if(bdPending){ if(!document.querySelector('#crTov .cr-bd')) crBallonShow(bdKey); }
   else if(scPending && !document.querySelector('#crTov .cr-sc')) crScoutShow(SC, scKey);
+  else if(blPending && !document.querySelector('#crTov .cr-bl')) crBloomShow(BL, blKey);
   // 시즌을 막 끝낸 직후에만 오버롤 숫자가 올라가는 연출(제안을 고르며 다시 그릴 땐 안 한다)
   if(CR.fresh){
     CR.fresh=false;
