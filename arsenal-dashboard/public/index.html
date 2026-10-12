@@ -9251,7 +9251,7 @@ function crApi(a, body){
 }
 // meta는 CDN에 하루 캐시된다(s-maxage). 모양이 바뀌면(체형 bodies 추가 등) CR_META_V를 올려 URL을 바꿔야 옛 캐시를 안 받는다
 // — 체형을 넣고 이걸 안 해서 배포 직후 옛 meta(체형 없음)가 내려와 1페이지 체형 칸이 안 보이고 진행이 막혔다(사용자 지적).
-var CR_META_V='4';   // 4: 구단 유니폼 색(clubs[k][i][2])   // 3: 재능 개화 특성(하프스페이스 침투 등)·스루패스 이름
+var CR_META_V='5';   // 5: 유니폼 소매 색(kit[5]) · 4: 구단 유니폼 색(clubs[k][i][2])   // 3: 재능 개화 특성(하프스페이스 침투 등)·스루패스 이름
 function crMeta(){
   if(CR.meta) return Promise.resolve(CR.meta);
   return fetch(FN+'/career?a=meta&v='+CR_META_V).then(function(r){ if(!r.ok) throw new Error('잠시 후 다시 시도해 주세요.'); return r.json(); }).then(function(m){
@@ -9538,6 +9538,7 @@ function crWelcome(v){
   else if(K.pat==='band') pat='<rect x="0" y="48" width="120" height="14" fill="'+K.c2+'"/>';
   else if(K.pat==='sash') pat='<polygon points="22,4 40,4 106,116 88,116" fill="'+K.c2+'"/>';
   else if(K.pat==='diag') pat='<polygon points="120,0 120,120 0,120" fill="'+K.c2+'"/>';
+  if(K.sleeve) pat+='<polygon points="30,10 6,32 20,46 28,40" fill="'+K.sleeve+'"/><polygon points="90,10 114,32 100,46 92,40" fill="'+K.sleeve+'"/>';   // 소매(어깨 이음선 바깥)
   // 무늬 유니폼은 글자가 두 색 위에 걸치므로 흰 글씨 + 어두운 테두리로 통일(리버 플레이트 어깨띠·아약스 가운데 띠 위에서 빨강 글씨가 묻혔다)
   if(K.pat) K.text='#fff';
   var cid='crShirt'+Date.now(), tx=K.pat ? ' paint-order="stroke" stroke="rgba(0,0,0,.6)" stroke-width="3"' : '';
@@ -9599,11 +9600,12 @@ function crShow(v){
   if(v.phase==='retired') return crRetired();
   if(v.phase==='pick'){ CR.firstClubs=v.clubs; return crIntro(); }
 }
-// 구단 유니폼 색(사용자 지정 — 입단 연출 유니폼·선수 카드를 팀색으로). meta.clubs의 [유니폼 바탕색, 등 글자색, 대표색, 무늬?, 두 번째 색?]
+// 구단 유니폼 색(사용자 지정 — 입단 연출 유니폼·선수 카드를 팀색으로). meta.clubs의 [유니폼 바탕색, 등 글자색, 대표색, 무늬?, 두 번째 색?, 소매 색?]
+// 소매 색은 위키백과 정보칸에서 몸통과 확실히 다른 구단만(아스날 흰 소매 등 — scripts/build_club_colors.mjs)
 // 원자료는 Fotmob·ESPN 팀 색(scripts/build_club_colors.mjs). 모르는 구단은 예전처럼 아스날 레드.
 function crKit(club){
   var k=club && CR.meta && (CR.meta.club[String(club.n||'').replace(/ U-\d+$/,'')]||{}).kit;
-  return k ? {shirt:k[0], text:k[1], brand:k[2], pat:k[3]||null, c2:k[4]||null} : {shirt:'#D0010A', text:'#fff', brand:'#c40004', pat:null, c2:null};
+  return k ? {shirt:k[0], text:k[1], brand:k[2], pat:k[3]||null, c2:k[4]||null, sleeve:k[5]||null} : {shirt:'#D0010A', text:'#fff', brand:'#c40004', pat:null, c2:null, sleeve:null};
 }
 function crMix(hex, to, t){ var a=parseInt(hex.slice(1),16), b=parseInt(to.slice(1),16), r=function(x,y){ return Math.round(x+(y-x)*t); };
   var c=(r(a>>16,b>>16)<<16)|(r((a>>8)&255,(b>>8)&255)<<8)|r(a&255,b&255); return '#'+('000000'+c.toString(16)).slice(-6); }

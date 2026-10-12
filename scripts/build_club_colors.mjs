@@ -8,6 +8,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const raw = JSON.parse(readFileSync(new URL('./out/club_colors_raw.json', import.meta.url)));
+// 위키백과 정보칸 홈 유니폼(fetch_club_kits_wiki.mjs) — 소매 색(leftarm1)만 쓴다. 무늬(pattern_b1)는 거의 다 구단·시즌 전용 그림 이름이라 못 쓴다(298개 중 259개).
+const wiki = JSON.parse(readFileSync(new URL('./out/club_kits_wiki_raw.json', import.meta.url)));
 const W = '#ffffff', K = '#111111';
 // [무늬, 바탕색, 두 번째 색] — v 세로 줄무늬 · h 가로 줄무늬 · half 좌우 반반 · sash 어깨띠 · band 가슴 띠 · mid 가운데 넓은 띠 · diag 대각선 반반
 const PATTERN = {
@@ -49,6 +51,18 @@ const NOT_WHITE = [9810, 8674, 8406];
 const hex = c => c.replace('#','').toLowerCase();
 const lum = c => { const h = hex(c), v = [0,2,4].map(i => parseInt(h.slice(i,i+2),16)/255).map(x => x <= 0.03928 ? x/12.92 : Math.pow((x+0.055)/1.055, 2.4)); return 0.2126*v[0] + 0.7152*v[1] + 0.0722*v[2]; };
 const isWhite = c => c && lum(c) > 0.85;
+const rgb = c => [0,2,4].map(i => parseInt(hex(c).slice(i,i+2),16));
+const dist = (a, b) => { const x = rgb(a), y = rgb(b); return Math.hypot(x[0]-y[0], x[1]-y[1], x[2]-y[2]); };
+// 소매 색: 위키백과 소매(leftarm1)가 몸통(body1)과 확실히 다를 때만(같은 색의 명암 차이 — 로마 980729/681f30 같은 건 무시).
+// 검색 첫 결과 문서에 유니폼 값이 없어 다른 구단 문서로 넘어간 경우(page ≠ hits[0] — 프로시노네·광주 등)는 버린다.
+// 줄무늬·가로줄 구단(PATTERN)은 소매까지 무늬라 쓰지 않는다.
+const SLEEVE_MIN = 130;
+const sleeveOf = (id, shirt) => {
+  const w = wiki[id]; if(!w || !w.page || w.page !== w.hits[0] || PATTERN[id]) return null;
+  const la = w.kit.leftarm1, b = w.kit.body1; if(!/^[0-9a-f]{6}$/i.test(la || '') || !/^[0-9a-f]{6}$/i.test(b || '')) return null;
+  const c = '#' + la.toLowerCase();
+  return dist(c, '#' + b) >= SLEEVE_MIN && dist(c, shirt) >= SLEEVE_MIN ? c : null;
+};
 
 const out = {};
 for(const [id, x] of Object.entries(raw)){
@@ -60,13 +74,15 @@ for(const [id, x] of Object.entries(raw)){
   if(pat) shirt = pat[1];
   // 글자색(등 이름·번호): 밝은 유니폼엔 대표색(충분히 어두우면) 아니면 거의 검정, 어두운 유니폼엔 흰색
   const text = lum(shirt) > 0.45 ? (lum(brand) < 0.25 && brand.toLowerCase() !== shirt.toLowerCase() ? brand : K) : W;
-  out[id] = pat ? [shirt, text, brand, pat[0], pat[2]] : [shirt, text, brand];
+  const sleeve = sleeveOf(id, shirt);
+  out[id] = pat ? [shirt, text, brand, pat[0], pat[2]] : sleeve ? [shirt, text, brand, null, null, sleeve] : [shirt, text, brand];
 }
 const lines = Object.entries(out).map(([id, v]) => ` ${id}:${JSON.stringify(v)}`).join(',\n');
 writeFileSync(new URL('../arsenal-dashboard/api/_club_kits.js', import.meta.url),
 `// 자동 생성 — scripts/build_club_colors.mjs. 직접 고치지 말 것(무늬·흰 유니폼 예외는 그 스크립트에서).
-// Fotmob 구단 id → [유니폼 바탕색, 등 글자색, 대표색(선수 카드), 무늬?, 두 번째 색?]
+// Fotmob 구단 id → [유니폼 바탕색, 등 글자색, 대표색(선수 카드), 무늬?, 두 번째 색?, 소매 색?(위키백과)]
 export const CLUB_KIT = {
 ${lines}};
 `);
+console.log('sleeves', Object.entries(out).filter(([, v]) => v[5]).map(([id, v]) => raw[id].name + ' ' + v[0] + '/' + v[5]).join(' | '));
 console.log('kits', Object.keys(out).length, 'patterns', Object.keys(PATTERN).length, 'white', Object.values(out).filter(v => v[0] === W).length);
