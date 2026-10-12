@@ -2039,7 +2039,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-wl .crest{filter:drop-shadow(0 0 22px rgba(255,215,120,.35));animation:crTmNew .7s .15s cubic-bezier(.2,1.6,.4,1) both}
 .cr-wl .team{font-size:17px;font-weight:800;animation:crIvUp .4s .45s ease-out both}
 .cr-wl .shirt{width:150px;height:150px;flex:none;animation:crWlShirt .7s .6s cubic-bezier(.2,1.3,.4,1) both}
-.cr-wl .shirt svg{display:block;width:150px;height:150px}
+.cr-wl .shirt{border-radius:16px;overflow:hidden;position:relative;background:radial-gradient(circle at 50% 30%,rgba(120,150,220,.28),rgba(20,30,60,.6) 75%);border:1px solid rgba(150,180,255,.25)}
+.cr-wl .shirt img{position:absolute;left:-12%;top:-3%;width:124%;opacity:0;transition:opacity .3s}.cr-wl .shirt img.on{opacity:1}
 @keyframes crWlShirt{0%{opacity:0;transform:scaleX(0)}60%{opacity:1;transform:scaleX(1.06)}100%{opacity:1;transform:scaleX(1)}}
 .cr-wl .chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;animation:crIvUp .4s 1s ease-out both}
 .cr-wl .chips span{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:rgba(255,255,255,.1)}
@@ -9616,43 +9617,16 @@ function crWelcome(v){
   CR.wl={v:v}; CR.v=v; CR.tok=v.token; crStore(v);   // 인트로 중에 나가도 이어 하기가 되게
   var p=v.player, card=((CR.meta.cards[p.pos]||[])[p.card]||{}).n||'', club=p.club.n.replace(/ U-\d+$/,''), reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var say=CR_WL_COACH[Math.floor(Math.random()*CR_WL_COACH.length)], wait=reduce?1800:4200;
-  // 등 이름: 몸통 폭(약 58) 안에 — 한 줄에 10 크기로 안 들어가면 두 줄로 나누고(최대 12자), 그래도 넘치면 폭에 맞춰 눌러 담는다
-  var cw=function(str){ return [...str].reduce(function(t,ch){ return t+(/[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF\u3040-\u30FF\u4E00-\u9FFF]/.test(ch)?1.05:0.62); },0)+0.3; };
-  var nm=[...p.name], lines=cw(p.name)*10<=58 ? [p.name] : (function(){ var sp=p.name.lastIndexOf(' ', Math.ceil(nm.length/2)+1), cut=sp>0?sp:Math.ceil(nm.length/2); return [nm.slice(0,cut).join('').trim(), nm.slice(cut).join('').trim()]; })();
-  var nfs=Math.max(6, Math.min(10, Math.floor(58/Math.max.apply(null, lines.map(cw))*10)/10));
-  var nameSvg=lines.map(function(l,i){ return '<text x="60" y="'+(lines.length>1?38+i*(nfs+2):44)+'" text-anchor="middle" font-size="'+nfs+'" font-weight="800" fill="#fff"'+(cw(l)*nfs>58?' textLength="58" lengthAdjust="spacingAndGlyphs"':'')+'>'+gmEsc(l)+'</text>'; }).join('');
-  // 사파리(아이폰)에서 안 보였다(사용자 지적): 크기를 속성으로 박고, url(#그라데이션)·3D 회전·filter를 빼서 단순하게 그린다
-  // 유니폼은 입단한 구단 색(crKit) — 줄무늬·반반·띠 같은 무늬는 셔츠 모양으로 잘라(clipPath) 얹는다
-  var K=crKit(p.club), SH='M30 10 L50 4 Q60 12 70 4 L90 10 L114 32 L100 46 L92 40 L92 116 L28 116 L28 40 L20 46 L6 32 Z', pat='';
-  if(K.pat==='v') for(var i=0;i<6;i++) pat+='<rect x="'+(10+i*20)+'" y="0" width="10" height="120" fill="'+K.c2+'"/>';
-  else if(K.pat==='h') for(var i=0;i<6;i++) pat+='<rect x="0" y="'+(14+i*20)+'" width="120" height="10" fill="'+K.c2+'"/>';
-  else if(K.pat==='half') pat='<rect x="60" y="0" width="60" height="120" fill="'+K.c2+'"/>';
-  else if(K.pat==='mid') pat='<rect x="45" y="0" width="30" height="120" fill="'+K.c2+'"/>';
-  else if(K.pat==='band') pat='<rect x="0" y="48" width="120" height="14" fill="'+K.c2+'"/>';
-  else if(K.pat==='sash') pat='<polygon points="22,4 40,4 106,116 88,116" fill="'+K.c2+'"/>';
-  else if(K.pat==='diag') pat='<polygon points="120,0 120,120 0,120" fill="'+K.c2+'"/>';
-  if(K.sleeve) pat+='<polygon points="30,10 6,32 20,46 28,40" fill="'+K.sleeve+'"/><polygon points="90,10 114,32 100,46 92,40" fill="'+K.sleeve+'"/>';   // 소매(어깨 이음선 바깥)
-  // 무늬 유니폼은 글자가 두 색 위에 걸치므로 흰 글씨 + 어두운 테두리로 통일(리버 플레이트 어깨띠·아약스 가운데 띠 위에서 빨강 글씨가 묻혔다)
-  if(K.pat) K.text='#fff';
-  var cid='crShirt'+Date.now(), tx=K.pat ? ' paint-order="stroke" stroke="rgba(0,0,0,.6)" stroke-width="3"' : '';
-  nameSvg=nameSvg.replace(/fill="#fff"/g, 'fill="'+K.text+'"'+tx);
-  var shirt='<svg width="150" height="150" viewBox="0 0 120 120" aria-hidden="true">'
-    +'<defs><clipPath id="'+cid+'"><path d="'+SH+'"/></clipPath></defs>'
-    +'<path d="'+SH+'" fill="'+K.shirt+'"/>'
-    +(pat?'<g clip-path="url(#'+cid+')">'+pat+'</g>':'')
-    +'<path d="M28 78 L92 78 L92 116 L28 116 Z" fill="#000" opacity=".12"/>'
-    +'<path d="'+SH+'" fill="none" stroke="'+(crLum(K.shirt)>0.8?'rgba(0,0,0,.25)':'rgba(255,255,255,.4)')+'" stroke-width="1.5"/>'
-    +nameSvg
-    +'<text x="60" y="94" text-anchor="middle" font-size="44" fill="'+K.text+'"'+tx+' style="font-family:var(--fd)">'+(p.num||p.want||'')+'</text></svg>';
   crTovSet('<div class="cr-wl" role="dialog" aria-modal="true" aria-label="입단" onclick="crWelcomeGo()"><div class="cr-wl-box">'
     +'<span class="tag">WELCOME TO THE ACADEMY</span>'
     +'<div class="crest">'+crCrest(p.club,72)+'</div><div class="team">'+gmEsc(p.club.team)+'</div>'
-    +'<div class="shirt">'+shirt+'</div>'
+    +'<div class="shirt"><img alt="" id="crWlAv"></div>'   // 입단 연출도 도트 선수(사용자 지정 — 은퇴 카드와 같은 사람, 입단 구단 유니폼·희망 등번호)
     +'<div class="chips"><span>'+crFlag(p.nation)+crNat(p.nation).n+'</span><span>'+gmEsc(card)+'</span><span>'+gmEsc(p.body||'표준')+'</span><span>'+p.age+'세</span></div>'
     +'<div class="say"><div class="who">유스 코치</div><div class="t" id="crWlSay">'+(reduce?gmEsc(say):'')+'</div></div>'
     +'<div class="cr-sf-feed" id="crWlFeed"></div>'
     +'<div class="go"><i style="animation-duration:'+wait+'ms"></i><span>첫 시즌으로 넘어가요 · 누르면 바로</span></div></div></div>');
   var W=CR.wl;
+  crAvatar(crAvLook(p), crKit(p.club), p.num||p.want).then(function(u){ var im=document.getElementById('crWlAv'); if(im && CR.wl===W){ im.src=u; im.classList.add('on'); } }).catch(function(){});
   if(!reduce){ var t=document.getElementById('crWlSay'), k=0; setTimeout(function(){ W.ti=setInterval(function(){ if(CR.wl!==W || !t) return clearInterval(W.ti); k++; t.textContent=say.slice(0,k); if(k>=say.length) clearInterval(W.ti); }, 32); }, 1300); }
   // 팬 반응: 12개 중 3개를 섞어 차례로
   var pool=CR_WL_FAN.slice().sort(function(){ return Math.random()-0.5; }).slice(0,3);
@@ -9733,7 +9707,8 @@ var CR_AV_FAIR={ENG:1,GER:1,NED:1,NOR:1,BEL:1,USA:1};   // 밝은 머리색이 �
 function crAvRng(str){ var h=2166136261; for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); } return function(){ h+=0x6D2B79F5; var t=h; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
 function crAvPick(rg, w){ var tot=0, k; for(k in w) tot+=w[k]; var x=rg()*tot; for(k in w){ x-=w[k]; if(x<0) return k; } return k; }
 function crAvLook(c){
-  var rg=crAvRng(String(c.name)+'|'+c.nation+'|'+(c.num||'')+'|'+c.pos), sw=CR_AV_SKIN[c.nation]||[20,25,20,15,12,8], ws={};
+  // 시드는 이름·국적·포지션·직군만(등번호는 커리어 중 바뀐다 — 입단 연출과 은퇴 카드가 같은 사람이어야 한다, 사용자 지정)
+  var rg=crAvRng(String(c.name)+'|'+c.nation+'|'+c.pos+'|'+c.card), sw=CR_AV_SKIN[c.nation]||[20,25,20,15,12,8], ws={};
   sw.forEach(function(v,i){ if(v) ws[i+1]=v; });
   var skin=+crAvPick(rg, ws), hair=+crAvPick(rg, skin>=5?CR_AV_HAIR_DARK:CR_AV_HAIR_LIGHT), cw;
   if(CR_AV_FADE[hair]) cw={black:7, brown:3};
