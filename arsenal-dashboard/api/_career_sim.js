@@ -1089,7 +1089,8 @@ export const honorsOf = state => state.hist.flatMap(r => r.hon);
 export function contribScore(state){ const w = CONTRIB_CARD[(CARDS[state.pos][state.card]||{}).n] || CONTRIB[state.pos], t = state.tot; return ((t.wg ?? t.goals)*w.g + (t.wa ?? t.ast)*w.a + (t.wcs ?? t.cs ?? 0)*w.cs) * ((CARD_CONTRIB[state.pos]||[])[state.card] || 1); }
 // 발롱도르·FIFA 올해의 선수는 받을수록 한 번의 점수가 줄어든다(n번째: 200 × REPEAT_PTS[n−1], 마지막 값 이후 고정).
 // 수상 자체는 그대로 두고 점수만 관리한다(사용자 지정 — 연속 수상 12회면 S 등급만 2,400점이 쌓여 점수가 튀었다).
-const REPEAT_PTS = [1, 0.8, 0.65, 0.5, 0.4, 0.35], REPEAT_AW = /^(발롱도르|FIFA 올해의 선수)$/;
+// 공격수는 최저 0.5(사용자 지정 — 발롱 배율 0.97로 최상위 공격수 점수가 줄어 1위 아래로 미드·수비가 몰렸다)
+const REPEAT_PTS = [1, 0.8, 0.65, 0.5, 0.4, 0.35], REPEAT_FW = [1, 0.8, 0.65, 0.5], REPEAT_AW = /^(발롱도르|FIFA 올해의 선수)$/;
 // 수비수 가점(사용자 지정): 수비수는 발롱을 여러 번 받기 어려워 통합 최상위에서 사라졌다 — 수비수의 대표 상과 발롱을 더 쳐 준다.
 // 리그 올해의 미드필더·수비수, 챔스 올해의 공격수·미드필더·수비수는 실제와 달라 뺐다(사용자 지정) — 그 몫을 베스트 11 가점으로 메운다.
 // 베스트11 2.2 → 1.95, 월드 베스트11 2 → 1.8, 발롱 2 → 1.8(사용자 지정 — 성장 하향 뒤 최상단 1·2위를 수비수가 차지해 살짝 낮춤)
@@ -1113,7 +1114,8 @@ export function careerScore(state){
     const base = (tp ? tp[1] : (HONOR_TIER[h.tier]||{p:0}).p)*mul*(h.m||1)*(h.kind==='ind' ? ch : 1)*lgHonMul(h.n), n = +(String(h.n).split('×')[1])||1;
     if(!REPEAT_AW.test(h.n)) return t + base*n;
     const k = seen[h.n] = (seen[h.n]||0) + 1;
-    return t + base*REPEAT_PTS[Math.min(k, REPEAT_PTS.length)-1];
+    const rp = state.pos === 'FW' ? REPEAT_FW : REPEAT_PTS;
+    return t + base*rp[Math.min(k, rp.length)-1];
   }, 0);
   return Math.round((state.tot.wap ?? state.tot.apps) + contribScore(state) + state.tot.caps*2 + state.peak*10 + hp);
 }
