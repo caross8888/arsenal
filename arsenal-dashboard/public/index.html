@@ -1931,7 +1931,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hof-shelf>div.more{display:none}.cr-hof-tro.open .cr-hof-shelf>div.more{display:flex}
 .cr-tro-img{display:inline-block;vertical-align:middle;object-fit:contain}
 .cr-hof-shelf i img,.cr-hof-shelf i svg{display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}.cr-hof-shelf .tS i img,.cr-hof-shelf .tS i svg{filter:drop-shadow(0 0 8px rgba(233,199,102,.55)) drop-shadow(0 3px 4px rgba(0,0,0,.5))}
-.cr-hof-shelf span{font-size:10.5px;line-height:1.25;color:rgba(255,255,255,.82);margin-top:4px;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cr-hof-shelf span{font-size:clamp(9px,2.75vw,10.5px);line-height:1.25;color:rgba(255,255,255,.82);margin-top:4px;word-break:keep-all;overflow-wrap:anywhere;max-width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cr-hof-shelf b{font-size:11px;font-weight:800;color:#fff;margin-top:1px}
 .cr-hof-in{margin-top:6px;border:1px solid var(--bd);border-radius:10px;padding:10px}.cr-hof-in .cr-hof-h{border:0;padding:0;margin-bottom:8px;color:var(--gd)}
 .cr-hof .cr-badges>span{background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);font-weight:600}.cr-hof .cr-badges>span.b{border-color:rgba(233,199,102,.5);color:var(--gd);font-weight:800}
@@ -10884,7 +10884,7 @@ function crCardHtml(c){
   h+='<div class="cr-hof-b cr-hof-tro"><div class="cr-hof-h"><i>'+IC.cup+'</i>트로피 컬렉션'+(shelf.length>6?'<button class="all" onclick="this.closest(\'.cr-hof-tro\').classList.toggle(\'open\')"><span>전체 보기</span>›</button>':'<span class="cnt">'+nAll+'개</span>')+'</div>';
   if(shelf.length) h+='<div class="cr-hof-shelf">'+shelf.map(function(k,i){ var g=grp[k];
       // 칸이 좁아 이름을 줄인다(시안처럼 "월드컵 4회") — 나라 이름·"우승"을 떼고, 전체 이름은 title로
-      var sh=String(k).replace(/ 우승$/,'').replace(/^\S+ 리그 /,'리그 ');
+      var sh=String(k).replace(/ 우승$/,'').replace(/^\S+ 리그 /,'리그 ').replace(/^챔피언스리그$/,'챔스');   // 띄어쓰기 없는 6글자라 좁은 폰 칸을 넘었다(다른 챔스 상도 "챔스"로 줄여 쓴다)
       return '<div class="'+(i>=6?'more':'')+(g.tier==='S'?' tS':'')+'" title="'+gmEsc(k)+'"><i>'+crTrophy(k,40)+'</i><span>'+gmEsc(sh)+'</span><b>'+g.c+'회</b></div>'; }).join('')+'</div>';
   else h+='<div class="cr-note" style="text-align:center">트로피 없이 끝난 커리어예요.</div>';
   var restChips=function(list){ return list.map(function(k){ return '<span'+(grp[k].tier!=='C'?' class="b"':'')+'>'+crTrophy(k,16)+gmEsc(k)+(grp[k].c>1?' ×'+grp[k].c:'')+'</span>'; }).join(''); };
