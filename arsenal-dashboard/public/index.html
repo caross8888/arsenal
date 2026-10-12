@@ -2234,6 +2234,32 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* 특성은 아이콘만(사용자 지정 — 이름까지 나오면 선수 카드가 위아래로 너무 길어졌다). 누르면 이름·효과를 토스트로 — 칩을 펼치면 줄이 넘어가 다음 줄로 밀렸다(사용자 지적). */
 .cr-hc .cr-hc-tr{flex-wrap:nowrap;gap:4px;align-items:center}
 .cr-hc .cr-hc-tr > span{padding:2px;cursor:pointer}
+.cr-rx-btn{width:100%;display:flex;align-items:center;gap:10px;text-align:left;background:var(--surface);border:1px solid var(--border-bright);border-radius:14px;padding:12px 14px;color:var(--text);font:inherit;cursor:pointer;margin-top:12px}
+.cr-rx-btn .ic{font-size:22px;flex:none}.cr-rx-btn .t{flex:1;min-width:0}
+.cr-rx-btn .k{display:block;font-size:10.5px;font-weight:800;letter-spacing:.6px;color:var(--gold)}
+.cr-rx-btn b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-rx-btn small{display:block;font-size:11.5px;color:var(--text-secondary)}.cr-rx-btn .go{font-size:20px;color:var(--text-secondary);flex:none}
+.cr-rx .tag{background:#C8A84B;color:#2a1f05}
+.cr-rx-news{background:#F4EFE3;color:#1d1a14;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crTmDrop .5s .15s cubic-bezier(.2,1.2,.4,1) both}
+.cr-rx-news .mh{display:flex;justify-content:space-between;gap:8px;font-size:10px;letter-spacing:1px;font-weight:800;border-bottom:2px solid #1d1a14;padding-bottom:4px}.cr-rx-news .mh span{font-weight:600;letter-spacing:.3px}
+.cr-rx-news .hd{font-size:19px;font-weight:800;line-height:1.3;margin:8px 0 6px}
+.cr-rx-news p{margin:0;font-size:12.5px;line-height:1.6;color:#3d382c}
+.cr-rx-news .tg{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.cr-rx-news .tg span{font-size:10.5px;font-weight:700;border:1px solid #1d1a14;padding:1px 7px;border-radius:3px}.cr-rx-news .tg span.on{background:#1d1a14;color:#F4EFE3}
+.cr-rx-sec{font-size:11px;font-weight:800;letter-spacing:.6px;color:rgba(255,255,255,.65);margin:4px 2px -4px}
+.cr-rx .cr-sf-post{animation:none}.cr-rx .cr-sf-post .vf{display:inline;color:#60A5FA;font-size:11px}
+.cr-rx-cm{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden}
+.cr-rx-cm .bd{display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:11.5px;font-weight:800;color:#fff;background:#3B5998}.cr-rx-cm.dc .bd{background:#3B4890}
+.cr-rx-cm .bd span{font-size:10px;font-weight:800;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,.2)}
+.cr-rx-cm .ti{padding:10px 12px 2px;font-size:14.5px;font-weight:800;color:#F0F2F7;line-height:1.4}
+.cr-rx-cm .mt{padding:0 12px 9px;font-size:11px;color:rgba(255,255,255,.55)}
+.cr-rx-cm .ch{padding:7px 12px;font-size:11.5px;font-weight:700;color:rgba(255,255,255,.75);border-top:1px solid rgba(255,255,255,.12)}.cr-rx-cm .ch b{color:#FCA5A5}
+.cr-rx-cm .r{padding:8px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.cr-rx-cm .r.re{padding-left:30px;position:relative;background:rgba(255,255,255,.03)}.cr-rx-cm .r.re::before{content:'↳';position:absolute;left:13px;top:8px;color:rgba(255,255,255,.4);font-size:12px}
+.cr-rx-cm .w{display:flex;align-items:center;gap:6px;font-size:11.5px}.cr-rx-cm .w b{color:#93C5FD;font-weight:700}.cr-rx-cm.dc .w b{color:rgba(255,255,255,.75)}
+.cr-rx-cm i{font-style:normal;font-weight:400;color:rgba(255,255,255,.5)}.cr-rx-cm .mt i{color:inherit}
+.cr-rx-cm .bst{font-size:9.5px;font-weight:800;color:#fff;background:#EF4444;padding:0 5px;border-radius:3px}
+.cr-rx-cm .w em{margin-left:auto;font-style:normal;font-size:11px;color:rgba(255,255,255,.55)}
+.cr-rx-cm .r p{margin:3px 0 0;font-size:13px;color:#F0F2F7;line-height:1.45}
 .cr-tip{position:fixed;z-index:10001;max-width:calc(100vw - 24px);background:rgba(20,22,28,.96);color:#fff;font-size:12px;font-weight:600;line-height:1.4;padding:7px 11px;border-radius:9px;box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:0;pointer-events:none;transform:translateY(-4px);transition:opacity .15s,transform .15s;white-space:nowrap}
 .cr-tip::before{content:'';position:absolute;top:-5px;left:var(--ax,50%);margin-left:-5px;border:5px solid transparent;border-top:0;border-bottom-color:rgba(20,22,28,.96)}
 .cr-tip.on{opacity:1;transform:none}
@@ -10197,6 +10223,213 @@ function crScoutShow(sc, key){
    +'<button class="cr-iv-go" onclick="CR.scoutSeen=\''+key.replace(/'/g,'')+'\';crTovSet(\'\');crResult()">확인</button></div></div>');
   CR.scoutSeen=null; CR.scoutPend=key;
 }
+// ── 시즌 반응(사용자 지정) ── 결과 화면의 "시즌 반응" 줄을 누르면 오버레이로: 신문 1면 + SNS + 팬 커뮤니티(펨코·디시 말투, 매운맛 포함).
+// 그 시즌 기록(평점·골·도움·클린시트·순위·수상·부상·나이·유스)으로 상황을 고르고, 문구는 시드(이름·시즌)로 고정 — 다시 열어도 같다. 서버는 안 쓴다.
+// 템플릿 자리: {n}{n이}{n은}{n을}{n과}{n아} 이름(+조사), {club} 소속, {team} 팀명, {stat} 대표 기록, {g}{a}{cs} 골·도움·클린시트, {r} 평점, {rank} 순위, {age} 나이, {apps} 출전, {hon} 대표 수상
+var CR_RX={
+  news:{
+    ballon:['{club}의 자존심 {n}, 발롱도르로 시즌 마침표','"꿈이 이뤄졌다" {n}, 생애 첫 발롱도르… 그리고 다음 목표는','발롱도르 수상! {n}, 세계 최고에 서다','"이 시대의 주인공" {n}, 발롱도르 품었다'],
+    champ:['정상에 선 {club}, 그 중심엔 {n}','"우리가 챔피언" {n}, 우승 퍼레이드 주인공','{club} 우승! {n}, {stat로} 정상 견인','우승 트로피 든 {n} "이 순간을 위해 뛰었다"'],
+    elite:['빅클럽 스카우트 총출동… 시선은 {n}에게','"공 잡으면 무조건 위협적" 상대 감독도 인정한 {n}','<23|{age}세에 이 기록? {n}, 구단 최연소 기록 경신','<24|"괴물 신인" {n}, {age}세에 리그를 흔들다','"월클 입성" {n}, {club} 역사 새로 쓰다','감독도 엄지 척 "{n}은 특별하다"','{n} 없는 {club}? 상상도 하기 싫은 시즌','"{stat} 폭발" {n}, {club}의 새 에이스로','{n}, 시즌 평점 {r}… 리그 최정상급 활약','<24|이 선수 누구야? {n}, {club} 시즌 MVP 유력','{n} 원맨쇼… {club}, 그 없이는 설명 안 되는 시즌'],
+    good:['조용히 강했다… {n}, 꾸준함으로 증명한 시즌','{club} 팬 선정 "올해의 믿을맨" {n}','{n}, 기대에 부응한 시즌… 평점 {r}','"한 단계 성장했다" {n}, {club}의 믿을맨으로','<25|{age}세 {n}, 주전 경쟁 이겨냈다','{n}, {stat로} 존재감 증명','{club} 주전 굳힌 {n} "다음 시즌이 더 기대된다"','꾸준함의 가치… {n}, 시즌 평점 {r} 기록'],
+    avg:['{n}, 아쉬움과 가능성 사이','"다음 시즌이 진짜 시험대" {n}, 반등 숙제','{n}, 기복 있는 한 해… "꾸준함이 필요하다"','"나쁘지 않았지만…" {n}, 평가 엇갈린 시즌','{n}, 무난했던 시즌… 한 단계 도약이 숙제','절반의 성공 {n}, 평점 {r}','"아쉬움 남는다" {n}, 다음 시즌 반등 다짐'],
+    bad:['N|"먹튀 논란" 휩싸인 {n}, 침묵 깰까','{n} 부진에 {club} 팬심 싸늘','팬들 야유 속 시즌 마감… {n}, 반등할 수 있을까','"이적설 솔솔" 부진한 {n}, 거취 주목','{club} 팬들 "{n} 기용 이해 안 돼"','"이대로는 안 된다" {n}, 평점 {r} 부진','{n} 향한 의문부호… 주전 경쟁 빨간불','실망스러운 한 해… {n}, 팬들 인내심 바닥'],
+    bench:['벤치 신세 {n}, "뛸 수 있는 곳으로" 이적 고민','"출전 시간이 필요하다" {n} 측, 임대 검토','감독 구상에서 밀린 {n}, 다음 시즌 거취는?','출전 {apps}경기… {n}, 벤치에 갇힌 한 시즌','기회가 없었다? {n}, 출전 시간 부족에 발목'],
+    injury:['의료진 "복귀까지 시간 필요" {n}, 길어진 공백','재활의 시간… {n}, "더 강해져서 돌아오겠다"','또 부상… {n}, 유리몸 꼬리표 떼어낼까','부상에 발목 잡힌 {n}, {apps}경기 출전에 그쳐','"몸이 따라주지 않았다" {n}, 부상으로 얼룩진 시즌'],
+    decline:['노장은 죽지 않는다… {n}, 후배들의 롤모델로','"은퇴는 아직" {n}, 그래도 버틴 한 시즌','L|{club}의 정신적 지주 {n}, 기록보다 존재감','세월 앞에 장사 없다… {n}, 하락세 뚜렷','베테랑 {n}의 황혼기… "경험으로 버틴 시즌"'],
+    youth:['{age}세 {n}, 유스 무대 "이미 수준이 다르다"','"제2의 레전드" 기대감… {team} {n}','유스 무대 평정한 {n}, 1군 감독도 주목','{team}의 보석 {n}, 유스 무대 {stat}','"1군 콜업 머지않았다" {team} {n} 주목','{club} 아카데미가 키우는 {n}, 스카우트들 눈길'],
+    youthLow:['아직은 시간이 필요한 {n}, 유스 무대 {stat}','{team} {n}, 성장통 겪은 한 시즌']},
+  sns:{
+    elite:['{n} 다음 경기 티켓 벌써 매진이래','N|{n} 응원가 벌써 생김 ㅋㅋ','오늘도 {n}의 날이었다','{n} 볼 잡으면 일어나서 봄','N|이 정도면 이적료 두 배 줘도 아깝지 않다','{n} 덕분에 축구 볼 맛 남','N|이 선수 데려온 스카우트 연봉 올려줘라','{n} 하이라이트만 30분째 보는 중','상대 팀 팬들이 {n} 욕하는 거 보니까 잘하긴 하나 봄 ㅋㅋ','{n} 유니폼 품절이래 ㄷㄷ','이건 축구가 아니라 {n} 원맨쇼임','{n} 볼 잡으면 그냥 골 냄새 남','다른 팀 팬인데 {n} 부럽다 진짜','<25|{n} 폼 미쳤다 진짜 ㅋㅋㅋ 이게 {age}살?','>29|{n} 나이 거꾸로 먹냐 ㅋㅋㅋ 폼 미쳤다','이 정도면 {club} 레전드 각 아님?','{n} 막을 수비수 리그에 없음 ㄹㅇ','발롱 얘기 슬슬 나와야 하는 거 아니냐','{n} 재계약 빨리 해라 제발','시즌 평점 {r} 실화냐 ㄷㄷ','{n} 경기 보려고 새벽에 일어나는 중','ㄹㅇ 이 선수 우리 팀 맞냐 ㅋㅋㅋ','이번 시즌 {n} 없었으면 {club} 어땠을지 생각만 해도 끔찍'],
+    good:['L|{n} 이제 진짜 팀의 기둥','{n} 슬슬 국대 소집 각','{n} 같은 선수가 진짜 필요했음','N|다음 시즌 {n} 등번호 마킹 확정','N|{n} 데려온 거 신의 한 수였다','L|이제 {n} 없으면 허전함','{n} 다음 시즌 10골 더 가자 ㅋㅋ','{n} 성장하는 거 보는 맛이 있음','기복 없는 게 {n} 최고 장점','{n} 이번 시즌 잘했다 ㅇㅈ','꾸준한 게 최고임 {n} 믿는다','{stat이면} 충분히 밥값 했지','{n} 다음 시즌 한 단계만 더 가자','국대 감독 {n} 보고 있냐?','N|처음엔 의심했는데 {n} 인정함'],
+    avg:['{n} 좋은 경기는 진짜 좋은데...','본전은 했다 정도?','{n} 큰 경기에서 한 번만 터져주라','{n} 다음 시즌엔 각성 좀','{n} 잘할 때랑 못할 때 차이가 너무 큼','이 정도면 그냥 로테 자원 아님?','{n} 기대치 조절 필요함','평타는 쳤는데 연봉 생각하면...','{n} 다음 시즌 증명 못 하면 이별각','나쁘진 않은데 한방이 없음','평점 {r}... 딱 밥값','{n} 다음 시즌이 진짜 증명할 시즌','기대치가 높아서 그렇지 못한 건 아님','솔직히 좀 애매했음 {n}','{n} 폼 들쭉날쭉한 거 고쳐야 함','ㄹㅇ 계륵... 팔기도 쓰기도 애매함'],
+    bad:['{n} 볼 잡으면 일단 상대한테 기부함 ㅋㅋ 기부천사','N|이적료 생각하면 역대급 먹튀임','N|{n} 먹튀 확정 ㅋㅋ 환불 안 되나','{n} 패스는 상대 팀 전용인가봄','{n} 오늘 상대 팀 도움 1개 추가 ㅋㅋ','{n} 나오면 수적 열세 느낌','하이라이트에 {n} 실수만 나옴','이번 시즌 {n} 보느라 수명 깎임','{n} 오늘도 존재감 0','이게 프로 선수 맞냐 ㅋㅋㅋ','{n} 자리에 유스 써도 이것보단 낫겠다','상대 팀 MVP {n} ㅋㅋㅋ','{n} 터치 하나하나가 불안함','N|이적료 회수만 하자 제발','{n} 슈팅 관중석 박는 거 이제 놀랍지도 않음','감독님 {n} 말고 다른 선수도 있어요','{n} 폼 왜 이럼?? 그냥 벤치 박자','주급 얼마 받는지 궁금하다 진짜','{n} 볼 잡으면 일단 불안함','이적시장 열리면 팔자 제발','평점 {r} ㅋㅋㅋ 이게 맞냐','에이전트가 일 하나는 잘했네 계약은 땄으니까','N|이 정도면 사기 계약 아님? 환불 되냐','볼 뺏기는 것도 재능임 ㅋㅋ','{n} 경기 보다가 리모컨 던질 뻔','{n} 쉴드치던 사람들 다 어디감?','감독이 {n} 계속 쓰는 이유 아는 사람?'],
+    bench:['{n} 벤치에서 박수만 치다 시즌 끝남','훈련장에서 잘하면 뭐하냐 경기를 뛰어야지','{n} 벤치 지박령 ㅋㅋ','출전 {apps}경기면 연봉 경기당 얼마냐','이대로면 {n} 커리어 망함 이적해라','감독이랑 {n} 사이 뭐 있음?','{n} 경기에 좀 내보내라 감독아','벤치에서 뭘 보여줄 수 있냐고','임대라도 보내라 썩힌다','{n} 출전 {apps}경기가 말이 되냐','N|이럴 거면 왜 데려왔음?'],
+    injury:['{n} 몸만 건강하면 월클인데 ㅠ','재활 잘 하고 와라 기다린다','{n} 의무실 단골 ㅠ','부상 없는 {n} 한 시즌만 보고 싶다','유리몸 소리 듣기 싫으면 다음 시즌 증명해라','재활 영상 올라왔던데 표정 밝아서 다행','또 부상이냐... 몸 관리 좀','{n} 복귀만 기다린다 ㅠ','의료진 뭐하냐 진짜','부상만 없었으면 이번 시즌 날아다녔을 듯','{n} 다치지 마라 제발 ㅠㅠ'],
+    decline:['L|{n} 은퇴식은 꼭 홈에서 해주자','나이는 못 속이네 그래도 고맙다','{n} 은퇴하면 코치로 남아줘','전성기 때 진짜 무서웠는데 ㅠ','그래도 큰 경기 경험은 무시 못 함','이제 {n} 출전 시간 관리해줘야 함','에이징커브 왔다... 슬프다','{n}도 이제 나이 먹었네','재계약은 1년만 해라','그래도 라커룸 리더로는 필요함','전성기 {n} 그립다 ㅠ'],
+    youth:['벌써 1군 훈련 따라간다던데 {n}','{n} 데뷔전 직관 예약','{n} 유스 하이라이트 돌려보는 중','이미 1군 몇몇보다 나은 듯 ㅋㅋ','{n} 다른 팀에 뺏기면 진짜 화날 듯','유스 직관 간 보람 있다 {n} 최고','유스에서 {n} 얘 물건임','{n} 1군 콜업 언제 함?','유스 리그 씹어먹는 중 ㄷㄷ','{team} 직관 갔는데 {n} 혼자 차원이 다름','{n} 팔지 마라 진짜 무조건 키워'],
+    youthLow:['{n} 기대했는데 아직은 좀 아쉽네','유스에서도 적응 중인 듯 천천히 크자','{n} 스카우트 리포트 과대평가였나...','유스 경기 봤는데 {n} 존재감 1도 없더라','아직 어리잖아 몇 년은 지켜봐야지']},
+  stat:{
+    elite:['{n} 이번 시즌 {stat} · 평점 {r}','{club} 내 평점 1위 {n} ({r})','<23|{age}세 이하 {stat}은 이번 시즌 리그 상위권'],
+    good:['{n} 시즌 기록: {stat} · 평점 {r}'],
+    avg:['{n} 시즌 기록: {stat} · 평점 {r}'],
+    bad:['{n} 시즌 평점 {r} — 팀 내 하위권'],
+    bench:['{n} 시즌 출전 {apps}경기'],
+    injury:['{n} 시즌 출전 {apps}경기 (부상)'],
+    decline:['{n} 시즌 기록: {stat} · 평점 {r}'],
+    youth:['{team} {n}: {stat}'],
+    youthLow:['{team} {n}: {stat} · 평점 {r}']},
+  champ:['우승!!! {n} 고마워 ㅠㅠ','{club} 우승 실화냐 ㅠㅠㅠ','이번 우승 지분 {n}이 절반임'],
+  // 우승은 했는데 본인은 부진한 시즌
+  champLow:['우승은 했는데 {n}은 묻어간 거 아님? ㅋㅋ','{club} 우승 ㅠㅠ 근데 {n}은 반성해라','팀이 우승시켜줬다 {n} 다음 시즌엔 지분 좀 챙겨']
+};
+// 커뮤니티(사용자 지정 — 글 하나 + 댓글). 한 시즌은 펨코 아니면 디시 한쪽 말투로만 쓴다(섞이면 어색하다).
+//   f = 펨코 해외축구 게시판: 출처 태그 제목([Fotmob]·[OPTA]·[로마노]…), 고정닉, 베스트 댓글·추천 수, "펨붕이"
+//   d = 디시 갤러리: 말머리 제목([일반]·[정보]·[짤]), 전원 ㅇㅇ(IP), 추천 수 없음, "갤럼·개추·념글"
+// t 제목 · c 댓글 · r 답글 쌍[원댓글, 답글] (쌍은 둘 다 조건을 통과해야 쓴다)
+var CR_RX_CM={
+  elite:{
+    f:{t:['[Fotmob] {n} 시즌 평점 {r}, 팀 내 1위','[OPTA] {n} 이번 시즌 {stat}','{n} 시즌 스탯 근황.jpg','ㅁㅊㅁㅊ {n} 폼 실화냐','{n} 이번 시즌 하이라이트 ㄷㄷ.gif','펨붕이들 {n} 리그 탑3 인정?','[로마노] 빅클럽들 {n} 주시 중… 아직 협상 단계 아님','{n} 원맨팀 소리 나오는 이유','<24|{age}살이 이게 맞냐고 ㅋㅋㅋㅋ','{n} 이번 시즌 대충 평.txt (칭찬 일색)','N|{n} 영입 역대급 성공 아님?'],
+       c:['와 평점 {r}은 ㄹㅇ 미쳤네','펨코 감독들 {n} 무시하던 거 기억함 ㅋㅋ','이건 인정 안 할 수가 없다','{n} 이적료 1억부터 시작임 ㅅㄱ','이 정도면 포텐 가야지','<24|{age}살에 이러면 나중엔 뭐가 되냐','{n} 경기 보는 맛에 산다','추천 박고 감','리그 탑3 ㅇㅈ합니다','N|이적 첫 시즌에 이러는 건 반칙이지','L|이제 그냥 {club} 그 자체임','{n} 재계약 서둘러라 진짜','상대 팀 팬들이 {n} 욕하는 거 보니까 진짜 잘하나 봄 ㅋㅋ'],
+       r:[['{n} 근데 좀 과대평가 아님?','스탯 보고 와라 ㅋㅋㅋ'],['다음 시즌에도 이 폼이면 발롱 간다','설레발은 금지임 펨붕아 ㅋㅋ'],['빅클럽 이적설 나오던데','제발 남아줘 ㅠㅠ']]},
+    d:{t:['[일반] {n} 이번 시즌 ㄹㅇ 미쳤네','[정보] {n} 시즌 기록 정리 ({stat})','[짤] {n} 하이라이트 모음','[일반] 갤럼들 {n} 리그 탑3 맞지?','[일반] {n} 없었으면 이번 시즌 어쩔 뻔했냐','<24|[일반] {age}살이 이게 말이 되냐','N|[일반] {n} 영입한 사람 상 줘라','[정보] {n} 평점 {r} 팀 내 1위'],
+       c:['ㄹㅇ 개추','념글 가자','{n} 갤주 등극 ㅋㅋㅋ','ㅇㅈ 이번 시즌은 {n} 원맨팀이었음','평점 {r} ㄷㄷ','다른 갤에서도 {n} 얘기만 함 ㅋㅋ','{n} 까던 놈들 다 어디 갔냐','이건 반박 불가','<24|{age}살 맞냐고 ㅋㅋㅋ','N|영입 대성공이네 ㄹㅇ','L|{n}은 그냥 우리 팀 상징임','{n} 팔면 갤 터진다'],
+       r:[['솔직히 운도 좀 있었음','스탯 보고도 그런 소리가 나오냐 ㅋㅋ'],['다음 시즌에도 이러면 진짜 월클','설레발 치지 마라 ㅋㅋ'],['빅클럽에서 노린다던데','팔면 갤 문 닫는다']]}},
+  good:{
+    f:{t:['[Fotmob] {n} 시즌 평점 {r}','{n} 이번 시즌 대충 평.txt','{n} 생각보다 훨씬 잘하는데?','{n} 이번 시즌 몇 점 줌?','{club} 시즌 MVP {n} vs 나머지','N|{n} 영입 대성공 각','{n} 재계약 해야 되는 거 아님?','{n} 국대 안 뽑히는 게 말이 됨?','{n} 시즌 스탯 근황.jpg'],
+       c:['꾸준한 게 최고임 ㅇㅈ','{stat이면} 충분히 밥값 했지','평점 {r} 무난하게 잘했다','다음 시즌 한 단계만 더 가자','국대 감독 이거 보고 있냐','N|처음엔 의심했는데 인정함','L|{n} 없으면 이제 허전함','기복 없는 게 진짜 장점','이 정도면 주전 확정 아님?','{n} 재계약 각 나왔다'],
+       r:[['근데 큰 경기에서는 좀 조용했음','그래도 이 정도면 충분하지 ㅋㅋ'],['다음 시즌엔 에이스 가능?','한 시즌만 더 보자']]},
+    d:{t:['[일반] {n} 이번 시즌 잘했지?','[정보] {n} 시즌 기록 ({stat})','[일반] {n} 생각보다 훨씬 쓸만함','[일반] {n} 국대 왜 안 뽑냐','N|[일반] {n} 영입 성공이네','L|[일반] {n} 이제 우리 팀 기둥 맞지'],
+       c:['ㅇㅈ 이번 시즌 잘했음','밥값은 확실히 함','{n} 은근 개꿀임 ㅋㅋ','평점 {r}이면 됐지 뭐','다음 시즌 기대된다','N|첫 시즌에 이 정도면 합격','L|이제 {n} 없는 우리 팀 상상 안 됨','국대 왜 안 뽑는지 모르겠음','기복 없는 게 최고임','개추'],
+       r:[['이 정도로 국대는 좀 아님','리그 평점 보고 말해라 ㅋㅋ'],['다음 시즌 에이스 각?','ㄱㄷ 해보자']]}},
+  avg:{
+    f:{t:['{n} 이번 시즌 냉정하게 평가해봄','{n} 기복 왜 이렇게 심함?','{n} 딱 평타 시즌이었네','[Fotmob] {n} 시즌 평점 {r}… 애매하다','{n} 이번 시즌 대충 평.txt','{n} 연봉 대비 냉정하게 몇 점?','{n} 이 정도면 로테 자원 아님?','N|{n} 적응 기간 감안하면 할 만큼 함?'],
+       c:['딱 평타','좋은 경기는 진짜 좋은데…','평점 {r}… 딱 밥값','다음 시즌이 진짜 증명할 시즌','잘할 때랑 못할 때 차이가 너무 큼','로테 자원으로는 괜찮음','기대치가 높아서 그렇지 못한 건 아님','큰 경기에서 한 번만 터져주라','연봉 생각하면 좀 아쉽긴 함','N|적응 기간 생각하면 할 만큼 함'],
+       r:[['이 정도면 그냥 로테 아님?','주전 맡길 정도는 아님 ㄹㅇ'],['다음 시즌엔 터진다','그 소리 작년에도 들음 ㅋㅋ']]},
+    d:{t:['[일반] {n} 이번 시즌 냉정하게 몇 점임','[일반] {n} 딱 평타였네','[정보] {n} 시즌 기록 ({stat}) 평점 {r}','[일반] {n} 기복 왜 이럼','[일반] {n} 다음 시즌 주전 맞냐','N|[일반] {n} 첫 시즌 이 정도면 됨?'],
+       c:['딱 평타 ㅇㅇ','계륵 그 자체','평점 {r} ㅋㅋ 애매하다','팔기도 쓰기도 애매함','잘하는 경기만 잘함','다음 시즌 못하면 이별각','솔직히 그냥 무난했음','기복만 줄이면 됨','N|첫 시즌이니까 봐준다','로테로는 쓸만함'],
+       r:[['다음 시즌엔 터진다 진짜','그 소리 작년에도 했잖아 ㅋㅋ'],['그래도 연봉값은 했지','그건 좀…']]}},
+  bad:{
+    f:{t:['[Fotmob] {n} 시즌 평점 {r} ㅋㅋㅋㅋ','{n} 이번 시즌 스탯 근황.jpg','{n} 진짜 왜 이럼?','오늘도 {n} 보다가 축구 접을 뻔','{n} 쉴드 치던 펨붕이들 어디감','N|{n} 역대급 먹튀 후보 등록','기부천사 {n} 이번 시즌 볼 헌납 모음.gif','{n} 팔면 얼마 받음? (진지)','{n} 원툴: 연봉','{n} 이번 시즌 대충 평.txt (욕 주의)','{n} 장점 3줄 요약 가능한 사람?','펨붕이들 {n} 몇 시즌 더 기다려줌?','N|[디 애슬레틱] {club}, {n} 영입 실패 인정 분위기'],
+       c:['평점 {r} ㅋㅋㅋㅋ','기부천사 {n} 오늘도 볼 기부 ㅋㅋ','N|이적료 생각하면 역대급 먹튀','이 정도면 상대 팀 MVP 아님?','{n} 볼 잡으면 일단 불안함','유스 써도 이것보단 낫겠다','감독이 계속 쓰는 이유 아는 사람?','에이전트가 일 하나는 잘했네','이적시장 열리면 팔자 제발','하이라이트에 실수만 나옴','<25|아직 어리다는 쉴드 언제까지 됨?','>27|이제 나이 핑계도 못 댐','장점 3줄 요약: 1. 2. 3.'],
+       r:[['그래도 몇 경기는 잘했잖아','그 몇 경기가 몇 경기인데 ㅋㅋㅋ'],['다음 시즌엔 반등한다','그 소리 몇 번째임'],['N|이적료 얼마였더라?','묻지 마라 잠 못 잔다']]},
+    d:{t:['[일반] {n} 진짜 왜 이럼?','[일반] {n} 이번 시즌 평점 {r} ㅋㅋㅋ','[짤] {n} 볼 헌납 모음','[일반] {n} 언제 팔아?','N|[일반] {n} 먹튀 확정이지?','[일반] {n} 쉴드 치던 놈들 나와봐','[일반] 오늘도 {n} 보다가 혈압 오름','[정보] {n} 이번 시즌 기록 ({stat})'],
+       c:['ㄹㅇ 기부천사 ㅋㅋㅋ','N|먹튀 확정','평점 {r} 실화냐','{n} 나오면 수적 열세임','이적시장 열리자마자 팔아라','{n} 볼 잡으면 채널 돌림','감독이랑 무슨 사이냐 진짜','쉴드 치던 놈들 다 어디 감','{n} 또 상대 도움 1개 추가 ㅋㅋ','이게 프로 맞냐','주급 생각하면 혈압 오름','<25|어리다는 핑계도 이제 끝','>27|나이 먹고 이러면 답 없음','N|환불 안 되냐 ㅋㅋ'],
+       r:[['그래도 몇 경기는 잘함','손가락으로 셀 수 있잖아 ㅋㅋ'],['다음 시즌엔 반등함','그 말 믿고 1년 버렸다'],['N|이적료 얼마 줬냐','말하면 갤 터짐']]}},
+  bench:{
+    f:{t:['{n} 이번 시즌 출전 시간 근황','[디 애슬레틱] {n}, 출전 시간 불만… 이적 고려','감독은 {n} 왜 안 씀?','{n} 임대 가는 게 맞지 않냐','{n} 벤치 지박령 근황.jpg'],
+       c:['벤치 지박령 ㅋㅋ','훈련장에서 잘하면 뭐하냐','임대라도 보내라','출전 {apps}경기면 경기당 연봉 얼마냐','감독이랑 사이 안 좋음?','이대로면 커리어 망함','N|이럴 거면 왜 데려왔음?','벤치에서 뭘 보여주냐고','프리시즌 때는 좋았는데','이번 여름 거취 주목'],
+       r:[['훈련 태도 문제라던데','카더라 그만 ㅋㅋ'],['기회만 주면 잘할 듯','그 기회를 못 잡은 거지']]},
+    d:{t:['[일반] {n} 왜 안 씀?','[일반] {n} 출전 {apps}경기 실화냐','[일반] {n} 임대 보내라','[정보] {n} 이번 시즌 출전 기록'],
+       c:['벤치 붙박이 ㅋㅋ','감독이 안 쓰는 데는 이유가 있겠지','임대 ㄱㄱ','{apps}경기 ㅋㅋㅋ','썩히지 말고 팔아라','N|데려와 놓고 안 쓰는 건 뭐냐','훈련장 메시','기회를 줘야 뭘 하지','여름에 나갈 듯','프리시즌 땐 잘했잖아'],
+       r:[['훈련 때 태도가 별로라던데','출처 없으면 주작임'],['기회만 주면 잘함','기회 줬는데 못 잡은 거임']]}},
+  injury:{
+    f:{t:['[오피셜] {n} 부상… 복귀 시점 미정','{n} 또 부상이냐 ㅠㅠ','{n} 부상 이력 근황.jpg','{n} 건강하기만 하면 월클인데','{n} 복귀하면 바로 주전임?'],
+       c:['건강하기만 하면 월클인데 ㅠ','재활 잘 하고 와라','의무실 단골 ㅠ','부상 없는 시즌 한 번만 보자','또 부상이냐…','복귀하면 바로 주전이지','의료진 뭐함 진짜','다치지 마라 제발 ㅠㅠ','재활 영상 보니까 표정은 밝더라'],
+       r:[['유리몸이면 팔아야 하는 거 아님?','건강할 때 클래스 보고 말해라'],['복귀 언제쯤임?','기사 보니 프리시즌엔 돌아온다던데']]},
+    d:{t:['[일반] {n} 또 다침?','[정보] {n} 부상 복귀 일정','[일반] {n} 몸만 건강하면 월클인데','[일반] {n} 출전 {apps}경기… 부상 진짜'],
+       c:['유리몸 ㅠ','또 다쳤냐','몸 관리 좀 해라','의무실 VIP','복귀만 기다린다','부상만 없었으면 날아다녔음','의료진 교체해라','다치지만 마라 ㅠ','재활 순조롭다던데'],
+       r:[['유리몸은 답 없음 팔자','건강할 때 보고도 그런 소리 함?'],['복귀 언제냐','프리시즌 맞춰 온다던데']]}},
+  decline:{
+    f:{t:['{n} 에이징커브 근황.jpg','{n} 전성기 vs 지금.gif','L|{n} 은퇴하면 영구결번 가능?','{n} 재계약 1년이면 적당함?','{n} 아직 큰 경기에선 쓸 만하지 않냐','L|{n} 은퇴 투어 하면 무조건 직관 간다'],
+       c:['나이는 못 속이네','그래도 고맙다','재계약은 1년만','라커룸 리더로는 필요함','전성기 때 진짜 무서웠는데 ㅠ','L|은퇴식은 꼭 홈에서','큰 경기 경험은 무시 못 함','출전 시간 관리해줘야 함'],
+       r:[['이제 내보낼 때 됨','그래도 라커룸에선 필요함'],['한 시즌 더 가능?','후보로는 충분하지']]},
+    d:{t:['[일반] {n} 에이징커브 왔냐','[일반] {n} 전성기 그립다','[일반] {n} 재계약 1년이면 되지?','L|[일반] {n} 은퇴하면 영결 가능?'],
+       c:['에이징커브 ㅠ','세월 앞에 장사 없다','그래도 클래스는 남아있음','1년 재계약 ㄱ','L|영결 해줘라','은퇴하면 코치로 남자','전성기 생각나서 슬프다','후보로는 충분함'],
+       r:[['이제 정리할 때 됐다','라커룸에선 아직 필요함'],['한 시즌 더 가능?','후보로는 충분']]}},
+  youth:{
+    f:{t:['[유스] {n} 유스 하이라이트 ㄷㄷ','{team} {n}이 그렇게 잘함?','{n} 1군 콜업 언제쯤일까','유스 직관 다녀옴 {n} 미쳤음','[로마노] 빅클럽들 {team} {n} 관찰 중','{n} 유스 스탯 근황.jpg'],
+       c:['벌써 1군 훈련 따라간다던데','데뷔전 직관 예약','이미 1군 몇몇보다 나은 듯 ㅋㅋ','팔지 마라 무조건 키워','유스 리그 씹어먹는 중 ㄷㄷ','다른 팀에 뺏기면 진짜 화날 듯','하이라이트 돌려보는 중','1군 콜업 언제 함?'],
+       r:[['유스에서 잘하는 애들 많잖아','이건 레벨이 다름 ㄹㅇ'],['1군 가면 적응 기간 필요할 듯','그래도 기대는 됨']]},
+    d:{t:['[일반] {team} {n} 물건이다','[정보] {n} 유스 기록 ({stat})','[일반] {n} 1군 언제 올림?','[짤] {n} 유스 하이라이트'],
+       c:['얘 물건이네','1군 올려라','유스 씹어먹는 중','데뷔하면 직관 간다','팔면 갤 터짐','벌써 스카우트 붙었다던데','이미 1군급임','키워라 제발'],
+       r:[['유스 잘하는 애들 흔함','하이라이트 보고 와라'],['1군은 또 다르다','그래도 기대됨']]}},
+  youthLow:{
+    f:{t:['{n} 유망주 거품 논란','{n} 요즘 유스에서 폼 어떰?','{n} 아직은 시간이 필요한 듯','유스 직관 다녀옴 {n} 아직은 글쎄'],
+       c:['유스도 적응이 필요하지','천천히 크자','스카우트 리포트 과대평가였나','어리잖아 몇 년은 봐야지','존재감이 1도 없더라','기대했는데 좀 아쉽네','유스 경기 보니까 아직 피지컬이 부족하던데','포텐은 있어 보임 ㄹㅇ','이번 시즌은 경험 쌓은 걸로'],
+       r:[['이대로면 방출각','아직 어리다니까 ㅋㅋ']]},
+    d:{t:['[일반] {n} 거품이었냐','[일반] {n} 요즘 유스에서 폼 어떰?','[정보] {n} 유스 기록 ({stat})'],
+       c:['거품 ㅇㅇ','아직 애기임','몇 년은 봐야지','존재감 0','기대했는데 아쉽','천천히 크면 됨','아직 몸이 덜 큼','포텐은 있음','경험 쌓았다 치자'],
+       r:[['방출 ㄱ','애한테 너무하네 ㅋㅋ']]}},
+  // 우승 시즌: 제목을 우승으로 바꾸고 첫 댓글도 우승 얘기(본인이 부진했으면 "버스 탑승")
+  champ:{f:{t:['{club} 우승 ㅁㅊㅁㅊㅁㅊ','오늘 밤 {club} 팬들 마음.jpg','우승 MVP {n} vs 나머지 투표'], c:['{club} 우승 ㅠㅠㅠ','우승 지분 {n}이 절반임','{n} 고마워 ㅠㅠ']},
+         d:{t:['[일반] 우승 ㅁㅊㅁㅊ','[일반] 우승 MVP {n} 맞지?','[짤] 우승 세리머니 {n}'], c:['우승 ㅠㅠㅠㅠ','갤 축제다','{n} 지분 ㄹㅇ 큼']}},
+  champLow:{f:{t:['{n} 우승 버스 탑승 성공 ㅋㅋㅋ','{club} 우승했는데 {n}은 뭐함?'], c:['{n} 우승 버스 탑승 성공 ㅋㅋ','팀이 우승시켜줌']},
+            d:{t:['[일반] {n} 우승 버스 탑승 ㅋㅋ','[일반] 우승했는데 {n}은 뭐 했냐'], c:['버스 기사님들 감사합니다 ㅋㅋ','{n}은 묻어감']}}
+};
+// 펨코 고정닉 · 디시 유동 IP 앞자리
+var CR_RX_NICK=['전술충','새벽축구','xG신봉자','풀백장인','라인브레이커','왼발의마법사','PL중독','오프사이드트랩','감독경질요정','유스덕후','직관러','중원사령관','펨코감독','치킨각','하이라인','게겐프레싱','시즌권12년차','축구는과학','원정팬','역습한방'];
+var CR_RX_IP=['118.235','211.36','39.7','223.38','175.223','106.101','110.70','223.62','121.181','58.140'];
+// 포지션별 문구(팬·커뮤니티 풀에 섞는다) — 공격수는 골, 미드필더는 패스·중원, 수비수는 클린시트·수비
+var CR_RX_POS={
+  FW:{elite:['{n} 박스 안에서 볼 잡으면 그냥 골임','골 냄새 맡는 거 진짜 타고났다 {n}'],
+      good:['{n} 골 감각 확실히 올라옴'],
+      bad:['{n} 오늘도 빅찬스 기부 ㅋㅋ','골키퍼 연습 상대 해주는 중 {n}','{n} 1대1 찬스 또 날림 ㅋㅋㅋ','골대 앞에서 왜 이렇게 소심하냐 {n}','공격수가 {g}골이면 할 말 다 한 거 아님?']},
+  MF:{elite:['{n} 중원 장악력 미쳤다','{n} 패스 한 번에 경기 흐름이 바뀜'],
+      good:['{n} 없으면 중원 구멍 뚫림'],
+      bad:['{n} 중원에서 볼 기부 중 ㅋㅋ','{n} 압박 오면 그냥 볼 헌납','{n} 백패스 장인 ㅋㅋㅋ','중원에서 볼 끌다 뺏기는 거 몇 번째냐','{n} 있을 때 중원 텅텅 빔']},
+  DF:{elite:['{n} 뒤에 있으면 그냥 든든함','통곡의 벽 {n} ㄷㄷ'],
+      good:['{n} 수비 라인 안정감 확실히 생김'],
+      bad:['{n} 빌드업 패스가 상대 공격 시작점 ㅋㅋ','{n} 태클 타이밍 매번 반 박자 늦음','{n} 뒷공간 또 털림 ㅋㅋ','{n} 마크하는 거 맞냐 그냥 구경하던데','수비수가 이렇게 불안할 수가 있나 {n}']}
+};
+var CR_RX_VERIFIED=['pitch_stats','transfer_talk','tactics_lab','football_daily','matchday_live'];
+// 로/으로: 받침 없거나 ㄹ 받침이면 로
+function crRo(w){ var c=String(w).slice(-1).charCodeAt(0), j=c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28:0; return w+(j===0||j===8?'로':'으로'); }
+function crJo(n, a, b){ var c=String(n).slice(-1).charCodeAt(0); var has=c>=0xAC00 && c<=0xD7A3 ? (c-0xAC00)%28>0 : false; return n+(has?a:b); }
+function crReact(){
+  var p=CR.v.player, r=CR.v.result.row, rg=crSfRng(crSfSeed()^0x5eed), pick=function(a){ return a[Math.floor(rg()*a.length)]; };
+  var hon=(r.hon||[]).map(function(h){ return String(h.n); }), R=r.apps?r.rating:0, Ra=R+Math.max(0,21-r.age)*0.15;   // 10대 1군은 평점이 낮은 게 보통이라 팬 반응 기준을 나이만큼 너그럽게
+  var champ=hon.some(function(h){ return / 리그 우승$|^챔피언스리그 우승/.test(h) && !/유스/.test(h); }), ballon=hon.some(function(h){ return /^발롱도르/.test(h); });
+  var k=r.youth?(R>=7.0?'youth':'youthLow'):(r.injured&&r.apps<15)?'injury':r.apps<8?'bench':(r.age>=31&&r.dOvr<0&&R<7.2)?'decline':Ra>=7.35?'elite':Ra>=7.0?'good':Ra>=6.6?'avg':'bad';
+  var club=String(p.club.n).replace(/ U-\d+$/,''), stat=p.pos==='DF'?'클린시트 '+r.cs+'회'+(r.ast?' · '+r.ast+'도움':''):r.goals+'골 '+r.ast+'도움';
+  var bigHon=hon.filter(function(h){ return /발롱|득점왕|도움왕|베스트 11|올해의 선수|우승|골든/.test(h) && !/유스/.test(h); });
+  var V={n:p.name, club:club, team:r.team, stat:stat, g:r.goals, a:r.ast, cs:r.cs, r:R?R.toFixed(2):'-', rank:r.rank, age:r.age, apps:r.apps, hon:bigHon[0]||'', x:(p.pos==='DF'?(2+Math.floor(rg()*4))+'실점 방어':(2+Math.floor(rg()*6))+'골')};
+  var fill=function(t){ return t.replace(/\{n([이은을과아])\}/g, function(_,j){ return crJo(p.name, {이:'이',은:'은',을:'을',과:'과',아:'아'}[j], {이:'가',은:'는',을:'를',과:'와',아:'야'}[j]); })
+      .replace(/\{stat로\}/g, crRo(stat)).replace(/\{stat이면\}/g, crJo(stat,'이면','면')).replace(/\{(\w+)\}/g, function(_,x){ return V[x]!=null?V[x]:''; }); };
+  // "<24|문구"는 24세 이하만, ">29|문구"는 30세 이상만(나이에 안 맞는 말 — "이 선수 누구야?"를 33세에게 하지 않게)
+  // 이 구단에서 몇 시즌째인가(같은 구단 연속 시즌 수 — 유스 포함). 첫 시즌이면 "데려왔다·먹튀·응원가" 같은 영입 문구, 4시즌+면 "기둥·영구결번" 같은 원클럽 문구
+  var H=p.hist||[], ten=0; for(var hi=H.length-1; hi>=0 && H[hi][7]===H[H.length-1][7]; hi--) ten++;
+  var isNew=ten===1 && H.length>1 && !r.youth, isLong=ten>=4;
+  // 문구 앞 조건: "<24|" 24세 이하만 · ">29|" 30세 이상만 · "N|" 이적 첫 시즌만 · "L|" 이 구단 4시즌+만
+  var ok=function(t){ var m=t.match(/^([<>])(\d+)\|/); if(m) return m[1]==='<' ? r.age<=+m[2] : r.age>+m[2]; if(/^N\|/.test(t)) return isNew; if(/^L\|/.test(t)) return isLong; return true; },
+      strip=function(t){ return t.replace(/^([<>]\d+|N|L)\|/,''); };
+  var pick2=function(a){ return a[Math.floor(rg()*a.length)]; };
+  pick=function(a){ var b=a.filter(ok); if(!b.length) b=a.filter(function(t){ return !/^([<>]\d+|N|L)\|/.test(t); }); if(!b.length) b=a; return strip(b[Math.floor(rg()*b.length)]); };
+  // 신문
+  // 우승은 트로피, 나머지는 수상 — 리그 우승은 순위 문장("정상에 올랐다")이 이미 말하니 뺀다
+  var award=bigHon.filter(function(h){ return !/우승/.test(h); }), trophy=bigHon.filter(function(h){ return /우승/.test(h) && !/ 리그 우승$/.test(h); });
+  var hk=ballon?'ballon':(champ&&!r.youth&&R>=6.8)?'champ':k, posKo={FW:'공격수',MF:'미드필더',DF:'수비수'}[p.pos], lg=r.youth?'유스 리그':crNat(((CR.meta.club[club])||{}).nat).n+' 리그';
+  var body=r.age+'세 '+posKo+' '+crJo(p.name,'이','가')+' '+lg+' '+r.apps+'경기 '+stat+'로 시즌을 마쳤다. '
+    +(r.rank===1?'팀은 리그 정상에 올랐다. ':r.rank<=4?'팀은 '+r.rank+'위로 상위권을 지켰다. ':r.rank>=16?'팀은 '+r.rank+'위로 힘겨운 시즌을 보냈다. ':'팀은 '+r.rank+'위로 시즌을 마감했다. ')
+    +(trophy.length?trophy.slice(0,2).join(' · ')+' 트로피도 들어 올렸다. ':'')+(award.length?award.slice(0,2).join(' · ')+' 수상의 기쁨도 누렸다. ':'')+(R?'시즌 평점은 '+R.toFixed(2)+'.':'');
+  var score=R?Math.max(3,Math.min(10,Math.round((5+(R-6)*2.4)*2)/2)):null;
+  var news={head:fill(pick(CR_RX.news[hk])), body:body, tags:(score!=null?['평점 '+score+'/10']:[]).concat(bigHon.slice(0,2)), date:(2027+r.age-15)+'년 5월 · 시즌 리뷰'};
+  // SNS 5개: 통계 계정 1 + 팬 4(우승이면 1개는 우승 반응)
+  var fans=CR_RX.sns[k].concat((CR_RX_POS[p.pos]||{})[k]||[]).filter(ok).map(strip), sns=[], used={};
+  var fan=function(){ for(var t=0;t<20;t++){ var i=Math.floor(rg()*fans.length); if(!used[i]){ used[i]=1; return fans[i]; } } return pick(fans); };
+  sns.push({id:pick(CR_RX_VERIFIED), v:1, t:fill(pick(CR_RX.stat[k]))});
+  var hot=Ra>=6.8;   // 우승 시즌 반응: 본인이 잘했으면 고마움, 부진했으면 "묻어갔다"
+  if(champ && !r.youth) sns.push({id:pick(CR_FAN_ID), t:fill(pick(hot?CR_RX.champ:CR_RX.champLow))});
+  while(sns.length<5) sns.push({id:pick(CR_FAN_ID), t:fill(fan())});
+  var heat={elite:9,good:5,avg:2.5,bad:4,bench:1.5,injury:2,decline:2,youth:1,youthLow:0.6}[k]*(1+Math.max(0,(p.ovr-70)/15));
+  sns.forEach(function(s){ var v=Math.round(heat*(150+rg()*900)); s.lk=v>=1000?(v/1000).toFixed(1)+'k':v; s.c='hsl('+Math.floor(rg()*360)+',55%,45%)'; });
+  // 커뮤니티: 글 하나 + 댓글 6개(단독 4 + 원댓글·답글 1쌍). 펨코(f)·디시(d) 중 한쪽 말투로만
+  var fm=rg()<0.5, D=CR_RX_CM[k][fm?'f':'d'], CH=champ && !r.youth ? CR_RX_CM[hot?'champ':'champLow'][fm?'f':'d'] : null;
+  // SNS에 이미 나온 말과 겹치는 댓글은 뺀다(같은 말이 두 번 보이지 않게 — 이름·공백·ㅋㅠ·문장부호를 빼고 5글자 이상 겹치면)
+  var nz=function(t){ return fill(t).split(p.name).join('').replace(/[\sㅋㅠ.,!?…~]/g,''); }, seen=sns.map(function(x){ return nz(x.t); });
+  var dup=function(t){ var z=nz(t); for(var i=0;i+5<=z.length;i++){ var g=z.substr(i,5); if(seen.some(function(y){ return y.indexOf(g)>=0; })) return true; } return false; };
+  var cpool=D.c.filter(ok).map(strip).filter(function(t){ return !dup(t); }), take=function(){ return cpool.length ? cpool.splice(Math.floor(rg()*cpool.length),1)[0] : ''; };
+  var nicks=CR_RX_NICK.slice(), ips=CR_RX_IP.slice(), who=function(){ return fm ? {nick:nicks.splice(Math.floor(rg()*nicks.length),1)[0]} : {nick:'ㅇㅇ', ip:ips.splice(Math.floor(rg()*ips.length),1)[0]}; };
+  var cm=function(t){ var o=who(); o.t=fill(t); o.up=fm?Math.round(heat*(2+rg()*30)):0; return o; };
+  var cmts=[]; if(CH) cmts.push(cm(pick(CH.c)));
+  while(cmts.length<4 && cpool.length) cmts.push(cm(take()));
+  if(fm){ cmts.sort(function(a,b){ return b.up-a.up; }); cmts.slice(0,2).forEach(function(c){ c.best=1; c.up+=Math.round(heat*40); }); cmts.sort(function(a,b){ return b.up-a.up; }); }   // 펨코: 추천 많은 2개가 베스트로 맨 위
+  var prs=D.r.filter(function(x){ return ok(x[0]) && ok(x[1]); });
+  if(prs.length){ var pr=pick2(prs), par=cm(strip(pr[0])), rp=cm(strip(pr[1])); rp.re=1; cmts.splice(Math.min(cmts.length,(fm?2:1)+Math.floor(rg()*3)),0,par,rp); }   // 답글 쌍은 펨코면 베스트 2개 아래에
+  var tl=CH?pick(CH.t):pick(D.t), ncmt=Math.max(cmts.length, Math.round(heat*(5+rg()*18))), op=who();
+  var comm={fm:fm, board:fm?'해외축구':club+' 갤러리', hot:heat>=4, title:fill(tl), by:op, views:Math.round(heat*(300+rg()*1500)), rec:Math.round(heat*(8+rg()*40)), n:ncmt, cmts:cmts};
+  return {news:news, sns:sns, comm:comm};
+}
+function crReactBtn(){
+  var X=crReact();
+  return '<button class="cr-rx-btn" onclick="crReactShow()"><span class="ic" aria-hidden="true">📣</span><span class="t"><span class="k">SEASON REACTION · 시즌 반응</span><b>'+gmEsc(X.news.head)+'</b><small>기사 1 · SNS '+X.sns.length+' · 커뮤니티 댓글 '+X.comm.n+'</small></span><span class="go" aria-hidden="true">›</span></button>';
+}
+function crReactShow(){
+  var X=crReact(), N=X.news;
+  var post=function(s){ return '<div class="cr-sf-post"><i style="background:'+s.c+'">'+gmEsc(String(s.id).slice(0,1).toUpperCase())+'</i><div><b>@'+gmEsc(s.id)+(s.v?' <span class="vf">✔</span>':'')+'</b><span>'+gmEsc(s.t)+'</span></div><em>♥ '+s.lk+'</em></div>'; };
+  var C=X.comm, nm=function(o){ return gmEsc(o.nick)+(o.ip?'<i>('+o.ip+')</i>':''); };
+  var cmt=function(c){ return '<div class="r'+(c.re?' re':'')+'"><div class="w"><b>'+nm(c)+'</b>'+(c.best?'<span class="bst">BEST</span>':'')+(c.up?'<em>👍 '+c.up+'</em>':'')+'</div><p>'+gmEsc(c.t)+'</p></div>'; };
+  var community='<div class="cr-rx-cm '+(C.fm?'fm':'dc')+'"><div class="bd">'+gmEsc(C.board)+(C.hot?'<span>'+(C.fm?'포텐 터짐':'개념글')+'</span>':'')+'</div>'
+    +'<div class="ti">'+gmEsc(C.title)+'</div><div class="mt">'+nm(C.by)+' · 조회 '+C.views.toLocaleString()+' · 추천 '+C.rec+'</div>'
+    +'<div class="ch">댓글 <b>'+C.n+'</b></div>'+C.cmts.map(cmt).join('')+'</div>';
+  crTovSet('<div class="cr-tm cr-rx" role="dialog" aria-modal="true" aria-label="시즌 반응"><button class="cr-tm-x" onclick="crTovSet(\'\')" aria-label="닫기">✕</button><div class="cr-tm-box">'
+    +'<span class="tag">SEASON REACTION · 시즌 반응</span>'
+    +'<div class="cr-rx-news"><div class="mh">THE DAILY PITCH<span>'+gmEsc(N.date)+'</span></div><div class="hd">'+gmEsc(N.head)+'</div><p>'+gmEsc(N.body)+'</p>'
+    +(N.tags.length?'<div class="tg">'+N.tags.map(function(t,i){ return '<span'+(i?'':' class="on"')+'>'+gmEsc(t)+'</span>'; }).join('')+'</div>':'')+'</div>'
+    +'<div class="cr-rx-sec">SNS</div>'+X.sns.map(post).join('')
+    +'<div class="cr-rx-sec">커뮤니티</div>'+community
+    +'</div></div>');
+}
 // 재능 개화 오버레이(사용자 지정 — 포지션 특성은 고르지 않고 시즌 활약으로 "얻는다"): 카드 한 장이 빛과 함께 뒤집혀 나온다
 function crBloomShow(t, key){
   crTovSet('<div class="cr-tov cr-bl" role="dialog" aria-modal="true" aria-label="재능 개화"><span class="tag">TALENT BLOOM · 재능 개화</span>'
@@ -10216,6 +10449,7 @@ function crResult(){
    +(r.notes.length||R.forced?'<ul class="cr-notes">'+r.notes.map(function(t){ return '<li>'+gmEsc(t)+'</li>'; }).join('')
       +(R.forced?'<li>'+(R.forcedWhy==='body'?'몸이 더 이상 버텨 주지 않아요. 선수 생활을 마무리할 때가 됐어요.':p.age>=40?'40세 — 선수 생활을 마무리할 때가 됐어요.':gmEsc(p.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.')+'</li>':'')+'</ul>':'')
    +'</div>';
+  h+=crReactBtn();   // 시즌 반응(신문·SNS·커뮤니티) — 누르면 오버레이
   // 예전 코치 평가(옛 토큰의 결과 화면용)
   if(r.coach) h+='<div class="cr-goal"><span class="cr-goal-tag">COACH · 코치 평가</span><div class="cr-goal-t">'+gmEsc(r.coach)+'</div></div>';
   // 잠재력 평가(18·21세): 처음엔 오버레이로, 확인한 뒤엔 결과 화면에 작게 남는다
