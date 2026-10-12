@@ -214,10 +214,13 @@ const LOAN_STAY = [1.0, 0.03], LOAN_GO = 1.0, LOAN_GO_Y = 1.0;   // 남기: [성
 // 벤치에 앉을 높은 팀이나 너무 낮은 팀을 고르면 잔류와 비슷하거나 손해(사용자 지정 — "잘 골라야 이득").
 // 남았을 때 기준으로 잡는 이유: 큰 구단 U-21(구단 계수 1.85 × 아카데미)과 작은 구단 1군은 성장 바탕이 2배 넘게 달라 고정 배율로는 어느 쪽에도 맞지 않는다.
 const LOAN_P = 0.35, LOAN_R = [-20, 6], LOAN_Q = 1.42, LOAN_PLAY = [0.3, 1.0], LOAN_LVL = 0.025;
-const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
+const WF_BONUS = {1:-0.04, 2:0, 3:0.04, 4:0.13, 5:0.18};
+// 타고난 약발(사용자 지정 — 예전엔 모두 ★2로 시작해 비현실적이었다): ★1 10% · ★2 35% · ★3 40% · ★4 13% · ★5 2%. 커리어 시드로 고정.
+const WF_BORN = [0.10, 0.35, 0.40, 0.13, 0.02];
+const wfBorn = seed => { let x = mulberry((seed>>>0) ^ hashStr('wf'))(), k = 0; while(k < 4 && x >= WF_BORN[k]){ x -= WF_BORN[k]; k++; } return k + 1; };
 // 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
 // 재능 개화(포지션 특성 획득)를 넣으며 다시 맞췄다(직전 G 0.41/0.126/0.031 · A 0.181/0.168/0.052, 발롱 mu 126).
-const G_RATE = {FW:0.40, MF:0.123, DF:0.0298}, A_RATE = {FW:0.175, MF:0.163, DF:0.0505};
+const G_RATE = {FW:0.384, MF:0.1194, DF:0.0298}, A_RATE = {FW:0.168, MF:0.158, DF:0.0505};   // 타고난 약발(평균 ★2 → ★2.6)로 오른 만큼 FW·MF를 다시 내림(직전 FW 0.40·0.175, MF 0.123·0.163)
 // 클린시트를 출전 경기 전체로 세면서(약 1.5배) cs 점수는 그만큼 낮췄다(예전 MF 0.5 · DF 3.5 — DF는 포지션 점수 중앙을 맞추느라 조금 더 낮춤).
 const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:5.4,a:4.5,cs:0.33}, DF:{g:8,a:5,cs:2.2}};
 // 측면 수비 카드는 도움이 본업이라 도움 비중을 키우고 클린시트 비중을 줄인다(사용자 지정 — "윙백·풀백은 클린시트보다 도움").
@@ -318,7 +321,7 @@ export function createCareer(input, clubIdx, seed){
   if(!o) throw new Error('bad club');
   const sh = bodyShift(pos, body), st = startStats(pos, card).map((v,i) => v + sh[i]*BODY_U[0]), ovr = START_OVR;
   C = {v:1, seed:seed>>>0, name, nation, pos, card, foot, body, want:num, num:null, dream:dream||null,
-       st, ovr, off:st.map(v => v-ovr), age:15, club:o.club, fame:0, wf:2, phase:'prep', train:'균형', ev:null, evPick:null,
+       st, ovr, off:st.map(v => v-ovr), age:15, club:o.club, fame:0, wf:wfBorn(seed), phase:'prep', train:'균형', ev:null, evPick:null,
        hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, boost:1, peak:ovr, clubs:[o.club.n],
        talent:1, youthPts:0, awoken:false, last:null, offers:null, lv:0};
   newEvent();
