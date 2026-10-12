@@ -9707,11 +9707,13 @@ var CR_AV_FAIR={ENG:1,GER:1,NED:1,NOR:1,BEL:1,USA:1};   // 밝은 머리색이 �
 function crAvRng(str){ var h=2166136261; for(var i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); } return function(){ h+=0x6D2B79F5; var t=h; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; }; }
 function crAvPick(rg, w){ var tot=0, k; for(k in w) tot+=w[k]; var x=rg()*tot; for(k in w){ x-=w[k]; if(x<0) return k; } return k; }
 function crAvLook(c){
-  // 시드는 이름·국적·포지션·직군만(등번호는 커리어 중 바뀐다 — 입단 연출과 은퇴 카드가 같은 사람이어야 한다, 사용자 지정)
-  var rg=crAvRng(String(c.name)+'|'+c.nation+'|'+c.pos+'|'+c.card), sw=CR_AV_SKIN[c.nation]||[20,25,20,15,12,8], ws={};
+  // 시드는 커리어 id(사용자 지정 — 같은 이름·국적으로 다시 만들어도 커리어마다 다른 얼굴, 한 커리어 안에선 입단~은퇴 같은 사람).
+  // id가 없는 옛 카드만 이름·국적·포지션·직군. 피부톤은 시드와 상관없이 국적별 분포에서 뽑는다(아시아 국적이 어두운 톤으로 나오지 않게).
+  var rg=crAvRng(c.id ? 'cid|'+c.id : String(c.name)+'|'+c.nation+'|'+c.pos+'|'+c.card), sw=CR_AV_SKIN[c.nation]||[20,25,20,15,12,8], ws={};
   sw.forEach(function(v,i){ if(v) ws[i+1]=v; });
   var skin=+crAvPick(rg, ws), hair=+crAvPick(rg, skin>=5?CR_AV_HAIR_DARK:CR_AV_HAIR_LIGHT), cw;
   if(CR_AV_FADE[hair]) cw={black:7, brown:3};
+  else if(c.nation==='KOR' || c.nation==='JPN') cw={black:85, brown:15};   // 아시아 국적은 검정·갈색만(밝게 염색한 머리가 14%쯤 나와 어색했다)
   else if(skin>=5) cw={black:90, brown:8, blond:2};
   else if(skin<=2 && CR_AV_FAIR[c.nation]) cw={black:12, brown:34, lbrown:24, blond:18, plat:5, red:5, grey:2};
   else if(skin<=3) cw={black:45, brown:38, lbrown:10, blond:4, red:1, grey:2};
