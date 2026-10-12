@@ -10824,7 +10824,8 @@ function crCardHtml(c){
   ns.forEach(function(r){ if(r.loan) return; apps[r.club]=(apps[r.club]||0)+r.apps; if(!main || apps[r.club]>apps[main.n]) main={n:r.club, id:r.id}; });
   if(!main && c.seasons.length) main={n:c.seasons[c.seasons.length-1].club, id:c.seasons[c.seasons.length-1].id};
   var K=crKit(main), bc=crLum(K.shirt)>0.6 ? K.brand : K.shirt;   // 흰·노랑 유니폼 구단은 어둡게 깔면 회색이 돼서 대표색으로
-  var bg='radial-gradient(120% 40% at 100% 0%,'+crMix(bc,'#000000',0.35)+'99,transparent 62%),linear-gradient(180deg,'+crMix(bc,'#000000',0.74)+' 0%,#0B0D12 45%)';
+  // 크기는 px로 고정(접힌 카드 약 1,000px에서의 40%·45%) — %면 시즌별 기록을 펼쳐 카드가 길어질 때 그라데이션도 같이 늘어났다
+  var bg='radial-gradient(120% 400px at 100% 0%,'+crMix(bc,'#000000',0.35)+'99,transparent 62%),linear-gradient(180deg,'+crMix(bc,'#000000',0.74)+' 0px,#0B0D12 460px)';
   var chips=(c.traits||[]).map(function(tr,i){ return '<span class="cr-rc-chip">'+crTraitIc((c.traitIds||[])[i]||(CR.meta.traitIds||{})[tr])+gmEsc(tr)+'</span>'; }).join('')
    +(c.oneClub?'<span class="cr-rc-chip gold"><span class="cr-ui-ic">'+crIcon('shield-halved')+'</span>원클럽맨</span>':'')
    +(c.farewell?'<span class="cr-rc-chip gold"><span class="cr-ui-ic">'+crIcon('hands-clapping')+'</span>레전드 고별전</span>':'')
