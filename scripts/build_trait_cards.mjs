@@ -53,6 +53,7 @@ const ICON = {
   runs:    `<path d="M50,6 V94" stroke-dasharray="8 8" opacity=".6"/>${arrow(14,76,84,28)}<circle cx="66" cy="68" r="7" fill="#fff" opacity=".5"/><circle cx="34" cy="30" r="7" fill="#fff" opacity=".5"/>`,
   fpass:   `<circle cx="20" cy="76" r="9"/><circle cx="80" cy="26" r="9" fill="#fff"/><path d="M30,68 Q38,30 66,28" stroke-dasharray="7 7"/>${head(68,28,54,26)}`,
   wing:    `<path d="M88,6 V94" opacity=".6"/><path d="M72,92 V40 Q72,18 50,18 H26"/>${head(24,18,40,18)}<path d="M60,74 L72,66 M60,58 L72,50" stroke-width="3.5" opacity=".6"/>`,
+  halfsp:  `<path d="M24,6 V94 M76,6 V94" stroke-dasharray="6 7" opacity=".45"/><path d="M93,90 Q66,74 62,24"/>${head(62,22,63,40)}<circle cx="38" cy="40" r="7" fill="#fff" opacity=".45"/>`,
   flong:   longShot,
   pace:    `<path d="M40,18 L68,50 L40,82"/><path d="M62,18 L90,50 L62,82"/><path d="M8,34 H28 M4,50 H30 M8,66 H28" opacity=".6"/>`,
   // MF
