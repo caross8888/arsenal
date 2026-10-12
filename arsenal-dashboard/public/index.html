@@ -2095,6 +2095,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media (prefers-reduced-motion: reduce){.cr-anmsg span,.cr-badges.pop span,.cr-anim .cr-rs b.bump{animation:none}}
 .cr-hist .cr-rc-row:not(.hd){background:var(--surface2)}
 .cr-hist .cr-rc-row.ars{background:linear-gradient(90deg,rgba(239,1,7,.18),var(--surface2) 70%)}
+.cr-hist .cr-rc-table.two .cr-rc-row:not(.hd){padding:8px 10px}.cr-hist .cr-rc-table.two .cr-rc-row.hd{padding:0 10px}
+.cr-hist .cr-rc-table.two .cr-rk-o.y{background:var(--surface3);color:var(--text-secondary)}
 .cr-goal{border:1px solid var(--border-accent);background:linear-gradient(135deg,rgba(200,168,75,.16),rgba(200,168,75,.04));border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .cr-goal-tag{align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:var(--gold);border-radius:999px;padding:3px 9px}
 .cr-promo{border:1px solid rgba(34,197,94,.45);background:rgba(34,197,94,.12);color:var(--green);border-radius:14px;padding:11px 14px;font-size:14px;font-weight:700}
@@ -9814,15 +9816,18 @@ function crHist(){
   var p=CR.v.player, h=p.hist||[], W=p.pos==='DF' && /풀백|윙백/.test(((CR.meta.cards[p.pos]||[])[p.card]||{}).n||'');   // 측면 수비는 도움 칸도
   if(!h.length) return '';
   crTrophyDefs();
+  var st=function(v){ return '<span class="st'+(v.length>3?' w4':'')+'">'+v.map(function(x){ return '<span>'+x+'</span>'; }).join('')+'</span>'; };
   return '<details class="cr-panel cr-hist"><summary><b>커리어 기록</b><span>'+h.length+'시즌 · '+p.tot.apps+'경기 '+p.tot.goals+'골 '+p.tot.ast+'도움</span></summary>'
-   +'<div class="cr-rc-table'+(W?' w7':'')+'" style="margin-top:10px"><div class="cr-rc-row hd"><span>나이</span><span>구단</span><span>OVR</span><span>경기</span><span>골</span>'+(W?'<span>도움</span>':'')+'<span>'+(p.pos==='DF'?'CS':'도움')+'</span></div>'
+   // 은퇴 카드 시즌별 기록과 같은 2줄(랭킹 줄 꼴, 사용자 지정): 구단명 아래 트로피 전부 / 스탯 아래 OVR 칩
+   +'<div class="cr-rc-table two" style="margin-top:10px"><div class="cr-rc-row hd"><span>나이</span><span>구단 · 수상</span><span class="rs">'+st(['경기','골'].concat(W?['도움']:[]).concat([p.pos==='DF'?'CS':'도움']))+'</span></div>'
    +h.slice().reverse().map(function(r, i){
       var hs=r[9]||[], ars=/아스날/.test(r[7]||'')&&!r[8];
-      var icons=hs.slice(0,3).map(function(n){ return crTrophy(n,20); }).join('')+(hs.length>3?'<b>+'+(hs.length-3)+'</b>':'');
+      var icons=hs.map(function(n){ return crTrophy(n,18); }).join('');
       var prev=h[h.length-2-i], d=prev?r[6]-prev[6]:0;
       return '<div class="cr-rc-row'+(r[8]?' youth':'')+(ars?' ars':'')+'"><span class="a">'+r[0]+'</span>'
-       +'<span class="c">'+crCrest({n:r[7]||r[1]},24)+'<em>'+gmEsc(r[1])+(r[2]?' <small>임대</small>':'')+'</em>'+(icons?'<span class="ic">'+icons+'</span>':'')+'</span>'
-       +'<span class="o '+(r[8]?'y':crOvrCls(r[6]))+'" title="'+(d>0?'+':'')+d+'">'+r[6]+'</span><span>'+r[3]+'</span><span>'+r[4]+'</span>'+(W?'<span>'+(r[10]!=null?r[10]:'—')+'</span>':'')+'<span>'+r[5]+'</span></div>';
+       +'<span class="c">'+crCrest({n:r[7]||r[1]},26)+'<span class="cn"><em>'+gmEsc(r[1])+(r[2]?' <small>임대</small>':'')+'</em>'+(icons?'<span class="ic">'+icons+'</span>':'')+'</span></span>'
+       +'<span class="rs">'+st([r[3], r[4]].concat(W?[r[10]!=null?r[10]:'—']:[]).concat([r[5]]))
+       +'<span class="cr-rk-o '+(r[8]?'y':crOvrCls(r[6]))+'" title="'+(d>0?'+':'')+d+'"><small>OVR</small>'+r[6]+'</span></span></div>';
     }).join('')+'</div></details>';
 }
 function crBack(){ return '<button class="gm-back" onclick="gameList()">← 게임 목록</button>'; }
