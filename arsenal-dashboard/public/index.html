@@ -2234,6 +2234,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* 특성은 아이콘만(사용자 지정 — 이름까지 나오면 선수 카드가 위아래로 너무 길어졌다). 누르면 이름·효과를 토스트로 — 칩을 펼치면 줄이 넘어가 다음 줄로 밀렸다(사용자 지적). */
 .cr-hc .cr-hc-tr{flex-wrap:nowrap;gap:4px;align-items:center}
 .cr-hc .cr-hc-tr > span{padding:2px;cursor:pointer}
+.cr-tip{position:fixed;left:50%;bottom:calc(96px + var(--safe-bottom));transform:translate(-50%,8px);z-index:10001;max-width:calc(100vw - 32px);background:rgba(20,22,28,.94);color:#fff;font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-tip.on{opacity:1;transform:translate(-50%,0)}
 .cr-hc.dk{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
 /* 밝은 유니폼(흰색·노랑) 카드: 글자·막대를 어둡게 */
 .cr-hc.lt{color:#14161C;box-shadow:inset 0 0 0 1px rgba(20,22,28,.1),0 1px 4px rgba(20,22,28,.08)}   /* 라이트 모드 바탕(#ECEEF2)에서 흰 카드 테두리가 묻히지 않게 */
@@ -9576,6 +9578,12 @@ function crMix(hex, to, t){ var a=parseInt(hex.slice(1),16), b=parseInt(to.slice
   var c=(r(a>>16,b>>16)<<16)|(r((a>>8)&255,(b>>8)&255)<<8)|r(a&255,b&255); return '#'+('000000'+c.toString(16)).slice(-6); }
 function crLum(hex){ var v=parseInt(hex.slice(1),16); return (0.2126*(v>>16)+0.7152*((v>>8)&255)+0.0722*(v&255))/255; }
 // 선수 카드 배경 = 유니폼 바탕색(사용자 지정 — 흰 유니폼 구단은 흰 카드, 줄무늬 같은 무늬는 카드엔 안 그린다). 밝은 유니폼(흰색·노랑)은 글자를 어둡게(.cr-hc.lt).
+// 잠깐 떴다 사라지는 말풍선(특성 아이콘 누를 때) — 하나만, 2초 뒤 사라진다. gameToast는 화면 아래에 계속 쌓이는 안내 문구라 여기엔 안 맞았다(사용자 지적).
+function crTip(msg){
+  var t=document.getElementById('crTip'); if(!t){ t=document.createElement('div'); t.id='crTip'; t.className='cr-tip'; document.body.appendChild(t); }
+  t.textContent=msg; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on');
+  clearTimeout(crTip.h); crTip.h=setTimeout(function(){ t.classList.remove('on'); }, 2200);
+}
 function crKitCard(club){
   // 검정·아주 어두운 유니폼(뉴캐슬·보타포구 등)은 다크 모드 바탕(#0B0D12)에 묻혀서 시작을 조금 밝히고 옅은 테두리(.cr-hc.dk)
   var K=crKit(club), L=crLum(K.shirt), lt=L>0.6, dk=L<0.14;
@@ -9593,7 +9601,7 @@ function crHead(){
    +'<div class="cr-hc-s">'+gmEsc(p.club.team)+'</div><div class="cr-hc-s">'+gmEsc(card.n)+'</div></div>'   // 팀·직군 두 줄 — 한 줄이면 모바일에서 직군이 잘렸다. 오른쪽 나이·오버롤 높이 안이라 카드는 안 길어진다
    +'<div class="cr-hc-o age"><b>'+p.age+'</b><span>AGE</span></div><div class="cr-hc-o"><b>'+p.ovr+'</b><span>OVR</span></div></div>'
    +'<div class="cr-hc-ch">'+chip(gmEsc(p.foot))+chip('약발 '+crStars(p.wf))+(p.h?chip(gmEsc(p.body||'표준')+' '+p.h+'cm'):'')+(p.glass?chip('🩹 유리몸'):'')
-   +(p.traits&&p.traits.length?'<div class="cr-hc-tr">'+p.traits.map(function(t){ return '<span title="'+gmEsc(t.n+' · '+t.d)+'" onclick="gameToast(this.title)">'+crTraitIc(t.id)+'</span>'; }).join('')+'</div>':'')+'</div>'
+   +(p.traits&&p.traits.length?'<div class="cr-hc-tr">'+p.traits.map(function(t){ return '<span title="'+gmEsc(t.n+' · '+t.d)+'" onclick="crTip(this.title)">'+crTraitIc(t.id)+'</span>'; }).join('')+'</div>':'')+'</div>'
    +'<div class="cr-hc-st">'+st.map(function(n,i){
       // 막대 눈금은 30~99(스탯이 그 사이라 0~100으로 그리면 +2 같은 변화가 안 보인다)
       var v=p.st[i], d=dl?dl[i]:0, base=d>0?v-d:v, X=function(x){ return Math.max(0,Math.min(100,(x-30)/69*100)).toFixed(1); }, seg='';
