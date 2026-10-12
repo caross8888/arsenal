@@ -9555,20 +9555,10 @@ function crKit(club){
 function crMix(hex, to, t){ var a=parseInt(hex.slice(1),16), b=parseInt(to.slice(1),16), r=function(x,y){ return Math.round(x+(y-x)*t); };
   var c=(r(a>>16,b>>16)<<16)|(r((a>>8)&255,(b>>8)&255)<<8)|r(a&255,b&255); return '#'+('000000'+c.toString(16)).slice(-6); }
 function crLum(hex){ var v=parseInt(hex.slice(1),16); return (0.2126*(v>>16)+0.7152*((v>>8)&255)+0.0722*(v&255))/255; }
-// 선수 카드 배경 = 유니폼(사용자 지정 — 흰 유니폼 구단은 흰 카드). 유니폼색 → 조금 어둡게 그라데이션, 무늬는 반투명으로 얹는다.
-// 밝은 유니폼(흰색·노랑)은 글자를 어둡게 바꾼다(.cr-hc.lt).
-function crA(hex, a){ var v=parseInt(hex.slice(1),16); return 'rgba('+(v>>16)+','+((v>>8)&255)+','+(v&255)+','+a+')'; }
+// 선수 카드 배경 = 유니폼 바탕색(사용자 지정 — 흰 유니폼 구단은 흰 카드, 줄무늬 같은 무늬는 카드엔 안 그린다). 밝은 유니폼(흰색·노랑)은 글자를 어둡게(.cr-hc.lt).
 function crKitCard(club){
-  var K=crKit(club), lt=crLum(K.shirt)>0.6, base=K.shirt, c=K.c2 ? crA(K.c2, lt ? 0.2 : 0.3) : null, pat='';
-  if(K.pat==='v') pat='repeating-linear-gradient(90deg,'+c+' 0 22px,transparent 22px 44px),';
-  else if(K.pat==='h') pat='repeating-linear-gradient(180deg,'+c+' 0 18px,transparent 18px 36px),';
-  else if(K.pat==='half') pat='linear-gradient(90deg,transparent 50%,'+c+' 50%),';
-  else if(K.pat==='mid') pat='linear-gradient(90deg,transparent 40%,'+c+' 40% 60%,transparent 60%),';
-  else if(K.pat==='band') pat='linear-gradient(180deg,transparent 24%,'+c+' 24% 34%,transparent 34%),';
-  else if(K.pat==='sash') pat='linear-gradient(115deg,transparent 28%,'+c+' 28% 40%,transparent 40%),';
-  else if(K.pat==='diag') pat='linear-gradient(135deg,transparent 50%,'+c+' 50%),';
-  var bg=pat+'linear-gradient(135deg,'+base+' 0%,'+crMix(base,'#000000',lt?0.12:0.5)+' 100%)';
-  return {cls: lt ? ' lt' : '', bg: bg};
+  var K=crKit(club), lt=crLum(K.shirt)>0.6;
+  return {cls: lt ? ' lt' : '', bg: 'linear-gradient(135deg,'+K.shirt+' 0%,'+crMix(K.shirt,'#000000',lt?0.12:0.5)+' 100%)'};
 }
 function crHead(){
   var p=CR.v.player, st=CR.meta.stats[p.pos], card=CR.meta.cards[p.pos][p.card];
