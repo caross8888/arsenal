@@ -1,0 +1,30 @@
+# 커리어 모드 구단 색 원자료 수집 — scripts/fetch_club_colors.mjs를 GitHub Actions에서 돌려(개발 환경에선 Fotmob·ESPN이 막혀 있다)
+# 결과(scripts/out/club_colors_raw.json)를 같은 브랜치에 커밋한다. 스크립트를 고쳐 푸시하거나 Run workflow로 실행.
+name: club colors
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['scripts/fetch_club_colors.mjs']
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node scripts/fetch_club_colors.mjs
+      - name: 결과 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898732+github-actions[bot]@users.noreply.github.com"
+          git add scripts/out/club_colors_raw.json
+          git commit -m "구단 색 원자료(Fotmob·ESPN) 수집 결과" || echo "변경 없음"
+          git push

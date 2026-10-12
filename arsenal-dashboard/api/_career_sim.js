@@ -214,10 +214,14 @@ const LOAN_STAY = [1.0, 0.03], LOAN_GO = 1.0, LOAN_GO_Y = 1.0;   // 남기: [성
 // 벤치에 앉을 높은 팀이나 너무 낮은 팀을 고르면 잔류와 비슷하거나 손해(사용자 지정 — "잘 골라야 이득").
 // 남았을 때 기준으로 잡는 이유: 큰 구단 U-21(구단 계수 1.85 × 아카데미)과 작은 구단 1군은 성장 바탕이 2배 넘게 달라 고정 배율로는 어느 쪽에도 맞지 않는다.
 const LOAN_P = 0.35, LOAN_R = [-20, 6], LOAN_Q = 1.42, LOAN_PLAY = [0.3, 1.0], LOAN_LVL = 0.025;
-const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
+const WF_BONUS = {1:-0.04, 2:0, 3:0.04, 4:0.13, 5:0.18};
+// 타고난 약발(사용자 지정 — 예전엔 모두 ★2로 시작해 비현실적이었다): ★1 10% · ★2 35% · ★3 40% · ★4 13% · ★5 2%. 커리어 시드로 고정.
+const WF_DF_R = 0.03;
+const WF_BORN = [0.10, 0.35, 0.40, 0.13, 0.02];
+const wfBorn = seed => { let x = mulberry((seed>>>0) ^ hashStr('wf'))(), k = 0; while(k < 4 && x >= WF_BORN[k]){ x -= WF_BORN[k]; k++; } return k + 1; };
 // 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
 // 재능 개화(포지션 특성 획득)를 넣으며 다시 맞췄다(직전 G 0.41/0.126/0.031 · A 0.181/0.168/0.052, 발롱 mu 126).
-const G_RATE = {FW:0.40, MF:0.123, DF:0.0298}, A_RATE = {FW:0.175, MF:0.163, DF:0.0505};
+const G_RATE = {FW:0.384, MF:0.1194, DF:0.0298}, A_RATE = {FW:0.168, MF:0.158, DF:0.0505};   // 타고난 약발(평균 ★2 → ★2.6)로 오른 만큼 FW·MF를 다시 내림(직전 FW 0.40·0.175, MF 0.123·0.163)
 // 클린시트를 출전 경기 전체로 세면서(약 1.5배) cs 점수는 그만큼 낮췄다(예전 MF 0.5 · DF 3.5 — DF는 포지션 점수 중앙을 맞추느라 조금 더 낮춤).
 const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:5.4,a:4.5,cs:0.33}, DF:{g:8,a:5,cs:2.2}};
 // 측면 수비 카드는 도움이 본업이라 도움 비중을 키우고 클린시트 비중을 줄인다(사용자 지정 — "윙백·풀백은 클린시트보다 도움").
@@ -244,7 +248,8 @@ const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 
 // mu 126 → 127: 재능 개화로 상위권 기록이 오른 만큼(발롱 커리어당 0.045 → 0.043).
 // 공격수 배율 1.03 → 0.97(사용자 지정 — 정점 98 공격수가 발롱 13개까지 받았다. 감점 대신 기준을 올려 활약하면 받는 건 그대로): 최다 13 → 11, 공격수 비율 62 → 52%.
 // mu 138 → 126(사용자 지정 — 성장 하향 뒤 발롱이 반토막 나서 상위권 공격수·미드필더가 수비수 아래로 밀렸다. 상위 1% 공격수 발롱 3.0 → 4.2개)
-const BALLON = {mu:127, sd:14, big:45, bigW:1.5, pos:{FW:0.97, MF:1.08, DF:0.95}, top:4, inc:10, recW:0.7, fat:{FW:0, MF:5, DF:25}};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점.
+const BALLON = {mu:127, sd:14, big:45, bigW:1.5, pos:{FW:0.97, MF:1.08, DF:0.95}, top:4, inc:10, recW:0.7, fat:{FW:0, MF:5, DF:25},
+  card:{'윙어':1.2, '펄스나인':1.23}, incCard:{'윙어':25, '펄스나인':30}};   // card·incCard: 도움형 공격수(사용자 지정 — "공격수인데 적어도 8개까진"). 골 위주 발롱 점수라 펄스나인 최다 3 · 윙어 5개였다 → 9 · 8개. 연속 수상 가점을 키워 몇 명에게 몰리게(배율만 올리면 1~3개짜리만 늘었다)
 // fat: 받은 횟수당 감점, 포지션별 — 공격수는 10회도 자연스럽지만 미드필더는 메시·호날두급이어도 5~6회, 수비수는 세대급이어도 2회 안팎이 상식선(사용자 지정)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
@@ -318,7 +323,7 @@ export function createCareer(input, clubIdx, seed){
   if(!o) throw new Error('bad club');
   const sh = bodyShift(pos, body), st = startStats(pos, card).map((v,i) => v + sh[i]*BODY_U[0]), ovr = START_OVR;
   C = {v:1, seed:seed>>>0, name, nation, pos, card, foot, body, want:num, num:null, dream:dream||null,
-       st, ovr, off:st.map(v => v-ovr), age:15, club:o.club, fame:0, wf:2, phase:'prep', train:'균형', ev:null, evPick:null,
+       st, ovr, off:st.map(v => v-ovr), age:15, club:o.club, fame:0, wf:wfBorn(seed), phase:'prep', train:'균형', ev:null, evPick:null,
        hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, boost:1, peak:ovr, clubs:[o.club.n],
        talent:1, youthPts:0, awoken:false, last:null, offers:null, lv:0};
   newEvent();
@@ -394,7 +399,7 @@ function newEvent(){
   let ev = loan || pool[Math.floor(r*pool.length)];
   // 약발 훈련: 공격수·미드필더, 20세까지, 시즌당 30% 확률
   const r2 = mulberry(C.seed ^ hashStr('wf'+C.age))();
-  if(!loan && (C.pos==='FW'||C.pos==='MF') && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');
+  if(!loan && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');   // 수비수도(사용자 지정 — 약발은 표시되는데 훈련이 안 떴다)
   C.ev = ev.id; C.lastEv = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null; delete C.loanClubs; delete C.scoutClub;
   if(ev.id === 'scout'){ const t = scoutTarget(); if(t) C.scoutClub = t; else C.ev = C.lastEv = 'extra'; }
   if(ev.id === 'loan'){
@@ -541,7 +546,7 @@ export function prepView(state){
     ['기자들이 이번 시즌 각오를 묻고 있어요.','스포츠 매체에서 단독 인터뷰를 요청했어요.','개막 전 기자회견에 나서게 됐어요.','팬 채널에서 인터뷰를 하고 싶대요.'][C.age % 4];
   if(ev.id === 'loan' && loanList().length > 1) d = '두 구단에서 한 시즌 임대 제안이 왔어요. 갈 곳을 고르거나, 남아서 경쟁할 수 있어요.';
   if(ev.id === 'scout' && C.scoutClub) d = C.scoutClub.n+' 스카우트가 찾아왔어요. 아카데미로 옮기면 더 좋은 환경에서 크지만, 1군 데뷔 문턱도 높아요.';
-  if(ev.id === 'weak') d = '코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. 양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요. 대신 이번 시즌 다른 훈련 시간이 줄어요.';
+  if(ev.id === 'weak') d = '코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. '+(C.pos==='DF' ? '양발을 쓰면 빌드업에서 패스 길이 넓어져 도움이 늘어요.' : '양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요.')+' 대신 이번 시즌 다른 훈련 시간이 줄어요.';
   let goal;
   const lv = lvOf();
   if(lv === 0) goal = '유스 무대에 적응하기';
@@ -668,11 +673,14 @@ export function playSeason(state, choice){
   const cardG = Math.sqrt({'포처':1.35,'타깃맨':1.05,'윙어':0.8,'펄스나인':0.85,'공격형 미드필더':1.4,'메짤라':1.2,'수비형 미드필더':0.5,'윙백':1.3,'인버티드 풀백':1.2}[card.n]||1);
   const cardA = Math.sqrt({'윙어':1.5,'펄스나인':1.5,'공격형 미드필더':1.4,'딥라잉 플레이메이커':1.2,'윙백':2.4,'풀백':1.7,'인버티드 풀백':1.5,'포처':0.6}[card.n]||1);
   // 약발 보너스(골·도움): ★3까지는 작고 ★4부터 커진다 — 훈련 비용(그 시즌 성장 ×0.92) 대비 ★3은 약간 손해, ★4부터 약간 이득(사용자 지정)
-  const wfF = (C.pos==='FW'||C.pos==='MF') ? 1+WF_BONUS[C.wf] : 1;
+  // 약발: 공격수·미드필더는 골·도움 모두, 수비수는 도움만 절반(빌드업 패스 — 사용자 지정, 예전엔 수비수 효과·훈련 없음)
+  const wfF = (C.pos==='FW'||C.pos==='MF') ? 1+WF_BONUS[C.wf] : 1, wfA = C.pos==='DF' ? 1+WF_BONUS[C.wf]*0.5 : wfF;
+  // 수비수는 평점도 조금(빌드업에서 양발로 풀어 나온다): ★2 기준 한 칸당 +WF_DF_R. 약발 훈련 이벤트가 다른 성장 이벤트 자리를 가져가는 만큼 메운다.
+  const wfR = C.pos==='DF' ? (C.wf-2)*WF_DF_R : 0;
   const CB = ctBonus();
   const LT = lgTier(club.nat);   // 리그 수준(하위 리그일수록 기록이 더 나온다)
   const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF*TM.g*CB.g*LG_OUT[LT];
-  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a*CB.a*LG_OUT[LT];
+  const aRate = wfA*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a*CB.a*LG_OUT[LT];
   const minsEq = starts + subs*0.3;
   const hot = !row0Youth && starts>=15 && rng()<0.02;   // 커리어 하이 시즌
   // 커리어 하이 ×1.3(예전 ×1.6 — 88 오버롤로 79골이 나왔다), 골 45·도움 25를 넘는 몫은 절반만(60골 넘는 시즌은 전설급에서만 드물게).
@@ -697,7 +705,7 @@ export function playSeason(state, choice){
   // MF 0.85(예전 0.6): 같은 오버롤의 수비수와 평점 분포를 맞춘 값 — 낮으면 평점 기반 상·발롱에서 미드필더 고점이 눌렸다(사용자 지적)
   // FW 도움 1.0(예전 0.6): 도움형 공격수(펄스나인·윙어)가 평점 기반 상을 못 받아 상위권 천장이 가장 낮았다(사용자 지적)
   const perfBonus = {FW:(goalsL+astL*1.0)/ap*0.5, MF:(goalsL*1.5+astL*1.2)/ap*0.85, DF:csL/ap*0.6+(goalsL*2+astL*1.5)/ap*0.3+0.065}[C.pos];
-  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+DF_.r+(rng()-0.5)*0.5)) : 0;
+  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+DF_.r+wfR+(rng()-0.5)*0.5)) : 0;
   // 유스: 화면에 보이는 평점은 보정된 기록으로 다시 매긴다(기록만 오르고 평점이 그대로면 어색하다 — 사용자 지적).
   // 계산(이적 제안 수 등)엔 위의 rating을 그대로 써서 밸런스는 바뀌지 않는다.
   const perfShow = row0Youth ? {FW:(goals+ast*1.0)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.85, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.3+0.065}[C.pos] : perfBonus;
@@ -850,10 +858,10 @@ export function playSeason(state, choice){
   if(senior && apps>=20){
     const recRaw = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos]*LG_PTS[LT], rec = BALLON.recW*recRaw;   // 하위 리그 기록은 발롱에서도 덜 쳐준다   // recW: 공격 포인트 비중(우승 비중을 키운 만큼 낮춤)
     let hp2 = 0; hon.forEach(x => { const m = BALLON_PTS.find(r => r[0].test(x.n)); if(m) hp2 += m[1]; });
-    const star = Math.max(0,ov-85)*2 + Math.max(0,ov-94)*BALLON.top + (C.lastBallon===C.age-1 ? BALLON.inc : 0) - (C.ballonN||0)*BALLON.fat[C.pos];
+    const star = Math.max(0,ov-85)*2 + Math.max(0,ov-94)*BALLON.top + (C.lastBallon===C.age-1 ? (BALLON.incCard[CARDS[C.pos][C.card].n] ?? BALLON.inc) : 0) - (C.ballonN||0)*BALLON.fat[C.pos];
     // 압도적 시즌(공격 포인트가 아주 많은 시즌)은 따로 더 친다 — 62골을 넣고도 "후보 30인"에 그치던 문제(사용자 지적)
     const standout = Math.max(0, recRaw-BALLON.big)*BALLON.bigW;
-    const bp = (rec + Math.max(0,rating-7.0)*20 + hp2 + star + standout)*BALLON.pos[C.pos];
+    const bp = (rec + Math.max(0,rating-7.0)*20 + hp2 + star + standout)*BALLON.pos[C.pos]*(BALLON.card[CARDS[C.pos][C.card].n]||1);
     const rival = BALLON.mu + BALLON.sd*((rng()+rng()+rng()+rng()-2)*1.73), gap = bp-rival;
     if(gap > 0){ add('발롱도르','S'); C.lastBallon = C.age; C.ballonN = (C.ballonN||0) + 1; if(rng()<0.75) add('FIFA 올해의 선수','S'); }
     else {
