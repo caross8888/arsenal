@@ -55,7 +55,7 @@ const ICON = {
   wing:    `<path d="M90,6 V94" opacity=".6"/><path d="M26,94 Q26,66 52,66 H58 Q72,66 72,52 V20"/>${head(72,17,72,30)}<path d="M60,46 L50,40 M60,32 L50,26" stroke-width="3.5" opacity=".6"/>`,   // 가운데 아래에서 바로 측면으로 꺾여 터치라인을 타고 올라가는 화살표(사용자 지정 — 예전엔 안쪽으로 파고드는 모양이었다)
   halfsp:  `<path d="M24,6 V94 M76,6 V94" stroke-dasharray="6 7" opacity=".45"/><path d="M93,90 Q66,74 62,24"/>${head(62,22,63,40)}<circle cx="38" cy="40" r="7" fill="#fff" opacity=".45"/>`,
   flong:   longShot,
-  pace:    `<path d="M40,18 L68,50 L40,82"/><path d="M62,18 L90,50 L62,82"/><path d="M8,34 H28 M4,50 H30 M8,66 H28" opacity=".6"/>`,
+  pace:    `<path d="M4,60 H96" stroke-dasharray="6 7" opacity=".45"/><circle cx="14" cy="60" r="8" fill="#fff" opacity=".5"/><circle cx="38" cy="60" r="8" fill="#fff" opacity=".5"/><circle cx="90" cy="60" r="8" fill="#fff" opacity=".5"/><path d="M36,96 Q64,88 64,60 V28"/>${head(64,22,64,40,15)}<circle cx="86" cy="26" r="7" fill="#fff"/>`,   // 수비 라인 사이를 뚫고 뒷공간의 공으로(사용자 지정 — 예전 겹화살표는 뜻이 안 보였다)
   // MF
   kpass:   `<circle cx="28" cy="42" r="12" fill="#fff" opacity=".45"/><circle cx="72" cy="42" r="12" fill="#fff" opacity=".45"/>${arrow(50,92,50,10)}`,
   boxrun:  `<path d="M12,10 V56 H88 V10"/><path d="M34,10 V28 H66 V10" opacity=".6"/>${arrow(50,94,50,36)}`,
