@@ -8610,7 +8610,7 @@ function gmPost(a, body){
   var h={'Content-Type':'application/json'};
   if(PK.tok) h.Authorization='Bearer '+PK.tok;
   return fetch(FN+'/game?a='+a, {method:'POST', headers:h, body:JSON.stringify(body||{})})
-    .then(function(r){ return r.json().then(function(j){ if(!r.ok){ var e=new Error(j.error||'잠시 후 다시 시도해 주세요.'); e.login=!!j.login; throw e; } return j; }); });
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ if(!r.ok){ var e=new Error(j.error||'잠시 후 다시 시도해 주세요.'); e.login=!!j.login; throw e; } return j; }); });
 }
 
 // ── 승부예측(api/pick.js) ───────────────────────────────────────────────
@@ -9179,13 +9179,17 @@ function crStore(v){
     localStorage.setItem(CR_INFO, JSON.stringify({name:p.name, age:p.age, phase:v.phase, reg: v.phase==='retired' && prev.phase==='retired' && prev.reg || undefined}));
   }catch(e){}
 }
+// 응답이 20초 넘게 없으면 실패로 처리한다(모바일 망에서 요청이 걸린 채 끝나지 않아 화면이 멈춘 것처럼 보이지 않게)
 function crApi(a, body){
-  return fetch(FN+'/career?a='+a, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{})})
+  var ac=window.AbortController ? new AbortController() : null, to=ac ? setTimeout(function(){ ac.abort(); }, 20000) : 0;
+  return fetch(FN+'/career?a='+a, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{}), signal:ac ? ac.signal : undefined})
+    .catch(function(e){ clearTimeout(to); throw new Error(e && e.name==='AbortError' ? '응답이 늦어요. 다시 시도해 주세요.' : '연결이 불안정해요. 다시 시도해 주세요.'); })
+    .then(function(r){ clearTimeout(to); return r; })
     .then(function(r){ return r.json().then(function(j){ if(!r.ok){ var e=new Error(j.error||'잠시 후 다시 시도해 주세요.'); e.status=r.status; throw e; } return j; }); });
 }
 // meta는 CDN에 하루 캐시된다(s-maxage). 모양이 바뀌면(체형 bodies 추가 등) CR_META_V를 올려 URL을 바꿔야 옛 캐시를 안 받는다
 // — 체형을 넣고 이걸 안 해서 배포 직후 옛 meta(체형 없음)가 내려와 1페이지 체형 칸이 안 보이고 진행이 막혔다(사용자 지적).
-var CR_META_V='2';
+var CR_META_V='3';   // 3: 재능 개화 특성(하프스페이스 침투 등)·스루패스 이름
 function crMeta(){
   if(CR.meta) return Promise.resolve(CR.meta);
   return fetch(FN+'/career?a=meta&v='+CR_META_V).then(function(r){ if(!r.ok) throw new Error('잠시 후 다시 시도해 주세요.'); return r.json(); }).then(function(m){
@@ -10209,7 +10213,12 @@ function crTmShow(){
 function crTmPick(k, btn){
   if(CR.busy || CR.tmGo || Date.now() < (CR.tmReady||0)) return;
   var R=CR.v.result;
-  if(k<0){ if(k===-1 && R.released) return; CR.pick=null; CR.tmGo=true; return crPickFx(btn, '#crTov .cr-tm-c', function(){ CR.tmGo=false; crNext(null); }); }   // 오버레이는 crShow가 닫는다
+  // 잔류·은퇴: 오버레이는 crShow가 닫는다. 실패하면(네트워크·서버 오류) 오버레이를 닫고 결과 화면으로 돌려 다시 고를 수 있게 —
+  // 예전엔 고른 카드가 잠긴 오버레이가 그대로 남아 화면이 멈춘 것처럼 보였다(사용자 제보).
+  if(k<0){ if(k===-1 && R.released) return; CR.pick=null; CR.tmGo=true; return crPickFx(btn, '#crTov .cr-tm-c', function(){ CR.tmGo=false;
+    if(CR.busy) return crTmFail(null);
+    CR.busy=true;
+    crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(crTmFail); }); }
   // 이적 완료 연출(OFFICIAL · HERE WE GO)은 이제 다음 화면의 이적 계약서에 사인한 뒤에 나온다(계약 → 발표 순서, 사용자 지정)
   CR.pick=k; CR.tmGo=true; crPickFx(btn, '#crTov .cr-tm-c', function(){});
   var t0=Date.now(), MIN=700, fin=function(fn){ setTimeout(function(){ CR.tmGo=false; crTovSet(''); fn(); }, Math.max(0, MIN-(Date.now()-t0))); };
@@ -10217,6 +10226,7 @@ function crTmPick(k, btn){
   crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ fin(function(){ crShow(v); window.scrollTo(0,0); }); }).catch(function(e){ fin(function(){ crErr(e); }); });
 }
 // 이적·재계약 완료 연출: (옛 구단 →) 새 구단, OFFICIAL 도장, HERE WE GO / 재계약. 계약서에 사인한 뒤에 띄우고, 약 3.6초 뒤(누르면 바로) 준비 화면으로.
+function crTmFail(e){ crTovSet(''); crErr(e); crResult(); }
 function crTmDone(ct){
   var p=CR.v.player, conf='', tr=ct.type==='transfer';
   for(var i=0;i<26;i++) conf+='<i style="--x:'+((i*37)%100)+'%;--d:'+(0.9+(i%7)*0.09)+'s;--r:'+((i*53)%360)+'deg;--c:'+['#EF0107','#C8A84B','#F0F2F7','#22C55E'][i%4]+'"></i>';
