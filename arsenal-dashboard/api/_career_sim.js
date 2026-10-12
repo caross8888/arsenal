@@ -1143,7 +1143,8 @@ export function playerView(state){
     glass:!!C.glass, tot:C.tot, peak:C.peak, traits:(C.traits||[]).map(id => traitView(id, C.pos)),
     // 커리어 기록 접이식 표: [나이, 팀, 임대, 경기, 골, 도움(수비수는 클린시트), 오버롤, 구단, 유스, 그 시즌 주요 수상(S·A·B, 대표팀 제외)]
     hist: C.hist.map(r => [r.age, r.team, r.loan?1:0, r.apps, r.goals, C.pos==='DF' ? r.cs : r.ast, r.ovr, r.club, r.youth?1:0,
-      r.hon.filter(h => 'SAB'.includes(h.tier) && h.kind!=='nat').sort((a,b) => 'SAB'.indexOf(a.tier)-'SAB'.indexOf(b.tier)).map(h => h.n)])};
+      r.hon.filter(h => 'SAB'.includes(h.tier) && h.kind!=='nat').sort((a,b) => 'SAB'.indexOf(a.tier)-'SAB'.indexOf(b.tier)).map(h => h.n),
+      r.ast])};   // [10] 도움 — 수비수는 [5]가 클린시트라, 측면 수비(풀백·윙백·인버티드 풀백) 커리어 기록에 도움 칸을 더 그릴 때 쓴다
 }
 // 은퇴 카드(랭킹에도 이 모양으로 저장한다)
 export function cardView(state){
