@@ -372,7 +372,10 @@ export const EVENTS = [
   // 추가 이벤트(사용자 지정 — 유스 훈련·개인 훈련만 너무 자주 떴다)
   {id:'ftcall', t:'1군 훈련 초대', d:'1군 감독이 이번 시즌 1군 훈련에 합류하라고 했어요.', a:['합류한다 (성장 ↑ · 유스 출전 ↓)','유스에서 뛴다 (출전 ↑)'], ok:() => youth() && C.age>=16},
   {id:'scout', t:'빅클럽 스카우트', d:'', a:['옮긴다 (아카데미 ↑ · 데뷔 문턱 ↑)','남는다 (출전 안정)'], ok:() => youth() && C.age<=17 && scoutRoll() && !!scoutTarget()},
-  {id:'captain', t:'부주장 제안', d:'감독이 부주장 완장을 맡아 달라고 해요.', a:['수락한다 (출전 ↑ · 명성 ↑ 또는 ↓)','사양한다 (성장 ↑)'], ok:() => !youth() && C.age>=23 && C.age<=32},
+  // 부주장은 한 구단에서 한 번만 제안한다(사용자 지정 — 같은 팀에서 매 시즌 다시 뜨는 게 어색했다).
+  // 이적하면 감독이 바뀌니 새 팀에서 다시 올 수 있고, 수락해 두 시즌이 지나면 그 팀에서 주장 제안으로 이어진다.
+  {id:'captain', t:'부주장 제안', d:'감독이 부주장 완장을 맡아 달라고 해요.', a:['수락한다 (출전 ↑ · 명성 ↑ 또는 ↓)','사양한다 (성장 ↑)'], ok:() => !youth() && C.age>=23 && C.age<=32 && !C.capt && C.viceAt !== C.club.n},
+  {id:'captfull', t:'주장 제안', d:'감독이 다음 시즌 주장 완장을 맡아 달라고 해요.', a:['수락한다 (출전 ↑↑ · 명성 ↑↑ 또는 ↓↓)','부주장으로 남는다 (성장 ↑)'], ok:() => !youth() && !C.capt && !!C.vice && C.club.n === C.viceClub && C.age >= (C.viceAge||0) + 2},
   {id:'natcall', t:'A매치 차출', d:'대표팀 감독이 이번 A매치 기간 소집을 원해요. 구단은 휴식을 바라고 있어요.', a:['차출에 응한다 (명성 ↑ · 부상 위험 ↑)','휴식을 요청한다 (출전 ↑ · 대표 경기 ↓)'], ok:() => !youth() && (C.tot.caps||0) > 0},
   {id:'sns', t:'SNS 논란', d:'경기 뒤 했던 말이 SNS에서 퍼지며 논란이 됐어요.', a:['사과한다 (명성 조금 ↓ · 감독 신뢰)','정면 돌파 (명성 ↑↑ 또는 ↓↓)'], ok:() => !youth() && C.age>=19},
   {id:'diet', t:'식단·회복 전문가', d:'에이전트가 식단·회복 전문가를 붙이자고 해요.', a:['고용한다 (하락 ↓ · 부상 위험 ↓ · 출전 ↓)','하던 대로 (출전 유지)'], ok:() => C.age>=30}];
@@ -626,7 +629,11 @@ export function playSeason(state, choice){
   if(ev==='ftcall'){ if(pick===0){ growMul*=1.12; startAdj-=0.08; notes.push('1군 형들과 훈련하며 한 단계 성장했어요.'); } else startAdj+=0.05; }
   if(ev==='scout' && pick===0 && C.scoutClub){ const from = C.club.n; club = C.club = C.scoutClub; if(!C.clubs.includes(club.n)) C.clubs.push(club.n); delete C.scoutClub; growMul*=0.96; startAdj-=0.05; notes.push(from+'에서 '+club.n+' 아카데미로 옮겼어요. 적응하느라 첫 시즌은 조금 애먹었어요.'); }
   if(ev==='scout' && pick===1) startAdj+=0.04;
-  if(ev==='captain'){ if(pick===0) startAdj+=0.05; else growMul*=1.04; }
+  // 부주장: 제안을 받은 구단을 기억해 같은 팀에서 다시 뜨지 않게 하고, 수락하면 주장 제안의 전제가 된다.
+  if(ev==='captain'){ C.viceAt = C.club.n;
+    if(pick===0){ C.vice = true; C.viceClub = C.club.n; C.viceAge = C.age; startAdj+=0.05; notes.push('부주장 완장을 받았어요.'); }
+    else growMul*=1.04; }
+  if(ev==='captfull'){ if(pick===0){ C.capt = true; C.captClub = C.club.n; startAdj+=0.07; notes.push('주장 완장을 받았어요. 라커룸의 중심이 됐어요.'); } else growMul*=1.04; }
   if(ev==='natcall' && pick===1) startAdj+=0.05;
   if(ev==='sns' && pick===0) startAdj+=0.02;
   if(ev==='study'){ C.studied = pick===0 ? 'yes' : 'no';
@@ -885,6 +892,7 @@ export function playSeason(state, choice){
   const rJudge = row0Youth ? ratingShow : rating, mediaBar = row0Youth ? (C.age<=20 ? 7.35 : 7.8) : 7.0 - Math.max(0, 21-C.age)*0.3;
   if(ev==='media' && pick===0){ if(rJudge>=mediaBar){ fg+=2; notes.push('큰소리친 만큼 해내서 주목받았어요.'); } else { fg-=1; notes.push('인터뷰에서 한 말이 부메랑이 됐어요.'); } }
   if(ev==='captain' && pick===0){ if(rating>=7.0){ fg+=1; notes.push('부주장 완장의 무게를 이겨냈어요.'); } else if(rating<6.6){ fg-=1; notes.push('부주장인데 부진하다는 비판을 받았어요.'); } }
+  if(ev==='captfull' && pick===0){ if(rating>=7.0){ fg+=2; notes.push('주장으로서 팀을 이끌었어요.'); } else if(rating<6.6){ fg-=2; notes.push('주장인데 부진하다는 비판이 쏟아졌어요.'); } }
   if(ev==='natcall' && pick===0){ fg+=1; notes.push('대표팀 일정까지 소화하며 이름을 알렸어요.'); }
   if(ev==='sns'){ if(pick===0){ fg-=1; notes.push('빠르게 사과해 논란이 가라앉았어요.'); } else if(rating>=7.0){ fg+=2; notes.push('경기력으로 논란을 잠재우고 오히려 인기를 얻었어요.'); } else { fg-=2; notes.push('부진까지 겹쳐 비판이 거세졌어요.'); } }
   C.fame = Math.max(-5, Math.min(12, C.fame-Math.sign(C.fame)+fg));
