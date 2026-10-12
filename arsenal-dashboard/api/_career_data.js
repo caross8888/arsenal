@@ -114,13 +114,14 @@ export const BLOOM_CARD = {
  '윙어':['wing','pace','fpass'], '인사이드 포워드':['shot','flong','wing'], '포처':['shot','runs','pace'], '타깃맨':['shot','aerial','fpass'], '펄스나인':['fpass','kpass','flong'],
  '박스투박스':['boxrun','press','mlong'], '공격형 미드필더':['kpass','mlong','tempo'], '메짤라':['boxrun','kpass','wing'], '딥라잉 플레이메이커':['switch','tempo','kpass'], '수비형 미드필더':['press','clean','switch'],
  '센터백':['line','aerial','clean'], '볼플레잉 센터백':['build','switch','line'], '스위퍼':['cover','line','build'], '풀백':['clean','cover','overlap'], '윙백':['overlap','wing','press'], '인버티드 풀백':['build','tempo','cover']};
+// 한 카드의 세 특성이 모두 같은 능력치면 안 된다(사용자 지적 — 윙백이 전부 스피드였다): 윙백 적극적 압박 = 대인마크, 펄스나인 중거리슛 = 결정력.
 // 조건: 특성 → 포지션(카드 이름이 있으면 그 카드가 우선) → [연관 능력치, 기준, 이번 시즌 기록(골 goals · 도움 ast · 클린시트 cs · 평점 rating · 출전 apps), 기준]. 기준은 21~28세 1군 시즌 분포의 대략 상위 25%.
 export const BLOOM_COND = {
- shot:{FW:['결정력',82,'goals',13]}, runs:{FW:['오프더볼',78,'goals',11]}, pace:{FW:['스피드',77,'goals',11], '포처':['스피드',72,'goals',11]}, flong:{FW:['패스',75,'goals',10]},
+ shot:{FW:['결정력',82,'goals',13]}, runs:{FW:['오프더볼',78,'goals',11]}, pace:{FW:['스피드',77,'goals',11], '포처':['스피드',72,'goals',11]}, flong:{FW:['패스',75,'goals',10], '펄스나인':['결정력',75,'goals',9]},
  fpass:{FW:['패스',74,'ast',6], '윙어':['패스',68,'ast',6]}, kpass:{FW:['패스',76,'ast',6], MF:['시야',78,'ast',7], '메짤라':['시야',75,'ast',6]}, aerial:{FW:['오프더볼',77,'goals',11], DF:['공중볼',72,'rating',7.15]},
  wing:{FW:['드리블',76,'ast',6], MF:['볼키핑',76,'ast',6], DF:['스피드',78,'ast',3]},
  boxrun:{MF:['체력',78,'goals',5]}, mlong:{MF:['패스',78,'goals',4]}, tempo:{MF:['볼키핑',75,'rating',7], '딥라잉 플레이메이커':['볼키핑',73,'rating',7], DF:['패스',80,'rating',7.15]},
- press:{MF:['태클',74,'cs',12], '박스투박스':['태클',72,'cs',11], DF:['스피드',76,'cs',12]}, switch:{MF:['패스',81,'ast',6], '수비형 미드필더':['패스',76,'rating',6.9], DF:['패스',80,'rating',7.15]}, clean:{MF:['태클',76,'apps',34], DF:['태클',78,'apps',34]},
+ press:{MF:['태클',74,'cs',12], '박스투박스':['태클',72,'cs',11], DF:['대인마크',70,'cs',11]}, switch:{MF:['패스',81,'ast',6], '수비형 미드필더':['패스',76,'rating',6.9], DF:['패스',80,'rating',7.15]}, clean:{MF:['태클',76,'apps',34], DF:['태클',78,'apps',34]},
  line:{DF:['대인마크',78,'cs',12], '스위퍼':['대인마크',75,'cs',11]}, cover:{DF:['스피드',80,'cs',11]}, overlap:{DF:['스피드',78,'ast',3], '풀백':['스피드',74,'ast',2]}, build:{DF:['패스',83,'ast',3], '스위퍼':['패스',80,'ast',3]}};
 
 export const TRAITS = [
