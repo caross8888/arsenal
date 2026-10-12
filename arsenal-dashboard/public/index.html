@@ -1912,7 +1912,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hof-big small{font-size:11px;font-weight:800;color:var(--gd);margin-top:3px;white-space:nowrap}
 .cr-hof-big .lr{width:14px;color:var(--gd);opacity:.85;display:flex}.cr-hof-big .lr svg{width:14px;height:30px}.cr-hof-big .lr.r{transform:scaleX(-1)}
 .cr-hof-big .cup{color:var(--gd);display:flex}.cr-hof-big .cup svg{width:22px;height:22px}
-.cr-hof-st{display:grid;grid-template-columns:repeat(4,1fr);padding:10px 2px}.cr-hof-st.n5{grid-template-columns:repeat(5,1fr)}.cr-hof-st.n5>div{gap:3px}.cr-hof-st.n5 i.mk{width:18px;height:18px}.cr-hof-st.n5 small{font-size:9.5px;white-space:nowrap;letter-spacing:-.3px}.cr-hof-st.n5 b{font-size:14px}
+.cr-hof-st{display:grid;grid-template-columns:repeat(4,1fr);padding:10px 2px}
 .cr-hof-st>div{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0}.cr-hof-st>div+div{border-left:1px solid var(--ln)}
 .cr-hof-st i.mk{flex:none;width:22px;height:22px;background:#B9C8E4;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
 .cr-hof-st span{display:flex;flex-direction:column;line-height:1.1}.cr-hof-st b{font-size:15px;font-weight:800}.cr-hof-st small{font-size:10.5px;color:var(--fg2)}
@@ -10790,7 +10790,8 @@ function crCardHtml(c){
    +'<div><span><b class="w">'+nTro+'</b><small>우승</small></span><i class="cup">'+IC.cup+'</i></div></div>';
   // ③ 통산
   // 아이콘은 단색 도트(img/career/ic, 사용자가 시안 스타일로 뽑은 것)를 마스크로 — 색은 CSS(currentColor)라 테마가 바뀌어도 칠만 바꾸면 된다
-  h+='<div class="cr-hof-b cr-hof-st'+(WIDE?' n5':'')+'">'+[['apps',t.apps,'경기'],['goals',t.goals,'골']].concat(WIDE?[['assists',t.ast,'도움'],['cs',t.cs||0,'클린시트']]:[DF?['cs',t.cs||0,'클린시트']:['assists',t.ast,'도움']],[['caps',t.caps||0,'A매치']])
+  h+='<div class="cr-hof-b cr-hof-st">'+(WIDE ? [['apps',t.apps,'경기'],['assists',t.ast,'도움'],['cs',t.cs||0,'클린시트'],['caps',t.caps||0,'A매치']]   // 측면 수비는 골 대신 도움(사용자 지정 — 5칸은 답답했다. 골은 시즌별 표에)
+        : [['apps',t.apps,'경기'],['goals',t.goals,'골'],DF?['cs',t.cs||0,'클린시트']:['assists',t.ast,'도움'],['caps',t.caps||0,'A매치']])
      .map(function(x){ return '<div><i class="mk" style="--m:url(/img/career/ic/'+x[0]+'.png)"></i><span><b>'+x[1]+'</b><small>'+x[2]+'</small></span></div>'; }).join('')+'</div>';
   // ④ 커리어 하이
   if(ns.length){
