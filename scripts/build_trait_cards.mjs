@@ -56,6 +56,7 @@ const ICON = {
   halfsp:  `<path d="M24,6 V94 M76,6 V94" stroke-dasharray="6 7" opacity=".45"/><path d="M93,90 Q66,74 62,24"/>${head(62,22,63,40)}<circle cx="38" cy="40" r="7" fill="#fff" opacity=".45"/>`,
   hold:    `<path d="M50,6 V28" stroke-dasharray="7 7"/>${head(50,32,50,18)}<circle cx="68" cy="34" r="9" fill="#fff" opacity=".35"/><circle cx="50" cy="54" r="13" fill="#fff" opacity=".6"/><path d="M40,66 L22,84"/>${head(19,87,30,76)}`,   // 포스트 플레이: 수비를 등지고 받아 옆으로 떨궈 준다
   link:    `<circle cx="50" cy="20" r="9" fill="#fff"/><circle cx="20" cy="76" r="9" fill="#fff" opacity=".55"/><circle cx="80" cy="76" r="9" fill="#fff" opacity=".55"/><path d="M44,32 L28,62"/>${head(26,66,36,48)}<path d="M33,78 H64"/>${head(68,78,50,78)}<path d="M74,64 L58,34"/>${head(56,30,66,48)}`,   // 연계 플레이: 내려와 받아 주고받으며 연결
+  fox:     `${goal(22,8,56,24)}<path d="M62,34 L72,52 L52,70" stroke-dasharray="6 6"/>${ball(46,74,9)}<circle cx="46" cy="74" r="19" stroke-width="3" opacity=".55"/><circle cx="24" cy="58" r="7" fill="#fff" opacity=".4"/><circle cx="82" cy="78" r="7" fill="#fff" opacity=".4"/>`,   // 위치 선정: 골대에 맞고 흘러나온 공이 서 있던 자리로
   flong:   longShot,
   pace:    `<path d="M4,60 H96" stroke-dasharray="6 7" opacity=".45"/><circle cx="14" cy="60" r="8" fill="#fff" opacity=".5"/><circle cx="38" cy="60" r="8" fill="#fff" opacity=".5"/><circle cx="90" cy="60" r="8" fill="#fff" opacity=".5"/><path d="M36,96 Q64,88 64,60 V28"/>${head(64,22,64,40,15)}<circle cx="86" cy="26" r="7" fill="#fff"/>`,   // 수비 라인 사이를 뚫고 뒷공간의 공으로(사용자 지정 — 예전 겹화살표는 뜻이 안 보였다)
   // MF

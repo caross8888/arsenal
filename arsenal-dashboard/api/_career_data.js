@@ -111,13 +111,13 @@ export const CTRAITS = [
 // effPos: 다른 포지션 카드에도 열리는 특성의 그 포지션 효과(예: 공중볼 장악은 타깃맨에겐 세트피스 골 +25%가 너무 커서 골 +6%).
 // 재능 개화(사용자 지정): 카드마다 열리는 특성 3개 — 같은 특성이 포지션을 넘어 붙기도 한다(측면 돌파 선호 = 윙어·윙백, 하프스페이스 침투 = 인사이드 포워드·메짤라).
 export const BLOOM_CARD = {
- '윙어':['wing','pace','fpass'], '인사이드 포워드':['shot','flong','halfsp'], '포처':['shot','runs','pace'], '타깃맨':['shot','aerial','hold'], '펄스나인':['fpass','kpass','link'],
+ '윙어':['wing','pace','fpass'], '인사이드 포워드':['shot','flong','halfsp'], '포처':['shot','runs','fox'], '타깃맨':['shot','aerial','hold'], '펄스나인':['fpass','kpass','link'],
  '박스투박스':['boxrun','press','mlong'], '공격형 미드필더':['kpass','mlong','tempo'], '메짤라':['boxrun','kpass','halfsp'], '딥라잉 플레이메이커':['switch','tempo','kpass'], '수비형 미드필더':['press','clean','switch'],
  '센터백':['line','aerial','clean'], '볼플레잉 센터백':['build','switch','line'], '스위퍼':['cover','line','build'], '풀백':['clean','cover','overlap'], '윙백':['overlap','wing','press'], '인버티드 풀백':['build','tempo','cover']};
 // 한 카드의 세 특성이 모두 같은 능력치면 안 된다(사용자 지적 — 윙백이 전부 스피드였다): 윙백 적극적 압박 = 대인마크, 펄스나인 연계 플레이 = 드리블.
 // 조건: 특성 → 포지션(카드 이름이 있으면 그 카드가 우선) → [연관 능력치, 기준, 이번 시즌 기록(골 goals · 도움 ast · 클린시트 cs · 평점 rating · 출전 apps), 기준]. 기준은 21~28세 1군 시즌 분포의 대략 상위 25%.
 export const BLOOM_COND = {
- shot:{FW:['결정력',82,'goals',13]}, runs:{FW:['오프더볼',78,'goals',11]}, link:{FW:['드리블',70,'rating',6.9]}, hold:{FW:['패스',72,'ast',5]}, halfsp:{FW:['드리블',76,'goals',10], MF:['볼키핑',76,'ast',6]}, pace:{FW:['스피드',77,'goals',11], '포처':['스피드',72,'goals',11]}, flong:{FW:['패스',75,'goals',10], '인사이드 포워드':['패스',71,'goals',9]},
+ shot:{FW:['결정력',82,'goals',13]}, runs:{FW:['스피드',72,'goals',11]}, fox:{FW:['오프더볼',78,'goals',12]}, link:{FW:['드리블',70,'rating',6.9]}, hold:{FW:['패스',72,'ast',5]}, halfsp:{FW:['드리블',76,'goals',10], MF:['볼키핑',76,'ast',6]}, pace:{FW:['스피드',77,'goals',11]}, flong:{FW:['패스',75,'goals',10], '인사이드 포워드':['패스',71,'goals',9]},
  fpass:{FW:['패스',74,'ast',6], '윙어':['패스',68,'ast',6], '펄스나인':['패스',78,'ast',6]}, kpass:{FW:['패스',80,'ast',7], MF:['시야',78,'ast',7], '메짤라':['시야',75,'ast',6]}, aerial:{FW:['오프더볼',80,'goals',12], DF:['공중볼',72,'rating',7.15]},
  wing:{FW:['드리블',76,'ast',6], DF:['스피드',78,'ast',3]},
  boxrun:{MF:['체력',78,'goals',5]}, mlong:{MF:['패스',78,'goals',4]}, tempo:{MF:['볼키핑',75,'rating',7], '딥라잉 플레이메이커':['볼키핑',73,'rating',7], DF:['패스',80,'rating',7.15]},
@@ -126,13 +126,14 @@ export const BLOOM_COND = {
 
 export const TRAITS = [
  {id:'shot',   pos:'FW', n:'정확한 슛 선호',       d:'골 +7%',               stat:'결정력', min:82, eff:{g:1.07},              aff:['포처','인사이드 포워드']},
- {id:'runs',   pos:'FW', n:'오프사이드 라인 침투', d:'골 +5% · 선발 조금 ↑', stat:'오프더볼', min:78, eff:{g:1.05, st:0.02},     aff:['포처','타깃맨']},
+ {id:'runs',   pos:'FW', n:'오프사이드 라인 침투', d:'골 +5% · 선발 조금 ↑', stat:'스피드', min:72, eff:{g:1.05, st:0.02},     aff:['포처','타깃맨']},
  {id:'fpass',  pos:'FW', n:'득점보다 패스 선호',   d:'골 −10% · 도움 +18%',  stat:'패스', min:74, eff:{g:0.9, a:1.18},        aff:['펄스나인','윙어']},
  {id:'wing',   pos:'FW', n:'측면 돌파 선호',       d:'도움 +9%',             stat:'드리블', min:76, eff:{a:1.09},              aff:['윙어','인사이드 포워드']},
  {id:'flong',  pos:'FW', n:'중거리슛 시도',        d:'골 +4% · 올해의 골 확률 ↑', stat:'패스', min:75, eff:{g:1.04, goty:3},   aff:['인사이드 포워드','펄스나인']},
  {id:'halfsp', pos:'FW', n:'하프스페이스 침투',    d:'골 +4% · 도움 +4%',    stat:'드리블', min:76, eff:{g:1.04, a:1.04},       aff:['인사이드 포워드','메짤라']},
  {id:'hold',   pos:'FW', n:'포스트 플레이',         d:'도움 +10% · 평점 ↑',   stat:'패스', min:72, eff:{a:1.1, r:0.03},       aff:['타깃맨']},
  {id:'link',   pos:'FW', n:'연계 플레이',           d:'도움 +6% · 평점 ↑',    stat:'드리블', min:73, eff:{a:1.06, r:0.05},      aff:['펄스나인']},
+ {id:'fox',    pos:'FW', n:'위치 선정',             d:'골 +4% · 평점 ↑',      stat:'오프더볼', min:78, eff:{g:1.04, r:0.05},      aff:['포처']},
  {id:'pace',   pos:'FW', n:'뒷공간 침투',          d:'골 +6%',               stat:'스피드', min:77, eff:{g:1.06},              aff:['윙어','포처']},
  {id:'kpass',  pos:'MF', n:'스루패스 선호',        d:'도움 +10%',            stat:'시야', min:78, eff:{a:1.1},                aff:['공격형 미드필더','딥라잉 플레이메이커']},
  {id:'boxrun', pos:'MF', n:'박스 침투',            d:'골 +12%',              stat:'체력', min:78, eff:{g:1.12},              aff:['박스투박스','메짤라']},
