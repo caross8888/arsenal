@@ -56,10 +56,27 @@ async function kv(...args){
   return j.result;
 }
 const kvReady = () => !!(KV_URL && KV_TOKEN);
-// 랭킹 한 줄 요약: 대표 업적(발롱도르·월드컵·챔스·리그 우승·득점왕 중 있는 것 셋)
-const TOP_HON = [['발롱도르', /^발롱도르$/], ['월드컵 우승', /월드컵 우승/], ['챔피언스리그 우승', /챔피언스리그 우승/], ['리그 우승', /리그 우승$/], ['득점왕', /득점왕/]];
-const summaryOf = card => ({nm: card.name, nat: card.nation, pos: card.pos, card: card.card, peak: card.peak,
-  hon: TOP_HON.map(([n, re]) => [n, card.honors.filter(h => re.test(h[0])).length]).filter(x => x[1]).slice(0, 3)});
+// 랭킹 한 줄 요약(SUM_V): 아바타(커리어 id·등번호·주 소속 구단 유니폼)와 주요 트로피(S·A·B 상, 이름별 횟수, 큰 상부터 최대 16개).
+//   몇 개를 보일지는 화면이 정한다(폭이 차면 뒤쪽을 감춘다). 옛 요약(v 없음)은 readPos가 저장된 카드로 다시 만든다.
+const SUM_V = 2, TIER = 'SAB';
+const mainClubOf = card => {
+  const apps = {}; let m = null;
+  for(const r of card.seasons || []){ if(r.youth || r.loan) continue; apps[r.club] = (apps[r.club] || 0) + r.apps; if(!m || apps[r.club] > apps[m.n]) m = {n: r.club, id: r.id}; }
+  const last = (card.seasons || []).at(-1);
+  return m || (last ? {n: last.club, id: last.id} : null);
+};
+const summaryOf = card => {
+  const g = {}, order = [];
+  for(const [n, tier] of card.honors || []){
+    if(!TIER.includes(tier)) continue;
+    const nm = String(n).split(' ×')[0], c = +(String(n).split('×')[1]) || 1;
+    if(!g[nm]){ g[nm] = {t: tier, c: 0}; order.push(nm); }
+    g[nm].c += c;
+  }
+  order.sort((a, b) => TIER.indexOf(g[a].t) - TIER.indexOf(g[b].t) || g[b].c - g[a].c);
+  return {v: SUM_V, id: card.id, nm: card.name, nat: card.nation, pos: card.pos, card: card.card, num: card.num, peak: card.peak,
+    club: mainClubOf(card), hon: order.slice(0, 16).map(nm => [nm, g[nm].c])};
+};
 // 옛 한 판 → 포지션별(한 번만). 옛 요약에 포지션이 있어서 그걸로 나눈다.
 let _migrated = false;
 async function migrateV1(){
@@ -89,6 +106,20 @@ async function readPos(p, n){
   if(top.length){
     const sums = await kv('HMGET', sumKey(p), ...top.map(r => r.key)) || [];
     top.forEach((r, i) => { try { Object.assign(r, JSON.parse(sums[i] || '{}')); } catch(_){} r.p = p; });
+    // 옛 요약(아바타·구단·트로피 전체가 없던 것)은 저장된 카드로 한 번 다시 만들어 덮어쓴다
+    const stale = top.filter(r => r.v !== SUM_V);
+    if(stale.length){
+      const raws = await kv('MGET', ...stale.map(r => `career:card:${r.key}:${p}`)) || [];
+      const olds = raws.some(x => !x) ? await kv('MGET', ...stale.map(r => `career:card:${r.key}`)) || [] : [];
+      const put = [];
+      stale.forEach((r, i) => {
+        let card = null;
+        try { card = JSON.parse(raws[i] || 'null'); if(!card){ const o = JSON.parse(olds[i] || 'null'); if(o && o.pos === p) card = o; } } catch(_){}
+        if(!card) return;
+        const sum = summaryOf(card); Object.assign(r, sum); put.push(r.key, JSON.stringify(sum));
+      });
+      if(put.length) await kv('HSET', sumKey(p), ...put);
+    }
   }
   return top;
 }
