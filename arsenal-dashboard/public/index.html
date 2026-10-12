@@ -2009,9 +2009,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media (prefers-reduced-motion: reduce){.cr-sf,.cr-sf *{animation:none!important}}
 .cr-inj{display:flex;flex-direction:column;gap:10px;animation:crIvUp .35s ease-out both}
 .cr-inj .hd{text-align:center;color:#F0F2F7}.cr-inj .hd b{display:block;font-size:17px;color:#FCA5A5}.cr-inj .hd span{font-size:13px;color:rgba(255,255,255,.75)}
-.cr-pk-on{position:relative;border-color:#C8A84B!important;background:rgba(200,168,75,.18)!important;box-shadow:0 0 0 3px rgba(200,168,75,.3),0 10px 26px rgba(0,0,0,.35);animation:crPkPop .4s cubic-bezier(.2,1.6,.4,1) both!important;opacity:1!important}
+/* 고른 카드 표시: 배경색은 버튼이 원래 쓰던 색(반투명 어두운 카드)을 그대로 두고 금색만 덧입힌다.
+   예전엔 background를 통째로 rgba(200,168,75,.18)로 덮어써서, 이벤트 배경이 밝은 그림으로 바뀐 뒤
+   고른 버튼만 배경이 사라진 것처럼 보였다(사용자 지적). */
+.cr-pk-on{position:relative;border-color:#C8A84B!important;background-image:linear-gradient(rgba(200,168,75,.22),rgba(200,168,75,.22))!important;box-shadow:0 0 0 3px rgba(200,168,75,.3),0 10px 26px rgba(0,0,0,.35);animation:crPkPop .4s cubic-bezier(.2,1.6,.4,1) both!important;opacity:1!important}
 .cr-pk-on::after{content:"✓ 선택";position:absolute;top:-9px;right:10px;font-size:11px;font-weight:800;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:2px 8px;animation:crIvUp .25s ease-out both}
-.cr-pk-off{opacity:.3!important;transform:scale(.95)!important;filter:grayscale(.6);transition:opacity .3s,transform .3s!important}
+.cr-pk-off{opacity:.45!important;transform:scale(.95)!important;filter:grayscale(.6);transition:opacity .3s,transform .3s!important}
 .cr-tr-o:disabled,.cr-tm-c:disabled,.cr-inj-c:disabled{cursor:default}
 @keyframes crPkPop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1.02)}}
 .cr-inj-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
