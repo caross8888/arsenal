@@ -9589,7 +9589,7 @@ function crHead(){
    +'<div class="cr-hc-id"><div class="cr-hc-n">'+gmEsc(p.name)+(p.num?' <span>#'+p.num+'</span>':'')+'</div>'
    +'<div class="cr-hc-s">'+gmEsc(p.club.team)+'</div><div class="cr-hc-s">'+gmEsc(card.n)+'</div></div>'   // 팀·직군 두 줄 — 한 줄이면 모바일에서 직군이 잘렸다. 오른쪽 나이·오버롤 높이 안이라 카드는 안 길어진다
    +'<div class="cr-hc-o age"><b>'+p.age+'</b><span>AGE</span></div><div class="cr-hc-o"><b>'+p.ovr+'</b><span>OVR</span></div></div>'
-   +'<div class="cr-hc-ch">'+chip(gmEsc(p.foot))+(p.pos!=='DF'?chip('약발 '+crStars(p.wf)):'')+(p.h?chip(gmEsc(p.body||'표준')+' '+p.h+'cm'):'')+(p.glass?chip('🩹 유리몸'):'')
+   +'<div class="cr-hc-ch">'+chip(gmEsc(p.foot))+chip('약발 '+crStars(p.wf))+(p.h?chip(gmEsc(p.body||'표준')+' '+p.h+'cm'):'')+(p.glass?chip('🩹 유리몸'):'')
    +(p.traits&&p.traits.length?'<div class="cr-hc-tr">'+p.traits.map(function(t){ return '<span title="'+gmEsc(t.n+' · '+t.d)+'" onclick="this.classList.toggle(\'on\')">'+crTraitIc(t.id)+'<em>'+gmEsc(t.n)+'</em></span>'; }).join('')+'</div>':'')+'</div>'
    +'<div class="cr-hc-st">'+st.map(function(n,i){
       // 막대 눈금은 30~99(스탯이 그 사이라 0~100으로 그리면 +2 같은 변화가 안 보인다)

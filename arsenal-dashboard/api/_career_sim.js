@@ -216,6 +216,7 @@ const LOAN_STAY = [1.0, 0.03], LOAN_GO = 1.0, LOAN_GO_Y = 1.0;   // 남기: [성
 const LOAN_P = 0.35, LOAN_R = [-20, 6], LOAN_Q = 1.42, LOAN_PLAY = [0.3, 1.0], LOAN_LVL = 0.025;
 const WF_BONUS = {1:-0.04, 2:0, 3:0.04, 4:0.13, 5:0.18};
 // 타고난 약발(사용자 지정 — 예전엔 모두 ★2로 시작해 비현실적이었다): ★1 10% · ★2 35% · ★3 40% · ★4 13% · ★5 2%. 커리어 시드로 고정.
+const WF_DF_R = 0.03;
 const WF_BORN = [0.10, 0.35, 0.40, 0.13, 0.02];
 const wfBorn = seed => { let x = mulberry((seed>>>0) ^ hashStr('wf'))(), k = 0; while(k < 4 && x >= WF_BORN[k]){ x -= WF_BORN[k]; k++; } return k + 1; };
 // 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
@@ -398,7 +399,7 @@ function newEvent(){
   let ev = loan || pool[Math.floor(r*pool.length)];
   // 약발 훈련: 공격수·미드필더, 20세까지, 시즌당 30% 확률
   const r2 = mulberry(C.seed ^ hashStr('wf'+C.age))();
-  if(!loan && (C.pos==='FW'||C.pos==='MF') && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');
+  if(!loan && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');   // 수비수도(사용자 지정 — 약발은 표시되는데 훈련이 안 떴다)
   C.ev = ev.id; C.lastEv = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null; delete C.loanClubs; delete C.scoutClub;
   if(ev.id === 'scout'){ const t = scoutTarget(); if(t) C.scoutClub = t; else C.ev = C.lastEv = 'extra'; }
   if(ev.id === 'loan'){
@@ -545,7 +546,7 @@ export function prepView(state){
     ['기자들이 이번 시즌 각오를 묻고 있어요.','스포츠 매체에서 단독 인터뷰를 요청했어요.','개막 전 기자회견에 나서게 됐어요.','팬 채널에서 인터뷰를 하고 싶대요.'][C.age % 4];
   if(ev.id === 'loan' && loanList().length > 1) d = '두 구단에서 한 시즌 임대 제안이 왔어요. 갈 곳을 고르거나, 남아서 경쟁할 수 있어요.';
   if(ev.id === 'scout' && C.scoutClub) d = C.scoutClub.n+' 스카우트가 찾아왔어요. 아카데미로 옮기면 더 좋은 환경에서 크지만, 1군 데뷔 문턱도 높아요.';
-  if(ev.id === 'weak') d = '코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. 양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요. 대신 이번 시즌 다른 훈련 시간이 줄어요.';
+  if(ev.id === 'weak') d = '코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. '+(C.pos==='DF' ? '양발을 쓰면 빌드업에서 패스 길이 넓어져 도움이 늘어요.' : '양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요.')+' 대신 이번 시즌 다른 훈련 시간이 줄어요.';
   let goal;
   const lv = lvOf();
   if(lv === 0) goal = '유스 무대에 적응하기';
@@ -672,11 +673,14 @@ export function playSeason(state, choice){
   const cardG = Math.sqrt({'포처':1.35,'타깃맨':1.05,'윙어':0.8,'펄스나인':0.85,'공격형 미드필더':1.4,'메짤라':1.2,'수비형 미드필더':0.5,'윙백':1.3,'인버티드 풀백':1.2}[card.n]||1);
   const cardA = Math.sqrt({'윙어':1.5,'펄스나인':1.5,'공격형 미드필더':1.4,'딥라잉 플레이메이커':1.2,'윙백':2.4,'풀백':1.7,'인버티드 풀백':1.5,'포처':0.6}[card.n]||1);
   // 약발 보너스(골·도움): ★3까지는 작고 ★4부터 커진다 — 훈련 비용(그 시즌 성장 ×0.92) 대비 ★3은 약간 손해, ★4부터 약간 이득(사용자 지정)
-  const wfF = (C.pos==='FW'||C.pos==='MF') ? 1+WF_BONUS[C.wf] : 1;
+  // 약발: 공격수·미드필더는 골·도움 모두, 수비수는 도움만 절반(빌드업 패스 — 사용자 지정, 예전엔 수비수 효과·훈련 없음)
+  const wfF = (C.pos==='FW'||C.pos==='MF') ? 1+WF_BONUS[C.wf] : 1, wfA = C.pos==='DF' ? 1+WF_BONUS[C.wf]*0.5 : wfF;
+  // 수비수는 평점도 조금(빌드업에서 양발로 풀어 나온다): ★2 기준 한 칸당 +WF_DF_R. 약발 훈련 이벤트가 다른 성장 이벤트 자리를 가져가는 만큼 메운다.
+  const wfR = C.pos==='DF' ? (C.wf-2)*WF_DF_R : 0;
   const CB = ctBonus();
   const LT = lgTier(club.nat);   // 리그 수준(하위 리그일수록 기록이 더 나온다)
   const gRate = wfF*G_RATE[C.pos]*Math.pow(effG/75,2)*cardG*teamF*TM.g*CB.g*LG_OUT[LT];
-  const aRate = wfF*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a*CB.a*LG_OUT[LT];
+  const aRate = wfA*A_RATE[C.pos]*Math.pow(effA/75,2)*cardA*teamF*TM.a*CB.a*LG_OUT[LT];
   const minsEq = starts + subs*0.3;
   const hot = !row0Youth && starts>=15 && rng()<0.02;   // 커리어 하이 시즌
   // 커리어 하이 ×1.3(예전 ×1.6 — 88 오버롤로 79골이 나왔다), 골 45·도움 25를 넘는 몫은 절반만(60골 넘는 시즌은 전설급에서만 드물게).
@@ -701,7 +705,7 @@ export function playSeason(state, choice){
   // MF 0.85(예전 0.6): 같은 오버롤의 수비수와 평점 분포를 맞춘 값 — 낮으면 평점 기반 상·발롱에서 미드필더 고점이 눌렸다(사용자 지적)
   // FW 도움 1.0(예전 0.6): 도움형 공격수(펄스나인·윙어)가 평점 기반 상을 못 받아 상위권 천장이 가장 낮았다(사용자 지적)
   const perfBonus = {FW:(goalsL+astL*1.0)/ap*0.5, MF:(goalsL*1.5+astL*1.2)/ap*0.85, DF:csL/ap*0.6+(goalsL*2+astL*1.5)/ap*0.3+0.065}[C.pos];
-  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+DF_.r+(rng()-0.5)*0.5)) : 0;
+  const rating = apps ? Math.max(5.6, Math.min(8.9, 6.45+(o-70)/17+(o-clubLv)/40+perfBonus+TM.r+CB.r+DF_.r+wfR+(rng()-0.5)*0.5)) : 0;
   // 유스: 화면에 보이는 평점은 보정된 기록으로 다시 매긴다(기록만 오르고 평점이 그대로면 어색하다 — 사용자 지적).
   // 계산(이적 제안 수 등)엔 위의 rating을 그대로 써서 밸런스는 바뀌지 않는다.
   const perfShow = row0Youth ? {FW:(goals+ast*1.0)/ap*0.5, MF:(goals*1.5+ast*1.2)/ap*0.85, DF:cs/ap*0.6+(goals*2+ast*1.5)/ap*0.3+0.065}[C.pos] : perfBonus;
