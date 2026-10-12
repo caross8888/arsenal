@@ -1928,7 +1928,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-hof-shelf>div{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 2px 8px;min-width:0}
 .cr-hof-shelf>div:not(:nth-child(6n+1)){border-left:1px solid var(--ln)}
 .cr-hof-shelf>div.more{display:none}.cr-hof-tro.open .cr-hof-shelf>div.more{display:flex}
-.cr-hof-shelf i svg{display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}.cr-hof-shelf .tS i svg{filter:drop-shadow(0 0 8px rgba(233,199,102,.55)) drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+.cr-tro-img{display:inline-block;vertical-align:middle;object-fit:contain}
+.cr-hof-shelf i img,.cr-hof-shelf i svg{display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}.cr-hof-shelf .tS i img,.cr-hof-shelf .tS i svg{filter:drop-shadow(0 0 8px rgba(233,199,102,.55)) drop-shadow(0 3px 4px rgba(0,0,0,.5))}
 .cr-hof-shelf span{font-size:10.5px;line-height:1.25;color:rgba(255,255,255,.82);margin-top:4px;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .cr-hof-shelf b{font-size:11px;font-weight:800;color:#fff;margin-top:1px}
 .cr-hof-in{margin-top:6px;border:1px solid var(--bd);border-radius:10px;padding:10px}.cr-hof-in .cr-hof-h{border:0;padding:0;margin-bottom:8px;color:var(--gd)}
@@ -10738,7 +10739,19 @@ var CR_TROPHY_ART={
 var CR_TROPHY_OF=[[/챔피언스리그 우승/,'ucl'],[/월드컵 우승/,'worldcup'],[/(유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵) 우승/,'continental'],
   [/리그 우승/,'league'],[/컵 대회 우승/,'cup'],[/발롱도르/,'ballon'],[/FIFA 올해의 선수/,'best'],[/득점왕|골든슈/,'bootG'],[/도움왕/,'bootS'],
   [/골든볼/,'gball'],[/(리그|챔스) 올해의 선수|리그 올해의 (미드필더|수비수)/,'plaqueG'],[/베스트 11/,'plaqueS'],[/챔스 올해의 (공격수|미드필더|수비수)/,'plaqueStar'],[/.*/,'medal']];
+// 트로피 그림(사용자 지정 — 실제 트로피를 그린 도트 아이콘, img/career/tro/ · scripts/build_career_trophies.py). 이름으로 파일을 고르고, 없으면 예전 SVG
+var CR_TRO_IMG=[[/^월드컵 우승/,'worldcup'],[/^유로 우승/,'euro'],[/^코파 아메리카 우승/,'copa'],[/^아시안컵 우승/,'asiancup'],[/^골드컵 우승/,'goldcup'],[/^아프리카 네이션스컵 우승/,'afcon'],
+  [/챔피언스리그 우승/,'ucl'],[/컵 대회 우승/,'cup'],[/^유스 리그 우승/,'youth'],[/^발롱도르/,'ballon'],[/FIFA 올해의 선수/,'best'],[/골든볼/,'goldenball'],[/골든슈/,'goldenshoe'],
+  [/득점왕/,'topscorer'],[/도움왕/,'assist'],[/^챔스 올해의 선수/,'uclpoty'],[/리그 올해의 선수/,'poty'],[/^월드 베스트 11/,'worldbest11'],[/베스트 11/,'best11'],
+  [/골든보이/,'goldenboy'],[/영플레이어/,'young'],[/이달의 선수/,'motm'],[/올해의 골/,'goal'],[/^구단 올해의 선수/,'clubpoty'],[/올해의 선수/,'natpoty']];
+function crTroImg(name){
+  var m=String(name).match(/^(\S+) 리그 우승$/);
+  if(m && m[1]!=='유스' && CR.meta){ for(var id in CR.meta.nat) if(CR.meta.nat[id].n===m[1]) return 'league_'+id; }
+  for(var i=0;i<CR_TRO_IMG.length;i++) if(CR_TRO_IMG[i][0].test(name)) return CR_TRO_IMG[i][1];
+  return null;
+}
 function crTrophy(name, h){
+  var f=crTroImg(name); if(f) return '<img class="cr-tro-img" src="/img/career/tro/'+f+'.png" height="'+(h||40)+'" width="'+(h||40)+'" alt="'+gmEsc(name)+'" loading="lazy">';
   var k='medal'; for(var i=0;i<CR_TROPHY_OF.length;i++) if(CR_TROPHY_OF[i][0].test(name)){ k=CR_TROPHY_OF[i][1]; break; }
   return '<svg viewBox="0 0 48 62" height="'+(h||40)+'" role="img" aria-label="'+gmEsc(name)+'">'+CR_TROPHY_ART[k]+'</svg>';
 }
