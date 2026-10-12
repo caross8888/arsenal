@@ -52,7 +52,7 @@ const ICON = {
   shot:    `<circle cx="50" cy="50" r="34"/><circle cx="50" cy="50" r="13"/><circle cx="50" cy="50" r="3.5" fill="#fff"/><path d="M50,6 V28 M50,72 V94 M6,50 H28 M72,50 H94"/>`,
   runs:    `<path d="M50,6 V94" stroke-dasharray="8 8" opacity=".6"/>${arrow(14,76,84,28)}<circle cx="66" cy="68" r="7" fill="#fff" opacity=".5"/><circle cx="34" cy="30" r="7" fill="#fff" opacity=".5"/>`,
   fpass:   `<circle cx="20" cy="76" r="9"/><circle cx="80" cy="26" r="9" fill="#fff"/><path d="M30,68 Q38,30 66,28" stroke-dasharray="7 7"/>${head(68,28,54,26)}`,
-  wing:    `<path d="M90,6 V94" opacity=".6"/><path d="M28,92 V52 Q28,22 58,22 H72"/>${head(74,22,58,22)}<path d="M40,74 L28,66 M40,58 L28,50" stroke-width="3.5" opacity=".6"/>`,   // 가운데에서 바깥(측면)으로 휘어 나가는 화살표(사용자 지정 — 예전엔 안쪽으로 파고드는 모양이었다)
+  wing:    `<path d="M90,6 V94" opacity=".6"/><path d="M26,94 Q26,66 52,66 H58 Q72,66 72,52 V20"/>${head(72,17,72,30)}<path d="M60,46 L50,40 M60,32 L50,26" stroke-width="3.5" opacity=".6"/>`,   // 가운데 아래에서 바로 측면으로 꺾여 터치라인을 타고 올라가는 화살표(사용자 지정 — 예전엔 안쪽으로 파고드는 모양이었다)
   halfsp:  `<path d="M24,6 V94 M76,6 V94" stroke-dasharray="6 7" opacity=".45"/><path d="M93,90 Q66,74 62,24"/>${head(62,22,63,40)}<circle cx="38" cy="40" r="7" fill="#fff" opacity=".45"/>`,
   flong:   longShot,
   pace:    `<path d="M40,18 L68,50 L40,82"/><path d="M62,18 L90,50 L62,82"/><path d="M8,34 H28 M4,50 H30 M8,66 H28" opacity=".6"/>`,
