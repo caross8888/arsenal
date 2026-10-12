@@ -1960,7 +1960,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-share .tro{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding:8px 2px}.cr-share .tro>div{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}.cr-share .tro>div+div{border-left:1px solid var(--ln)}
 .cr-share .tro span{font-size:9px;line-height:1.2;color:rgba(255,255,255,.8);margin-top:3px;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.cr-share .tro b{font-size:10px;font-weight:800}
 .cr-share .hi{display:grid;grid-template-columns:repeat(3,1fr);padding:7px 2px}.cr-share .hi>div{text-align:center;min-width:0;padding:0 3px}.cr-share .hi>div+div{border-left:1px solid var(--ln)}.cr-share .hi small{display:block;font-size:9.5px;font-weight:800;color:var(--gd)}.cr-share .hi b{display:block;font-family:var(--fd);font-size:24px;font-weight:400;line-height:1.1}.cr-share .hi span{display:block;font-size:9.5px;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cr-share .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:9.5px;color:rgba(255,255,255,.45)}.cr-share .clubs{display:flex;align-items:center;gap:3px;min-width:0;overflow:hidden}.cr-share .clubs i{font-style:normal;color:rgba(255,255,255,.35)}
+.cr-share .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:9.5px;color:rgba(255,255,255,.45)}.cr-share .clubs{display:flex;align-items:center;gap:3px;min-width:0;overflow:hidden}.cr-share .clubs i{font-style:normal;color:rgba(255,255,255,.35)}.cr-share .clubs em{font-style:normal;font-size:10px;font-weight:800;color:rgba(255,255,255,.75);background:rgba(255,255,255,.1);border-radius:999px;padding:2px 6px}
 .cr-shot-btn{display:block;margin:12px auto 0;font:inherit;font-size:13px;font-weight:700;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:999px;padding:9px 16px;cursor:pointer}
 .cr-shot-btn:disabled{opacity:.6;cursor:default}
 .cr-rc-minor-t{font-size:12.5px;color:var(--text-secondary);text-align:center}
@@ -10908,7 +10908,9 @@ function crShareHtml(c){
        return '<div class="b hi">'+cell(DF?'최다 클린시트':'최다 골', DF?(bg2.cs||0):bg2.goals, bg2)+cell('최고 OVR', bo.ovr, bo)+cell('최다 수상', (bh.hon||[]).length, bh)+'</div>'; })()   // 커리어 하이(아래가 비어 보여서)
    +(shelf.length?'<div class="b tro">'+shelf.map(function(k){ var sh=String(k).replace(/ 우승$/,'').replace(/^\S+ 리그 /,'리그 ');
        return '<div><i>'+crTrophy(k,34)+'</i><span>'+gmEsc(sh)+'</span><b>'+grp[k].c+'회</b></div>'; }).join('')+'</div>':'')
-   +'<div class="foot"><span class="clubs">'+clubs.slice(0,6).map(function(x){ return crCrest(x,20); }).join('<i>›</i>')+'</span><span>The Gunners Hub · 커리어 모드</span></div></div>';
+   +'<div class="foot"><span class="clubs">'+(clubs.length<=6 ? clubs.map(function(x){ return crCrest(x,20); }).join('<i>›</i>')
+       // 구단이 많으면 처음 2곳 · +N · 마지막 3곳(예전엔 앞 6곳만 그려서 은퇴한 구단이 빠졌다)
+       : clubs.slice(0,2).map(function(x){ return crCrest(x,20); }).join('<i>›</i>')+'<i>›</i><em>+'+(clubs.length-5)+'</em><i>›</i>'+clubs.slice(-3).map(function(x){ return crCrest(x,20); }).join('<i>›</i>'))+'</span><span>The Gunners Hub · 커리어 모드</span></div></div>';
 }
 function crShot(btn, share){
   if(btn.disabled) return;
