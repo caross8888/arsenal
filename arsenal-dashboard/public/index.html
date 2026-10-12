@@ -2213,10 +2213,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-blh summary{display:flex;align-items:baseline;justify-content:space-between;gap:8px;cursor:pointer;list-style:none;font-size:14px}
 .cr-blh summary::-webkit-details-marker{display:none}
 .cr-blh summary span{font-size:12px;color:var(--text-secondary)} .cr-blh summary span::after{content:' ▾'} .cr-blh[open] summary span::after{content:' ▴'}
-.cr-blh-r{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:6px;padding:6px 0;border-top:1px solid var(--border)}
+.cr-blh-r{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px;padding:6px 0;border-top:1px solid var(--border)}
 .cr-blh-r>div{min-width:0;display:flex;flex-direction:column} .cr-blh-r b{font-size:13px} .cr-blh-r small{font-size:11.5px;color:var(--text-secondary)}
-.cr-blh-r .c{font-size:11px;white-space:nowrap;color:var(--text-secondary);border:1px solid var(--border-bright);border-radius:999px;padding:2px 7px}
-.cr-blh-r .c.on{color:var(--green);border-color:var(--green)}
+.cr-blh-r .p{font-size:13px;font-weight:700;color:var(--gold)}
 .cr-hc-tr{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 .cr-hc-tr > span{font-size:10.5px;font-weight:700;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px}
 .cr-tr-ic{display:inline-block;width:18px;height:18px;border-radius:50%;flex:none;vertical-align:-4px;background-repeat:no-repeat;background-size:176.5%;background-position:50% 30%}
@@ -9552,14 +9551,13 @@ function crHist(){
 function crBack(){ return '<button class="gm-back" onclick="gameList()">← 게임 목록</button>'; }
 
 // ── 시즌 준비 ──────────────────────────────────────────────────────────
-// 재능 개화 안내(21~28세 1군): 특성마다 스탯 조건 충족 여부 + 오버롤 몫 + 이번 시즌에 채울 기록. 접어 두고 요약만 보인다.
+// 재능 개화 안내(21~28세 1군, 사용자 지정 — 조건은 감추고 연관 능력치와 대략의 확률만). 접어 두고 요약만 보인다.
 function crBloomHint(b){
   if(!b || !b.list || !b.list.length) return '';
-  var best=Math.max.apply(null, b.list.map(function(x){ return (x.sOk?10:0)+b.ovr; }));
-  return '<details class="cr-panel cr-blh"><summary><b>재능 개화</b><span>이번 시즌 최대 '+Math.round(best+10)+'% · 앞으로 '+b.n+'개까지</span></summary>'
-   +'<div class="cr-note" style="margin:6px 0 8px">스탯 조건 10% + 오버롤 '+b.ovr+'%(65부터 오르고 85에서 최대 10%) + 이번 시즌 기록 10%. 시즌 끝에 확률이 가장 높은 특성 하나를 굴려요.</div>'
-   +b.list.map(function(x){ return '<div class="cr-blh-r">'+crTraitIc(x.id)+'<div><b>'+gmEsc(x.n)+'</b><small>'+gmEsc(x.d)+'</small></div>'
-     +'<span class="c'+(x.sOk?' on':'')+'">'+gmEsc(x.stat)+' '+x.min+'+</span><span class="c">'+gmEsc(x.rec)+'</span></div>'; }).join('')+'</details>';
+  var best=Math.max.apply(null, b.list.map(function(x){ return x.p; }))+10;   // 서버 p는 이번 시즌 기록 몫(+10%)을 뺀 확률 — 활약하면 닿는 최대치로 보여 준다
+  return '<details class="cr-panel cr-blh"><summary><b>재능 개화</b><span>획득 확률 최대 '+best+'%'+(b.n<2?' · 1개 더':'')+'</span></summary>'
+   +'<div class="cr-note" style="margin:6px 0 4px">시즌이 끝나면 재능이 꽃필 수 있어요. 연관 능력치가 높고 이번 시즌에 활약할수록 확률이 올라요.</div>'
+   +b.list.map(function(x){ return '<div class="cr-blh-r">'+crTraitIc(x.id)+'<div><b>'+gmEsc(x.n)+'</b><small>연관 능력치 · '+gmEsc(x.stat)+'</small></div><span class="p">~'+(x.p+10)+'%</span></div>'; }).join('')+'</details>';
 }
 function crPrep(){
   var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lcs=pr.loanClubs||(pr.loanClub?[pr.loanClub]:[]), iv=pr.interview;   // 인터뷰는 이벤트 칸 없이 오버레이로

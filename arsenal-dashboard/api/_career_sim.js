@@ -8,7 +8,7 @@
 // 난수는 커리어 시드 + (나이·선택)으로 정해져서, 같은 시즌에 같은 선택을 하면 결과가 같다.
 // 함수들은 모듈 변수 C에 상태를 걸어 두고 계산한다(요청 하나 안에서만 쓰므로 안전).
 
-import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS, ACADEMY } from './_career_data.js';
+import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS, ACADEMY, BLOOM_CARD, BLOOM_COND } from './_career_data.js';
 
 export { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS };
 
@@ -136,11 +136,10 @@ const AW_PRESTIGE = [0.2, 105];   // 수상용 평점의 구단 수준 보정: [
 const EV_GROW = {coach:1.17, coachInj:0.10, coachStart:0, extra:1.3, extraInj:0.14, talk:1.2};
 // 특성: 18세부터 시즌 끝에 조건 스탯을 넘은 특성이 있으면 이 확률로 제안(최대 3개 제시, 하나 고름), 선수당 최대 TRAIT_MAX개
 const TRAIT_P = 0.3, TRAIT_MAX = 3, POS_TRAITS_ON = false;
-// 재능 개화(사용자 지정 — 포지션 특성을 고르는 대신 "얻는다"): 21~28세 1군 시즌 끝마다 특성별 확률 =
+// 재능 개화(사용자 지정 — 포지션 특성을 고르는 대신 "얻는다"): 카드(직군)마다 열리는 특성 3개(BLOOM_CARD) 중, 21~28세 1군 시즌 끝마다 특성별 확률 =
 // 스탯 조건(stat ≥ min) 10% + 오버롤 0~10%(65 → 85 비례) + 이번 시즌 기록(rec) 10%. 확률이 가장 높은 특성 하나만 굴린다(한 시즌 최대 1개), 커리어 최대 2개.
-// 16,000커리어 실측(효과 반영 전): 평균 0.86개 — 21~28세 최고 오버롤 ~69 0.29 · 70~74 0.66 · 75~79 1.12 · 80~84 1.44 · 90+ 1.66.
+// 16,000커리어 실측: 평균 0.87개(0개 40% · 1개 33% · 2개 27%), 카드별 0.71(스위퍼)~1.07(펄스나인).
 const BLOOM_AGE = [21, 28], BLOOM_MAX = 2, BLOOM_STEP = 0.1, BLOOM_OVR = [65, 85];
-const REC_N = {goals:'골', ast:'도움', cs:'클린시트', rating:'평점', apps:'출전'};
 const TRAIT_BY_ID = new Map([...TRAITS, ...CTRAITS.map(t => ({...t, pos:'공통'}))].map(t => [t.id, t]));
 // 공통 특성: 17세 시즌 끝에 3개 제시(반드시 하나). 무조건 이득만(사용자 지정 — 다른 스탯을 깎지 않는다):
 // 성장하는 시즌마다 대상 스탯 +CT_SHIFT(누적 CT_CAP까지, C.ctg). 오버롤은 그대로.
@@ -177,15 +176,16 @@ function ctBonus(){
   return {g:1+(b&&b.g||0)*n, a:1+(b&&b.a||0)*n, cs:1+(b&&b.cs||0)*n, r:(b&&b.r||0)*n};
 }
 const commonOf = () => (C.traits||[]).map(id => TRAIT_BY_ID.get(id)).find(t => t && t.pos==='공통');
-const ownPos = () => (C.traits||[]).filter(id => (TRAIT_BY_ID.get(id)||{}).pos === C.pos);
+const ownPos = () => (C.traits||[]).filter(id => { const t = TRAIT_BY_ID.get(id); return t && t.pos !== '공통'; });
 const bloomOn = () => C.age >= BLOOM_AGE[0] && C.age <= BLOOM_AGE[1] && ownPos().length < BLOOM_MAX;
 const ovrPart = () => BLOOM_STEP * Math.max(0, Math.min(1, (cOvr() - BLOOM_OVR[0]) / (BLOOM_OVR[1] - BLOOM_OVR[0])));
-// 특성마다 지금 스탯·오버롤로 채운 몫(row가 있으면 이번 시즌 기록까지)
+// 내 카드에 열리는 특성마다 지금 스탯·오버롤로 채운 몫(row가 있으면 이번 시즌 기록까지)
 function bloomList(row){
   const st = STATS[C.pos], have = new Set(C.traits||[]), op = ovrPart();
-  return TRAITS.filter(t => t.pos === C.pos && t.rec && !have.has(t.id)).map(t => {
-    const sOk = Math.round(C.st[st.indexOf(t.stat)]) >= t.min, rOk = !!row && row[t.rec[0]] >= t.rec[1];
-    return {t, sOk, rOk, p: (sOk ? BLOOM_STEP : 0) + op + (rOk ? BLOOM_STEP : 0)};
+  const card = CARDS[C.pos][C.card].n;
+  return (BLOOM_CARD[card] || []).filter(id => !have.has(id)).map(id => {
+    const [stat, min, rk, rmin] = BLOOM_COND[id][card] || BLOOM_COND[id][C.pos], sOk = Math.round(C.st[st.indexOf(stat)]) >= min, rOk = !!row && row[rk] >= rmin;
+    return {t: TRAIT_BY_ID.get(id), stat, sOk, p: (sOk ? BLOOM_STEP : 0) + op + (rOk ? BLOOM_STEP : 0)};
   });
 }
 function rollBloom(row){
@@ -196,13 +196,13 @@ function rollBloom(row){
   C.traits = (C.traits||[]).concat(pick.t.id);
   return pick.t.id;
 }
-// 준비 화면 안내: 개화할 수 있는 특성과 지금 채운 조건(기록은 이번 시즌에 채워야 한다)
-const bloomView = () => !bloomOn() || youth() ? null : {n: BLOOM_MAX - ownPos().length, ovr: Math.round(ovrPart()*100),
-  list: bloomList(null).map(x => ({id:x.t.id, n:x.t.n, d:x.t.d, stat:x.t.stat, min:x.t.min, sOk:x.sOk, rec:REC_N[x.t.rec[0]]+' '+x.t.rec[1]+(x.t.rec[0]==='rating'?'.0':'')+'+'}))};
+// 준비 화면 안내(사용자 지정 — 조건은 감추고 연관 능력치와 대략의 확률만): p = 지금 스탯·오버롤로 채운 확률(%), 이번 시즌 기록을 채우면 +10%
+const bloomView = () => !bloomOn() || youth() ? null : {n: BLOOM_MAX - ownPos().length,
+  list: bloomList(null).map(x => ({id:x.t.id, n:x.t.n, stat:x.stat, p:Math.round(x.p*100)}))};
 // 가진 특성의 효과를 곱/합으로 모은다
 function traitMods(){
   const m = {g:1, a:1, cs:1, r:0, st:0, inj:0, goty:1};
-  for(const id of (C.traits||[])){ const e = (TRAIT_BY_ID.get(id)||{}).eff || {};
+  for(const id of (C.traits||[])){ const t = TRAIT_BY_ID.get(id)||{}, e = (t.effPos||{})[C.pos] || t.eff || {};
     m.g *= e.g||1; m.a *= e.a||1; m.cs *= e.cs||1; m.r += e.r||0; m.st += e.st||0; m.inj += e.inj||0; m.goty *= e.goty||1; }
   return m;
 }
@@ -216,8 +216,8 @@ const LOAN_STAY = [1.0, 0.03], LOAN_GO = 1.0, LOAN_GO_Y = 1.0;   // 남기: [성
 const LOAN_P = 0.35, LOAN_R = [-20, 6], LOAN_Q = 1.42, LOAN_PLAY = [0.3, 1.0], LOAN_LVL = 0.025;
 const WF_BONUS = {1:0, 2:0, 3:0.04, 4:0.13, 5:0.18};
 // 공통 특성(모두 하나씩 받고 무조건 이득)을 넣으며 평균 기록이 오른 만큼 내렸다(예전 G 0.446/0.13/0.035 · A 0.19/0.17/0.06, 발롱 mu 134).
-// 재능 개화(포지션 특성 획득)를 넣으며 다시 내렸다(직전 G 0.41/0.126/0.031 · A 0.181/0.168/0.052, 발롱 mu 126, 골든슈 29골).
-const G_RATE = {FW:0.394, MF:0.121, DF:0.0298}, A_RATE = {FW:0.175, MF:0.163, DF:0.0505};
+// 재능 개화(포지션 특성 획득)를 넣으며 다시 맞췄다(직전 G 0.41/0.126/0.031 · A 0.181/0.168/0.052, 발롱 mu 126).
+const G_RATE = {FW:0.40, MF:0.123, DF:0.0298}, A_RATE = {FW:0.175, MF:0.163, DF:0.0505};
 // 클린시트를 출전 경기 전체로 세면서(약 1.5배) cs 점수는 그만큼 낮췄다(예전 MF 0.5 · DF 3.5 — DF는 포지션 점수 중앙을 맞추느라 조금 더 낮춤).
 const CONTRIB = {FW:{g:3,a:2,cs:0}, MF:{g:5.4,a:4.5,cs:0.33}, DF:{g:8,a:5,cs:2.2}};
 // 측면 수비 카드는 도움이 본업이라 도움 비중을 키우고 클린시트 비중을 줄인다(사용자 지정 — "윙백·풀백은 클린시트보다 도움").
@@ -241,9 +241,9 @@ const DEV = [0.8, 1.2];
 const K_GROW = 0.297, DAMP = [0.02, 24], PLAY_C = [0.5, 0.2],   // 출전 계수 바닥 0.75/0.45 → 0.5/0.2: 뛰는 곳을 고르는 게 더 중요해졌다(선택 강화)
   CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
 const INJ = [0.10, 0.008, 0.003];   // 일반 부상 기본, 큰 부상 기본, 30세 이후 큰 부상 증가(1살당)
-// mu 126 → 128: 재능 개화로 상위권 기록이 오른 만큼(발롱 커리어당 0.045 유지).
+// mu 126 → 127: 재능 개화로 상위권 기록이 오른 만큼(발롱 커리어당 0.045 → 0.043).
 // mu 138 → 126(사용자 지정 — 성장 하향 뒤 발롱이 반토막 나서 상위권 공격수·미드필더가 수비수 아래로 밀렸다. 상위 1% 공격수 발롱 3.0 → 4.2개)
-const BALLON = {mu:128, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.08, DF:0.95}, top:4, inc:10, recW:0.7, fat:{FW:0, MF:5, DF:25}};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점.
+const BALLON = {mu:127, sd:14, big:45, bigW:1.5, pos:{FW:1.03, MF:1.08, DF:0.95}, top:4, inc:10, recW:0.7, fat:{FW:0, MF:5, DF:25}};   // 포지션 배율: 미드·수비 가점(사용자 지정 — 예전 1.03/0.93/0.82로는 발롱 92%가 공격수). inc 연속 수상 가점.
 // fat: 받은 횟수당 감점, 포지션별 — 공격수는 10회도 자연스럽지만 미드필더는 메시·호날두급이어도 5~6회, 수비수는 세대급이어도 2회 안팎이 상식선(사용자 지정)
 const INJ_MINOR = ['햄스트링 부상','발목 염좌','허벅지 근육 부상','종아리 부상','무릎 타박상'];
 const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골절'];
@@ -798,7 +798,7 @@ export function playSeason(state, choice){
       let motm = 0; for(let mi=0; mi<3; mi++) if(rng()<Math.max(0,awR-7.0)*0.25) motm++;
       if(motm) add('이달의 선수'+(motm>1?' ×'+motm:''),'C');
       if(rating>=7.6 && apps>=25 && rng()<0.4) add('구단 올해의 선수','C');
-      if(goals>=30 && rng()<0.6) add('유러피언 골든슈','B');   // 29 → 30골: 재능 개화로 상위권 골이 오른 만큼
+      if(goals>=29 && rng()<0.6) add('유러피언 골든슈','B');
     }
     if(inUCL){
       if(uG>=8) add('챔스 득점왕','B'); if(uA>=6) add('챔스 도움왕','B');
@@ -948,7 +948,7 @@ function rollTraits(){
 }
 export const traitView = (id, pos) => { const t = TRAIT_BY_ID.get(id); if(!t) return null;
   if(t.pos==='공통' && t.d) return {id:t.id, n:t.n, d:t.d, common:true};
-  return t.pos==='공통' ? {id:t.id, n:t.n, d:t.s[pos]+' 성장 ↑ · '+((CT_LABEL[pos]||{})[t.s[pos]]||'')+' ↑', common:true} : {id:t.id, n:t.n, d:t.d, stat:t.stat, min:t.min}; };
+  return t.pos==='공통' ? {id:t.id, n:t.n, d:t.s[pos]+' 성장 ↑ · '+((CT_LABEL[pos]||{})[t.s[pos]]||'')+' ↑', common:true} : {id:t.id, n:t.n, d:((t.effPos||{})[pos]||{}).d || t.d, stat:t.stat, min:t.min}; };
 
 // ── 이적 · 방출 ────────────────────────────────────────────────────────
 // 방출: 31세 이후 오버롤 66 미만이거나 소속팀 선발 확률 15% 미만이면 재계약 불가(잔류 불가) → 낮은 구단의 말년 제안만.
