@@ -2217,8 +2217,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-blh-r>div{min-width:0;display:flex;flex-direction:column} .cr-blh-r b{font-size:13px} .cr-blh-r small{font-size:11.5px;color:var(--text-secondary)}
 .cr-blh-r .p{font-size:13px;font-weight:700;color:var(--gold)}
 .cr-hc-tr{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
-/* 밝은 유니폼(흰색·노랑) 카드: 글자·막대를 어둡게 */
+/* 모바일: 특성은 아이콘만 가로로(사용자 지정 — 이름까지 나오면 선수 카드가 위아래로 너무 길어졌다). 누르면 그 특성 이름이 펼쳐진다. */
+.cr-hc-tr > span em{font-style:normal}
+@media (max-width:899px){
+  .cr-hc-tr{flex-wrap:nowrap;gap:5px;align-items:center}
+  .cr-hc .cr-hc-tr > span{padding:2px;cursor:pointer}
+  .cr-hc .cr-hc-tr > span em{display:none}
+  .cr-hc .cr-hc-tr > span.on{padding:2px 8px 2px 2px}
+  .cr-hc .cr-hc-tr > span.on em{display:inline;white-space:nowrap}
+}
 .cr-hc.dk{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+/* 밝은 유니폼(흰색·노랑) 카드: 글자·막대를 어둡게 */
 .cr-hc.lt{color:#14161C;box-shadow:inset 0 0 0 1px rgba(20,22,28,.1),0 1px 4px rgba(20,22,28,.08)}   /* 라이트 모드 바탕(#ECEEF2)에서 흰 카드 테두리가 묻히지 않게 */
 .cr-hc.lt .cr-hc-s,.cr-hc.lt .cr-hc-o span,.cr-hc.lt .cr-hc-st span{color:rgba(20,22,28,.72)}
 .cr-hc.lt .cr-hc-n span,.cr-hc.lt .cr-hc-o b{color:#8A6A12}
@@ -9572,7 +9581,7 @@ function crHead(){
    +'<div class="cr-hc-s">'+gmEsc(p.club.team)+' · '+gmEsc(card.n)+'</div>'
    +'<div class="cr-hc-s">'+p.foot+(p.pos!=='DF'?' · 약발 '+crStars(p.wf):'')+(p.glass?' · 🩹 유리몸':'')+'</div>'
    +(p.h?'<div class="cr-hc-s">'+gmEsc(p.body||'표준')+' · '+p.h+'cm · '+p.w+'kg</div>':'')
-   +(p.traits&&p.traits.length?'<div class="cr-hc-tr">'+p.traits.map(function(t){ return '<span title="'+gmEsc(t.d)+'">'+crTraitIc(t.id)+gmEsc(t.n)+'</span>'; }).join('')+'</div>':'')+'</div>'
+   +(p.traits&&p.traits.length?'<div class="cr-hc-tr">'+p.traits.map(function(t){ return '<span title="'+gmEsc(t.n+' · '+t.d)+'" onclick="this.classList.toggle(\'on\')">'+crTraitIc(t.id)+'<em>'+gmEsc(t.n)+'</em></span>'; }).join('')+'</div>':'')+'</div>'
    +'<div class="cr-hc-o age"><b>'+p.age+'</b><span>AGE</span></div><div class="cr-hc-o"><b>'+p.ovr+'</b><span>OVR</span></div></div>'
    +'<div class="cr-hc-st">'+st.map(function(n,i){
       // 시즌 결과 화면: 이번 시즌 오른 만큼은 초록(내린 만큼은 빨강) 구간으로, 막 끝난 시즌이면 차오르는 애니메이션
