@@ -8644,13 +8644,14 @@ function openGames(fromHistory){
 // 버튼으로 직접 게임 목록(뒤로 버튼 없음)까지 나오면 남은 가드를 걷어 낸다 — 안 그러면 다음 뒤로 가기가 한 번 헛돈다.
 var _gmIgnorePop=false;
 function gmSyncBack(){
-  if(!inGames()) return;
+  if(!inGames() || _gmIgnorePop || (history.state && history.state.crtov)) return;   // 오버레이 기록이 맨 위거나 걷어 내는 중이면 그 뒤에
   var has=!!document.querySelector('#gameRoot .gm-back'), top=!!(history.state && history.state.gsub);
   if(has && !top) history.pushState({tab:'games', gsub:1}, '', '#games');
   else if(!has && top){ _gmIgnorePop=true; history.back(); }
 }
 function gmBackPop(){
-  if(_gmIgnorePop){ _gmIgnorePop=false; return true; }
+  if(_gmIgnorePop){ _gmIgnorePop=false; setTimeout(gmSyncBack, 0); return true; }
+  var x=document.querySelector('#crTov .cr-tm-x'); if(x){ x.click(); setTimeout(gmSyncBack, 0); return true; }   // 오버레이만 닫는다(기록은 이미 빠졌다)
   if(!inGames() || location.hash!=='#games') return false;
   var b=document.querySelector('#gameRoot .gm-back'); if(!b) return false;
   b.click(); return true;
@@ -9580,11 +9581,14 @@ function crWelcomeGo(){
 
 // ── 서버 응답 → 화면 ──────────────────────────────────────────────────
 // 특성 선택 오버레이는 body 바로 아래에 둔다(섹션 안에 두면 헤더·하단 탭보다 아래 깔린다)
+// 닫기(✕) 버튼이 있는 오버레이(이적시장·시즌 반응)는 기록을 하나 쌓아 두고, 폰·브라우저 뒤로 가기는 그 오버레이만 닫는다(사용자 지정 —
+// 예전엔 게임 자체가 나가졌다). ✕로 닫으면 쌓아 둔 기록을 걷어 낸다. 고르기 전엔 못 닫는 오버레이(특성·이벤트)는 기록을 안 쌓는다.
 function crTovSet(html){
-  var o=document.getElementById('crTov');
-  if(!html){ if(o) o.remove(); return; }
+  var o=document.getElementById('crTov'), st=history.state||{};
+  if(!html){ if(o) o.remove(); if(st.crtov){ _gmIgnorePop=true; history.back(); } return; }
   if(!o){ o=document.createElement('div'); o.id='crTov'; document.body.appendChild(o); }
   o.innerHTML=html;
+  if(html.indexOf('cr-tm-x')>=0 && !st.crtov && inGames()) history.pushState({tab:'games', crtov:1}, '', '#games');
 }
 function crShow(v){
   crTovSet('');
