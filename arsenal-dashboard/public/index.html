@@ -1946,16 +1946,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 #crShotBox.shooting{padding:16px;background:var(--navy)}
 .cr-shot-row{display:grid;grid-template-columns:1.3fr 1fr;gap:8px}.cr-shot-row .cr-shot-btn{width:100%;margin:0}.cr-shot-btn.ghost{background:none;color:var(--text-secondary)}
 #crShareBox{position:fixed;left:-10000px;top:0}
-.cr-share{width:360px;height:450px;box-sizing:border-box;border-radius:0;padding:18px;background:radial-gradient(120% 80% at 85% 0%,#4a0b0e,#0B0D12 62%);color:#F0F2F7;display:flex;flex-direction:column;gap:8px;overflow:hidden;font-family:var(--fb)}
-.cr-share .top{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:3px;color:#C8A84B;font-weight:700}.cr-share .top b{display:flex;align-items:center;gap:5px;letter-spacing:0;font-size:12px;color:rgba(255,255,255,.8)}
-.cr-share .nm{font-size:30px;font-weight:900;line-height:1.1;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cr-share .sub{font-size:12.5px;color:rgba(255,255,255,.75)}
-.cr-share .row{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin-top:2px}
-.cr-share .pk{background:linear-gradient(160deg,#E9C766,#B8892E);border-radius:14px;padding:6px 14px;color:#1d1b16;text-align:center}.cr-share .pk small{display:block;font-size:10px;font-weight:800;letter-spacing:2px}.cr-share .pk b{font-family:var(--fd);font-size:46px;font-weight:400;line-height:1}
-.cr-share .sc small{font-size:11px;color:rgba(255,255,255,.7)}.cr-share .sc b{display:block;font-family:var(--fd);font-size:36px;font-weight:400;color:#E4C766;line-height:1}.cr-share .st{font-size:12px;color:rgba(255,255,255,.8)}
-.cr-share .tro{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px}.cr-share .tro>div{position:relative;background:rgba(255,255,255,.06);border-radius:10px;padding:6px 2px 5px;text-align:center}
-.cr-share .tro i{display:block;height:38px}.cr-share .tro i svg{display:inline-block}.cr-share .tro b{position:absolute;top:4px;right:6px;font-size:11px;color:#E4C766}.cr-share .tro span{font-size:10.5px;line-height:1.2;display:block;word-break:keep-all}
-.cr-share .clubs{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:auto}.cr-share .clubs i{font-style:normal;color:rgba(255,255,255,.4);font-size:12px}
-.cr-share .foot{display:flex;justify-content:space-between;align-items:flex-end;font-size:10px;color:rgba(255,255,255,.5);min-height:20px}
+.cr-share{width:360px;height:450px;box-sizing:border-box;padding:12px;color:#F0F2F7;display:flex;flex-direction:column;gap:8px;overflow:hidden;font-family:var(--fb);--gd:#E9C766;--bd:rgba(150,180,255,.22);--ln:rgba(255,255,255,.12)}
+.cr-share .b{background:rgba(255,255,255,.035);border:1px solid var(--bd);border-radius:12px;padding:9px}
+.cr-share .top{display:flex;gap:10px;align-items:center}.cr-share .av{flex:none;width:76px;height:88px;border-radius:9px;overflow:hidden;position:relative;background:radial-gradient(circle at 50% 30%,rgba(120,150,220,.28),rgba(20,30,60,.6) 75%);border:1px solid var(--bd)}
+.cr-share .av img{position:absolute;left:-28%;top:-2%;width:156%}
+.cr-share .id{min-width:0;flex:1}.cr-share .k{font-size:9px;letter-spacing:2.2px;color:var(--gd);font-weight:800}.cr-share .nm{font-size:24px;font-weight:900;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0}
+.cr-share .s{font-size:11px;color:rgba(255,255,255,.68);font-weight:600;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-share .big{display:grid;grid-template-columns:1.25fr 1.1fr .85fr;padding:6px 2px}.cr-share .big>div{display:flex;align-items:center;justify-content:center;gap:2px;min-width:0}.cr-share .big>div+div{border-left:1px solid var(--ln)}
+.cr-share .big span{display:flex;flex-direction:column;align-items:center;line-height:1}.cr-share .big b{font-family:var(--fd);font-size:30px;font-weight:400;color:var(--gd)}.cr-share .big b.l{font-size:25px}.cr-share .big b.w{color:#fff}
+.cr-share .big small{font-size:9.5px;font-weight:800;color:var(--gd);margin-top:2px;white-space:nowrap}.cr-share .big img.lr{height:34px;width:auto}
+.cr-share .st{display:grid;grid-template-columns:repeat(4,1fr);padding:7px 2px}.cr-share .st>div{display:flex;align-items:center;justify-content:center;gap:4px}.cr-share .st>div+div{border-left:1px solid var(--ln)}
+.cr-share .st img{width:18px;height:18px;opacity:.78}.cr-share .st span{display:flex;flex-direction:column;line-height:1.1}.cr-share .st b{font-size:13px;font-weight:800}.cr-share .st small{font-size:9.5px;color:rgba(255,255,255,.68)}
+.cr-share .tro{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding:8px 2px}.cr-share .tro>div{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}.cr-share .tro>div+div{border-left:1px solid var(--ln)}
+.cr-share .tro span{font-size:9px;line-height:1.2;color:rgba(255,255,255,.8);margin-top:3px;word-break:keep-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.cr-share .tro b{font-size:10px;font-weight:800}
+.cr-share .hi{display:grid;grid-template-columns:repeat(3,1fr);padding:7px 2px}.cr-share .hi>div{text-align:center;min-width:0;padding:0 3px}.cr-share .hi>div+div{border-left:1px solid var(--ln)}.cr-share .hi small{display:block;font-size:9.5px;font-weight:800;color:var(--gd)}.cr-share .hi b{display:block;font-family:var(--fd);font-size:24px;font-weight:400;line-height:1.1}.cr-share .hi span{display:block;font-size:9.5px;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-share .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:9.5px;color:rgba(255,255,255,.45)}.cr-share .clubs{display:flex;align-items:center;gap:3px;min-width:0;overflow:hidden}.cr-share .clubs i{font-style:normal;color:rgba(255,255,255,.35)}
 .cr-shot-btn{display:block;margin:12px auto 0;font:inherit;font-size:13px;font-weight:700;color:var(--text);background:var(--surface2);border:1px solid var(--border-bright);border-radius:999px;padding:9px 16px;cursor:pointer}
 .cr-shot-btn:disabled{opacity:.6;cursor:default}
 .cr-rc-minor-t{font-size:12.5px;color:var(--text-secondary);text-align:center}
@@ -10872,20 +10877,38 @@ function crShotFonts(){
 }
 // 공유 카드(사용자 지정): 은퇴 카드 전체는 너무 길어서 4:5 한 장 — 이름·PEAK·점수·통산·대표 수상 6개·거쳐 간 구단(사인은 넣었다가 뺐다).
 // 화면 밖에 잠깐 그려서 캡처하고 지운다. 테마와 상관없이 어두운 배경 고정(공유했을 때 늘 같은 모양).
+// 공유 카드(사용자 지정 — 은퇴 카드와 같은 테마): 4:5 한 장. 팀색 배경 위 박스 — 머리(도트 선수·이름·국적·기간) · PEAK/점수/우승 · 통산 4칸 · 대표 트로피 6 · 거쳐 간 구단.
+// 화면 밖에 잠깐 그려서 캡처하고 지운다. 도트 선수는 캔버스로 그려지므로 CR._shareAv(약속)를 기다린 뒤 캡처한다(crShot).
+// 통산 아이콘은 마스크(CSS) 대신 그냥 <img> — 캡처 라이브러리가 mask 이미지를 못 그릴 수 있어서.
 function crShareHtml(c){
   crTrophyDefs();
-  var t=c.tot, card=CR.meta.cards[c.pos][c.card], DF=c.pos==='DF', grp={}, order=[];
+  var t=c.tot, card=CR.meta.cards[c.pos][c.card], nat=crNat(c.nation), DF=c.pos==='DF', WIDE=DF && /풀백|윙백/.test(card.n), grp={}, order=[];
   c.honors.forEach(function(x){ var nm=String(x[0]).split(' ×')[0], n=+(String(x[0]).split('×')[1])||1; if(!grp[nm]){ grp[nm]={tier:x[1], c:0}; order.push(nm); } grp[nm].c+=n; });
   order.sort(function(a,b){ return 'SABC'.indexOf(grp[a].tier)-'SABC'.indexOf(grp[b].tier) || grp[b].c-grp[a].c; });
-  var nTro=c.honors.filter(function(x){ return x[2]!=='ind' && /우승/.test(x[0]); }).length;
-  var clubs=[]; (c.seasons||[]).forEach(function(r){ if(r.youth) return; var L=clubs[clubs.length-1]; if(L && L.n===r.club) return; clubs.push({n:r.club, id:r.id}); });
-  return '<div class="cr-share"><div class="top"><span>CAREER</span><b>'+crFlag(c.nation)+gmEsc(crNat(c.nation).n)+'</b></div>'
-   +'<div class="nm">'+gmEsc(c.name)+'</div><div class="sub">'+gmEsc(card.n)+' · #'+c.num+' · '+c.age+'세 은퇴</div>'
-   +'<div class="row"><div class="pk"><small>PEAK</small><b>'+c.peak+'</b></div><div class="sc"><small>커리어 점수</small><b>'+Number(c.score).toLocaleString()+'</b>'
-   +'<div class="st">'+t.apps+'경기 · '+t.goals+'골 · '+(DF?(t.cs||0)+'CS':t.ast+'도움')+' · '+nTro+'우승</div></div></div>'
-   +(order.length?'<div class="tro">'+order.slice(0,6).map(function(k){ return '<div><i>'+crTrophy(k,38)+'</i>'+(grp[k].c>1?'<b>×'+grp[k].c+'</b>':'')+'<span>'+gmEsc(k)+'</span></div>'; }).join('')+'</div>':'')
-   +'<div class="clubs">'+clubs.map(function(x){ return crCrest(x,26); }).join('<i>›</i>')+'</div>'
-   +'<div class="foot"><span>The Gunners Hub · 커리어 모드</span></div></div>';
+  var nTro=c.honors.filter(function(x){ return x[2]!=='ind' && /우승/.test(x[0]); }).length, yr=function(a){ return 2027+a-15; };
+  var apps={}, main=null, seen={}, clubs=[];
+  (c.seasons||[]).forEach(function(r){ if(r.youth || r.loan) return; apps[r.club]=(apps[r.club]||0)+r.apps; if(!main || apps[r.club]>apps[main.n]) main={n:r.club, id:r.id}; if(!seen[r.club]){ seen[r.club]=1; clubs.push({n:r.club, id:r.id}); } });
+  var K=crKit(main), bc=crLum(K.shirt)>0.6 ? K.brand : K.shirt;
+  var bg='radial-gradient(120% 45% at 100% 0%,'+crMix(bc,'#000000',0.35)+'99,transparent 62%),linear-gradient(180deg,'+crMix(bc,'#000000',0.74)+' 0%,#0B0D12 55%)';
+  CR._shareAv=crAvatar(crAvLook(c), K, c.num).catch(function(){ return ''; });
+  var st=(WIDE ? [['apps',t.apps,'경기'],['assists',t.ast,'도움'],['cs',t.cs||0,'클린시트'],['caps',t.caps||0,'A매치']]
+             : [['apps',t.apps,'경기'],['goals',t.goals,'골'],DF?['cs',t.cs||0,'클린시트']:['assists',t.ast,'도움'],['caps',t.caps||0,'A매치']]);
+  var shelf=order.slice(0,6);
+  return '<div class="cr-share" style="background:'+bg+'">'
+   +'<div class="b top"><div class="av"><img alt="" id="crShareAv"></div><div class="id"><div class="k">★ HALL OF FAME ★</div><div class="nm">'+gmEsc(c.name)+'</div>'
+   +'<div class="s">'+crFlag(c.nation)+gmEsc(nat.n)+' · '+gmEsc(card.n)+(c.num?' · #'+c.num:'')+'</div>'
+   +'<div class="s">'+((c.seasons||[]).length?yr(c.seasons[0].age)+' – '+yr(c.age)+' · ':'')+c.age+'세 은퇴'+(main?' · '+gmEsc(main.n):'')+'</div></div></div>'
+   +'<div class="b big"><div class="pk"><img class="lr" src="/img/career/ic/laurel_l.png" alt=""><span><b>'+c.peak+'</b><small>PEAK OVR</small></span><img class="lr" src="/img/career/ic/laurel_r.png" alt=""></div>'
+   +'<div><span><b'+(c.score>=10000?' class="l"':'')+'>'+Number(c.score).toLocaleString()+'</b><small>커리어 점수</small></span></div>'
+   +'<div><span><b class="w">'+nTro+'</b><small>우승</small></span></div></div>'
+   +'<div class="b st">'+st.map(function(x){ return '<div><img src="/img/career/ic/'+x[0]+'.png" alt=""><span><b>'+x[1]+'</b><small>'+x[2]+'</small></span></div>'; }).join('')+'</div>'
+   +(function(){ var ns=(c.seasons||[]).filter(function(r){ return !r.youth; }); if(!ns.length) return '';
+       var bg2=ns.reduce(function(a,b){ return (DF?(b.cs||0)>(a.cs||0):b.goals>a.goals)?b:a; }), bo=ns.reduce(function(a,b){ return b.ovr>a.ovr?b:a; }), bh=ns.reduce(function(a,b){ return (b.hon||[]).length>(a.hon||[]).length?b:a; });
+       var cell=function(k,v,r){ return '<div><small>'+k+'</small><b>'+v+'</b><span>'+r.age+'세 · '+gmEsc(r.club)+'</span></div>'; };
+       return '<div class="b hi">'+cell(DF?'최다 클린시트':'최다 골', DF?(bg2.cs||0):bg2.goals, bg2)+cell('최고 OVR', bo.ovr, bo)+cell('최다 수상', (bh.hon||[]).length, bh)+'</div>'; })()   // 커리어 하이(아래가 비어 보여서)
+   +(shelf.length?'<div class="b tro">'+shelf.map(function(k){ var sh=String(k).replace(/ 우승$/,'').replace(/^\S+ 리그 /,'리그 ');
+       return '<div><i>'+crTrophy(k,34)+'</i><span>'+gmEsc(sh)+'</span><b>'+grp[k].c+'회</b></div>'; }).join('')+'</div>':'')
+   +'<div class="foot"><span class="clubs">'+clubs.slice(0,6).map(function(x){ return crCrest(x,20); }).join('<i>›</i>')+'</span><span>The Gunners Hub · 커리어 모드</span></div></div>';
 }
 function crShot(btn, share){
   if(btn.disabled) return;
@@ -10907,7 +10930,9 @@ function crShot(btn, share){
   var done0=done; done=function(){ box.classList.remove('shooting'); dets.forEach(function(x,i){ x.open=detOpen[i]; }); done0(); };
   // 화면 밖(공유 카드)의 지연 로딩 이미지는 끝까지 안 불려 와서 저장이 멈췄다 → 즉시 로딩 + 4초 상한
   imgs.forEach(function(i){ i.loading='eager'; });
-  Promise.race([Promise.all(imgs.map(function(i){ return i.complete ? 0 : new Promise(function(r){ i.onload=i.onerror=r; }); })), new Promise(function(r){ setTimeout(r, 4000); })])
+  var avReady=share && CR._shareAv ? CR._shareAv.then(function(u){ var el=document.getElementById('crShareAv'); if(el && u) return new Promise(function(r){ el.onload=el.onerror=r; el.src=u; }); }) : Promise.resolve();
+  var waitImgs=[].slice.call(box.querySelectorAll('img')).filter(function(i){ return i.id!=='crShareAv'; });
+  avReady.then(function(){ return Promise.race([Promise.all(waitImgs.map(function(i){ i.loading='eager'; return i.complete ? 0 : new Promise(function(r){ i.onload=i.onerror=r; }); })), new Promise(function(r){ setTimeout(r, 4000); })]); })
     .then(function(){ return Promise.all([crLoadH2I(), crShotFonts()]); })
     // includeQueryParams: html-to-image는 이미지 캐시 키에서 쿼리를 떼어 내서, 엠블럼 프록시(…/career?a=logo&id=N)가 전부 같은 키가 됐다
     // — 저장한 사진에서 모든 구단 엠블럼이 처음 받은 하나로 통일되던 버그(사용자 제보).
