@@ -1794,6 +1794,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @keyframes crBarFade{from{opacity:1}to{opacity:.35}}
 @media (prefers-reduced-motion: reduce){.cr-hc-st u.up.grow,.cr-hc-st u.dn.fade{animation:none}}
 .cr-hc-st em{display:block;height:100%;background:#fff;border-radius:2px;transition:width .5s}
+/* 99(최고치)를 찍은 능력치는 금색 강조(사용자 지정) */
+.cr-hc-st>div.max{background:linear-gradient(160deg,rgba(233,199,102,.32),rgba(233,199,102,.12));box-shadow:inset 0 0 0 1.5px #E9C766}
+.cr-hc-st>div.max b{color:#F5D77A}
+.cr-hc-st>div.max em{background:#E9C766}
+.cr-hc.lt .cr-hc-st>div.max{background:linear-gradient(160deg,#2a2c33,#14161C);box-shadow:inset 0 0 0 1.5px #E9C766}   /* 흰·노랑 카드에선 금색이 묻혀서 검은 타일에 금색 */
+.cr-hc.lt .cr-hc-st>div.max b{color:#F5D77A}
+.cr-hc.lt .cr-hc-st>div.max span{color:rgba(255,255,255,.75)}
+.cr-hc.lt .cr-hc-st>div.max i{background:rgba(255,255,255,.18)}
+.cr-hc.lt .cr-hc-st>div.max em{background:#E9C766}
 .cr-stars{color:#E9C766;letter-spacing:1px}
 .cr-loanc{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px;width:100%;border:1.5px solid transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
 .cr-loanc[aria-pressed="true"]{border-color:var(--red);background:color-mix(in srgb,var(--red) 12%,var(--surface2))}
@@ -9592,7 +9601,7 @@ function crHead(){
       var v=p.st[i], d=dl?dl[i]:0, base=d>0?v-d:v, X=function(x){ return Math.max(0,Math.min(100,(x-30)/69*100)).toFixed(1); }, seg='';
       if(d>0) seg='<u class="up'+(CR.fresh?' grow':'')+'" style="left:'+X(base)+'%;width:'+(X(v)-X(base)).toFixed(1)+'%"></u>';
       if(d<0) seg='<u class="dn'+(CR.fresh?' fade':'')+'" style="left:'+X(v)+'%;width:'+(X(v-d)-X(v)).toFixed(1)+'%"></u>';
-      return '<div><b>'+v+(d?'<small class="'+(d>0?'up':'dn')+'">'+(d>0?'+':'')+d+'</small>':'')+'</b><span>'+n+'</span><i><em style="width:'+X(base)+'%"></em>'+seg+'</i></div>'; }).join('')+'</div></div>';
+      return '<div'+(v>=99?' class="max"':'')+'><b>'+v+(d?'<small class="'+(d>0?'up':'dn')+'">'+(d>0?'+':'')+d+'</small>':'')+'</b><span>'+n+'</span><i><em style="width:'+X(base)+'%"></em>'+seg+'</i></div>'; }).join('')+'</div></div>';
 }
 // 커리어 기록: 은퇴 카드와 같은 표(나이 알약 · 엠블럼 · 그 시즌 트로피 · 오버롤 색 배지), 최근 시즌이 위
 function crHist(){
