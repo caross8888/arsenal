@@ -2218,6 +2218,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-blh-r .p{font-size:13px;font-weight:700;color:var(--gold)}
 .cr-hc-tr{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 /* 밝은 유니폼(흰색·노랑) 카드: 글자·막대를 어둡게 */
+.cr-hc.dk{box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
 .cr-hc.lt{color:#14161C;box-shadow:inset 0 0 0 1px rgba(20,22,28,.1),0 1px 4px rgba(20,22,28,.08)}   /* 라이트 모드 바탕(#ECEEF2)에서 흰 카드 테두리가 묻히지 않게 */
 .cr-hc.lt .cr-hc-s,.cr-hc.lt .cr-hc-o span,.cr-hc.lt .cr-hc-st span{color:rgba(20,22,28,.72)}
 .cr-hc.lt .cr-hc-n span,.cr-hc.lt .cr-hc-o b{color:#8A6A12}
@@ -9557,8 +9558,10 @@ function crMix(hex, to, t){ var a=parseInt(hex.slice(1),16), b=parseInt(to.slice
 function crLum(hex){ var v=parseInt(hex.slice(1),16); return (0.2126*(v>>16)+0.7152*((v>>8)&255)+0.0722*(v&255))/255; }
 // 선수 카드 배경 = 유니폼 바탕색(사용자 지정 — 흰 유니폼 구단은 흰 카드, 줄무늬 같은 무늬는 카드엔 안 그린다). 밝은 유니폼(흰색·노랑)은 글자를 어둡게(.cr-hc.lt).
 function crKitCard(club){
-  var K=crKit(club), lt=crLum(K.shirt)>0.6;
-  return {cls: lt ? ' lt' : '', bg: 'linear-gradient(135deg,'+K.shirt+' 0%,'+crMix(K.shirt,'#000000',lt?0.12:0.5)+' 100%)'};
+  // 검정·아주 어두운 유니폼(뉴캐슬·보타포구 등)은 다크 모드 바탕(#0B0D12)에 묻혀서 시작을 조금 밝히고 옅은 테두리(.cr-hc.dk)
+  var K=crKit(club), L=crLum(K.shirt), lt=L>0.6, dk=L<0.14;
+  var a=dk ? crMix(K.shirt,'#ffffff',0.14) : K.shirt, b=dk ? K.shirt : crMix(K.shirt,'#000000',lt?0.12:0.5);
+  return {cls: lt ? ' lt' : dk ? ' dk' : '', bg: 'linear-gradient(135deg,'+a+' 0%,'+b+' 100%)'};
 }
 function crHead(){
   var p=CR.v.player, st=CR.meta.stats[p.pos], card=CR.meta.cards[p.pos][p.card];
