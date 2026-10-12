@@ -9189,11 +9189,11 @@ function crApi(a, body){
 }
 // meta는 CDN에 하루 캐시된다(s-maxage). 모양이 바뀌면(체형 bodies 추가 등) CR_META_V를 올려 URL을 바꿔야 옛 캐시를 안 받는다
 // — 체형을 넣고 이걸 안 해서 배포 직후 옛 meta(체형 없음)가 내려와 1페이지 체형 칸이 안 보이고 진행이 막혔다(사용자 지적).
-var CR_META_V='3';   // 3: 재능 개화 특성(하프스페이스 침투 등)·스루패스 이름
+var CR_META_V='4';   // 4: 구단 유니폼 색(clubs[k][i][2])   // 3: 재능 개화 특성(하프스페이스 침투 등)·스루패스 이름
 function crMeta(){
   if(CR.meta) return Promise.resolve(CR.meta);
   return fetch(FN+'/career?a=meta&v='+CR_META_V).then(function(r){ if(!r.ok) throw new Error('잠시 후 다시 시도해 주세요.'); return r.json(); }).then(function(m){
-    m.club={}; Object.keys(m.clubs).forEach(function(k){ m.clubs[k].forEach(function(c){ m.club[c[0]]={n:c[0], id:c[1], nat:k}; }); });
+    m.club={}; Object.keys(m.clubs).forEach(function(k){ m.clubs[k].forEach(function(c){ m.club[c[0]]={n:c[0], id:c[1], nat:k, kit:c[2]||null}; }); });
     m.nat={}; m.nations.forEach(function(n){ m.nat[n.id]=n; });
     CR.meta=m; return m;
   });
@@ -9467,11 +9467,27 @@ function crWelcome(v){
   var nfs=Math.max(6, Math.min(10, Math.floor(58/Math.max.apply(null, lines.map(cw))*10)/10));
   var nameSvg=lines.map(function(l,i){ return '<text x="60" y="'+(lines.length>1?38+i*(nfs+2):44)+'" text-anchor="middle" font-size="'+nfs+'" font-weight="800" fill="#fff"'+(cw(l)*nfs>58?' textLength="58" lengthAdjust="spacingAndGlyphs"':'')+'>'+gmEsc(l)+'</text>'; }).join('');
   // 사파리(아이폰)에서 안 보였다(사용자 지적): 크기를 속성으로 박고, url(#그라데이션)·3D 회전·filter를 빼서 단순하게 그린다
+  // 유니폼은 입단한 구단 색(crKit) — 줄무늬·반반·띠 같은 무늬는 셔츠 모양으로 잘라(clipPath) 얹는다
+  var K=crKit(p.club), SH='M30 10 L50 4 Q60 12 70 4 L90 10 L114 32 L100 46 L92 40 L92 116 L28 116 L28 40 L20 46 L6 32 Z', pat='';
+  if(K.pat==='v') for(var i=0;i<6;i++) pat+='<rect x="'+(10+i*20)+'" y="0" width="10" height="120" fill="'+K.c2+'"/>';
+  else if(K.pat==='h') for(var i=0;i<6;i++) pat+='<rect x="0" y="'+(14+i*20)+'" width="120" height="10" fill="'+K.c2+'"/>';
+  else if(K.pat==='half') pat='<rect x="60" y="0" width="60" height="120" fill="'+K.c2+'"/>';
+  else if(K.pat==='mid') pat='<rect x="45" y="0" width="30" height="120" fill="'+K.c2+'"/>';
+  else if(K.pat==='band') pat='<rect x="0" y="48" width="120" height="14" fill="'+K.c2+'"/>';
+  else if(K.pat==='sash') pat='<polygon points="22,4 40,4 106,116 88,116" fill="'+K.c2+'"/>';
+  else if(K.pat==='diag') pat='<polygon points="120,0 120,120 0,120" fill="'+K.c2+'"/>';
+  // 무늬 유니폼은 글자가 두 색 위에 걸치므로 흰 글씨 + 어두운 테두리로 통일(리버 플레이트 어깨띠·아약스 가운데 띠 위에서 빨강 글씨가 묻혔다)
+  if(K.pat) K.text='#fff';
+  var cid='crShirt'+Date.now(), tx=K.pat ? ' paint-order="stroke" stroke="rgba(0,0,0,.6)" stroke-width="3"' : '';
+  nameSvg=nameSvg.replace(/fill="#fff"/g, 'fill="'+K.text+'"'+tx);
   var shirt='<svg width="150" height="150" viewBox="0 0 120 120" aria-hidden="true">'
-    +'<path d="M30 10 L50 4 Q60 12 70 4 L90 10 L114 32 L100 46 L92 40 L92 116 L28 116 L28 40 L20 46 L6 32 Z" fill="#D0010A" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>'
-    +'<path d="M28 78 L92 78 L92 116 L28 116 Z" fill="#000" opacity=".14"/>'
+    +'<defs><clipPath id="'+cid+'"><path d="'+SH+'"/></clipPath></defs>'
+    +'<path d="'+SH+'" fill="'+K.shirt+'"/>'
+    +(pat?'<g clip-path="url(#'+cid+')">'+pat+'</g>':'')
+    +'<path d="M28 78 L92 78 L92 116 L28 116 Z" fill="#000" opacity=".12"/>'
+    +'<path d="'+SH+'" fill="none" stroke="'+(crLum(K.shirt)>0.8?'rgba(0,0,0,.25)':'rgba(255,255,255,.4)')+'" stroke-width="1.5"/>'
     +nameSvg
-    +'<text x="60" y="94" text-anchor="middle" font-size="44" fill="#fff" style="font-family:var(--fd)">'+(p.num||p.want||'')+'</text></svg>';
+    +'<text x="60" y="94" text-anchor="middle" font-size="44" fill="'+K.text+'"'+tx+' style="font-family:var(--fd)">'+(p.num||p.want||'')+'</text></svg>';
   crTovSet('<div class="cr-wl" role="dialog" aria-modal="true" aria-label="입단" onclick="crWelcomeGo()"><div class="cr-wl-box">'
     +'<span class="tag">WELCOME TO THE ACADEMY</span>'
     +'<div class="crest">'+crCrest(p.club,72)+'</div><div class="team">'+gmEsc(p.club.team)+'</div>'
@@ -9518,10 +9534,21 @@ function crShow(v){
   if(v.phase==='retired') return crRetired();
   if(v.phase==='pick'){ CR.firstClubs=v.clubs; return crIntro(); }
 }
+// 구단 유니폼 색(사용자 지정 — 입단 연출 유니폼·선수 카드를 팀색으로). meta.clubs의 [유니폼 바탕색, 등 글자색, 대표색, 무늬?, 두 번째 색?]
+// 원자료는 Fotmob·ESPN 팀 색(scripts/build_club_colors.mjs). 모르는 구단은 예전처럼 아스날 레드.
+function crKit(club){
+  var k=club && CR.meta && (CR.meta.club[String(club.n||'').replace(/ U-\d+$/,'')]||{}).kit;
+  return k ? {shirt:k[0], text:k[1], brand:k[2], pat:k[3]||null, c2:k[4]||null} : {shirt:'#D0010A', text:'#fff', brand:'#c40004', pat:null, c2:null};
+}
+function crMix(hex, to, t){ var a=parseInt(hex.slice(1),16), b=parseInt(to.slice(1),16), r=function(x,y){ return Math.round(x+(y-x)*t); };
+  var c=(r(a>>16,b>>16)<<16)|(r((a>>8)&255,(b>>8)&255)<<8)|r(a&255,b&255); return '#'+('000000'+c.toString(16)).slice(-6); }
+function crLum(hex){ var v=parseInt(hex.slice(1),16); return (0.2126*(v>>16)+0.7152*((v>>8)&255)+0.0722*(v&255))/255; }
+// 선수 카드 배경: 대표색 → 어둡게(예전 기본 #c40004 → #3a0102와 같은 비율). 밝은 대표색(맨시티 하늘색 등)은 흰 글씨가 보이게 시작부터 조금 어둡게.
+function crKitGrad(club){ var b=crKit(club).brand, s=crLum(b)>0.45 ? crMix(b,'#000000',0.35) : b; return 'linear-gradient(135deg,'+s+' 0%,'+crMix(b,'#000000',0.72)+' 100%)'; }
 function crHead(){
   var p=CR.v.player, st=CR.meta.stats[p.pos], card=CR.meta.cards[p.pos][p.card];
   var dl=CR.v.phase==='result' && CR.v.result ? CR.v.result.row.deltas : null;
-  return '<div class="cr-hc"><div class="cr-hc-top">'+crCrest(p.club,40)
+  return '<div class="cr-hc" style="background:'+crKitGrad(p.club)+'"><div class="cr-hc-top">'+crCrest(p.club,40)
    +'<div style="flex:1;min-width:0"><div class="cr-hc-n">'+gmEsc(p.name)+(p.num?' <span>#'+p.num+'</span>':'')+'</div>'
    +'<div class="cr-hc-s">'+gmEsc(p.club.team)+' · '+gmEsc(card.n)+'</div>'
    +'<div class="cr-hc-s">'+p.foot+(p.pos!=='DF'?' · 약발 '+crStars(p.wf):'')+(p.glass?' · 🩹 유리몸':'')+'</div>'
