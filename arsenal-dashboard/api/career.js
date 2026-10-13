@@ -20,6 +20,7 @@ import crypto from 'crypto';
 import { tokenCodec } from './_token.js';
 import { readToken } from './_account.js';
 import * as S from './_career_sim.js';
+import {NATIONAL_REACTION_GROUPS} from './_career_international.js';
 import { CLUB_KIT } from './_club_kits.js';
 
 const {ready: tokenReady, seal, open} = tokenCodec('career-token-v1', {zip: true});
@@ -233,7 +234,7 @@ export default async function handler(req, res){
     if(a === 'meta'){
       res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
       return res.json(META || (META = {
-        nations: S.NATIONS, stats: S.STATS, names: S.NAMES, bodies: S.bodyMeta(),
+        nations: S.NATIONS, nationalReactionGroups: NATIONAL_REACTION_GROUPS, stats: S.STATS, names: S.NAMES, bodies: S.bodyMeta(),
         cards: Object.fromEntries(Object.entries(S.CARDS).map(([p, cs]) => [p, cs.map((c, i) => { const st = S.startStats(p, i); return {n: c.n, d: c.d, w: c.w, st, ovr: S.ovrOf(st, c.w)}; })])),
         // 꿈의 구단 고르기용 — 명성 숫자는 빼고 이름·엠블럼 id만(국가 안에서는 명성 순)
         clubs: Object.fromEntries(Object.entries(S.CLUBS).map(([k, cs]) => [k, cs.map(c => [c[0], c[2], CLUB_KIT[c[2]] || null])])),   // [이름, Fotmob id, 유니폼 색(_club_kits.js)]

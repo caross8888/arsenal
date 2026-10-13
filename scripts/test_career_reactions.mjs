@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {NATIONAL_REACTION_GROUPS,nationalExpectation} from '../arsenal-dashboard/api/_career_international.js';
 const html=fs.readFileSync(new URL('../arsenal-dashboard/public/index.html',import.meta.url),'utf8');
-const context=vm.createContext({CR:{v:{player:{name:'대표팀테스트',nation:'KOR',age:22,military:{status:'arts'}}}},crNat:id=>({n:{KOR:'대한민국',ENG:'잉글랜드',BRA:'브라질',NGA:'나이지리아'}[id]||id}),crJo:(n,j)=>n+j});
+const context=vm.createContext({CR:{meta:{nationalReactionGroups:NATIONAL_REACTION_GROUPS},v:{player:{name:'대표팀테스트',nation:'KOR',age:22,military:{status:'arts'}}}},crNat:id=>({n:{KOR:'대한민국',ENG:'잉글랜드',BRA:'브라질',NGA:'나이지리아'}[id]||id}),crJo:(n,j)=>n+j});
 const array=name=>{const start=html.indexOf('var '+name+'=');assert(start>=0,name);return html.slice(start,html.indexOf(';',start)+1);};
 for(const name of ['CR_RX_VERIFIED','CR_FAN_ID','CR_RX_NICK','CR_RX_IP'])vm.runInContext(array(name),context);
 vm.runInContext(html.slice(html.indexOf('function crSfRng('),html.indexOf('function crSfClub(')),context);
@@ -17,7 +18,7 @@ assert.equal(run("crNationalReactionEvents({age:22,hon:[{n:'아스날 리그 우
 assert.equal(run('crNationalReactionEvents({age:23,hon:[],national:[]}).length'),0);
 console.log('PASS 대표팀 성과만 추가 · 우승/체육요원 같은 사건 중복 없음 · 이전 병역 혜택 재공지 없음');
 context.testRow=structuredClone(row);context.testRow.hon=[];context.testRow.national=context.testRow.national.slice(1);Object.assign(context.testRow.national[0],{won:false,place:2,qualified:false});Object.assign(context.testRow.international,{place:2,qualified:false});
-assert.equal(run('crNationalReactionEvents(testRow)[0].type'),'medal');
+assert.equal(run('crNationalReactionEvents(testRow)[0].type'),'critic');
 assert(run("!/금메달만|병역 상태가 바뀌지는/.test(JSON.stringify(crNationalReaction(crNationalReactionEvents(testRow)[0])))"));
 context.testRow.national=[];Object.assign(context.testRow.international,{name:'올림픽',kind:'olympic',place:3,qualified:true});
 assert.equal(run('crNationalReactionEvents(testRow)[0].type'),'qualify');
@@ -37,8 +38,20 @@ assert(Math.abs((yeji.yes+yeji.no)/yeji.fm-.70)<.04);
 assert(Math.abs(yeji.yes/(yeji.yes+yeji.no)-.10)<.03);
 console.log('PASS 예지 등장 70% · 등장한 댓글의 대댓글 10% · 중복 없이 바로 아래 답글');
 
-run("CR.sf={G:10,i:0,national:[{id:'regular',at:.2,knockout:false},{id:'cup',at:.7,knockout:true}],natSeen:{}}");
+run("CR.sf={G:10,i:0,national:[{id:'regular',at:.2,knockout:false},{id:'groups-out',at:.7,knockout:true,bracket:null},{id:'cup',at:.7,knockout:true,bracket:{}}],natSeen:{}}");
 assert.equal(run("JSON.stringify(crSfNationalQueue(Array.from({length:10},(_,k)=>({k}))).filter(m=>m.national).map(m=>m.national.id))"),'["cup"]');
 run("CR.sf.natSeen.cup=true");
 assert.equal(run("crSfNationalQueue([{k:9}]).filter(m=>m.national).length"),0);
-console.log('PASS 일반 A매치로 클럽 시즌 중단 없음 · 대회만 삽입 · 확인한 대회 중복 없음');
+console.log('PASS 일반 A매치·조별 탈락으로 중단 없음 · 토너먼트만 삽입 · 확인한 대회 중복 없음');
+
+for(const [outcome,type] of [['32강 탈락','critic'],['16강 탈락','fair'],['8강 탈락','praise'],['4강 탈락','historic'],['준우승','historic']]){context.resultWindow={name:'월드컵',nation:'KOR',knockout:true,kind:'senior',outcome,expectation:'16강',matches:[]};assert.equal(run('crNationalReactionEvent(resultWindow).type'),type);assert.equal(run('crNationalReaction(crNationalReactionEvent(resultWindow)).sns.length'),5);assert(run('crNationalReaction(crNationalReactionEvent(resultWindow)).comm.cmts.length>=6'));}
+context.resultWindow={name:'월드컵',nation:'BRA',knockout:true,kind:'senior',outcome:'16강 탈락',expectation:'4강',matches:[]};
+assert.equal(run('crNationalReactionEvent(resultWindow).type'),'critic');
+context.resultWindow.outcome='조별리그 탈락';assert(run('crNationalReactionEvent(resultWindow)'));
+console.log('PASS 한국 월드컵 32강 비판·16강 무난·8강 호평·4강/준우승 신화 · 강팀 16강 비판 · 조별 탈락도 반응');
+
+const countries=Object.values(NATIONAL_REACTION_GROUPS).flatMap(g=>g.nations);
+assert.equal(new Set(countries).size,15);
+for(const nation of countries){context.groupNation=nation;for(const outcome of ['32강 탈락','16강 탈락','8강 탈락','4강 탈락','준우승']){context.groupWindow={name:'월드컵',nation,knockout:true,kind:'senior',outcome,matches:[]};assert.equal(run('crNationalReactionEvent(groupWindow).expected'),nationalExpectation(nation,'월드컵'));context.expectedGroup=Object.keys(NATIONAL_REACTION_GROUPS).find(k=>NATIONAL_REACTION_GROUPS[k].nations.includes(nation));assert.equal(run('crNationalReactionEvent(groupWindow).group'),context.expectedGroup);if(context.expectedGroup==='challenger'){const expected={'32강 탈락':'critic','16강 탈락':'fair','8강 탈락':'praise','4강 탈락':'historic','준우승':'historic'}[outcome];assert.equal(run('crNationalReactionEvent(groupWindow).type'),expected);}}}
+for(const cup of ['월드컵','아시안컵','올림픽','아시안게임'])assert.equal(nationalExpectation('KOR',cup),nationalExpectation('JPN',cup));
+console.log('PASS 15개국 중복 없는 3그룹 · 도전자 5개국 동일 월드컵 반응 · 한국/일본 동일 대회 기대 · 서버/화면 기준 일치');
