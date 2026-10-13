@@ -200,3 +200,5 @@ JSON files + matching `*_images/` folders for History content (trophies, manager
 ### Deployment
 
 Live on Vercel (auto-deploys on push to `main`), configured by `arsenal-dashboard/vercel.json`. `claude/**` 브랜치 푸시는 미리보기 배포를 만들지 않는다(`git.deploymentEnabled`) — Hobby 플랜 하루 배포 한도를 작업 브랜치 푸시가 다 써서 main 반영 배포가 "Deployment rate limited"로 막힌 적이 있다. **`arsenal-dashboard/netlify.toml` and `arsenal-dashboard/README.md` describe an older Netlify-based deployment** (different function directory, different API providers — api-football.com/newsapi.org instead of the ESPN/Fotmob/FPL/Guardian setup above) and are stale; don't follow them when reasoning about how the app is actually deployed or which APIs it actually calls.
+
+**정적 파일 브라우저 캐시**(`vercel.json`의 `headers`, 사용자 지정 — Hobby 플랜 월 CDN 요청 한도 때문에): `/img/`·`/video/`·`/data/` 그림은 1일, `/data/*.json`은 1시간 동안 브라우저가 서버에 다시 묻지 않는다. 캐시 설정이 없을 땐 방문할 때마다 그림 한 장 한 장이 요청으로 잡혀 CDN 요청이 빠르게 쌓였다. 배포가 비우는 건 Vercel 쪽 캐시뿐이고 방문자 브라우저 캐시는 못 비우므로, **이미 있는 그림을 같은 파일명으로 바꿔 배포할 땐 그 그림을 부르는 주소에 `?v=2`처럼 버전을 붙이거나 올릴 것** — 안 그러면 다녀간 사람에겐 최대 하루 옛 그림이 보인다. 새 파일명으로 추가하는 그림은 상관없다.
