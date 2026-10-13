@@ -10733,10 +10733,15 @@ var CR_RX_FM_PERSONA={
     injury:['{n} 건강하게 돌아오길 응원한다 👍','회복이 먼저야, 기다리면서 응원할게 👍','무리하지 말고 잘 나아서 돌아와 👍'],
     win:['{club} 우승 축하해, 모두 응원했어 👍','{n}도 우승까지 고생 많았어, 응원해 👍','우승한 우리 선수들 계속 응원해야지 👍']},
   '정성일':{
-    good:['책님 오늘 아스날 이기나요!!! 잉토 걸어도 됩니까','맨시티에 모든 걸 걸었는데 또 알등이 됐습니다','{n} 잘할 줄 알았는데 잉토는 왜 잃었지'],
-    rough:['시티에 다 걸었다가 잉토 잃고 다시 알등이 됨','책님 오늘 아스날 이기나요!!! 이번엔 복구해야 합니다','한 번만 더 걸면 알등이 탈출할 수 있겠지...'],
-    injury:['부상 소식 보고 건 잉토도 잃었다... 다시 알등이','책님 다음 경기 아스날 이기나요!!! 제 잉여력이 걸렸어요','맨시티에 다 걸었는데 {n} 부상까지, 되는 게 없네'],
-    win:['책님 우승팀 맞히셨나요!!! 전 시티에 다 걸어서 알등이입니다','{club} 우승 걸었으면 잉토 복구했을 텐데','우승 축하하는데 맨시티에 모든 걸 건 내 잉여력은 어디 갔냐']}
+    good:['책님 다음 {club} 경기 이기나요!!! 잉토 걸어도 됩니까','또 잉토 잃고 알등이 됐습니다... 다음 픽 좀','{n} 활약은 맞혔는데 경기 결과 잉토는 왜 틀렸지'],
+    rough:['{club} 경기 잉토 또 틀려서 알등이 됨','책님 다음 {club} 경기 이기나요!!! 이번엔 복구해야 합니다','한 번만 더 걸면 알등이 탈출할 수 있겠지...'],
+    injury:['부상 소식 보고 건 잉토도 잃었다... 다시 알등이','책님 {club} 다음 경기 이기나요!!! 제 잉여력이 걸렸어요','{n} 부상까지 겹치니 잉토도 영 안 풀리네'],
+    win:['책님 {club} 우승 찍으셨죠!!! 전 반대에 걸었다가 알등이입니다','{club} 우승에 걸었으면 잉토 복구했을 텐데','우승팀 못 맞혀서 또 알등이지만 {club} 축하합니다'],
+    city:{
+      good:['책님 다음 맨시티 경기 이기나요!!! 잉토 걸어도 됩니까','맨시티 경기 잉토에 전부 걸었다가 또 알등이 됐습니다'],
+      rough:['맨시티 경기 잉토에 다 걸었다가 다시 알등이 됨','책님 맨시티 다음엔 이기나요!!! 제 잉여력 좀 살려주세요'],
+      injury:['맨시티 경기 잉토도 잃었는데 {n} 부상까지, 되는 게 없네','책님 맨시티 다음 경기 이기나요!!! 복구해야 합니다'],
+      win:['책님 맨시티 우승 찍으셨죠!!! 전 반대 걸었다가 알등이입니다','맨시티 우승에 걸었으면 잉토 복구했을 텐데']}}
 };
 // 실제 팬 별칭이 확인된 구단만 사용한다. 리그 1위나 유스 시즌엔 "우승 못했다"는 글을 띄우지 않는다.
 var CR_RX_FM_FANS={'맨체스터 시티':{team:'시티',fan:'짭순이'},'아스날':{team:'아스날',fan:'개순이'},
@@ -10837,7 +10842,8 @@ function crReact(){
     var names=Object.keys(CR_RX_FM_PERSONA), name=pick2(names), voice=CR_RX_FM_PERSONA[name];
     var mood=k==='injury'?'injury':CH?'win':['bad','bench','decline','youthLow'].indexOf(k)>=0?'rough':'good';
     var first=(CH||tl===fanTitle)&&cmts.length>1?1:0, one=cmts[first+Math.floor(rg()*(cmts.length-first))];
-    one.nick=name; one.t=fill(pick2(voice[mood]||voice.all));
+    var lines=name==='정성일' && club==='맨체스터 시티' ? voice.city[mood] : voice[mood]||voice.all;
+    one.nick=name; one.t=fill(pick2(lines));
   }
   if(fm){ cmts.sort(function(a,b){ return b.up-a.up; }); cmts.slice(0,2).forEach(function(c){ c.best=1; c.up+=Math.round(heat*40); }); cmts.sort(function(a,b){ return b.up-a.up; }); }   // 펨코: 추천 많은 2개가 베스트로 맨 위
   var prs=(CH&&CH.r?CH.r:D.r).filter(function(x){ return ok(x[0]) && ok(x[1]); });
