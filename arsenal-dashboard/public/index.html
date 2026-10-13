@@ -10741,7 +10741,9 @@ var CR_RX_FM_PERSONA={
       good:['책님 다음 맨시티 경기 이기나요!!! 잉토 걸어도 됩니까','맨시티 경기 잉토에 전부 걸었다가 또 알등이 됐습니다'],
       rough:['맨시티 경기 잉토에 다 걸었다가 다시 알등이 됨','책님 맨시티 다음엔 이기나요!!! 제 잉여력 좀 살려주세요'],
       injury:['맨시티 경기 잉토도 잃었는데 {n} 부상까지, 되는 게 없네','책님 맨시티 다음 경기 이기나요!!! 복구해야 합니다'],
-      win:['책님 맨시티 우승 찍으셨죠!!! 전 반대 걸었다가 알등이입니다','맨시티 우승에 걸었으면 잉토 복구했을 텐데']}}
+      win:['책님 맨시티 우승 찍으셨죠!!! 전 반대 걸었다가 알등이입니다','맨시티 우승에 걸었으면 잉토 복구했을 텐데']},
+    noTitle:['{club} 우승에 모든 걸 건 내 잉토는 어떻게 되는 거냐','책님 {club} 리그 우승한다고 하셨잖아요!!! 제 잉토 다 날려서 또 알등이 됐습니다','내 잉토 전부 {club} 리그 우승에 걸었는데 이거 어떻게 복구하냐'],
+    cityNoTitle:['맨시티 우승에 모든 걸 건 내 잉토는 어떻게 되는 거냐','책님 맨시티 리그 우승한다고 하셨잖아요!!! 제 잉토 다 날려서 또 알등이입니다','내 잉토 전부 맨시티 리그 우승에 걸었는데 이거 어떻게 복구하냐']}
 };
 // 실제 팬 별칭이 확인된 구단만 사용한다. 리그 1위나 유스 시즌엔 "우승 못했다"는 글을 띄우지 않는다.
 var CR_RX_FM_FANS={'맨체스터 시티':{team:'시티',fan:'짭순이'},'아스날':{team:'아스날',fan:'개순이'},
@@ -10842,7 +10844,11 @@ function crReact(){
     var names=Object.keys(CR_RX_FM_PERSONA), name=pick2(names), voice=CR_RX_FM_PERSONA[name];
     var mood=k==='injury'?'injury':CH?'win':['bad','bench','decline','youthLow'].indexOf(k)>=0?'rough':'good';
     var first=(CH||tl===fanTitle)&&cmts.length>1?1:0, one=cmts[first+Math.floor(rg()*(cmts.length-first))];
-    var lines=name==='정성일' && club==='맨체스터 시티' ? voice.city[mood] : voice[mood]||voice.all;
+    var lines=voice[mood]||voice.all;
+    if(name==='정성일'){
+      if(!r.youth && r.rank>1) lines=club==='맨체스터 시티'?voice.cityNoTitle:voice.noTitle;
+      else if(club==='맨체스터 시티') lines=voice.city[mood];
+    }
     one.nick=name; one.t=fill(pick2(lines));
   }
   if(fm){ cmts.sort(function(a,b){ return b.up-a.up; }); cmts.slice(0,2).forEach(function(c){ c.best=1; c.up+=Math.round(heat*40); }); cmts.sort(function(a,b){ return b.up-a.up; }); }   // 펨코: 추천 많은 2개가 베스트로 맨 위
