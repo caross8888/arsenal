@@ -7,6 +7,7 @@
 //   POST ?a=new     {name, nation, foot, pos, card, num, dream}  → {token, clubs}      첫 구단 3곳
 //   POST ?a=join    {token, pick}                                 → {token, player, prep}
 //   POST ?a=season  {token, train, evPick[, loanPick][, injPick]}             → {token, injury} | {token, player, result}
+//   POST ?a=military {token, action:"apply"|"regular"}          → 상무 지원/일반 복무 선택
 //   POST ?a=next    {token, pick?, trait?}                                → {token, player, prep} | {token, card}(은퇴)
 //   POST ?a=retire  {token}                                       → {token, card}
 //   POST ?a=view    {token}                                       → 지금 단계 화면(이어 하기)
@@ -168,6 +169,7 @@ function load(token, phases){
   const st = open(token);
   if(!st || !st.v) bad('커리어 정보가 올바르지 않아요. 새로 시작해 주세요.');
   if(phases && !phases.includes(st.phase)) bad('진행 순서가 맞지 않아요. 화면을 새로고침해 주세요.');
+  S.militaryView(st);
   return st;
 }
 
@@ -298,11 +300,18 @@ export default async function handler(req, res){
         const rows = [0, 1].map(k => { const c = JSON.parse(JSON.stringify(C)); return S.playSeason(c, {...C.pending, injPick: k}).row; });
         const pre = rows.reduce((m, w) => m ? m.map((x, i) => Math.min(x, [w.apps, w.goals, w.ast, w.cs][i])) : [w.apps, w.goals, w.ast, w.cs], null);
         const games = rows[1].games;   // 시즌 진행 화면의 경기 칸 수
-        return res.json({token: seal(C), ...view(C), pre: {apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3], games}});
+        const segments=rows[1].segments && rows[1].segments.map((seg,i)=>({...seg,...Object.fromEntries(['apps','starts','goals','ast','cs'].map(k=>[k,Math.min(seg[k],rows[0].segments[i][k])]))}));
+        return res.json({token: seal(C), ...view(C), pre: {apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3], games, ...(segments?{segments}:{})}});
       }
       delete C.pending;
       C.forced = r.forced; C.forcedWhy = r.forcedWhy;
       return res.json({token: seal(C), ...view(C)});
+    }
+
+    if(a === 'military'){
+      const C=load(body.token,['result']);
+      try { S.militaryAction(C,body.action); } catch(e){ bad(e.message); }
+      return res.json({token:seal(C), ...view(C)});
     }
 
     if(a === 'next'){
@@ -312,6 +321,8 @@ export default async function handler(req, res){
       // 특성 제안이 있으면 반드시 하나를 고른다(강제 은퇴로 끝나는 시즌은 제외)
       const tp = body.trait == null || body.trait === '' ? null : Number(body.trait);
       if(C.traitOffer && C.traitOffer.length && !C.forced && !(Number.isInteger(tp) && C.traitOffer[tp])) bad('특성을 하나 골라 주세요.');
+      const mv=S.militaryView(C);
+      if(pick!=null && mv && (mv.selected || mv.service || mv.lastChance)) bad('병역 계획을 먼저 결정해 주세요.');
       S.nextSeason(C, pick, tp);
       delete C.forced; delete C.forcedWhy;
       return res.json({token: seal(C), ...view(C)});

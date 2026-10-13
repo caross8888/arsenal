@@ -38,7 +38,7 @@ except ImportError:
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_DIR = os.path.join(ROOT, 'public', 'img', 'career-scenes')
 # index.html의 CR_SCENE_PHOTO가 쓰는 장면 이름(= 이벤트 id). captfull은 captain 그림을 함께 쓴다.
-SCENES = ['field', 'talk', 'tour', 'scout', 'captain', 'natcall', 'sns', 'diet', 'study']
+SCENES = ['field', 'talk', 'tour', 'scout', 'captain', 'natcall', 'sns', 'diet', 'study', 'military', 'military-mobile']
 
 
 def find_border_box(im):
@@ -106,7 +106,7 @@ def main():
     ap = argparse.ArgumentParser(description='커리어 이벤트 배경 그림 넣기')
     ap.add_argument('scene', help='장면 id (%s)' % ', '.join(SCENES))
     ap.add_argument('src', help='생성 AI로 뽑은 원본 그림')
-    ap.add_argument('--mode', choices=['auto', 'border', 'corner'], default='auto')
+    ap.add_argument('--mode', choices=['auto', 'border', 'corner', 'none'], default='auto')
     ap.add_argument('--quality', type=int, default=90)
     ap.add_argument('--out', default=None, help='저장 경로(기본: public/img/career-scenes/<장면id>.webp)')
     args = ap.parse_args()
@@ -120,7 +120,7 @@ def main():
     im = Image.open(args.src).convert('RGB')
     print('원본: %s %dx%d' % (os.path.basename(args.src), im.size[0], im.size[1]))
 
-    box, how = None, None
+    box, how = ((0, 0, im.width, im.height), '원본 구도 유지') if args.mode == 'none' else (None, None)
     if args.mode in ('auto', 'border'):
         box = find_border_box(im)
         how = '테두리 안쪽'

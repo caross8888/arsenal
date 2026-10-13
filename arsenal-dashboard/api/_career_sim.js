@@ -9,6 +9,9 @@
 // 함수들은 모듈 변수 C에 상태를 걸어 두고 계산한다(요청 하나 안에서만 쓰므로 안전).
 
 import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS, ACADEMY, BLOOM_CARD, BLOOM_COND } from './_career_data.js';
+import * as MIL from './_career_military.js';
+export const militaryView = MIL.militaryView;
+export const militaryAction = MIL.applyMilitary;
 
 export { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS };
 
@@ -257,6 +260,7 @@ const INJ_MAJOR = ['십자인대 파열','아킬레스건 부상','중족골 골
 export const ALL = [];
 for(const k of Object.keys(CLUBS)) for(const c of CLUBS[k]) ALL.push({n:c[0], r:c[1], id:c[2], nat:k});
 const BY_NAME = new Map(ALL.map(c => [c.n, c]));
+const PLAYABLE = ALL.filter(c => c.n !== MIL.SANGMU);
 export const clubByName = n => BY_NAME.get(n) || null;
 export const natInfo = id => NATIONS.find(n => n.id === id);
 
@@ -294,7 +298,7 @@ const ABROAD_P = {KOR:0.3, JPN:0.3, NGA:0.35, USA:0.25, NOR:0.25, ARG:0.2, BEL:0
 const ABROAD_LEAGUES = ['ENG','ESP','ITA','GER','FRA'];
 export function firstClubs(nation, pos, card, seed){
   // 자국 구단 중 무작위 3곳(사용자 지정 — 도전·적정·안정 틀 없이). 시드로 정해서 같은 커리어면 같은 3곳. 표시는 구단 수준 순.
-  const home = (CLUBS[nation]||[]).map(c => clubByName(c[0]));
+  const home = (CLUBS[nation]||[]).map(c => clubByName(c[0])).filter(c => c.n !== MIL.SANGMU);
   const rr = mulberry(((seed ?? 0)>>>0) ^ hashStr('first')), pool = home.slice(), pick = [];
   while(pick.length < 3 && pool.length) pick.push(pool.splice(Math.floor(rr()*pool.length), 1)[0]);
   const list = pick.sort((a,b) => b.r-a.r).map(c => [c, null]);
@@ -326,6 +330,7 @@ export function createCareer(input, clubIdx, seed){
        st, ovr, off:st.map(v => v-ovr), age:15, club:o.club, fame:0, wf:wfBorn(seed), phase:'prep', train:'균형', ev:null, evPick:null,
        hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, boost:1, peak:ovr, clubs:[o.club.n],
        talent:1, youthPts:0, awoken:false, last:null, offers:null, lv:0};
+  if(C.nation==='KOR') C.military={status:'pending'};
   newEvent();
   return C;
 }
@@ -386,8 +391,8 @@ function scoutTarget(){
   const a0 = acadOf(C.club); if(a0 >= 5) return null;
   const want = Math.min(5, a0 + (a0 <= 3 && mulberry(C.seed ^ hashStr('scout-up|'+C.age))() < 0.25 ? 2 : 1));
   const find = a => { const ok = c => c.n!==C.club.n && c.r>=C.club.r && acadOf(c)===a;
-    let cs = ALL.filter(c => c.nat===C.club.nat && ok(c));                                   // 자국 우선
-    if(!cs.length) cs = ALL.filter(c => ['ENG','ESP','GER','ITA','FRA'].includes(c.nat) && ok(c));   // 없으면 5대 리그
+    let cs = PLAYABLE.filter(c => c.nat===C.club.nat && ok(c));                                   // 자국 우선
+    if(!cs.length) cs = PLAYABLE.filter(c => ['ENG','ESP','GER','ITA','FRA'].includes(c.nat) && ok(c));   // 없으면 5대 리그
     return cs; };
   let cs = find(want); if(!cs.length && want > a0+1) cs = find(a0+1);   // ★+2 자리가 없으면 ★+1
   if(!cs.length) return null;
@@ -408,8 +413,8 @@ function newEvent(){
   if(ev.id === 'loan'){
     // 임대 구단은 두 곳 중 고른다(사용자 지정): 후보를 수준순으로 반으로 나눠 위쪽(덜 뛰지만 수준 높은 팀)·아래쪽(많이 뛰는 팀)에서 하나씩
     const me = cRep(), inR = c => c.n!==C.club.n && c.r<=C.club.r-4 && c.r>=me+LOAN_R[0] && c.r<=me+LOAN_R[1];
-    let cands = ALL.filter(c => c.nat===C.club.nat && inR(c));
-    if(cands.length < 2) cands = ALL.filter(inR);
+    let cands = PLAYABLE.filter(c => c.nat===C.club.nat && inR(c));
+    if(cands.length < 2) cands = PLAYABLE.filter(inR);
     cands = [...cands].sort((a,b) => b.r-a.r);
     const h = Math.ceil(cands.length/2), r3 = mulberry(C.seed ^ hashStr('loan2|'+C.age))();
     const picks = [cands[Math.floor(r*h)], cands.length > 1 ? cands[h + Math.floor(r3*(cands.length-h))] : null].filter(Boolean);
@@ -557,7 +562,7 @@ export function prepView(state){
   else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 ↓)' : ' (감독 신뢰 ↑)')];
-  return {goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, contract: C.contract || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
+  return {military:MIL.militaryView(C), service:MIL.serviceView(C), international:MIL.tournamentView(C), goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, contract: C.contract || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
     interview: ev.id === 'media' ? interviewOf() : null, bloom: bloomView(),
     loanClubs: C.ev==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
 }
@@ -591,6 +596,11 @@ function rollInjury(){
 export function playSeason(state, choice){
   C = state;
   if(C.phase !== 'prep' && C.phase !== 'injury') throw new Error('phase');
+  const service=MIL.serviceView(C);
+  if(service && service.fullRegular) return playRegularService();
+  if(C.phase==='prep') C.seasonTournament=MIL.tournamentView(C);
+  const tournament=C.seasonTournament || null;
+  if(service && service.returning) C.club={...C.military.home};
   if(trainOpts().includes(choice.train)) C.train = choice.train; else if(!trainOpts().includes(C.train)) C.train = '균형';
   if(C.phase === 'prep'){
     if(choice.evPick !== 0 && choice.evPick !== 1) throw new Error('evPick');
@@ -612,6 +622,10 @@ export function playSeason(state, choice){
   delete C.stageNote;   // 승격 알림은 준비 화면에서만(prepView.promo)
   delete C.contract;    // 첫 프로 계약 오버레이도 준비 화면에서 한 번만
   let club = C.club, onLoan = false, startAdj = 0, growMul = 1, declMul = 1;
+  if(service && service.returning){
+    if(service.kind==='regular') growMul *= .5;
+    else { const sm=clubByName(MIL.SANGMU); club={...club,r:(club.r+sm.r)/2}; }
+  }
   if(ev==='loan' && pick===0 && C.loanClub){ club = C.loanClub; onLoan = true; growMul *= youth() ? LOAN_GO_Y : LOAN_GO; notes.push(C.loanClub.n+'로 1시즌 임대를 떠났어요.'); }
   // 남아서 경쟁: 1군 선수들과 훈련하는 효과(성장 ↑)와 감독의 관심(출전 ↑ 조금). 예전엔 효과가 없어 "임대 간다"가 늘 정답이었다(전략 검사).
   if(ev==='loan' && pick===1){ growMul *= LOAN_STAY[0]; startAdj += LOAN_STAY[1]; notes.push(youth() ? '남아서 U-21에서 1군 데뷔를 기다렸어요.' : '남아서 1군 선수들과 부딪히며 훈련했어요.'); }
@@ -642,7 +656,7 @@ export function playSeason(state, choice){
   if(ev==='diet'){ if(pick===0){ declMul*=0.8; startAdj-=0.04; notes.push('식단·회복 관리 덕에 몸이 가벼워졌어요.'); } }
   if(ev==='media'){ C.ivSeen = [...(C.ivSeen||[]), interviewOf().id].slice(-16); C.mediaN = (C.mediaN||0) + 1; if(pick===1) startAdj+=0.03; }   // 겸손: 감독 신뢰. 자신감은 시즌 평점을 보고 아래에서 정산
 
-  const lv = onLoan ? 3 : lvOf(), row0Youth = lv < 3, games = STAGE[lv].games;
+  const lv = onLoan ? 3 : lvOf(), row0Youth = lv < 3, games = service && service.kind==='regular' ? Math.round(STAGE[lv].games/2) : STAGE[lv].games;
   // 새 영입 효과: 이적 첫 시즌엔 구단이 기회를 더 준다(돈을 주고 데려왔으니). 없으면 큰 구단으로 가는 게 늘 손해였다(전략 검사).
   const lastSr = [...C.hist].reverse().find(r => !r.youth && !r.loan);
   if(!onLoan && lastSr) startAdj += lastSr.club !== club.n ? NEW_SIGNING[0] : NEW_SIGNING[1];
@@ -879,6 +893,15 @@ export function playSeason(state, choice){
     }
   }
 
+  const international=MIL.resolveTournament(C,tournament,ratingShow);
+  delete C.seasonTournament;
+  if(international){
+    if(international.award) hon.push(international.award);
+    notes.push(international.year+' '+international.name+' '+international.place+'위'+(international.medal?' · '+international.award.n:''));
+    if(international.qualified) notes.push('체육요원 편입 요건을 충족했어요. 선수 활동을 이어가며 군사교육·봉사 의무를 이행합니다.');
+    C.tot.uCaps=(C.tot.uCaps||0)+5;
+  }
+
   // 수상 효과: 명성·다음 시즌 성장(최대 ×1.15)
   let boost = 1, fameAdd = 0;
   hon.forEach(h => { const t = HONOR_TIER[h.tier]; if(!t) return; boost *= t.g; fameAdd += t.f; });
@@ -920,12 +943,20 @@ export function playSeason(state, choice){
   }
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(ratingShow*100)/100, rank,
                youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(scout ? {scout} : {}), ...(numUp ? {numUp} : {})};
+  if(international) row.international=international;
+  if(service && service.kind==='regular') row.notes.push('일반 복무 6개월을 마치고 소속팀에서 남은 6개월을 뛰었어요.');
+  if(service && service.kind==='sangmu' && service.returning){
+    row.segments=serviceSegments(row);
+    row.team=MIL.SANGMU+' → '+C.club.n;
+  }
+  MIL.finishServiceSeason(C,row);
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
   // 점수용 가중 기록(리그 수준 반비례). 옛 토큰은 지금까지 기록을 가중 1로 시작한다.
   if(C.tot.wg == null){ C.tot.wg = C.tot.goals; C.tot.wa = C.tot.ast; C.tot.wcs = C.tot.cs; }
   if(C.tot.wap == null) C.tot.wap = C.tot.apps;
-  C.tot.wap += apps*LG_PTS[LT];   // 출전 점수도 리그 수준으로 — 하위 리그는 주전 자리를 쉽게 잡아 출전이 쌓인다
-  C.tot.wg += goalsL*LG_PTS[LT]; C.tot.wa += astL*LG_PTS[LT]; C.tot.wcs += csL*LG_PTS[LT];   // 유스 보정 전 값(점수 밸런스 유지)
+  const splitWeight = key => row.segments.reduce((sum,s)=>sum+s[key]*LG_PTS[lgTier(clubByName(s.club).nat)],0);
+  C.tot.wap += row.segments ? splitWeight('apps') : apps*LG_PTS[LT];   // 전역 시즌은 실제로 뛴 각 구단의 리그 배율로 계산
+  C.tot.wg += row.segments ? splitWeight('goals') : goalsL*LG_PTS[LT]; C.tot.wa += row.segments ? splitWeight('ast') : astL*LG_PTS[LT]; C.tot.wcs += row.segments ? splitWeight('cs') : csL*LG_PTS[LT];   // 유스 보정 전 값(점수 밸런스 유지)
   C.tot.apps += apps; C.tot.goals += goals; C.tot.ast += ast; C.tot.cs += cs; C.tot.caps += caps; C.tot.cg += cg; C.tot.ca = (C.tot.ca||0) + ca; C.tot.ccs = (C.tot.ccs||0) + ccs;
   C.peak = Math.max(C.peak, cOvr());
   C.bodyOut = bodyEnd();
@@ -935,6 +966,22 @@ export function playSeason(state, choice){
   if(!C.glass && (C.injCount||0)>=4 && C.injCount/C.hist.length>=0.3){ C.glass = true; row.notes.push('잦은 부상으로 "유리몸" 꼬리표가 붙었어요. 구단들이 영입을 망설여요.'); }
   C.phase = 'result';
   return {row, offers: offerView(), released: !!C.released, forced: forcedRetire(), forcedWhy: forcedWhy(), canRetire: C.age>=29};
+}
+
+
+function playRegularService(){
+  const o=cOvr();C.ovr=Math.max(30,C.ovr-1);C.st=C.st.map(v=>Math.max(30,v-1));
+  const row={age:C.age,club:C.club.n,team:'일반 복무',loan:false,youth:false,games:0,starts:0,apps:0,goals:0,ast:0,cs:0,rating:0,rank:null,
+    ovrBefore:o,ovr:cOvr(),dOvr:cOvr()-o,deltas:C.st.map(()=>-1),hon:[],caps:0,injured:0,notes:['일반 현역 복무 중이라 프로 경기에 출전하지 않았어요. 전문 훈련 공백으로 기량이 조금 떨어졌어요.']};
+  MIL.finishServiceSeason(C,row);C.hist.push(row);C.last={starts:0,games:0};C.boost=1;C.offers=[];C.traitOffer=[];C.bodyOut=false;C.phase='result';delete C.contract;delete C.stageNote;
+  return {row,offers:[],released:false,forced:false,forcedWhy:null,canRetire:C.age>=29};
+}
+function serviceSegments(row){
+  const keys=['games','starts','apps','goals','ast','cs'],sm=clubByName(MIL.SANGMU);
+  const first={age:row.age,club:sm.n,team:sm.n,loan:true,youth:false,ovr:row.ovrBefore,rating:row.rating,rank:Math.min(12,Math.max(2,row.rank)),hon:[]};
+  const second={age:row.age,club:C.club.n,team:C.club.n,loan:false,youth:false,ovr:row.ovr,rating:row.rating,rank:row.rank,hon:row.hon};
+  for(const k of keys){first[k]=Math.floor(row[k]/2);second[k]=row[k]-first[k];}
+  return [first,second];
 }
 
 // ── 특성 제안 ──────────────────────────────────────────────────────────
@@ -984,9 +1031,11 @@ const bodyEnd = () => {
 };
 function makeOffers(rng, row, rt){
   if(C.age < 17) return [];
+  const military=MIL.militaryView(C);
+  if(military && (military.selected || military.service)){ C.released=false; return []; }
   C.released = isReleased();
   if(C.released){
-    const me0 = cRep(), lows = ALL.filter(c => c.n!==C.club.n && c.r<=me0 && c.r>=me0-15).sort((a,b) => b.r-a.r);
+    const me0 = cRep(), lows = PLAYABLE.filter(c => c.n!==C.club.n && c.r<=me0 && c.r>=me0-15).sort((a,b) => b.r-a.r);
     const k = cOvr()>=relBar()-3 ? 2 : cOvr()>=relBar()-6 ? 1 : 0, out0 = [];   // 말년 제안도 나이 문턱을 따라 오른다
     for(let i=0; i<k && lows.length; i++){ out0.push({c: lows.splice(Math.floor(rng()*Math.min(lows.length,6)),1)[0], kind:'말년'}); }
     return out0;
@@ -994,11 +1043,11 @@ function makeOffers(rng, row, rt){
   let n = rt>=7.2 ? 3 : rt>=6.8 ? 2 : row.apps>5 ? 1 : 0;
   if(C.glass) n = Math.max(0, n-1);
   // 내 명성 ±8 구단만(유스 보정은 넣지 않는다 — 넣었다가 17세에 레알·인터 제안이 오는 버그가 있었다)
-  const me = cRep(), out = [], pool = ALL.filter(c => c.n!==C.club.n && c.r>=me-8 && c.r<=me+8);
+  const me = cRep(), out = [], pool = PLAYABLE.filter(c => c.n!==C.club.n && c.r>=me-8 && c.r<=me+8);
   const kinds = [['도전', c => c.r>me+3], ['적정', c => Math.abs(c.r-me)<=3], ['안정', c => c.r<me-3]];
   for(const [kind, f] of kinds){ if(out.length>=n) break; const cs = pool.filter(f).filter(c => out.every(o => o.c.n!==c.n)); if(cs.length) out.push({c: cs[Math.floor(rng()*cs.length)], kind}); }
   const dream = clubByName(C.dream);
-  if(dream && dream.n!==C.club.n && dream.r<=me+10 && out.every(o => o.c.n!==dream.n) && rng()<0.5) out.push({c:dream, kind: dream.r>me+3 ? '도전' : '적정', dream:true});
+  if(dream && dream.n!==MIL.SANGMU && dream.n!==C.club.n && dream.r<=me+10 && out.every(o => o.c.n!==dream.n) && rng()<0.5) out.push({c:dream, kind: dream.r>me+3 ? '도전' : '적정', dream:true});
   return out;
 }
 const forcedWhy = () => C.age>=40 ? 'age' : C.bodyOut ? 'body' : (C.released && !C.offers.length) ? 'contract' : null;
@@ -1027,6 +1076,8 @@ function offerView(){
 export function nextSeason(state, pick, traitPick){
   C = state;
   if(C.phase !== 'result') throw new Error('phase');
+  const military=MIL.militaryView(C);
+  if(pick!=null && military && (military.selected || military.service || military.lastChance)) throw new Error('병역 계획을 먼저 결정해 주세요.');
   if(C.traitOffer && C.traitOffer.length && !forcedRetire()){
     const id = C.traitOffer[traitPick == null ? 0 : traitPick];
     if(!id) throw new Error('trait');
@@ -1046,10 +1097,11 @@ export function nextSeason(state, pick, traitPick){
   const r = C.hist[C.hist.length-1]; delete r.notes; delete r.numUp; delete r.coach; delete r.scout; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
   const moved = pick != null, lv0 = lvOf();
   C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
+  if(MIL.beginService(C) || MIL.serviceView(C)){ C.lv=3; C.contract=null; newEvent(); return C; }
   // 유스 계약 만료(18세가 되는 여름): 첫 구단 유스에서 구단 수준에 한참 못 미치면 재계약 없이 내보낸다 → 실력에 맞는 자국 구단으로.
   // 큰 구단 유스(첫 구단 "도전")의 대가 — 없으면 출전 기회가 적어도 잃을 게 없어서 도전이 늘 정답이었다.
   if(!moved && C.age === 18 && lv0 < 2 && C.last && C.last.starts/Math.max(1,C.last.games) < YOUTH_CUT && cOvr() < cohortLv(C.club, 17) - YOUTH_CUT_BEHIND && mulberry(C.seed ^ hashStr('cut'))() < YOUTH_CUT_P){
-    const near = ALL.filter(c => c.nat === C.club.nat && c.n !== C.club.n && Math.abs(c.r - (cOvr() + YOUTH_CUT_TO)) <= 4);
+    const near = PLAYABLE.filter(c => c.nat === C.club.nat && c.n !== C.club.n && Math.abs(c.r - (cOvr() + YOUTH_CUT_TO)) <= 4);
     const to = near.length ? near[Math.floor(mulberry(C.seed ^ hashStr('cutto'))()*near.length)] : null;
     if(to){ C.cutFrom = C.club.n; C.club = to; if(!C.clubs.includes(to.n)) C.clubs.push(to.n); }
   }
@@ -1092,7 +1144,7 @@ export function retire(state){
   if(C.phase === 'retired') return C;
   if(C.phase === 'result' && C.age < 29 && !forcedRetire()) throw new Error('too young');
   const lastClub = C.hist[C.hist.length-1].club, atLast = C.hist.filter(r => !r.youth && r.club===lastClub).length;
-  const senior = C.hist.filter(r => !r.youth && !r.loan), clubsSr = new Set(senior.map(r => r.club));
+  const senior = C.hist.filter(r => !r.youth && !r.loan && (!r.service || r.service.kind!=='sangmu') && r.apps>0), clubsSr = new Set(senior.map(r => r.club));
   C.oneClub = senior.length>=10 && clubsSr.size===1;
   C.farewell = atLast>=8 || C.peak>=88 || C.fame>=8;
   C.iron = !C.glass && C.hist.filter(r => !r.youth).length>=15 && (C.injGames||0)<=12 && !C.majorInj;
@@ -1145,12 +1197,12 @@ export function marketValue(ovr, age){
 // 화면에 보여 줄 선수 정보(숨은 재능·명성·시드 같은 숨김 값은 빼고)
 export function playerView(state){
   C = state;
-  const hw = bodyHW(C.age);
-  return {id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:cOvr(),
-    st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(C.club), team:teamName(C.club)}, phase:C.phase, seasons:C.hist.length,
+  const hw = bodyHW(C.age), military=MIL.militaryView(C), visibleClub=military && military.status==='sangmu' ? clubByName(MIL.SANGMU) : C.club;
+  return {military, id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:cOvr(),
+    st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(visibleClub), team:teamName(visibleClub)}, phase:C.phase, seasons:C.hist.length,
     glass:!!C.glass, tot:C.tot, peak:C.peak, traits:(C.traits||[]).map(id => traitView(id, C.pos)),
     // 커리어 기록 접이식 표: [나이, 팀, 임대, 경기, 골, 도움(수비수는 클린시트), 오버롤, 구단, 유스, 그 시즌 주요 수상(S·A·B, 대표팀 제외)]
-    hist: C.hist.map(r => [r.age, r.team, r.loan?1:0, r.apps, r.goals, C.pos==='DF' ? r.cs : r.ast, r.ovr, r.club, r.youth?1:0,
+    hist: C.hist.flatMap(r => r.segments || [r]).map(r => [r.age, r.team, r.loan?1:0, r.apps, r.goals, C.pos==='DF' ? r.cs : r.ast, r.ovr, r.club, r.youth?1:0,
       r.hon.filter(h => 'SAB'.includes(h.tier) && h.kind!=='nat').sort((a,b) => 'SAB'.indexOf(a.tier)-'SAB'.indexOf(b.tier)).map(h => h.n),
       r.ast])};   // [10] 도움 — 수비수는 [5]가 클린시트라, 측면 수비(풀백·윙백·인버티드 풀백) 커리어 기록에 도움 칸을 더 그릴 때 쓴다
 }
@@ -1159,10 +1211,10 @@ export function cardView(state){
   C = state;
   let peakVal = 0; C.hist.forEach(r => { peakVal = Math.max(peakVal, marketValue(r.ovr, r.age)); });
   const hw = bodyHW(Math.max(18, C.age));
-  return {id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
+  return {military:MIL.militaryView(C), id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
     peakValue: Math.round(peakVal*10)/10, traits:(C.traits||[]).map(id => (TRAIT_BY_ID.get(id)||{}).n).filter(Boolean), traitIds:(C.traits||[]).filter(id => TRAIT_BY_ID.has(id)), oneClub:!!C.oneClub, farewell:!!C.farewell, glass:!!C.glass, iron:!!C.iron,
     tot:C.tot, clubs:C.clubs,
-    seasons: C.hist.map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:r.ovr,
+    seasons: C.hist.flatMap(r => r.segments || [r]).map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:r.ovr,
       apps:r.apps, goals:r.goals, ast:r.ast, cs:r.cs, hon:r.hon.filter(h => h.tier!=='C' && h.tier!=='-').map(h => [h.n, h.tier, h.kind])})),
     honors: honorsOf(C).filter(h => h.tier!=='-').map(h => [h.n, h.tier, h.kind])};
 }
