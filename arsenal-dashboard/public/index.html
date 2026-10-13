@@ -10709,7 +10709,7 @@ var CR_RX_NICK=['퇴근하고축구','막차놓친사람','소금빵두개','비
   '주말엔집에서','현관앞택배','세탁기돌리는중','따뜻한보리차','월요일싫다','낮잠30분','초코우유한잔','종이컵두개','그냥보는중','냉장고문닫아',
   '북런던날씨','하이버리역','개막만기다림','원정버스탄날','마지막추가시간','직관가는길','하프타임라면','새벽경기알람','잔디냄새','빨간머플러',
   '책상서랍','구름사진','목요일저녁','버스정류장','두번째알람','여름밤산책','책읽다가축구','파란유리컵','동네빵집','아침형인간',
-  '무롱이','덕선','원귀몸','미노이','조휴일','국주','고장율','지용지','민주','핸메픽','점자욱','남궁도위','뽀쪽','제찜','꼼짝','담배고양이','IGOR','수비멘디'];
+  '무롱이','덕선','원귀몸','미노이','조휴일','국주','고장율','지용지','민주','핸메픽','남궁자욱','남궁도위','뽀쪽','제찜','꼼짝','담배고양이','IGOR','수비멘디'];
 var CR_RX_FM_PERSONA={
   '람세이':{
     good:['아이고 {n} 오늘도 야무지게 뛰었네, 밥은 잘 챙겨 먹고 다니나','우리 {n} 잘한 건 칭찬 좀 해줘라, 애가 얼마나 뛰었는데','어휴 이 정도면 {club} 팬들도 기특하겠다'],
@@ -10744,6 +10744,10 @@ var CR_RX_FM_PERSONA={
       win:['책님 맨시티 우승 찍으셨죠!!! 전 반대 걸었다가 알등이입니다','맨시티 우승에 걸었으면 잉토 복구했을 텐데']},
     noTitle:['{club} 우승에 모든 걸 건 내 잉토는 어떻게 되는 거냐','책님 {club} 리그 우승한다고 하셨잖아요!!! 제 잉토 다 날려서 또 알등이 됐습니다','내 잉토 전부 {club} 리그 우승에 걸었는데 이거 어떻게 복구하냐'],
     cityNoTitle:['맨시티 우승에 모든 걸 건 내 잉토는 어떻게 되는 거냐','책님 맨시티 리그 우승한다고 하셨잖아요!!! 제 잉토 다 날려서 또 알등이입니다','내 잉토 전부 맨시티 리그 우승에 걸었는데 이거 어떻게 복구하냐']}
+};
+var CR_RX_FM_JAWOOK={
+  c:['X암지!!!!!!!!!!!!!!!!!!!!!!!','클X리X리스!~~~!!!!!!!','소X순!!!!!!!!!!!!!!!!!!!','나X관~~~~~~~~~~'],
+  r:['미친새끼 ㅋㅋ','어쩌다 이렇게까지 망가진거냐','역시 내행님 자욱']
 };
 // 실제 팬 별칭이 확인된 구단만 사용한다. 리그 1위나 유스 시즌엔 "우승 못했다"는 글을 띄우지 않는다.
 var CR_RX_FM_FANS={'맨체스터 시티':{team:'시티',fan:'짭순이'},'아스날':{team:'아스날',fan:'개순이'},
@@ -10835,7 +10839,8 @@ function crReact(){
   var nz=function(t){ return fill(t).split(p.name).join('').replace(/[\sㅋㅠ.,!?…~]/g,''); }, seen=sns.map(function(x){ return nz(x.t); });
   var dup=function(t){ var z=nz(t); for(var i=0;i+5<=z.length;i++){ var g=z.substr(i,5); if(seen.some(function(y){ return y.indexOf(g)>=0; })) return true; } return false; };
   var cpool=D.c.concat(more?more.c:[],moreChamp?moreChamp.c:[]).filter(ok).map(strip).filter(function(t){ return !dup(t); }), take=function(){ return cpool.length ? cpool.splice(Math.floor(rg()*cpool.length),1)[0] : ''; };
-  var nicks=CR_RX_NICK.slice(), ips=CR_RX_IP.slice(), who=function(){ return fm ? {nick:nicks.splice(Math.floor(rg()*nicks.length),1)[0]} : {nick:'ㅇㅇ', ip:ips.splice(Math.floor(rg()*ips.length),1)[0]}; };
+  var jawook=fm&&rg()<0.25, nicks=CR_RX_NICK.filter(function(n){ return !jawook||n!=='남궁자욱'; }), ips=CR_RX_IP.slice();
+  var who=function(){ return fm ? {nick:nicks.splice(Math.floor(rg()*nicks.length),1)[0]} : {nick:'ㅇㅇ', ip:ips.splice(Math.floor(rg()*ips.length),1)[0]}; };
   var cm=function(t){ var o=who(); o.t=fill(t); o.up=fm?Math.round(heat*(2+rg()*30)):0; return o; };
   var cmts=[]; if(CH) cmts.push(cm(pick(CH.c)));
   if(fanTitle && tl===fanTitle) cmts.push(cm('여기 '+clubFan.fan+' 한 명 추가요... 이번엔 진짜 기대했는데'));
@@ -10853,7 +10858,11 @@ function crReact(){
   }
   if(fm){ cmts.sort(function(a,b){ return b.up-a.up; }); cmts.slice(0,2).forEach(function(c){ c.best=1; c.up+=Math.round(heat*40); }); cmts.sort(function(a,b){ return b.up-a.up; }); }   // 펨코: 추천 많은 2개가 베스트로 맨 위
   var prs=(CH&&CH.r?CH.r:D.r).filter(function(x){ return ok(x[0]) && ok(x[1]); });
-  if(prs.length){ var pr=pick2(prs), par=cm(strip(pr[0])), rp=cm(strip(pr[1])); rp.re=1; cmts.splice(Math.min(cmts.length,(fm?2:1)+Math.floor(rg()*3)),0,par,rp); }   // 답글 쌍은 펨코면 베스트 2개 아래에
+  if(jawook||prs.length){
+    var pr=jawook?null:pick2(prs), par=cm(jawook?pick2(CR_RX_FM_JAWOOK.c):strip(pr[0])), rp=cm(jawook?pick2(CR_RX_FM_JAWOOK.r):strip(pr[1]));
+    if(jawook) par.nick='남궁자욱';
+    rp.re=1; cmts.splice(Math.min(cmts.length,(fm?2:1)+Math.floor(rg()*3)),0,par,rp);
+  }   // 답글 쌍은 펨코면 베스트 2개 아래에
   var ncmt=Math.max(cmts.length, Math.round(heat*(5+rg()*18))), op=who();
   var comm={fm:fm, board:fm?'해외축구':club+' 갤러리', hot:heat>=4, title:fill(tl), by:op, views:Math.round(heat*(300+rg()*1500)), rec:Math.round(heat*(8+rg()*40)), n:ncmt, cmts:cmts};
   return {news:news, sns:sns, comm:comm};
