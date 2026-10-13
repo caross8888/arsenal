@@ -2174,7 +2174,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tr-say .t{font-size:16px;font-weight:700;line-height:1.5;min-height:48px}
 .cr-tr-say .wf{margin-top:6px;padding-top:6px;border-top:1px solid #dde0e8;font-size:12.5px;font-weight:700;color:#5b6070}.cr-tr-say .wf .cr-stars{color:#b8860b}
 .cr-tr-say .cur{display:inline-block;width:2px;height:1em;background:#14161C;vertical-align:-2px;margin-left:1px;animation:crIvCur .7s steps(1) infinite}
-.cr-tr-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cr-tr-opts[hidden]{display:none}
+.cr-tr-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cr-tr-opts[hidden]{display:none}.cr-tr-opts>.cr-tr-o:only-child,.cr-tr-opts>.cr-tr-o:nth-child(3):last-child{grid-column:1 / -1}
 .cr-tr-o{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font:inherit;color:#F0F2F7;cursor:pointer;border-radius:16px;padding:16px 10px 14px;border:1.5px solid rgba(255,255,255,.14);background:rgba(18,26,22,.82);animation:crTrCard .5s cubic-bezier(.2,1.3,.4,1) both;animation-delay:var(--d);transition:border-color .15s,background .15s,transform .15s}
 .cr-tr-o .e{font-size:30px;line-height:1}
 .cr-icon{display:inline-block;width:1em;height:1em;fill:currentColor;vertical-align:-.14em;flex:none}
@@ -9879,14 +9879,14 @@ function crBloomHint(b){
 }
 // 병역·국제대회는 기존 성장 이벤트 뒤에 이어지는 별도 안내다. evPick을 덮어쓰지 않는다.
 function crMilitaryPanel(){
-  var p=CR.v.player,M=p.military;if(!M)return '';
+  var p=CR.v.player,M=p.military;if(!M || (M.status==='pending' && p.age<19))return '';
   var desc=M.status==='pending'?(M.lastChance?'올해가 마지막 상무 지원 시즌이에요. 시즌 종료 후 복무 계획을 정해주세요.':'상무 지원은 19~27세 시즌에 가능해요. 국제대회 성적에 따라 체육요원 편입도 가능해요.')
     :M.service?'전역까지 '+M.left+'개월 · 복귀 구단 '+gmEsc(M.home.n):M.status==='arts'?'선수 활동을 이어가며 군사교육·봉사 의무를 이행해요.':M.status==='legacy'?'28세 이상으로 진행 중이던 기존 저장에는 새 입영 마감을 적용하지 않아요.':'병역을 이행했어요.';
   return '<div class="cr-panel cr-military-panel"><div class="cr-lbl"><b>'+gmEsc(M.label)+'</b><span>'+(M.selected?'다음 시즌 '+(M.selected==='sangmu'?'상무 입대':'일반 복무'):M.lastChance?'마지막 지원 기회':'대한민국')+'</span></div><div class="cr-note">'+desc+'</div>'
-    +(M.status==='pending'?'<button class="cr-chip" onclick="crMilitaryInfo()">'+(CR.v.phase==='result'?'병역 계획 · 지원하기':'병역 계획 · 자격 보기')+'</button>':'')+'</div>';
+    +(M.status==='pending'&&!M.selected&&CR.v.phase==='result'?'<button class="cr-chip" onclick="crMilitaryInfo()">병역 계획</button>':'')+'</div>';
 }
 function crMilitaryScene(scene,tag,say,options,pick){
-  CR_TR[scene]={tag:tag,ic:scene==='tournament'?'earth-americas':'shield',who:scene==='tournament'?'대한민국 대표팀 감독':'에이전트',say:say,opt:scene==='tournament'?['plane-departure','clipboard']:['shield','clipboard']};
+  CR_TR[scene]={tag:tag,ic:scene==='tournament'?'earth-americas':'shield',who:scene==='tournament'?'대한민국 대표팀 감독':'에이전트',say:say,opt:options.map(function(t){return /취소|나중/.test(t)?'pause':scene==='tournament'?'plane-departure':/상무|입대|복무/.test(t)?'shield':'check';})};
   CR.extraPick=pick;crTrShow({id:scene,t:tag,d:say,a:options});
 }
 function crExtraKey(type){var p=CR.v.player;return (p.id||p.name)+'|'+p.age+'|'+type;}
@@ -9894,44 +9894,50 @@ function crExtraOnce(type){CR.extraSeen=CR.extraSeen||{};var key=crExtraKey(type
 function crExtraPrep(){
   var pr=CR.v.prep,M=CR.v.player.military,T=pr.international;
   if(pr.service && crExtraOnce('service')){
-    return crMilitaryScene(pr.service.kind==='regular'?'military':'militaryTalk','MILITARY SERVICE · 복무 안내',pr.service.returning?'전역까지 '+pr.service.left+'개월 남았어요. 복무를 마친 뒤 '+pr.service.home.n+'에서 남은 시즌을 뛰게 됩니다. 기존 훈련 선택도 복귀 기간에 반영돼요.':'상무에서 첫 시즌을 시작해요. 기존 훈련과 성장 이벤트를 진행하면서 병역도 이행합니다.', ['확인 · 시즌 준비','커리어 기록 보기'],function(){crTovSet('',true);crPrep();});
+    return crMilitaryScene(pr.service.kind==='regular'?'military':'militaryTalk','MILITARY SERVICE · 복무 안내',pr.service.returning?'전역까지 '+pr.service.left+'개월 남았어요. 복무를 마친 뒤 '+pr.service.home.n+'에서 남은 시즌을 뛰게 됩니다. 기존 훈련 선택도 복귀 기간에 반영돼요.':'상무에서 첫 시즌을 시작해요. 기존 훈련과 성장 이벤트를 진행하면서 병역도 이행합니다.', ['확인'],function(){crTovSet('',true);crPrep();});
   }
   if(T && crExtraOnce('international')){
-    return crMilitaryScene('tournament',(T.kind==='asian'?'ASIAN GAMES':'OLYMPIC TEAM')+' · 대표팀 발탁',T.year+' '+T.name+' 최종 명단에 이름을 올렸다.'+(T.wild?' 와일드카드로 네 경험이 필요하다.':'')+' 함께 메달에 도전하자. '+(T.kind==='asian'?'금메달':'동메달 이상')+'을 따면 체육요원 편입 대상이 된다.', ['대표팀 합류 · 확인','대회 기준 확인'],function(i){crTovSet('',true);if(i===1)return crMilitaryInfo();crPrep();});
+    return crMilitaryScene('tournament',(T.kind==='asian'?'ASIAN GAMES':'OLYMPIC TEAM')+' · 대표팀 발탁',T.year+' '+T.name+' 최종 명단에 이름을 올렸다.'+(T.wild?' 와일드카드로 네 경험이 필요하다.':'')+' 함께 메달에 도전하자. '+(T.kind==='asian'?'금메달':'동메달 이상')+'을 따면 체육요원 편입 대상이 된다.', ['대표팀 합류'],function(){crTovSet('',true);crPrep();});
   }
-  if(M && M.lastChance && crExtraOnce('deadline')) return crMilitaryScene('militaryTalk','MILITARY PLAN · 마지막 지원 시즌','올해가 마지막 상무 지원 시즌이에요. 기존 훈련은 그대로 진행하고, 시즌 종료 후 이적시장에서 병역 계획을 결정해주세요.', ['확인 · 시즌 준비','지원 기준 확인'],function(i){crTovSet('',true);if(i===1)return crMilitaryInfo();crPrep();});
+  if(M && M.lastChance && crExtraOnce('deadline')) return crMilitaryScene('militaryTalk','MILITARY PLAN · 마지막 지원 시즌','올해가 마지막 상무 지원 시즌이에요. 기존 훈련은 그대로 진행하고, 시즌 종료 후 이적시장에서 병역 계획을 결정해주세요.', ['확인'],function(){crTovSet('',true);crPrep();});
 }
 function crMilitaryInfo(){
   var M=CR.v.player.military;if(!M)return;
   if(CR.v.phase==='result' && M.status==='pending' && CR.v.player.age>=19){
     if(M.selected)return crMilitaryAnnouncement(M.selected==='sangmu'?'selected':'regular');
-    var can=M.canApply,txt=can?'상무 지원은 최근 기량·출전·평점과 포지션 수요를 평가해요. 현재 예상 선발 확률은 '+M.chance+'%입니다.':M.applied?'이번 모집에서는 선발되지 않았어요.'+(M.lastChance?' 마지막 지원 시즌이라 일반 복무를 준비해야 해요.':' 다음 시즌에 다시 지원할 수 있어요.'):'현재 상무 지원 연령 또는 1군 선수 조건을 충족하지 않았어요.';
-    return crMilitaryScene('militaryTalk','MILITARY PLAN · 병역 계획',txt,can?['상무 지원하기',M.lastChance?'일반 복무 준비':'이적시장 돌아가기']:['일반 복무 준비',M.lastChance?'결과로 돌아가기':'한 시즌 더 뛰기'],function(i){
-      crTovSet('',true);if(can && i===0)return crMilitaryAct('apply');if((can&&M.lastChance&&i===1)||(!can&&i===0))return crMilitaryAct('regular');crResult();
+    var can=M.canApply,market=!!document.querySelector('#crTov .cr-tm'),txt=can?'상무 예상 선발 확률은 '+M.chance+'%예요. 선발되면 다음 시즌에 입대해 18개월을 복무하고, 전역 후 원소속팀으로 돌아옵니다.':M.applied?'이번 상무 모집에서는 선발되지 않았어요.'+(M.lastChance?' 올해가 마지막 지원 시즌이므로 일반 복무를 준비해야 해요.':' 다음 시즌에 재지원할 수 있어요.'):'상무는 19~27세 1군 선수만 지원할 수 있어요.';
+    var options=[],actions=[];
+    if(M.lastChance)txt+=' 올해가 마지막 지원 시즌이에요. 이번 시즌에는 복무 계획을 정해야 합니다.';
+    if(can){options.push('상무 지원');actions.push('apply');}
+    if(M.canRegular){options.push('일반 복무');actions.push('regular');}
+    if(!M.lastChance){options.push('나중에 결정');actions.push('back');}
+    return crMilitaryScene('militaryTalk','MILITARY PLAN · 병역 계획',txt,options,function(i){
+      crTovSet('',true);if(actions[i]==='apply')return crMilitaryAct('apply');if(actions[i]==='regular')return crMilitaryRegularConfirm(market);if(market)crTmShow();else crResult();
     });
   }
-  crMilitaryScene('militaryTalk','MILITARY PLAN · 제도 안내','상무 지원은 접수연도 기준 19~27세로 제한돼요. 아시안게임 금메달이나 올림픽 동메달 이상이면 체육요원 편입 대상입니다. 게임에서는 미해결 상태로 28세 시즌에 들어가면 일반 복무를 시작해요.',['확인','시즌 준비로 돌아가기'],function(){crTovSet('',true);if(CR.v.phase==='prep')crPrep();else crResult();});
+  crMilitaryScene('militaryTalk','MILITARY PLAN · 제도 안내','상무 지원은 접수연도 기준 19~27세로 제한돼요. 아시안게임 금메달이나 올림픽 동메달 이상이면 체육요원 편입 대상입니다. 게임에서는 미해결 상태로 28세 시즌에 들어가면 일반 복무를 시작해요.',['확인'],function(){crTovSet('',true);if(CR.v.phase==='prep')crPrep();else crResult();});
 }
-function crMilitaryRegularConfirm(){
-  crMilitaryScene('military','MILITARY SERVICE · 일반 복무 준비','일반 현역 복무는 18개월이에요. 복무 중에는 프로 경기와 전문 훈련을 멈추고, 전역 후 선수 활동을 재개합니다. 다음 시즌부터 복무를 시작하시겠어요?',['일반 복무 준비','이적시장 돌아가기'],function(i){crTovSet('',true);if(i===0)return crMilitaryAct('regular');crTmShow();});
+function crMilitaryRegularConfirm(market){
+  market=market||!!document.querySelector('#crTov .cr-tm');
+  crMilitaryScene('military','MILITARY SERVICE · 일반 복무 준비','일반 현역 복무는 18개월이에요. 복무 중에는 프로 경기와 전문 훈련을 멈추고, 전역 후 선수 활동을 재개합니다. 다음 시즌부터 복무를 시작하시겠어요?',['입대 신청','취소'],function(i){crTovSet('',true);if(i===0)return crMilitaryAct('regular');if(market)crTmShow();else crResult();});
 }
 function crMilitaryAct(action){
   if(CR.busy)return;CR.busy=true;
   crApi('military',{token:CR.tok,action:action}).then(function(v){crShow(v);var M=v.player.military;
     if(M.selected)return crMilitaryAnnouncement(M.selected==='sangmu'?'selected':'regular');
-    crMilitaryScene('militaryTalk','SANGMU · 선발 결과','이번 상무 최종 명단에 들지 못했어요.'+(M.lastChance?' 지원 가능한 마지막 시즌이 끝났으니 일반 복무를 준비해야 해요.':' 다음 시즌에 다시 지원하거나 일반 복무를 준비할 수 있어요.'),[M.lastChance?'일반 복무 준비':'다음 모집 준비','복무 계획 보기'],function(i){crTovSet('',true);if(M.lastChance&&i===0)return crMilitaryAct('regular');if(i===1)return crMilitaryInfo();crResult();});
+    crMilitaryScene('militaryTalk','SANGMU · 선발 결과','이번 상무 최종 명단에 들지 못했어요.'+(M.lastChance?' 지원 가능한 마지막 시즌이 끝났으니 일반 복무를 준비해야 해요.':' 다음 시즌에 다시 지원하거나 일반 복무를 준비할 수 있어요.'),[M.lastChance?'일반 복무 안내':'확인'],function(){crTovSet('',true);if(M.lastChance)return crMilitaryRegularConfirm();crResult();});
   }).catch(crErr);
 }
 function crMilitaryAnnouncement(kind){
   var p=CR.v.player,M=p.military,R=M.returnNotice,back=kind==='return',regular=kind==='regular';
-  if(regular)return crMilitaryScene('military','MILITARY SERVICE · 일반 복무 준비','다음 시즌부터 일반 현역 복무를 시작해요. 18개월 동안 프로 경기와 전문 훈련에는 공백이 생기지만, 전역 후 다시 선수 활동을 이어갈 수 있어요.',['입대 준비 · 확인','복귀 계획 확인'],function(){crTovSet('',true);crResult();});
+  if(regular)return crMilitaryScene('military','MILITARY SERVICE · 일반 복무 준비','다음 시즌부터 일반 현역 복무를 시작해요. 18개월 동안 프로 경기와 전문 훈련에는 공백이 생기지만, 전역 후 다시 선수 활동을 이어갈 수 있어요.',['확인'],function(){crTovSet('',true);crResult();});
   var from=back?R.from:p.club.n,to=back?R.club:'김천 상무',id=back?R.id:133901;
   crTovSet('<div class="cr-tm done" role="dialog" aria-modal="true" aria-label="'+(back?'전역 복귀':'상무 최종 선발')+'" onclick="crTovSet(\'\',true);crResult()"><div class="cr-tmd"><div class="cr-tmd-row"><div class="old">'+crCrest({n:from},56)+'</div><div class="arr">➜</div><div class="new">'+crCrest({n:to,id:id},96)+'</div></div><div class="stamp">'+(back?'DISCHARGED':'SELECTED')+'</div><div class="hwg">'+(back?gmEsc(to)+' 복귀':'상무 최종 선발')+'</div><div class="who"><b>'+gmEsc(p.name)+'</b> · '+(back?'병역 이행 완료':'김천 상무 입대 예정')+'<br><small>'+(back?'소속팀에서 남은 시즌을 뛰었어요':'18개월 복무 · 전역 후 '+gmEsc(p.club.n)+' 복귀')+'</small></div><div class="cr-note">누르면 결과 화면으로 돌아가요</div></div></div>');
 }
 function crRegularPrep(){
   var p=CR.v.player,S=CR.v.prep.service;CR.evPick=0;
   crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()+crMilitaryPanel()+'<div class="cr-goal"><span class="cr-goal-tag">MILITARY SERVICE · 일반 복무</span><div class="cr-goal-t">전역까지 '+S.left+'개월</div><div class="cr-note">이번 시즌에는 프로 경기 출전과 전문 훈련이 없어요. 복무를 마친 뒤 선수 활동을 재개합니다.</div></div>'+crHist(),'<div class="sum">'+p.age+'세<b>'+p.ovr+'</b></div><button class="gm-btn" onclick="crRegularStart(this)">복무 기간 진행</button>');
-  if(crExtraOnce('regular'))crMilitaryScene('military','MILITARY SERVICE · 일반 복무','일반 현역 복무 중이에요. 이번 시즌에는 프로 경기에 출전하지 않고 12개월을 복무합니다. 다음 시즌에는 남은 6개월을 마친 뒤 구단으로 돌아가요.',['복무 기간 진행','커리어 기록 보기'],function(i){crTovSet('',true);if(i===0)return crRegularStart();});
+  if(crExtraOnce('regular'))crMilitaryScene('military','MILITARY SERVICE · 일반 복무','일반 현역 복무 중이에요. 이번 시즌에는 프로 경기에 출전하지 않고 12개월을 복무합니다. 다음 시즌에는 남은 6개월을 마친 뒤 구단으로 돌아가요.',['복무 기간 진행'],function(){crTovSet('',true);crRegularStart();});
 }
 function crRegularStart(btn){
   if(!crBusy(btn,'복무 기간 진행 중...'))return;
