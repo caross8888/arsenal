@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-23T01:55:06.705426+00:00",
+  "updated_at": "2026-10-13T04:46:07.848659+00:00",
   "season": "2026/2027",
   "source": "Fotmob",
   "players": [
@@ -23,6 +23,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2026-03",
           "endDate": "2026-08",
           "active": false,
@@ -36,15 +37,15 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 2,
-          "starts": 2,
+          "appearances": 3,
+          "starts": 3,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 180,
+          "minutesPlayed": 270,
           "cleanSheets": 1,
-          "goalsConceded": 2,
+          "goalsConceded": 4,
           "avgRating": 7.0
         },
         "EFLT": {
@@ -63,54 +64,59 @@
       },
       "stats": {
         "saves": {
-          "value": "6",
-          "per90": 3,
-          "percentile": 46
+          "value": "12",
+          "per90": 4,
+          "percentile": 82
         },
         "save_percentage": {
           "value": "75.0",
           "per90": 75,
-          "percentile": 80
+          "percentile": 77
         },
         "goals_conceded": {
-          "value": "2",
-          "per90": 1,
-          "percentile": 64
+          "value": "4",
+          "per90": 1.33,
+          "percentile": 31
         },
         "clean_sheet_team_title": {
           "value": "1",
-          "per90": 0.5,
-          "percentile": 68
+          "per90": 0.33,
+          "percentile": 67
         },
         "error_led_to_goal": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
+          "value": "1",
+          "per90": 0.33,
+          "percentile": 0
+        },
+        "keeper_sweeper": {
+          "value": "3",
+          "per90": 1,
+          "percentile": 80
         },
         "keeper_high_claim": {
           "value": "1",
-          "per90": 0.5,
-          "percentile": 46
+          "per90": 0.33,
+          "percentile": 41
         },
         "successful_passes": {
-          "value": "53",
-          "per90": 26.5,
-          "percentile": 66
+          "value": "77",
+          "per90": 25.67,
+          "percentile": 82
         },
         "successful_passes_accuracy": {
-          "value": "88.3",
-          "per90": 88.33,
-          "percentile": 92
+          "value": "83.7",
+          "per90": 83.7,
+          "percentile": 75
         },
         "long_balls_accurate": {
-          "value": "2",
-          "per90": 1,
-          "percentile": 8
+          "value": "12",
+          "per90": 4,
+          "percentile": 67
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "22.2",
-          "per90": 22.22,
-          "percentile": 19
+          "value": "48.0",
+          "per90": 48,
+          "percentile": 84
         },
         "yellow_cards": {
           "value": "0",
@@ -124,23 +130,23 @@
         },
         "clean_sheet_title": {
           "value": "1",
-          "per90": 0.5,
-          "percentile": 68
+          "per90": 0.33,
+          "percentile": 67
         },
         "rating": {
-          "value": "6.98",
-          "per90": 6.99,
-          "percentile": 68
+          "value": "6.83",
+          "per90": 6.83,
+          "percentile": 59
         },
         "matches_uppercase": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 44
+          "value": "3",
+          "per90": 3,
+          "percentile": 74
         },
         "player_started_matches": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 44
+          "value": "3",
+          "per90": 3,
+          "percentile": 75
         },
         "saved_penalties": {
           "value": "0/0",
@@ -152,7 +158,30 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2024-04",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": "2026-06",
+          "active": false
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2023-01",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1318727,
@@ -178,7 +207,44 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Swansea City Academy",
+          "teamId": 773655,
+          "startDate": "2022-07",
+          "endDate": "2024-07",
+          "active": false
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2021-10",
+          "endDate": "2022-06",
+          "active": false
+        },
+        {
+          "team": "Arsenal U23",
+          "teamId": 357195,
+          "startDate": "2019-09",
+          "endDate": "2022-06",
+          "active": false
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2018-08",
+          "endDate": "2022-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1436934,
@@ -200,6 +266,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2024-07",
           "endDate": "2024-08",
           "active": false,
@@ -216,7 +283,23 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2024-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": "2025-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1360346,
@@ -233,7 +316,7 @@
       "height": "179 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 444966,
+        "value": 446282,
         "currency": "EUR"
       },
       "contractEnd": "2027-06-30",
@@ -241,6 +324,7 @@
       "career": [
         {
           "team": "Newport County",
+          "teamId": 10262,
           "startDate": "2025-07",
           "endDate": "2026-01",
           "active": false,
@@ -252,6 +336,7 @@
         },
         {
           "team": "Manchester United",
+          "teamId": 10260,
           "startDate": "2024-02",
           "endDate": "2025-06",
           "active": false,
@@ -296,57 +381,57 @@
         "successful_passes": {
           "value": "30",
           "per90": 19.01,
-          "percentile": 17
+          "percentile": 15
         },
         "successful_passes_accuracy": {
           "value": "73.2",
           "per90": 73.17,
-          "percentile": 17
+          "percentile": 15
         },
         "long_balls_accurate": {
           "value": "1",
           "per90": 0.63,
-          "percentile": 10
+          "percentile": 7
         },
         "long_ball_succeeeded_accuracy": {
           "value": "14.3",
           "per90": 14.29,
-          "percentile": 11
+          "percentile": 8
         },
         "chances_created": {
           "value": "1",
           "per90": 0.63,
-          "percentile": 26
+          "percentile": 23
         },
         "duel_won": {
           "value": "4",
           "per90": 2.54,
-          "percentile": 17
+          "percentile": 15
         },
         "duel_won_percent": {
           "value": "40.0",
           "per90": 40,
-          "percentile": 18
+          "percentile": 13
         },
         "aerials_won": {
           "value": "1",
           "per90": 0.63,
-          "percentile": 33
+          "percentile": 27
         },
         "aerials_won_percent": {
           "value": "50.0",
           "per90": 50,
-          "percentile": 47
+          "percentile": 42
         },
         "touches": {
           "value": "76",
           "per90": 48.17,
-          "percentile": 24
+          "percentile": 23
         },
         "touches_opp_box": {
           "value": "1",
           "per90": 0.63,
-          "percentile": 16
+          "percentile": 12
         },
         "dispossessed": {
           "value": "0",
@@ -356,37 +441,37 @@
         "defensive_actions": {
           "value": "5",
           "per90": 3.17,
-          "percentile": 21
+          "percentile": 20
         },
         "matchstats.headers.tackles": {
           "value": "3",
           "per90": 1.9,
-          "percentile": 34
+          "percentile": 31
         },
         "interceptions": {
           "value": "1",
           "per90": 0.63,
-          "percentile": 21
+          "percentile": 18
         },
         "fouls": {
           "value": "2",
           "per90": 1.27,
-          "percentile": 48
+          "percentile": 46
         },
         "recoveries": {
           "value": "3",
           "per90": 1.9,
-          "percentile": 8
+          "percentile": 4
         },
         "dribbled_past": {
           "value": "1",
           "per90": 0.63,
-          "percentile": 40
+          "percentile": 44
         },
         "clearances": {
           "value": "1",
           "per90": 0.63,
-          "percentile": 10
+          "percentile": 9
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -411,12 +496,12 @@
         "rating": {
           "value": "6.36",
           "per90": 6.36,
-          "percentile": 20
+          "percentile": 15
         },
         "matches_uppercase": {
           "value": "2",
           "per90": 2,
-          "percentile": 19
+          "percentile": 20
         },
         "player_started_matches": {
           "value": "2",
@@ -467,7 +552,51 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-08",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Manchester United U21",
+          "teamId": 1070257,
+          "startDate": "2026-02",
+          "endDate": "2026-08",
+          "active": false
+        },
+        {
+          "team": "Manchester United U21",
+          "teamId": 1070257,
+          "startDate": "2023-08",
+          "endDate": "2025-07",
+          "active": false
+        },
+        {
+          "team": "Manchester United U19",
+          "teamId": 686654,
+          "startDate": "2021-07",
+          "endDate": "2025-07",
+          "active": false
+        },
+        {
+          "team": "Manchester United U18",
+          "teamId": 1113551,
+          "startDate": "2021-07",
+          "endDate": "2024-06",
+          "active": false
+        },
+        {
+          "team": "Manchester United FC Under 17",
+          "teamId": -1,
+          "startDate": "2022-04",
+          "endDate": "2022-12",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1751837,
@@ -489,6 +618,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2025-05",
           "endDate": "2026-08",
           "active": false,
@@ -502,15 +632,15 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 4,
-          "starts": 2,
+          "appearances": 5,
+          "starts": 3,
           "goals": 0,
           "assists": 0,
-          "yellowCards": 0,
+          "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 171,
+          "minutesPlayed": 261,
           "cleanSheets": 1,
-          "goalsConceded": 7,
+          "goalsConceded": 9,
           "avgRating": 6.5
         },
         "EFLT": {
@@ -547,9 +677,9 @@
           "percentile": 0
         },
         "shots": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 0
+          "value": "1",
+          "per90": 0.34,
+          "percentile": 26
         },
         "assists": {
           "value": "0",
@@ -557,44 +687,54 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "142",
-          "per90": 74.74,
-          "percentile": 70
+          "value": "182",
+          "per90": 62.76,
+          "percentile": 95
         },
         "successful_passes_accuracy": {
-          "value": "91.6",
-          "per90": 91.61,
-          "percentile": 79
+          "value": "92.4",
+          "per90": 92.39,
+          "percentile": 95
         },
         "long_balls_accurate": {
-          "value": "5",
-          "per90": 2.63,
-          "percentile": 39
+          "value": "8",
+          "per90": 2.76,
+          "percentile": 81
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "55.6",
-          "per90": 55.56,
-          "percentile": 64
+          "value": "61.5",
+          "per90": 61.54,
+          "percentile": 78
         },
         "chances_created": {
+          "value": "3",
+          "per90": 1.03,
+          "percentile": 70
+        },
+        "dribbles_succeeded": {
           "value": "1",
-          "per90": 0.53,
-          "percentile": 60
+          "per90": 0.34,
+          "percentile": 40
+        },
+        "won_contest_subtitle": {
+          "value": "100.0",
+          "per90": 100,
+          "percentile": 100
         },
         "duel_won": {
-          "value": "2",
-          "per90": 1.05,
-          "percentile": 12
+          "value": "3",
+          "per90": 1.03,
+          "percentile": 4
         },
         "duel_won_percent": {
-          "value": "66.7",
-          "per90": 66.67,
-          "percentile": 66
+          "value": "42.9",
+          "per90": 42.86,
+          "percentile": 16
         },
         "aerials_won": {
           "value": "1",
-          "per90": 0.53,
-          "percentile": 18
+          "per90": 0.34,
+          "percentile": 27
         },
         "aerials_won_percent": {
           "value": "100.0",
@@ -602,96 +742,138 @@
           "percentile": 100
         },
         "touches": {
-          "value": "176",
-          "per90": 92.63,
-          "percentile": 63
+          "value": "234",
+          "per90": 80.69,
+          "percentile": 88
         },
         "touches_opp_box": {
           "value": "1",
-          "per90": 0.53,
-          "percentile": 29
+          "per90": 0.34,
+          "percentile": 12
         },
         "dispossessed": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
+          "value": "1",
+          "per90": 0.34,
+          "percentile": 44
         },
         "defensive_actions": {
-          "value": "12",
-          "per90": 6.32,
-          "percentile": 39
+          "value": "13",
+          "per90": 4.48,
+          "percentile": 48
         },
         "matchstats.headers.tackles": {
           "value": "1",
-          "per90": 0.53,
-          "percentile": 18
+          "per90": 0.34,
+          "percentile": 5
         },
         "interceptions": {
-          "value": "4",
-          "per90": 2.11,
-          "percentile": 78
+          "value": "3",
+          "per90": 1.03,
+          "percentile": 56
+        },
+        "blocked_shots": {
+          "value": "1",
+          "per90": 0.34,
+          "percentile": 60
         },
         "fouls": {
-          "value": "1",
-          "per90": 0.53,
-          "percentile": 57
+          "value": "3",
+          "per90": 1.03,
+          "percentile": 27
         },
         "recoveries": {
-          "value": "4",
-          "per90": 2.11,
-          "percentile": 21
+          "value": "9",
+          "per90": 3.1,
+          "percentile": 46
         },
         "clearances": {
-          "value": "7",
-          "per90": 3.68,
-          "percentile": 41
+          "value": "8",
+          "per90": 2.76,
+          "percentile": 71
         },
         "clean_sheet_team_title": {
           "value": "1",
-          "per90": 0.53,
-          "percentile": 72
+          "per90": 0.34,
+          "percentile": 76
         },
         "goals_conceded_while_on_pitch": {
-          "value": "3",
-          "per90": 1.58,
-          "percentile": 55
+          "value": "5",
+          "per90": 1.72,
+          "percentile": 35
         },
         "yellow_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
+          "value": "1",
+          "per90": 0.34,
+          "percentile": 7
         },
         "red_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "rating": {
-          "value": "6.53",
-          "per90": 6.53,
-          "percentile": 46
+          "value": "6.50",
+          "per90": 6.5,
+          "percentile": 24
         },
         "matches_uppercase": {
-          "value": "4",
-          "per90": 4,
+          "value": "5",
+          "per90": 5,
           "percentile": 100
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 29
         },
         "minutes_played": {
-          "value": "171",
+          "value": "261",
           "per90": 90,
-          "percentile": 40
+          "percentile": 66
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-03",
+          "endDate": "2025-06",
+          "active": false
+        },
+        {
+          "team": "Newcastle United U18",
+          "teamId": 1113561,
+          "startDate": "2024-01",
+          "endDate": "2024-03",
+          "active": false
+        },
+        {
+          "team": "Wolverhampton Wanderers U18",
+          "teamId": 1113554,
+          "startDate": "2021-12",
+          "endDate": "2024-01",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1562337,
@@ -701,21 +883,22 @@
       "name": "Jaden Dixon",
       "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/1562337.png",
       "nationality": "England",
-      "position": "centerback",
+      "position": "rightback",
       "posGroup": "DF",
       "jersey": "40",
       "age": 19,
       "height": "",
       "preferredFoot": "",
       "marketValue": {
-        "value": 1832256,
+        "value": 2198707,
         "currency": "EUR"
       },
       "contractEnd": "2028-06-30",
-      "positionLabel": "Center Back",
+      "positionLabel": "Right Back",
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2026-02",
           "endDate": "2026-06",
           "active": false,
@@ -727,6 +910,7 @@
         },
         {
           "team": "Stoke City",
+          "teamId": 10194,
           "startDate": "2023-10",
           "endDate": "2026-02",
           "active": false,
@@ -738,6 +922,19 @@
         }
       ],
       "competitions": {
+        "PL2": {
+          "name": "프리미어리그 2",
+          "appearances": 3,
+          "starts": 1,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 1,
+          "redCards": 0,
+          "minutesPlayed": 115,
+          "cleanSheets": 0,
+          "goalsConceded": 8,
+          "avgRating": 6.7
+        },
         "EFLT": {
           "name": "EFL 트로피",
           "appearances": 1,
@@ -750,19 +947,6 @@
           "cleanSheets": 0,
           "goalsConceded": 1,
           "avgRating": 7.0
-        },
-        "PL2": {
-          "name": "프리미어리그 2",
-          "appearances": 2,
-          "starts": 0,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 1,
-          "redCards": 0,
-          "minutesPlayed": 57,
-          "cleanSheets": 0,
-          "goalsConceded": 6,
-          "avgRating": 6.7
         }
       },
       "stats": {
@@ -771,37 +955,192 @@
           "per90": 0,
           "percentile": 0
         },
+        "shots": {
+          "value": "1",
+          "per90": 0.78,
+          "percentile": 36
+        },
+        "headed_shots": {
+          "value": "1",
+          "per90": 0.78,
+          "percentile": 57
+        },
         "assists": {
           "value": "0",
           "per90": 0,
           "percentile": 0
         },
-        "rating": {
-          "value": "6.64",
-          "per90": 6.63,
+        "successful_passes": {
+          "value": "78",
+          "per90": 61.04,
+          "percentile": 36
+        },
+        "successful_passes_accuracy": {
+          "value": "90.7",
+          "per90": 90.7,
+          "percentile": 73
+        },
+        "long_balls_accurate": {
+          "value": "6",
+          "per90": 4.7,
+          "percentile": 43
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "54.5",
+          "per90": 54.55,
+          "percentile": 65
+        },
+        "dribbles_succeeded": {
+          "value": "1",
+          "per90": 0.78,
+          "percentile": 70
+        },
+        "won_contest_subtitle": {
+          "value": "100.0",
+          "per90": 100,
+          "percentile": 100
+        },
+        "duel_won": {
+          "value": "6",
+          "per90": 4.7,
+          "percentile": 32
+        },
+        "duel_won_percent": {
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 23
+        },
+        "touches": {
+          "value": "103",
+          "per90": 80.61,
+          "percentile": 33
+        },
+        "touches_opp_box": {
+          "value": "1",
+          "per90": 0.78,
+          "percentile": 29
+        },
+        "dispossessed": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "defensive_actions": {
+          "value": "12",
+          "per90": 9.39,
+          "percentile": 38
+        },
+        "matchstats.headers.tackles": {
+          "value": "5",
+          "per90": 3.91,
+          "percentile": 73
+        },
+        "interceptions": {
+          "value": "2",
+          "per90": 1.57,
+          "percentile": 42
+        },
+        "blocked_shots": {
+          "value": "2",
+          "per90": 1.57,
           "percentile": 47
         },
-        "matches_uppercase": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 27
+        "fouls": {
+          "value": "1",
+          "per90": 0.78,
+          "percentile": 55
         },
-        "player_started_matches": {
+        "recoveries": {
+          "value": "11",
+          "per90": 8.61,
+          "percentile": 64
+        },
+        "dribbled_past": {
+          "value": "2",
+          "per90": 1.57,
+          "percentile": 10
+        },
+        "clearances": {
+          "value": "3",
+          "per90": 2.35,
+          "percentile": 14
+        },
+        "clean_sheet_team_title": {
           "value": "0",
           "per90": 0,
           "percentile": 0
         },
+        "goals_conceded_while_on_pitch": {
+          "value": "4",
+          "per90": 3.13,
+          "percentile": 45
+        },
+        "yellow_cards": {
+          "value": "1",
+          "per90": 0.78,
+          "percentile": 5
+        },
+        "red_cards": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "6.46",
+          "per90": 6.46,
+          "percentile": 41
+        },
+        "matches_uppercase": {
+          "value": "3",
+          "per90": 3,
+          "percentile": 46
+        },
+        "player_started_matches": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 0
+        },
         "minutes_played": {
-          "value": "57",
+          "value": "115",
           "per90": 90,
-          "percentile": 17
+          "percentile": 28
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-02",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Stoke City U21",
+          "teamId": 773650,
+          "startDate": "2023-08",
+          "endDate": "2026-02",
+          "active": false
+        },
+        {
+          "team": "Stoke City U18",
+          "teamId": 1113556,
+          "startDate": "2023-05",
+          "endDate": "2025-06",
+          "active": false
+        },
+        {
+          "team": "Tottenham Hotspur Under 14",
+          "teamId": -1,
+          "startDate": "2019-07",
+          "endDate": "2020-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1727880,
@@ -823,6 +1162,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2026-07",
           "endDate": "2026-08",
           "active": false,
@@ -881,14 +1221,14 @@
           "percentile": 0
         },
         "shots": {
-          "value": "2",
-          "per90": 0.73,
-          "percentile": 65
+          "value": "3",
+          "per90": 1.09,
+          "percentile": 87
         },
         "ShotsOnTarget": {
-          "value": "1",
-          "per90": 0.36,
-          "percentile": 65
+          "value": "2",
+          "per90": 0.73,
+          "percentile": 91
         },
         "assists": {
           "value": "0",
@@ -896,29 +1236,29 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "164",
-          "per90": 59.52,
-          "percentile": 92
+          "value": "163",
+          "per90": 59.15,
+          "percentile": 91
         },
         "successful_passes_accuracy": {
-          "value": "88.6",
-          "per90": 88.65,
-          "percentile": 84
+          "value": "89.1",
+          "per90": 89.07,
+          "percentile": 87
         },
         "long_balls_accurate": {
           "value": "6",
           "per90": 2.18,
-          "percentile": 75
+          "percentile": 71
         },
         "long_ball_succeeeded_accuracy": {
           "value": "46.2",
           "per90": 46.15,
-          "percentile": 61
+          "percentile": 59
         },
         "chances_created": {
           "value": "3",
           "per90": 1.09,
-          "percentile": 71
+          "percentile": 70
         },
         "big_chance_created_team_title": {
           "value": "1",
@@ -928,27 +1268,27 @@
         "crosses_succeeeded": {
           "value": "2",
           "per90": 0.73,
-          "percentile": 76
+          "percentile": 78
         },
         "crosses_succeeeded_accuracy": {
           "value": "40.0",
           "per90": 40,
-          "percentile": 84
+          "percentile": 87
         },
         "duel_won": {
           "value": "11",
           "per90": 3.99,
-          "percentile": 55
+          "percentile": 51
         },
         "duel_won_percent": {
           "value": "61.1",
           "per90": 61.11,
-          "percentile": 67
+          "percentile": 63
         },
         "aerials_won": {
           "value": "3",
           "per90": 1.09,
-          "percentile": 74
+          "percentile": 70
         },
         "aerials_won_percent": {
           "value": "75.0",
@@ -956,14 +1296,14 @@
           "percentile": 75
         },
         "touches": {
-          "value": "241",
-          "per90": 87.46,
+          "value": "243",
+          "per90": 88.19,
           "percentile": 89
         },
         "touches_opp_box": {
-          "value": "6",
-          "per90": 2.18,
-          "percentile": 82
+          "value": "7",
+          "per90": 2.54,
+          "percentile": 85
         },
         "dispossessed": {
           "value": "0",
@@ -973,12 +1313,12 @@
         "fouls_won": {
           "value": "4",
           "per90": 1.45,
-          "percentile": 73
+          "percentile": 75
         },
         "defensive_actions": {
           "value": "14",
           "per90": 5.08,
-          "percentile": 54
+          "percentile": 51
         },
         "matchstats.headers.tackles": {
           "value": "4",
@@ -986,44 +1326,44 @@
           "percentile": 46
         },
         "interceptions": {
-          "value": "3",
-          "per90": 1.09,
-          "percentile": 61
+          "value": "2",
+          "per90": 0.73,
+          "percentile": 35
         },
         "blocked_shots": {
           "value": "1",
           "per90": 0.36,
-          "percentile": 62
+          "percentile": 60
         },
         "fouls": {
           "value": "4",
           "per90": 1.45,
-          "percentile": 16
+          "percentile": 15
         },
         "recoveries": {
           "value": "12",
           "per90": 4.35,
-          "percentile": 64
+          "percentile": 62
         },
         "dribbled_past": {
           "value": "2",
           "per90": 0.73,
-          "percentile": 20
+          "percentile": 22
         },
         "clearances": {
-          "value": "6",
-          "per90": 2.18,
-          "percentile": 64
+          "value": "7",
+          "per90": 2.54,
+          "percentile": 66
         },
         "clean_sheet_team_title": {
           "value": "1",
           "per90": 0.36,
-          "percentile": 78
+          "percentile": 76
         },
         "goals_conceded_while_on_pitch": {
           "value": "3",
           "per90": 1.09,
-          "percentile": 52
+          "percentile": 51
         },
         "yellow_cards": {
           "value": "0",
@@ -1036,19 +1376,19 @@
           "percentile": 100
         },
         "rating": {
-          "value": "7.11",
-          "per90": 7.11,
-          "percentile": 69
+          "value": "7.12",
+          "per90": 7.12,
+          "percentile": 70
         },
         "matches_uppercase": {
           "value": "3",
           "per90": 3,
-          "percentile": 39
+          "percentile": 38
         },
         "player_started_matches": {
           "value": "3",
           "per90": 3,
-          "percentile": 54
+          "percentile": 55
         },
         "minutes_played": {
           "value": "248",
@@ -1060,7 +1400,37 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-02",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-04",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1800618,
@@ -1083,15 +1453,15 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 4,
+          "appearances": 5,
           "starts": 4,
           "goals": 0,
           "assists": 0,
-          "yellowCards": 1,
+          "yellowCards": 2,
           "redCards": 0,
-          "minutesPlayed": 267,
+          "minutesPlayed": 299,
           "cleanSheets": 1,
-          "goalsConceded": 7,
+          "goalsConceded": 9,
           "avgRating": 6.6
         },
         "UYL": {
@@ -1115,13 +1485,13 @@
           "percentile": 0
         },
         "shots": {
-          "value": "5",
-          "per90": 1.69,
+          "value": "6",
+          "per90": 1.81,
           "percentile": 100
         },
         "headed_shots": {
-          "value": "4",
-          "per90": 1.35,
+          "value": "5",
+          "per90": 1.51,
           "percentile": 100
         },
         "assists": {
@@ -1130,138 +1500,143 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "210",
-          "per90": 70.79,
-          "percentile": 92
+          "value": "235",
+          "per90": 70.74,
+          "percentile": 95
         },
         "successful_passes_accuracy": {
-          "value": "87.9",
-          "per90": 87.87,
-          "percentile": 54
+          "value": "88.3",
+          "per90": 88.35,
+          "percentile": 59
         },
         "long_balls_accurate": {
-          "value": "11",
-          "per90": 3.71,
-          "percentile": 79
+          "value": "15",
+          "per90": 4.52,
+          "percentile": 88
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "44.0",
-          "per90": 44,
-          "percentile": 46
+          "value": "55.6",
+          "per90": 55.56,
+          "percentile": 67
         },
         "chances_created": {
           "value": "2",
-          "per90": 0.67,
-          "percentile": 84
+          "per90": 0.6,
+          "percentile": 83
+        },
+        "big_chance_created_team_title": {
+          "value": "1",
+          "per90": 0.3,
+          "percentile": 100
         },
         "duel_won": {
-          "value": "6",
-          "per90": 2.02,
-          "percentile": 33
+          "value": "9",
+          "per90": 2.71,
+          "percentile": 58
         },
         "duel_won_percent": {
-          "value": "40.0",
-          "per90": 40,
-          "percentile": 12
+          "value": "40.9",
+          "per90": 40.91,
+          "percentile": 13
         },
         "aerials_won": {
-          "value": "4",
-          "per90": 1.35,
-          "percentile": 65
+          "value": "7",
+          "per90": 2.11,
+          "percentile": 85
         },
         "aerials_won_percent": {
-          "value": "44.4",
-          "per90": 44.44,
-          "percentile": 27
+          "value": "46.7",
+          "per90": 46.67,
+          "percentile": 24
         },
         "touches": {
-          "value": "273",
-          "per90": 92.02,
-          "percentile": 92
-        },
-        "touches_opp_box": {
-          "value": "6",
-          "per90": 2.02,
+          "value": "311",
+          "per90": 93.61,
           "percentile": 95
         },
+        "touches_opp_box": {
+          "value": "9",
+          "per90": 2.71,
+          "percentile": 97
+        },
         "dispossessed": {
-          "value": "1",
-          "per90": 0.34,
-          "percentile": 12
+          "value": "2",
+          "per90": 0.6,
+          "percentile": 3
         },
         "fouls_won": {
           "value": "1",
-          "per90": 0.34,
-          "percentile": 31
+          "per90": 0.3,
+          "percentile": 33
         },
         "defensive_actions": {
-          "value": "20",
-          "per90": 6.74,
-          "percentile": 62
+          "value": "24",
+          "per90": 7.22,
+          "percentile": 73
         },
         "matchstats.headers.tackles": {
           "value": "1",
-          "per90": 0.34,
+          "per90": 0.3,
           "percentile": 18
         },
         "interceptions": {
           "value": "6",
-          "per90": 2.02,
-          "percentile": 94
+          "per90": 1.81,
+          "percentile": 92
         },
         "blocked_shots": {
           "value": "4",
-          "per90": 1.35,
-          "percentile": 83
+          "per90": 1.2,
+          "percentile": 81
         },
         "fouls": {
           "value": "2",
-          "per90": 0.67,
-          "percentile": 34
+          "per90": 0.6,
+          "percentile": 33
         },
         "recoveries": {
-          "value": "10",
-          "per90": 3.37,
-          "percentile": 64
+          "value": "9",
+          "per90": 2.71,
+          "percentile": 55
         },
         "dribbled_past": {
           "value": "1",
-          "per90": 0.34,
-          "percentile": 21
+          "per90": 0.3,
+          "percentile": 23
         },
         "clearances": {
-          "value": "9",
-          "per90": 3.03,
-          "percentile": 51
+          "value": "13",
+          "per90": 3.91,
+          "percentile": 70
         },
         "clean_sheet_team_title": {
           "value": "1",
-          "per90": 0.34,
-          "percentile": 72
+          "per90": 0.3,
+          "percentile": 73
         },
         "goals_conceded_while_on_pitch": {
           "value": "4",
-          "per90": 1.35,
-          "percentile": 46
+          "per90": 1.2,
+          "percentile": 45
         },
         "yellow_cards": {
           "value": "1",
-          "per90": 0.34,
-          "percentile": 6
+          "per90": 0.3,
+          "percentile": 5
         },
         "red_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "rating": {
-          "value": "6.60",
-          "per90": 6.6,
-          "percentile": 50
+          "value": "6.55",
+          "per90": 6.55,
+          "percentile": 47
         },
         "matches_uppercase": {
-          "value": "4",
-          "per90": 4,
+          "value": "5",
+          "per90": 5,
           "percentile": 100
         },
         "player_started_matches": {
@@ -1270,16 +1645,53 @@
           "percentile": 100
         },
         "minutes_played": {
-          "value": "267",
+          "value": "299",
           "per90": 90,
-          "percentile": 66
+          "percentile": 82
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2026-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Tottenham Hotspur U21",
+          "teamId": 860802,
+          "startDate": "2025-09",
+          "endDate": "2026-06",
+          "active": false
+        },
+        {
+          "team": "Tottenham Hotspur U19",
+          "teamId": 394198,
+          "startDate": "2025-07",
+          "endDate": "2026-06",
+          "active": false
+        },
+        {
+          "team": "Tottenham Hotspur U18",
+          "teamId": 1113562,
+          "startDate": "2023-12",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1838554,
@@ -1300,6 +1712,19 @@
       "positionLabel": "Left Back",
       "career": [],
       "competitions": {
+        "PL2": {
+          "name": "프리미어리그 2",
+          "appearances": 3,
+          "starts": 2,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 202,
+          "cleanSheets": 0,
+          "goalsConceded": 7,
+          "avgRating": 6.3
+        },
         "EFLT": {
           "name": "EFL 트로피",
           "appearances": 2,
@@ -1312,19 +1737,6 @@
           "cleanSheets": 0,
           "goalsConceded": 6,
           "avgRating": 6.6
-        },
-        "PL2": {
-          "name": "프리미어리그 2",
-          "appearances": 2,
-          "starts": 1,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 112,
-          "cleanSheets": 0,
-          "goalsConceded": 5,
-          "avgRating": 6.3
         }
       },
       "stats": {
@@ -1334,9 +1746,9 @@
           "percentile": 0
         },
         "shots": {
-          "value": "1",
-          "per90": 0.8,
-          "percentile": 26
+          "value": "2",
+          "per90": 0.89,
+          "percentile": 65
         },
         "assists": {
           "value": "0",
@@ -1344,94 +1756,119 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "40",
-          "per90": 32.14,
-          "percentile": 24
+          "value": "71",
+          "per90": 31.63,
+          "percentile": 47
         },
         "successful_passes_accuracy": {
-          "value": "76.9",
-          "per90": 76.92,
-          "percentile": 35
+          "value": "78.0",
+          "per90": 78.02,
+          "percentile": 41
         },
         "long_balls_accurate": {
-          "value": "5",
-          "per90": 4.02,
-          "percentile": 64
+          "value": "6",
+          "per90": 2.67,
+          "percentile": 71
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "62.5",
-          "per90": 62.5,
-          "percentile": 80
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 63
         },
-        "dribbles_succeeded": {
-          "value": "4",
-          "per90": 3.21,
-          "percentile": 85
+        "chances_created": {
+          "value": "2",
+          "per90": 0.89,
+          "percentile": 43
         },
-        "won_contest_subtitle": {
-          "value": "57.1",
-          "per90": 57.14,
-          "percentile": 65
-        },
-        "duel_won": {
-          "value": "12",
-          "per90": 9.64,
-          "percentile": 60
-        },
-        "duel_won_percent": {
-          "value": "57.1",
-          "per90": 57.14,
+        "crosses_succeeeded": {
+          "value": "1",
+          "per90": 0.45,
           "percentile": 55
         },
+        "crosses_succeeeded_accuracy": {
+          "value": "20.0",
+          "per90": 20,
+          "percentile": 65
+        },
+        "dribbles_succeeded": {
+          "value": "7",
+          "per90": 3.12,
+          "percentile": 98
+        },
+        "won_contest_subtitle": {
+          "value": "63.6",
+          "per90": 63.64,
+          "percentile": 68
+        },
+        "duel_won": {
+          "value": "19",
+          "per90": 8.47,
+          "percentile": 87
+        },
+        "duel_won_percent": {
+          "value": "61.3",
+          "per90": 61.29,
+          "percentile": 66
+        },
+        "aerials_won": {
+          "value": "1",
+          "per90": 0.45,
+          "percentile": 27
+        },
+        "aerials_won_percent": {
+          "value": "33.3",
+          "per90": 33.33,
+          "percentile": 32
+        },
         "touches": {
-          "value": "91",
-          "per90": 73.12,
-          "percentile": 28
+          "value": "162",
+          "per90": 72.18,
+          "percentile": 57
         },
         "touches_opp_box": {
-          "value": "2",
-          "per90": 1.61,
-          "percentile": 35
+          "value": "3",
+          "per90": 1.34,
+          "percentile": 47
         },
         "dispossessed": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
+          "value": "2",
+          "per90": 0.89,
+          "percentile": 24
         },
         "fouls_won": {
-          "value": "4",
-          "per90": 3.21,
-          "percentile": 73
+          "value": "5",
+          "per90": 2.23,
+          "percentile": 86
         },
         "defensive_actions": {
-          "value": "5",
-          "per90": 4.02,
-          "percentile": 21
+          "value": "9",
+          "per90": 4.01,
+          "percentile": 32
         },
         "matchstats.headers.tackles": {
-          "value": "4",
-          "per90": 3.21,
-          "percentile": 46
+          "value": "6",
+          "per90": 2.67,
+          "percentile": 62
         },
         "fouls": {
           "value": "3",
-          "per90": 2.41,
-          "percentile": 28
+          "per90": 1.34,
+          "percentile": 27
         },
         "recoveries": {
-          "value": "6",
-          "per90": 4.82,
-          "percentile": 30
+          "value": "9",
+          "per90": 4.01,
+          "percentile": 46
         },
         "dribbled_past": {
           "value": "1",
-          "per90": 0.8,
-          "percentile": 40
+          "per90": 0.45,
+          "percentile": 44
         },
         "clearances": {
-          "value": "1",
-          "per90": 0.8,
-          "percentile": 10
+          "value": "3",
+          "per90": 1.34,
+          "percentile": 31
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -1439,9 +1876,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "4",
-          "per90": 3.21,
-          "percentile": 44
+          "value": "6",
+          "per90": 2.67,
+          "percentile": 25
         },
         "yellow_cards": {
           "value": "0",
@@ -1454,31 +1891,61 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.34",
-          "per90": 6.34,
-          "percentile": 19
+          "value": "6.58",
+          "per90": 6.58,
+          "percentile": 33
         },
         "matches_uppercase": {
-          "value": "2",
-          "per90": 2,
-          "percentile": 19
+          "value": "3",
+          "per90": 3,
+          "percentile": 38
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 29
         },
         "minutes_played": {
-          "value": "112",
+          "value": "202",
           "per90": 90,
-          "percentile": 26
+          "percentile": 48
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-02",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2025-03",
+          "endDate": "2025-06",
+          "active": false
+        },
+        {
+          "team": "Chelsea U18",
+          "teamId": 1113552,
+          "startDate": "2023-07",
+          "endDate": "2025-01",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1787525,
@@ -1495,7 +1962,7 @@
       "height": "187 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 2630540,
+        "value": 5046127,
         "currency": "EUR"
       },
       "contractEnd": "2027-06-30",
@@ -1503,6 +1970,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2025-07",
           "endDate": null,
           "active": true,
@@ -1514,6 +1982,19 @@
         }
       ],
       "competitions": {
+        "PL2": {
+          "name": "프리미어리그 2",
+          "appearances": 4,
+          "starts": 4,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 298,
+          "cleanSheets": 0,
+          "goalsConceded": 9,
+          "avgRating": 7.1
+        },
         "EFL": {
           "name": "카라바오컵",
           "appearances": 1,
@@ -1525,19 +2006,6 @@
           "minutesPlayed": 90,
           "cleanSheets": 0,
           "goalsConceded": 2,
-          "avgRating": 7.1
-        },
-        "PL2": {
-          "name": "프리미어리그 2",
-          "appearances": 3,
-          "starts": 3,
-          "goals": 0,
-          "assists": 0,
-          "yellowCards": 0,
-          "redCards": 0,
-          "minutesPlayed": 240,
-          "cleanSheets": 0,
-          "goalsConceded": 7,
           "avgRating": 7.1
         },
         "UCL": {
@@ -1562,18 +2030,18 @@
         },
         "shots": {
           "value": "2",
-          "per90": 0.75,
-          "percentile": 65
+          "per90": 0.6,
+          "percentile": 62
         },
         "ShotsOnTarget": {
           "value": "2",
-          "per90": 0.75,
-          "percentile": 94
+          "per90": 0.6,
+          "percentile": 95
         },
         "headed_shots": {
           "value": "1",
-          "per90": 0.38,
-          "percentile": 59
+          "per90": 0.3,
+          "percentile": 57
         },
         "assists": {
           "value": "0",
@@ -1581,29 +2049,29 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "147",
-          "per90": 55.13,
-          "percentile": 72
+          "value": "165",
+          "per90": 49.83,
+          "percentile": 77
         },
         "successful_passes_accuracy": {
-          "value": "90.7",
-          "per90": 90.74,
-          "percentile": 72
+          "value": "91.2",
+          "per90": 91.16,
+          "percentile": 75
         },
         "long_balls_accurate": {
           "value": "4",
-          "per90": 1.5,
-          "percentile": 29
+          "per90": 1.21,
+          "percentile": 27
         },
         "long_ball_succeeeded_accuracy": {
           "value": "28.6",
           "per90": 28.57,
-          "percentile": 17
+          "percentile": 15
         },
         "dribbles_succeeded": {
-          "value": "1",
-          "per90": 0.38,
-          "percentile": 72
+          "value": "2",
+          "per90": 0.6,
+          "percentile": 94
         },
         "won_contest_subtitle": {
           "value": "100.0",
@@ -1611,79 +2079,79 @@
           "percentile": 100
         },
         "duel_won": {
-          "value": "21",
-          "per90": 7.87,
-          "percentile": 95
+          "value": "25",
+          "per90": 7.55,
+          "percentile": 97
         },
         "duel_won_percent": {
-          "value": "75.0",
-          "per90": 75,
-          "percentile": 83
+          "value": "73.5",
+          "per90": 73.53,
+          "percentile": 84
         },
         "aerials_won": {
-          "value": "5",
-          "per90": 1.88,
-          "percentile": 76
+          "value": "6",
+          "per90": 1.81,
+          "percentile": 78
         },
         "aerials_won_percent": {
-          "value": "83.3",
-          "per90": 83.33,
-          "percentile": 72
+          "value": "85.7",
+          "per90": 85.71,
+          "percentile": 74
         },
         "touches": {
-          "value": "211",
-          "per90": 79.12,
-          "percentile": 71
+          "value": "240",
+          "per90": 72.48,
+          "percentile": 78
         },
         "touches_opp_box": {
           "value": "4",
-          "per90": 1.5,
-          "percentile": 81
+          "per90": 1.21,
+          "percentile": 80
         },
         "dispossessed": {
-          "value": "2",
-          "per90": 0.75,
-          "percentile": 2
+          "value": "3",
+          "per90": 0.91,
+          "percentile": 0
         },
         "fouls_won": {
-          "value": "8",
-          "per90": 3,
-          "percentile": 96
+          "value": "10",
+          "per90": 3.02,
+          "percentile": 98
         },
         "defensive_actions": {
-          "value": "25",
-          "per90": 9.38,
-          "percentile": 80
+          "value": "29",
+          "per90": 8.76,
+          "percentile": 86
         },
         "matchstats.headers.tackles": {
           "value": "7",
-          "per90": 2.62,
-          "percentile": 91
+          "per90": 2.11,
+          "percentile": 90
         },
         "interceptions": {
           "value": "3",
-          "per90": 1.12,
-          "percentile": 63
+          "per90": 0.91,
+          "percentile": 57
         },
         "blocked_shots": {
-          "value": "1",
-          "per90": 0.38,
-          "percentile": 28
+          "value": "3",
+          "per90": 0.91,
+          "percentile": 67
         },
         "fouls": {
-          "value": "4",
-          "per90": 1.5,
-          "percentile": 14
+          "value": "5",
+          "per90": 1.51,
+          "percentile": 4
         },
         "recoveries": {
-          "value": "9",
-          "per90": 3.38,
-          "percentile": 58
+          "value": "12",
+          "per90": 3.62,
+          "percentile": 71
         },
         "clearances": {
-          "value": "14",
-          "per90": 5.25,
-          "percentile": 78
+          "value": "16",
+          "per90": 4.83,
+          "percentile": 79
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -1691,9 +2159,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "5",
-          "per90": 1.88,
-          "percentile": 36
+          "value": "7",
+          "per90": 2.11,
+          "percentile": 15
         },
         "yellow_cards": {
           "value": "0",
@@ -1703,27 +2171,27 @@
         "red_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "rating": {
-          "value": "7.07",
-          "per90": 7.07,
-          "percentile": 77
+          "value": "6.86",
+          "per90": 6.86,
+          "percentile": 68
         },
         "matches_uppercase": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 44
+          "value": "4",
+          "per90": 4,
+          "percentile": 77
         },
         "player_started_matches": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 57
+          "value": "4",
+          "per90": 4,
+          "percentile": 100
         },
         "minutes_played": {
-          "value": "240",
+          "value": "298",
           "per90": 90,
-          "percentile": 60
+          "percentile": 81
         }
       },
       "traits": {
@@ -2255,7 +2723,37 @@
         }
       ],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-02",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-07",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1845210,
@@ -2268,7 +2766,7 @@
       "position": "",
       "posGroup": "MF",
       "jersey": "84",
-      "age": 18,
+      "age": 19,
       "height": "",
       "preferredFoot": "",
       "marketValue": null,
@@ -2281,7 +2779,16 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        }
+      ]
     },
     {
       "id": 1680340,
@@ -2290,10 +2797,10 @@
       ],
       "name": "Demiane Agustien",
       "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/1680340.png",
-      "nationality": "Curacao",
+      "nationality": "Netherlands",
       "position": "centerattackingmidfielder",
       "posGroup": "MF",
-      "jersey": "",
+      "jersey": "37",
       "age": 19,
       "height": "",
       "preferredFoot": "",
@@ -2303,6 +2810,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2026-07",
           "endDate": "2026-08",
           "active": false,
@@ -2350,7 +2858,7 @@
         "shots": {
           "value": "1",
           "per90": 0.74,
-          "percentile": 10
+          "percentile": 11
         },
         "assists": {
           "value": "0",
@@ -2360,37 +2868,37 @@
         "successful_passes": {
           "value": "39",
           "per90": 28.77,
-          "percentile": 58
+          "percentile": 53
         },
         "successful_passes_accuracy": {
           "value": "79.6",
           "per90": 79.59,
-          "percentile": 47
+          "percentile": 54
         },
         "long_balls_accurate": {
           "value": "2",
           "per90": 1.48,
-          "percentile": 56
+          "percentile": 54
         },
         "long_ball_succeeeded_accuracy": {
           "value": "40.0",
           "per90": 40,
-          "percentile": 45
+          "percentile": 49
         },
         "duel_won": {
           "value": "7",
           "per90": 5.16,
-          "percentile": 40
+          "percentile": 35
         },
         "duel_won_percent": {
           "value": "53.8",
           "per90": 53.85,
-          "percentile": 78
+          "percentile": 79
         },
         "touches": {
           "value": "76",
           "per90": 56.07,
-          "percentile": 53
+          "percentile": 44
         },
         "touches_opp_box": {
           "value": "1",
@@ -2400,42 +2908,42 @@
         "dispossessed": {
           "value": "2",
           "per90": 1.48,
-          "percentile": 46
+          "percentile": 49
         },
         "fouls_won": {
           "value": "2",
           "per90": 1.48,
-          "percentile": 35
+          "percentile": 33
         },
         "defensive_actions": {
           "value": "10",
           "per90": 7.38,
-          "percentile": 87
+          "percentile": 83
         },
         "matchstats.headers.tackles": {
           "value": "5",
           "per90": 3.69,
-          "percentile": 75
+          "percentile": 70
         },
         "interceptions": {
           "value": "3",
           "per90": 2.21,
-          "percentile": 90
+          "percentile": 82
         },
         "fouls": {
           "value": "2",
           "per90": 1.48,
-          "percentile": 41
+          "percentile": 44
         },
         "recoveries": {
           "value": "4",
           "per90": 2.95,
-          "percentile": 28
+          "percentile": 24
         },
         "clearances": {
           "value": "2",
           "per90": 1.48,
-          "percentile": 74
+          "percentile": 72
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -2445,7 +2953,7 @@
         "goals_conceded_while_on_pitch": {
           "value": "4",
           "per90": 2.95,
-          "percentile": 33
+          "percentile": 35
         },
         "yellow_cards": {
           "value": "0",
@@ -2460,12 +2968,12 @@
         "rating": {
           "value": "6.24",
           "per90": 6.24,
-          "percentile": 14
+          "percentile": 10
         },
         "matches_uppercase": {
           "value": "3",
           "per90": 3,
-          "percentile": 44
+          "percentile": 42
         },
         "player_started_matches": {
           "value": "1",
@@ -2482,7 +2990,37 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Derby County U18",
+          "teamId": 1113549,
+          "startDate": "2023-02",
+          "endDate": "2025-07",
+          "active": false
+        },
+        {
+          "team": "Derby County U21",
+          "teamId": 773680,
+          "startDate": "2024-12",
+          "endDate": "2025-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1526415,
@@ -2494,12 +3032,12 @@
       "nationality": "England",
       "position": "centermidfielder",
       "posGroup": "MF",
-      "jersey": "",
+      "jersey": "39",
       "age": 19,
       "height": "175 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 241920,
+        "value": 290304,
         "currency": "EUR"
       },
       "contractEnd": null,
@@ -2507,6 +3045,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2026-07",
           "endDate": "2026-08",
           "active": false,
@@ -2518,6 +3057,7 @@
         },
         {
           "team": "Crawley Town",
+          "teamId": 8647,
           "startDate": "2026-01",
           "endDate": "2026-06",
           "active": false,
@@ -2529,6 +3069,7 @@
         },
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2025-07",
           "endDate": "2026-01",
           "active": false,
@@ -2545,7 +3086,51 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-02",
+          "endDate": "2026-01",
+          "active": false
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2023-11",
+          "endDate": "2026-01",
+          "active": false
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2022-07",
+          "endDate": "2025-06",
+          "active": false
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2023-11",
+          "endDate": "2024-06",
+          "active": false
+        },
+        {
+          "team": "Arsenal Under 14",
+          "teamId": -1,
+          "startDate": "2019-07",
+          "endDate": "2020-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1677184,
@@ -2560,13 +3145,14 @@
       "jersey": "44",
       "age": 18,
       "height": "",
-      "preferredFoot": "",
+      "preferredFoot": "Right",
       "marketValue": null,
       "contractEnd": null,
       "positionLabel": "Defensive Midfielder",
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2026-01",
           "endDate": null,
           "active": true,
@@ -2580,15 +3166,15 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 4,
-          "starts": 4,
+          "appearances": 5,
+          "starts": 5,
           "goals": 0,
           "assists": 1,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 345,
+          "minutesPlayed": 416,
           "cleanSheets": 1,
-          "goalsConceded": 7,
+          "goalsConceded": 9,
           "avgRating": 7.1
         },
         "EFL": {
@@ -2638,164 +3224,164 @@
           "percentile": 0
         },
         "shots": {
-          "value": "4",
-          "per90": 1.04,
-          "percentile": 64
+          "value": "5",
+          "per90": 1.08,
+          "percentile": 74
         },
         "ShotsOnTarget": {
-          "value": "2",
-          "per90": 0.52,
-          "percentile": 66
+          "value": "3",
+          "per90": 0.65,
+          "percentile": 85
         },
         "headed_shots": {
           "value": "1",
-          "per90": 0.26,
-          "percentile": 86
+          "per90": 0.22,
+          "percentile": 87
         },
         "assists": {
           "value": "1",
-          "per90": 0.26,
-          "percentile": 70
+          "per90": 0.22,
+          "percentile": 69
         },
         "successful_passes": {
-          "value": "158",
-          "per90": 41.22,
-          "percentile": 91
+          "value": "189",
+          "per90": 40.89,
+          "percentile": 92
         },
         "successful_passes_accuracy": {
-          "value": "86.8",
-          "per90": 86.81,
-          "percentile": 67
+          "value": "87.1",
+          "per90": 87.1,
+          "percentile": 70
         },
         "long_balls_accurate": {
-          "value": "4",
-          "per90": 1.04,
-          "percentile": 41
+          "value": "6",
+          "per90": 1.3,
+          "percentile": 58
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "57.1",
-          "per90": 57.14,
-          "percentile": 53
+          "value": "60.0",
+          "per90": 60,
+          "percentile": 58
         },
         "chances_created": {
           "value": "5",
-          "per90": 1.3,
-          "percentile": 81
+          "per90": 1.08,
+          "percentile": 75
         },
         "big_chance_created_team_title": {
           "value": "1",
-          "per90": 0.26,
-          "percentile": 66
+          "per90": 0.22,
+          "percentile": 62
         },
         "dribbles_succeeded": {
           "value": "4",
-          "per90": 1.04,
-          "percentile": 90
+          "per90": 0.87,
+          "percentile": 86
         },
         "won_contest_subtitle": {
           "value": "66.7",
           "per90": 66.67,
-          "percentile": 62
+          "percentile": 66
         },
         "duel_won": {
-          "value": "14",
-          "per90": 3.65,
-          "percentile": 70
-        },
-        "duel_won_percent": {
-          "value": "50.0",
-          "per90": 50,
-          "percentile": 41
-        },
-        "aerials_won": {
-          "value": "3",
-          "per90": 0.78,
-          "percentile": 78
-        },
-        "aerials_won_percent": {
-          "value": "75.0",
-          "per90": 75,
+          "value": "17",
+          "per90": 3.68,
           "percentile": 77
         },
+        "duel_won_percent": {
+          "value": "45.9",
+          "per90": 45.95,
+          "percentile": 38
+        },
+        "aerials_won": {
+          "value": "1",
+          "per90": 0.22,
+          "percentile": 28
+        },
+        "aerials_won_percent": {
+          "value": "25.0",
+          "per90": 25,
+          "percentile": 32
+        },
         "touches": {
-          "value": "217",
-          "per90": 56.61,
-          "percentile": 87
+          "value": "263",
+          "per90": 56.9,
+          "percentile": 92
         },
         "touches_opp_box": {
           "value": "6",
-          "per90": 1.57,
-          "percentile": 76
+          "per90": 1.3,
+          "percentile": 70
         },
         "dispossessed": {
-          "value": "1",
-          "per90": 0.26,
-          "percentile": 51
-        },
-        "fouls_won": {
           "value": "2",
-          "per90": 0.52,
+          "per90": 0.43,
           "percentile": 32
         },
+        "fouls_won": {
+          "value": "4",
+          "per90": 0.87,
+          "percentile": 67
+        },
         "defensive_actions": {
-          "value": "14",
-          "per90": 3.65,
-          "percentile": 72
+          "value": "18",
+          "per90": 3.89,
+          "percentile": 83
         },
         "matchstats.headers.tackles": {
-          "value": "5",
-          "per90": 1.3,
-          "percentile": 59
+          "value": "8",
+          "per90": 1.73,
+          "percentile": 83
         },
         "interceptions": {
-          "value": "5",
+          "value": "6",
           "per90": 1.3,
-          "percentile": 87
+          "percentile": 92
         },
         "blocked_shots": {
           "value": "1",
-          "per90": 0.26,
-          "percentile": 53
+          "per90": 0.22,
+          "percentile": 51
         },
         "fouls": {
-          "value": "6",
-          "per90": 1.57,
+          "value": "7",
+          "per90": 1.51,
           "percentile": 10
         },
         "penalty_conceded_title": {
           "value": "1",
-          "per90": 0.26,
+          "per90": 0.22,
           "percentile": 0
         },
         "recoveries": {
-          "value": "14",
-          "per90": 3.65,
-          "percentile": 75
+          "value": "18",
+          "per90": 3.89,
+          "percentile": 81
         },
         "dribbled_past": {
-          "value": "4",
-          "per90": 1.04,
-          "percentile": 9
+          "value": "6",
+          "per90": 1.3,
+          "percentile": 3
         },
         "clearances": {
           "value": "3",
-          "per90": 0.78,
+          "per90": 0.65,
           "percentile": 56
         },
         "clean_sheet_team_title": {
           "value": "1",
-          "per90": 0.26,
-          "percentile": 72
+          "per90": 0.22,
+          "percentile": 74
         },
         "goals_conceded_while_on_pitch": {
-          "value": "7",
-          "per90": 1.83,
-          "percentile": 14
+          "value": "9",
+          "per90": 1.95,
+          "percentile": 7
         },
         "yellow_cards": {
-          "value": "0",
-          "per90": 0,
-          "percentile": 100
+          "value": "1",
+          "per90": 0.22,
+          "percentile": 10
         },
         "red_cards": {
           "value": "0",
@@ -2803,24 +3389,24 @@
           "percentile": 100
         },
         "rating": {
-          "value": "7.07",
-          "per90": 7.07,
-          "percentile": 55
+          "value": "6.96",
+          "per90": 6.96,
+          "percentile": 44
         },
         "matches_uppercase": {
-          "value": "4",
-          "per90": 4,
+          "value": "5",
+          "per90": 5,
           "percentile": 100
         },
         "player_started_matches": {
-          "value": "4",
-          "per90": 4,
+          "value": "5",
+          "per90": 5,
           "percentile": 100
         },
         "minutes_played": {
-          "value": "345",
+          "value": "416",
           "per90": 90,
-          "percentile": 88
+          "percentile": 97
         }
       },
       "traits": null,
@@ -2873,7 +3459,37 @@
         }
       ],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-02",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-02",
+          "endDate": "2026-06",
+          "active": false
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": "2024-02",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1624056,
@@ -2888,13 +3504,14 @@
       "jersey": "45",
       "age": 18,
       "height": "",
-      "preferredFoot": "",
+      "preferredFoot": "Right",
       "marketValue": null,
       "contractEnd": null,
       "positionLabel": "Defensive Midfielder",
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2026-07",
           "endDate": null,
           "active": true,
@@ -2908,16 +3525,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 4,
+          "appearances": 5,
           "starts": 3,
           "goals": 0,
           "assists": 0,
           "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 258,
+          "minutesPlayed": 290,
           "cleanSheets": 1,
-          "goalsConceded": 7,
-          "avgRating": 6.5
+          "goalsConceded": 9,
+          "avgRating": 6.6
         },
         "EFL": {
           "name": "카라바오컵",
@@ -2966,9 +3583,14 @@
           "percentile": 0
         },
         "shots": {
+          "value": "2",
+          "per90": 0.62,
+          "percentile": 38
+        },
+        "ShotsOnTarget": {
           "value": "1",
-          "per90": 0.35,
-          "percentile": 22
+          "per90": 0.31,
+          "percentile": 49
         },
         "assists": {
           "value": "0",
@@ -2976,114 +3598,119 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "128",
-          "per90": 44.65,
-          "percentile": 84
+          "value": "146",
+          "per90": 45.31,
+          "percentile": 87
         },
         "successful_passes_accuracy": {
-          "value": "83.1",
-          "per90": 83.12,
-          "percentile": 51
+          "value": "84.9",
+          "per90": 84.88,
+          "percentile": 57
         },
         "long_balls_accurate": {
-          "value": "7",
-          "per90": 2.44,
-          "percentile": 66
+          "value": "6",
+          "per90": 1.86,
+          "percentile": 58
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "50.0",
-          "per90": 50,
-          "percentile": 39
+          "value": "46.2",
+          "per90": 46.15,
+          "percentile": 40
+        },
+        "chances_created": {
+          "value": "1",
+          "per90": 0.31,
+          "percentile": 12
         },
         "crosses_succeeeded": {
           "value": "1",
-          "per90": 0.35,
-          "percentile": 52
+          "per90": 0.31,
+          "percentile": 49
         },
         "crosses_succeeeded_accuracy": {
           "value": "16.7",
           "per90": 16.67,
-          "percentile": 56
+          "percentile": 52
         },
         "dribbles_succeeded": {
           "value": "2",
-          "per90": 0.7,
-          "percentile": 55
+          "per90": 0.62,
+          "percentile": 53
         },
         "won_contest_subtitle": {
-          "value": "100.0",
-          "per90": 100,
-          "percentile": 100
+          "value": "40.0",
+          "per90": 40,
+          "percentile": 44
         },
         "duel_won": {
-          "value": "11",
-          "per90": 3.84,
-          "percentile": 56
+          "value": "13",
+          "per90": 4.03,
+          "percentile": 64
         },
         "duel_won_percent": {
-          "value": "45.8",
-          "per90": 45.83,
-          "percentile": 35
+          "value": "41.9",
+          "per90": 41.94,
+          "percentile": 26
         },
         "touches": {
-          "value": "205",
-          "per90": 71.51,
-          "percentile": 85
+          "value": "237",
+          "per90": 73.55,
+          "percentile": 86
         },
         "touches_opp_box": {
-          "value": "4",
-          "per90": 1.4,
-          "percentile": 59
+          "value": "6",
+          "per90": 1.86,
+          "percentile": 70
         },
         "dispossessed": {
           "value": "2",
-          "per90": 0.7,
-          "percentile": 29
+          "per90": 0.62,
+          "percentile": 32
         },
         "fouls_won": {
-          "value": "3",
-          "per90": 1.05,
-          "percentile": 51
+          "value": "4",
+          "per90": 1.24,
+          "percentile": 67
         },
         "defensive_actions": {
-          "value": "15",
-          "per90": 5.23,
-          "percentile": 78
+          "value": "16",
+          "per90": 4.97,
+          "percentile": 77
         },
         "matchstats.headers.tackles": {
-          "value": "6",
-          "per90": 2.09,
-          "percentile": 73
+          "value": "7",
+          "per90": 2.17,
+          "percentile": 74
         },
         "interceptions": {
-          "value": "4",
-          "per90": 1.4,
-          "percentile": 80
+          "value": "3",
+          "per90": 0.93,
+          "percentile": 67
         },
         "blocked_shots": {
           "value": "1",
-          "per90": 0.35,
-          "percentile": 53
+          "per90": 0.31,
+          "percentile": 51
         },
         "fouls": {
-          "value": "6",
-          "per90": 2.09,
-          "percentile": 10
+          "value": "8",
+          "per90": 2.48,
+          "percentile": 3
         },
         "recoveries": {
-          "value": "9",
-          "per90": 3.14,
-          "percentile": 53
+          "value": "14",
+          "per90": 4.34,
+          "percentile": 68
         },
         "dribbled_past": {
-          "value": "5",
-          "per90": 1.74,
-          "percentile": 4
+          "value": "6",
+          "per90": 1.86,
+          "percentile": 3
         },
         "clearances": {
-          "value": "4",
-          "per90": 1.4,
-          "percentile": 69
+          "value": "5",
+          "per90": 1.55,
+          "percentile": 74
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -3092,13 +3719,13 @@
         },
         "goals_conceded_while_on_pitch": {
           "value": "5",
-          "per90": 1.74,
-          "percentile": 30
+          "per90": 1.55,
+          "percentile": 32
         },
         "yellow_cards": {
           "value": "1",
-          "per90": 0.35,
-          "percentile": 9
+          "per90": 0.31,
+          "percentile": 10
         },
         "red_cards": {
           "value": "0",
@@ -3106,24 +3733,24 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.50",
-          "per90": 6.5,
-          "percentile": 17
+          "value": "6.52",
+          "per90": 6.52,
+          "percentile": 18
         },
         "matches_uppercase": {
-          "value": "4",
-          "per90": 4,
+          "value": "5",
+          "per90": 5,
           "percentile": 100
         },
         "player_started_matches": {
           "value": "3",
           "per90": 3,
-          "percentile": 55
+          "percentile": 56
         },
         "minutes_played": {
-          "value": "258",
+          "value": "290",
           "per90": 90,
-          "percentile": 64
+          "percentile": 74
         }
       },
       "traits": null,
@@ -3281,7 +3908,37 @@
         }
       ],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2024-10",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2023-09",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1636825,
@@ -3303,6 +3960,7 @@
       "career": [
         {
           "team": "Blackburn Rovers",
+          "teamId": 8655,
           "startDate": "2024-04",
           "endDate": "2026-08",
           "active": false,
@@ -3363,7 +4021,7 @@
         "shots": {
           "value": "1",
           "per90": 1,
-          "percentile": 10
+          "percentile": 11
         },
         "assists": {
           "value": "0",
@@ -3371,19 +4029,19 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "15",
-          "per90": 15,
-          "percentile": 14
+          "value": "16",
+          "per90": 16,
+          "percentile": 11
         },
         "successful_passes_accuracy": {
-          "value": "65.2",
-          "per90": 65.22,
-          "percentile": 4
+          "value": "66.7",
+          "per90": 66.67,
+          "percentile": 5
         },
         "long_balls_accurate": {
           "value": "1",
           "per90": 1,
-          "percentile": 27
+          "percentile": 28
         },
         "long_ball_succeeeded_accuracy": {
           "value": "100.0",
@@ -3393,17 +4051,17 @@
         "chances_created": {
           "value": "5",
           "per90": 5,
-          "percentile": 78
+          "percentile": 75
         },
         "big_chance_created_team_title": {
           "value": "1",
           "per90": 1,
-          "percentile": 65
+          "percentile": 63
         },
         "crosses_succeeeded": {
           "value": "2",
           "per90": 2,
-          "percentile": 75
+          "percentile": 73
         },
         "crosses_succeeeded_accuracy": {
           "value": "50.0",
@@ -3413,17 +4071,17 @@
         "duel_won": {
           "value": "3",
           "per90": 3,
-          "percentile": 10
+          "percentile": 7
         },
         "duel_won_percent": {
-          "value": "33.3",
-          "per90": 33.33,
-          "percentile": 16
+          "value": "30.0",
+          "per90": 30,
+          "percentile": 9
         },
         "aerials_won": {
           "value": "1",
           "per90": 1,
-          "percentile": 50
+          "percentile": 44
         },
         "aerials_won_percent": {
           "value": "100.0",
@@ -3431,49 +4089,54 @@
           "percentile": 100
         },
         "touches": {
-          "value": "49",
-          "per90": 49.0,
-          "percentile": 27
+          "value": "50",
+          "per90": 50,
+          "percentile": 21
         },
         "touches_opp_box": {
           "value": "5",
           "per90": 5,
-          "percentile": 38
+          "percentile": 33
         },
         "dispossessed": {
           "value": "4",
           "per90": 4,
-          "percentile": 22
+          "percentile": 26
         },
         "fouls_won": {
           "value": "1",
           "per90": 1,
-          "percentile": 15
+          "percentile": 13
         },
         "defensive_actions": {
           "value": "3",
           "per90": 3,
-          "percentile": 27
+          "percentile": 24
         },
         "matchstats.headers.tackles": {
           "value": "1",
           "per90": 1,
-          "percentile": 10
+          "percentile": 7
         },
         "interceptions": {
           "value": "2",
           "per90": 2,
-          "percentile": 78
+          "percentile": 69
         },
         "fouls": {
           "value": "1",
           "per90": 1,
-          "percentile": 58
+          "percentile": 59
         },
         "recoveries": {
           "value": "1",
           "per90": 1,
-          "percentile": 6
+          "percentile": 3
+        },
+        "dribbled_past": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 35
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -3483,7 +4146,7 @@
         "goals_conceded_while_on_pitch": {
           "value": "2",
           "per90": 2,
-          "percentile": 60
+          "percentile": 61
         },
         "yellow_cards": {
           "value": "0",
@@ -3496,14 +4159,14 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.22",
-          "per90": 6.21,
-          "percentile": 11
+          "value": "6.20",
+          "per90": 6.2,
+          "percentile": 7
         },
         "matches_uppercase": {
           "value": "2",
           "per90": 2,
-          "percentile": 22
+          "percentile": 20
         },
         "player_started_matches": {
           "value": "1",
@@ -3513,7 +4176,7 @@
         "minutes_played": {
           "value": "90",
           "per90": 90,
-          "percentile": 18
+          "percentile": 15
         }
       },
       "traits": {
@@ -3554,7 +4217,37 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2026-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Blackburn Rovers U21",
+          "teamId": 773685,
+          "startDate": "2023-11",
+          "endDate": "2026-06",
+          "active": false
+        },
+        {
+          "team": "Blackburn Rovers U18",
+          "teamId": 1113560,
+          "startDate": "2023-09",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1636592,
@@ -3576,6 +4269,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2025-07",
           "endDate": "2026-08",
           "active": false,
@@ -3589,16 +4283,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 4,
-          "starts": 4,
-          "goals": 1,
+          "appearances": 5,
+          "starts": 5,
+          "goals": 2,
           "assists": 0,
           "yellowCards": 1,
           "redCards": 0,
-          "minutesPlayed": 360,
+          "minutesPlayed": 450,
           "cleanSheets": 1,
-          "goalsConceded": 7,
-          "avgRating": 6.9
+          "goalsConceded": 9,
+          "avgRating": 7.0
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -3629,23 +4323,23 @@
       },
       "stats": {
         "goals": {
-          "value": "1",
-          "per90": 0.25,
-          "percentile": 42
+          "value": "2",
+          "per90": 0.4,
+          "percentile": 66
         },
         "shots": {
-          "value": "9",
-          "per90": 2.25,
-          "percentile": 74
+          "value": "13",
+          "per90": 2.6,
+          "percentile": 89
         },
         "ShotsOnTarget": {
-          "value": "5",
-          "per90": 1.25,
-          "percentile": 77
+          "value": "7",
+          "per90": 1.4,
+          "percentile": 89
         },
         "headed_shots": {
           "value": "1",
-          "per90": 0.25,
+          "per90": 0.2,
           "percentile": 44
         },
         "assists": {
@@ -3654,143 +4348,148 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "52",
-          "per90": 13.0,
+          "value": "60",
+          "per90": 12,
           "percentile": 94
         },
         "successful_passes_accuracy": {
-          "value": "74.3",
-          "per90": 74.29,
-          "percentile": 45
+          "value": "74.1",
+          "per90": 74.07,
+          "percentile": 40
         },
         "long_balls_accurate": {
           "value": "1",
-          "per90": 0.25,
-          "percentile": 55
+          "per90": 0.2,
+          "percentile": 53
         },
         "long_ball_succeeeded_accuracy": {
           "value": "25.0",
           "per90": 25,
-          "percentile": 55
+          "percentile": 53
         },
         "chances_created": {
-          "value": "5",
-          "per90": 1.25,
-          "percentile": 90
+          "value": "6",
+          "per90": 1.2,
+          "percentile": 94
         },
         "big_chance_created_team_title": {
           "value": "2",
-          "per90": 0.5,
-          "percentile": 100
+          "per90": 0.4,
+          "percentile": 90
         },
         "crosses_succeeeded": {
           "value": "2",
-          "per90": 0.5,
-          "percentile": 95
+          "per90": 0.4,
+          "percentile": 94
         },
         "crosses_succeeeded_accuracy": {
-          "value": "33.3",
-          "per90": 33.33,
+          "value": "28.6",
+          "per90": 28.57,
           "percentile": 74
         },
         "dribbles_succeeded": {
           "value": "1",
-          "per90": 0.25,
-          "percentile": 32
+          "per90": 0.2,
+          "percentile": 31
         },
         "won_contest_subtitle": {
-          "value": "9.1",
-          "per90": 9.09,
-          "percentile": 32
+          "value": "8.3",
+          "per90": 8.33,
+          "percentile": 31
         },
         "duel_won": {
-          "value": "17",
-          "per90": 4.25,
-          "percentile": 92
+          "value": "18",
+          "per90": 3.6,
+          "percentile": 90
         },
         "duel_won_percent": {
-          "value": "37.8",
-          "per90": 37.78,
-          "percentile": 40
+          "value": "36.0",
+          "per90": 36,
+          "percentile": 37
         },
         "aerials_won": {
-          "value": "3",
-          "per90": 0.75,
-          "percentile": 65
+          "value": "2",
+          "per90": 0.4,
+          "percentile": 40
         },
         "aerials_won_percent": {
-          "value": "33.3",
-          "per90": 33.33,
-          "percentile": 47
+          "value": "22.2",
+          "per90": 22.22,
+          "percentile": 31
         },
         "touches": {
-          "value": "140",
-          "per90": 35,
+          "value": "163",
+          "per90": 32.6,
           "percentile": 97
         },
         "touches_opp_box": {
-          "value": "21",
-          "per90": 5.25,
-          "percentile": 87
+          "value": "27",
+          "per90": 5.4,
+          "percentile": 92
         },
         "dispossessed": {
           "value": "7",
-          "per90": 1.75,
+          "per90": 1.4,
           "percentile": 0
         },
         "fouls_won": {
           "value": "8",
-          "per90": 2,
+          "per90": 1.6,
           "percentile": 90
         },
         "defensive_actions": {
-          "value": "10",
-          "per90": 2.5,
+          "value": "13",
+          "per90": 2.6,
           "percentile": 100
         },
         "matchstats.headers.tackles": {
-          "value": "5",
-          "per90": 1.25,
-          "percentile": 92
+          "value": "7",
+          "per90": 1.4,
+          "percentile": 97
         },
         "interceptions": {
           "value": "3",
-          "per90": 0.75,
-          "percentile": 95
+          "per90": 0.6,
+          "percentile": 100
+        },
+        "blocked_shots": {
+          "value": "1",
+          "per90": 0.2,
+          "percentile": 74
         },
         "fouls": {
-          "value": "3",
-          "per90": 0.75,
-          "percentile": 35
+          "value": "4",
+          "per90": 0.8,
+          "percentile": 26
         },
         "recoveries": {
           "value": "10",
-          "per90": 2.5,
+          "per90": 2,
           "percentile": 87
         },
         "dribbled_past": {
-          "value": "3",
-          "per90": 0.75,
+          "value": "4",
+          "per90": 0.8,
           "percentile": 2
         },
         "clearances": {
           "value": "2",
-          "per90": 0.5,
-          "percentile": 84
+          "per90": 0.4,
+          "percentile": 87
         },
         "clean_sheet_team_title": {
           "value": "1",
-          "per90": 0.25,
-          "percentile": 81
+          "per90": 0.2,
+          "percentile": 82
         },
         "goals_conceded_while_on_pitch": {
-          "value": "7",
-          "per90": 1.75,
-          "percentile": 6
+          "value": "9",
+          "per90": 1.8,
+          "percentile": 2
         },
         "yellow_cards": {
           "value": "1",
-          "per90": 0.25,
+          "per90": 0.2,
           "percentile": 5
         },
         "red_cards": {
@@ -3799,22 +4498,22 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.96",
-          "per90": 6.96,
-          "percentile": 53
+          "value": "7.08",
+          "per90": 7.08,
+          "percentile": 56
         },
         "matches_uppercase": {
-          "value": "4",
-          "per90": 4,
+          "value": "5",
+          "per90": 5,
           "percentile": 100
         },
         "player_started_matches": {
-          "value": "4",
-          "per90": 4,
+          "value": "5",
+          "per90": 5,
           "percentile": 100
         },
         "minutes_played": {
-          "value": "360",
+          "value": "450",
           "per90": 90,
           "percentile": 100
         }
@@ -3823,7 +4522,30 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-02",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1611072,
@@ -3840,7 +4562,7 @@
       "height": "180 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 857375,
+        "value": 856556,
         "currency": "EUR"
       },
       "contractEnd": null,
@@ -3848,6 +4570,7 @@
       "career": [
         {
           "team": "Saint Mirren B",
+          "teamId": -1,
           "startDate": "2024-07",
           "endDate": "2026-02",
           "active": false,
@@ -3859,6 +4582,7 @@
         },
         {
           "team": "St. Mirren",
+          "teamId": 9800,
           "startDate": "2024-01",
           "endDate": "2026-02",
           "active": false,
@@ -3872,16 +4596,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 4,
-          "starts": 1,
+          "appearances": 5,
+          "starts": 2,
           "goals": 1,
-          "assists": 1,
+          "assists": 2,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 139,
+          "minutesPlayed": 197,
           "cleanSheets": 1,
-          "goalsConceded": 7,
-          "avgRating": 6.5
+          "goalsConceded": 9,
+          "avgRating": 6.6
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -3900,93 +4624,113 @@
       "stats": {
         "goals": {
           "value": "1",
-          "per90": 0.65,
-          "percentile": 42
+          "per90": 0.45,
+          "percentile": 44
         },
         "shots": {
-          "value": "5",
-          "per90": 3.24,
-          "percentile": 40
+          "value": "6",
+          "per90": 2.73,
+          "percentile": 55
         },
         "ShotsOnTarget": {
           "value": "3",
-          "per90": 1.94,
-          "percentile": 47
+          "per90": 1.36,
+          "percentile": 52
+        },
+        "headed_shots": {
+          "value": "1",
+          "per90": 0.45,
+          "percentile": 44
         },
         "assists": {
-          "value": "1",
-          "per90": 0.65,
-          "percentile": 69
+          "value": "2",
+          "per90": 0.91,
+          "percentile": 94
         },
         "successful_passes": {
-          "value": "17",
-          "per90": 11.01,
-          "percentile": 40
+          "value": "27",
+          "per90": 12.27,
+          "percentile": 63
         },
         "successful_passes_accuracy": {
-          "value": "89.5",
-          "per90": 89.47,
-          "percentile": 92
+          "value": "84.4",
+          "per90": 84.38,
+          "percentile": 81
         },
         "chances_created": {
-          "value": "2",
-          "per90": 1.29,
-          "percentile": 44
+          "value": "3",
+          "per90": 1.36,
+          "percentile": 60
+        },
+        "big_chance_created_team_title": {
+          "value": "1",
+          "per90": 0.45,
+          "percentile": 71
         },
         "dribbles_succeeded": {
           "value": "1",
-          "per90": 0.65,
-          "percentile": 32
+          "per90": 0.45,
+          "percentile": 31
         },
         "won_contest_subtitle": {
           "value": "50.0",
           "per90": 50,
-          "percentile": 55
+          "percentile": 53
         },
         "duel_won": {
-          "value": "2",
-          "per90": 1.29,
-          "percentile": 5
-        },
-        "duel_won_percent": {
-          "value": "22.2",
-          "per90": 22.22,
-          "percentile": 6
-        },
-        "touches": {
-          "value": "41",
-          "per90": 26.55,
-          "percentile": 29
-        },
-        "touches_opp_box": {
-          "value": "8",
-          "per90": 5.18,
-          "percentile": 37
-        },
-        "dispossessed": {
           "value": "4",
-          "per90": 2.59,
+          "per90": 1.82,
           "percentile": 19
         },
+        "duel_won_percent": {
+          "value": "30.8",
+          "per90": 30.77,
+          "percentile": 18
+        },
+        "touches": {
+          "value": "67",
+          "per90": 30.45,
+          "percentile": 60
+        },
+        "touches_opp_box": {
+          "value": "13",
+          "per90": 5.91,
+          "percentile": 65
+        },
+        "dispossessed": {
+          "value": "6",
+          "per90": 2.73,
+          "percentile": 3
+        },
+        "fouls_won": {
+          "value": "2",
+          "per90": 0.91,
+          "percentile": 37
+        },
         "defensive_actions": {
-          "value": "1",
-          "per90": 0.65,
-          "percentile": 15
+          "value": "2",
+          "per90": 0.91,
+          "percentile": 39
         },
         "matchstats.headers.tackles": {
           "value": "1",
-          "per90": 0.65,
+          "per90": 0.45,
           "percentile": 32
         },
         "fouls": {
           "value": "1",
-          "per90": 0.65,
-          "percentile": 66
+          "per90": 0.45,
+          "percentile": 63
         },
         "recoveries": {
-          "value": "3",
-          "per90": 1.94,
-          "percentile": 37
+          "value": "6",
+          "per90": 2.73,
+          "percentile": 65
+        },
+        "clearances": {
+          "value": "1",
+          "per90": 0.45,
+          "percentile": 55
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -3994,9 +4738,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "3",
-          "per90": 1.94,
-          "percentile": 52
+          "value": "5",
+          "per90": 2.27,
+          "percentile": 19
         },
         "yellow_cards": {
           "value": "0",
@@ -4009,31 +4753,47 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.54",
-          "per90": 6.54,
-          "percentile": 27
+          "value": "6.68",
+          "per90": 6.68,
+          "percentile": 32
         },
         "matches_uppercase": {
-          "value": "4",
-          "per90": 4,
+          "value": "5",
+          "per90": 5,
           "percentile": 100
         },
         "player_started_matches": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 34
         },
         "minutes_played": {
-          "value": "139",
+          "value": "198",
           "per90": 90,
-          "percentile": 37
+          "percentile": 58
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-02",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2026-04",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1669872,
@@ -4055,6 +4815,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2026-02",
           "endDate": "2026-08",
           "active": false,
@@ -4066,6 +4827,7 @@
         },
         {
           "team": "Linfield",
+          "teamId": 7971,
           "startDate": "2023-07",
           "endDate": "2024-06",
           "active": false,
@@ -4079,16 +4841,16 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 3,
-          "starts": 3,
+          "appearances": 4,
+          "starts": 4,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 240,
+          "minutesPlayed": 298,
           "cleanSheets": 1,
-          "goalsConceded": 3,
-          "avgRating": 6.6
+          "goalsConceded": 5,
+          "avgRating": 6.7
         },
         "UYL": {
           "name": "유스리그",
@@ -4124,14 +4886,14 @@
           "percentile": 0
         },
         "shots": {
-          "value": "5",
-          "per90": 1.88,
-          "percentile": 75
+          "value": "7",
+          "per90": 2.11,
+          "percentile": 88
         },
         "ShotsOnTarget": {
           "value": "2",
-          "per90": 0.75,
-          "percentile": 66
+          "per90": 0.6,
+          "percentile": 65
         },
         "assists": {
           "value": "0",
@@ -4139,104 +4901,119 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "60",
-          "per90": 22.5,
-          "percentile": 47
+          "value": "73",
+          "per90": 22.05,
+          "percentile": 52
         },
         "successful_passes_accuracy": {
-          "value": "76.9",
-          "per90": 76.92,
-          "percentile": 24
+          "value": "74.5",
+          "per90": 74.49,
+          "percentile": 15
         },
         "long_balls_accurate": {
           "value": "5",
-          "per90": 1.88,
-          "percentile": 53
+          "per90": 1.51,
+          "percentile": 51
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "71.4",
-          "per90": 71.43,
-          "percentile": 78
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 43
         },
         "chances_created": {
-          "value": "4",
-          "per90": 1.5,
-          "percentile": 73
+          "value": "5",
+          "per90": 1.51,
+          "percentile": 75
         },
         "crosses_succeeeded": {
           "value": "4",
-          "per90": 1.5,
-          "percentile": 92
+          "per90": 1.21,
+          "percentile": 89
         },
         "crosses_succeeeded_accuracy": {
-          "value": "40.0",
-          "per90": 40,
-          "percentile": 81
+          "value": "36.4",
+          "per90": 36.36,
+          "percentile": 79
         },
         "dribbles_succeeded": {
-          "value": "2",
-          "per90": 0.75,
-          "percentile": 55
+          "value": "3",
+          "per90": 0.91,
+          "percentile": 73
         },
         "won_contest_subtitle": {
-          "value": "66.7",
-          "per90": 66.67,
-          "percentile": 62
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 45
         },
         "duel_won": {
-          "value": "14",
-          "per90": 5.25,
-          "percentile": 70
+          "value": "18",
+          "per90": 5.44,
+          "percentile": 80
         },
         "duel_won_percent": {
-          "value": "51.9",
-          "per90": 51.85,
-          "percentile": 53
+          "value": "56.2",
+          "per90": 56.25,
+          "percentile": 67
         },
         "touches": {
-          "value": "128",
-          "per90": 48,
-          "percentile": 53
+          "value": "157",
+          "per90": 47.42,
+          "percentile": 60
         },
         "touches_opp_box": {
-          "value": "12",
-          "per90": 4.5,
-          "percentile": 93
+          "value": "13",
+          "per90": 3.93,
+          "percentile": 92
         },
         "dispossessed": {
-          "value": "9",
-          "per90": 3.38,
-          "percentile": 0
+          "value": "7",
+          "per90": 2.11,
+          "percentile": 3
         },
         "fouls_won": {
-          "value": "8",
-          "per90": 3,
-          "percentile": 93
+          "value": "10",
+          "per90": 3.02,
+          "percentile": 97
         },
         "defensive_actions": {
-          "value": "5",
-          "per90": 1.88,
-          "percentile": 20
+          "value": "8",
+          "per90": 2.42,
+          "percentile": 44
         },
         "matchstats.headers.tackles": {
-          "value": "4",
-          "per90": 1.5,
-          "percentile": 47
+          "value": "5",
+          "per90": 1.51,
+          "percentile": 57
+        },
+        "interceptions": {
+          "value": "1",
+          "per90": 0.3,
+          "percentile": 21
+        },
+        "blocked_shots": {
+          "value": "1",
+          "per90": 0.3,
+          "percentile": 51
         },
         "fouls": {
           "value": "1",
-          "per90": 0.38,
-          "percentile": 72
+          "per90": 0.3,
+          "percentile": 74
         },
         "recoveries": {
-          "value": "10",
-          "per90": 3.75,
+          "value": "14",
+          "per90": 4.23,
+          "percentile": 68
+        },
+        "dribbled_past": {
+          "value": "1",
+          "per90": 0.3,
           "percentile": 57
         },
         "clearances": {
           "value": "1",
-          "per90": 0.38,
-          "percentile": 19
+          "per90": 0.3,
+          "percentile": 21
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -4244,9 +5021,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "3",
-          "per90": 1.12,
-          "percentile": 53
+          "value": "5",
+          "per90": 1.51,
+          "percentile": 32
         },
         "yellow_cards": {
           "value": "0",
@@ -4259,31 +5036,54 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.65",
-          "per90": 6.65,
-          "percentile": 26
+          "value": "6.76",
+          "per90": 6.76,
+          "percentile": 30
         },
         "matches_uppercase": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 39
+          "value": "4",
+          "per90": 4,
+          "percentile": 63
         },
         "player_started_matches": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 55
+          "value": "4",
+          "per90": 4,
+          "percentile": 75
         },
         "minutes_played": {
-          "value": "240",
+          "value": "298",
           "per90": 90,
-          "percentile": 58
+          "percentile": 76
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-07",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1400928,
@@ -4305,6 +5105,7 @@
       "career": [
         {
           "team": "Dunfermline Athletic",
+          "teamId": 8457,
           "startDate": "2025-01",
           "endDate": "2025-06",
           "active": false,
@@ -4316,6 +5117,7 @@
         },
         {
           "team": "Rangers B",
+          "teamId": 1266916,
           "startDate": "2023-08",
           "endDate": "2025-01",
           "active": false,
@@ -4327,6 +5129,7 @@
         },
         {
           "team": "Rangers",
+          "teamId": 8548,
           "startDate": "2022-08",
           "endDate": "2022-09",
           "active": false,
@@ -4349,7 +5152,7 @@
           "minutesPlayed": 218,
           "cleanSheets": 1,
           "goalsConceded": 7,
-          "avgRating": 6.4
+          "avgRating": 6.5
         },
         "EFLT": {
           "name": "EFL 트로피",
@@ -4374,7 +5177,7 @@
         "shots": {
           "value": "2",
           "per90": 0.83,
-          "percentile": 23
+          "percentile": 22
         },
         "assists": {
           "value": "0",
@@ -4384,32 +5187,22 @@
         "successful_passes": {
           "value": "47",
           "per90": 19.4,
-          "percentile": 65
+          "percentile": 63
         },
         "successful_passes_accuracy": {
           "value": "71.2",
           "per90": 71.21,
-          "percentile": 11
-        },
-        "long_balls_accurate": {
-          "value": "1",
-          "per90": 0.41,
-          "percentile": 27
-        },
-        "long_ball_succeeeded_accuracy": {
-          "value": "33.3",
-          "per90": 33.33,
-          "percentile": 31
+          "percentile": 16
         },
         "chances_created": {
           "value": "3",
           "per90": 1.24,
-          "percentile": 52
+          "percentile": 53
         },
         "crosses_succeeeded": {
           "value": "3",
           "per90": 1.24,
-          "percentile": 85
+          "percentile": 83
         },
         "crosses_succeeeded_accuracy": {
           "value": "15.8",
@@ -4419,72 +5212,72 @@
         "dribbles_succeeded": {
           "value": "2",
           "per90": 0.83,
-          "percentile": 52
+          "percentile": 43
         },
         "won_contest_subtitle": {
           "value": "40.0",
           "per90": 40,
-          "percentile": 53
+          "percentile": 50
         },
         "duel_won": {
           "value": "10",
           "per90": 4.13,
-          "percentile": 68
+          "percentile": 59
         },
         "duel_won_percent": {
           "value": "47.6",
           "per90": 47.62,
-          "percentile": 65
+          "percentile": 66
         },
         "touches": {
           "value": "116",
           "per90": 47.89,
-          "percentile": 77
+          "percentile": 71
         },
         "touches_opp_box": {
           "value": "12",
           "per90": 4.95,
-          "percentile": 79
+          "percentile": 74
         },
         "dispossessed": {
           "value": "5",
           "per90": 2.06,
-          "percentile": 15
+          "percentile": 20
         },
         "fouls_won": {
           "value": "4",
           "per90": 1.65,
-          "percentile": 68
+          "percentile": 65
         },
         "defensive_actions": {
-          "value": "6",
-          "per90": 2.48,
+          "value": "7",
+          "per90": 2.89,
           "percentile": 59
         },
         "matchstats.headers.tackles": {
           "value": "4",
           "per90": 1.65,
-          "percentile": 61
+          "percentile": 58
         },
         "interceptions": {
-          "value": "2",
-          "per90": 0.83,
-          "percentile": 78
+          "value": "3",
+          "per90": 1.24,
+          "percentile": 82
         },
         "fouls": {
           "value": "1",
           "per90": 0.41,
-          "percentile": 58
+          "percentile": 59
         },
         "recoveries": {
-          "value": "8",
-          "per90": 3.3,
+          "value": "10",
+          "per90": 4.13,
           "percentile": 67
         },
         "dribbled_past": {
           "value": "1",
           "per90": 0.41,
-          "percentile": 30
+          "percentile": 35
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -4494,7 +5287,7 @@
         "goals_conceded_while_on_pitch": {
           "value": "5",
           "per90": 2.06,
-          "percentile": 27
+          "percentile": 28
         },
         "yellow_cards": {
           "value": "0",
@@ -4507,31 +5300,47 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.43",
-          "per90": 6.43,
-          "percentile": 22
+          "value": "6.50",
+          "per90": 6.5,
+          "percentile": 25
         },
         "matches_uppercase": {
           "value": "4",
           "per90": 4,
-          "percentile": 100
+          "percentile": 67
         },
         "player_started_matches": {
           "value": "2",
           "per90": 2,
-          "percentile": 40
+          "percentile": 39
         },
         "minutes_played": {
           "value": "218",
           "per90": 90,
-          "percentile": 70
+          "percentile": 66
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Rangers U19",
+          "teamId": 1088639,
+          "startDate": "2022-07",
+          "endDate": "2025-01",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1838813,
@@ -4585,7 +5394,7 @@
         "matches_uppercase": {
           "value": "2",
           "per90": 2,
-          "percentile": 27
+          "percentile": 28
         },
         "player_started_matches": {
           "value": "0",
@@ -4595,14 +5404,44 @@
         "minutes_played": {
           "value": "53",
           "per90": 90,
-          "percentile": 16
+          "percentile": 17
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2023-09",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1435434,
@@ -4615,11 +5454,11 @@
       "position": "leftwinger",
       "posGroup": "FW",
       "jersey": "63",
-      "age": 19,
+      "age": 20,
       "height": "180 cm",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 505434,
+        "value": 467913,
         "currency": "EUR"
       },
       "contractEnd": null,
@@ -4627,6 +5466,7 @@
       "career": [
         {
           "team": "Swindon Town",
+          "teamId": 9795,
           "startDate": "2026-02",
           "endDate": "2026-06",
           "active": false,
@@ -4638,6 +5478,7 @@
         },
         {
           "team": "Manchester United",
+          "teamId": 10260,
           "startDate": "2024-07",
           "endDate": "2025-06",
           "active": false,
@@ -4651,15 +5492,15 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 3,
-          "starts": 3,
-          "goals": 2,
+          "appearances": 4,
+          "starts": 4,
+          "goals": 3,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 213,
+          "minutesPlayed": 303,
           "cleanSheets": 1,
-          "goalsConceded": 6,
+          "goalsConceded": 8,
           "avgRating": 7.0
         },
         "EFLT": {
@@ -4678,24 +5519,24 @@
       },
       "stats": {
         "goals": {
-          "value": "2",
-          "per90": 0.85,
-          "percentile": 87
+          "value": "3",
+          "per90": 0.89,
+          "percentile": 96
         },
         "shots": {
-          "value": "5",
-          "per90": 2.11,
-          "percentile": 63
+          "value": "7",
+          "per90": 2.08,
+          "percentile": 78
         },
         "ShotsOnTarget": {
-          "value": "3",
-          "per90": 1.27,
-          "percentile": 78
+          "value": "4",
+          "per90": 1.19,
+          "percentile": 86
         },
         "headed_shots": {
           "value": "1",
-          "per90": 0.42,
-          "percentile": 87
+          "per90": 0.3,
+          "percentile": 86
         },
         "assists": {
           "value": "0",
@@ -4703,109 +5544,114 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "50",
-          "per90": 21.13,
-          "percentile": 70
+          "value": "64",
+          "per90": 19.01,
+          "percentile": 81
         },
         "successful_passes_accuracy": {
-          "value": "78.1",
-          "per90": 78.12,
-          "percentile": 38
-        },
-        "long_balls_accurate": {
-          "value": "1",
-          "per90": 0.42,
-          "percentile": 27
-        },
-        "long_ball_succeeeded_accuracy": {
-          "value": "50.0",
-          "per90": 50,
-          "percentile": 48
+          "value": "78.0",
+          "per90": 78.05,
+          "percentile": 42
         },
         "chances_created": {
-          "value": "2",
-          "per90": 0.85,
-          "percentile": 40
+          "value": "4",
+          "per90": 1.19,
+          "percentile": 70
         },
         "crosses_succeeeded": {
-          "value": "1",
-          "per90": 0.42,
-          "percentile": 51
+          "value": "3",
+          "per90": 0.89,
+          "percentile": 83
         },
         "crosses_succeeeded_accuracy": {
-          "value": "20.0",
-          "per90": 20,
-          "percentile": 61
+          "value": "30.0",
+          "per90": 30,
+          "percentile": 70
         },
         "dribbles_succeeded": {
           "value": "2",
-          "per90": 0.85,
-          "percentile": 52
+          "per90": 0.59,
+          "percentile": 43
         },
         "won_contest_subtitle": {
-          "value": "66.7",
-          "per90": 66.67,
-          "percentile": 81
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 61
         },
         "duel_won": {
-          "value": "7",
-          "per90": 2.96,
-          "percentile": 40
+          "value": "9",
+          "per90": 2.67,
+          "percentile": 48
         },
         "duel_won_percent": {
-          "value": "38.9",
-          "per90": 38.89,
-          "percentile": 30
+          "value": "33.3",
+          "per90": 33.33,
+          "percentile": 14
+        },
+        "aerials_won": {
+          "value": "2",
+          "per90": 0.59,
+          "percentile": 75
+        },
+        "aerials_won_percent": {
+          "value": "40.0",
+          "per90": 40,
+          "percentile": 65
         },
         "touches": {
-          "value": "98",
-          "per90": 41.41,
-          "percentile": 67
+          "value": "134",
+          "per90": 39.8,
+          "percentile": 77
         },
         "touches_opp_box": {
-          "value": "10",
-          "per90": 4.23,
-          "percentile": 73
+          "value": "15",
+          "per90": 4.46,
+          "percentile": 83
         },
         "dispossessed": {
-          "value": "4",
-          "per90": 1.69,
-          "percentile": 22
+          "value": "8",
+          "per90": 2.38,
+          "percentile": 2
         },
         "fouls_won": {
           "value": "1",
-          "per90": 0.42,
-          "percentile": 15
+          "per90": 0.3,
+          "percentile": 13
         },
         "defensive_actions": {
           "value": "7",
-          "per90": 2.96,
-          "percentile": 67
+          "per90": 2.08,
+          "percentile": 59
         },
         "matchstats.headers.tackles": {
           "value": "4",
-          "per90": 1.69,
-          "percentile": 61
+          "per90": 1.19,
+          "percentile": 58
         },
         "interceptions": {
           "value": "1",
-          "per90": 0.42,
-          "percentile": 46
+          "per90": 0.3,
+          "percentile": 41
         },
         "fouls": {
-          "value": "3",
-          "per90": 1.27,
-          "percentile": 27
+          "value": "4",
+          "per90": 1.19,
+          "percentile": 20
         },
         "recoveries": {
-          "value": "3",
-          "per90": 1.27,
-          "percentile": 19
+          "value": "4",
+          "per90": 1.19,
+          "percentile": 24
+        },
+        "dribbled_past": {
+          "value": "1",
+          "per90": 0.3,
+          "percentile": 35
         },
         "clearances": {
           "value": "2",
-          "per90": 0.85,
-          "percentile": 74
+          "per90": 0.59,
+          "percentile": 72
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -4813,9 +5659,9 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "6",
-          "per90": 2.54,
-          "percentile": 16
+          "value": "8",
+          "per90": 2.38,
+          "percentile": 7
         },
         "yellow_cards": {
           "value": "0",
@@ -4828,24 +5674,24 @@
           "percentile": 100
         },
         "rating": {
-          "value": "7.00",
-          "per90": 7,
+          "value": "7.07",
+          "per90": 7.07,
           "percentile": 57
         },
         "matches_uppercase": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 44
+          "value": "4",
+          "per90": 4,
+          "percentile": 67
         },
         "player_started_matches": {
-          "value": "3",
-          "per90": 3,
-          "percentile": 70
+          "value": "4",
+          "per90": 4,
+          "percentile": 100
         },
         "minutes_played": {
-          "value": "213",
+          "value": "303",
           "per90": 90,
-          "percentile": 69
+          "percentile": 89
         }
       },
       "traits": {
@@ -4886,7 +5732,51 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-08",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Manchester United U21",
+          "teamId": 1070257,
+          "startDate": "2026-05",
+          "endDate": "2026-08",
+          "active": false
+        },
+        {
+          "team": "Manchester United U21",
+          "teamId": 1070257,
+          "startDate": "2023-01",
+          "endDate": "2026-02",
+          "active": false
+        },
+        {
+          "team": "Manchester United U19",
+          "teamId": 686654,
+          "startDate": "2023-09",
+          "endDate": "2025-06",
+          "active": false
+        },
+        {
+          "team": "Manchester United U18",
+          "teamId": 1113551,
+          "startDate": "2022-09",
+          "endDate": "2025-06",
+          "active": false
+        },
+        {
+          "team": "Manchester United FC Under 17",
+          "teamId": -1,
+          "startDate": "2022-04",
+          "endDate": "2025-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1680994,
@@ -4911,6 +5801,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2024-09",
           "endDate": "2026-06",
           "active": false,
@@ -4966,17 +5857,17 @@
         "saves": {
           "value": "8",
           "per90": 4,
-          "percentile": 69
+          "percentile": 67
         },
         "save_percentage": {
           "value": "61.5",
           "per90": 61.54,
-          "percentile": 49
+          "percentile": 46
         },
         "goals_conceded": {
           "value": "5",
           "per90": 2.5,
-          "percentile": 19
+          "percentile": 18
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -4996,7 +5887,7 @@
         "penalty_save_percent": {
           "value": "0.0",
           "per90": 0,
-          "percentile": 76
+          "percentile": 75
         },
         "error_led_to_goal": {
           "value": "0",
@@ -5006,17 +5897,17 @@
         "keeper_sweeper": {
           "value": "1",
           "per90": 0.5,
-          "percentile": 42
+          "percentile": 36
         },
         "keeper_high_claim": {
           "value": "1",
           "per90": 0.5,
-          "percentile": 46
+          "percentile": 41
         },
         "successful_passes": {
           "value": "73",
           "per90": 36.5,
-          "percentile": 80
+          "percentile": 74
         },
         "successful_passes_accuracy": {
           "value": "90.1",
@@ -5026,7 +5917,7 @@
         "long_balls_accurate": {
           "value": "9",
           "per90": 4.5,
-          "percentile": 59
+          "percentile": 56
         },
         "long_ball_succeeeded_accuracy": {
           "value": "56.2",
@@ -5051,17 +5942,17 @@
         "rating": {
           "value": "6.72",
           "per90": 6.72,
-          "percentile": 56
+          "percentile": 48
         },
         "matches_uppercase": {
           "value": "2",
           "per90": 2,
-          "percentile": 44
+          "percentile": 46
         },
         "player_started_matches": {
           "value": "2",
           "per90": 2,
-          "percentile": 44
+          "percentile": 46
         },
         "saved_penalties": {
           "value": "0/1",
@@ -5073,7 +5964,37 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2024-08",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2023-04",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": "2023-12",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1845201,
@@ -5086,7 +6007,7 @@
       "position": "",
       "posGroup": "MF",
       "jersey": "",
-      "age": 17,
+      "age": 18,
       "height": "",
       "preferredFoot": "",
       "marketValue": null,
@@ -5099,7 +6020,23 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-07",
+          "endDate": "2025-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1845207,
@@ -5112,7 +6049,7 @@
       "position": "",
       "posGroup": "MF",
       "jersey": "",
-      "age": 17,
+      "age": 18,
       "height": "",
       "preferredFoot": "",
       "marketValue": null,
@@ -5139,7 +6076,37 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal FC Under 17",
+          "teamId": -1,
+          "startDate": "2026-08",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-04",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-01",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1760060,
@@ -5161,6 +6128,7 @@
       "career": [
         {
           "team": "St. Johnstone",
+          "teamId": 8467,
           "startDate": "2025-05",
           "endDate": "2025-06",
           "active": false,
@@ -5229,34 +6197,54 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "21",
-          "per90": 42,
-          "percentile": 6
+          "value": "20",
+          "per90": 40,
+          "percentile": 2
         },
         "successful_passes_accuracy": {
-          "value": "84.0",
-          "per90": 84,
-          "percentile": 69
+          "value": "83.3",
+          "per90": 83.33,
+          "percentile": 60
+        },
+        "long_balls_accurate": {
+          "value": "1",
+          "per90": 2,
+          "percentile": 7
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "100.0",
+          "per90": 100,
+          "percentile": 100
         },
         "chances_created": {
           "value": "1",
           "per90": 2,
-          "percentile": 26
+          "percentile": 23
         },
         "duel_won": {
-          "value": "2",
-          "per90": 4,
-          "percentile": 6
+          "value": "3",
+          "per90": 6,
+          "percentile": 4
         },
         "duel_won_percent": {
           "value": "50.0",
           "per90": 50,
-          "percentile": 34
+          "percentile": 30
+        },
+        "aerials_won": {
+          "value": "1",
+          "per90": 2,
+          "percentile": 27
+        },
+        "aerials_won_percent": {
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 42
         },
         "touches": {
-          "value": "35",
-          "per90": 70,
-          "percentile": 4
+          "value": "36",
+          "per90": 72,
+          "percentile": 2
         },
         "dispossessed": {
           "value": "0",
@@ -5266,27 +6254,17 @@
         "fouls_won": {
           "value": "2",
           "per90": 4,
-          "percentile": 31
-        },
-        "defensive_actions": {
-          "value": "1",
-          "per90": 2,
-          "percentile": 2
+          "percentile": 32
         },
         "fouls": {
           "value": "1",
           "per90": 2,
-          "percentile": 65
+          "percentile": 63
         },
         "recoveries": {
           "value": "3",
           "per90": 6,
-          "percentile": 8
-        },
-        "clearances": {
-          "value": "1",
-          "per90": 2,
-          "percentile": 10
+          "percentile": 4
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -5301,7 +6279,7 @@
         "yellow_cards": {
           "value": "1",
           "per90": 2,
-          "percentile": 6
+          "percentile": 7
         },
         "red_cards": {
           "value": "0",
@@ -5309,9 +6287,9 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.64",
-          "per90": 6.64,
-          "percentile": 39
+          "value": "6.56",
+          "per90": 6.56,
+          "percentile": 30
         },
         "matches_uppercase": {
           "value": "1",
@@ -5333,7 +6311,30 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        }
+      ]
     },
     {
       "id": 1845200,
@@ -5359,7 +6360,37 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2025-04",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-11",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1845205,
@@ -5389,19 +6420,56 @@
         "yellow_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "red_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal FC Under 17",
+          "teamId": -1,
+          "startDate": "2026-08",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-11",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-10",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        }
+      ]
     },
     {
       "id": 1845206,
@@ -5427,7 +6495,92 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal FC Under 17",
+          "teamId": -1,
+          "startDate": "2026-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2025-02",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-07",
+          "endDate": "2025-06",
+          "active": false
+        }
+      ]
+    },
+    {
+      "id": 2354679,
+      "squadLevels": [
+        "academy"
+      ],
+      "name": "Daniel McCarron",
+      "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/2354679.png",
+      "nationality": "Northern Ireland",
+      "position": "",
+      "posGroup": "MF",
+      "jersey": "",
+      "age": 16,
+      "height": "",
+      "preferredFoot": "",
+      "marketValue": null,
+      "contractEnd": null,
+      "positionLabel": "defender",
+      "career": [
+        {
+          "team": "Dungannon Swifts",
+          "teamId": 4615,
+          "startDate": "2025-07",
+          "endDate": "2026-07",
+          "active": false,
+          "appearances": "1",
+          "goals": "0",
+          "assists": "0",
+          "transfer": null,
+          "loan": false
+        }
+      ],
+      "competitions": {},
+      "stats": {},
+      "traits": null,
+      "shotmap": [],
+      "heatmap": [],
+      "season": "2026/2027",
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC Under 17",
+          "teamId": -1,
+          "startDate": "2026-08",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2026-07",
+          "endDate": null,
+          "active": true
+        }
+      ]
     },
     {
       "id": 1867188,
@@ -5453,7 +6606,30 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2025-11",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-01",
+          "endDate": "2026-06",
+          "active": false
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-11",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1800575,
@@ -5476,15 +6652,15 @@
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 1,
+          "appearances": 2,
           "starts": 1,
           "goals": 0,
-          "assists": 0,
+          "assists": 1,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 73,
+          "minutesPlayed": 105,
           "cleanSheets": 1,
-          "goalsConceded": 0,
+          "goalsConceded": 2,
           "avgRating": 6.7
         },
         "UYL": {
@@ -5508,14 +6684,14 @@
           "percentile": 0
         },
         "shots": {
-          "value": "4",
-          "per90": 4.93,
-          "percentile": 48
+          "value": "5",
+          "per90": 4.29,
+          "percentile": 59
         },
         "ShotsOnTarget": {
-          "value": "2",
-          "per90": 2.47,
-          "percentile": 56
+          "value": "3",
+          "per90": 2.57,
+          "percentile": 72
         },
         "assists": {
           "value": "0",
@@ -5523,84 +6699,99 @@
           "percentile": 0
         },
         "successful_passes": {
-          "value": "17",
-          "per90": 20.96,
-          "percentile": 18
+          "value": "34",
+          "per90": 29.14,
+          "percentile": 49
         },
         "successful_passes_accuracy": {
-          "value": "81.0",
-          "per90": 80.95,
-          "percentile": 54
+          "value": "79.1",
+          "per90": 79.07,
+          "percentile": 51
         },
         "long_balls_accurate": {
           "value": "1",
-          "per90": 1.23,
-          "percentile": 27
+          "per90": 0.86,
+          "percentile": 28
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "100.0",
-          "per90": 100,
-          "percentile": 100
+          "value": "50.0",
+          "per90": 50,
+          "percentile": 54
         },
         "dribbles_succeeded": {
-          "value": "1",
-          "per90": 1.23,
-          "percentile": 27
+          "value": "2",
+          "per90": 1.71,
+          "percentile": 43
         },
         "won_contest_subtitle": {
+          "value": "66.7",
+          "per90": 66.67,
+          "percentile": 78
+        },
+        "duel_won": {
+          "value": "6",
+          "per90": 5.14,
+          "percentile": 28
+        },
+        "duel_won_percent": {
+          "value": "85.7",
+          "per90": 85.71,
+          "percentile": 100
+        },
+        "aerials_won": {
+          "value": "1",
+          "per90": 0.86,
+          "percentile": 44
+        },
+        "aerials_won_percent": {
           "value": "100.0",
           "per90": 100,
           "percentile": 100
         },
-        "duel_won": {
-          "value": "3",
-          "per90": 3.7,
-          "percentile": 10
-        },
-        "duel_won_percent": {
-          "value": "75.0",
-          "per90": 75,
-          "percentile": 97
-        },
         "touches": {
-          "value": "36",
-          "per90": 44.38,
-          "percentile": 15
-        },
-        "touches_opp_box": {
-          "value": "5",
-          "per90": 6.16,
+          "value": "68",
+          "per90": 58.29,
           "percentile": 38
         },
+        "touches_opp_box": {
+          "value": "9",
+          "per90": 7.71,
+          "percentile": 60
+        },
         "dispossessed": {
-          "value": "1",
-          "per90": 1.23,
-          "percentile": 66
+          "value": "0",
+          "per90": 0,
+          "percentile": 100
         },
         "fouls_won": {
-          "value": "1",
-          "per90": 1.23,
-          "percentile": 15
+          "value": "2",
+          "per90": 1.71,
+          "percentile": 33
         },
         "defensive_actions": {
-          "value": "2",
-          "per90": 2.47,
-          "percentile": 15
+          "value": "4",
+          "per90": 3.43,
+          "percentile": 34
         },
         "matchstats.headers.tackles": {
           "value": "1",
-          "per90": 1.23,
-          "percentile": 10
+          "per90": 0.86,
+          "percentile": 7
+        },
+        "interceptions": {
+          "value": "2",
+          "per90": 1.71,
+          "percentile": 69
         },
         "blocked_shots": {
           "value": "1",
-          "per90": 1.23,
+          "per90": 0.86,
           "percentile": 84
         },
         "recoveries": {
-          "value": "2",
-          "per90": 2.47,
-          "percentile": 10
+          "value": "1",
+          "per90": 0.86,
+          "percentile": 3
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -5623,14 +6814,14 @@
           "percentile": 100
         },
         "rating": {
-          "value": "6.66",
-          "per90": 6.66,
-          "percentile": 38
+          "value": "6.64",
+          "per90": 6.64,
+          "percentile": 33
         },
         "matches_uppercase": {
-          "value": "1",
-          "per90": 1,
-          "percentile": 0
+          "value": "2",
+          "per90": 2,
+          "percentile": 20
         },
         "player_started_matches": {
           "value": "1",
@@ -5638,16 +6829,46 @@
           "percentile": 0
         },
         "minutes_played": {
-          "value": "73",
+          "value": "105",
           "per90": 90,
-          "percentile": 13
+          "percentile": 27
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal FC Under 17",
+          "teamId": -1,
+          "startDate": "2026-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-08",
+          "endDate": null,
+          "active": true
+        }
+      ]
     },
     {
       "id": 1832920,
@@ -5668,6 +6889,19 @@
       "positionLabel": "midfielder",
       "career": [],
       "competitions": {
+        "PL2": {
+          "name": "프리미어리그 2",
+          "appearances": 1,
+          "starts": 0,
+          "goals": 0,
+          "assists": 0,
+          "yellowCards": 0,
+          "redCards": 0,
+          "minutesPlayed": 19,
+          "cleanSheets": 0,
+          "goalsConceded": 2,
+          "avgRating": null
+        },
         "UYL": {
           "name": "유스리그",
           "appearances": 1,
@@ -5682,12 +6916,80 @@
           "avgRating": null
         }
       },
-      "stats": {},
+      "stats": {
+        "goals": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "assists": {
+          "value": "1",
+          "per90": 4.74,
+          "percentile": 82
+        },
+        "rating": {
+          "value": "7.69",
+          "per90": 7.69,
+          "percentile": 90
+        },
+        "matches_uppercase": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 0
+        },
+        "player_started_matches": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "minutes_played": {
+          "value": "19",
+          "per90": 90,
+          "percentile": 6
+        }
+      },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal FC Under 17",
+          "teamId": -1,
+          "startDate": "2026-08",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-08",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        }
+      ]
     },
     {
       "id": 1845204,
@@ -5713,7 +7015,37 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC Under 17",
+          "teamId": -1,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal Under 16",
+          "teamId": -1,
+          "startDate": "2024-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-07",
+          "endDate": "2025-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1860808,
@@ -5735,6 +7067,7 @@
       "career": [
         {
           "team": "Cardiff City",
+          "teamId": 8344,
           "startDate": "2025-10",
           "endDate": "2026-06",
           "active": false,
@@ -5769,19 +7102,35 @@
         "yellow_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "red_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2026-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2026-09",
+          "endDate": null,
+          "active": true
+        }
+      ]
     },
     {
       "id": 1845202,
@@ -5843,7 +7192,7 @@
         "rating": {
           "value": "6.38",
           "per90": 6.38,
-          "percentile": 30
+          "percentile": 29
         },
         "matches_uppercase": {
           "value": "1",
@@ -5865,7 +7214,44 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal FC Under 17",
+          "teamId": -1,
+          "startDate": "2026-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        }
+      ]
     },
     {
       "id": 2264021,
@@ -5887,6 +7273,7 @@
       "career": [
         {
           "team": "Arsenal U18",
+          "teamId": 1113566,
           "startDate": "",
           "endDate": null,
           "active": true,
@@ -5907,19 +7294,20 @@
         "yellow_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "red_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": []
     },
     {
       "id": 1635773,
@@ -5936,7 +7324,7 @@
       "height": "183 cm",
       "preferredFoot": "Left",
       "marketValue": {
-        "value": 7500000,
+        "value": 10100000,
         "currency": "EUR"
       },
       "contractEnd": null,
@@ -5944,6 +7332,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2025-07",
           "endDate": null,
           "active": true,
@@ -6051,22 +7440,22 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 68
+            "value": 64
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 3
+            "value": 4
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 23
+            "value": 16
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 99
+            "value": 100
           },
           {
             "key": "shot_attempts",
@@ -6076,7 +7465,7 @@
           {
             "key": "touches",
             "title": "Touches",
-            "value": 53
+            "value": 42
           }
         ]
       },
@@ -6466,7 +7855,37 @@
         }
       ],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2024-11",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2023-09",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1692320,
@@ -6479,7 +7898,7 @@
       "position": "rightwinger",
       "posGroup": "FW",
       "jersey": "",
-      "age": 17,
+      "age": 18,
       "height": "",
       "preferredFoot": "",
       "marketValue": null,
@@ -6488,6 +7907,7 @@
       "career": [
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2026-01",
           "endDate": "2026-06",
           "active": false,
@@ -6504,7 +7924,37 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2024-09",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-03",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2025-09",
+          "endDate": "2026-06",
+          "active": false
+        }
+      ]
     },
     {
       "id": 1842678,
@@ -6530,7 +7980,37 @@
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal FC Under 17",
+          "teamId": -1,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2024-10",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal FC U15",
+          "teamId": -1,
+          "startDate": "2023-01",
+          "endDate": null,
+          "active": true
+        }
+      ]
     },
     {
       "id": 1867187,
@@ -6540,7 +8020,7 @@
       "name": "Emerson Nwaneri",
       "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/1867187.png",
       "nationality": "England",
-      "position": "centerattackingmidfielder",
+      "position": "centermidfielder",
       "posGroup": "MF",
       "jersey": "",
       "age": 16,
@@ -6548,20 +8028,20 @@
       "preferredFoot": "",
       "marketValue": null,
       "contractEnd": null,
-      "positionLabel": "forward",
+      "positionLabel": "midfielder",
       "career": [],
       "competitions": {
         "PL2": {
           "name": "프리미어리그 2",
-          "appearances": 0,
-          "starts": 0,
+          "appearances": 1,
+          "starts": 1,
           "goals": 0,
           "assists": 0,
           "yellowCards": 0,
           "redCards": 0,
-          "minutesPlayed": 0,
+          "minutesPlayed": 90,
           "cleanSheets": 0,
-          "goalsConceded": 0,
+          "goalsConceded": 2,
           "avgRating": null
         },
         "UYL": {
@@ -6580,26 +8060,196 @@
       },
       "stats": {
         "goals": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "shots": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "assists": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "successful_passes": {
+          "value": "23",
+          "per90": 23,
+          "percentile": 27
+        },
+        "successful_passes_accuracy": {
+          "value": "71.9",
+          "per90": 71.88,
+          "percentile": 19
+        },
+        "long_balls_accurate": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 28
+        },
+        "long_ball_succeeeded_accuracy": {
+          "value": "33.3",
+          "per90": 33.33,
+          "percentile": 34
+        },
+        "chances_created": {
+          "value": "2",
+          "per90": 2,
+          "percentile": 37
+        },
+        "dribbles_succeeded": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 22
+        },
+        "won_contest_subtitle": {
+          "value": "33.3",
+          "per90": 33.33,
+          "percentile": 40
+        },
+        "duel_won": {
+          "value": "6",
+          "per90": 6,
+          "percentile": 28
+        },
+        "duel_won_percent": {
+          "value": "40.0",
+          "per90": 40,
+          "percentile": 33
+        },
+        "touches": {
+          "value": "57",
+          "per90": 57,
+          "percentile": 29
+        },
+        "touches_opp_box": {
           "value": "3",
+          "per90": 3,
+          "percentile": 18
+        },
+        "dispossessed": {
+          "value": "0",
           "per90": 0,
           "percentile": 100
+        },
+        "fouls_won": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 13
+        },
+        "defensive_actions": {
+          "value": "7",
+          "per90": 7,
+          "percentile": 59
+        },
+        "matchstats.headers.tackles": {
+          "value": "4",
+          "per90": 4,
+          "percentile": 58
+        },
+        "interceptions": {
+          "value": "2",
+          "per90": 2,
+          "percentile": 69
+        },
+        "blocked_shots": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 84
+        },
+        "fouls": {
+          "value": "3",
+          "per90": 3,
+          "percentile": 28
+        },
+        "recoveries": {
+          "value": "3",
+          "per90": 3,
+          "percentile": 16
+        },
+        "dribbled_past": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 35
+        },
+        "clean_sheet_team_title": {
+          "value": "0",
+          "per90": 0,
+          "percentile": 0
+        },
+        "goals_conceded_while_on_pitch": {
+          "value": "2",
+          "per90": 2,
+          "percentile": 61
         },
         "yellow_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "red_cards": {
           "value": "0",
           "per90": 0,
+          "percentile": 100
+        },
+        "rating": {
+          "value": "7.22",
+          "per90": 7.22,
+          "percentile": 67
+        },
+        "matches_uppercase": {
+          "value": "1",
+          "per90": 1,
           "percentile": 0
+        },
+        "player_started_matches": {
+          "value": "1",
+          "per90": 1,
+          "percentile": 0
+        },
+        "minutes_played": {
+          "value": "90",
+          "per90": 90,
+          "percentile": 15
         }
       },
       "traits": null,
       "shotmap": [],
       "heatmap": [],
       "season": "2026/2027",
-      "loan": null
+      "loan": null,
+      "youthCareer": [
+        {
+          "team": "Arsenal FC Under 17",
+          "teamId": -1,
+          "startDate": "2026-07",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-01",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2025-11",
+          "endDate": null,
+          "active": true
+        },
+        {
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2025-10",
+          "endDate": null,
+          "active": true
+        }
+      ]
     },
     {
       "id": 1473063,
@@ -6616,7 +8266,7 @@
       "height": "",
       "preferredFoot": "Right",
       "marketValue": {
-        "value": 429980,
+        "value": 515976,
         "currency": "EUR"
       },
       "contractEnd": null,
@@ -6624,10 +8274,11 @@
       "career": [
         {
           "team": "St. Mirren",
+          "teamId": 9800,
           "startDate": "2026-08",
           "endDate": "2027-06",
           "active": true,
-          "appearances": "6",
+          "appearances": "7",
           "goals": "0",
           "assists": "0",
           "transfer": "loan",
@@ -6635,6 +8286,7 @@
         },
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2026-07",
           "endDate": "2026-08",
           "active": false,
@@ -6646,6 +8298,7 @@
         },
         {
           "team": "Shrewsbury Town",
+          "teamId": 9896,
           "startDate": "2025-08",
           "endDate": "2026-06",
           "active": false,
@@ -6657,6 +8310,7 @@
         },
         {
           "team": "Arsenal",
+          "teamId": 9825,
           "startDate": "2024-09",
           "endDate": "2025-08",
           "active": false,
@@ -6675,9 +8329,9 @@
           "percentile": 0
         },
         "expected_goals": {
-          "value": "0.48",
-          "per90": 0.11,
-          "percentile": 35
+          "value": "0.52",
+          "per90": 0.1,
+          "percentile": 33
         },
         "expected_goals_on_target": {
           "value": "0.14",
@@ -6685,24 +8339,24 @@
           "percentile": 29
         },
         "non_penalty_xg": {
-          "value": "0.48",
-          "per90": 0.11,
-          "percentile": 40
+          "value": "0.52",
+          "per90": 0.1,
+          "percentile": 36
         },
         "shots": {
-          "value": "8",
-          "per90": 1.83,
-          "percentile": 51
+          "value": "9",
+          "per90": 1.76,
+          "percentile": 53
         },
         "ShotsOnTarget": {
           "value": "2",
-          "per90": 0.46,
-          "percentile": 42
+          "per90": 0.39,
+          "percentile": 40
         },
         "headed_shots": {
           "value": "1",
-          "per90": 0.23,
-          "percentile": 55
+          "per90": 0.2,
+          "percentile": 58
         },
         "assists": {
           "value": "0",
@@ -6710,134 +8364,144 @@
           "percentile": 0
         },
         "expected_assists": {
-          "value": "0.73",
-          "per90": 0.17,
-          "percentile": 78
+          "value": "0.77",
+          "per90": 0.15,
+          "percentile": 67
         },
         "successful_passes": {
-          "value": "84",
-          "per90": 19.24,
-          "percentile": 65
+          "value": "101",
+          "per90": 19.76,
+          "percentile": 64
         },
         "successful_passes_accuracy": {
-          "value": "75.7",
-          "per90": 75.68,
-          "percentile": 44
+          "value": "77.1",
+          "per90": 77.1,
+          "percentile": 45
         },
         "long_balls_accurate": {
           "value": "1",
-          "per90": 0.23,
+          "per90": 0.2,
           "percentile": 16
         },
         "long_ball_succeeeded_accuracy": {
-          "value": "20.0",
-          "per90": 20,
-          "percentile": 18
+          "value": "16.7",
+          "per90": 16.67,
+          "percentile": 16
+        },
+        "line_breaking_passes": {
+          "value": "9",
+          "per90": 1.76,
+          "percentile": 80
         },
         "chances_created": {
           "value": "10",
-          "per90": 2.29,
-          "percentile": 82
+          "per90": 1.96,
+          "percentile": 80
         },
         "crosses_succeeeded": {
           "value": "3",
-          "per90": 0.69,
-          "percentile": 69
+          "per90": 0.59,
+          "percentile": 65
         },
         "crosses_succeeeded_accuracy": {
-          "value": "25.0",
-          "per90": 25,
-          "percentile": 67
+          "value": "23.1",
+          "per90": 23.08,
+          "percentile": 58
         },
         "dribbles_succeeded": {
           "value": "7",
-          "per90": 1.6,
-          "percentile": 75
+          "per90": 1.37,
+          "percentile": 73
         },
         "won_contest_subtitle": {
           "value": "33.3",
           "per90": 33.33,
-          "percentile": 22
+          "percentile": 20
         },
         "duel_won": {
-          "value": "18",
-          "per90": 4.12,
-          "percentile": 51
+          "value": "22",
+          "per90": 4.3,
+          "percentile": 56
         },
         "duel_won_percent": {
-          "value": "34.0",
-          "per90": 33.96,
+          "value": "35.5",
+          "per90": 35.48,
           "percentile": 18
         },
         "aerials_won": {
-          "value": "1",
-          "per90": 0.23,
-          "percentile": 18
+          "value": "2",
+          "per90": 0.39,
+          "percentile": 35
         },
         "aerials_won_percent": {
-          "value": "16.7",
-          "per90": 16.67,
-          "percentile": 24
+          "value": "22.2",
+          "per90": 22.22,
+          "percentile": 31
         },
         "touches": {
-          "value": "199",
-          "per90": 45.57,
-          "percentile": 64
+          "value": "231",
+          "per90": 45.2,
+          "percentile": 58
         },
         "touches_opp_box": {
-          "value": "28",
-          "per90": 6.41,
-          "percentile": 91
+          "value": "31",
+          "per90": 6.07,
+          "percentile": 82
         },
         "dispossessed": {
-          "value": "7",
-          "per90": 1.6,
-          "percentile": 22
+          "value": "8",
+          "per90": 1.57,
+          "percentile": 18
         },
         "fouls_won": {
-          "value": "7",
-          "per90": 1.6,
-          "percentile": 65
+          "value": "9",
+          "per90": 1.76,
+          "percentile": 71
         },
         "defensive_actions": {
-          "value": "5",
-          "per90": 1.15,
-          "percentile": 20
+          "value": "8",
+          "per90": 1.57,
+          "percentile": 36
         },
         "matchstats.headers.tackles": {
-          "value": "3",
-          "per90": 0.69,
-          "percentile": 22
+          "value": "4",
+          "per90": 0.78,
+          "percentile": 38
         },
         "interceptions": {
           "value": "1",
-          "per90": 0.23,
+          "per90": 0.2,
           "percentile": 24
         },
+        "blocked_shots": {
+          "value": "1",
+          "per90": 0.2,
+          "percentile": 62
+        },
         "fouls": {
-          "value": "4",
-          "per90": 0.92,
-          "percentile": 31
+          "value": "6",
+          "per90": 1.17,
+          "percentile": 22
         },
         "recoveries": {
-          "value": "16",
-          "per90": 3.66,
-          "percentile": 71
+          "value": "20",
+          "per90": 3.91,
+          "percentile": 75
         },
         "poss_won_att_3rd_team_title": {
-          "value": "3",
-          "per90": 0.69,
-          "percentile": 55
+          "value": "4",
+          "per90": 0.78,
+          "percentile": 60
         },
         "dribbled_past": {
           "value": "5",
-          "per90": 1.15,
-          "percentile": 7
+          "per90": 0.98,
+          "percentile": 11
         },
         "clearances": {
-          "value": "1",
-          "per90": 0.23,
-          "percentile": 16
+          "value": "2",
+          "per90": 0.39,
+          "percentile": 40
         },
         "clean_sheet_team_title": {
           "value": "0",
@@ -6845,14 +8509,14 @@
           "percentile": 0
         },
         "goals_conceded_while_on_pitch": {
-          "value": "7",
-          "per90": 1.6,
-          "percentile": 11
+          "value": "11",
+          "per90": 2.15,
+          "percentile": 2
         },
         "expected_goals_against_while_on_pitch": {
-          "value": "8.80",
-          "per90": 2.02,
-          "percentile": 13
+          "value": "11.85",
+          "per90": 2.32,
+          "percentile": 4
         },
         "yellow_cards": {
           "value": "0",
@@ -6862,27 +8526,27 @@
         "red_cards": {
           "value": "0",
           "per90": 0,
-          "percentile": 0
+          "percentile": 100
         },
         "rating": {
-          "value": "6.59",
-          "per90": 6.59,
-          "percentile": 29
+          "value": "6.52",
+          "per90": 6.52,
+          "percentile": 25
         },
         "matches_uppercase": {
-          "value": "5",
-          "per90": 5,
-          "percentile": 33
+          "value": "6",
+          "per90": 6,
+          "percentile": 40
         },
         "player_started_matches": {
-          "value": "5",
-          "per90": 5,
-          "percentile": 65
+          "value": "6",
+          "per90": 6,
+          "percentile": 75
         },
         "minutes_played": {
-          "value": "393",
+          "value": "460",
           "per90": 90,
-          "percentile": 71
+          "percentile": 73
         }
       },
       "traits": {
@@ -6891,22 +8555,22 @@
           {
             "key": "chances_created",
             "title": "Chances created",
-            "value": 84
+            "value": 86
           },
           {
             "key": "aerials_won",
             "title": "Aerial duels",
-            "value": 5
+            "value": 8
           },
           {
             "key": "defensive_actions",
             "title": "Defensive actions",
-            "value": 4
+            "value": 5
           },
           {
             "key": "goals",
             "title": "Goals",
-            "value": 72
+            "value": 73
           },
           {
             "key": "shot_attempts",
@@ -8081,6 +9745,211 @@
           "x": 38.51,
           "y": 64.79,
           "comp": "PL"
+        },
+        {
+          "x": 65.37,
+          "y": 3.94,
+          "comp": "PL"
+        },
+        {
+          "x": 69.76,
+          "y": 19.09,
+          "comp": "PL"
+        },
+        {
+          "x": 71.22,
+          "y": 2.75,
+          "comp": "PL"
+        },
+        {
+          "x": 68.18,
+          "y": 6.82,
+          "comp": "PL"
+        },
+        {
+          "x": 70.66,
+          "y": 10.49,
+          "comp": "PL"
+        },
+        {
+          "x": 36.71,
+          "y": 5.84,
+          "comp": "PL"
+        },
+        {
+          "x": 42.79,
+          "y": 3.15,
+          "comp": "PL"
+        },
+        {
+          "x": 63.45,
+          "y": 3.48,
+          "comp": "PL"
+        },
+        {
+          "x": 93.5,
+          "y": 15.1,
+          "comp": "PL"
+        },
+        {
+          "x": 72.24,
+          "y": 7.22,
+          "comp": "PL"
+        },
+        {
+          "x": 94,
+          "y": 19.87,
+          "comp": "PL"
+        },
+        {
+          "x": 61.88,
+          "y": 12.2,
+          "comp": "PL"
+        },
+        {
+          "x": 33.66,
+          "y": 18.11,
+          "comp": "PL"
+        },
+        {
+          "x": 99.59,
+          "y": 1.31,
+          "comp": "PL"
+        },
+        {
+          "x": 99.21,
+          "y": 3.74,
+          "comp": "PL"
+        },
+        {
+          "x": 99.97,
+          "y": 2.36,
+          "comp": "PL"
+        },
+        {
+          "x": 99.5,
+          "y": 3.41,
+          "comp": "PL"
+        },
+        {
+          "x": 40.53,
+          "y": 42,
+          "comp": "PL"
+        },
+        {
+          "x": 85.39,
+          "y": 6.76,
+          "comp": "PL"
+        },
+        {
+          "x": 44.98,
+          "y": 2.49,
+          "comp": "PL"
+        },
+        {
+          "x": 65.37,
+          "y": 8.46,
+          "comp": "PL"
+        },
+        {
+          "x": 67.51,
+          "y": 5.97,
+          "comp": "PL"
+        },
+        {
+          "x": 66.94,
+          "y": 10.04,
+          "comp": "PL"
+        },
+        {
+          "x": 71.56,
+          "y": 3.94,
+          "comp": "PL"
+        },
+        {
+          "x": 86.14,
+          "y": 12.2,
+          "comp": "PL"
+        },
+        {
+          "x": 59.62,
+          "y": 60.85,
+          "comp": "PL"
+        },
+        {
+          "x": 93,
+          "y": 57.96,
+          "comp": "PL"
+        },
+        {
+          "x": 83.84,
+          "y": 60.19,
+          "comp": "PL"
+        },
+        {
+          "x": 24.2,
+          "y": 63.93,
+          "comp": "PL"
+        },
+        {
+          "x": 11.3,
+          "y": 40.05,
+          "comp": "PL"
+        },
+        {
+          "x": 11.3,
+          "y": 40.05,
+          "comp": "PL"
+        },
+        {
+          "x": 3.98,
+          "y": 40.05,
+          "comp": "PL"
+        },
+        {
+          "x": 7.53,
+          "y": 58.75,
+          "comp": "PL"
+        },
+        {
+          "x": 10.04,
+          "y": 62.56,
+          "comp": "PL"
+        },
+        {
+          "x": 99.21,
+          "y": 20.57,
+          "comp": "PL"
+        },
+        {
+          "x": 56.97,
+          "y": 29.88,
+          "comp": "PL"
+        },
+        {
+          "x": 66.72,
+          "y": 10.04,
+          "comp": "PL"
+        },
+        {
+          "x": 73.02,
+          "y": 14.68,
+          "comp": "PL"
+        },
+        {
+          "x": 62.33,
+          "y": 22.53,
+          "comp": "PL"
+        },
+        {
+          "x": 73.81,
+          "y": 11.15,
+          "comp": "PL"
+        },
+        {
+          "x": 99.59,
+          "y": 11.15,
+          "comp": "PL"
         }
       ],
       "season": "2026/2027",
@@ -8088,107 +9957,37 @@
         "team": "St. Mirren",
         "teamId": 9800,
         "until": "2027-06-30"
-      }
-    },
-    {
-      "id": 1288276,
-      "squadLevels": [
-        "academy"
-      ],
-      "name": "Charles Sagoe Jr.",
-      "fotmobPhoto": "https://images.fotmob.com/image_resources/playerimages/1288276.png",
-      "nationality": "England",
-      "position": "leftwinger",
-      "posGroup": "FW",
-      "jersey": "24",
-      "age": 22,
-      "height": "",
-      "preferredFoot": "",
-      "marketValue": {
-        "value": 750092,
-        "currency": "EUR"
       },
-      "contractEnd": null,
-      "positionLabel": "Left Winger",
-      "career": [
+      "youthCareer": [
         {
-          "team": "Kalmar FF",
-          "startDate": "2026-02",
-          "endDate": "2026-12",
-          "active": true,
-          "appearances": "25",
-          "goals": "4",
-          "assists": "8",
-          "transfer": "loan",
-          "loan": true
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2026-07",
+          "endDate": "2026-08",
+          "active": false
         },
         {
-          "team": "Arsenal",
-          "startDate": "2025-11",
-          "endDate": "2026-02",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null,
-          "transfer": null,
-          "loan": false
+          "team": "Arsenal U21",
+          "teamId": 950214,
+          "startDate": "2023-12",
+          "endDate": "2025-08",
+          "active": false
         },
         {
-          "team": "Shrewsbury Town",
-          "startDate": "2024-08",
-          "endDate": "2025-01",
-          "active": false,
-          "appearances": "18",
-          "goals": "0",
-          "assists": "0",
-          "transfer": "loan",
-          "loan": true
+          "team": "Arsenal U19",
+          "teamId": 394196,
+          "startDate": "2023-12",
+          "endDate": "2025-06",
+          "active": false
         },
         {
-          "team": "Arsenal",
-          "startDate": "2024-07",
-          "endDate": "2024-08",
-          "active": false,
-          "appearances": null,
-          "goals": null,
-          "assists": null,
-          "transfer": "return",
-          "loan": false
-        },
-        {
-          "team": "Swansea City",
-          "startDate": "2024-02",
-          "endDate": "2024-05",
-          "active": false,
-          "appearances": "2",
-          "goals": "0",
-          "assists": "0",
-          "transfer": "loan",
-          "loan": true
-        },
-        {
-          "team": "Arsenal",
-          "startDate": "2022-12",
-          "endDate": "2024-02",
-          "active": false,
-          "appearances": "1",
-          "goals": "0",
-          "assists": "0",
-          "transfer": null,
-          "loan": false
+          "team": "Arsenal U18",
+          "teamId": 1113566,
+          "startDate": "2022-07",
+          "endDate": "2024-06",
+          "active": false
         }
-      ],
-      "competitions": {},
-      "stats": {},
-      "traits": null,
-      "shotmap": [],
-      "heatmap": [],
-      "season": "2026/2027",
-      "loan": {
-        "team": "Kalmar FF",
-        "teamId": 9892,
-        "until": "2026-12-31"
-      }
+      ]
     }
   ]
 }
