@@ -10083,7 +10083,7 @@ function crSfClub(){
   }
   return {club:v.player.club, loan:false};
 }
-function crSfSeed(){ var p=CR.v.player, s=String(p.name)+'|'+p.age+'|'+CR.sf.club.n, h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function crSfSeed(){ var p=CR.v.player, s=String(p.name)+'|'+p.age+'|'+(CR.sf?CR.sf.club.n:p.club.n), h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function crSfOpen(still){
   var p=CR.v.player, season=crSfClub(), club=season.club, df=p.pos==='DF', yth=!season.loan && (p.age<18 || /U-\d+$/.test(club.team||''));
   var lbs=[['apps','경기'],['goals','골'],['ast','도움']].concat(df?[['cs','클린시트']]:[]);
@@ -10704,11 +10704,60 @@ var CR_RX_NEWS_ANGLE={
   youthLow:['아직 어린 만큼 결과보다 성장 과정을 더 지켜볼 필요가 있다.','이번 시즌의 아쉬움은 다음 단계를 준비할 과제로 남았다.','당장의 기록만으로 가능성을 단정하기는 이르다.']
 };
 
-// 펨코 고정닉은 평범한 생활형 닉네임에 축구 팬 이름을 조금 섞는다. 디시는 유동 IP 앞자리만 표시한다.
+// 펨코 계정은 일반 고정닉과 말투가 정해진 고정닉을 나눈다. 후자는 닉네임과 댓글을 함께 골라 말이 어긋나지 않게 한다.
 var CR_RX_NICK=['퇴근하고축구','막차놓친사람','소금빵두개','비오는수요일','하늘색우산','오늘도야근','김치볶음밥','노란포스트잇','새벽두시반','동네고양이',
   '주말엔집에서','현관앞택배','세탁기돌리는중','따뜻한보리차','월요일싫다','낮잠30분','초코우유한잔','종이컵두개','그냥보는중','냉장고문닫아',
   '북런던날씨','하이버리역','개막만기다림','원정버스탄날','마지막추가시간','직관가는길','하프타임라면','새벽경기알람','잔디냄새','빨간머플러',
-  '책상서랍','구름사진','목요일저녁','버스정류장','두번째알람','여름밤산책','책읽다가축구','파란유리컵','동네빵집','아침형인간'];
+  '책상서랍','구름사진','목요일저녁','버스정류장','두번째알람','여름밤산책','책읽다가축구','파란유리컵','동네빵집','아침형인간',
+  '무롱이','덕선','원귀몸','미노이','조휴일','국주','고장율','지용지','민주','핸메픽','점자욱','남궁도위','뽀쪽','제찜','꼼짝','담배고양이','IGOR','수비멘디'];
+var CR_RX_FM_PERSONA={
+  '람세이':{
+    good:['아이고 {n} 오늘도 야무지게 뛰었네, 밥은 잘 챙겨 먹고 다니나','우리 {n} 잘한 건 칭찬 좀 해줘라, 애가 얼마나 뛰었는데','어휴 이 정도면 {club} 팬들도 기특하겠다'],
+    rough:['아이고 {n}도 속상하겠다, 다음엔 좀 나아지겠지','우리 애 기죽이지 마라, 한 시즌 못했다고 끝난 것도 아니고','에구 경기 안 풀릴 때도 있는 거지, 밥이나 잘 챙겨 먹어라'],
+    injury:['아이고 다친 데는 괜찮나, 무리해서 나오지 말아라','우리 {n} 몸부터 추스르고 와, 경기야 또 있지','어휴 부상 소식 들으니 마음이 쓰이네'],
+    win:['아이고 {club} 우승이라니, 우리 애들 참 잘했다','오늘은 다들 칭찬해 줘라, 한 시즌 고생 많았잖아','우리 {n}도 우승 멤버지, 축하한다']},
+  '덕수':{
+    good:['{n} 경기 보고 왔는데 이제 아이돌 직캠 봐도 됨?','신부후보 아이돌 순위 정하다가 {n} 하이라이트 놓칠 뻔','축구 틀어 놓고 자취생 추천템 찾는 중인데 오늘 폼 좋네'],
+    rough:['경기 보느라 여자아이돌 컴백 무대 놓쳤는데 이건 좀 아쉽다','신부후보 얘기는 잠시 접고 {n} 다음 경기나 봐야겠음','오늘 경기 마음 아파서 자취생 추천템이나 받아봄'],
+    injury:['{n} 부상이라니... 아이돌 직캠도 눈에 안 들어온다','신부후보 얘기할 기분이 아니네, 빨리 나아라','자취생 회복식 추천템 아는 사람? {n}도 잘 챙겨 먹길'],
+    win:['우승 보느라 여자아이돌 무대 놓쳤는데 오늘은 인정','{club} 우승 축하하고, 신부후보 얘기는 내일 하자','우승 기념 자취생 야식 추천템 받는다']},
+  '예지':{all:['ㅋㅋ']},
+  'Don Vito':{
+    good:['{n} 오늘 폼은 완전 주인공 각성 에피소드네','이 패스 연출이면 작화팀이 힘 좀 줬다','{club} 이번 시즌 스토리 전개 좋다'],
+    rough:['오늘은 주인공 보정이 안 걸렸네... 다음 화 기다림','{n} 성장 서사는 여기서 끝이 아니라고 봄','이건 빌런전 앞두고 수련하는 에피소드임'],
+    injury:['부상 에피소드라니 전개 너무 매운 거 아니냐','회복하고 복귀하는 장면이 진짜 클라이맥스일 듯','{n} 복귀 편 나올 때까지 존버한다'],
+    win:['이건 시즌 최종화 엔딩으로 손색없다','{club} 우승 엔딩, 2기 제작 확정해라','{n} 우승 장면은 오프닝에 넣어도 되겠다']},
+  '아일릿박민주':{
+    good:['{club} 선수라면 응원해야지 👍','{n} 오늘도 고생했다, 다음 경기도 응원함 👍','꾸준히 뛰어 준 {n} 응원한다 👍'],
+    rough:['한 경기 아쉬워도 {n} 응원해야지 👍','{club} 선수니까 다음 시즌도 믿고 응원함 👍','출전 기회 오면 더 잘할 거야, 응원해 👍'],
+    injury:['{n} 건강하게 돌아오길 응원한다 👍','회복이 먼저야, 기다리면서 응원할게 👍','무리하지 말고 잘 나아서 돌아와 👍'],
+    win:['{club} 우승 축하해, 모두 응원했어 👍','{n}도 우승까지 고생 많았어, 응원해 👍','우승한 우리 선수들 계속 응원해야지 👍']},
+  '정성일':{
+    good:['책님 오늘 아스날 이기나요!!! 잉토 걸어도 됩니까','맨시티에 모든 걸 걸었는데 또 알등이 됐습니다','{n} 잘할 줄 알았는데 잉토는 왜 잃었지'],
+    rough:['시티에 다 걸었다가 잉토 잃고 다시 알등이 됨','책님 오늘 아스날 이기나요!!! 이번엔 복구해야 합니다','한 번만 더 걸면 알등이 탈출할 수 있겠지...'],
+    injury:['부상 소식 보고 건 잉토도 잃었다... 다시 알등이','책님 다음 경기 아스날 이기나요!!! 제 잉여력이 걸렸어요','맨시티에 다 걸었는데 {n} 부상까지, 되는 게 없네'],
+    win:['책님 우승팀 맞히셨나요!!! 전 시티에 다 걸어서 알등이입니다','{club} 우승 걸었으면 잉토 복구했을 텐데','우승 축하하는데 맨시티에 모든 걸 건 내 잉여력은 어디 갔냐']}
+};
+// 실제 팬 별칭이 확인된 구단만 사용한다. 리그 1위나 유스 시즌엔 "우승 못했다"는 글을 띄우지 않는다.
+var CR_RX_FM_FANS={'맨체스터 시티':{team:'시티',fan:'짭순이'},'아스날':{team:'아스날',fan:'개순이'},
+  '바르셀로나':{team:'바르샤',fan:'꾸순이'},'리버풀':{team:'리버풀',fan:'콥순이'},
+  '첼시':{team:'첼시',fan:'첼순이'},'맨체스터 유나이티드':{team:'맨유',fan:'맹순이'},
+  '토트넘':{team:'토트넘',fan:'닭순이'},'바이에른 뮌헨':{team:'뮌헨',fan:'뮌순이'},
+  '레알 마드리드':{team:'레알',fan:'레순이'}};
+// 같은 결과라도 펨코 쪽은 게시글·댓글이 좀 더 짧고 서로 반응하는 말투로 보충한다.
+var CR_RX_FM_MORE={
+  elite:{t:['{n} 이번 시즌은 포텐 보내도 되냐','{n} 폼 근황.gif'],c:['이건 추천 안 누를 수가 없네','시즌 내내 이 폼이면 올해의 선수 얘기 나올 만함','하이라이트 한 장면만 봐도 왜 포텐 갔는지 알겠다','이 정도면 상대 팬도 인정할 듯']},
+  good:{t:['{n} 묵묵히 잘한 시즌 맞지?','{n} 이번 시즌 평가는 좀 올려줘라'],c:['이런 선수는 시즌 끝나고 더 생각남','스탯만 보면 모르는데 경기 보면 납득됨','베스트까진 몰라도 추천은 누른다','올해는 조용히 제 몫 한 게 큼']},
+  avg:{t:['{n} 시즌 평가는 추천 vs 비추','{n} 이번 시즌 딱 이 정도였음?'],c:['추천 주기엔 애매하고 비추 주기엔 또 아쉬움','고점은 봤는데 꾸준함이 숙제임','움짤 하나로 판단하기엔 경기마다 달랐다','일단 다음 시즌까지는 봐야 한다고 봄']},
+  bad:{t:['{n} 이번 시즌은 솔직히 아쉽다','{n} 반등 가능하다고 봄?'],c:['비추부터 누르기 전에 기록은 보고 오자','못한 경기 많았던 건 맞음','다음 시즌에도 이러면 그때는 진짜 고민해야지','잘했던 장면도 있는데 꾸준하지가 않음']},
+  bench:{t:['{n} 출전 시간 이게 맞냐','{n} 시즌 결산하기도 애매하네'],c:['몇 분 뛰지도 않았는데 평가가 되나','훈련장 말고 경기장에서 좀 보자','일단 선발 한 번은 줘야 판단하지','이럴 거면 임대가 낫다는 말 나올 만함']},
+  injury:{t:['{n} 복귀는 천천히 했으면','{n} 부상 소식 듣고 들어왔다'],c:['복귀 일정부터 재촉할 일이 아님','재활 잘하고 돌아오면 그때 추천 누를게','이번엔 몸 상태부터 제대로 확인하자','괜히 일찍 뛰다가 또 다치면 더 손해']},
+  decline:{t:['{n} 아직 한 시즌 더 가능하냐','{n} 역할 바꾸면 쓸 만하지 않음?'],c:['전성기랑 비교하면 당연히 아쉽지','풀타임은 무리여도 중요한 경기엔 필요함','재계약은 역할부터 정하고 얘기해야 함','이제는 출전 시간 조절이 핵심일 듯']},
+  youth:{t:['{n} 유스 경기 보고 온 사람?','{n} 1군 올리기 전에 이것부터 보자'],c:['유스 하이라이트 말고 풀경기도 봐야 함','이 나이에 이 정도면 추천 누른다','당장 1군 말고 단계 밟게 하는 게 맞지','직관 후기 보니까 움직임이 좋다더라']},
+  youthLow:{t:['{n} 유스에서 좀 더 기다려야 할 듯','{n} 한 시즌으로 거품 판정은 이르지'],c:['유스인데 벌써 비추 줄 일인가','하이라이트만 보고 기대 너무 올린 듯','실전 경험 더 쌓고 판단하자','다음 시즌까지는 봐야 한다고 생각함']},
+  champ:{t:['{club} 우승 포텐 가자','우승 기념 {n} 하이라이트 모음'],c:['오늘만큼은 추천 좀 아끼지 말자','우승 장면 움짤 계속 돌려보는 중','이 시즌은 진짜 오래 기억할 듯','MVP 투표는 내일 하고 오늘은 즐기자']},
+  champLow:{t:['우승은 했는데 {n} 평가는 따로 해야지','{n} 우승 메달 받고 다음 시즌엔 보여줘라'],c:['우승 축하는 하고 시즌 평가는 따로 하자','오늘은 비추 접어두고 축하부터 한다','메달 받았으니 다음 시즌엔 출전으로 증명해야지','팀은 우승했지만 개인 시즌은 아쉬운 게 맞음']}
+};
 var CR_RX_IP=['118.235','211.36','39.7','223.38','175.223','106.101','110.70','223.62','121.181','58.140'];
 // 포지션별 문구(팬·커뮤니티 풀에 섞는다) — 공격수는 골, 미드필더는 패스·중원, 수비수는 클린시트·수비
 var CR_RX_POS={
@@ -10731,7 +10780,7 @@ function crReact(){
   var hon=(r.hon||[]).map(function(h){ return String(h.n); }), R=r.apps?r.rating:0, Ra=R+Math.max(0,21-r.age)*0.15;   // 10대 1군은 평점이 낮은 게 보통이라 팬 반응 기준을 나이만큼 너그럽게
   var champ=hon.some(function(h){ return / 리그 우승$|^챔피언스리그 우승/.test(h) && !/유스/.test(h); }), ballon=hon.some(function(h){ return /^발롱도르/.test(h); });
   var k=r.youth?(R>=7.0?'youth':'youthLow'):(r.injured&&r.apps<15)?'injury':r.apps<8?'bench':(r.age>=31&&r.dOvr<0&&R<7.2)?'decline':Ra>=7.35?'elite':Ra>=7.0?'good':Ra>=6.6?'avg':'bad';
-  var club=String(p.club.n).replace(/ U-\d+$/,''), stat=p.pos==='DF'?'클린시트 '+r.cs+'회'+(r.ast?' · '+r.ast+'도움':''):r.goals+'골 '+r.ast+'도움';
+  var club=String(r.club||p.club.n).replace(/ U-\d+$/,''), stat=p.pos==='DF'?'클린시트 '+r.cs+'회'+(r.ast?' · '+r.ast+'도움':''):r.goals+'골 '+r.ast+'도움';
   var bigHon=hon.filter(function(h){ return /발롱|득점왕|도움왕|베스트 11|올해의 선수|우승|골든/.test(h) && !/유스/.test(h); });
   var posKo={FW:'공격수',MF:'미드필더',DF:'수비수'}[p.pos], lg=r.youth?'유스 리그':crNat(((CR.meta.club[club])||{}).nat).n+' 리그';
   var V={n:p.name, club:club, team:r.team, stat:stat, pos:posKo, league:lg, g:r.goals, a:r.ast, cs:r.cs, r:R?R.toFixed(2):'-', rank:r.rank, age:r.age, apps:r.apps, hon:bigHon[0]||'', x:(p.pos==='DF'?(2+Math.floor(rg()*4))+'실점 방어':(2+Math.floor(rg()*6))+'골')};
@@ -10769,18 +10818,31 @@ function crReact(){
   sns.forEach(function(s){ var v=Math.round(heat*(150+rg()*900)); s.lk=v>=1000?(v/1000).toFixed(1)+'k':v; s.c='hsl('+Math.floor(rg()*360)+',55%,45%)'; });
   // 커뮤니티: 글 하나 + 댓글 6개(단독 4 + 원댓글·답글 1쌍). 펨코(f)·디시(d) 중 한쪽 말투로만
   var fm=rg()<0.5, D=CR_RX_CM[k][fm?'f':'d'], CH=champ && !r.youth ? CR_RX_CM[hot?'champ':'champLow'][fm?'f':'d'] : null;
+  var clubFan=fm&&!r.youth&&!CH&&r.rank>1 ? CR_RX_FM_FANS[club] : null;
+  var fanTitle=clubFan?clubFan.team+' 우승 못해서 심란한 '+clubFan.fan+' 있어...?':null;
+  var more=fm?CR_RX_FM_MORE[k]:null, moreChamp=fm&&CH?CR_RX_FM_MORE[hot?'champ':'champLow']:null;
+  var titles=CH?CH.t.concat(moreChamp?moreChamp.t:[]):D.t.concat(more?more.t:[]);
+  if(fanTitle) titles.push(fanTitle);
+  var tl=pick(titles);
   // SNS에 이미 나온 말과 겹치는 댓글은 뺀다(같은 말이 두 번 보이지 않게 — 이름·공백·ㅋㅠ·문장부호를 빼고 5글자 이상 겹치면)
   var nz=function(t){ return fill(t).split(p.name).join('').replace(/[\sㅋㅠ.,!?…~]/g,''); }, seen=sns.map(function(x){ return nz(x.t); });
   var dup=function(t){ var z=nz(t); for(var i=0;i+5<=z.length;i++){ var g=z.substr(i,5); if(seen.some(function(y){ return y.indexOf(g)>=0; })) return true; } return false; };
-  var cpool=D.c.filter(ok).map(strip).filter(function(t){ return !dup(t); }), take=function(){ return cpool.length ? cpool.splice(Math.floor(rg()*cpool.length),1)[0] : ''; };
+  var cpool=D.c.concat(more?more.c:[],moreChamp?moreChamp.c:[]).filter(ok).map(strip).filter(function(t){ return !dup(t); }), take=function(){ return cpool.length ? cpool.splice(Math.floor(rg()*cpool.length),1)[0] : ''; };
   var nicks=CR_RX_NICK.slice(), ips=CR_RX_IP.slice(), who=function(){ return fm ? {nick:nicks.splice(Math.floor(rg()*nicks.length),1)[0]} : {nick:'ㅇㅇ', ip:ips.splice(Math.floor(rg()*ips.length),1)[0]}; };
   var cm=function(t){ var o=who(); o.t=fill(t); o.up=fm?Math.round(heat*(2+rg()*30)):0; return o; };
   var cmts=[]; if(CH) cmts.push(cm(pick(CH.c)));
+  if(fanTitle && tl===fanTitle) cmts.push(cm('여기 '+clubFan.fan+' 한 명 추가요... 이번엔 진짜 기대했는데'));
   while(cmts.length<4 && cpool.length) cmts.push(cm(take()));
+  if(fm && cmts.length){
+    var names=Object.keys(CR_RX_FM_PERSONA), name=pick2(names), voice=CR_RX_FM_PERSONA[name];
+    var mood=k==='injury'?'injury':CH?'win':['bad','bench','decline','youthLow'].indexOf(k)>=0?'rough':'good';
+    var first=(CH||tl===fanTitle)&&cmts.length>1?1:0, one=cmts[first+Math.floor(rg()*(cmts.length-first))];
+    one.nick=name; one.t=fill(pick2(voice[mood]||voice.all));
+  }
   if(fm){ cmts.sort(function(a,b){ return b.up-a.up; }); cmts.slice(0,2).forEach(function(c){ c.best=1; c.up+=Math.round(heat*40); }); cmts.sort(function(a,b){ return b.up-a.up; }); }   // 펨코: 추천 많은 2개가 베스트로 맨 위
   var prs=(CH&&CH.r?CH.r:D.r).filter(function(x){ return ok(x[0]) && ok(x[1]); });
   if(prs.length){ var pr=pick2(prs), par=cm(strip(pr[0])), rp=cm(strip(pr[1])); rp.re=1; cmts.splice(Math.min(cmts.length,(fm?2:1)+Math.floor(rg()*3)),0,par,rp); }   // 답글 쌍은 펨코면 베스트 2개 아래에
-  var tl=CH?pick(CH.t):pick(D.t), ncmt=Math.max(cmts.length, Math.round(heat*(5+rg()*18))), op=who();
+  var ncmt=Math.max(cmts.length, Math.round(heat*(5+rg()*18))), op=who();
   var comm={fm:fm, board:fm?'해외축구':club+' 갤러리', hot:heat>=4, title:fill(tl), by:op, views:Math.round(heat*(300+rg()*1500)), rec:Math.round(heat*(8+rg()*40)), n:ncmt, cmts:cmts};
   return {news:news, sns:sns, comm:comm};
 }
