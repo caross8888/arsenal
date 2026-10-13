@@ -10075,16 +10075,24 @@ function crSeason(btn){
 var CR_MONTHS=['8월','9월','10월','11월','12월','1월','2월','3월','4월','5월'];
 function crSeasonLabel(age){ var y=2026+age-15; return y+'-'+String(y+1).slice(-2); }
 function crSfRng(seed){ var a=seed>>>0; return function(){ a=(a+0x6D2B79F5)>>>0; var t=a; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
-function crSfSeed(){ var p=CR.v.player, s=String(p.name)+'|'+p.age+'|'+p.club.n, h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function crSfClub(){
+  var v=CR.v, pr=v.prep, pick=v.phase==='injury' ? v.pending && v.pending.evPick : CR.evPick;
+  if(pr && pr.event.id==='loan' && pick===0){
+    var clubs=pr.loanClubs||(pr.loanClub?[pr.loanClub]:[]), lc=clubs[v.phase==='injury'?0:(CR.loanPick||0)];
+    if(lc) return {club:Object.assign({},lc,{team:lc.n}), loan:true};
+  }
+  return {club:v.player.club, loan:false};
+}
+function crSfSeed(){ var p=CR.v.player, s=String(p.name)+'|'+p.age+'|'+CR.sf.club.n, h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function crSfOpen(still){
-  var p=CR.v.player, df=p.pos==='DF', yth=p.age<18 || /U-\d+$/.test(p.club.team||'');
+  var p=CR.v.player, season=crSfClub(), club=season.club, df=p.pos==='DF', yth=!season.loan && (p.age<18 || /U-\d+$/.test(club.team||''));
   var lbs=[['apps','경기'],['goals','골'],['ast','도움']].concat(df?[['cs','클린시트']]:[]);
-  CR.sf={n:{apps:0,goals:0,ast:0,cs:0}, i:0, G:0, timer:null, q:[], lbs:lbs, form:[]};
+  CR.sf={n:{apps:0,goals:0,ast:0,cs:0}, i:0, G:0, timer:null, q:[], lbs:lbs, form:[], club:club, loan:season.loan};
   // 다른 오버레이(인터뷰·훈련 제안·이적시장)와 같은 틀: 흐린 배경 + 튀어 들어오는 아이콘 + 알약 태그 + 밝은 말풍선 카드 + 어두운 반투명 줄
   crTovSet('<div class="cr-sf'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행" onclick="crSfTap(event)"><div class="cr-sf-box" id="crSfBox">'
     +'<div class="ic" aria-hidden="true">'+dIcon('stadium',24)+'</div><span class="tag">SEASON '+crSeasonLabel(p.age)+' · 시즌 '+(p.seasons+1)+'</span>'
     // 시즌 카드: 구단·시즌, 진행(몇 번째 경기 / 전체), 내 기록, 최근 5경기 결과
-    +'<div class="cr-sf-card" id="crSfCard"><div class="hd">'+crCrest(p.club,32)+'<div><b>'+gmEsc(p.club.team)+'</b><span>'+gmEsc(p.name)+' · '+(yth?'유스 리그':crNat(p.club.nat).n+' 리그')+'</span></div>'
+    +'<div class="cr-sf-card" id="crSfCard"><div class="hd">'+crCrest(club,32)+'<div><b>'+gmEsc(club.team)+'</b><span>'+gmEsc(p.name)+' · '+(yth?'유스 리그':crNat(club.nat).n+' 리그')+'</span></div>'
     +'<div class="md"><b id="crSfMd">0</b><span id="crSfG">/ –</span></div></div>'
     +'<div class="cr-sf-prog"><i id="crSfProg"></i></div>'
     +'<div class="st" style="grid-template-columns:repeat('+lbs.length+',1fr)">'+lbs.map(function(l){ return '<div><b id="crSfN_'+l[0]+'">0</b><span>'+l[1]+'</span></div>'; }).join('')+'</div>'
@@ -10115,6 +10123,14 @@ var CR_FAN={
     '세계 최고 맞다','해외 팬들도 난리 났음','광고 또 찍었더라 ㅋㅋ','{n} 유니폼 품절이래','올해의 선수 확정','레알이 노린다는 소문…','몸값 1억 유로 넘는다며','이 선수 동시대에 보는 게 행운'],
   low:['기회 좀 줘봐라 감독','벤치에만 두기 아깝다','{n} 언제 터지냐','훈련장에선 제일 잘한다던데',
     '임대라도 보내서 뛰게 해라','{n} 아직 포기 안 했다','후반 교체로라도 보고 싶다','언젠간 터진다 믿는다','출전 시간만 주면 증명할 듯','감독이 왜 안 쓰는지 모르겠음','묵묵히 하는 거 멋있다','한 번만 기회 오면 돼'],
+  loan:['{club}에서 실전 경험 쌓는 중','임대 와서 매 경기 적응하는 게 보인다','{n} 오늘은 선발일까','{club} 팬들 사이에서도 이름 알려지겠네','원소속팀 팬인데 임대 경기까지 챙겨 봄',
+    '낯선 팀인데 동료들이랑 호흡 괜찮다','임대생이라고 봐주는 경기 없다','{n} 경기 뛰는 게 제일 반갑다','오늘도 {club} 경기 틀었다','여기서 꾸준히 뛰면 자신감 붙을 듯','임대팀 전술에 점점 녹아드는 중','경기 끝나고 원소속팀 팬들도 반응 궁금하다'],
+  loanStart:['{n} 임대 첫 시즌, {club} 경기 챙겨 봐야지','{club} 팬인데 새로 온 {n} 기대 중','이번 임대에서 출전 시간 많이 받았으면','원소속팀에서 왔다는 {n}, 어떤 선수인지 보자'],
+  loanDebut:['{n} {club} 첫 출전이다!','임대 와서 드디어 실전 뛰네','첫 경기부터 움직임 괜찮은데','{club} 유니폼 입고 뛰는 거 새롭다','첫 출전 긴장하지 말고 해보자'],
+  loanGoal:['{n} 임대 와서 골까지 넣네','{club} 팬들 이제 {n} 이름 외우겠다','임대생 골이라니 원소속팀 팬도 환호 중','{n} 여기서 계속 뛰면 더 좋아지겠다','이 골로 임대팀 팬들 마음 잡았네'],
+  loanAssist:['{n} 임대팀에서도 도움 기록!','{club} 동료랑 호흡 맞아간다','이 패스 보려고 임대 경기 챙긴다','원소속팀 팬들도 이 도움 봤겠지','낯선 팀에서 저런 패스면 적응 끝난 듯'],
+  loanCs:['{n} 임대팀 수비에 힘 보탰네','{club} 무실점에 {n} 몫도 크다','임대 와서 수비 경험 제대로 쌓는 중','오늘은 뒷문 든든했다'],
+  loanBench:['임대 왔는데 경기 좀 뛰게 해줘','{n} 실전 경험 쌓으러 온 건데','다음 경기는 선발 기회 오려나','임대팀에서도 출전 경쟁 쉽지 않네'],
   abroad:['{nat}에서 온 그 선수 맞지?','{nat} 팬들도 보고 있다 👀','적응 잘하는 듯','언어는 좀 늘었으려나 ㅋㅋ',
     '{nat} 커뮤니티에서도 난리던데','현지 음식은 입에 맞나','{nat} 국기 들고 온 팬 봄','해외파의 자존심','타지에서 고생 많다','{nat}에서 새벽에 보는 중 ㅋㅋ','현지 언론 평점 좋더라','동료들이랑 잘 지내는 듯'],
   glass:['제발 이번 시즌은 안 다치길…','몸 관리만 하면 되는데','부상만 없으면 월클인데','보호대 꼭 차라','의료진 {n} 좀 잘 챙겨줘','건강이 최고다 진짜'],
@@ -10155,21 +10171,24 @@ var CR_FAN={
   '인버티드 풀백':['안으로 좁혀서 미드필더처럼','풀백이 빌드업을 하네','인버티드 역할 완벽 이해','중원 숫자 싸움 이기게 해줌'],
   win:['우승이다!!!!','{club} 챔피언!!','{n} 우승 축하해 ㅠㅠ','우승 퍼레이드 간다','이 순간을 위해 응원했다','올해는 우리가 최고'],
   end:['수고했다 {n}','다음 시즌도 기대한다','{n} 이번 시즌 정리 ㄷㄷ','시즌 끝나니까 허전하네','한 시즌 동안 고생 많았다','휴가 잘 보내고 와','다음 시즌 개막 언제냐','이번 시즌 {n} 덕에 즐거웠다']};
-var CR_FAN_ID=['직관러','시즌권12년차','유스덕후','전술충','새벽축구','north_bank','gooner_1886','축구는과학','원정팬','치킨각','kop_kr','ultras_09','라인브레이커','풀백장인','하이라이트봇아님',
-  '응원가장인','축구보는회사원','주말은축구','90분풀타임','오프사이드트랩','중계새로고침','유니폼수집가','통계충','직관3회차','골대뒤N석','원정버스','하프라인','축구고인물','오늘도본방','킥오프5분전'];
+var CR_FAN_ID=['seoulgooner','minji_031','latebus23','sora_14','mondayoff','northbank_92','bluecup10','june_kl','afterwork_fc','milkandmatch',
+  'sujin_08','nightshift_7','ordinary_park','busstop_23','sunday_choi','redscarf_11','haneul_27','kickoff_alarm','somin_04','coffee_at_2',
+  'hyunwoo_96','smallumbrella','matchday_mi','jjong_17','winterwindow','jiyoon_22','lasttrain_5','doyeon_91','yellowmug','gooner_kim',
+  'dahye_03','homebound_8','seungho_12','paperplane_6','eunji_28','tuesday_night','jaemin_09','noonbreak_3','from_seoul','jisu_44'];
 function crSfFeedStart(){
-  var S=CR.sf, p=CR.v.player, yth=p.age<18 || /U-\d+$/.test(p.club.team||''), pool=[];
+  var S=CR.sf, p=CR.v.player, yth=!S.loan && (p.age<18 || /U-\d+$/.test(S.club.team||'')), pool=[];
   var add=function(k, w){ for(var i=0;i<(w||1);i++) pool=pool.concat(CR_FAN[k]); };
   if(yth) add('youth',2); else if(p.age<=21) add('young',2); else if(p.age>=31) add('vet',2); else add('prime',2);
   if(p.ovr>=86 || p.peak>=88) add('star');
-  if(!yth && p.ovr<68) add('low');
-  if(p.club.nat!==p.nation) add('abroad');
+  if(!yth && p.ovr<68 && !S.loan) add('low');
+  if(S.loan) add('loan',2);
+  if(S.club.nat!==p.nation) add('abroad');
   if(p.glass) add('glass');
   if(!yth) add(p.pos);
   var cn=((CR.meta.cards[p.pos]||[])[p.card]||{}).n; if(CR_FAN[cn]) add(cn, 2);
   if(p.tot && p.tot.caps>0) add('nat');
   if((p.hist||[]).some(function(h){ return (h[9]||[]).length; })) add('honor');
-  S.fan={pool:pool, q:[], last:[], bench:0};
+  S.fan={pool:pool, q:S.loan?[CR_FAN.loanStart[Math.floor(Math.random()*CR_FAN.loanStart.length)]]:[], last:[], bench:0};
   var tick=function(){
     if(CR.sf!==S || !document.getElementById('crSfFeed')) return;
     var t=S.fan.q.shift();
@@ -10189,7 +10208,7 @@ function crSfSay(t){
   var S=CR.sf, f=document.getElementById('crSfFeed'); if(!f) return;
   var p=CR.v.player;
   S.fan.last=[t].concat(S.fan.last).slice(0,6);
-  var txt=t.replace(/\{g\}/g, S.n.goals).replace(/\{n\}/g, p.name).replace(/\{club\}/g, p.club.n.replace(/ U-\d+$/,'')).replace(/\{nat\}/g, crNat(p.nation).n);
+  var txt=t.replace(/\{g\}/g, S.n.goals).replace(/\{n\}/g, p.name).replace(/\{club\}/g, S.club.n.replace(/ U-\d+$/,'')).replace(/\{nat\}/g, crNat(p.nation).n);
   var id=CR_FAN_ID[Math.floor(Math.random()*CR_FAN_ID.length)], hue=Math.floor(Math.random()*360);
   var el=document.createElement('div'); el.className='cr-sf-post';
   el.innerHTML='<i style="background:hsl('+hue+',55%,45%)">'+gmEsc(id.slice(0,1).toUpperCase())+'</i><div><b>@'+gmEsc(id)+'</b><span>'+gmEsc(txt)+'</span></div><em>'+crIcon('heart')+' '+(1+Math.floor(Math.random()*480))+'</em>';
@@ -10199,9 +10218,9 @@ function crSfSay(t){
 function crSfClose(){ if(CR.sf) clearTimeout(CR.sf.timer); CR.sf=null; crTovSet(''); }
 // 합계를 from..to 경기 칸에 나눈다(시드 고정). out: 이 구간 앞쪽 몇 칸은 부상 결장.
 function crSfPlan(from, to, tot, out){
-  var p=CR.v.player, R=crSfRng(crSfSeed()+from*7919), G=CR.sf.G;
-  var opp=((CR.meta.clubs||{})[p.club.nat]||[]).map(function(c){ return c[0]; }).filter(function(n){ return n!==p.club.n; });
-  var sfx=(p.club.team.match(/ (U-\d+)$/)||[])[1];
+  var club=CR.sf.club, R=crSfRng(crSfSeed()+from*7919), G=CR.sf.G;
+  var opp=((CR.meta.clubs||{})[club.nat]||[]).map(function(c){ return c[0]; }).filter(function(n){ return n!==club.n; });
+  var sfx=(club.team.match(/ (U-\d+)$/)||[])[1];
   var slots=[], list=[];
   for(var k=from;k<to;k++) slots.push(k);
   var free=slots.slice(out||0), apps=Math.min(tot.apps, free.length);
@@ -10266,10 +10285,15 @@ function crSfMatch(m, quiet){   // 한 경기: 진행·기록·최근 결과·�
   if(m.pl){ S.n.apps++; S.n.goals+=m.g; S.n.ast+=m.a; S.n.cs+=m.cs; }
   if(!quiet && S.fan){
     S.fan.bench=m.pl||m.inj ? 0 : S.fan.bench+1;
+    var loanDebut=S.loan && m.pl && !S.fan.loanDebut;
+    if(loanDebut) S.fan.loanDebut=true;
     if(m.g && Math.floor(S.n.goals/10)>Math.floor((S.n.goals-m.g)/10)) crSfReact('milestone');
-    else if(m.g) crSfReact(m.g>2?'hat':m.g>1?'brace':'goal');
+    else if(m.g) crSfReact(S.loan?'loanGoal':m.g>2?'hat':m.g>1?'brace':'goal');
     else if(m.a && m.cs && df) crSfReact('csast');
-    else if(m.a) crSfReact('assist'); else if(m.cs && df) crSfReact('cs'); else if(S.fan.bench===3) crSfReact('bench');
+    else if(m.a) crSfReact(S.loan?'loanAssist':'assist');
+    else if(m.cs && df) crSfReact(S.loan?'loanCs':'cs');
+    else if(loanDebut) crSfReact('loanDebut');
+    else if(S.fan.bench===3) crSfReact(S.loan?'loanBench':'bench');
   }
   S.i=m.k+1;
   var res=m.our>m.their?'W':m.our<m.their?'L':'D';
@@ -10533,8 +10557,158 @@ var CR_RX_CM={
   champLow:{f:{t:['{n} 우승 버스 탑승했네 ㅋㅋ','{club} 우승했는데 {n}은 뭐 했냐','우승은 했는데 {n} 시즌 평가는 어떰?'], c:['{n} 우승 버스 잘 탔네 ㅋㅋ','팀이 우승시켜줬지','우승했으니 오늘은 넘어간다 ㅋㅋ','우승 메달은 받았는데 시즌 내내 아쉽긴 했음','다음 시즌엔 우승 지분 좀 챙겨라'], r:[['우승은 했는데 {n} 시즌은 아쉽긴 하네','그래도 우승 멤버인 건 맞지'],['버스 탄 거 아니냐 ㅋㅋ','우승했으면 된 거지 오늘은 넘어가자'],['다음 시즌엔 지분 좀 챙겨라','ㅇㅇ 이번엔 팀이 다 해줬네']]},
             d:{t:['[일반] {n} 우승 버스 탑승 ㅋㅋ','[일반] 우승했는데 {n}은 뭐 했노','[정보] 우승팀 {n} 시즌 기록 ({stat})'], c:['오늘은 버스 탄 사람도 우승 멤버다 ㅋㅋ','{n}은 묻어갔네','우승했으니 이번 시즌은 넘어간다 ㅋㅋ','우승했으니 됐지 뭐 다음 시즌엔 잘해라','팀 우승이랑 개인 시즌 평가는 별개지'], r:[['우승은 했는데 개인 기록은 아쉽네','그래도 트로피 하나 추가했잖아'],['{n} 버스 탄 거 맞지 ㅋㅋ','오늘은 우승했으니 넘어가자'],['다음 시즌엔 본인도 좀 해줘라','이번엔 동료들이 캐리했노']]}}
 };
-// 펨코 고정닉 · 디시 유동 IP 앞자리
-var CR_RX_NICK=['전술충','새벽축구','xG신봉자','풀백장인','라인브레이커','왼발의마법사','PL중독','오프사이드트랩','감독경질요정','유스덕후','직관러','중원사령관','펨코감독','치킨각','하이라인','게겐프레싱','시즌권12년차','축구는과학','원정팬','역습한방'];
+// 같은 성적 구간을 여러 시즌 겪어도 제목과 대화가 반복되지 않도록 게시판별 문구를 보충한다.
+var CR_RX_CM_MORE={
+  good:{
+    f:{t:['{n} 올해는 묵묵하게 잘한 편 아니냐','[시즌 결산] {n} 평점 {r} 어떻게 봄?'],
+       c:['팀 밸런스 잡아준 게 컸음','기록보다 경기에서 보인 안정감이 좋았다','다음 시즌에도 선발 경쟁 충분히 할 듯'],
+       r:[['이번 시즌은 고점보다 꾸준함이 좋았음','ㅇㅇ 꾸준히 해준 게 제일 고맙지']]},
+    d:{t:['[일반] {n} 이번 시즌은 인정해야지','[정보] {n} {apps}경기 뛰고 남긴 기록'],
+       c:['조용히 자기 몫 했음','볼 때마다 크게 흔들리지 않더라','내년에도 이 정도면 주전 경쟁 가능'],
+       r:[['기록만 보면 평범한데','경기 보면 기여도가 보이긴 함']]}
+  },
+  avg:{
+    f:{t:['{n} 이번 시즌 좋았던 장면 vs 아쉬운 장면','평점 {r} 나온 {n}, 내년엔 어떻게 써야 함?'],
+       c:['좋을 때 폼을 오래 유지했으면 좋겠음','시즌 전체로 보면 확실한 답이 안 나옴','로테로 쓰면서 경쟁시키는 게 맞을 듯'],
+       r:[['주전으로 밀어주기엔 애매함','그렇다고 바로 정리할 수준도 아니지']]},
+    d:{t:['[일반] {n} 다음 시즌 역할 뭐가 맞냐','[일반] {n} 시즌 총평 좀 해보자'],
+       c:['경기마다 평가가 달라짐','선발 고정은 아직 모르겠음','확실히 밀리진 않았는데 압도적이지도 않음'],
+       r:[['로테로 남기는 게 맞는 듯','ㅇㅇ 경쟁 붙여봐야 알지']]}
+  },
+  bench:{
+    f:{t:['{n} {apps}경기로 뭘 평가하라는 거임','[시즌 결산] {n} 출전 기회 너무 적지 않았나'],
+       c:['컵 경기라도 더 썼으면 판단했을 텐데','기회가 적은 건 맞는데 다음 시즌 계획이 궁금함','계속 벤치면 선수한테도 손해다'],
+       r:[['임대 보내는 게 서로 좋지 않을까','뛸 수 있는 팀이면 그게 낫겠지']]},
+    d:{t:['[일반] {n} {apps}경기 뛰고 시즌 끝','[일반] {n} 다음 시즌도 벤치면 어쩌냐'],
+       c:['표본이 너무 적어서 평가 불가','컵에서라도 좀 써보지','계속 안 쓸 거면 출전할 길을 열어줘라'],
+       r:[['저 출전 시간으로 뭘 보여줌','그래서 다음 시즌엔 기회 더 줘야 함']]}
+  },
+  injury:{
+    f:{t:['{n} 부상 시즌, 기록보다 복귀가 중요해 보임','[시즌 결산] {n} 결장 기간이 너무 길었다'],
+       c:['회복 일정부터 차분히 잡아야지','서두르다 재발하면 더 오래 쉰다','다음 시즌엔 건강하게 오래 봤으면'],
+       r:[['복귀하자마자 풀타임은 무리겠지','경기 감각부터 천천히 올려야지']]},
+    d:{t:['[일반] {n} 다음 시즌엔 건강하게 볼 수 있냐','[정보] {n} 시즌 출전 {apps}경기'],
+       c:['재활 끝나는 게 우선임','복귀 서두르지 않았으면 좋겠다','몸 상태 봐가면서 출전 늘려야지'],
+       r:[['지금 기록으로 평가하면 너무 박하지','부상으로 못 뛴 기간을 감안해야지']]}
+  },
+  decline:{
+    f:{t:['{n} 다음 시즌 출전 시간 조절이 관건일 듯','베테랑 {n} 이번 시즌 어떻게 봤음?'],
+       c:['예전처럼 매주 선발은 무리일 수 있지','필요한 순간에 쓰는 편이 낫겠다','경험을 어린 선수들한테 전해줬으면'],
+       r:[['주전 자리 계속 맡기긴 어렵지 않나','출전 관리하면서 쓰면 도움은 되지']]},
+    d:{t:['[일반] {n} 다음 시즌 기용 어떻게 할 거냐','[일반] 베테랑 {n} 역할 바뀔 때 된 듯'],
+       c:['매 경기 풀타임은 버겁겠지','로테로도 도움 될 장면은 있음','후배들이랑 같이 뛰면 좋겠다'],
+       r:[['이제 주전은 힘들어 보임','그래도 경험 살릴 자리는 남아 있음']]}
+  },
+  youth:{
+    f:{t:['[유스] {n} 이번 시즌 기록 보고 옴','{team} {n}, 다음 단계는 어디가 맞음?'],
+       c:['유스에서 계속 뛰면서 몸부터 만들자','재능은 보이는데 서두르진 말았으면','컵 경기에서 한 번은 보고 싶다'],
+       r:[['바로 1군 올리자는 건 좀 빠름','프리시즌에서 어느 정도인지 보면 되지']]},
+    d:{t:['[정보] {team} {n} 이번 시즌 {stat}','[일반] {n} 다음 시즌엔 어디서 뛰냐'],
+       c:['유스 경기에서 눈에 띄긴 함','지금은 꾸준히 뛰는 게 중요','1군 훈련 한번 따라가 보면 좋겠다'],
+       r:[['당장 1군 선발은 무리겠지','컵에서 기회 줄 정도는 되지 않냐']]}
+  },
+  youthLow:{
+    f:{t:['[유스] {n} 아직 기다려봐야 하는 이유','{n} 이번 시즌 평가 너무 빠른 거 아님?'],
+       c:['이 나이에 한 시즌으로 단정하긴 어렵다','잘 안 풀릴 때도 경기 경험은 쌓아야지','기본기부터 다시 다듬으면 됨'],
+       r:[['올해는 기대만큼 못한 건 맞음','맞는데 아직 성장할 시간은 많잖아']]},
+    d:{t:['[일반] {n} 한 시즌 더 지켜보자','[일반] 유스 {n} 평가 벌써 끝냄?'],
+       c:['좀 더 뛰어봐야 알지','올해 기록만으로 자르긴 이름','기대치 낮추고 성장 과정 보자'],
+       r:[['이번 시즌은 아쉬웠다','그건 맞지만 여기서 끝은 아니지']]}
+  },
+  champ:{
+    f:{t:['[우승 기념] 이번 시즌 가장 기억나는 장면','{club} 우승하고 시즌 기록 다시 보니 감회가 다르다'],
+       c:['우승 확정되는 순간 아직도 생각남','트로피 들고 있는 사진만 계속 보는 중','이 멤버로 우승해서 더 좋다'],
+       r:[['{n}이 이번 시즌 많이 해줬지','맞아 우승 멤버 전부 고맙다']]},
+    d:{t:['[일반] 우승 시즌이라니 아직도 신기함','[짤] {club} 우승 세리머니 다시 보기'],
+       c:['오늘은 기록보다 트로피다','우승 사진 저장해놨다','우승 기념 유니폼 하나 사고 싶다'],
+       r:[['{n} 지분 인정해야지','ㅇㅇ 그래도 다 같이 만든 우승임']]}
+  },
+  champLow:{
+    f:{t:['{club}은 우승, {n} 개인 시즌은 따로 봐야지','[시즌 결산] 우승 멤버 {n} 다음 시즌 과제'],
+       c:['팀 우승은 축하하고 개인 평가는 냉정하게 하자','메달은 받았으니 다음 시즌엔 경기로 보여줘야지','올해 아쉬웠던 만큼 내년엔 반등하길'],
+       r:[['우승했다고 부진까지 없어지는 건 아니지','맞아 그래도 오늘은 같이 축하하자']]},
+    d:{t:['[일반] 우승했는데 {n}은 내년에 달라져야 함','[정보] 우승팀 {n} 개인 기록 다시 보기'],
+       c:['우승은 우승이고 기록은 기록이지','내년엔 출전 때 더 보여줘야 함','이번엔 동료 도움 받은 건 맞다'],
+       r:[['올해 {n}은 아쉬웠음','인정 그래도 다음 시즌은 또 모르지']]}
+  }
+};
+Object.keys(CR_RX_CM_MORE).forEach(function(k){
+  ['f','d'].forEach(function(site){ ['t','c','r'].forEach(function(kind){
+    CR_RX_CM[k][site][kind]=CR_RX_CM[k][site][kind].concat(CR_RX_CM_MORE[k][site][kind]);
+  }); });
+});
+
+// 시즌이 거듭돼도 같은 문구가 자주 겹치지 않도록 상황별 시즌 반응을 보충한다.
+var CR_RX_MORE={
+  news:{
+    ballon:['발롱도르의 주인공 {n}, {club}에서 완성한 한 해','{n} 발롱도르 수상… 시즌 기록은 {stat}','발롱도르 수상자 {n}, 숫자로 본 이번 시즌','{club} {n}, 발롱도르와 함께 남긴 {apps}경기','발롱도르 받은 {n}, 다음 시즌의 기대도 커진다','{n}의 시즌 결산: 발롱도르와 평점 {r}','{club} 팬에게 특별한 시즌… {n} 발롱도르 수상','발롱도르로 이어진 {n}의 한 시즌'],
+    champ:['{club} 우승 시즌, {n}의 기록을 돌아보다','리그 정상에 선 {club}… {n}은 {stat}','우승 트로피와 함께 끝난 {n}의 시즌','{club} 챔피언 등극, {n}의 한 해는','{n}, 우승한 팀에서 {apps}경기 소화','우승 뒤 돌아본 {club} {n}의 시즌','{club}의 정상 도전 끝에 남은 {n}의 기록','트로피 품은 {club}, {n}의 다음 시즌은'],
+    elite:['{n} 시즌 기록은 {stat}… 존재감 남긴 한 해','{club} {n}, {apps}경기에서 보여준 경쟁력','평점 {r}로 마친 {n}, 올해의 활약 정리','{n}의 이번 시즌을 숫자로 돌아보면','{club}에서 눈길 끈 {n}, 다음 단계는','{n}, 시즌 내내 이어간 좋은 흐름','{stat} 기록한 {n}, {club} 팬들의 기대 키웠다','{n}이 남긴 시즌 기록, 다음 해에도 이어질까'],
+    good:['{n}, {apps}경기에서 꾸준히 제 몫','{club} {n}, 화려함보다 꾸준함으로','시즌 평점 {r}… {n}의 안정적인 한 해','{n} 이번 시즌 성적표: {stat}','{club}에서 자리 지킨 {n}, 다음 목표는','{n}, 시즌 마친 뒤 돌아본 성장의 흔적','꾸준히 출전한 {n}, 기록은 {stat}','{n}의 좋은 시즌, 다음 해에도 이어질까'],
+    avg:['{n}의 시즌 성적표, 가능성과 아쉬움 공존','{club} {n}, 평점 {r}로 마친 한 해','{n} 이번 시즌 {stat}… 다음 단계는','{apps}경기 뛴 {n}, 평가가 갈리는 이유','{n}의 한 해, 기록만으론 부족한 설명','{club}에서 보낸 {n}의 평범한 듯 복잡한 시즌','기복 속 시즌 마친 {n}, 내년 과제는','{n}의 다음 시즌에 필요한 변화는'],
+    bad:['{n}, 평점 {r}로 끝난 아쉬운 시즌','{club} {n}, 다음 시즌 반등이 필요하다','{n} 이번 시즌 기록은 {stat}… 평가 엇갈려','{apps}경기 출전한 {n}, 남은 과제는','부진했던 {n}, 출전 기록부터 다시 살펴보니','{club}에서 쉽지 않은 한 해 보낸 {n}','{n}의 시즌 결산, 다음 해엔 달라질까','{n}, 기대와 달랐던 경기력 돌아보기'],
+    bench:['출전 {apps}경기… {n}에게 부족했던 기회','{n}의 시즌을 평가하기엔 너무 적은 출전','{club} {n}, 다음 시즌엔 경기 시간을 얻을까','벤치에서 길게 기다린 {n}, 남은 질문','{n}, 제한된 출전 속 {stat} 기록','경기보다 대기 시간이 길었던 {n}의 한 해','{apps}경기 뛴 {n}, 향후 역할 주목','{n}의 다음 시즌 과제는 출전 시간 확보'],
+    injury:['부상으로 멈춘 {n}의 시즌, 출전 {apps}경기','{n}, 회복을 앞세워 다음 시즌 준비','결장 기간 길었던 {n}, 기록은 {stat}','{club} {n}, 부상과 함께 돌아본 한 해','{n}의 시즌 결산… 숫자보다 중요한 회복','출전 {apps}경기, {n}에게 남은 과제는 건강','부상 여파 속 시즌 마친 {n}, 다음 해는','{n}, 경기장 복귀를 기다리는 시간'],
+    decline:['{n}, 달라진 역할을 고민할 시점','베테랑 {n}, 시즌 평점 {r}로 한 해 마무리','{club} {n}, 경험과 체력 사이의 선택','{n}의 이번 시즌 기록은 {stat}','{age}세 {n}, 다음 시즌 기용법이 관건','출전 {apps}경기, 베테랑 {n}의 한 해','{n}, 예전과 다른 시즌을 지나며','{club}의 베테랑 {n}, 역할 변화 앞두나'],
+    youth:['{team} {n}, 유스에서 남긴 기록은 {stat}','{age}세 {n}, 성장 과정을 돌아보다','{n}, 유스 무대 {apps}경기에서 가능성','{team}의 {n}, 다음 시즌 향할 무대는','유스 시즌 마친 {n}, 1군까지 남은 거리','{club} 유스 {n}, 이번 시즌 성적표','{n}, {team}에서 쌓은 한 해의 경험','어린 {n}의 기록보다 눈여겨볼 성장'],
+    youthLow:['{team} {n}, 서두르지 않아야 할 평가','유스 시즌 마친 {n}, 다음 단계는','{age}세 {n}, 한 시즌의 아쉬움과 과제','{n}, {team}에서 배운 한 해','{club} 유스 {n}, 다음 시즌 반등 기다린다','{n}의 유스 시즌, 기록은 {stat}','{team} {n}, 성장 속도를 지켜볼 때','{n}, 부족했던 한 해 뒤에 남은 가능성','유스에서 출전 {apps}경기… {n}의 과제','{n}의 다음 시즌은 조금 더 긴 호흡으로']
+  },
+  sns:{
+    elite:['{n} 이번 시즌 경기 놓친 게 아깝다','상대가 둘씩 붙어도 {n}은 결국 해냄','{n} 이름 나오면 하이라이트부터 찾게 됨','이번 시즌 최고 장면 고르라면 {n}부터 떠오름'],
+    good:['기록 보니까 {n} 진짜 꾸준히 뛰었네','{n} 없을 때 빈자리가 더 크게 느껴짐','이번 시즌은 {n}한테 박수 쳐야지','엄청 화려하진 않아도 {n} 할 일 다 했다','{n} 다음 시즌도 이 정도만 해줘도 좋겠다','시즌 초보다 {n} 훨씬 편하게 뛰는 듯','{stat}이면 충분히 칭찬받을 시즌','{n} 경기 끝나고 생각보다 자주 이름 남더라'],
+    avg:['{n} 잘한 날은 확실히 잘했는데 아쉽다','이번 시즌 {n} 평가는 사람마다 다를 듯','기록은 무난한데 경기마다 체감이 다름','{n} 다음 시즌엔 기복만 줄였으면','좋은 장면도 분명 있었음 {n}','결국 {n}한테 기대한 만큼은 아니었나','평점 {r} 보니 딱 애매하네','{n} 조금만 더 안정적이면 좋겠다'],
+    bad:['{n} 이번 시즌은 본인도 아쉬울 듯','다음 시즌엔 첫 터치부터 다시 잡아야겠다','{n} 무리한 선택이 자꾸 눈에 띄네','기록보다 경기 내용이 더 걱정됨'],
+    bench:['{n} 출전 {apps}경기면 평가하기도 어렵다','교체로라도 {n} 좀 더 보고 싶었는데','벤치에서 시즌이 끝나다니 아쉽네','{n}은 다음 시즌에 뛸 수 있는 팀이 필요할 듯','몇 분 뛰고 증명하라는 것도 어렵지','{n} 훈련만 하다 한 해 지나갔네','출전 기회부터 만들어줘야 한다','{n} 뛰는 모습 보고 판단하고 싶다'],
+    injury:['{n} 복귀는 천천히 해도 괜찮아','기록보다 몸 회복이 먼저지','{n} 없는 기간 길게 느껴졌다','이번 시즌은 재활한 시간도 있었잖아','복귀 후 무리시키지만 않았으면','{n} 다시 경기장에 서는 날 기다린다','다음 시즌엔 건강하게 오래 뛰자','출전 {apps}경기라니 본인이 제일 답답하겠지'],
+    decline:['{n} 예전만큼 못 뛰어도 남기는 게 있다','경험 필요한 순간엔 아직 {n}이 생각남','출전 시간 조절하면 더 보여줄 수 있을 듯','{n}의 다음 시즌이 어떤 모습일지 궁금하다','전성기랑만 비교하면 너무 박하지','{n} 후배들 챙기는 모습은 좋더라','한 해 한 해 더 소중해지는 선수','기록만으로 {n} 이번 시즌을 말하긴 어렵다'],
+    youth:['{team} 경기 챙겨볼 이유 하나 생김','{n} 볼 때마다 조금씩 늘어 있네','유스에서 잘한다고 바로 1군은 아니지만 기대됨','{n} 서두르지 말고 경기 꾸준히 뛰었으면','올해는 {n} 이름 확실히 외웠다','다음 시즌 유스 경기 또 보러 가야지','{n} 지금 나이에 {stat}이면 눈길 가지','이런 유망주는 성장 과정 보는 재미가 있음'],
+    youthLow:['한 시즌 아쉬웠다고 {n} 끝난 건 아니지','{n} 경기 경험 더 쌓으면 달라질 수도','유스 선수한테 너무 빨리 결론 내리지 말자','이번 시즌은 {n}에게 공부가 됐을 듯','{n} 좋은 장면도 몇 번 있었어','다음 시즌엔 자신감 좀 찾았으면','기대가 컸던 만큼 더 아쉽네','유스에서 막힌 부분부터 차근차근 풀자','{n} 아직 기다려볼 나이잖아','훈련보다 실전이 더 필요해 보임','급하게 1군 얘기할 단계는 아닌 듯','올해 기록만 보고 재능을 지우진 말자']
+  },
+  stat:{
+    elite:['{n}: {apps}경기 · {stat} · 평균 평점 {r}','{club}의 이번 시즌 기록을 말할 때 {n}을 빼기 어렵다','{n}의 {stat}, 시즌 평점 {r}로 마감'],
+    good:['{club} {n}: {apps}경기에서 {stat}','{n} 시즌 평점 {r}, 꾸준한 출전이 눈에 띈다','{n}의 한 해를 숫자로 보면 {stat}'],
+    avg:['{n}: {apps}경기 · {stat} · 평점 {r}','{n} 시즌 평점 {r}, 다음 시즌 기록도 주목','{club} {n}의 시즌 기록은 {stat}'],
+    bad:['{n}: {apps}경기 · {stat} · 평점 {r}','{n} 시즌 평점 {r}, 다음 시즌 반등 필요','{club} {n}의 이번 시즌 기록: {stat}'],
+    bench:['{n} 이번 시즌 {apps}경기 출전, 표본이 적다','{n}의 출전 기록은 {apps}경기','{club} {n}: 제한된 출전 시간 속 {stat}'],
+    injury:['{n} 부상으로 이번 시즌 {apps}경기 출전','{n}: {apps}경기 · {stat}, 결장 기간이 길었다','{club} {n}의 시즌 출전 기록은 {apps}경기'],
+    decline:['{n}: {apps}경기 · {stat} · 평점 {r}','{club} {n}의 이번 시즌 기록은 {stat}','{n} 시즌 평점 {r}, 출전 {apps}경기'],
+    youth:['{team} {n}: {apps}경기 · {stat}','{n} 유스 시즌 평점 {r}, 기록은 {stat}','{team}에서 {n}의 시즌 기록: {stat}'],
+    youthLow:['{team} {n}: {apps}경기 · 평점 {r}','{n} 유스 시즌 기록: {stat}','{team}에서 {n}의 시즌 평점은 {r}']
+  },
+  champ:['{club} 우승 사진 볼 때마다 아직도 좋다','{n}도 이 우승 멤버라는 게 자랑스럽다','우승 확정 순간 다시 돌려보는 중','이번 시즌은 결국 트로피로 기억하겠지'],
+  champLow:['팀은 우승했으니 일단 같이 축하하자','{n}에게도 다음 시즌은 새 출발이겠지','우승 메달은 받았지만 개인 시즌은 아쉽다','{n} 다음 시즌엔 더 많이 보여줘야 해']
+};
+Object.keys(CR_RX_MORE.news).forEach(function(k){ CR_RX.news[k]=CR_RX.news[k].concat(CR_RX_MORE.news[k]); });
+Object.keys(CR_RX_MORE.sns).forEach(function(k){ CR_RX.sns[k]=CR_RX.sns[k].concat(CR_RX_MORE.sns[k]); });
+Object.keys(CR_RX_MORE.stat).forEach(function(k){ CR_RX.stat[k]=CR_RX.stat[k].concat(CR_RX_MORE.stat[k]); });
+CR_RX.champ=CR_RX.champ.concat(CR_RX_MORE.champ);
+CR_RX.champLow=CR_RX.champLow.concat(CR_RX_MORE.champLow);
+// 기사는 실제 시즌 기록을 바탕으로 문장 순서와 관점을 바꾼다. 확인되지 않은 인터뷰·이적설은 만들지 않는다.
+var CR_RX_NEWS_LEAD=[
+  '{age}세 {pos} {n이} {league} {apps}경기에 나섰다. 시즌 기록은 {stat}.',
+  '{club} 소속 {n은} 이번 {league}에서 {apps}경기를 뛰었다. 남긴 기록은 {stat}.',
+  '{n이} {league}에서 보낸 한 해가 끝났다. {apps}경기에 출전했고 기록은 {stat}.',
+  '{team}의 {pos} {n은} 이번 시즌 {apps}경기에 나섰다. 결과는 {stat}.'
+];
+var CR_RX_NEWS_ANGLE={
+  ballon:['발롱도르 수상은 이번 시즌을 상징하는 장면으로 남았다.','시즌을 마친 뒤 발롱도르까지 품으며 한 해를 완성했다.','한 해의 성과는 발롱도르 수상으로 이어졌다.'],
+  champ:['선수의 기록도 이번 시즌을 돌아보는 한 장면이 됐다.','개인 기록과 평점 {r}은 한 해를 평가하는 기준이 된다.','출전과 기록을 함께 보면 팀 안에서 맡은 역할을 읽을 수 있다.'],
+  elite:['시즌 평점 {r}이 이번 활약을 뒷받침한다.','높은 평가를 받은 한 해였고, 다음 시즌 기대도 커졌다.','개인 기록과 경기 평가 모두 눈길을 끄는 시즌이었다.'],
+  good:['출전 기록과 평점 {r}이 꾸준함을 보여준다.','눈에 띄는 기복 없이 제 몫을 해낸 한 해였다.','이번 시즌 쌓은 출전 기록이 다음 해의 발판이 될 전망이다.'],
+  avg:['좋았던 장면과 아쉬운 장면이 함께 남았다.','평점 {r}만으로 한 해의 기복을 모두 설명하긴 어렵다.','다음 시즌에는 경기마다 보여준 차이를 줄이는 것이 과제다.'],
+  bad:['다음 시즌에는 이번 기록을 넘어서는 반등이 필요하다.','평점 {r}로 마무리한 만큼 경기력 회복이 과제로 남았다.','아쉬운 시즌을 뒤로하고 새 출발을 준비해야 한다.'],
+  bench:['출전 경기 수가 적어 이번 한 해만으로 기량을 단정하기 어렵다.','다음 시즌에는 경기장에서 보낼 시간을 늘리는 게 먼저다.','제한된 출전 기회가 시즌 평가에도 영향을 미쳤다.'],
+  injury:['부상으로 경기장을 비운 시간도 길었다.','다음 시즌의 첫 과제는 건강한 복귀다.','출전 기록보다 몸 상태 회복에 시선이 쏠린다.'],
+  decline:['출전 시간과 역할 조정이 다음 시즌의 관심사다.','경험을 살리면서 체력을 관리할 방안이 필요하다.','오랜 경험을 어떤 역할로 이어갈지가 남은 질문이다.'],
+  youth:['성인 무대에 앞서 꾸준한 실전 경험이 중요한 시기다.','유스에서 쌓은 기록이 다음 단계의 발판이 될 수 있다.','아직 어린 선수인 만큼 성장 과정도 함께 지켜봐야 한다.'],
+  youthLow:['아직 어린 만큼 결과보다 성장 과정을 더 지켜볼 필요가 있다.','이번 시즌의 아쉬움은 다음 단계를 준비할 과제로 남았다.','당장의 기록만으로 가능성을 단정하기는 이르다.']
+};
+
+// 펨코 고정닉은 평범한 생활형 닉네임에 축구 팬 이름을 조금 섞는다. 디시는 유동 IP 앞자리만 표시한다.
+var CR_RX_NICK=['퇴근하고축구','막차놓친사람','소금빵두개','비오는수요일','하늘색우산','오늘도야근','김치볶음밥','노란포스트잇','새벽두시반','동네고양이',
+  '주말엔집에서','현관앞택배','세탁기돌리는중','따뜻한보리차','월요일싫다','낮잠30분','초코우유한잔','종이컵두개','그냥보는중','냉장고문닫아',
+  '북런던날씨','하이버리역','개막만기다림','원정버스탄날','마지막추가시간','직관가는길','하프타임라면','새벽경기알람','잔디냄새','빨간머플러',
+  '책상서랍','구름사진','목요일저녁','버스정류장','두번째알람','여름밤산책','책읽다가축구','파란유리컵','동네빵집','아침형인간'];
 var CR_RX_IP=['118.235','211.36','39.7','223.38','175.223','106.101','110.70','223.62','121.181','58.140'];
 // 포지션별 문구(팬·커뮤니티 풀에 섞는다) — 공격수는 골, 미드필더는 패스·중원, 수비수는 클린시트·수비
 var CR_RX_POS={
@@ -10559,7 +10733,8 @@ function crReact(){
   var k=r.youth?(R>=7.0?'youth':'youthLow'):(r.injured&&r.apps<15)?'injury':r.apps<8?'bench':(r.age>=31&&r.dOvr<0&&R<7.2)?'decline':Ra>=7.35?'elite':Ra>=7.0?'good':Ra>=6.6?'avg':'bad';
   var club=String(p.club.n).replace(/ U-\d+$/,''), stat=p.pos==='DF'?'클린시트 '+r.cs+'회'+(r.ast?' · '+r.ast+'도움':''):r.goals+'골 '+r.ast+'도움';
   var bigHon=hon.filter(function(h){ return /발롱|득점왕|도움왕|베스트 11|올해의 선수|우승|골든/.test(h) && !/유스/.test(h); });
-  var V={n:p.name, club:club, team:r.team, stat:stat, g:r.goals, a:r.ast, cs:r.cs, r:R?R.toFixed(2):'-', rank:r.rank, age:r.age, apps:r.apps, hon:bigHon[0]||'', x:(p.pos==='DF'?(2+Math.floor(rg()*4))+'실점 방어':(2+Math.floor(rg()*6))+'골')};
+  var posKo={FW:'공격수',MF:'미드필더',DF:'수비수'}[p.pos], lg=r.youth?'유스 리그':crNat(((CR.meta.club[club])||{}).nat).n+' 리그';
+  var V={n:p.name, club:club, team:r.team, stat:stat, pos:posKo, league:lg, g:r.goals, a:r.ast, cs:r.cs, r:R?R.toFixed(2):'-', rank:r.rank, age:r.age, apps:r.apps, hon:bigHon[0]||'', x:(p.pos==='DF'?(2+Math.floor(rg()*4))+'실점 방어':(2+Math.floor(rg()*6))+'골')};
   var fill=function(t){ return t.replace(/\{n\}(은|는|이|가|을|를|과|와|아|야)/g, function(_,j){
         var pair={은:['은','는'],는:['은','는'],이:['이','가'],가:['이','가'],을:['을','를'],를:['을','를'],과:['과','와'],와:['과','와'],아:['아','야'],야:['아','야']}[j];
         return crJo(p.name, pair[0], pair[1]);
@@ -10576,9 +10751,9 @@ function crReact(){
   pick=function(a){ var b=a.filter(ok); if(!b.length) b=a.filter(function(t){ return !/^([<>]\d+|N|L)\|/.test(t); }); if(!b.length) b=a; return strip(b[Math.floor(rg()*b.length)]); };
   // 신문
   // 우승은 트로피, 나머지는 수상 — 리그 우승은 순위 문장("정상에 올랐다")이 이미 말하니 뺀다
-  var award=bigHon.filter(function(h){ return !/우승/.test(h); }), trophy=bigHon.filter(function(h){ return /우승/.test(h) && !/ 리그 우승$/.test(h); });
-  var hk=ballon?'ballon':(champ&&!r.youth&&R>=6.8)?'champ':k, posKo={FW:'공격수',MF:'미드필더',DF:'수비수'}[p.pos], lg=r.youth?'유스 리그':crNat(((CR.meta.club[club])||{}).nat).n+' 리그';
-  var body=r.age+'세 '+posKo+' '+crJo(p.name,'이','가')+' '+lg+' '+r.apps+'경기 '+stat+'로 시즌을 마쳤다. '
+  var award=bigHon.filter(function(h){ return !/우승/.test(h) && !(ballon&&/^발롱도르/.test(h)); }), trophy=bigHon.filter(function(h){ return /우승/.test(h) && !/ 리그 우승$/.test(h); });
+  var hk=ballon?'ballon':(champ&&!r.youth&&R>=6.8)?'champ':k;
+  var body=fill(pick(CR_RX_NEWS_LEAD))+' '+fill(pick(CR_RX_NEWS_ANGLE[hk]))+' '
     +(r.rank===1?'팀은 리그 정상에 올랐다. ':r.rank<=4?'팀은 '+r.rank+'위로 상위권을 지켰다. ':r.rank>=16?'팀은 '+r.rank+'위로 힘겨운 시즌을 보냈다. ':'팀은 '+r.rank+'위로 시즌을 마감했다. ')
     +(trophy.length?trophy.slice(0,2).join(' · ')+' 트로피도 들어 올렸다. ':'')+(award.length?award.slice(0,2).join(' · ')+' 수상의 기쁨도 누렸다. ':'')+(R?'시즌 평점은 '+R.toFixed(2)+'.':'');
   var score=R?Math.max(3,Math.min(10,Math.round((5+(R-6)*2.4)*2)/2)):null;
