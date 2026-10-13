@@ -2,7 +2,7 @@
   "version": 2,
   "buildCommand": "echo 'no build needed'",
   "outputDirectory": "public",
-  "git": { "deploymentEnabled": { "claude/**": false } },
+  "git": { "deploymentEnabled": { "claude/**": false, "codex/**": false, "work": false } },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
