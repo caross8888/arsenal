@@ -15,6 +15,8 @@ function run(t, pol){ const pos=['FW','MF','DF'][t%3];
     let pick=null;
     if(pol.move){ if(pol.move!=='stay'){ const i=r.offers.findIndex(o=>o.kind===pol.move); pick=i>=0?i:null; } if(C.released&&pick==null&&r.offers.length) pick=0; }
     else pick=(C.released||ro>=.5)&&r.offers.length?Math.floor(ro2*r.offers.length):null;
+    let military=S.militaryView(C);if(military?.lastChance&&military.canApply){S.militaryAction(C,'apply');military=S.militaryView(C);}
+    if(military&&(military.lastChance||military.selected||military.service))pick=null;
     S.nextSeason(C,pick); if(C.phase==='retired')break; }
   return C; }
 const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;

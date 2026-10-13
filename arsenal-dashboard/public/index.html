@@ -2149,6 +2149,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* 이벤트 성격별 배경. 훈련(coach·weak·ftcall·extra)은 기본 훈련장, 나머지는 장소와 분위기를 다르게 잡는다. */
 .cr-tr:not(.theme-coach):not(.theme-weak):not(.theme-ftcall):not(.theme-extra) .pitch{display:none}
 .cr-tr.theme-coach .pitch,.cr-tr.theme-weak .pitch,.cr-tr.theme-ftcall .pitch,.cr-tr.theme-extra .pitch{display:none}
+.cr-military-panel .cr-note{margin:6px 0 10px}.cr-military-panel>.cr-chip{width:100%;padding:8px;color:var(--text)}
+.cr-military-medal .cr-icon{width:160px;height:210px;filter:drop-shadow(0 0 18px var(--gold))}
 .cr-tr.theme-talk{background:radial-gradient(ellipse 70% 55% at 50% 0%,rgba(183,137,82,.24),transparent 78%),linear-gradient(180deg,#29231c,#11100e 72%,#080909)}
 .cr-tr.theme-talk:before{background:linear-gradient(180deg,rgba(9,10,10,.05) 0 40%,rgba(8,9,9,.44) 67%,rgba(5,6,6,.82) 100%),radial-gradient(ellipse 68% 46% at 50% 0%,rgba(238,194,132,.12),transparent 72%)}
 .cr-tr.theme-tour{background:radial-gradient(ellipse 48% 32% at 50% 0%,rgba(70,139,190,.34),transparent 78%),linear-gradient(155deg,#101c2a,#080d16 72%)}
@@ -9705,14 +9707,14 @@ function crWelcomeGo(){
 // 예전엔 게임 자체가 나가졌다). ✕로 닫으면 쌓아 둔 기록을 걷어 낸다. 고르기 전엔 못 닫는 오버레이(특성·이벤트)는 기록을 안 쌓는다.
 function crTovSet(html, keepGameHistory){
   var o=document.getElementById('crTov'), st=history.state||{};
-  if(!html){ if(o) o.remove(); if(st.crtov){ if(keepGameHistory) history.replaceState({tab:'games',gsub:1},'','#games'); else { _gmIgnorePop=true; history.back(); } } return; }
+  if(!html){ CR.extraPick=null; if(o) o.remove(); if(st.crtov){ if(keepGameHistory) history.replaceState({tab:'games',gsub:1},'','#games'); else { _gmIgnorePop=true; history.back(); } } return; }
   if(!o){ o=document.createElement('div'); o.id='crTov'; document.body.appendChild(o); }
   o.innerHTML=html;
   if(html.indexOf('cr-tm-x')>=0 && !st.crtov && inGames()) history.pushState({tab:'games', crtov:1}, '', '#games');
 }
 function crShow(v){
   crTovSet('', true);
-  CR.busy=false; CR.v=v; CR.tok=v.token; CR.armed=null; crStore(v);
+  CR.busy=false; CR.extraPick=null; CR.v=v; CR.tok=v.token; CR.armed=null; crStore(v);
   if(v.phase==='prep'){ CR.evPick=null; CR.loanPick=null; return crPrep(); }
   if(v.phase==='injury') return crInjury();
   if(v.phase==='result'){ CR.traitPick=null; CR.pick=v.result.released && v.result.offers.length ? 0 : null; CR.fresh=!!CR.animDone; CR.animDone=false; return crResult(); }
@@ -9836,7 +9838,7 @@ function crHead(){
    +'<div class="cr-hc-id"><div class="cr-hc-n">'+gmEsc(p.name)+(p.num?' <span>#'+p.num+'</span>':'')+'</div>'
    +'<div class="cr-hc-s">'+gmEsc(p.club.team)+'</div><div class="cr-hc-s">'+gmEsc(card.n)+'</div></div>'   // 팀·직군 두 줄 — 한 줄이면 모바일에서 직군이 잘렸다. 오른쪽 나이·오버롤 높이 안이라 카드는 안 길어진다
    +'<div class="cr-hc-o age"><b>'+p.age+'</b><span>AGE</span></div><div class="cr-hc-o"><b>'+p.ovr+'</b><span>OVR</span></div></div>'
-   +'<div class="cr-hc-ch">'+chip(gmEsc(p.foot))+chip('약발 '+crStars(p.wf))+(p.h?chip(gmEsc(p.body||'표준')+' '+p.h+'cm'):'')+(p.glass?chip('<span class="cr-ui-ic" style="color:var(--loss)">'+crIcon('bandage')+'</span>유리몸'):'')
+   +'<div class="cr-hc-ch">'+chip(gmEsc(p.foot))+chip('약발 '+crStars(p.wf))+(p.military?chip(gmEsc(p.military.label)):'')+(p.h?chip(gmEsc(p.body||'표준')+' '+p.h+'cm'):'')+(p.glass?chip('<span class="cr-ui-ic" style="color:var(--loss)">'+crIcon('bandage')+'</span>유리몸'):'')
    +(p.traits&&p.traits.length?'<div class="cr-hc-tr">'+p.traits.map(function(t){ return '<span title="'+gmEsc(t.n+' · '+t.d)+'" onclick="crTip(this.title,this)">'+crTraitIc(t.id)+'</span>'; }).join('')+'</div>':'')+'</div>'
    +'<div class="cr-hc-st">'+st.map(function(n,i){
       // 막대 눈금은 30~99(스탯이 그 사이라 0~100으로 그리면 +2 같은 변화가 안 보인다)
@@ -9851,7 +9853,7 @@ function crHist(){
   if(!h.length) return '';
   crTrophyDefs();
   var st=function(v){ return '<span class="st'+(v.length>3?' w4':'')+'">'+v.map(function(x){ return '<span>'+x+'</span>'; }).join('')+'</span>'; };
-  return '<details class="cr-panel cr-hist"><summary><b>커리어 기록</b><span>'+h.length+'시즌 · '+p.tot.apps+'경기 '+p.tot.goals+'골 '+p.tot.ast+'도움</span></summary>'
+  return '<details class="cr-panel cr-hist"><summary><b>커리어 기록</b><span>'+p.seasons+'시즌 · '+p.tot.apps+'경기 '+p.tot.goals+'골 '+p.tot.ast+'도움</span></summary>'
    // 은퇴 카드 시즌별 기록과 같은 2줄(랭킹 줄 꼴, 사용자 지정): 구단명 아래 트로피 전부 / 스탯 아래 OVR 칩
    +'<div class="cr-rc-table two" style="margin-top:10px"><div class="cr-rc-row hd"><span>나이</span><span>구단 · 수상</span><span class="rs">'+st(['경기','골'].concat(W?['도움']:[]).concat([p.pos==='DF'?'CS':'도움']))+'</span></div>'
    +h.slice().reverse().map(function(r, i){
@@ -9875,7 +9877,81 @@ function crBloomHint(b){
    +'<div class="cr-note" style="margin:6px 0 4px">시즌이 끝나면 재능이 꽃필 수 있어요. 연관 능력치가 높고 이번 시즌에 활약할수록 확률이 올라요.</div>'
    +b.list.map(function(x){ return '<div class="cr-blh-r">'+crTraitIc(x.id)+'<div><b>'+gmEsc(x.n)+'</b><small>연관 능력치 · '+gmEsc(x.stat)+'</small></div><span class="p">~'+(x.p+10)+'%</span></div>'; }).join('')+'</details>';
 }
+// 병역·국제대회는 기존 성장 이벤트 뒤에 이어지는 별도 안내다. evPick을 덮어쓰지 않는다.
+function crMilitaryPanel(){
+  var p=CR.v.player,M=p.military;if(!M)return '';
+  var desc=M.status==='pending'?(M.lastChance?'올해가 마지막 상무 지원 시즌이에요. 시즌 종료 후 복무 계획을 정해주세요.':'상무 지원은 19~27세 시즌에 가능해요. 국제대회 성적에 따라 체육요원 편입도 가능해요.')
+    :M.service?'전역까지 '+M.left+'개월 · 복귀 구단 '+gmEsc(M.home.n):M.status==='arts'?'선수 활동을 이어가며 군사교육·봉사 의무를 이행해요.':M.status==='legacy'?'28세 이상으로 진행 중이던 기존 저장에는 새 입영 마감을 적용하지 않아요.':'병역을 이행했어요.';
+  return '<div class="cr-panel cr-military-panel"><div class="cr-lbl"><b>'+gmEsc(M.label)+'</b><span>'+(M.selected?'다음 시즌 '+(M.selected==='sangmu'?'상무 입대':'일반 복무'):M.lastChance?'마지막 지원 기회':'대한민국')+'</span></div><div class="cr-note">'+desc+'</div>'
+    +(M.status==='pending'?'<button class="cr-chip" onclick="crMilitaryInfo()">'+(CR.v.phase==='result'?'병역 계획 · 지원하기':'병역 계획 · 자격 보기')+'</button>':'')+'</div>';
+}
+function crMilitaryScene(scene,tag,say,options,pick){
+  CR_TR[scene]={tag:tag,ic:scene==='tournament'?'earth-americas':'shield',who:scene==='tournament'?'대한민국 대표팀 감독':'에이전트',say:say,opt:scene==='tournament'?['plane-departure','clipboard']:['shield','clipboard']};
+  CR.extraPick=pick;crTrShow({id:scene,t:tag,d:say,a:options});
+}
+function crExtraKey(type){var p=CR.v.player;return (p.id||p.name)+'|'+p.age+'|'+type;}
+function crExtraOnce(type){CR.extraSeen=CR.extraSeen||{};var key=crExtraKey(type);if(CR.extraSeen[key])return false;CR.extraSeen[key]=true;return true;}
+function crExtraPrep(){
+  var pr=CR.v.prep,M=CR.v.player.military,T=pr.international;
+  if(pr.service && crExtraOnce('service')){
+    return crMilitaryScene(pr.service.kind==='regular'?'military':'militaryTalk','MILITARY SERVICE · 복무 안내',pr.service.returning?'전역까지 '+pr.service.left+'개월 남았어요. 복무를 마친 뒤 '+pr.service.home.n+'에서 남은 시즌을 뛰게 됩니다. 기존 훈련 선택도 복귀 기간에 반영돼요.':'상무에서 첫 시즌을 시작해요. 기존 훈련과 성장 이벤트를 진행하면서 병역도 이행합니다.', ['확인 · 시즌 준비','커리어 기록 보기'],function(){crTovSet('',true);crPrep();});
+  }
+  if(T && crExtraOnce('international')){
+    return crMilitaryScene('tournament',(T.kind==='asian'?'ASIAN GAMES':'OLYMPIC TEAM')+' · 대표팀 발탁',T.year+' '+T.name+' 최종 명단에 이름을 올렸다.'+(T.wild?' 와일드카드로 네 경험이 필요하다.':'')+' 함께 메달에 도전하자. '+(T.kind==='asian'?'금메달':'동메달 이상')+'을 따면 체육요원 편입 대상이 된다.', ['대표팀 합류 · 확인','대회 기준 확인'],function(i){crTovSet('',true);if(i===1)return crMilitaryInfo();crPrep();});
+  }
+  if(M && M.lastChance && crExtraOnce('deadline')) return crMilitaryScene('militaryTalk','MILITARY PLAN · 마지막 지원 시즌','올해가 마지막 상무 지원 시즌이에요. 기존 훈련은 그대로 진행하고, 시즌 종료 후 이적시장에서 병역 계획을 결정해주세요.', ['확인 · 시즌 준비','지원 기준 확인'],function(i){crTovSet('',true);if(i===1)return crMilitaryInfo();crPrep();});
+}
+function crMilitaryInfo(){
+  var M=CR.v.player.military;if(!M)return;
+  if(CR.v.phase==='result' && M.status==='pending' && CR.v.player.age>=19){
+    if(M.selected)return crMilitaryAnnouncement(M.selected==='sangmu'?'selected':'regular');
+    var can=M.canApply,txt=can?'상무 지원은 최근 기량·출전·평점과 포지션 수요를 평가해요. 현재 예상 선발 확률은 '+M.chance+'%입니다.':M.applied?'이번 모집에서는 선발되지 않았어요.'+(M.lastChance?' 마지막 지원 시즌이라 일반 복무를 준비해야 해요.':' 다음 시즌에 다시 지원할 수 있어요.'):'현재 상무 지원 연령 또는 1군 선수 조건을 충족하지 않았어요.';
+    return crMilitaryScene('militaryTalk','MILITARY PLAN · 병역 계획',txt,can?['상무 지원하기',M.lastChance?'일반 복무 준비':'이적시장 돌아가기']:['일반 복무 준비',M.lastChance?'결과로 돌아가기':'한 시즌 더 뛰기'],function(i){
+      crTovSet('',true);if(can && i===0)return crMilitaryAct('apply');if((can&&M.lastChance&&i===1)||(!can&&i===0))return crMilitaryAct('regular');crResult();
+    });
+  }
+  crMilitaryScene('militaryTalk','MILITARY PLAN · 제도 안내','상무 지원은 접수연도 기준 19~27세로 제한돼요. 아시안게임 금메달이나 올림픽 동메달 이상이면 체육요원 편입 대상입니다. 게임에서는 미해결 상태로 28세 시즌에 들어가면 일반 복무를 시작해요.',['확인','시즌 준비로 돌아가기'],function(){crTovSet('',true);if(CR.v.phase==='prep')crPrep();else crResult();});
+}
+function crMilitaryRegularConfirm(){
+  crMilitaryScene('military','MILITARY SERVICE · 일반 복무 준비','일반 현역 복무는 18개월이에요. 복무 중에는 프로 경기와 전문 훈련을 멈추고, 전역 후 선수 활동을 재개합니다. 다음 시즌부터 복무를 시작하시겠어요?',['일반 복무 준비','이적시장 돌아가기'],function(i){crTovSet('',true);if(i===0)return crMilitaryAct('regular');crTmShow();});
+}
+function crMilitaryAct(action){
+  if(CR.busy)return;CR.busy=true;
+  crApi('military',{token:CR.tok,action:action}).then(function(v){crShow(v);var M=v.player.military;
+    if(M.selected)return crMilitaryAnnouncement(M.selected==='sangmu'?'selected':'regular');
+    crMilitaryScene('militaryTalk','SANGMU · 선발 결과','이번 상무 최종 명단에 들지 못했어요.'+(M.lastChance?' 지원 가능한 마지막 시즌이 끝났으니 일반 복무를 준비해야 해요.':' 다음 시즌에 다시 지원하거나 일반 복무를 준비할 수 있어요.'),[M.lastChance?'일반 복무 준비':'다음 모집 준비','복무 계획 보기'],function(i){crTovSet('',true);if(M.lastChance&&i===0)return crMilitaryAct('regular');if(i===1)return crMilitaryInfo();crResult();});
+  }).catch(crErr);
+}
+function crMilitaryAnnouncement(kind){
+  var p=CR.v.player,M=p.military,R=M.returnNotice,back=kind==='return',regular=kind==='regular';
+  if(regular)return crMilitaryScene('military','MILITARY SERVICE · 일반 복무 준비','다음 시즌부터 일반 현역 복무를 시작해요. 18개월 동안 프로 경기와 전문 훈련에는 공백이 생기지만, 전역 후 다시 선수 활동을 이어갈 수 있어요.',['입대 준비 · 확인','복귀 계획 확인'],function(){crTovSet('',true);crResult();});
+  var from=back?R.from:p.club.n,to=back?R.club:'김천 상무',id=back?R.id:133901;
+  crTovSet('<div class="cr-tm done" role="dialog" aria-modal="true" aria-label="'+(back?'전역 복귀':'상무 최종 선발')+'" onclick="crTovSet(\'\',true);crResult()"><div class="cr-tmd"><div class="cr-tmd-row"><div class="old">'+crCrest({n:from},56)+'</div><div class="arr">➜</div><div class="new">'+crCrest({n:to,id:id},96)+'</div></div><div class="stamp">'+(back?'DISCHARGED':'SELECTED')+'</div><div class="hwg">'+(back?gmEsc(to)+' 복귀':'상무 최종 선발')+'</div><div class="who"><b>'+gmEsc(p.name)+'</b> · '+(back?'병역 이행 완료':'김천 상무 입대 예정')+'<br><small>'+(back?'소속팀에서 남은 시즌을 뛰었어요':'18개월 복무 · 전역 후 '+gmEsc(p.club.n)+' 복귀')+'</small></div><div class="cr-note">누르면 결과 화면으로 돌아가요</div></div></div>');
+}
+function crRegularPrep(){
+  var p=CR.v.player,S=CR.v.prep.service;CR.evPick=0;
+  crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'+crHead()+crMilitaryPanel()+'<div class="cr-goal"><span class="cr-goal-tag">MILITARY SERVICE · 일반 복무</span><div class="cr-goal-t">전역까지 '+S.left+'개월</div><div class="cr-note">이번 시즌에는 프로 경기 출전과 전문 훈련이 없어요. 복무를 마친 뒤 선수 활동을 재개합니다.</div></div>'+crHist(),'<div class="sum">'+p.age+'세<b>'+p.ovr+'</b></div><button class="gm-btn" onclick="crRegularStart(this)">복무 기간 진행</button>');
+  if(crExtraOnce('regular'))crMilitaryScene('military','MILITARY SERVICE · 일반 복무','일반 현역 복무 중이에요. 이번 시즌에는 프로 경기에 출전하지 않고 12개월을 복무합니다. 다음 시즌에는 남은 6개월을 마친 뒤 구단으로 돌아가요.',['복무 기간 진행','커리어 기록 보기'],function(i){crTovSet('',true);if(i===0)return crRegularStart();});
+}
+function crRegularStart(btn){
+  if(!crBusy(btn,'복무 기간 진행 중...'))return;
+  crApi('season',{token:CR.tok,train:'균형',evPick:0}).then(crShow).catch(function(e){crErr(e);crRegularPrep();});
+}
+function crInternationalPanel(r){
+  var T=r.international;if(!T)return '';
+  return '<div class="cr-panel"><div class="cr-lbl"><b>'+T.year+' '+gmEsc(T.name)+'</b><span>'+T.place+'위'+(T.wild?' · 와일드카드':'')+'</span></div><div class="cr-note">'+(T.medal?gmEsc(T.award.n):'메달 획득 실패')+(T.qualified?' · 체육요원 편입 요건 충족':T.kind==='asian'&&T.place!==1?' · 금메달만 편입 대상':!T.medal?' · 올림픽 3위 이상만 편입 대상':'')+'</div></div>';
+}
+function crMilitaryResultExtra(){
+  var p=CR.v.player,T=CR.v.result.row.international,M=p.military;
+  if(T && T.medal && crExtraOnce('medal')){
+    var color={1:'#E4C766',2:'#CFD8E3',3:'#D69969'}[T.place],label={1:'GOLD MEDAL',2:'SILVER MEDAL',3:'BRONZE MEDAL'}[T.place];
+    crTovSet('<div class="cr-bd wc" role="dialog" aria-modal="true" aria-label="'+gmEsc(T.award.n)+'" onclick="crTovSet(\'\',true);crResult()"><div class="cr-bd-box"><div class="art cr-military-medal" style="color:'+color+'">'+crIcon('medal')+'</div><div class="ttl"><b>'+label+'</b><span>'+T.year+' · '+gmEsc(T.award.n)+'</span></div><div class="who"><b>'+crFlag('KOR')+' 대한민국</b><span>'+gmEsc(p.name)+(T.qualified?' · <em>체육요원 편입 대상</em>':'')+'</span></div><div class="go"><span>누르면 시즌 결과로 돌아가요</span></div></div></div>');return;
+  }
+  if(M && M.returnNotice && crExtraOnce('return'))crMilitaryAnnouncement('return');
+}
+
 function crPrep(){
+  if(CR.v.prep.service && CR.v.prep.service.fullRegular) return crRegularPrep();
   var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lcs=pr.loanClubs||(pr.loanClub?[pr.loanClub]:[]), iv=pr.interview;   // 인터뷰는 이벤트 칸 없이 오버레이로
   // 인터뷰·임대(구단 카드) 말고는 모든 이벤트를 오버레이로 — CR_TR에 없는 이벤트도 기본 틀로 띄운다(새 이벤트를 넣고 문구를 깜빡해도 이벤트 칸으로 새지 않게)
   var tr=!iv && !lcs.length && ev.id!=='loan' ? ev : null;
@@ -9883,7 +9959,7 @@ function crPrep(){
   var topts=pr.trainOpts||['강점 강화','균형','약점 보완']; if(topts.indexOf(CR.train)<0) CR.train='균형';
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
   crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'
-   +crHead()
+   +crHead()+crMilitaryPanel()
    +(pr.promo?'<div class="cr-promo">'+crIcon('arrow-trend-up')+' '+gmEsc(pr.promo)+'</div>':'')
    +'<div class="cr-goal"><span class="cr-goal-tag">SEASON GOAL · 이번 시즌 목표</span><div class="cr-goal-t">'+gmEsc(pr.goal)+'</div>'
    +'<div class="cr-note">'+(pr.youth?(pr.stage?pr.stage+' 시즌이에요. 실력이 팀 수준에 가까워지면 시즌 끝에 '+(pr.stage==='U-21'?'1군에 합류':'월반')+'하고, 높은 무대일수록 더 크게 성장해요.':'유스 시즌이라 출전 기회는 유스팀 기준이에요.'):pr.late?'성장이 멈춘 나이예요. 이제는 기량을 얼마나 오래 지키느냐가 관건이에요.':'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
@@ -9910,6 +9986,7 @@ function crPrep(){
   if(ctr && CR.proSeen!==ctrKey){ if(!document.querySelector('#crTov .cr-pro')) crProShow(ctr, ctrKey); return; }
   if(iv && CR.evPick==null && !document.querySelector('#crTov .cr-iv')) crIvShow(iv);
   if(tr && CR.evPick==null && !document.querySelector('#crTov .cr-tr')) crTrShow(tr);
+  if(CR.evPick!=null && !document.getElementById('crTov')) crExtraPrep();
 }
 // ── 계약서 오버레이(사용자 지정) ── 첫 프로 계약(pro)·이적(transfer)·재계약(renew). 손가락으로 직접 사인하고, 귀찮으면 "이름으로 서명"(손글씨 글꼴).
 // 사인은 이 기기에만(localStorage cr_sig_{커리어 id}) 두고 다음 계약서에 자동으로 써 넣는다(다시 쓸 수도 있다). 카드·서버·랭킹엔 넣지 않는다.
@@ -9998,7 +10075,7 @@ function crTrFx(txt){   // "성장 ↑ · 부상 위험 ↑" → 좋은 쪽(초�
     var bad=(/부상|하락|문턱|부담/.test(m[1]))===(m[2][0]==='↑');   // 오르면 나쁜 것: 부상 위험·하락·데뷔 문턱
     return '<span class="fx '+(bad?'bad':'good')+'">'+gmEsc(m[1])+' '+m[2]+'</span>'; }).join('');
 }
-var CR_SCENE_PHOTO={field:'field.webp',talk:'talk.webp',tour:'tour.webp',scout:'scout.webp',captain:'captain.webp',captfull:'captain.webp',natcall:'natcall.webp',sns:'sns.webp',diet:'diet.webp',study:'study.webp'};
+var CR_SCENE_PHOTO={field:'field.webp',talk:'talk.webp?v=2',tour:'tour.webp',scout:'scout.webp',captain:'captain.webp',captfull:'captain.webp',natcall:'natcall.webp',sns:'sns.webp',diet:'diet.webp',study:'study.webp',military:'military.webp',militaryTalk:'talk.webp?v=2',tournament:'natcall.webp'};
 function crTrShow(ev){
   var T=CR_TR[ev.id]||{tag:'EVENT · '+ev.t, ic:'clipboard', who:'구단', say:ev.d, opt:['check','pause']}, theme=Object.prototype.hasOwnProperty.call(CR_TR,ev.id)?ev.id:'default', scene=['coach','weak','ftcall','extra','default'].indexOf(theme)>=0?'field':theme, SAY=typeof T.say==='function'?T.say(CR.v.player, ev):(T.say||ev.d); CR.trSel=null;
   // 장면 배경(픽셀아트 그림). 새 장면을 추가하면 CR_SCENE_PHOTO에 한 줄 넣고, 그림이 아직
@@ -10006,7 +10083,7 @@ function crTrShow(ev){
   // 예전엔 코드로 그린 scenes.svg를 <use>로 끌어 썼는데, 아이폰 사파리가 외부 SVG의 <use>를
   // 지원하지 않아 배경이 아예 안 보였다. 그래서 그림 파일(<img>)로 바꿨다.
   var photo=CR_SCENE_PHOTO[scene];
-  var sceneArt='<img class="cr-scene cr-scene-photo" src="/img/career-scenes/'+(photo||'field.webp')+'" alt="">';
+  var sceneArt=(scene==='military'?'<picture><source media="(max-width:899px) and (orientation:portrait)" srcset="/img/career-scenes/military-mobile.webp">':'')+'<img class="cr-scene cr-scene-photo" src="/img/career-scenes/'+(photo||'field.webp')+'" alt="">'+(scene==='military'?'</picture>':'');
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   crTovSet('<div class="cr-tr theme-'+theme+'" role="dialog" aria-modal="true" aria-label="'+gmEsc(ev.t)+'" onclick="crTypeSkip()">'+sceneArt+'<div class="pitch" aria-hidden="true"><i></i><i></i><i></i></div>'
    +'<div class="cr-tr-box"><div class="ic" aria-hidden="true">'+crIcon(T.ic)+'</div><span class="tag">'+T.tag+'</span>'
@@ -10034,6 +10111,7 @@ function crTypeSkip(){ if(CR.typeSkip) CR.typeSkip(); }
 function crTrPick(i, btn){   // 고르는 즉시 반영(사용자 지정) — 고른 카드를 표시하고 잠깐 뒤 닫는다
   if(CR.trSel!=null) return;
   CR.trSel=i;
+  if(CR.extraPick){var extra=CR.extraPick;CR.extraPick=null;return crPickFx(btn,'#crTov .cr-tr-o',function(){CR.typeSkip=null;extra(i);});}
   crPickFx(btn, '#crTov .cr-tr-o', function(){ CR.evPick=i; CR.typeSkip=null; crTovSet(''); crPrep(); });
 }
 // ── 인터뷰 오버레이(사용자 지정) ── 시즌 준비 화면에 인터뷰 이벤트가 뜨면 바로 띄운다. 기자 질문을 타자 치듯 보여 주고,
@@ -10215,9 +10293,21 @@ function crSfSay(t){
   f.insertBefore(el, f.firstChild);
   while(f.children.length>3) f.removeChild(f.lastChild);
 }
-function crSfClose(){ if(CR.sf) clearTimeout(CR.sf.timer); CR.sf=null; crTovSet(''); }
+function crSfClose(){ if(CR.sf){clearTimeout(CR.sf.timer);if(CR.sf.fan)clearTimeout(CR.sf.fan.timer);} CR.sf=null; crTovSet(''); }
 // 합계를 from..to 경기 칸에 나눈다(시드 고정). out: 이 구간 앞쪽 몇 칸은 부상 결장.
-function crSfPlan(from, to, tot, out){
+function crSfPlan(from,to,tot,out){
+  var S=CR.sf;if(!S.segments)return crSfPlanBase(from,to,tot,out);
+  var key=['apps','goals','ast','cs'],savedClub=S.club,savedRank=S.rank,cursor=0,plan=[],skip=out||0;
+  S.segments.forEach(function(seg){
+    var a=Math.max(from,cursor),b=Math.min(to,cursor+seg.games);cursor+=seg.games;if(a>=b)return;
+    var done=(S.tally||{})[seg.club]||{},target={};
+    key.forEach(function(k){target[k]=S.preview?Math.round(seg[k]*(b-a)/Math.max(1,seg.games)):Math.max(0,seg[k]-(done[k]||0));});
+    S.club=Object.assign({},CR.meta.club[seg.club]||{n:seg.club,nat:'KOR'},{team:seg.club});S.rank=seg.rank;
+    var no=Math.min(skip,Math.max(0,b-a-target.apps));skip-=no;
+    plan=plan.concat(crSfPlanBase(a,b,target,no).map(function(m){m.club=Object.assign({},S.club);return m;}));
+  });S.club=savedClub;S.rank=savedRank;return plan;
+}
+function crSfPlanBase(from, to, tot, out){
   var club=CR.sf.club, R=crSfRng(crSfSeed()+from*7919), G=CR.sf.G;
   var opp=((CR.meta.clubs||{})[club.nat]||[]).map(function(c){ return c[0]; }).filter(function(n){ return n!==club.n; });
   var sfx=(club.team.match(/ (U-\d+)$/)||[])[1];
@@ -10227,7 +10317,7 @@ function crSfPlan(from, to, tot, out){
   // 뛴 경기: 남은 칸에서 고르게 흩어 고른다(앞쪽 몰림 없이)
   var played={}; free.map(function(k){ return [R(), k]; }).sort(function(a,b){ return a[0]-b[0]; }).slice(0, apps).forEach(function(x){ played[x[1]]=R()<0.78?'start':'sub'; });
   var pk=Object.keys(played).map(Number);
-  var put=function(n, key, cap){ for(var t=0;t<n && pk.length;t++){ var m=pk[Math.floor(R()*pk.length)]; list[m]=list[m]||{}; if(cap && list[m][key]) continue; list[m][key]=(list[m][key]||0)+1; } };
+  var put=function(n, key, cap){ var free=pk.slice(); for(var t=0;t<n && (cap?free.length:pk.length);t++){ var choices=cap?free:pk, at=Math.floor(R()*choices.length), m=choices[at]; if(cap) free.splice(at,1); list[m]=list[m]||{}; list[m][key]=(list[m][key]||0)+1; } };
   slots.forEach(function(k){ list[k]={}; });
   put(tot.goals,'g'); put(tot.ast,'a'); put(Math.min(tot.cs, pk.length),'cs',true);
   var prevOpp=null;
@@ -10248,13 +10338,14 @@ function crSfData(v){
   var S=CR.sf, A=v.phase==='injury';
   CR.v=v; CR.tok=v.token; crStore(v);   // 진행 중에 새로고침해도 이어지게(부상이면 부상 단계로)
   if(A){
+    S.segments=v.pre.segments||null;S.preview=true;
     S.G=v.pre.games||38;
     var frac=0.3+((v.injury.games*7+v.player.age)%25)/100, at=Math.max(1, Math.round(frac*S.G));
     var tot={}; ['apps','goals','ast','cs'].forEach(function(x){ tot[x]=Math.round((v.pre[x]||0)*frac); });
     S.injAt=at; S.injGames=v.injury.games; crSfSetG();
     crSfWall(); crSfRun(crSfPlan(0, at, tot, 0), function(){ crSfInjury(v); });
   } else {
-    var r=v.result.row; S.G=S.G||r.games; S.rank=r.youth?Math.min(r.rank,10):r.rank; crSfSetG();
+    var r=v.result.row; S.segments=r.segments||null;S.preview=false; S.G=S.G||r.games; S.rank=r.youth?Math.min(r.rank,10):r.rank; crSfSetG();
     if(!S.wall) crSfWall();
     var from=S.injAt!=null ? S.injAt+1 : 0, out=S.injAt!=null ? Math.min(S.G-from, S.quick?Math.ceil(S.injGames/2):S.injGames) : 0;
     var rest={apps:Math.max(0,r.apps-S.n.apps), goals:Math.max(0,r.goals-S.n.goals), ast:Math.max(0,r.ast-S.n.ast), cs:Math.max(0,(r.cs||0)-S.n.cs)};
@@ -10282,6 +10373,12 @@ function crSfRun(list, done){
 }
 function crSfMatch(m, quiet){   // 한 경기: 진행·기록·최근 결과·경기 기록 한 줄. 골/도움이면 true(조금 더 머문다)
   var S=CR.sf, p=CR.v.player, df=p.pos==='DF';
+  if(m.club && S.club.n!==m.club.n){
+    S.club=m.club;
+    var hd=document.querySelector('#crSfCard .hd');
+    if(hd)hd.innerHTML=crCrest(S.club,32)+'<div><b>'+gmEsc(S.club.team)+'</b><span>'+gmEsc(p.name)+' · 전역 후 복귀</span></div><div class="md"><b id="crSfMd">'+S.i+'</b><span id="crSfG">/ '+S.G+'경기</span></div>';
+  }
+  if(m.pl && m.club){S.tally=S.tally||{};var tally=S.tally[m.club.n]||(S.tally[m.club.n]={apps:0,goals:0,ast:0,cs:0});tally.apps++;tally.goals+=m.g;tally.ast+=m.a;tally.cs+=m.cs;}
   if(m.pl){ S.n.apps++; S.n.goals+=m.g; S.n.ast+=m.a; S.n.cs+=m.cs; }
   if(!quiet && S.fan){
     S.fan.bench=m.pl||m.inj ? 0 : S.fan.bench+1;
@@ -10326,6 +10423,7 @@ function crSfEnd(v){   // 끝 요약을 잠깐(약 2.4초) 보여 주고 결과 
   var S=CR.sf, r=v.result.row, x=document.getElementById('crSfExtra'), card=document.getElementById('crSfCard'), log=document.getElementById('crSfLog');
   if(!S) return;
   S.done=null; S.v=v;
+  S.lbs.forEach(function(l){S.n[l[0]]=r[l[0]]||0;var n=document.getElementById('crSfN_'+l[0]);if(n)n.textContent=S.n[l[0]];});
   if(S.fan){ crSfReact(r.rank===1&&!r.youth?'win':'end'); S.fan.hold=true; }
   var fd=document.getElementById('crSfFeed'); if(fd) fd.classList.add('gone');   // 요약 자리
   var pr=document.getElementById('crSfProg'); if(pr) pr.style.transform='scaleX(1)';
@@ -10377,7 +10475,7 @@ function crInjPick(k, btn){
 // ── 시즌 결과 · 이적시장 ──────────────────────────────────────────────
 function crHonBadge(h){
   // 수상 배지 앞 아이콘: 트로피 그림(사용자 지정). 그림이 없는 상만 아이콘 세트(crIcon)
-  var ic=crTroImg(h.n) ? crTrophy(h.n,22) : crIcon(h.kind==='team'?'trophy':h.kind==='nat'?'earth-americas':'star')+' ';
+  var ic=crTroImg(h.n) ? crTrophy(h.n,22) : crIcon(/메달/.test(h.n)?'medal':h.kind==='team'?'trophy':h.kind==='nat'?'earth-americas':'star')+' ';
   return '<span class="'+(h.kind==='ind'?'aw':h.kind==='nat'?'nt':'')+(h.tier==='S'?' s':'')+'">'+ic+gmEsc(h.n)+'</span>';
 }
 // ── 잠재력 평가 오버레이(사용자 지정 — 18세·21세 시즌 끝, 인터뷰처럼 애니메이션) ──
@@ -10899,14 +10997,15 @@ function crResult(){
   var p=CR.v.player, R=CR.v.result, r=R.row, st=CR.meta.stats[p.pos];
   var dCls=r.dOvr>0?'up':r.dOvr<0?'down':'', lg=r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그';
   var h='<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+p.seasons+' 결과</div></div>'+crHead()
-   +'<div class="cr-panel"><div class="cr-lbl"><b>'+r.age+'세 시즌 · '+gmEsc(r.team)+(r.loan?' (임대)':'')+'</b><span>'+lg+' '+r.rank+'위</span></div>'
+   +'<div class="cr-panel"><div class="cr-lbl"><b>'+r.age+'세 시즌 · '+gmEsc(r.team)+(r.loan?' (임대)':'')+'</b><span>'+(r.rank==null?'프로 출전 없음':lg+' '+r.rank+'위')+'</span></div>'
    +'<div class="cr-rs"'+(p.pos==='DF'?' style="grid-template-columns:repeat(6,1fr)"':'')+'>'+[[r.apps,'경기'],[r.starts,'선발'],[r.goals,'골'],[r.ast,'도움']].concat(p.pos==='DF'?[[r.cs,'클린시트']]:[]).concat([[r.apps?r.rating.toFixed(2):'—','평점']]).map(function(x){ return '<div><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'
    +'<div class="cr-dovr '+dCls+'"><span>오버롤</span><b>'+r.ovrBefore+' → <span id="crOvrTo">'+(CR.fresh?r.ovrBefore:r.ovr)+'</span></b><em>'+(r.dOvr>0?'+':'')+r.dOvr+'</em></div>'
    +(r.hon.length?'<div class="cr-badges'+(CR.fresh?' pop':'')+'">'+r.hon.map(function(h,i){ return crHonBadge(h).replace('<span class="','<span style="animation-delay:'+(0.3+i*0.12)+'s" class="'); }).join('')+'</div>':'')
    +(r.notes.length||R.forced?'<ul class="cr-notes">'+r.notes.map(function(t){ return '<li>'+gmEsc(t)+'</li>'; }).join('')
       +(R.forced?'<li>'+(R.forcedWhy==='body'?'몸이 더 이상 버텨 주지 않아요. 선수 생활을 마무리할 때가 됐어요.':p.age>=40?'40세 — 선수 생활을 마무리할 때가 됐어요.':gmEsc(p.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.')+'</li>':'')+'</ul>':'')
    +'</div>';
-  h+=crReactBtn();   // 시즌 반응(신문·SNS·커뮤니티) — 누르면 오버레이
+  h+=crMilitaryPanel()+crInternationalPanel(r);
+  if(r.games) h+=crReactBtn();   // 시즌 반응(신문·SNS·커뮤니티) — 누르면 오버레이
   // 예전 코치 평가(옛 토큰의 결과 화면용)
   if(r.coach) h+='<div class="cr-goal"><span class="cr-goal-tag">COACH · 코치 평가</span><div class="cr-goal-t">'+gmEsc(r.coach)+'</div></div>';
   // 잠재력 평가(18·21세): 처음엔 오버레이로, 확인한 뒤엔 결과 화면에 작게 남는다
@@ -10936,13 +11035,13 @@ function crResult(){
         +'<div><b>'+gmEsc(tp.n)+'</b><span>'+gmEsc(tp.d)+'</span></div><button onclick="CR.traitPick=null;crResult()">다시 고르기</button></div></div>'; }
   }
   // 이적시장은 결과 화면 칸 대신 "이적시장 열기" 버튼 → 오버레이(crTmShow, 사용자 지정). 제안 없이 잔류뿐이면 버튼 없이 바로 다음 시즌.
-  var tm=!R.forced && (R.released || R.offers.length);
+  var M=p.military, tm=!R.forced && !(M && (M.selected || M.service)) && (R.released || R.offers.length || M && M.status==='pending' && p.age>=19);
   h+=crHist();
   var y=window.scrollY;
   crRender(h, R.forced
     ? '<button class="gm-btn" onclick="crRetire(this,true)">은퇴 · 커리어 마무리</button>'
     : (R.canRetire?'<button class="gm-btn ghost" onclick="crRetire(this)">은퇴</button>':'')
-      +'<button class="gm-btn" '+(TO&&CR.traitPick==null?'disabled ':'')+'onclick="'+(tm?'crTmShow()':'crNext(this)')+'">'+(TO&&CR.traitPick==null?'특성을 골라 주세요':tm?crIcon('plane-departure')+' '+(R.released?'계약 만료 · 다음 행선지':'이적시장 열기'):'다음 시즌')+'</button>');
+      +'<button class="gm-btn" '+(TO&&CR.traitPick==null?'disabled ':'')+'onclick="'+(tm?'crTmShow()':'crNext(this)')+'">'+(TO&&CR.traitPick==null?'특성을 골라 주세요':tm?crIcon('plane-departure')+' '+(R.released?'계약 만료 · 다음 행선지':'이적시장 열기'):M&&M.selected?'입대 준비':M&&M.service?'복무 · 다음 시즌':'다음 시즌')+'</button>');
   window.scrollTo(0,y);   // 제안을 고를 때마다 다시 그려도 보던 자리 그대로
   // 월드컵 우승도 같은 시상 오버레이(사용자 지정). 같은 시즌에 발롱도르도 받았으면 발롱도르만(둘 다 띄우면 너무 길다).
   var WC=!BD && (r.hon||[]).some(function(h){ return /^월드컵 우승/.test(h.n); }), wcKey=WC?p.name+'|wc|'+p.seasons:null, wcPending=WC && CR.bdSeen!==wcKey;
@@ -10950,6 +11049,7 @@ function crResult(){
   else if(bdPending){ if(!document.querySelector('#crTov .cr-bd')) crBallonShow(bdKey); }
   else if(scPending && !document.querySelector('#crTov .cr-sc')) crScoutShow(SC, scKey);
   else if(blPending && !document.querySelector('#crTov .cr-bl')) crBloomShow(BL, blKey);
+  if(!document.getElementById('crTov')) crMilitaryResultExtra();
   // 시즌을 막 끝낸 직후에만 오버롤 숫자가 올라가는 연출(제안을 고르며 다시 그릴 땐 안 한다)
   if(CR.fresh){
     CR.fresh=false;
@@ -10968,10 +11068,12 @@ function crPickFx(btn, sel, fn){
   setTimeout(fn, 650);
 }
 function crTmShow(){
-  var p=CR.v.player, R=CR.v.result, n=R.offers.length, d=0;
+  var p=CR.v.player, R=CR.v.result, M=p.military, n=R.offers.length, d=0;
   var card=function(on, crest, tag, nm, meta, right){ d+=0.12; return '<button class="cr-tm-c" style="--d:'+(0.55+d)+'s" onclick="'+on.replace(')',',this)')+'">'+crest+'<div class="b"><div class="tg">'+tag+'</div><div class="nm">'+nm+'</div><div class="mt">'+meta+'</div></div><div>'+right+'</div></button>'; };
   var h=(R.released?'':card('crTmPick(-1)', crCrest(p.club,40), '잔류', gmEsc(p.club.n), crFlag(p.club.nat)+crNat(p.club.nat).n, R.stay?crChance(R.stay.chance):''))
     +R.offers.map(function(o,k){ return card('crTmPick('+k+')', crCrest(o,40), gmEsc(o.kind)+(o.dream?' · '+crIcon('heart')+' 꿈의 구단':''), gmEsc(o.n), crFlag(o.nat)+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':''), crChance(o.chance)); }).join('')
+    +(M&&M.canApply?card('crMilitaryInfo(0)',crCrest({n:'김천 상무',id:133901},40),'병역 · 입대 지원','김천 상무','18개월 복무 · 전역 후 '+gmEsc(p.club.n)+' 복귀','<span class="cr-chance mid">지원 가능</span>'):'')
+    +(M&&M.canRegular?card('crMilitaryRegularConfirm(0)', '<div class="cr-tm-ret">'+crIcon('shield')+'</div>','병역 · 일반 현역','일반 복무','18개월 · 프로 경기 공백',''):'')
     +(R.released?card('crTmPick(-2)', '<div class="cr-tm-ret" aria-hidden="true">'+crIcon('flag-checkered')+'</div>', '커리어 마무리', '은퇴', '여기서 축구화를 벗어요', ''):'');
   crTovSet('<div class="cr-tm" role="dialog" aria-modal="true" aria-label="이적시장"><button class="cr-tm-x" onclick="crTovSet(\'\')" aria-label="닫기">'+crIcon('circle-xmark')+'</button><div class="cr-tm-box">'
     +'<span class="tag">'+(R.released?'CONTRACT EXPIRED · 계약 만료':'TRANSFER WINDOW · 이적시장')+'</span>'
@@ -10983,6 +11085,7 @@ function crTmShow(){
 }
 function crTmPick(k, btn){
   if(CR.busy || CR.tmGo || Date.now() < (CR.tmReady||0)) return;
+  var M=CR.v.player.military;if(M&&M.lastChance&&M.status==='pending'&&!M.selected)return crMilitaryInfo();
   var R=CR.v.result;
   // 잔류·은퇴: 오버레이는 crShow가 닫는다. 실패하면(네트워크·서버 오류) 오버레이를 닫고 결과 화면으로 돌려 다시 고를 수 있게 —
   // 예전엔 고른 카드가 잠긴 오버레이가 그대로 남아 화면이 멈춘 것처럼 보였다(사용자 제보).
@@ -11012,6 +11115,7 @@ function crTmDoneGo(){
   o.classList.add('out'); setTimeout(function(){ crTovSet('', true); crPrep(); }, 280);
 }
 function crNext(btn){
+  var M=CR.v.player.military;if(M&&M.lastChance&&!M.selected)return crMilitaryInfo();
   if(!crBusy(btn,'다음 시즌 준비 중...')) return;
   crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(crErr);
 }
@@ -11117,7 +11221,7 @@ function crCardHtml(c){
   var K=crKit(main), bc=crLum(K.shirt)>0.6 ? K.brand : K.shirt;   // 흰·노랑 유니폼 구단은 어둡게 깔면 회색이 돼서 대표색으로
   // 크기는 px로 고정(접힌 카드 약 1,000px에서의 40%·45%) — %면 시즌별 기록을 펼쳐 카드가 길어질 때 그라데이션도 같이 늘어났다
   var bg='radial-gradient(120% 400px at 100% 0%,'+crMix(bc,'#000000',0.35)+'99,transparent 62%),linear-gradient(180deg,'+crMix(bc,'#000000',0.74)+' 0px,#0B0D12 460px)';
-  var chips=(c.traits||[]).map(function(tr,i){ return '<span class="cr-rc-chip">'+crTraitIc((c.traitIds||[])[i]||(CR.meta.traitIds||{})[tr])+gmEsc(tr)+'</span>'; }).join('')
+  var chips=(c.military&&c.military.status!=='legacy'?'<span class="cr-rc-chip gold">'+crIcon('shield')+gmEsc(c.military.label)+'</span>':'')+(c.traits||[]).map(function(tr,i){ return '<span class="cr-rc-chip">'+crTraitIc((c.traitIds||[])[i]||(CR.meta.traitIds||{})[tr])+gmEsc(tr)+'</span>'; }).join('')
    +(c.oneClub?'<span class="cr-rc-chip gold"><span class="cr-ui-ic">'+crIcon('shield-halved')+'</span>원클럽맨</span>':'')
    +(c.farewell?'<span class="cr-rc-chip gold"><span class="cr-ui-ic">'+crIcon('hands-clapping')+'</span>레전드 고별전</span>':'')
    +(c.glass?'<span class="cr-rc-chip" style="color:#FCA5A5"><span class="cr-ui-ic">'+crIcon('bandage')+'</span>유리몸</span>':c.iron?'<span class="cr-rc-chip" style="color:#86EFAC"><span class="cr-ui-ic">'+crIcon('dumbbell')+'</span>강철 체력</span>':'');
@@ -11161,7 +11265,7 @@ function crCardHtml(c){
      +'<span class="rs">'+stH([r.apps, r.goals].concat(WIDE?[r.ast]:[]).concat([c.pos==='DF'?(r.cs||0):r.ast]))
      +'<span class="cr-rk-o '+(r.youth?'y':crOvrCls(r.ovr))+'"><small>OVR</small>'+r.ovr+'</span></span></div>';
   });
-  var natHon=honors.filter(function(x){ return x.kind==='nat' && /우승/.test(x.n); }), nv=function(v){ return v!=null?v:'—'; };   /* 대표팀 도움(수비수는 클린시트) — 예전 커리어 기록엔 없어서 "—" */
+  var natHon=honors.filter(function(x){ return x.kind==='nat' && /우승|메달/.test(x.n); }), nv=function(v){ return v!=null?v:'—'; };   /* 대표팀 도움(수비수는 클린시트) — 예전 커리어 기록엔 없어서 "—" */
   if(t.caps) tableH+='<div class="cr-rc-row nat"><span class="a">'+crFlag(c.nation)+'</span><span class="c"><span class="cn"><em>'+nat.n+' 대표팀</em>'
      +(natHon.length?'<span class="ic">'+natHon.map(function(x){ return crTrophy(x.n,18); }).join('')+'</span>':'')+'</span></span>'
      +'<span class="rs">'+stH([t.caps, t.cg].concat(WIDE?[nv(t.ca)]:[]).concat([nv(c.pos==='DF'?t.ccs:t.ca)]))+'</span></div>';

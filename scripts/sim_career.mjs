@@ -33,7 +33,9 @@ for(let t=0; t<N; t++){
     if(res.injury) res = S.playSeason(C, {injPick: R()<0.5?0:1});
     if(res.released) released++;
     if(res.forced || C.age>=34){ S.retire(C); break; }
-    const pick = (C.released || R()>=0.5) && res.offers.length ? Math.floor(R()*res.offers.length) : null;
+    let military=S.militaryView(C);if(military?.lastChance&&military.canApply){S.militaryAction(C,'apply');military=S.militaryView(C);}
+    const locked=military&&(military.lastChance||military.selected||military.service);
+    const pick = !locked && (C.released || R()>=0.5) && res.offers.length ? Math.floor(R()*res.offers.length) : null;
     S.nextSeason(C, pick);
     if(C.phase === 'retired') break;
   }
