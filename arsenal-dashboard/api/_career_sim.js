@@ -10,6 +10,7 @@
 
 import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS, ACADEMY, BLOOM_CARD, BLOOM_COND } from './_career_data.js';
 import * as MIL from './_career_military.js';
+import {nationalSchedule} from './_career_international.js';
 export const militaryView = MIL.militaryView;
 export const militaryAction = MIL.applyMilitary;
 
@@ -841,7 +842,7 @@ export function playSeason(state, choice){
   C.uclNext = rank<=4 && club.r>=78 ? club.n : null;
 
   // 대표팀·국제 대회(2030년부터 4년마다 월드컵, 그 사이 2년마다 대륙컵)
-  let caps = 0, cg = 0, ca = 0, ccs = 0, ycall = false; const year = 2026+(C.age-15)+1;
+  let caps = 0, cg = 0, ca = 0, ccs = 0, ycall = false, nationalCup=null, cupApps=0, cupWon=false; const year = 2026+(C.age-15)+1;
   if(C.age>=18 && ov>=NAT_BAR[C.nation]-2-(C.ycaps?1:0)){
     caps = Math.round(4+rng()*6);
     if(ev==='natcall' && pick===1) caps = Math.max(1, Math.round(caps/2));   // 휴식 요청: 대표 경기 절반
@@ -850,10 +851,10 @@ export function playSeason(state, choice){
     const wc = year%4===2, cont = year%4===0;
     if(wc || cont){
       const cup = wc ? '월드컵' : CONT_CUP[C.nation], str = Math.min(0.4, NAT_STR[C.nation]*0.55*(wc?1:CONT_MUL[C.nation]));
-      caps += Math.round(3+rng()*4);
+      cupApps=Math.round(3+rng()*4); caps += cupApps; nationalCup=cup;
       // 약체국 가점(사용자 지정): 우승 확률이 낮은 나라일수록 우승 점수 배율이 크다 — √(10% ÷ 그 대회 우승 확률), 1~3배.
       // 브라질 월드컵 ×1.0 · 잉글랜드 ×1.1 · 네덜란드 ×1.5 · 노르웨이 ×2.5 · 한국 ×3.0. 기대 점수(확률 × 점수)는 여전히 강국이 높다.
-      if(rng()<str){ add(cup+' 우승', wc?'S':'A', 'nat'); hon[hon.length-1].m = Math.round(Math.min(3, Math.max(1, Math.sqrt(0.1/str)))*100)/100; if(rng()<0.3) add(cup+' 골든볼', wc?'A':'B', 'nat'); }
+      if(rng()<str){ cupWon=true; add(cup+' 우승', wc?'S':'A', 'nat'); hon[hon.length-1].m = Math.round(Math.min(3, Math.max(1, Math.sqrt(0.1/str)))*100)/100; if(rng()<0.3) add(cup+' 골든볼', wc?'A':'B', 'nat'); }
       if(C.pos!=='DF' && rng()<0.08*Math.pow(ov/85,3)) add(cup+' 득점왕','B','nat');
       notes.push(year+' '+cup+'에 출전했어요.');
     }
@@ -899,7 +900,7 @@ export function playSeason(state, choice){
     if(international.award) hon.push(international.award);
     notes.push(international.year+' '+international.name+' '+international.place+'위'+(international.medal?' · '+international.award.n:''));
     if(international.qualified) notes.push('체육요원 편입 요건을 충족했어요. 선수 활동을 이어가며 군사교육·봉사 의무를 이행합니다.');
-    C.tot.uCaps=(C.tot.uCaps||0)+5;
+    C.tot.uCaps=(C.tot.uCaps||0)+Math.min(5,international.place<=4?6:4);
   }
 
   // 수상 효과: 명성·다음 시즌 성장(최대 ×1.15)
@@ -944,6 +945,7 @@ export function playSeason(state, choice){
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(ratingShow*100)/100, rank,
                youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(scout ? {scout} : {}), ...(numUp ? {numUp} : {})};
   if(international) row.international=international;
+  if(caps || international) row.national=nationalSchedule({seed:C.seed,nation:C.nation,year,caps,goals:cg,ast:ca,cs:ccs,cup:nationalCup,cupApps,won:cupWon,international});
   if(service && service.kind==='regular') row.notes.push('일반 복무 6개월을 마치고 소속팀에서 남은 6개월을 뛰었어요.');
   if(service && service.kind==='sangmu' && service.returning){
     row.segments=serviceSegments(row);

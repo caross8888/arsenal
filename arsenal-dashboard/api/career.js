@@ -301,7 +301,8 @@ export default async function handler(req, res){
         const pre = rows.reduce((m, w) => m ? m.map((x, i) => Math.min(x, [w.apps, w.goals, w.ast, w.cs][i])) : [w.apps, w.goals, w.ast, w.cs], null);
         const games = rows[1].games;   // 시즌 진행 화면의 경기 칸 수
         const segments=rows[1].segments && rows[1].segments.map((seg,i)=>({...seg,...Object.fromEntries(['apps','starts','goals','ast','cs'].map(k=>[k,Math.min(seg[k],rows[0].segments[i][k])]))}));
-        return res.json({token: seal(C), ...view(C), pre: {apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3], games, ...(segments?{segments}:{})}});
+        const national=(rows[1].national||[]).filter(w=>(rows[0].national||[]).some(other=>other.id===w.id&&JSON.stringify(other)===JSON.stringify(w)));
+        return res.json({token: seal(C), ...view(C), pre: {national, apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3], games, ...(segments?{segments}:{})}});
       }
       delete C.pending;
       C.forced = r.forced; C.forcedWhy = r.forcedWhy;
