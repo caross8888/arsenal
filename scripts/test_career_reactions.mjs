@@ -7,6 +7,7 @@ const array=name=>{const start=html.indexOf('var '+name+'=');assert(start>=0,nam
 for(const name of ['CR_RX_VERIFIED','CR_FAN_ID','CR_RX_NICK','CR_RX_IP'])vm.runInContext(array(name),context);
 vm.runInContext(html.slice(html.indexOf('function crSfRng('),html.indexOf('function crSfClub(')),context);
 vm.runInContext(html.slice(html.indexOf('var CR_RX_NATIONAL='),html.indexOf('function crNationalReactBtns(')),context);
+vm.runInContext(html.slice(html.indexOf('function crSfNationalQueue('),html.indexOf('function crSfNatOpen(')),context);
 const run=code=>vm.runInContext(code,context);
 const row={age:22,hon:[{n:'월드컵 우승'},{n:'아시안게임 금메달'}],national:[{name:'월드컵',kind:'senior',nation:'KOR',knockout:true,won:true,matches:[{played:true,g:1,a:2},{played:false,g:0,a:0}]},{name:'아시안게임',kind:'age',nation:'KOR',knockout:true,won:true,medal:true,place:1,qualified:true}],international:{name:'아시안게임',kind:'asian',year:2034,medal:true,place:1,qualified:true}};
 context.testRow=row;
@@ -17,7 +18,7 @@ assert.equal(run('crNationalReactionEvents({age:23,hon:[],national:[]}).length')
 console.log('PASS 대표팀 성과만 추가 · 우승/체육요원 같은 사건 중복 없음 · 이전 병역 혜택 재공지 없음');
 context.testRow=structuredClone(row);context.testRow.hon=[];context.testRow.national=context.testRow.national.slice(1);Object.assign(context.testRow.national[0],{won:false,place:2,qualified:false});Object.assign(context.testRow.international,{place:2,qualified:false});
 assert.equal(run('crNationalReactionEvents(testRow)[0].type'),'medal');
-assert(run("crNationalReaction(crNationalReactionEvents(testRow)[0]).news.body.includes('병역 상태가 바뀌지는 않는다')"));
+assert(run("!/금메달만|병역 상태가 바뀌지는/.test(JSON.stringify(crNationalReaction(crNationalReactionEvents(testRow)[0])))"));
 context.testRow.national=[];Object.assign(context.testRow.international,{name:'올림픽',kind:'olympic',place:3,qualified:true});
 assert.equal(run('crNationalReactionEvents(testRow)[0].type'),'qualify');
 console.log('PASS 아시안게임 은메달은 체육요원 처리 안 함 · 올림픽 동메달은 요건 충족');
@@ -35,3 +36,9 @@ const yeji=run(`(()=>{let yes=0,no=0,fm=0;for(let i=0;i<6000;i++){CR.v.player.na
 assert(Math.abs((yeji.yes+yeji.no)/yeji.fm-.70)<.04);
 assert(Math.abs(yeji.yes/(yeji.yes+yeji.no)-.10)<.03);
 console.log('PASS 예지 등장 70% · 등장한 댓글의 대댓글 10% · 중복 없이 바로 아래 답글');
+
+run("CR.sf={G:10,i:0,national:[{id:'regular',at:.2,knockout:false},{id:'cup',at:.7,knockout:true}],natSeen:{}}");
+assert.equal(run("JSON.stringify(crSfNationalQueue(Array.from({length:10},(_,k)=>({k}))).filter(m=>m.national).map(m=>m.national.id))"),'["cup"]');
+run("CR.sf.natSeen.cup=true");
+assert.equal(run("crSfNationalQueue([{k:9}]).filter(m=>m.national).length"),0);
+console.log('PASS 일반 A매치로 클럽 시즌 중단 없음 · 대회만 삽입 · 확인한 대회 중복 없음');
