@@ -57,6 +57,17 @@ check('일반 복무는 0경기 · 대표팀·수상·훈련 없음 · 6개월 �
   S.nextSeason(c,null,0);assert(S.prepView(c).service.fullRegular);let r=play(c);assert.equal(r.row.games,0);assert.equal(r.row.apps,0);assert.equal(r.row.rank,null);assert.deepEqual(c.tot,total);assert.equal(c.ovr,ovr-1);assert.equal(r.row.hon.length,0);assert.equal(c.military.left,6);
   S.nextSeason(c,null,0);r=play(c);assert.equal(c.military.status,'completed');assert.equal(r.row.service.months,6);assert(r.row.games>0&&r.row.games<30);assert(c.tot.apps>total.apps);assert.equal(c.club.n,'FC 서울');
 });
+check('남은 6개월 먼저 전역 · 이벤트/나이/시즌 기록 보존 · 반 시즌 계산 동일',()=>{
+ for(let seed=1;seed<=100;seed++){
+  const c=result(seed);S.militaryAction(c,'regular');S.nextSeason(c,null,0);play(c);S.nextSeason(c,null,0);
+  const legacy=structuredClone(c),age=c.age,ev=c.ev,total=structuredClone(c.tot),hist=c.hist.length;
+  S.regularReturn(c);assert.equal(c.military.status,'completed');assert.equal(c.military.left,0);assert.equal(c.age,age);assert.equal(c.ev,ev);assert.deepEqual(c.tot,total);assert.equal(c.hist.length,hist);
+  assert.equal(S.prepView(c).service,null);assert.equal(S.prepView(c).returnPeriod.months,6);assert.equal(S.prepView(c).international,null);
+  const before=structuredClone(c);S.regularReturn(c);assert.deepEqual(c,before);
+  const a=play(legacy),b=play(c);assert.deepEqual(b.row,a.row);assert.deepEqual(c.tot,legacy.tot);assert.equal(c.returnService,undefined);
+ }
+ const full=result();S.militaryAction(full,'regular');S.nextSeason(full,null,0);assert.throws(()=>S.regularReturn(full));assert.throws(()=>S.regularReturn(fixture(1,26,'ENG')));
+});
 check('체육요원·이행 완료·구형 저장 데이터',()=>{
   const arts=result();arts.military.status='arts';assert.throws(()=>S.militaryAction(arts,'apply'));S.nextSeason(arts,null,0);assert.equal(arts.military.status,'arts');
   const old=fixture(7,32);delete old.military;assert.equal(S.militaryView(old).status,'legacy');assert.equal(S.prepView(old).service,null);
@@ -76,4 +87,9 @@ const c=result();const token=codec.seal(c);const applied=await api('military',{t
 const next=await api('next',{token:applied.data.token,pick:null,trait:0});assert.equal(next.code,200);assert.equal(next.data.prep.service.fullRegular,true);
 const finished=await api('season',{token:next.data.token,train:'균형',evPick:0});assert.equal(finished.code,200);assert.equal(finished.data.result.row.apps,0);assert.equal(finished.data.player.military.left,6);
 const bad=await api('military',{token:next.data.token,action:'apply'});assert.equal(bad.code,400);count++;console.log('PASS API 토큰 재개·부적절한 단계 거부');
+const returnPrep=await api('next',{token:finished.data.token,pick:null,trait:0});assert.equal(returnPrep.data.prep.service.left,6);
+const returned=await api('service-return',{token:returnPrep.data.token});assert.equal(returned.code,200);assert.equal(returned.data.player.military.status,'completed');assert.equal(returned.data.prep.service,null);assert.equal(returned.data.prep.returnPeriod.months,6);
+const repeat=await api('service-return',{token:returned.data.token});assert.equal(repeat.code,200);assert.deepEqual(repeat.data.prep,returned.data.prep);
+const half=await api('season',{token:returned.data.token,train:'균형',evPick:0,injPick:1});assert.equal(half.code,200);assert.equal(half.data.result.row.service.months,6);assert(half.data.result.row.games>0&&half.data.result.row.games<30);
+assert.equal((await api('service-return',{token:next.data.token})).code,400);assert.equal((await api('service-return',{token:half.data.token})).code,400);count++;console.log('PASS API 전역 먼저 처리 · 토큰 재개/중복 요청 안전 · 반 시즌 유지');
 console.log(`${count} military scenarios passed`);

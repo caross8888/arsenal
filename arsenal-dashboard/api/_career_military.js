@@ -70,8 +70,17 @@ export function beginService(C){
   if(M.status==='sangmu'){const c=CLUBS.KOR.find(c=>c[0]===SANGMU);C.club={n:c[0],r:c[1],id:c[2],nat:'KOR'};if(!C.clubs.includes(SANGMU))C.clubs.push(SANGMU);}
   C.loanClub=null;delete C.loanClubs;C.lv=3;C.contract=null;C.released=false;return true;
 }
+// 남은 일반 복무를 먼저 마친 뒤 같은 시즌의 복귀 이벤트/훈련을 진행한다.
+export function completeRegularReturn(C){
+ const M=ensureMilitary(C);if(C.phase!=='prep')throw Error('복귀 시즌 준비 단계에서만 진행할 수 있어요.');
+ if(C.returnService&&M?.status==='completed')return C.returnService;
+ const service=serviceView(C);if(!service||service.kind!=='regular'||service.fullRegular)throw Error('남은 일반 복무 기간이 없어요.');
+ C.returnService={...service};C.club={...M.home};C.num=M.homeNum??C.num;C.cEnd=M.homeEnd||C.age+1;
+ M.left=0;M.status='completed';M.returnAge=C.age;M.returnNotice={from:'일반 복무',club:C.club.n,id:C.club.id,homeNum:C.num};
+ return C.returnService;
+}
 export function finishServiceSeason(C,row){
-  const M=ensureMilitary(C);if(!active(M))return;
+  const M=ensureMilitary(C);if(!active(M)){if(C.returnService){row.service={kind:'regular',months:C.returnService.months,remaining:0,home:C.returnService.home.n};row.notes.push('병역 이행 완료! '+C.club.n+'에 복귀해 남은 시즌을 뛰었어요.');delete C.returnService;}return;}
   const kind=M.status,months=Math.min(12,M.left);row.service={kind,months,remaining:Math.max(0,M.left-months),home:M.home.n};
   M.left-=months;
   if(M.left<=0){

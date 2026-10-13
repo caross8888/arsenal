@@ -13,6 +13,7 @@ import * as MIL from './_career_military.js';
 import {nationalSchedule} from './_career_international.js';
 export const militaryView = MIL.militaryView;
 export const militaryAction = MIL.applyMilitary;
+export const regularReturn = MIL.completeRegularReturn;
 
 export { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS };
 
@@ -563,7 +564,7 @@ export function prepView(state){
   else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 ↓)' : ' (감독 신뢰 ↑)')];
-  return {military:MIL.militaryView(C), service:MIL.serviceView(C), international:MIL.tournamentView(C), goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, contract: C.contract || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
+  return {military:MIL.militaryView(C), service:MIL.serviceView(C), returnPeriod:C.returnService?{months:C.returnService.months,home:C.returnService.home}:null, international:C.returnService?null:MIL.tournamentView(C), goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, contract: C.contract || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
     interview: ev.id === 'media' ? interviewOf() : null, bloom: bloomView(),
     loanClubs: C.ev==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
 }
@@ -597,9 +598,9 @@ function rollInjury(){
 export function playSeason(state, choice){
   C = state;
   if(C.phase !== 'prep' && C.phase !== 'injury') throw new Error('phase');
-  const service=MIL.serviceView(C);
+  const service=MIL.serviceView(C)||C.returnService;
   if(service && service.fullRegular) return playRegularService();
-  if(C.phase==='prep') C.seasonTournament=MIL.tournamentView(C);
+  if(C.phase==='prep') C.seasonTournament=C.returnService?null:MIL.tournamentView(C);
   const tournament=C.seasonTournament || null;
   if(service && service.returning) C.club={...C.military.home};
   if(trainOpts().includes(choice.train)) C.train = choice.train; else if(!trainOpts().includes(C.train)) C.train = '균형';

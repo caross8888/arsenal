@@ -287,6 +287,11 @@ export default async function handler(req, res){
       return res.json({token: seal(C), ...view(C)});
     }
 
+    if(a === 'service-return'){
+      const C=load(body.token,['prep']);try { S.regularReturn(C); } catch(e){ bad(e.message); }
+      return res.json({token:seal(C),...view(C)});
+    }
+
     if(a === 'season'){
       const C = load(body.token, ['prep', 'injury']);
       // 부상 질문에 답하는 두 번째 호출은 첫 호출의 훈련·이벤트 선택을 그대로 쓴다(토큰에 남겨 둔 것)
