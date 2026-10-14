@@ -10548,7 +10548,7 @@ function crSfNatOpen(w,resume){
   var n={apps:0,goals:0,ast:0,cs:0};w.matches.slice(0,start).forEach(function(m){if(m.played){n.apps++;n.goals+=m.g;n.ast+=m.a;n.cs+=m.cs;}});
   S.nat={w:w,i:start,start:start,n:n,resume:resume,finished:false};
   if(S.fan)S.fan.national=true;
-  var el=document.createElement('div');el.id='crSfNational';el.className='cr-nat-overlay entering'+(w.knockout?' tournament':'')+(w.kind==='club'?' club-final':'');el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',w.name+(w.kind==='club'?' 결승':' 대표팀 진행'));el.onclick=function(e){e.stopPropagation();if(!e.target.closest('button'))crSfNatFinish();};
+  var el=document.createElement('div');el.id='crSfNational';el.className='cr-nat-overlay entering'+(w.knockout?' tournament':'')+(w.kind==='club'?' club-final':'');el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',w.name+(w.kind==='club'?' 결승':' 대표팀 진행'));el.onclick=function(e){e.stopPropagation();};
   var scene=CR_NAT_BG_CELL[w.name]||[0,0];el.style.setProperty('--cr-scene-x',scene[0]);el.style.setProperty('--cr-scene-y',scene[1]);
   var nation=gmEsc(w.kind==='club'?w.club.n:crNat(w.nation).n),age=w.kind==='age';
   var art=age?crIcon('medal'):crTrophy(w.name+' 우승',40),year=w.year||2027+CR.v.player.age-15;
@@ -10728,12 +10728,13 @@ function crSfMatch(m, quiet){   // 한 경기: 진행·기록·최근 결과·�
 function crSfTap(e){
   var S=CR.sf; if(!S) return;
   if(e && e.target.closest && e.target.closest('.cr-inj-c')) return;
-  if(S.nat)return crSfNatFinish();
+  // 시즌 스킵을 연속으로 눌러도 대표팀·챔스 하이라이트는 별도로 재생한다.
+  if(S.nat)return;
   if(S.v) return crSfDone();
   if(S.hurtWait) return;
   crSfSkip();
 }
-function crSfSkip(){var S=CR.sf;if(!S)return;if(S.nat)return crSfNatFinish();if(S.hurtWait)return;S.skip=true;clearTimeout(S.timer);if(S.tick)S.tick();}
+function crSfSkip(){var S=CR.sf;if(!S||S.nat)return;if(S.hurtWait)return;S.skip=true;clearTimeout(S.timer);if(S.tick)S.tick();}
 function crSfEnd(v){   // 끝 요약을 잠깐(약 2.4초) 보여 주고 결과 화면으로 저절로 넘어간다(사용자 지정 — 버튼 없이, 넘어가서 오버롤 오르는 연출까지). 누르면 바로.
   var S=CR.sf, r=v.result.row, x=document.getElementById('crSfExtra'), card=document.getElementById('crSfCard'), log=document.getElementById('crSfLog');
   if(!S) return;
