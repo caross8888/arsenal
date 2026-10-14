@@ -2040,8 +2040,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-sf-end .go i{display:block;height:3px;border-radius:2px;background:#C8A84B;transform-origin:left;animation:crSfGo linear both}
 .cr-sf-end .go span{display:block;margin-top:6px;font-size:11.5px;color:rgba(255,255,255,.6)}
 @keyframes crSfGo{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-.cr-sf-end>div{border-radius:14px;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);text-align:center}
-.cr-sf-end>div>span{display:block;font-size:11.5px;color:rgba(255,255,255,.6)}.cr-sf-end>div>b{font-family:var(--fd);font-size:28px;font-weight:400;color:#FFE38A}
+.cr-sf-end>div{border-radius:14px;padding:8px 12px;background:rgba(20,24,40,.92);border:1px solid rgba(255,255,255,.14);text-align:center}
+.cr-sf-end>div>span{display:block;font-size:11.5px;color:rgba(255,255,255,.75)}.cr-sf-end>div>b{font-family:var(--fd);font-size:28px;font-weight:400;color:#FFE38A}
 .cr-sf-end .cr-iv-go{grid-column:1/-1;animation:none}
 .cr-wl{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;cursor:pointer;
   background:radial-gradient(120% 80% at 50% 0%,rgba(60,8,12,.94),rgba(5,6,10,.96) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both;transition:opacity .25s}
@@ -2109,7 +2109,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tsel div{flex:1;min-width:0;display:flex;flex-direction:column} .cr-tsel b{font-size:14px} .cr-tsel span{font-size:12.5px;color:var(--text-secondary)}
 .cr-tsel button{font:inherit;font-size:12px;color:var(--text-secondary);background:none;border:1px solid var(--border-bright);border-radius:999px;padding:5px 10px;cursor:pointer;flex-shrink:0}
 /* 대표팀 진행은 클럽 시즌 오버레이를 유지한 채 위에 올린다. */
-.cr-nat-overlay{position:fixed;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:auto;background:color-mix(in srgb,var(--navy) 88%,transparent);backdrop-filter:blur(6px);cursor:pointer}
+.cr-nat-overlay{position:fixed;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:auto;background:color-mix(in srgb,var(--navy) 88%,transparent);backdrop-filter:blur(6px);cursor:pointer}
 .cr-nat-box{width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px;margin:auto 0;color:var(--text)}
 .cr-nat-box>.tag{align-self:center}.cr-nat-result{padding:12px;border-radius:12px;background:var(--surface2);color:var(--text);font-weight:700;text-align:center}.cr-nat-box .cr-note{text-align:center}.cr-nat-box button[hidden]{display:none}
 
