@@ -383,7 +383,7 @@ export const EVENTS = [
   // 이적하면 감독이 바뀌니 새 팀에서 다시 올 수 있고, 수락해 두 시즌이 지나면 그 팀에서 주장 제안으로 이어진다.
   {id:'captain', t:'부주장 제안', d:'감독이 부주장 완장을 맡아 달라고 해요.', a:['수락한다 (출전 ↑ · 명성 ↑ 또는 ↓)','사양한다 (성장 ↑)'], ok:() => !youth() && C.age>=23 && C.age<=32 && !C.capt && C.viceAt !== C.club.n},
   {id:'captfull', t:'주장 제안', d:'감독이 다음 시즌 주장 완장을 맡아 달라고 해요.', a:['수락한다 (출전 ↑↑ · 명성 ↑↑ 또는 ↓↓)','부주장으로 남는다 (성장 ↑)'], ok:() => !youth() && !C.capt && !!C.vice && C.club.n === C.viceClub && C.age >= (C.viceAge||0) + 2},
-  {id:'natcall', t:'A매치 차출', d:'대표팀 감독이 이번 A매치 기간 소집을 원해요. 구단은 휴식을 바라고 있어요.', a:['차출에 응한다 (명성 ↑ · 부상 위험 ↑)','휴식을 요청한다 (출전 ↑ · 대표 경기 ↓)'], ok:() => !youth() && (C.tot.caps||0) > 0},
+  {id:'natcall', t:'A매치 차출', d:'대표팀 감독이 이번 시즌 A대표팀 소집을 원해요. 구단은 휴식을 바라고 있어요.', a:['차출에 응한다 (명성 ↑ · 부상 위험 ↑)','휴식을 요청한다 (클럽 출전 ↑ · A매치 불참)'], ok:() => !youth() && (C.tot.caps||0) > 0},
   {id:'sns', t:'SNS 논란', d:'경기 뒤 했던 말이 SNS에서 퍼지며 논란이 됐어요.', a:['사과한다 (명성 조금 ↓ · 감독 신뢰)','정면 돌파 (명성 ↑↑ 또는 ↓↓)'], ok:() => !youth() && C.age>=19},
   {id:'diet', t:'식단·회복 전문가', d:'에이전트가 식단·회복 전문가를 붙이자고 해요.', a:['고용한다 (하락 ↓ · 부상 위험 ↓ · 출전 ↓)','하던 대로 (출전 유지)'], ok:() => C.age>=30}];
 // 빅클럽 스카우트(사용자 지정): 지금 아카데미 ★이 낮을수록 자주 온다(★5면 안 온다). 데려가려는 곳은 대부분 ★+1, 25%만 ★+2.
@@ -844,9 +844,10 @@ export function playSeason(state, choice){
 
   // 대표팀·국제 대회(2030년부터 4년마다 월드컵, 그 사이 2년마다 대륙컵)
   let caps = 0, cg = 0, ca = 0, ccs = 0, ycall = false, nationalCup=null, cupApps=0, cupWon=false; const year = 2026+(C.age-15)+1;
-  if(C.age>=18 && ov>=NAT_BAR[C.nation]-2-(C.ycaps?1:0)){
+  if(ev==='natcall' && pick===1){
+    notes.push('휴식을 요청해 이번 시즌 A대표팀 일정에는 참가하지 않았어요.');
+  } else if(C.age>=18 && ov>=NAT_BAR[C.nation]-2-(C.ycaps?1:0)){
     caps = Math.round(4+rng()*6);
-    if(ev==='natcall' && pick===1) caps = Math.max(1, Math.round(caps/2));   // 휴식 요청: 대표 경기 절반
     notes.push(natInfo(C.nation).n+' 대표팀에 뽑혔어요.');
     if(ov>=NAT_BAR[C.nation]+7 && rating>=7.0 && rng()<0.35) add(natInfo(C.nation).n+' 올해의 선수','C','nat');
     const wc = year%4===2, cont = year%4===0;

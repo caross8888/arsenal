@@ -25,6 +25,25 @@ for(const nation of ['ENG','BRA','KOR','JPN','USA','NGA'])for(const age of [18,2
 console.log('PASS 6개국 A대표·대륙대회·연령별 대표 기록과 실제 시즌 일치');
 assert.deepEqual(nationalSchedule({seed:1,nation:'ENG',year:2027,caps:0,goals:0,ast:0,cs:0}),[]);
 console.log('PASS 미차출 시즌에는 대표팀 진행 없음');
+let refusals=0,ageCallups=0;
+for(const nation of ['ENG','BRA','KOR'])for(const age of [18,20,21,22])for(const seed of [1,7,13,47])for(const penaltyMode of [false,true]){
+ const base=S.createCareer({...input,nation},0,seed);
+ Object.assign(base,{age,lv:3,club:S.clubByName('아스날'),ovr:90,peak:90,st:Array(5).fill(90),awoken:true,proAt:18,cEnd:35,ev:'natcall',penaltyMode});
+ Object.assign(base.tot,{caps:10,cg:3,ca:2,ccs:1});
+ const resting=structuredClone(base),row=S.playSeason(resting,{train:'균형',evPick:1,injPick:1}).row;
+ assert.equal(row.caps,0,'refusing call-up must mean no senior appearances');
+ assert(!(row.national||[]).some(w=>w.kind==='senior'),'refusal must also exclude senior tournaments');
+ for(const key of ['caps','cg','ca','ccs'])assert.equal(resting.tot[key],base.tot[key],'refusal must not add senior career records');
+ assert(!row.hon.some(h=>/^(월드컵|유로|코파 아메리카|아시안컵|골드컵|아프리카 네이션스컵)/.test(h.n)),'no senior tournament awards without participation');
+ assert(row.notes.some(n=>n.includes('A대표팀 일정에는 참가하지 않았어요')));
+ if(row.international){assert((row.national||[]).some(w=>w.kind==='age'),'age-team selection remains a separate event');ageCallups++;}
+ const accepting=structuredClone(base),accepted=S.playSeason(accepting,{train:'균형',evPick:0,injPick:1}).row;
+ assert(accepted.caps>0,'accepting call-up still produces senior appearances');
+ assert((accepted.national||[]).some(w=>w.kind==='senior'));
+ refusals++;
+}
+assert(ageCallups>0);
+console.log('PASS A매치 차출 거절',refusals,'개: 출전·대회·통산·수상 제외, 수락 시 출전, 별도 연령별 차출',ageCallups,'개 유지');
 for(const name of ['월드컵','유로','코파 아메리카','아시안컵','골드컵','아프리카 네이션스컵'])for(let seed=1;seed<=100;seed++){
  const nation={'월드컵':'ENG','유로':'ENG','코파 아메리카':'BRA','아시안컵':'KOR','골드컵':'USA','아프리카 네이션스컵':'NGA'}[name];
  const w=nationalSchedule({seed,nation,year:2030,caps:10,goals:5,ast:2,cs:2,cup:name,cupApps:5,won:seed%2===0}).find(w=>w.id==='senior-cup'),b=w.bracket;
