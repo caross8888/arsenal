@@ -188,7 +188,7 @@ const resultView = C => {
 
 const clone=C=>JSON.parse(JSON.stringify(C));
 function seasonDraft(C,choice,decisions={}){const D=clone(C);D.phase=C.pendingSeason?.phase||C.phase;delete D.pendingSeason;D.penaltyMode=true;D.penaltyDecisions=decisions;const r=S.playSeason(D,choice);return {D,r};}
-function firstPenalty(row){for(const w of row?.national||[])for(const m of w.matches)if(m.pk?.pending)return {w,m};return null;}
+function firstPenalty(row){for(const w of [...(row?.national||[]),...(row?.clubFinal?[row.clubFinal]:[])])for(const m of w.matches)if(m.pk?.pending)return {w,m};return null;}
 function advanceSeason(C,choice,decisions={}){
  const base=clone(C),phase=C.pendingSeason?.phase||C.phase,{D,r}=seasonDraft(C,choice,decisions);
  if(!r.injury&&firstPenalty(r.row)){delete base.pendingSeason;Object.assign(C,base,{phase:'penalty',pendingSeason:{phase,choice,decisions}});return {penalty:true};}
@@ -199,7 +199,7 @@ function penaltyView(C){
  const {r}=seasonDraft(C,C.pendingSeason.choice,C.pendingSeason.decisions),P=firstPenalty(r.row);if(!P)throw Error('승부차기 상태가 올바르지 않습니다.');
  const preview=clone(r.row);delete preview.hon;delete preview.notes;delete preview.international;delete preview.bloom;delete preview.scout;delete preview.deltas;
  for(const w of preview.national||[])if(w.pending){w.outcome='승부차기 결과 대기';w.won=false;w.medal=false;w.qualified=false;delete w.place;if(w.bracket)w.bracket.winner=null;}
- return {phase:'penalty',player:S.playerView(C),preview,shootout:{key:P.m.pk.key,cup:P.w.name,year:2027+C.age-15,window:P.w.id,stage:P.m.stage,nation:C.nation,opp:P.m.opp,our:P.m.our,their:P.m.their,prefix:{ours:P.m.pk.ours,theirs:P.m.pk.theirs,our:P.m.pk.our,their:P.m.pk.their}}};
+ return {phase:'penalty',player:S.playerView(C),preview,shootout:{key:P.m.pk.key,cup:P.w.name,year:2027+C.age-15,window:P.w.id,stage:P.m.stage,nation:C.nation,opp:P.m.opp,...(P.w.kind==='club'?{kind:'club',ourName:P.w.club.n,theirName:P.w.opponent.n}:{}),our:P.m.our,their:P.m.their,prefix:{ours:P.m.pk.ours,theirs:P.m.pk.theirs,our:P.m.pk.our,their:P.m.pk.their}}};
 }
 
 // 지금 단계에 맞는 화면 데이터
@@ -349,7 +349,7 @@ export default async function handler(req, res){
       let outcome;try{outcome=kickVerdict(C.seed,P.key,input);}catch(e){bad(e.message);}
       const decisions={...C.pendingSeason.decisions,[P.key]:input};
       advanceSeason(C,C.pendingSeason.choice,decisions);
-      const v=view(C),row=v.preview||v.result.row,w=row.national.find(w=>w.id===P.window),m=w.matches.find(m=>m.stage===P.stage);
+      const v=view(C),row=v.preview||v.result.row,w=P.window==='club-final'?row.clubFinal:row.national.find(w=>w.id===P.window),m=w.matches.find(m=>m.stage===P.stage);
       return res.json({token:seal(C),...v,penaltyResult:{key:P.key,kick:outcome,pk:m.pk,stage:P.stage,window:P.window}});
     }
 

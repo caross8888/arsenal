@@ -2132,10 +2132,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-nat-result.victory{color:var(--gold);border:1px solid var(--gold)}.cr-nat-result.eliminated{color:var(--text-secondary);border:1px solid var(--border-bright)}
 .cr-nat-ceremony{z-index:2;overflow:auto}.cr-nat-ceremony .cr-bd-box{margin:auto;gap:12px}.cr-nat-cup{width:auto;max-width:220px;height:240px;image-rendering:pixelated;filter:drop-shadow(0 0 24px var(--gold))}.cr-nat-medal>.cr-icon{width:160px;height:220px;filter:drop-shadow(0 0 20px var(--gold))}.cr-nat-final-caption{color:var(--on-dark-header-secondary);font-size:13px;animation:crIvUp .5s 2s ease-out both}
 @media(max-height:700px){.cr-nat-overlay.tournament .cr-nat-box{gap:6px}.cr-nat-overlay.tournament .cr-note{display:none}.cr-nat-ceremony .cr-nat-cup,.cr-nat-ceremony .cr-wc-img{height:180px}.cr-nat-medal>.cr-icon{height:170px}}
-.cr-nat-overlay .cr-rx-btn{margin-top:0;flex-shrink:0}
+.cr-nat-overlay .cr-rx-btn{margin-top:0;flex-shrink:0;--text:var(--on-dark-header);--text-secondary:var(--on-dark-header-secondary);--gold:var(--on-dark-header-gold);--border-accent:color-mix(in srgb,var(--on-dark-header-gold) 30%,transparent);--border-bright:color-mix(in srgb,var(--on-dark-header) 15%,transparent)}
 /* 대표팀 대회 화면: 대회 머리말 → 대진표 → 스코어/기록 → 결과/반응. */
 .cr-nat-overlay.tournament{padding:18px 16px;background:none;backdrop-filter:none;isolation:isolate;--cr-scene-aspect:1;--cr-scene-w:max(100vw,calc(100vh * var(--cr-scene-aspect)));--cr-scene-h:max(100vh,calc(100vw / var(--cr-scene-aspect)))}
 .cr-nat-overlay.tournament::before{content:'';position:fixed;inset:0;z-index:-2;background-image:url('/img/career-scenes/international-stadiums.webp?v=2');background-repeat:no-repeat;background-size:calc(var(--cr-scene-w) * 4) calc(var(--cr-scene-h) * 2);background-position:calc(0px - var(--cr-scene-x) * var(--cr-scene-w) - (var(--cr-scene-w) - 100vw) / 2) calc(0px - var(--cr-scene-y) * var(--cr-scene-h) - (var(--cr-scene-h) - 100vh) / 2);image-rendering:pixelated}
+.cr-nat-overlay.tournament.club-final::before{background-image:url('/img/career-scenes/champions-final.webp?v=1');background-size:cover;background-position:center}
+.cr-nat-overlay.club-final:not(.scene-ready){background:linear-gradient(180deg,#080e35,#10132c)}
+.cr-nat-overlay.club-final .cr-nat-final-score .cr-crest{width:28px;height:28px;object-fit:contain}
 .cr-nat-overlay.tournament::after{content:'';position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,var(--overlay-black-55),color-mix(in srgb,var(--overlay-black-55) 80%,transparent) 45%,var(--overlay-black-55))}
 .cr-nat-overlay.tournament .cr-nat-box{gap:10px}.cr-nat-masthead{display:flex;flex-direction:column;align-items:center;gap:5px;padding:1px 0 5px;color:var(--on-dark-header);text-shadow:0 2px 8px var(--overlay-black-55)}.cr-nat-titleline{display:flex;align-items:center;justify-content:center;gap:8px}.cr-nat-masthead h3{font-size:25px;font-weight:900;line-height:1.25;letter-spacing:-.5px;margin:0}.cr-nat-emblem{width:28px;height:32px;display:grid;place-items:center;flex:none}.cr-nat-emblem img{max-width:28px;max-height:32px;image-rendering:pixelated}.cr-nat-emblem>.cr-icon{width:24px;height:28px;color:var(--gold)}.cr-nat-masthead small{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;color:var(--on-dark-header-secondary);font-size:11px}.cr-nat-masthead .cr-flag{width:16px;margin:0}.cr-nat-masthead time{font:inherit;color:inherit}
 
@@ -2420,6 +2423,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rx-btn b{display:block;margin:3px 0;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cr-rx-btn small{display:block;font-size:11.5px;color:var(--text-secondary)}.cr-rx-btn .go{color:var(--gold);flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;line-height:1;border-radius:50%;background:var(--border-accent)}.cr-rx-btn .go>svg{display:block;width:14px;height:14px;margin:0}
 :root[data-theme="light"] .cr-rx-btn .ic,:root[data-theme="light"] .cr-rx-btn .go{color:var(--text)}
+:root[data-theme="light"] .cr-nat-overlay .cr-rx-btn .ic,:root[data-theme="light"] .cr-nat-overlay .cr-rx-btn .go{color:var(--gold)}
+.cr-reactions{display:flex;flex-direction:column;gap:8px}
+.cr-reactions>.cr-rx-btn{margin:0}
 .cr-rx .tag{background:#C8A84B;color:#2a1f05}
 .cr-rx-news{background:#F4EFE3;color:#1d1a14;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crTmDrop .5s .15s cubic-bezier(.2,1.2,.4,1) both}
 .cr-rx-news .mh{display:flex;justify-content:space-between;gap:8px;font-size:10px;letter-spacing:1px;font-weight:800;border-bottom:2px solid #1d1a14;padding-bottom:4px}.cr-rx-news .mh span{font-weight:600;letter-spacing:.3px}
@@ -2818,7 +2824,7 @@ function playIntro(){
   <button class="nav-btn" onclick="showSec('history',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8l0 4l2 2"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg><span>History</span></button>
 </nav>
 <script src="/career/league-scenes.js?v=1"></script>
-<script src="/career/match-playback.js?v=37"></script>
+<script src="/career/match-playback.js?v=38"></script>
 <script>
 var FN='/api';
 var allStandings=[];
@@ -10441,7 +10447,7 @@ function crSfSay(t){
   f.insertBefore(el, f.firstChild);
   while(f.children.length>3) f.removeChild(f.lastChild);
 }
-function crSfClose(){ if(CR.sf){clearTimeout(CR.sf.timer);if(CR.sf.nat){if(CR.sf.nat.replay)CR.sf.nat.replay.destroy();clearTimeout(CR.sf.nat.timer);clearTimeout(CR.sf.nat.ceremonyTimer);clearTimeout(CR.sf.nat.exitTimer);clearTimeout(CR.sf.nat.resultTimer);clearTimeout(CR.sf.nat.penaltyExitTimer);if(CR.sf.nat.resultFrame)cancelAnimationFrame(CR.sf.nat.resultFrame);if(CR.sf.nat.openFrame)cancelAnimationFrame(CR.sf.nat.openFrame);if(CR.sf.nat.bracketFrame)cancelAnimationFrame(CR.sf.nat.bracketFrame);}if(CR.sf.fan)clearTimeout(CR.sf.fan.timer);} CR.sf=null; crTovSet(''); }
+function crSfClose(){ if(CR.sf){clearTimeout(CR.sf.timer);if(CR.sf.nat){if(CR.sf.nat.replay)CR.sf.nat.replay.destroy();clearTimeout(CR.sf.nat.timer);clearTimeout(CR.sf.nat.ceremonyTimer);clearTimeout(CR.sf.nat.finalTimer);clearTimeout(CR.sf.nat.exitTimer);clearTimeout(CR.sf.nat.resultTimer);clearTimeout(CR.sf.nat.penaltyExitTimer);if(CR.sf.nat.resultFrame)cancelAnimationFrame(CR.sf.nat.resultFrame);if(CR.sf.nat.openFrame)cancelAnimationFrame(CR.sf.nat.openFrame);if(CR.sf.nat.bracketFrame)cancelAnimationFrame(CR.sf.nat.bracketFrame);}if(CR.sf.fan)clearTimeout(CR.sf.fan.timer);} CR.sf=null; crTovSet(''); }
 // 합계를 from..to 경기 칸에 나눈다(시드 고정). out: 이 구간 앞쪽 몇 칸은 부상 결장.
 function crSfPlan(from,to,tot,out){
   var S=CR.sf;if(!S.segments)return crSfPlanBase(from,to,tot,out);
@@ -10497,8 +10503,21 @@ function crSfData(v){
     if(!S.wall) crSfWall();
     var from=S.injAt!=null ? S.injAt+1 : 0, out=S.injAt!=null ? Math.min(S.G-from, S.quick?Math.ceil(S.injGames/2):S.injGames) : 0;
     var rest={apps:Math.max(0,r.apps-S.n.apps), goals:Math.max(0,r.goals-S.n.goals), ast:Math.max(0,r.ast-S.n.ast), cs:Math.max(0,(r.cs||0)-S.n.cs)};
-    crSfRun(crSfPlan(from, S.G, rest, out), function(){ crSfEnd(CR.v); });
+    crSfRun(crSfPlan(from, S.G, rest, out), crSfAfterSeason);
   }
+}
+// 클럽 경기를 전부 재생한 뒤에만 챔스 결승을 연다. 대표팀 중간 일정 큐에는 넣지 않는다.
+function crSfAfterSeason(){
+ var S=CR.sf,row=CR.v.preview||CR.v.result?.row;if(!S||!row)return;
+ if(row.clubFinal && !(S.natSeen||{})['club-final']){
+  if(S.i<S.G)return;
+  var log=document.getElementById('crSfLog');if(log)log.insertAdjacentHTML('afterbegin','<div class="r ft"><span class="m">5월</span><b class="wdl">'+crIcon('flag-checkered')+'</b><span class="o">클럽 시즌 경기 종료 · 챔스 결승</span><span class="s"></span><span class="me"></span></div>');
+  return crSfNatOpen(row.clubFinal,function(){S.v=CR.v;crSfDone();});
+ }
+ crSfEnd(CR.v);
+}
+function crMatchSides(w,m){
+ return w.kind==='club'?{ourName:w.club.n,theirName:w.opponent.n,ourIcon:crCrest(w.club,28),theirIcon:crCrest(w.opponent,28)}:{ourName:crNat(w.nation).n,theirName:CR_NAT_NAME[m.opp]||crNat(m.opp).n,ourIcon:crFlag(w.nation),theirIcon:crFlag(m.opp)};
 }
 function crSfWall(){ if(CR.sf) CR.sf.wall=true; }
 function crSfSetG(){ var g=document.getElementById('crSfG'); if(g && CR.sf) g.textContent='/ '+CR.sf.G+'경기'; }
@@ -10507,6 +10526,11 @@ var CR_NAT_WARM=null;
 function crSfNatWarm(){
  if(CR_NAT_WARM)return CR_NAT_WARM;
  CR_NAT_WARM=new Promise(function(resolve){var img=new Image();img.onload=function(){(img.decode?img.decode().catch(function(){}):Promise.resolve()).then(function(){resolve(true);});};img.onerror=function(){CR_NAT_WARM=null;resolve(false);};img.src='/img/career-scenes/international-stadiums.webp?v=2';});return CR_NAT_WARM;
+}
+var CR_CLUB_FINAL_WARM=null;
+function crClubFinalWarm(){
+ if(CR_CLUB_FINAL_WARM)return CR_CLUB_FINAL_WARM;
+ CR_CLUB_FINAL_WARM=new Promise(function(resolve){var img=new Image();img.onload=function(){resolve(true);};img.onerror=function(){CR_CLUB_FINAL_WARM=null;resolve(false);};img.src='/img/career-scenes/champions-final.webp?v=1';});return CR_CLUB_FINAL_WARM;
 }
 var CR_NAT_BG_CELL={'월드컵':[0,0],'유로':[1,0],'코파 아메리카':[2,0],'아시안컵':[3,0],'골드컵':[0,1],'아프리카 네이션스컵':[1,1],'올림픽':[2,1],'아시안게임':[3,1]};
 var CR_NAT_NAME={CRO:'크로아티아',SUI:'스위스',DEN:'덴마크',URU:'우루과이',COL:'콜롬비아',CHI:'칠레',ECU:'에콰도르',PER:'페루',AUS:'호주',IRN:'이란',KSA:'사우디아라비아',QAT:'카타르',IRQ:'이라크',SEN:'세네갈',MAR:'모로코',EGY:'이집트',GHA:'가나',CMR:'카메룬',CIV:'코트디부아르',MEX:'멕시코',CAN:'캐나다',CRC:'코스타리카',JAM:'자메이카',PAN:'파나마'};
@@ -10524,33 +10548,33 @@ function crSfNatOpen(w,resume){
   var n={apps:0,goals:0,ast:0,cs:0};w.matches.slice(0,start).forEach(function(m){if(m.played){n.apps++;n.goals+=m.g;n.ast+=m.a;n.cs+=m.cs;}});
   S.nat={w:w,i:start,start:start,n:n,resume:resume,finished:false};
   if(S.fan)S.fan.national=true;
-  var el=document.createElement('div');el.id='crSfNational';el.className='cr-nat-overlay entering'+(w.knockout?' tournament':'');el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',w.name+' 대표팀 진행');el.onclick=function(e){e.stopPropagation();if(!e.target.closest('button'))crSfNatFinish();};
+  var el=document.createElement('div');el.id='crSfNational';el.className='cr-nat-overlay entering'+(w.knockout?' tournament':'')+(w.kind==='club'?' club-final':'');el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',w.name+(w.kind==='club'?' 결승':' 대표팀 진행'));el.onclick=function(e){e.stopPropagation();if(!e.target.closest('button'))crSfNatFinish();};
   var scene=CR_NAT_BG_CELL[w.name]||[0,0];el.style.setProperty('--cr-scene-x',scene[0]);el.style.setProperty('--cr-scene-y',scene[1]);
-  var nation=gmEsc(crNat(w.nation).n),age=w.kind==='age';
+  var nation=gmEsc(w.kind==='club'?w.club.n:crNat(w.nation).n),age=w.kind==='age';
   var art=age?crIcon('medal'):crTrophy(w.name+' 우승',40),year=w.year||2027+CR.v.player.age-15;
-  var cupLabel=({'월드컵':'FIFA WORLD CUP','유로':'UEFA EURO','코파 아메리카':'COPA AMERICA','아시안컵':'AFC ASIAN CUP','골드컵':'CONCACAF GOLD CUP','아프리카 네이션스컵':'AFRICA CUP OF NATIONS','올림픽':'OLYMPIC GAMES','아시안게임':'ASIAN GAMES'})[w.name]||w.name;
-  var header=w.knockout?'<div class="cr-nat-masthead"><div class="cr-nat-cup-label">'+gmEsc(cupLabel)+' '+year+'</div><div class="cr-nat-titleline"><div class="cr-nat-emblem" aria-hidden="true">'+art+'</div><h3>'+gmEsc(w.name+(w.name==='월드컵'?' 본선':''))+'</h3></div><small>'+crFlag(w.nation)+' '+nation+'<span>·</span>'+gmEsc(CR.v.player.name)+' #'+(CR.v.player.num||CR.v.player.want||'')+'</small></div>':'<span class="tag">INTERNATIONAL BREAK · '+w.month+'</span>';
+  var cupLabel=({'챔피언스리그':'UEFA CHAMPIONS LEAGUE FINAL','월드컵':'FIFA WORLD CUP','유로':'UEFA EURO','코파 아메리카':'COPA AMERICA','아시안컵':'AFC ASIAN CUP','골드컵':'CONCACAF GOLD CUP','아프리카 네이션스컵':'AFRICA CUP OF NATIONS','올림픽':'OLYMPIC GAMES','아시안게임':'ASIAN GAMES'})[w.name]||w.name;
+  var header=w.knockout?'<div class="cr-nat-masthead"><div class="cr-nat-cup-label">'+gmEsc(cupLabel)+' '+year+'</div><div class="cr-nat-titleline"><div class="cr-nat-emblem" aria-hidden="true">'+art+'</div><h3>'+gmEsc(w.name+(w.kind==='club'?' 결승':w.name==='월드컵'?' 본선':''))+'</h3></div><small>'+(w.kind==='club'?crCrest(w.club,18):crFlag(w.nation))+' '+nation+'<span>·</span>'+gmEsc(CR.v.player.name)+' #'+(CR.v.player.num||CR.v.player.want||'')+'</small></div>':'<span class="tag">INTERNATIONAL BREAK · '+w.month+'</span>';
   el.classList.add('match-live');
   el.innerHTML='<div class="cr-nat-box">'+header+'<div class="cr-nat-summary"><div class="cr-nat-match" id="crNatMatch"><div class="round">경기를 준비하고 있습니다</div></div><div class="cr-sf-card"><div class="st" style="grid-template-columns:repeat(3,1fr)"><div><b id="crNatApps">0</b><span>대회 출전</span></div><div><b id="crNatGoals">0</b><span>골</span></div><div><b id="crNatAst">0</b><span>도움</span></div></div></div><div class="cr-note" id="crNatAppsNote">조별리그 포함 · 선수 출전 수</div></div><button class="gm-btn" id="crNatContinue" onclick="crSfNatContinue()" hidden>클럽 시즌 계속</button></div>';
   document.querySelector('#crTov .cr-sf').appendChild(el);crSfNatStats();crSfLiveStages(w.matches[start]);
   var tick=function(){if(CR.sf!==S||!S.nat)return;if(S.nat.finishRequested||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return crSfNatFinish();if(S.nat.i>=w.matches.length)return crSfNatFinish();if(crSfNatMatch()===false)return;S.nat.timer=setTimeout(tick,w.knockout?(/강|결승|동메달/.test(w.matches[S.nat.i-1].stage)?1400:450):450);};
-  var N=S.nat;N.tick=tick;crSfNatWarm().then(function(ready){if(ready&&CR.sf===S&&S.nat===N)el.classList.add('scene-ready');});
+  var N=S.nat;N.tick=tick;(w.kind==='club'?crClubFinalWarm():crSfNatWarm()).then(function(ready){if(ready&&CR.sf===S&&S.nat===N)el.classList.add('scene-ready');});
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)el.classList.remove('entering');else N.openFrame=requestAnimationFrame(function(){N.openFrame=requestAnimationFrame(function(){if(CR.sf===S&&S.nat===N)el.classList.remove('entering');});});
   S.nat.timer=setTimeout(tick,300);
 }
 function crSfNatStats(){
   var N=CR.sf&&CR.sf.nat;if(!N)return;
   var stat={crNatApps:'apps',crNatGoals:'goals',crNatAst:'ast'};Object.keys(stat).forEach(function(id){document.getElementById(id).textContent=N.n[stat[id]];});
-  var appsNote=document.getElementById('crNatAppsNote');if(appsNote){var played=N.w.matches.slice(0,N.i).filter(function(x){return x.played;}),group=played.filter(function(x){return /^조별리그/.test(x.stage);}).length;appsNote.textContent='조별리그 '+group+'경기 · 토너먼트 '+(played.length-group)+'경기 출전';}
+  var appsNote=document.getElementById('crNatAppsNote');if(appsNote&&N.w.kind==='club'){appsNote.textContent=N.n.apps?'챔스 결승 단판 · 내 선수 출전 기록':'챔스 결승 단판 · 팀 경기 하이라이트';return;}if(appsNote){var played=N.w.matches.slice(0,N.i).filter(function(x){return x.played;}),group=played.filter(function(x){return /^조별리그/.test(x.stage);}).length;appsNote.textContent='조별리그 '+group+'경기 · 토너먼트 '+(played.length-group)+'경기 출전';}
 }
 function crSfNatMatch(){
   var S=CR.sf,N=S&&S.nat;if(!N||N.i>=N.w.matches.length)return;var m=N.w.matches[N.i],key=m.stage+'|'+m.opp;
   if(N.live)return false;
   if(window.CareerMatchReplay&&!N.fast&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&!(N.regDone||{})[key]){
    if(N.replay){N.replay.destroy();N.replay=null;}
-   var host=document.getElementById('crNatMatch'),overlay=document.getElementById('crSfNational');overlay.classList.add('match-live');crSfLiveStages(m);N.live={key:key};var live=N.live,liveStats={g:0,a:0};var updateLiveStats=function(){if(CR.sf!==S||S.nat!==N)return;document.getElementById('crNatApps').textContent=N.n.apps+(m.played?1:0);document.getElementById('crNatGoals').textContent=N.n.goals+liveStats.g;document.getElementById('crNatAst').textContent=N.n.ast+liveStats.a;var group=N.w.matches.slice(0,N.i).filter(function(x){return x.played&&/^조별/.test(x.stage);}).length,note=document.getElementById('crNatAppsNote');if(note)note.textContent='조별리그 '+group+'경기 · 토너먼트 '+(N.n.apps-group+(m.played?1:0))+'경기 출전';};
-   var nextMatch=N.w.matches[N.i+1];
-   N.replay=CareerMatchReplay.create(host,{nation:N.w.nation,opp:m.opp,pos:CR.v.player.pos,card:CR.v.player.card,role:((CR.meta.cards[CR.v.player.pos]||[])[CR.v.player.card]||{}).n,foot:CR.v.player.foot,number:CR.v.player.num||CR.v.player.want,player:CR.v.player.name,ourName:crNat(N.w.nation).n,theirName:CR_NAT_NAME[m.opp]||crNat(m.opp).n,ourFlag:crFlag(N.w.nation),theirFlag:crFlag(m.opp),nextStage:nextMatch&&nextMatch.stage,onScene:updateLiveStats,onEvent:function(event){if(event.personal==='goal')liveStats.g++;if(event.personal==='assist')liveStats.a++;updateLiveStats();}});
+   var host=document.getElementById('crNatMatch'),overlay=document.getElementById('crSfNational');overlay.classList.add('match-live');crSfLiveStages(m);N.live={key:key};var live=N.live,liveStats={g:0,a:0};var updateLiveStats=function(){if(CR.sf!==S||S.nat!==N)return;document.getElementById('crNatApps').textContent=N.n.apps+(m.played?1:0);document.getElementById('crNatGoals').textContent=N.n.goals+liveStats.g;document.getElementById('crNatAst').textContent=N.n.ast+liveStats.a;var group=N.w.matches.slice(0,N.i).filter(function(x){return x.played&&/^조별/.test(x.stage);}).length,note=document.getElementById('crNatAppsNote');if(note)note.textContent=N.w.kind==='club'?(m.played?'챔스 결승 단판 · 내 선수 출전 기록':'챔스 결승 단판 · 팀 경기 하이라이트'):'조별리그 '+group+'경기 · 토너먼트 '+(N.n.apps-group+(m.played?1:0))+'경기 출전';};
+   var nextMatch=N.w.matches[N.i+1],sides=crMatchSides(N.w,m);
+   N.replay=CareerMatchReplay.create(host,{nation:N.w.nation,opp:m.opp,pos:CR.v.player.pos,card:CR.v.player.card,role:((CR.meta.cards[CR.v.player.pos]||[])[CR.v.player.card]||{}).n,foot:CR.v.player.foot,number:CR.v.player.num||CR.v.player.want,player:CR.v.player.name,ourName:sides.ourName,theirName:sides.theirName,ourFlag:sides.ourIcon,theirFlag:sides.theirIcon,...(N.w.kind==='club'?{clubKits:[[crKit(N.w.club).shirt],[crKit(N.w.opponent).shirt]],ariaLabel:'챔피언스리그 결승 경기 중계'}:{}),nextStage:nextMatch&&nextMatch.stage,onScene:updateLiveStats,onEvent:function(event){if(event.personal==='goal')liveStats.g++;if(event.personal==='assist')liveStats.a++;updateLiveStats();}});
    N.replay.play(m,{year:2027+CR.v.player.age-15}).then(function(result){
     if(CR.sf!==S||S.nat!==N||N.live!==live||result.cancelled)return;N.live=null;N.regDone=N.regDone||{};N.regDone[key]=true;
     if(N.finishRequested)return crSfNatFinish();if(crSfNatMatch()===false)return;N.timer=setTimeout(N.tick,180);
@@ -10579,26 +10603,29 @@ function crSfNatResultRender(){
 }
 function crSfNatResultDraw(){
  var N=CR.sf&&CR.sf.nat;if(!N||!N.finished)return;if(N.replay){N.replay.destroy();N.replay=null;}var w=N.w,last=w.matches.at(-1),overlay=document.getElementById('crSfNational'),box=overlay.querySelector('.cr-nat-box'),header=box.querySelector('.cr-nat-masthead').outerHTML;
- var medal=w.kind==='age'&&w.medal,celebrate=w.won||medal,event=crNationalReactionEvent(w),title=medal?({1:'금메달',2:'은메달',3:'동메달'})[w.place]:w.won?'우승':w.outcome||'대회 종료';
+ var medal=w.kind==='age'&&w.medal,celebrate=w.won||medal,event=w.kind==='club'?{mood:w.won?'win':w.expectation==='underdog'?'praise':w.expectation==='title'?'critic':'fair'}:crNationalReactionEvent(w),title=medal?({1:'금메달',2:'은메달',3:'동메달'})[w.place]:w.won?'우승':w.outcome||'대회 종료';
  var art=medal?'<div class="cr-nat-result-medal" style="color:'+({1:'var(--gold)',2:'var(--on-dark-header-secondary)',3:'var(--amber)'})[w.place]+'">'+crIcon('medal')+'</div>':w.won?(w.name==='월드컵'?crWorldCupSvg():'<img class="cr-nat-result-cup" src="/img/career/tro/'+crTroImg(w.name+' 우승')+'.png" alt="'+gmEsc(w.name)+' 트로피">'):'';
  var assessment=celebrate?'':event?({historic:'기대를 뛰어넘은 역사적인 성적',praise:'기대 이상의 성적을 거뒀습니다',fair:'여기서 대표팀의 여정을 마칩니다',critic:'기대에 미치지 못한 아쉬운 결과'})[event.mood]:'';
+ if(w.kind==='club'&&!celebrate)assessment=w.expectation==='underdog'?'우승은 놓쳤지만 구단 위상을 뛰어넘은 결승 진출':w.expectation==='title'?'우승을 기대했던 구단에 남은 아쉬운 준우승':'정상까지 한 걸음 남겨둔 값진 결승 여정';
  if(!celebrate&&last.pk)assessment+=(assessment?' · ':'')+'승부차기에서 아쉽게';
  var caption=medal? w.name+' · '+w.place+'위':w.won?(w.name==='월드컵'?'WORLD CUP CHAMPIONS':w.name+' CHAMPIONS'):last.stage==='결승'?'FINAL':last.stage;
  var pk=last.pk&&!last.pk.pending?'<small class="pk">PK '+last.pk.our+'–'+last.pk.their+'</small>':'';
  var stats='<div class="cr-nat-final-stats"><div><b id="crNatApps">'+N.n.apps+'</b><span>출전</span></div><div><b id="crNatGoals">'+N.n.goals+'</b><span>골</span></div><div><b id="crNatAst">'+N.n.ast+'</b><span>도움</span></div>'+(CR.v.player.pos==='DF'?'<div><b>'+N.n.cs+'</b><span>클린시트</span></div>':'')+'</div>';
- var reaction=event?crReactionBtnHtml(crNationalReaction(event),{id:'crNatReactionLink',label:'NATIONAL TEAM · 대표팀 반응',icon:event.type==='qualify'?'shield':'bullhorn',action:'crSfNatReactionShow()'}):'';
+ var sides=crMatchSides(w,last);
+ var reaction=event?crReactionBtnHtml(w.kind==='club'?crClubFinalReaction(w):crNationalReaction(event),{id:'crNatReactionLink',label:w.kind==='club'?'UCL FINAL · 결승 반응':'NATIONAL TEAM · 대표팀 반응',icon:event.type==='qualify'?'shield':'bullhorn',action:'crSfNatReactionShow()'}):'';
  overlay.classList.remove('match-live','show-bracket');overlay.classList.add('completed');overlay.classList.toggle('won',!!w.won);overlay.classList.toggle('medallist',!!medal);
  if(medal)overlay.style.setProperty('--nat-honour-color',({1:'var(--gold)',2:'var(--on-dark-header-secondary)',3:'var(--amber)'})[w.place]);
- box.innerHTML=header+'<section class="cr-nat-final-hero'+(celebrate?' honour':' eliminated')+'" id="crNatResult" aria-live="polite">'+(art?'<div class="art">'+art+'</div>':'<div class="eyebrow">'+gmEsc(caption)+'</div>')+'<h2>'+gmEsc(title)+'</h2><p>'+gmEsc(celebrate?caption:assessment)+'</p>'+(w.qualified?'<small class="qualification">체육요원 편입 요건 충족</small>':'')+'</section><div class="cr-nat-final-score" id="crNatFinalScore"><span class="round">'+gmEsc(last.stage)+'</span><span class="team">'+crFlag(w.nation)+'<b>'+gmEsc(crNat(w.nation).n)+'</b></span><strong>'+last.our+' – '+last.their+'</strong><span class="team"><b>'+gmEsc(CR_NAT_NAME[last.opp]||crNat(last.opp).n)+'</b>'+crFlag(last.opp)+'</span>'+pk+'</div>'+stats+'<p class="cr-nat-final-apps" id="crNatAppsNote">조별리그 포함 · 선수 출전 기록</p>'+reaction+'<button class="gm-btn" id="crNatContinue" onclick="crSfNatContinue()">클럽 시즌 계속</button>';
+ box.innerHTML=header+'<section class="cr-nat-final-hero'+(celebrate?' honour':' eliminated')+'" id="crNatResult" aria-live="polite">'+(art?'<div class="art">'+art+'</div>':'<div class="eyebrow">'+gmEsc(caption)+'</div>')+'<h2>'+gmEsc(title)+'</h2><p>'+gmEsc(celebrate?caption:assessment)+'</p>'+(w.qualified?'<small class="qualification">체육요원 편입 요건 충족</small>':'')+'</section><div class="cr-nat-final-score" id="crNatFinalScore"><span class="round">'+gmEsc(last.stage)+'</span><span class="team">'+sides.ourIcon+'<b>'+gmEsc(sides.ourName)+'</b></span><strong>'+last.our+' – '+last.their+'</strong><span class="team"><b>'+gmEsc(sides.theirName)+'</b>'+sides.theirIcon+'</span>'+pk+'</div>'+stats+'<p class="cr-nat-final-apps" id="crNatAppsNote">'+(w.kind==='club'?'챔스 결승 단판 · 선수 출전 기록':'조별리그 포함 · 선수 출전 기록')+'</p>'+reaction+'<button class="gm-btn" id="crNatContinue" onclick="crSfNatContinue()">'+(w.kind==='club'?'시즌 결과로':'클럽 시즌 계속')+'</button>';
  crSfLiveStages(last);
  // Celebration now lives in the result itself, rather than covering it with another overlay.
  N.celebrated=!!celebrate;
+ if(w.kind==='club')N.finalTimer=setTimeout(crSfNatContinue,2400);
  if(celebrate&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){var conf=document.createElement('div');conf.className='conf cr-nat-final-conf';conf.setAttribute('aria-hidden','true');for(var i=0;i<22;i++)conf.insertAdjacentHTML('beforeend','<i style="--x:'+((i*29)%100)+'%;--d:'+(i%7*.09)+'s;--r:'+((i*61)%360)+'deg"></i>');overlay.appendChild(conf);}
 }
 
 function crNatVictorySparks(){return '<span class="cr-victory-sparks" aria-hidden="true"><i>✦</i><i>✦</i><i>✦</i><i>✦</i></span>';}
 function crSfLiveStages(m){
- var N=CR.sf&&CR.sf.nat;if(!N)return;document.getElementById('crLiveStages')?.remove();
+ var N=CR.sf&&CR.sf.nat;if(!N)return;document.getElementById('crLiveStages')?.remove();if(N.w.singleMatch)return;
  var stages=['조별'].concat(N.w.bracket?N.w.bracket.rounds.map(function(r){return r.stage;}):N.w.matches.filter(function(x){return !/^조별/.test(x.stage);}).map(function(x){return x.stage;}));if(m.stage==='동메달 결정전')stages.push(m.stage);
  var html=stages.map(function(stage){var played=stage==='조별'?N.w.matches.filter(function(x){return /^조별/.test(x.stage);}):N.w.matches.filter(function(x){return x.stage===stage&&N.w.matches.indexOf(x)<N.i;}),current=!N.finished&&stage===m.stage,label=stage==='조별'?'통과':played.length?(played[0].pk?'PK '+played[0].pk.our+'–'+played[0].pk.their:played[0].our+'–'+played[0].their):current?'진행 중':'—';return '<div class="'+(N.finished&&stage==='결승'&&N.w.won?'champion':current?'active':played.length?(stage!=='조별'&&crNatLost(played[0])?'out':'done'):'')+'"><b>'+stage+'</b><small>'+label+'</small></div>';}).join('');
  document.querySelector('#crSfNational .cr-nat-masthead').insertAdjacentHTML('afterend','<div class="cr-live-stages" id="crLiveStages">'+html+'</div>');
@@ -10610,7 +10637,7 @@ function crSfPenaltyOpen(m){
  var P=CR.v.shootout;if(!P||P.key!==m.pk.key){gameToast('승부차기 정보를 다시 확인해 주세요.');return;}
  var box=document.createElement('div');box.id='crPenaltyOverlay';box.className='cr-penalty-overlay';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label',N.w.name+' '+m.stage+' 승부차기');box.onclick=function(e){e.stopPropagation();};
  var frame=document.createElement('iframe');frame.title='슛 방향과 파워를 조절하는 승부차기';frame.src='/career/penalty.html?v=9';box.append(frame);N.pk={key:P.key,frame:frame,busy:false,resolved:false};
- frame.onload=function(){if(CR.sf!==S||S.nat!==N)return;frame.contentWindow.postMessage({type:'career-penalty-config',match:Object.assign({},P,{player:CR.v.player.name,ourName:crNat(P.nation).n,theirName:CR_NAT_NAME[P.opp]||crNat(P.opp).n})},location.origin);};
+ frame.onload=function(){if(CR.sf!==S||S.nat!==N)return;frame.contentWindow.postMessage({type:'career-penalty-config',match:Object.assign({},P,{player:CR.v.player.name,ourName:P.ourName||crNat(P.nation).n,theirName:P.theirName||CR_NAT_NAME[P.opp]||crNat(P.opp).n})},location.origin);};
  document.querySelector('#crTov .cr-sf').append(box);
 }
 window.addEventListener('message',function(e){
@@ -10623,7 +10650,7 @@ window.addEventListener('message',function(e){
  if(d.type!=='career-penalty-kick'||P.busy||P.resolved)return;P.busy=true;var tok=CR.tok;
  crApi('penalty',{token:tok,key:P.key,x:d.x,y:d.y,power:d.power}).then(function(v){
   if(CR.tok!==tok)return;CR.v=v;CR.tok=v.token;crStore(v);if(CR.sf!==S||S.nat!==N||N.pk!==P)return;
-  var row=v.preview||v.result.row;S.national=row.national||[];var updated=S.national.find(function(w){return w.id===N.w.id;});Object.assign(N.w,updated);
+  var row=v.preview||v.result.row;S.national=row.national||[];var updated=N.w.kind==='club'?row.clubFinal:S.national.find(function(w){return w.id===N.w.id;});Object.assign(N.w,updated);
   (S.q||[]).forEach(function(item){if(item.national){var fresh=S.national.find(function(w){return w.id===item.national.id;});if(fresh)Object.assign(item.national,fresh);}});
   N.n={apps:0,goals:0,ast:0,cs:0};N.w.matches.slice(0,N.i).forEach(function(m){if(m.played){N.n.apps++;N.n.goals+=m.g;N.n.ast+=m.a;N.n.cs+=m.cs;}});P.busy=false;P.resolved=true;
   P.frame.contentWindow.postMessage({type:'career-penalty-response',result:v.penaltyResult},location.origin);
@@ -10631,8 +10658,8 @@ window.addEventListener('message',function(e){
 });
 
 function crSfNatContinue(){
-  var S=CR.sf,N=S&&S.nat;if(!N||!N.finished||N.closing||document.getElementById('crNatReaction'))return;N.closing=true;clearTimeout(N.timer);clearTimeout(N.ceremonyTimer);if(N.openFrame)cancelAnimationFrame(N.openFrame);if(N.bracketFrame)cancelAnimationFrame(N.bracketFrame);S.natSeen=S.natSeen||{};S.natSeen[N.w.id]=true;
-  var log=document.getElementById('crSfLog'),r=document.createElement('div');r.className='r ft';r.innerHTML='<span class="m">'+N.w.month+'</span><b class="wdl">'+crIcon('earth-americas')+'</b><span class="o">'+gmEsc(N.w.name+' · '+N.w.outcome)+'</span><span class="s"></span><span class="me"></span>';if(log)log.prepend(r);
+  var S=CR.sf,N=S&&S.nat;if(!N||!N.finished||N.closing||document.getElementById('crNatReaction'))return;N.closing=true;clearTimeout(N.finalTimer);clearTimeout(N.timer);clearTimeout(N.ceremonyTimer);if(N.openFrame)cancelAnimationFrame(N.openFrame);if(N.bracketFrame)cancelAnimationFrame(N.bracketFrame);S.natSeen=S.natSeen||{};S.natSeen[N.w.id]=true;
+  var log=document.getElementById('crSfLog'),r=document.createElement('div');r.className='r ft';r.innerHTML='<span class="m">'+N.w.month+'</span><b class="wdl">'+crIcon(N.w.kind==='club'?'trophy':'earth-americas')+'</b><span class="o">'+gmEsc(N.w.name+' · '+N.w.outcome)+'</span><span class="s"></span><span class="me"></span>';if(log)log.prepend(r);
   var el=document.getElementById('crSfNational'),reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var finish=function(){if(CR.sf!==S||S.nat!==N)return;el?.remove();S.nat=null;if(S.fan)S.fan.national=false;N.resume();};
   if(reduce)return finish();el?.classList.add('leaving');document.getElementById('crNatContinue').disabled=true;N.exitTimer=setTimeout(finish,220);
@@ -11438,18 +11465,69 @@ function crNationalReaction(e){
  var title=fill(pick(e.type==='regular'?D.heads:outcome?['{country} {cup} {result}, '+({historic:'이건 진짜 신화다',praise:'기대 이상 잘했다',fair:'이 정도면 무난한 성적이지',critic:'이 성적은 솔직히 실망스럽다'})[e.type]].concat(D.heads):e.type==='qualify'?['{n} {cup} 메달 + 병역 요건까지 충족했다'].concat(D.heads):e.type==='win'?['{country} {cup} 우승했다 ㅋㅋ 오늘은 축하하자'].concat(D.heads):D.heads));
  return {event:e,news:news,sns:sns,comm:{fm:fm,board:fm?'해외축구':'국가대표 축구 갤러리',hot:true,title:title,by:who(),views:Math.round(heat*(3000+rg()*30000)),rec:Math.round(heat*(20+rg()*100)),n:Math.round(heat*(50+rg()*300)),cmts:cmts}};
 }
+var CR_RX_CLUB_FINAL={
+ win:{
+  heads:['{club}, 챔피언스리그 정상… {n}도 우승 멤버로','유럽 정상에 선 {club}, 결승에서 {opponent} 넘어섰다','{club}의 챔스 결승은 우승으로… {n}의 커리어에 새 트로피','{opponent} 꺾고 트로피 품은 {club}, 결승의 밤을 완성하다','{n}, {club}과 함께 챔피언스리그 우승 기쁨','챔스 결승 끝에 웃은 {club}… 우승으로 남긴 한 시즌'],
+  leads:['{club}은 챔피언스리그 결승에서 {opponent}를 꺾고 우승했다.','{opponent}와 맞붙은 단판 결승의 승자는 {club}이었다.','{club}의 챔피언스리그 도전은 트로피와 함께 마침표를 찍었다.'],
+  sns:['{club} 챔스 우승!!! 아직도 스코어 확인하는 중','{n} 챔스 트로피 들고 있는 사진은 무조건 저장이지','리그 끝나고 마지막 결승까지 이기니까 시즌이 다르게 기억되네','{opponent} 넘고 유럽 정상이라니 오늘 잠은 다 잤다','{club} 이번 시즌 유니폼은 오래 꺼내 입겠다','결승 끝난 거 아는데 우승 장면 계속 돌려 보고 있음','챔스 우승은 진짜 응원한 보람이 한꺼번에 오는 느낌','{n} 클럽 커리어에 챔스 우승 한 줄 추가되는 게 좋다','선수들 전부 고생했다, 오늘은 우승만 생각하자','단판 결승에서 이기는 건 또 다른 기분이네'],
+  titles:['{club} 챔스 우승 실화냐 ㅠㅠ','[결승 후기] {opponent} 넘고 유럽 정상이다','{n} 챔스 우승 멤버 됐다 ㅋㅋ','이번 시즌 마지막이 챔스 우승이라니'],
+  comments:['결승 끝났는데 아직도 긴장 안 풀린다','{club} 우승 영상은 볼 때마다 기분 좋겠지','트로피 들기까지 뛴 선수들 전부 고맙다','{opponent}가 쉬운 상대는 아니었는데 해냈네','오늘은 누가 더 잘했나 싸우지 말고 우승부터 즐겨','리그랑 다르게 단판 결승 이기니 감정이 확 오네','이번 시즌은 챔스 트로피로 기억하겠다','{n} 트로피 사진은 배경화면으로 간다'],
+  replies:[['이거 아직도 꿈 같음','나도 결과 몇 번을 다시 확인함 ㅋㅋ'],['다음 시즌도 우승 가능할까','다음 시즌 얘기는 내일 하고 오늘은 즐기자'],['{n} 커리어 진짜 달라지겠네','챔스 우승 멤버라는 건 오래 남지']]},
+ underdog:{
+  heads:['{club}, 아쉬운 챔스 준우승… 결승 진출만으로도 값진 여정','정상은 놓쳤지만 기대를 넘긴 {club}, 챔스 결승에서 남긴 가능성','{opponent}에 패한 {club}, 준우승 이상의 의미 남긴 시즌','{n}와 {club}, 유럽 정상 문턱까지… 기억될 챔스 도전','챔스 결승까지 오른 {club}, 다음 도전의 기준을 세웠다'],
+  leads:['{club}은 챔피언스리그 결승에서 {opponent}에 패해 준우승했다. 우승 문턱에서 멈췄지만 구단 위상을 고려하면 결승 진출 자체가 기대를 크게 넘긴 성과다.','{club}의 챔스 여정은 준우승으로 끝났다. 최상위 구단들과 겨뤄 결승에 오른 경험은 다음 도전의 발판이 될 수 있다.'],
+  sns:['{club}이 챔스 결승까지 온 걸 생각하면 준우승도 잘한 거지','우승 못 해서 아쉽지만 이 여정을 실패라고 하진 못하겠다','{opponent}랑 결승에서 만난다는 것부터 시즌 초엔 상상 못 했지','{n} 고생했다, 오늘 결과로 이번 챔스 전체를 지우지 말자','{club} 다음 시즌 보는 눈이 달라질 것 같음','마지막은 아쉽지만 여기까지 와서 더 기대하게 됐다','챔스 준우승 팀이 우리 팀이라니 아직도 느낌 이상하다','결승 경험 잘 살려서 다음엔 마지막 한 걸음도 가보자','{club} 선수들 돌아오면 먼저 박수부터 쳐줘야지','트로피는 놓쳤어도 구단이 어디까지 갈 수 있는지 보여줬다'],
+  titles:['{club} 챔스 준우승이면 진짜 잘한 거 아님?','우승은 놓쳤는데 이번 챔스는 오래 기억할 듯','[결승 결산] {club} 여기까지 온 것부터 기대 이상','{n} 결승까지 고생했다, 다음 도전도 응원함'],
+  comments:['결승 진출이 당연한 팀이 아니었잖아','준우승이면 이 구단 입장에선 충분히 대단한 성과지','마지막 경기 하나로 선수들 다 못했다고 하긴 너무하다','{opponent}랑 결승까지 와서 붙은 경험부터 남는 거임','다음에도 결승 간다고 장담 못 하니까 이번 여정 더 소중하다','우승이 목표인 거랑 준우승을 인정하는 건 같이 할 수 있지','{club} 팬이면 아쉬우면서도 자랑스러울 듯','이번 대회로 구단을 새로 보는 사람도 있겠지'],
+  replies:[['우승 못 했는데 성공한 시즌임?','이 팀이 챔스 결승까지 온 걸 생각해야지'],['결승 졌다고 욕만 하는 건 좀','맞음 기대보다 훨씬 멀리 온 여정이잖아'],['다음 시즌이 더 궁금하다','이번 경험 살려서 다시 도전했으면 좋겠음']]},
+ contender:{
+  heads:['{club}, 챔스 준우승… 정상까지 한 걸음 남긴 도전','{opponent}에 막힌 {club}, 값진 결승 경험과 남은 아쉬움','챔피언스리그 결승 마친 {n}, {club}은 준우승으로 시즌 결산','{club}의 유럽 무대 도전, 준우승 뒤 다음 과제를 남기다','{n}와 {club}, 챔스 결승의 밤은 아쉬움으로'],
+  leads:['{club}은 챔피언스리그 결승에서 {opponent}에 패해 준우승했다. 결승 진출은 값진 성과지만 우승까지 마지막 한 걸음을 남겼다.','{club}의 챔스 도전은 준우승으로 마무리됐다. 정상에 도전할 경쟁력을 보여준 만큼 마지막 경기의 아쉬움과 대회 전체의 성과를 함께 돌아볼 필요가 있다.'],
+  sns:['{club} 결승까지 갔는데 마지막이 너무 아쉽다','준우승도 성과인데 트로피가 눈앞에 있었으니 더 아쉽지','{n} 고생했고 다음엔 결승 끝나고 웃는 모습 보고 싶다','{opponent}전 다시 보면서 뭐가 부족했는지 정리해야겠네','이번 챔스 전체로 보면 잘한 장면도 많았잖아','정상까지 한 걸음 남겼네, 다음에도 도전할 수 있게 준비하자','준우승이 실패 전부는 아닌데 오늘은 마음 좀 아프다','{club} 이번 경험 다음 시즌에 써먹었으면'],
+  titles:['{club} 준우승… 딱 한 경기 남았는데 아쉽다','챔스 결승까지는 잘했지, 마지막이 아쉬운 거고','[결승 후기] {opponent}전 복기해 보자','{n} 고생했고 다음에는 트로피 들어 보자'],
+  comments:['결승 진출은 인정하는데 우승 놓친 건 아쉽지','준우승 평가가 칭찬 아니면 욕으로만 갈릴 필요 있나','대회 전체 성과랑 마지막 경기 과제를 같이 봐야 함','{club} 선수들 이번 결승 경험이 다음에 도움이 됐으면','{n} 개인 활약은 경기 내용 보고 따로 얘기하자','정상에 갈 경쟁력은 보였으니 다음 도전 준비해라','오늘은 아쉽지만 이 여정을 다 지우진 말자','다음에도 이 무대 돌아와서 마지막 한 걸음까지 가보자'],
+  replies:[['이번 챔스 잘한 거라고 봄?','결승 진출은 성과인데 우승은 놓쳐서 아쉽지'],['준우승으로 만족해야 함?','만족이랑 성과 인정하는 건 다른 얘기지'],['{n} 다음 시즌도 기대한다','클럽에서 이번 경험 살렸으면 좋겠음']]},
+ title:{
+  heads:['우승 기대했던 {club}, 챔스 준우승으로 남긴 아쉬움','{opponent}에 패한 {club}, 유럽 정상 도전 마지막에 멈췄다','챔스 트로피 놓친 {club}, 결승 경기력에 남은 질문','{n}의 챔스 결승 종료… {club}은 정상 탈환 과제','결승까지 오른 {club}, 우승 후보의 도전은 준우승으로'],
+  leads:['{club}은 챔피언스리그 결승에서 {opponent}에 패해 준우승했다. 구단 위상과 우승 기대를 고려하면 트로피를 놓친 아쉬움이 큰 결과다.','유럽 정상에 도전했던 {club}의 챔스는 준우승으로 끝났다. 결승 진출의 성과와 별개로 마지막 경기에서 우승을 놓친 원인을 돌아볼 필요가 있다.'],
+  sns:['{club}이면 우승 기대했는데 준우승은 아쉽지','결승까지 온 건 잘했지만 이 팀은 트로피 보려고 응원한 거잖아','{opponent}전 준비부터 다시 봐야 할 듯','{n} 한 명한테만 책임 넘길 일이 아니라 팀 전체가 돌아봐야지','우승 후보라고 결승이 쉬운 건 아니지만 결과는 아쉽다','이번 시즌 마지막 트로피를 못 챙긴 게 계속 마음에 남네','다음엔 결승에서 웃으려면 이번 경기부터 복기해야 한다','준우승이 아무 성과도 아닌 건 아닌데 기대에는 못 미쳤지'],
+  titles:['{club} 챔스 준우승, 우승 기대했는데 아쉽다','[결승 복기] {opponent}전 뭐가 안 됐을까','결승 진출이랑 우승 놓친 건 따로 봐야 한다고 봄','{n} 한 명 탓으로 결승 결과 끝내진 말자'],
+  comments:['이 구단 체급이면 챔스 우승 기대하는 게 이상한 건 아니지','결승까지 온 걸 인정해도 트로피 못 든 건 아쉬움','기대가 높았으니 비판도 나오는 거지','선수 하나 탓하면 다음 결승에서 같은 문제가 남을 듯','{opponent}전 전술이랑 준비를 다시 보는 게 먼저임','준우승을 대성공이라고 하긴 이 팀 기대치가 높지','그렇다고 결승까지 뛴 선수들 수고를 다 지울 필요는 없음','다음 시즌 정상 도전하려면 이번 결승에서 배워라'],
+  replies:[['준우승도 잘한 거 아니냐','성과는 맞는데 이 팀은 우승을 기대했잖아'],['선수 하나 때문에 진 거임?','팀 전체랑 상대 경기력까지 같이 봐야지'],['다음엔 우승 가능할까','가능하려면 이번 결승 과제부터 고쳐야지']]}
+};
+function crClubFinalReaction(w){
+ if(!w||w.pending)return null;
+ var m=w.matches[0],p=CR.v.player,key=w.won?'win':w.expectation||'contender',D=CR_RX_CLUB_FINAL[key],h=2166136261;
+ for(var c of p.name+'|'+w.year+'|'+w.club.n+'|'+w.opponent.n+'|'+w.outcome)h=Math.imul(h^c.charCodeAt(0),16777619);
+ var R=crSfRng(h),pick=function(a){return a[Math.floor(R()*a.length)];},take=function(a){return a.splice(Math.floor(R()*a.length),1)[0];};
+ var V={n:p.name,club:w.club.n,opponent:w.opponent.n,result:w.outcome,score:m.our+'–'+m.their,g:m.g,a:m.a,cs:m.cs},fill=function(t){return crReactionFill(t,V);};
+ var body=fill(pick(D.leads));body+=' '+fill(m.pk?'결승은 {score} 무승부 뒤 승부차기에서 승패가 갈렸다.':'결승 스코어는 {score}.');
+ if(m.pk)body+=' 승부차기 결과는 '+m.pk.our+'–'+m.pk.their+'.';
+ body+=' '+(m.played?fill('{n은} 결승에 출전해 {g}골 {a}도움을 기록했다.')+(p.pos==='DF'?' 클린시트 '+m.cs+'회.':''):fill('{n은} 결승에서 출전 기록을 남기지 못했다.'));
+ var sns=[{id:pick(CR_RX_VERIFIED),v:1,t:fill('{club}, 챔피언스리그 {result}. 결승 상대는 {opponent}, 스코어는 {score}.')}],pool=D.sns.slice();
+ var personal=m.played?(m.g?fill('{n} 결승에서 {g}골 넣은 장면은 기억하겠다'):m.a?fill('{n} 결승 {a}도움도 따로 챙겨 줘야지'):p.pos==='DF'&&m.cs?fill('{n} 결승 출전 경기 무실점으로 끝낸 기록도 봐야지'):fill('{n} 결승 골 도움은 없었네, 역할이랑 경기 내용도 같이 보자')):fill('{n} 결승에선 못 뛰었네, 다음 기회 기다린다');
+ sns.push({id:pick(CR_FAN_ID),t:personal});while(sns.length<5)sns.push({id:pick(CR_FAN_ID),t:fill(take(pool))});
+ sns.forEach(function(x){var n=Math.round(10000+R()*70000);x.lk=(n/1000).toFixed(1)+'k';x.c='hsl('+Math.floor(R()*360)+',55%,45%)';});
+ var fm=R()<.5,nicks=CR_RX_NICK.slice(),ips=CR_RX_IP.slice(),who=function(){return fm?{nick:take(nicks)}:{nick:'ㅇㅇ',ip:take(ips)};},cm=function(t){return Object.assign(who(),{t:fill(t),up:fm?Math.round(100+R()*1200):0});},comments=[],texts=D.comments.slice();
+ for(var i=0;i<4;i++)comments.push(cm(take(texts)));comments.push(cm(personal));
+ if(m.pk)comments.push(cm(w.won?'승부차기까지 가서 이기니까 더 긴장 풀리네':'승부차기 패배는 아쉽지만 한 명한테만 화풀이하진 말자'));
+ if(fm){var voice=pick(Object.keys(CR_RX_FM_PERSONA).filter(function(n){return n!=='예지';})),mood=w.won?'win':w.expectation==='title'?'rough':'good';comments[1].nick=voice;comments[1].t=fill(pick(CR_RX_FM_PERSONA[voice][mood]||CR_RX_FM_PERSONA[voice].all));comments.sort(function(a,b){return b.up-a.up;});comments.slice(0,2).forEach(function(x){x.best=1;});}
+ var pair=pick(D.replies),reply=cm(pair[1]);reply.re=1;comments.push(cm(pair[0]),reply);if(fm)crYejiComments(comments,R,cm);
+ return {news:{head:fill(pick(D.heads)),body,tags:['챔피언스리그',w.club.n,w.outcome],date:w.year+'년 · 시즌 종료 후 결승'},sns,comm:{fm,board:fm?'해외축구':w.club.n+' 갤러리',hot:true,title:fill(pick(D.titles)),by:who(),views:Math.round(60000+R()*800000),rec:Math.round(800+R()*4000),n:Math.round(1500+R()*7000),cmts:comments}};
+}
+function crClubFinalReactShow(){var w=CR.v.result?.row.clubFinal;if(w)crTovSet(crReactionHtml(crClubFinalReaction(w),'UCL FINAL · 결승 반응',"crTovSet('')"));}
 function crReactionBtnHtml(X,opts){
- return '<button class="cr-rx-btn"'+(opts.id?' id="'+gmEsc(opts.id)+'"':'')+' onclick="'+gmEsc(opts.action)+'"><span class="ic" aria-hidden="true">'+crIcon(opts.icon)+'</span><span class="t"><span class="k">'+gmEsc(opts.label)+'</span><b>'+gmEsc(X.news.head)+'</b><small>기사 1 · SNS '+X.sns.length+' · 커뮤니티 댓글 '+X.comm.n+'</small></span><span class="go" aria-hidden="true"><svg viewBox="4 4 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>';
+ return '<button class="cr-rx-btn"'+(opts.id?' id="'+gmEsc(opts.id)+'"':'')+' onclick="'+gmEsc(opts.action)+'"><span class="ic" aria-hidden="true">'+crIcon(opts.icon)+'</span><span class="t"><span class="k">'+gmEsc(opts.label)+'</span><b>'+gmEsc(X.news.head)+'</b><small>기사 1 · SNS '+X.sns.length+' · 댓글 '+Number(X.comm.n).toLocaleString('ko-KR')+'</small></span><span class="go" aria-hidden="true"><svg viewBox="4 4 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></button>';
 }
 function crNationalReactBtns(){
  return crNationalReactionEvents(CR.v.result&&CR.v.result.row).map(function(e,i){return crReactionBtnHtml(crNationalReaction(e),{label:e.type==='regular'?'NATIONAL TEAM · A매치 결산':'NATIONAL TEAM · 대표팀 반응',icon:e.type==='regular'?'earth-americas':e.type==='qualify'?'shield':'trophy',action:'crReactShow('+i+')'});}).join('');
 }
 function crSfNatReactionShow(){
  var S=CR.sf,N=S&&S.nat;if(!N||!N.finished||document.getElementById('crNatReaction'))return;
- var e=crNationalReactionEvent(N.w);if(!e)return;
- var shell=document.createElement('div');shell.innerHTML=crReactionHtml(crNationalReaction(e),'NATIONAL TEAM · 대표팀 반응','crSfNatReactionClose()');var box=shell.firstElementChild;box.id='crNatReaction';box.style.zIndex='3';box.onclick=function(event){event.stopPropagation();};document.getElementById('crSfNational').appendChild(box);
+ var club=N.w.kind==='club',e=club?N.w:crNationalReactionEvent(N.w);if(!e)return;clearTimeout(N.finalTimer);
+ var shell=document.createElement('div');shell.innerHTML=crReactionHtml(club?crClubFinalReaction(e):crNationalReaction(e),club?'UCL FINAL · 결승 반응':'NATIONAL TEAM · 대표팀 반응','crSfNatReactionClose()');var box=shell.firstElementChild;box.id='crNatReaction';box.style.zIndex='3';box.onclick=function(event){event.stopPropagation();};document.getElementById('crSfNational').appendChild(box);
 }
-function crSfNatReactionClose(){document.getElementById('crNatReaction')?.remove();document.getElementById('crNatReactionLink')?.focus({preventScroll:true});}
+function crSfNatReactionClose(){var N=CR.sf&&CR.sf.nat;if(N?.w.kind==='club')N.finalTimer=setTimeout(crSfNatContinue,2400);document.getElementById('crNatReaction')?.remove();document.getElementById('crNatReactionLink')?.focus({preventScroll:true});}
 
 function crReactBtn(){
  return crReactionBtnHtml(crReact(),{label:'SEASON REACTION · 시즌 반응',icon:'bullhorn',action:'crReactShow()'});
@@ -11493,8 +11571,9 @@ function crResult(){
       +(R.forced?'<li>'+(R.forcedWhy==='body'?'몸이 더 이상 버텨 주지 않아요. 선수 생활을 마무리할 때가 됐어요.':p.age>=40?'40세 — 선수 생활을 마무리할 때가 됐어요.':gmEsc(p.club.n)+'과(와) 계약이 끝났고 더 이상 제안이 없어요.')+'</li>':'')+'</ul>':'')
    +'</div>';
   h+=crInternationalPanel(r)+crMilitaryPanel();
-  h+=crNationalReactBtns();
-  if(r.games) h+=crReactBtn();   // 시즌 반응(신문·SNS·커뮤니티) — 누르면 오버레이
+  var reactionCards=crNationalReactBtns();if(r.clubFinal)reactionCards+=crReactionBtnHtml(crClubFinalReaction(r.clubFinal),{label:'UCL FINAL · 결승 반응',icon:'trophy',action:'crClubFinalReactShow()'});
+  if(r.games)reactionCards+=crReactBtn();   // 시즌 반응(신문·SNS·커뮤니티) — 누르면 오버레이
+  if(reactionCards)h+='<div class="cr-reactions">'+reactionCards+'</div>';
   // 예전 코치 평가(옛 토큰의 결과 화면용)
   if(r.coach) h+='<div class="cr-goal"><span class="cr-goal-tag">COACH · 코치 평가</span><div class="cr-goal-t">'+gmEsc(r.coach)+'</div></div>';
   // 잠재력 평가(18·21세): 처음엔 오버레이로, 확인한 뒤엔 결과 화면에 작게 남는다
