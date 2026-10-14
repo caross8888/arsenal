@@ -173,6 +173,7 @@ function load(token, phases){
   if(!st || !st.v) bad('커리어 정보가 올바르지 않아요. 새로 시작해 주세요.');
   if(phases && !phases.includes(st.phase)) bad('진행 순서가 맞지 않아요. 화면을 새로고침해 주세요.');
   S.militaryView(st);
+  if(st.phase==='result') S.refreshYouthRelease(st);
   return st;
 }
 
@@ -308,6 +309,12 @@ export default async function handler(req, res){
 
     if(a === 'service-return'){
       const C=load(body.token,['prep']);try { S.regularReturn(C); } catch(e){ bad(e.message); }
+      return res.json({token:seal(C),...view(C)});
+    }
+
+    if(a === 'scout'){
+      const C=load(body.token,['prep']);
+      try { S.acceptScout(C); } catch(e){ bad(e.message); }
       return res.json({token:seal(C),...view(C)});
     }
 
