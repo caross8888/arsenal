@@ -11,6 +11,7 @@
 import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS, ACADEMY, BLOOM_CARD, BLOOM_COND } from './_career_data.js';
 import * as MIL from './_career_military.js';
 import {nationalSchedule,seniorNationalCalendar} from './_career_international.js';
+import {championsFinal,EUROPEAN_LEAGUES} from './_career_club_final.js';
 export const militaryView = MIL.militaryView;
 export const militaryAction = MIL.applyMilitary;
 export const regularReturn = MIL.completeRegularReturn;
@@ -839,14 +840,18 @@ export function playSeason(state, choice){
   const rank = champ ? 1 : Math.max(2, Math.min(20, Math.round(1.5+(top-club.r)/2.2+(rng()-0.3)*4)));
   const hon = [], senior = !row0Youth, natN = natInfo(club.nat).n, ov = cOvr();
   const add = (n, tier, kind) => hon.push({n, tier, kind: kind||'ind'});
-  const inUCL = senior && (club.r>=86 || (club.r>=78 && C.uclNext===club.n));
+  const inUCL = senior && EUROPEAN_LEAGUES.has(club.nat) && (club.r>=86 || (club.r>=78 && C.uclNext===club.n));
   const uG = inUCL ? Math.round(goals*0.24*(0.8+rng()*0.4)) : 0, uA = inUCL ? Math.round(ast*0.24*(0.8+rng()*0.4)) : 0;
+  let clubFinal=null;
   if(senior){
     if(rank===1 && apps>=8) add(natN+' 리그 우승','B','team');
     if(apps>=8 && rng()<0.12*Math.pow(club.r/90,3)) add('컵 대회 우승','C','team');
     // 챔스 우승 확률: 강팀일수록 가파르게(레알 96 약 20%, 맨시티·바이에른 95 약 16%, 92 약 7%, 88 약 3%) — 상위 구단 확률 합이 100% 안팎.
     // 예전 0.06×(r/90)^4는 레알도 7.8%라 레알에서 17시즌을 뛰고 챔스 0회인 커리어가 나왔다(사용자 지적).
-    const uclWin = inUCL && apps>=8 && rng()<Math.min(0.25, 0.16*Math.exp((club.r-95)/4));
+    const winChance=Math.min(0.25,0.16*Math.exp((club.r-95)/4));
+    const baselineWin = inUCL && apps>=8 && rng()<winChance;
+    if(inUCL)clubFinal=championsFinal({seed:C.seed,year:2027+C.age-15,club,baselineWin,winChance,apps,starts,injured,goals:uG,ast:uA,pos:C.pos,penalties:!!C.penaltyMode,decisions:C.penaltyDecisions||{}});
+    const uclWin=clubFinal?clubFinal.won:baselineWin;
     if(uclWin) add('챔피언스리그 우승','A','team');
     if(apps>=20){
       // 리그 개인상은 "수상용 평점"으로 뽑는다: 평점 + 구단 수준 보정. 평점에는 약팀 에이스가 높게 나오는 항목이 있어서,
@@ -865,7 +870,9 @@ export function playSeason(state, choice){
     }
     if(inUCL){
       if(uG>=8) add('챔스 득점왕','B'); if(uA>=6) add('챔스 도움왕','B');
-      if(uclWin && rating>=7.5 && rng()<0.5) add('챔스 올해의 선수','A');
+      // 결승 PK 승패가 바뀌어도 이후 대표팀 경기의 난수열은 바뀌지 않게 한다.
+      const potyRoll=baselineWin&&rating>=7.5?rng():mulberry(C.seed^hashStr('ucl-poty|'+C.age))();
+      if(uclWin && rating>=7.5 && potyRoll<0.5) add('챔스 올해의 선수','A');
     }
     if(ov>=92 && rating>=7.7 && rng()<0.5) add('월드 베스트 11','B');
     if(C.age<=21 && ov>=80 && rating>=7.1 && rng()<0.5) add('골든보이','B');
@@ -988,6 +995,7 @@ export function playSeason(state, choice){
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(ratingShow*100)/100, rank,
                youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(scout ? {scout} : {}), ...(numUp ? {numUp} : {})};
   if(international) row.international=international;
+  if(clubFinal)row.clubFinal=clubFinal;
   if(interactiveNational){row.national=interactiveNational;const age=row.national.find(w=>w.id==='age-cup');if(age&&international){age.qualified=international.qualified;age.medal=international.medal;age.outcome=international.place+'위'+(international.medal?' · '+international.award.n:'');}}
   else if(caps || international) row.national=nationalSchedule({seed:C.seed,nation:C.nation,year,caps,goals:cg,ast:ca,cs:ccs,cup:nationalCup,cupApps,won:cupWon,international});
   if(service && service.kind==='regular') row.notes.push('일반 복무 6개월을 마치고 소속팀에서 남은 6개월을 뛰었어요.');
@@ -1269,6 +1277,6 @@ export function cardView(state){
     peakValue: Math.round(peakVal*10)/10, traits:(C.traits||[]).map(id => (TRAIT_BY_ID.get(id)||{}).n).filter(Boolean), traitIds:(C.traits||[]).filter(id => TRAIT_BY_ID.has(id)), oneClub:!!C.oneClub, farewell:!!C.farewell, glass:!!C.glass, iron:!!C.iron,
     tot:C.tot, clubs:C.clubs,
     seasons: C.hist.flatMap(r => r.segments || [r]).map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:r.ovr,
-      apps:r.apps, goals:r.goals, ast:r.ast, cs:r.cs, hon:r.hon.filter(h => h.tier!=='C' && h.tier!=='-').map(h => [h.n, h.tier, h.kind])})),
+      apps:r.apps, goals:r.goals, ast:r.ast, cs:r.cs,...(r.clubFinal?{clubFinal:r.clubFinal}:{}), hon:r.hon.filter(h => h.tier!=='C' && h.tier!=='-').map(h => [h.n, h.tier, h.kind])})),
     honors: honorsOf(C).filter(h => h.tier!=='-').map(h => [h.n, h.tier, h.kind])};
 }
