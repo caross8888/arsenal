@@ -7,6 +7,7 @@
 //   POST ?a=new     {name, nation, foot, pos, card, num, dream}  → {token, clubs}      첫 구단 3곳
 //   POST ?a=join    {token, pick}                                 → {token, player, prep}
 //   POST ?a=season  {token, train, evPick[, loanPick][, injPick]}             → {token, injury} | {token, player, result}
+//   POST ?a=penalty {token,key,x,y,power} → 승부차기 판정 및 대회 진행
 //   POST ?a=military {token, action:"apply"|"regular"}          → 상무 지원/일반 복무 선택
 //   POST ?a=next    {token, pick?, trait?}                                → {token, player, prep} | {token, card}(은퇴)
 //   POST ?a=retire  {token}                                       → {token, card}
@@ -20,6 +21,7 @@ import crypto from 'crypto';
 import { tokenCodec } from './_token.js';
 import { readToken } from './_account.js';
 import * as S from './_career_sim.js';
+import {kickVerdict} from './_career_shootout.js';
 import {NATIONAL_REACTION_GROUPS} from './_career_international.js';
 import { CLUB_KIT } from './_club_kits.js';
 
@@ -183,8 +185,25 @@ const resultView = C => {
           released: !!C.released, forced: !!C.forced, forcedWhy: C.forcedWhy || null, canRetire: C.age >= 29};
 };
 
+const clone=C=>JSON.parse(JSON.stringify(C));
+function seasonDraft(C,choice,decisions={}){const D=clone(C);D.phase=C.pendingSeason?.phase||C.phase;delete D.pendingSeason;D.penaltyMode=true;D.penaltyDecisions=decisions;const r=S.playSeason(D,choice);return {D,r};}
+function firstPenalty(row){for(const w of row?.national||[])for(const m of w.matches)if(m.pk?.pending)return {w,m};return null;}
+function advanceSeason(C,choice,decisions={}){
+ const base=clone(C),phase=C.pendingSeason?.phase||C.phase,{D,r}=seasonDraft(C,choice,decisions);
+ if(!r.injury&&firstPenalty(r.row)){delete base.pendingSeason;Object.assign(C,base,{phase:'penalty',pendingSeason:{phase,choice,decisions}});return {penalty:true};}
+ for(const k of Object.keys(C))delete C[k];Object.assign(C,D);
+ if(!r.injury){C.forced=r.forced;C.forcedWhy=r.forcedWhy;delete C.pending;}return r;
+}
+function penaltyView(C){
+ const {r}=seasonDraft(C,C.pendingSeason.choice,C.pendingSeason.decisions),P=firstPenalty(r.row);if(!P)throw Error('승부차기 상태가 올바르지 않습니다.');
+ const preview=clone(r.row);delete preview.hon;delete preview.notes;delete preview.international;delete preview.bloom;delete preview.scout;delete preview.deltas;
+ for(const w of preview.national||[])if(w.pending){w.outcome='승부차기 결과 대기';w.won=false;w.medal=false;w.qualified=false;delete w.place;if(w.bracket)w.bracket.winner=null;}
+ return {phase:'penalty',player:S.playerView(C),preview,shootout:{key:P.m.pk.key,cup:P.w.name,year:2027+C.age-15,window:P.w.id,stage:P.m.stage,nation:C.nation,opp:P.m.opp,our:P.m.our,their:P.m.their,prefix:{ours:P.m.pk.ours,theirs:P.m.pk.theirs,our:P.m.pk.our,their:P.m.pk.their}}};
+}
+
 // 지금 단계에 맞는 화면 데이터
 function view(C){
+  if(C.phase === 'penalty')return penaltyView(C);
   if(C.phase === 'pick') return {phase: 'pick', clubs: firstView(C.input, C.seed)};
   if(C.phase === 'retired') return {phase: 'retired', card: S.cardView(C)};
   const player = S.playerView(C);
@@ -298,7 +317,8 @@ export default async function handler(req, res){
       const choice = C.phase === 'injury' ? {...C.pending, injPick: Number(body.injPick)} : {train: body.train, evPick: Number(body.evPick), loanPick: Number(body.loanPick) || 0};
       if(C.phase === 'prep' && ![0, 1].includes(choice.evPick)) bad('이벤트 선택지를 골라 주세요.');
       if(C.phase === 'injury' && ![0, 1].includes(choice.injPick)) bad('부상 대처를 골라 주세요.');
-      const r = S.playSeason(C, choice);
+      const r = advanceSeason(C, choice);
+      if(r.penalty)return res.json({token:seal(C),...view(C)});
       if(r.injury){
         C.pending = {train: choice.train, evPick: choice.evPick};   // 임대 구단은 이미 C.loanClub에 정해졌다
         // 시즌 진행 화면이 부상 전까지도 숫자를 올릴 수 있게: 부상 처리를 어느 쪽으로 골라도 나오는 최소 기록.
@@ -307,12 +327,23 @@ export default async function handler(req, res){
         const pre = rows.reduce((m, w) => m ? m.map((x, i) => Math.min(x, [w.apps, w.goals, w.ast, w.cs][i])) : [w.apps, w.goals, w.ast, w.cs], null);
         const games = rows[1].games;   // 시즌 진행 화면의 경기 칸 수
         const segments=rows[1].segments && rows[1].segments.map((seg,i)=>({...seg,...Object.fromEntries(['apps','starts','goals','ast','cs'].map(k=>[k,Math.min(seg[k],rows[0].segments[i][k])]))}));
-        const national=(rows[1].national||[]).filter(w=>(rows[0].national||[]).some(other=>other.id===w.id&&JSON.stringify(other)===JSON.stringify(w)));
+        const national=(rows[1].national||[]).filter(w=>!w.knockout).filter(w=>(rows[0].national||[]).some(other=>other.id===w.id&&JSON.stringify(other)===JSON.stringify(w)));
         return res.json({token: seal(C), ...view(C), pre: {national, apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3], games, ...(segments?{segments}:{})}});
       }
       delete C.pending;
       C.forced = r.forced; C.forcedWhy = r.forcedWhy;
       return res.json({token: seal(C), ...view(C)});
+    }
+
+    if(a==='penalty'){
+      const C=load(body.token,['penalty']),P=penaltyView(C).shootout;
+      if(body.key!==P.key)bad('현재 승부차기를 다시 확인해 주세요.');
+      const input={x:body.x,y:body.y,power:body.power};
+      let outcome;try{outcome=kickVerdict(C.seed,P.key,input);}catch(e){bad(e.message);}
+      const decisions={...C.pendingSeason.decisions,[P.key]:input};
+      advanceSeason(C,C.pendingSeason.choice,decisions);
+      const v=view(C),row=v.preview||v.result.row,w=row.national.find(w=>w.id===P.window),m=w.matches.find(m=>m.stage===P.stage);
+      return res.json({token:seal(C),...v,penaltyResult:{key:P.key,kick:outcome,pk:m.pk,stage:P.stage,window:P.window}});
     }
 
     if(a === 'military'){

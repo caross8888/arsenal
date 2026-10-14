@@ -877,6 +877,15 @@ export function playSeason(state, choice){
     notes.push(natInfo(C.nation).n+' '+(C.age<=17 ? 'U-17' : 'U-19')+' 대표팀에 뽑혔어요.');
   }
 
+  // 직접 승부차기 시즌은 대회 경로가 확정된 뒤 수상·명성·병역을 계산한다.
+  const provisionalInternational=C.penaltyMode?MIL.resolveTournament(JSON.parse(JSON.stringify(C)),tournament,ratingShow):null;
+  const interactiveNational=C.penaltyMode&&(caps||provisionalInternational)?nationalSchedule({seed:C.seed,nation:C.nation,year,caps,goals:cg,ast:ca,cs:ccs,cup:nationalCup,cupApps,won:cupWon,international:provisionalInternational,penalties:true,decisions:C.penaltyDecisions||{}}):null;
+  if(interactiveNational){const seniorMatches=interactiveNational.filter(w=>w.kind==='senior').flatMap(w=>w.matches).filter(m=>m.played);caps=seniorMatches.length;cg=seniorMatches.reduce((n,m)=>n+m.g,0);ca=seniorMatches.reduce((n,m)=>n+m.a,0);ccs=seniorMatches.reduce((n,m)=>n+(m.cs||0),0);const cup=interactiveNational.find(w=>w.id==='senior-cup');if(cup){
+   const hadWin=cupWon;cupWon=!!cup.won;
+   if(hadWin&&!cupWon){for(let i=hon.length-1;i>=0;i--)if(hon[i].n===nationalCup+' 우승'||hon[i].n===nationalCup+' 골든볼')hon.splice(i,1);}
+   if(!hadWin&&cupWon){add(nationalCup+' 우승',nationalCup==='월드컵'?'S':'A','nat');const str=Math.min(.4,NAT_STR[C.nation]*.55*(nationalCup==='월드컵'?1:CONT_MUL[C.nation]));hon.at(-1).m=Math.round(Math.min(3,Math.max(1,Math.sqrt(.1/str)))*100)/100;}
+  }}
+
   // 발롱도르·FIFA 올해의 선수: 시즌 활약 점수 vs 그해 세계 경쟁자
   if(senior && apps>=20){
     const recRaw = {FW:goals+ast*0.6, MF:goals*1.4+ast*1.0, DF:cs*0.41+goals*2+ast}[C.pos]*LG_PTS[LT], rec = BALLON.recW*recRaw;   // 하위 리그 기록은 발롱에서도 덜 쳐준다   // recW: 공격 포인트 비중(우승 비중을 키운 만큼 낮춤)
@@ -895,13 +904,14 @@ export function playSeason(state, choice){
     }
   }
 
-  const international=MIL.resolveTournament(C,tournament,ratingShow);
+  const ageWindow=interactiveNational?.find(w=>w.id==='age-cup');
+  const international=MIL.resolveTournament(C,tournament,ratingShow,ageWindow?.place);
   delete C.seasonTournament;
   if(international){
     if(international.award) hon.push(international.award);
     notes.push(international.year+' '+international.name+' '+international.place+'위'+(international.medal?' · '+international.award.n:''));
     if(international.qualified) notes.push('체육요원 편입 요건을 충족했어요. 선수 활동을 이어가며 군사교육·봉사 의무를 이행합니다.');
-    C.tot.uCaps=(C.tot.uCaps||0)+Math.min(5,international.place<=4?6:4);
+    C.tot.uCaps=(C.tot.uCaps||0)+(ageWindow?ageWindow.matches.filter(m=>m.played).length:Math.min(5,international.place<=4?6:4));
   }
 
   // 수상 효과: 명성·다음 시즌 성장(최대 ×1.15)
@@ -946,7 +956,8 @@ export function playSeason(state, choice){
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(ratingShow*100)/100, rank,
                youth:row0Youth, ovrBefore:o, ovr:cOvr(), dOvr:cOvr()-o, deltas, hon, caps, notes, injured, ...(scout ? {scout} : {}), ...(numUp ? {numUp} : {})};
   if(international) row.international=international;
-  if(caps || international) row.national=nationalSchedule({seed:C.seed,nation:C.nation,year,caps,goals:cg,ast:ca,cs:ccs,cup:nationalCup,cupApps,won:cupWon,international});
+  if(interactiveNational){row.national=interactiveNational;const age=row.national.find(w=>w.id==='age-cup');if(age&&international){age.qualified=international.qualified;age.medal=international.medal;age.outcome=international.place+'위'+(international.medal?' · '+international.award.n:'');}}
+  else if(caps || international) row.national=nationalSchedule({seed:C.seed,nation:C.nation,year,caps,goals:cg,ast:ca,cs:ccs,cup:nationalCup,cupApps,won:cupWon,international});
   if(service && service.kind==='regular') row.notes.push('일반 복무 6개월을 마치고 소속팀에서 남은 6개월을 뛰었어요.');
   if(service && service.kind==='sangmu' && service.returning){
     row.segments=serviceSegments(row);
@@ -967,7 +978,7 @@ export function playSeason(state, choice){
   C.traitOffer = rollTraits();   // 시즌 결과와 다른 난수열(시즌 결과가 바뀌지 않게)
   const bl = rollBloom(row); if(bl) row.bloom = bl;
   if(!C.glass && (C.injCount||0)>=4 && C.injCount/C.hist.length>=0.3){ C.glass = true; row.notes.push('잦은 부상으로 "유리몸" 꼬리표가 붙었어요. 구단들이 영입을 망설여요.'); }
-  C.phase = 'result';
+  delete C.penaltyMode;delete C.penaltyDecisions;C.phase = 'result';
   return {row, offers: offerView(), released: !!C.released, forced: forcedRetire(), forcedWhy: forcedWhy(), canRetire: C.age>=29};
 }
 

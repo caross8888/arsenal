@@ -33,14 +33,14 @@ export function tournamentView(C){
   if(roll(C,'call|'+y+'|'+kind)>=p)return null;
   return {kind,year:y,name:kind==='asian'?'아시안게임':'올림픽',wild,callProbability:Math.round(p*100),medalRange:kind==='asian'?'금메달 30~40%':'메달 8~15%'};
 }
-export function resolveTournament(C,T,rating){
+export function resolveTournament(C,T,rating,actualPlace){
   if(!T)return null;
   const strength=clamp((C.ovr-60)/35+(rating-7)*.15,0,1),p=T.kind==='asian'?.30+.10*strength:.08+.07*strength;
   const qualifyingFinish=roll(C,'medal|'+T.year+'|'+T.kind)<p;
-  const place=T.kind==='asian'?(qualifyingFinish?1:2+Math.floor(roll(C,'place|'+T.year)*5)):(qualifyingFinish?1+Math.floor(roll(C,'place|'+T.year)*3):4+Math.floor(roll(C,'place|'+T.year)*5));
+  const place=actualPlace??(T.kind==='asian'?(qualifyingFinish?1:2+Math.floor(roll(C,'place|'+T.year)*5)):(qualifyingFinish?1+Math.floor(roll(C,'place|'+T.year)*3):4+Math.floor(roll(C,'place|'+T.year)*5)));
   const medal=place<=3;
   const award=medal?{n:T.name+' '+({1:'금메달',2:'은메달',3:'동메달'}[place]),tier:place===1?'A':'B',kind:'nat'}:null;
-  const M=ensureMilitary(C),qualified=qualifyingFinish&&M.status==='pending';
+  const M=ensureMilitary(C),qualified=(T.kind==='asian'?place===1:place<=3)&&M.status==='pending';
   if(qualified){M.status='arts';M.at=T.year;M.award=award.n;delete M.choice;}
   return {...T,place,medal,probability:Math.round(p*100),qualified,award};
 }
