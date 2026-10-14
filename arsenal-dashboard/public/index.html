@@ -2165,7 +2165,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @keyframes crIvMic{from{opacity:0;transform:translateY(30px) scale(.6)}to{opacity:1;transform:none}}
 @keyframes crIvCur{50%{opacity:0}}
 .cr-iv-box{position:relative;width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
-.cr-iv .mic{align-self:center;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:28px;background:linear-gradient(145deg,#2a2d36,#15171d);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 30px rgba(0,0,0,.5);animation:crIvMic .55s .1s cubic-bezier(.2,1.4,.4,1) both}
+.cr-iv .mic{align-self:center;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:28px;color:var(--on-dark-header);background:linear-gradient(145deg,#2a2d36,#15171d);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 30px rgba(0,0,0,.5);animation:crIvMic .55s .1s cubic-bezier(.2,1.4,.4,1) both}
 .cr-iv .tag{align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .2s ease-out both}
 .cr-iv-q{background:#F0F2F7;color:#14161C;border-radius:16px 16px 16px 4px;padding:14px 16px 15px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crIvUp .45s .45s ease-out both}
 .cr-iv-q .who{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#6b7080;margin-bottom:6px}.cr-iv-q .who b{color:#EF0107}
@@ -2419,6 +2419,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rx-btn .k{display:block;font-size:10.5px;font-weight:800;letter-spacing:.6px;color:var(--gold)}
 .cr-rx-btn b{display:block;margin:3px 0;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cr-rx-btn small{display:block;font-size:11.5px;color:var(--text-secondary)}.cr-rx-btn .go{color:var(--gold);flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;line-height:1;border-radius:50%;background:var(--border-accent)}.cr-rx-btn .go>svg{display:block;width:14px;height:14px;margin:0}
+:root[data-theme="light"] .cr-rx-btn .ic,:root[data-theme="light"] .cr-rx-btn .go{color:var(--text)}
 .cr-rx .tag{background:#C8A84B;color:#2a1f05}
 .cr-rx-news{background:#F4EFE3;color:#1d1a14;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crTmDrop .5s .15s cubic-bezier(.2,1.2,.4,1) both}
 .cr-rx-news .mh{display:flex;justify-content:space-between;gap:8px;font-size:10px;letter-spacing:1px;font-weight:800;border-bottom:2px solid #1d1a14;padding-bottom:4px}.cr-rx-news .mh span{font-weight:600;letter-spacing:.3px}
