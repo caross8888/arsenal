@@ -9977,7 +9977,7 @@ function crMilitaryPanel(){
     +(M.status==='pending'&&!M.selected&&CR.v.phase==='result'?'<button class="cr-chip" onclick="crMilitaryInfo()">병역 계획</button>':'')+'</div>';
 }
 function crMilitaryScene(scene,tag,say,options,pick){
-  CR_TR[scene]={tag:tag,ic:scene==='tournament'?'earth-americas':'shield',who:scene==='tournament'?'대한민국 대표팀 감독':'에이전트',say:say,opt:options.map(function(t){return /취소|나중/.test(t)?'pause':scene==='tournament'?'plane-departure':/상무|입대|복무/.test(t)?'shield':'check';})};
+  CR_TR[scene]={tag:tag,ic:scene==='tournament'?'earth-americas':scene==='militaryTalk'?'clipboard':'shield',who:scene==='tournament'?'대한민국 대표팀 감독':'에이전트',say:say,opt:options.map(function(t){return /취소|나중/.test(t)?'pause':scene==='tournament'?'plane-departure':/상무/.test(t)?'futbol':/입대|복무/.test(t)?'shield':'check';})};
   CR.extraPick=pick;crTrShow({id:scene,t:tag,d:say,a:options});
 }
 function crExtraKey(type){var p=CR.v.player;return (p.id||p.name)+'|'+p.age+'|'+type;}
@@ -9990,7 +9990,7 @@ function crExtraPrep(){
   if(T && crExtraOnce('international')){
     return crMilitaryScene('tournament',(T.kind==='asian'?'ASIAN GAMES':'OLYMPIC TEAM')+' · 대표팀 발탁',T.year+' '+T.name+' 최종 명단에 이름을 올렸다.'+(T.wild?' 와일드카드로 네 경험이 필요하다.':'')+' 함께 메달에 도전하자. '+(T.kind==='asian'?'금메달':'동메달 이상')+'을 따면 체육요원 편입 대상이 된다.', ['대표팀 합류'],function(){crTovSet('',true);crPrep();});
   }
-  if(M && M.lastChance && crExtraOnce('deadline')) return crMilitaryScene('militaryTalk','MILITARY PLAN · 마지막 지원 시즌','올해가 마지막 상무 지원 시즌이에요. 기존 훈련은 그대로 진행하고, 시즌 종료 후 이적시장에서 병역 계획을 결정해주세요.', ['확인'],function(){crTovSet('',true);crPrep();});
+  if(M && M.lastChance && crExtraOnce('deadline')) return crMilitaryScene('militaryTalk','MILITARY PLAN · 마지막 지원 시즌','올해가 마지막 상무 지원 시즌이에요. 기존 훈련은 그대로 진행하고, 시즌 종료 후 병역 계획을 먼저 결정해주세요.', ['확인'],function(){crTovSet('',true);crPrep();});
 }
 function crMilitaryInfo(){
   var M=CR.v.player.military;if(!M)return;
@@ -10196,7 +10196,7 @@ function crTrFx(txt){   // "성장 ↑ · 부상 위험 ↑" → 좋은 쪽(초�
     var bad=(/부상|하락|문턱|부담/.test(m[1]))===(m[2][0]==='↑');   // 오르면 나쁜 것: 부상 위험·하락·데뷔 문턱
     return '<span class="fx '+(bad?'bad':'good')+'">'+gmEsc(m[1])+' '+m[2]+'</span>'; }).join('');
 }
-var CR_SCENE_PHOTO={field:'field.webp',talk:'talk.webp?v=2',tour:'tour.webp',scout:'scout.webp',captain:'captain.webp?v=3',captfull:'captain.webp?v=3',natcall:'natcall.webp?v=2',sns:'sns.webp?v=2',diet:'diet.webp?v=2',study:'study.webp?v=2',military:'military.webp',militaryTalk:'talk.webp?v=2',tournament:'natcall.webp?v=2'};
+var CR_SCENE_PHOTO={field:'field.webp',talk:'talk.webp?v=2',tour:'tour.webp',scout:'scout.webp',captain:'captain.webp?v=3',captfull:'captain.webp?v=3',natcall:'natcall.webp?v=2',sns:'sns.webp?v=2',diet:'diet.webp?v=2',study:'study.webp?v=2',military:'military.webp',militaryTalk:'military-plan.webp?v=2',tournament:'natcall.webp?v=2'};
 function crTrShow(ev){
   var T=CR_TR[ev.id]||{tag:'EVENT · '+ev.t, ic:'clipboard', who:'구단', say:ev.d, opt:['check','pause']}, theme=Object.prototype.hasOwnProperty.call(CR_TR,ev.id)?ev.id:'default', scene=['coach','weak','ftcall','extra','default'].indexOf(theme)>=0?'field':theme, SAY=typeof T.say==='function'?T.say(CR.v.player, ev):(T.say||ev.d); CR.trSel=null;
   // 장면 배경(픽셀아트 그림). 새 장면을 추가하면 CR_SCENE_PHOTO에 한 줄 넣고, 그림이 아직
@@ -11494,13 +11494,13 @@ function crResult(){
         +'<div><b>'+gmEsc(tp.n)+'</b><span>'+gmEsc(tp.d)+'</span></div><button onclick="CR.traitPick=null;crResult()">다시 고르기</button></div></div>'; }
   }
   // 이적시장은 결과 화면 칸 대신 "이적시장 열기" 버튼 → 오버레이(crTmShow, 사용자 지정). 제안 없이 잔류뿐이면 버튼 없이 바로 다음 시즌.
-  var M=p.military, tm=!R.forced && !(M && (M.selected || M.service)) && (R.released || R.offers.length || M && M.status==='pending' && p.age>=19);
+  var M=p.military, militaryDue=M&&M.lastChance&&M.status==='pending'&&!M.selected, tm=!R.forced && !(M && (M.selected || M.service)) && (R.released || R.offers.length || M && M.status==='pending' && p.age>=19);
   h+=crHist();
   var y=window.scrollY;
   crRender(h, R.forced
     ? '<button class="gm-btn" onclick="crRetire(this,true)">은퇴 · 커리어 마무리</button>'
     : (R.canRetire?'<button class="gm-btn ghost" onclick="crRetire(this)">은퇴</button>':'')
-      +'<button class="gm-btn" '+(TO&&CR.traitPick==null?'disabled ':'')+'onclick="'+(tm?'crTmShow()':'crNext(this)')+'">'+(TO&&CR.traitPick==null?'특성을 골라 주세요':tm?crIcon('plane-departure')+' '+(R.released?'계약 만료 · 다음 행선지':'이적시장 열기'):M&&M.selected?'입대 준비':M&&M.service?'복무 · 다음 시즌':'다음 시즌')+'</button>');
+      +'<button class="gm-btn" '+(TO&&CR.traitPick==null?'disabled ':'')+'onclick="'+(militaryDue?'crMilitaryInfo()':tm?'crTmShow()':'crNext(this)')+'">'+(TO&&CR.traitPick==null?'특성을 골라 주세요':militaryDue?crIcon('shield')+' 병역 계획 결정':tm?crIcon('plane-departure')+' '+(R.released?'계약 만료 · 다음 행선지':'이적시장 열기'):M&&M.selected?'입대 준비':M&&M.service?'복무 · 다음 시즌':'다음 시즌')+'</button>');
   window.scrollTo(0,y);   // 제안을 고를 때마다 다시 그려도 보던 자리 그대로
   // 월드컵 우승도 같은 시상 오버레이(사용자 지정). 같은 시즌에 발롱도르도 받았으면 발롱도르만(둘 다 띄우면 너무 길다).
   var WC=!BD && (r.hon||[]).some(function(h){ return /^월드컵 우승/.test(h.n); }), wcKey=WC?p.name+'|wc|'+p.seasons:null, wcPending=WC && CR.bdSeen!==wcKey;
@@ -11527,6 +11527,7 @@ function crPickFx(btn, sel, fn){
   setTimeout(fn, 650);
 }
 function crTmShow(){
+  var M=CR.v.player.military;if(M&&M.lastChance&&M.status==='pending'&&!M.selected)return crMilitaryInfo();
   var p=CR.v.player, R=CR.v.result, M=p.military, n=R.offers.length, d=0;
   var card=function(on, crest, tag, nm, meta, right){ d+=0.12; return '<button class="cr-tm-c" style="--d:'+(0.55+d)+'s" onclick="'+on.replace(')',',this)')+'">'+crest+'<div class="b"><div class="tg">'+tag+'</div><div class="nm">'+nm+'</div><div class="mt">'+meta+'</div></div><div>'+right+'</div></button>'; };
   var h=(R.released?'':card('crTmPick(-1)', crCrest(p.club,40), '잔류', gmEsc(p.club.n), crFlag(p.club.nat)+crNat(p.club.nat).n, R.stay?crChance(R.stay.chance):''))
