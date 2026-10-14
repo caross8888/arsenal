@@ -10,7 +10,7 @@
 
 import { NATIONS, CLUBS, NAMES, STATS, CARDS, TRAITS, CTRAITS, ACADEMY, BLOOM_CARD, BLOOM_COND } from './_career_data.js';
 import * as MIL from './_career_military.js';
-import {nationalSchedule} from './_career_international.js';
+import {nationalSchedule,seniorNationalCalendar} from './_career_international.js';
 export const militaryView = MIL.militaryView;
 export const militaryAction = MIL.applyMilitary;
 export const regularReturn = MIL.completeRegularReturn;
@@ -121,7 +121,6 @@ function bodyHW(age){
 const DECLINE = {'스피드':1.5,'체력':1.5,'패스':0.5,'시야':0.5};
 const NAT_BAR = {ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
 const NAT_STR = {BRA:.18,FRA:.18,ESP:.16,ARG:.16,ENG:.14,GER:.12,POR:.10,NED:.08,ITA:.08,BEL:.06,NOR:.03,JPN:.03,USA:.02,KOR:.02,NGA:.02};
-const CONT_CUP = {ENG:'유로',ESP:'유로',GER:'유로',ITA:'유로',FRA:'유로',POR:'유로',NED:'유로',BEL:'유로',NOR:'유로',BRA:'코파 아메리카',ARG:'코파 아메리카',KOR:'아시안컵',JPN:'아시안컵',USA:'골드컵',NGA:'아프리카 네이션스컵'};
 // 유스 아카데미 보정(사용자 지정): 유스 시절 성장 계수에 쓰는 구단 수준에 더한다. 첫 구단이 자국 리그라 리그가 약한 나라는
 // 유스 성장부터 뒤처졌다(아르헨티나·포르투갈·네덜란드 점수 중앙이 이탈리아·잉글랜드보다 40% 낮음). 실제로 유망주를 많이 길러 내는 나라는 크게.
 const ACAD = {ARG:14, BRA:10, POR:11, NED:10, BEL:10, ESP:12, FRA:12, GER:13, ITA:8, ENG:13, NOR:11, KOR:6, JPN:6, USA:6, NGA:20};   // 유스 성장 계수 단계(76·86) 기준: 유망주 강국은 적정 구단이 86 이상, 나머지는 76 이상이 되게
@@ -366,6 +365,19 @@ function pStart(club, opt, lvAt){
 }
 
 // ── 시즌 이벤트 ────────────────────────────────────────────────────────
+export function nationalCallupPlan(state){
+  const level=state.lv??(state.age<16?0:state.age<18?1:3),bar=NAT_BAR[state.nation];
+  if(state.age<18||level<3||bar==null)return null;
+  if(state.military?.status==='regular'&&state.military.left>=12)return null;
+  const calendar=seniorNationalCalendar(state.nation,2027+state.age-15);
+  if(!calendar)return null;
+  const senior=!!calendar.cup&&Math.round(state.ovr)>=bar-2-(state.ycaps?1:0);
+  const ageTournament=state.returnService?null:MIL.tournamentView(state);
+  const windows=senior?calendar.windows.filter(w=>w.knockout).map(w=>({...w,kind:'senior'})):[];
+  if(ageTournament)windows.push({id:'age-cup',kind:'age',name:ageTournament.name,year:ageTournament.year,month:ageTournament.kind==='asian'?'9월':'7월',at:ageTournament.kind==='asian'?.16:1,knockout:true,wild:ageTournament.wild,ageLimit:23});
+  windows.sort((a,b)=>a.at-b.at||a.id.localeCompare(b.id));
+  return windows.length?{...calendar,cup:senior?calendar.cup:null,senior,ageTournament,windows,militaryEligible:state.nation==='KOR'&&state.military?.status==='pending',nationName:natInfo(state.nation).n}:null;
+}
 export const EVENTS = [
   {id:'talk', t:'감독 면담', d:'출전 시간이 부족하다고 느껴요. 어떻게 할까요?', a:['출전 시간을 요구한다 (출전 ↑ 또는 ↓)','훈련으로 증명한다'], ok:() => !youth()},
   {id:'coach', t:'개인 트레이너', d:'에이전트가 개인 트레이너를 붙이자고 해요.', a:['고용한다 (성장 ↑ · 부상 위험 ↑)','지금은 괜찮다 (부상 위험 ↓)'], ok:() => C.age<=27 && !youth()},   // 1군 데뷔 뒤에만(사용자 지정 — 유스 시절엔 같은 성격의 '유스 특별 훈련'과 겹쳤다)   // 28세부터는 성장 폭이 거의 없어 어색하다(사용자 지적)
@@ -383,7 +395,7 @@ export const EVENTS = [
   // 이적하면 감독이 바뀌니 새 팀에서 다시 올 수 있고, 수락해 두 시즌이 지나면 그 팀에서 주장 제안으로 이어진다.
   {id:'captain', t:'부주장 제안', d:'감독이 부주장 완장을 맡아 달라고 해요.', a:['수락한다 (출전 ↑ · 명성 ↑ 또는 ↓)','사양한다 (성장 ↑)'], ok:() => !youth() && C.age>=23 && C.age<=32 && !C.capt && C.viceAt !== C.club.n},
   {id:'captfull', t:'주장 제안', d:'감독이 다음 시즌 주장 완장을 맡아 달라고 해요.', a:['수락한다 (출전 ↑↑ · 명성 ↑↑ 또는 ↓↓)','부주장으로 남는다 (성장 ↑)'], ok:() => !youth() && !C.capt && !!C.vice && C.club.n === C.viceClub && C.age >= (C.viceAge||0) + 2},
-  {id:'natcall', t:'A매치 차출', d:'대표팀 감독이 이번 시즌 A대표팀 소집을 원해요. 구단은 휴식을 바라고 있어요.', a:['차출에 응한다 (명성 ↑ · 부상 위험 ↑)','휴식을 요청한다 (클럽 출전 ↑ · A매치 불참)'], ok:() => !youth() && (C.tot.caps||0) > 0},
+  {id:'natcall', t:'대표팀 대회 차출', d:'대표팀 감독이 이번 시즌 국제대회 참가를 요청했어요.', a:['차출에 응한다 (명성 ↑ · 부상 위험 ↑)','차출을 거절한다 (클럽 출전 ↑ · 대표팀 불참)'], ok:() => !!nationalCallupPlan(C)},
   {id:'sns', t:'SNS 논란', d:'경기 뒤 했던 말이 SNS에서 퍼지며 논란이 됐어요.', a:['사과한다 (명성 조금 ↓ · 감독 신뢰)','정면 돌파 (명성 ↑↑ 또는 ↓↓)'], ok:() => !youth() && C.age>=19},
   {id:'diet', t:'식단·회복 전문가', d:'에이전트가 식단·회복 전문가를 붙이자고 해요.', a:['고용한다 (하락 ↓ · 부상 위험 ↓ · 출전 ↓)','하던 대로 (출전 유지)'], ok:() => C.age>=30}];
 // 빅클럽 스카우트(사용자 지정): 지금 아카데미 ★이 낮을수록 자주 온다(★5면 안 온다). 데려가려는 곳은 대부분 ★+1, 25%만 ★+2.
@@ -401,15 +413,17 @@ function scoutTarget(){
   return cs[Math.floor(mulberry(C.seed ^ hashStr('scout-to|'+C.age))()*cs.length)];
 }
 const evById = id => EVENTS.find(e => e.id === id);
+const currentEvent = () => C.phase==='prep'&&nationalCallupPlan(C)?evById('natcall'):C.ev==='natcall'&&!nationalCallupPlan(C)?evById(youth()?'extra':'talk'):evById(C.ev);
 
 function newEvent(){
   // 지난 시즌과 같은 이벤트는 빼고 고른다(사용자 지정 — 같은 이벤트 연속이 단조로웠다). 후보가 그것뿐이면 그대로.
   const r = mulberry(C.seed ^ hashStr('ev'+C.age))(), okAll = EVENTS.filter(e => e.ok()), noRep = okAll.filter(e => e.id !== C.lastEv), pool = noRep.length ? noRep : okAll;
   const loan = pool.find(e => e.id === 'loan');
-  let ev = loan || pool[Math.floor(r*pool.length)];
+  const callup=nationalCallupPlan(C);
+  let ev = callup?evById('natcall'):loan || pool[Math.floor(r*pool.length)];
   // 약발 훈련: 공격수·미드필더, 20세까지, 시즌당 30% 확률
   const r2 = mulberry(C.seed ^ hashStr('wf'+C.age))();
-  if(!loan && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');   // 수비수도(사용자 지정 — 약발은 표시되는데 훈련이 안 떴다)
+  if(!callup && !loan && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');   // 수비수도(사용자 지정 — 약발은 표시되는데 훈련이 안 떴다)
   C.ev = ev.id; C.lastEv = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null; delete C.loanClubs; delete C.scoutClub;
   if(ev.id === 'scout'){ const t = scoutTarget(); if(t) C.scoutClub = t; else C.ev = C.lastEv = 'extra'; }
   if(ev.id === 'loan'){
@@ -550,12 +564,14 @@ function interviewOf(){
 // 시즌 준비 화면에 보여 줄 것(숨김 값 없음)
 export function prepView(state){
   C = state;
-  const ev = evById(C.ev);
+  const ev = currentEvent(),callup=ev.id==='natcall'?nationalCallupPlan(C):null;
   let d = ev.d;
+  if(callup)d=callup.nationName+' 대표팀의 '+callup.year+'년 '+callup.windows.map(w=>w.name).join(' · ')+'에 함께하자. 수락하면 아래 대회에 참가하고, 거절하면 이번 시즌 대표팀 일정에는 불참한다.';
   if(ev.id === 'media' && (C.mediaN || C.age > 20)) d =   // "첫 인터뷰"는 어릴 때 처음 한 번만
     ['기자들이 이번 시즌 각오를 묻고 있어요.','스포츠 매체에서 단독 인터뷰를 요청했어요.','개막 전 기자회견에 나서게 됐어요.','팬 채널에서 인터뷰를 하고 싶대요.'][C.age % 4];
   if(ev.id === 'loan' && loanList().length > 1) d = '두 구단에서 한 시즌 임대 제안이 왔어요. 갈 곳을 고르거나, 남아서 경쟁할 수 있어요.';
   if(ev.id === 'scout' && C.scoutClub) d = C.scoutClub.n+' 스카우트가 찾아왔어요. 아카데미로 옮기면 더 좋은 환경에서 크지만, 1군 데뷔 문턱도 높아요.';
+  if(ev.id === 'scout' && C.scoutMove) d = C.scoutMove+'에서 '+C.club.n+' 아카데미로 옮겼어요.';
   if(ev.id === 'weak') d = '코치가 '+(C.foot==='오른발'?'왼발':'오른발')+' 집중 훈련을 제안했어요. '+(C.pos==='DF' ? '양발을 쓰면 빌드업에서 패스 길이 넓어져 도움이 늘어요.' : '양발을 쓰면 슈팅·패스 각도가 넓어져 골·도움이 늘어요.')+' 대신 이번 시즌 다른 훈련 시간이 줄어요.';
   let goal;
   const lv = lvOf();
@@ -564,9 +580,9 @@ export function prepView(state){
   else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 ↓)' : ' (감독 신뢰 ↑)')];
-  return {military:MIL.militaryView(C), service:MIL.serviceView(C), returnPeriod:C.returnService?{months:C.returnService.months,home:C.returnService.home}:null, international:C.returnService?null:MIL.tournamentView(C), goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.stageNote || null, contract: C.contract || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a},
-    interview: ev.id === 'media' ? interviewOf() : null, bloom: bloomView(),
-    loanClubs: C.ev==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
+  return {military:MIL.militaryView(C), service:MIL.serviceView(C), returnPeriod:C.returnService?{months:C.returnService.months,home:C.returnService.home}:null, international:callup?.ageTournament||null, goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.scoutMove ? d : C.stageNote || null, contract: C.contract || null, trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a,...(callup?{callup}:{})},
+    selected: C.scoutMove ? 0 : null, interview: ev.id === 'media' ? interviewOf() : null, bloom: bloomView(),
+    loanClubs: ev.id==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
 }
 
 const loanList = () => C.loanClubs || (C.loanClub ? [C.loanClub] : []);   // 옛 토큰은 임대 구단 하나(loanClub)
@@ -592,6 +608,17 @@ function rollInjury(){
   else C.inj = null;
 }
 
+// 스카우트 수락은 시즌을 돌리기 전에 저장해 선수 카드·이어 하기에도 즉시 반영한다.
+export function acceptScout(state){
+  C=state;
+  if(C.phase!=='prep' || currentEvent().id!=='scout') throw new Error('스카우트 제안을 다시 확인해 주세요.');
+  if(C.scoutMove) return;
+  if(!C.scoutClub) throw new Error('스카우트 제안이 없어요.');
+  C.scoutMove=C.club.n;C.club=C.scoutClub;delete C.scoutClub;
+  if(!C.clubs.includes(C.club.n)) C.clubs.push(C.club.n);
+  C.evPick=0;
+}
+
 // ── 시즌 진행 ──────────────────────────────────────────────────────────
 // choice: {train, evPick, loanPick, injPick}. loanPick: 임대 이벤트에서 "간다"(evPick 0)일 때 고른 임대 구단 번호. 부상이 났는데 injPick이 없으면 {injury}만 돌려준다(상태는 그대로 두고
 // 부상 결과만 C.inj에 남김 — 같은 요청을 injPick과 함께 다시 부르면 이어서 계산한다).
@@ -600,13 +627,16 @@ export function playSeason(state, choice){
   if(C.phase !== 'prep' && C.phase !== 'injury') throw new Error('phase');
   const service=MIL.serviceView(C)||C.returnService;
   if(service && service.fullRegular) return playRegularService();
-  if(C.phase==='prep') C.seasonTournament=C.returnService?null:MIL.tournamentView(C);
-  const tournament=C.seasonTournament || null;
   if(service && service.returning) C.club={...C.military.home};
   if(trainOpts().includes(choice.train)) C.train = choice.train; else if(!trainOpts().includes(C.train)) C.train = '균형';
   if(C.phase === 'prep'){
+    // Keep the announced call-up through injury handling and end-of-season ability changes.
+    C.seasonCallup=nationalCallupPlan(C);
+    C.ev=currentEvent().id;
     if(choice.evPick !== 0 && choice.evPick !== 1) throw new Error('evPick');
-    C.evPick = choice.evPick;
+    C.evPick = C.scoutMove ? 0 : choice.evPick;
+    if(C.ev==='scout' && C.evPick===0 && !C.scoutMove) acceptScout(C);
+    C.seasonTournament=C.ev==='natcall'&&C.evPick===1?null:C.seasonCallup?.ageTournament||null;
     if(C.ev === 'loan' && C.evPick === 0){
       const lc = loanList()[choice.loanPick ?? 0];
       if(!lc) throw new Error('loanPick');
@@ -614,6 +644,7 @@ export function playSeason(state, choice){
     }
     rollInjury();
   }
+  const tournament=C.seasonTournament || null;
   if(C.inj){
     if(choice.injPick !== 0 && choice.injPick !== 1){ C.phase = 'injury'; return {injury: C.inj}; }
     C.injPick = choice.injPick;
@@ -643,7 +674,7 @@ export function playSeason(state, choice){
   }
   if(ev==='tour' && pick===0) startAdj+=0.06;
   if(ev==='ftcall'){ if(pick===0){ growMul*=1.12; startAdj-=0.08; notes.push('1군 형들과 훈련하며 한 단계 성장했어요.'); } else startAdj+=0.05; }
-  if(ev==='scout' && pick===0 && C.scoutClub){ const from = C.club.n; club = C.club = C.scoutClub; if(!C.clubs.includes(club.n)) C.clubs.push(club.n); delete C.scoutClub; growMul*=0.96; startAdj-=0.05; notes.push(from+'에서 '+club.n+' 아카데미로 옮겼어요. 적응하느라 첫 시즌은 조금 애먹었어요.'); }
+  if(ev==='scout' && pick===0 && C.scoutMove){ growMul*=0.96; startAdj-=0.05; notes.push(C.scoutMove+'에서 '+club.n+' 아카데미로 옮겼어요. 적응하느라 첫 시즌은 조금 애먹었어요.'); }
   if(ev==='scout' && pick===1) startAdj+=0.04;
   // 부주장: 제안을 받은 구단을 기억해 같은 팀에서 다시 뜨지 않게 하고, 수락하면 주장 제안의 전제가 된다.
   if(ev==='captain'){ C.viceAt = C.club.n;
@@ -845,14 +876,14 @@ export function playSeason(state, choice){
   // 대표팀·국제 대회(2030년부터 4년마다 월드컵, 그 사이 2년마다 대륙컵)
   let caps = 0, cg = 0, ca = 0, ccs = 0, ycall = false, nationalCup=null, cupApps=0, cupWon=false; const year = 2026+(C.age-15)+1;
   if(ev==='natcall' && pick===1){
-    notes.push('휴식을 요청해 이번 시즌 A대표팀 일정에는 참가하지 않았어요.');
-  } else if(C.age>=18 && ov>=NAT_BAR[C.nation]-2-(C.ycaps?1:0)){
+    notes.push('차출을 거절해 이번 시즌 대표팀 일정에는 참가하지 않았어요.');
+  } else if(C.seasonCallup?.senior || C.age>=18 && ov>=NAT_BAR[C.nation]-2-(C.ycaps?1:0)){
     caps = Math.round(4+rng()*6);
     notes.push(natInfo(C.nation).n+' 대표팀에 뽑혔어요.');
     if(ov>=NAT_BAR[C.nation]+7 && rating>=7.0 && rng()<0.35) add(natInfo(C.nation).n+' 올해의 선수','C','nat');
-    const wc = year%4===2, cont = year%4===0;
-    if(wc || cont){
-      const cup = wc ? '월드컵' : CONT_CUP[C.nation], str = Math.min(0.4, NAT_STR[C.nation]*0.55*(wc?1:CONT_MUL[C.nation]));
+    const cup = C.seasonCallup?.senior?C.seasonCallup.cup:null, wc=cup==='월드컵';
+    if(cup){
+      const str = Math.min(0.4, NAT_STR[C.nation]*0.55*(wc?1:CONT_MUL[C.nation]));
       cupApps=Math.round(3+rng()*4); caps += cupApps; nationalCup=cup;
       // 약체국 가점(사용자 지정): 우승 확률이 낮은 나라일수록 우승 점수 배율이 크다 — √(10% ÷ 그 대회 우승 확률), 1~3배.
       // 브라질 월드컵 ×1.0 · 잉글랜드 ×1.1 · 네덜란드 ×1.5 · 노르웨이 ×2.5 · 한국 ×3.0. 기대 점수(확률 × 점수)는 여전히 강국이 높다.
@@ -907,7 +938,7 @@ export function playSeason(state, choice){
 
   const ageWindow=interactiveNational?.find(w=>w.id==='age-cup');
   const international=MIL.resolveTournament(C,tournament,ratingShow,ageWindow?.place);
-  delete C.seasonTournament;
+  delete C.seasonTournament;delete C.seasonCallup;
   if(international){
     if(international.award) hon.push(international.award);
     notes.push(international.year+' '+international.name+' '+international.place+'위'+(international.medal?' · '+international.award.n:''));
@@ -979,7 +1010,7 @@ export function playSeason(state, choice){
   C.traitOffer = rollTraits();   // 시즌 결과와 다른 난수열(시즌 결과가 바뀌지 않게)
   const bl = rollBloom(row); if(bl) row.bloom = bl;
   if(!C.glass && (C.injCount||0)>=4 && C.injCount/C.hist.length>=0.3){ C.glass = true; row.notes.push('잦은 부상으로 "유리몸" 꼬리표가 붙었어요. 구단들이 영입을 망설여요.'); }
-  delete C.penaltyMode;delete C.penaltyDecisions;C.phase = 'result';
+  delete C.scoutMove;delete C.penaltyMode;delete C.penaltyDecisions;C.phase = 'result';
   return {row, offers: offerView(), released: !!C.released, forced: forcedRetire(), forcedWhy: forcedWhy(), canRetire: C.age>=29};
 }
 
@@ -1035,6 +1066,18 @@ export const traitView = (id, pos) => { const t = TRAIT_BY_ID.get(id); if(!t) re
 // 예전엔 나이와 상관없이 66이라 정점 85 이상이면 97%가 40세까지 뛰었다(사용자 지적: "80만 넘어도 40살까지 수월").
 const relBar = () => 66 + Math.max(0, C.age-33)*2;
 const isReleased = () => C.age>=31 && (cOvr()<relBar() || pStart(C.club)<0.15);
+function youthReleaseTarget(){
+  if(C.age!==17 || lvOf()>=2 || !C.last || C.last.starts/Math.max(1,C.last.games)>=YOUTH_CUT || cOvr()>=cohortLv(C.club,17)-YOUTH_CUT_BEHIND || mulberry(C.seed ^ hashStr('cut'))()>=YOUTH_CUT_P) return null;
+  const near=PLAYABLE.filter(c=>c.nat===C.club.nat && c.n!==C.club.n && Math.abs(c.r-(cOvr()+YOUTH_CUT_TO))<=4);
+  return near.length ? near[Math.floor(mulberry(C.seed ^ hashStr('cutto'))()*near.length)] : null;
+}
+// 이미 저장된 결과 화면도 같은 계약 판정을 적용한다.
+export function refreshYouthRelease(state){
+  C=state;
+  const to=youthReleaseTarget();
+  if(!to || C.youthReleased) return;
+  C.released=true;C.youthReleased=true;C.offers=[{c:to,kind:'새 출발'}];
+}
 // 몸의 한계: 35세부터 시즌 끝에 은퇴할 수밖에 없는 확률 — 나이와 몸의 소모(부상 이력)가 클수록 높다.
 // 단, 기량이 정점에서 꺾인 만큼만 적용한다(정점 −3까지 0, −13이면 전부). 몸 관리로 기량을 지킨 선수는 나이만으로 은퇴시키지 않는다
 // (사용자 지적: 정점 91, 35세 85인데 은퇴).
@@ -1048,6 +1091,8 @@ function makeOffers(rng, row, rt){
   if(C.age < 17) return [];
   const military=MIL.militaryView(C);
   if(military && (military.selected || military.service)){ C.released=false; return []; }
+  const youthTo=youthReleaseTarget();
+  if(youthTo){ C.released=true;C.youthReleased=true;row.notes.push(C.club.n+' 유스와 재계약하지 못했어요. 이적시장에서 새 팀을 골라 주세요.');return [{c:youthTo,kind:'새 출발'}]; }
   C.released = isReleased();
   if(C.released){
     const me0 = cRep(), lows = PLAYABLE.filter(c => c.n!==C.club.n && c.r<=me0 && c.r>=me0-15).sort((a,b) => b.r-a.r);
@@ -1091,6 +1136,7 @@ function offerView(){
 export function nextSeason(state, pick, traitPick){
   C = state;
   if(C.phase !== 'result') throw new Error('phase');
+  refreshYouthRelease(C);
   const military=MIL.militaryView(C);
   if(pick!=null && military && (military.selected || military.service || military.lastChance)) throw new Error('병역 계획을 먼저 결정해 주세요.');
   if(C.traitOffer && C.traitOffer.length && !forcedRetire()){
@@ -1111,15 +1157,8 @@ export function nextSeason(state, pick, traitPick){
   // 지난 시즌 줄에서 결과 화면에만 쓰는 값은 버린다(토큰 크기 — 은퇴 카드엔 필요 없다)
   const r = C.hist[C.hist.length-1]; delete r.notes; delete r.numUp; delete r.coach; delete r.scout; delete r.deltas; delete r.ovrBefore; delete r.dOvr;
   const moved = pick != null, lv0 = lvOf();
-  C.age++; C.phase = 'prep'; C.offers = null; C.released = false;
+  C.age++; C.phase = 'prep'; C.offers = null; C.released = false;delete C.youthReleased;
   if(MIL.beginService(C) || MIL.serviceView(C)){ C.lv=3; C.contract=null; newEvent(); return C; }
-  // 유스 계약 만료(18세가 되는 여름): 첫 구단 유스에서 구단 수준에 한참 못 미치면 재계약 없이 내보낸다 → 실력에 맞는 자국 구단으로.
-  // 큰 구단 유스(첫 구단 "도전")의 대가 — 없으면 출전 기회가 적어도 잃을 게 없어서 도전이 늘 정답이었다.
-  if(!moved && C.age === 18 && lv0 < 2 && C.last && C.last.starts/Math.max(1,C.last.games) < YOUTH_CUT && cOvr() < cohortLv(C.club, 17) - YOUTH_CUT_BEHIND && mulberry(C.seed ^ hashStr('cut'))() < YOUTH_CUT_P){
-    const near = PLAYABLE.filter(c => c.nat === C.club.nat && c.n !== C.club.n && Math.abs(c.r - (cOvr() + YOUTH_CUT_TO)) <= 4);
-    const to = near.length ? near[Math.floor(mulberry(C.seed ^ hashStr('cutto'))()*near.length)] : null;
-    if(to){ C.cutFrom = C.club.n; C.club = to; if(!C.clubs.includes(to.n)) C.clubs.push(to.n); }
-  }
   C.lv = Math.max(stageFor(C.club, !moved), moved && lv0===3 ? 3 : 0);   // 1군 선수를 데려간 구단은 1군으로 쓴다(이적했더니 U-21로 내려가는 일이 없게)
   // 승격 알림: 다음 시즌 준비 화면 맨 위에 한 번(prepView.promo)
   if(C.lv > Math.max(lv0, defLv(C.age)) || moved && C.lv===3 && C.age<22 && lv0<3) C.stageNote = C.prodigy && C.age<18 ? C.club.n+' 1군에 '+C.age+'세로 데뷔! 구단 역사에 남을 최연소급 데뷔예요.' : C.lv===3 ? (C.age<=18 ? '1군에 합류했어요! 또래보다 빠른 데뷔예요.' : '1군에 합류했어요!') : STAGE[C.lv].n+'로 월반했어요! 형들과 부딪히며 더 크게 성장해요.';

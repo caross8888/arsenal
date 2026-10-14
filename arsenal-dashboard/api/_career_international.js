@@ -3,6 +3,15 @@ import {shootoutFor,penaltyKey} from './_career_shootout.js';
 const EURO=['ENG','ESP','GER','ITA','FRA','POR','NED','BEL','NOR','CRO','SUI','DEN','SWE','AUT','POL','TUR'];
 const POOLS={europe:EURO,america:['BRA','ARG','URU','COL','CHI','ECU','PER','VEN','BOL','USA','MEX','CAN','CRC','JAM','PAN','HAI'],asia:['KOR','JPN','AUS','IRN','KSA','QAT','IRQ','UZB','CHN','UAE','OMN','JOR','BHR','THA','IND','SYR'],africa:['NGA','SEN','MAR','EGY','GHA','CMR','CIV','TUN','ALG','RSA','ANG','COD','MLI','BFA','ZAM','KEN'],gold:['USA','MEX','CAN','CRC','JAM','PAN','SLV','HON','GUA','HAI','TTO','CUW','SUR','MTQ','CUB','DOM']};
 const ALL=[...new Set(Object.values(POOLS).flat())].filter(n=>n!=='MTQ');
+const REGULAR_WINDOWS=[['9월',.12],['10월',.23],['11월',.34],['3월',.72]];
+const SENIOR_CUPS={ENG:'유로',ESP:'유로',GER:'유로',ITA:'유로',FRA:'유로',POR:'유로',NED:'유로',BEL:'유로',NOR:'유로',BRA:'코파 아메리카',ARG:'코파 아메리카',KOR:'아시안컵',JPN:'아시안컵',USA:'골드컵',NGA:'아프리카 네이션스컵'};
+export function seniorNationalCalendar(nation,year){
+ if(!SENIOR_CUPS[nation]||!Number.isInteger(year)||year<2027)return null;
+ const cup=year%4===2?'월드컵':year%4===0?SENIOR_CUPS[nation]:null;
+ const windows=REGULAR_WINDOWS.map(([month,at],i)=>({id:'senior-'+i,name:'A매치',year:i<3?year-1:year,month,at}));
+ if(cup)windows.push({id:'senior-cup',name:cup,year,month:'6월',at:1,knockout:true});
+ return {nation,year,cup,windows};
+}
 function random(seed,key){let h=seed>>>0;for(const c of key)h=Math.imul(h^c.charCodeAt(0),16777619);return ()=>{h+=0x6D2B79F5;let t=Math.imul(h^(h>>>15),h|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
 export function nationalOpponentPool(cup){const teams=/유로|네이션스리그/.test(cup)?EURO:/코파/.test(cup)?POOLS.america:/아시안게임/.test(cup)?POOLS.asia.filter(n=>n!=='AUS'):/아시안/.test(cup)?POOLS.asia:/아프리카/.test(cup)?POOLS.africa:/골드/.test(cup)?POOLS.gold:/올림픽/.test(cup)?ALL.filter(n=>n!=='CUW'):ALL;return teams.slice();}
 // 게임용 대표팀 전력. 모든 대회에서 강팀 우세를 반영하되 이변도 허용한다.
@@ -35,7 +44,7 @@ export function nationalSchedule({seed,nation,year,caps,goals,ast,cs,cup,cupApps
   cupStages=stages.slice(0,cupCount);cupApps=Math.min(cupApps,cupCount);
  }
  // 조기 탈락으로 대회 출전이 줄면 나머지는 일반 A매치에 배분해 기존 시즌 합계를 유지한다.
- const regular=Math.max(0,caps-(cupApps||0)),months=[['9월',.12],['10월',.23],['11월',.34],['3월',.72]];
+ const regular=Math.max(0,caps-(cupApps||0)),months=REGULAR_WINDOWS;
  let left=regular;
  months.forEach(([month,at],i)=>{const apps=Math.ceil(left/(4-i));left-=apps;if(apps)windows.push({id:'senior-'+i,kind:'senior',name:'A매치',month,at,nation,apps,stages:Array.from({length:apps},(_,k)=>'A매치 '+(k+1)),outcome:'대표팀 일정 종료'});});
  if(cupStages){const stage=cupStages.at(-1),outcome=won?'우승':cupCount===3?'조별리그 탈락':stage==='결승'?'준우승':stage+' 탈락';windows.push({id:'senior-cup',kind:'senior',name:cup,month:'6월',at:1,nation,apps:cupApps,stages:cupStages,outcome,won,knockout:true});}

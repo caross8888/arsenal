@@ -7,6 +7,7 @@ const context=vm.createContext({CR:{meta:{nationalReactionGroups:NATIONAL_REACTI
 const array=name=>{const start=html.indexOf('var '+name+'=');assert(start>=0,name);return html.slice(start,html.indexOf(';',start)+1);};
 for(const name of ['CR_RX_VERIFIED','CR_FAN_ID','CR_RX_NICK','CR_RX_IP'])vm.runInContext(array(name),context);
 vm.runInContext(html.slice(html.indexOf('function crSfRng('),html.indexOf('function crSfClub(')),context);
+vm.runInContext(html.slice(html.indexOf('function crRo('),html.indexOf('function crReact(){')),context);
 vm.runInContext(html.slice(html.indexOf('var CR_RX_NATIONAL='),html.indexOf('function crNationalReactBtns(')),context);
 vm.runInContext(html.slice(html.indexOf('function crSfNationalQueue('),html.indexOf('function crSfNatOpen(')),context);
 const run=code=>vm.runInContext(code,context);
@@ -24,7 +25,7 @@ context.testRow.national=[];Object.assign(context.testRow.international,{name:'�
 assert.equal(run('crNationalReactionEvents(testRow)[0].type'),'qualify');
 console.log('PASS 아시안게임 은메달은 체육요원 처리 안 함 · 올림픽 동메달은 요건 충족');
 context.testRow=row;
-assert(run("crNationalReaction(crNationalReactionEvents(testRow)[0]).news.body.includes('1경기에 출전해 1골 2도움')"));
+assert(run("crNationalReaction(crNationalReactionEvents(testRow)[0]).news.body.includes('1경기 · 1골 2도움')"));
 run("CR.v.player.nation='ENG'");context.testRow={age:18,hon:[{n:'월드컵 우승'}]};
 assert(run("crNationalReaction(crNationalReactionEvents(testRow)[0]).news.body.includes('잉글랜드 대표팀')"));
 assert(run("!crNationalReaction(crNationalReactionEvents(testRow)[0]).news.body.includes('대한민국')"));

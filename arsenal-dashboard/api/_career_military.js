@@ -1,5 +1,6 @@
-// 대한민국 남자 커리어의 병역·연령별 국제대회. 기존 성장 이벤트와 별도 난수열을 사용한다.
+// 연령별 국제대회와 대한민국 남자 커리어의 병역. 기존 성장 이벤트와 별도 난수열을 사용한다.
 import {CLUBS} from './_career_data.js';
+import {nationalOpponentPool} from './_career_international.js';
 export const SANGMU = '김천 상무';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const year=C=>2027+C.age-15;
@@ -24,8 +25,9 @@ export function militaryView(C){
     returnNotice:M.returnAge===C.age?M.returnNotice:null,service:serviceView(C)};
 }
 export function tournamentView(C){
-  if(C.nation!=='KOR'||C.age<18||(C.lv??3)<3||active(ensureMilitary(C)))return null;
+  if(C.age<18||(C.lv??3)<3||active(ensureMilitary(C)))return null;
   const y=year(C),kind=y%4===2?'asian':y%4===0?'olympic':null;if(!kind)return null;
+  if(!nationalOpponentPool(kind==='asian'?'아시안게임':'올림픽').includes(C.nation))return null;
   const o=Math.round(C.ovr),wild=C.age>23;
   if(o<(wild?72:59))return null;
   const last=C.hist.at(-1),form=last&&last.apps>=10?clamp((last.rating-6.8)*.12,-.1,.1):0;
@@ -40,7 +42,7 @@ export function resolveTournament(C,T,rating,actualPlace){
   const place=actualPlace??(T.kind==='asian'?(qualifyingFinish?1:2+Math.floor(roll(C,'place|'+T.year)*5)):(qualifyingFinish?1+Math.floor(roll(C,'place|'+T.year)*3):4+Math.floor(roll(C,'place|'+T.year)*5)));
   const medal=place<=3;
   const award=medal?{n:T.name+' '+({1:'금메달',2:'은메달',3:'동메달'}[place]),tier:place===1?'A':'B',kind:'nat'}:null;
-  const M=ensureMilitary(C),qualified=(T.kind==='asian'?place===1:place<=3)&&M.status==='pending';
+  const M=ensureMilitary(C),qualified=!!M&&(T.kind==='asian'?place===1:place<=3)&&M.status==='pending';
   if(qualified){M.status='arts';M.at=T.year;M.award=award.n;delete M.choice;}
   return {...T,place,medal,probability:Math.round(p*100),qualified,award};
 }
