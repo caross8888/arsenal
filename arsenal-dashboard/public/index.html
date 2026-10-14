@@ -2511,6 +2511,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .cr-nat-cup-label{color:var(--gold);font-size:10px;letter-spacing:2px;font-weight:800}
 /* Final tournament result: stage record → trophy/verdict → last score → personal stats → reactions. */
+.cr-nat-overlay>.cr-nat-box{transition:opacity 220ms ease,transform 220ms ease}.cr-nat-overlay.result-leaving>.cr-nat-box{opacity:0;transform:translateY(-6px);pointer-events:none}.cr-nat-overlay.result-entering>.cr-nat-box{opacity:0;transform:translateY(6px);pointer-events:none}.cr-penalty-overlay{animation:crNatStageIn 240ms ease both}@keyframes crNatStageIn{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){.cr-nat-overlay>.cr-nat-box{transition:none}.cr-penalty-overlay{animation:none}}
 .cr-nat-overlay.completed{cursor:default}.cr-nat-overlay.completed .cr-nat-box{min-height:calc(100svh - 36px);gap:12px}.cr-nat-overlay.completed .cr-nat-masthead{padding-top:6px}.cr-nat-overlay.completed .cr-live-stages{flex-shrink:0}.cr-live-stages .champion{border-color:var(--gold);color:var(--gold);background:var(--border-accent);box-shadow:0 0 12px var(--border-accent)}
 .cr-nat-overlay.completed .cr-nat-final-hero{align-self:stretch;max-width:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:0;border-radius:0;background:none;padding:14px 0 12px;margin:0;text-align:center;color:var(--on-dark-header)}
 .cr-nat-final-hero .art{flex-shrink:0;display:grid;place-items:center;width:100%;height:clamp(160px,27svh,260px)}.cr-nat-final-hero .cr-wc-img,.cr-nat-result-cup{height:clamp(160px,27svh,260px);max-height:260px;max-width:220px;width:auto;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 0 18px var(--border-accent))}.cr-nat-result-medal{display:grid;place-items:center;height:100%}.cr-nat-result-medal .cr-icon{width:140px;height:100%}
@@ -2812,7 +2813,7 @@ function playIntro(){
   <button class="nav-btn" onclick="showSec('history',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8l0 4l2 2"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg><span>History</span></button>
 </nav>
 <script src="/career/league-scenes.js?v=1"></script>
-<script src="/career/match-playback.js?v=35"></script>
+<script src="/career/match-playback.js?v=36"></script>
 <script>
 var FN='/api';
 var allStandings=[];
@@ -10428,7 +10429,7 @@ function crSfSay(t){
   f.insertBefore(el, f.firstChild);
   while(f.children.length>3) f.removeChild(f.lastChild);
 }
-function crSfClose(){ if(CR.sf){clearTimeout(CR.sf.timer);if(CR.sf.nat){if(CR.sf.nat.replay)CR.sf.nat.replay.destroy();clearTimeout(CR.sf.nat.timer);clearTimeout(CR.sf.nat.ceremonyTimer);clearTimeout(CR.sf.nat.exitTimer);if(CR.sf.nat.openFrame)cancelAnimationFrame(CR.sf.nat.openFrame);if(CR.sf.nat.bracketFrame)cancelAnimationFrame(CR.sf.nat.bracketFrame);}if(CR.sf.fan)clearTimeout(CR.sf.fan.timer);} CR.sf=null; crTovSet(''); }
+function crSfClose(){ if(CR.sf){clearTimeout(CR.sf.timer);if(CR.sf.nat){if(CR.sf.nat.replay)CR.sf.nat.replay.destroy();clearTimeout(CR.sf.nat.timer);clearTimeout(CR.sf.nat.ceremonyTimer);clearTimeout(CR.sf.nat.exitTimer);clearTimeout(CR.sf.nat.resultTimer);if(CR.sf.nat.resultFrame)cancelAnimationFrame(CR.sf.nat.resultFrame);if(CR.sf.nat.openFrame)cancelAnimationFrame(CR.sf.nat.openFrame);if(CR.sf.nat.bracketFrame)cancelAnimationFrame(CR.sf.nat.bracketFrame);}if(CR.sf.fan)clearTimeout(CR.sf.fan.timer);} CR.sf=null; crTovSet(''); }
 // 합계를 from..to 경기 칸에 나눈다(시드 고정). out: 이 구간 앞쪽 몇 칸은 부상 결장.
 function crSfPlan(from,to,tot,out){
   var S=CR.sf;if(!S.segments)return crSfPlanBase(from,to,tot,out);
@@ -10536,10 +10537,11 @@ function crSfNatMatch(){
   if(window.CareerMatchReplay&&!N.fast&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&!(N.regDone||{})[key]){
    if(N.replay){N.replay.destroy();N.replay=null;}
    var host=document.getElementById('crNatMatch'),overlay=document.getElementById('crSfNational');overlay.classList.add('match-live');crSfLiveStages(m);N.live={key:key};var live=N.live,liveStats={g:0,a:0};var updateLiveStats=function(){if(CR.sf!==S||S.nat!==N)return;document.getElementById('crNatApps').textContent=N.n.apps+(m.played?1:0);document.getElementById('crNatGoals').textContent=N.n.goals+liveStats.g;document.getElementById('crNatAst').textContent=N.n.ast+liveStats.a;var group=N.w.matches.slice(0,N.i).filter(function(x){return x.played&&/^조별/.test(x.stage);}).length,note=document.getElementById('crNatAppsNote');if(note)note.textContent='조별리그 '+group+'경기 · 토너먼트 '+(N.n.apps-group+(m.played?1:0))+'경기 출전';};
-   N.replay=CareerMatchReplay.create(host,{nation:N.w.nation,opp:m.opp,pos:CR.v.player.pos,card:CR.v.player.card,role:((CR.meta.cards[CR.v.player.pos]||[])[CR.v.player.card]||{}).n,foot:CR.v.player.foot,number:CR.v.player.num||CR.v.player.want,player:CR.v.player.name,ourName:crNat(N.w.nation).n,theirName:CR_NAT_NAME[m.opp]||crNat(m.opp).n,ourFlag:crFlag(N.w.nation),theirFlag:crFlag(m.opp),onScene:updateLiveStats,onEvent:function(event){if(event.personal==='goal')liveStats.g++;if(event.personal==='assist')liveStats.a++;updateLiveStats();}});
+   var nextMatch=N.w.matches[N.i+1];
+   N.replay=CareerMatchReplay.create(host,{nation:N.w.nation,opp:m.opp,pos:CR.v.player.pos,card:CR.v.player.card,role:((CR.meta.cards[CR.v.player.pos]||[])[CR.v.player.card]||{}).n,foot:CR.v.player.foot,number:CR.v.player.num||CR.v.player.want,player:CR.v.player.name,ourName:crNat(N.w.nation).n,theirName:CR_NAT_NAME[m.opp]||crNat(m.opp).n,ourFlag:crFlag(N.w.nation),theirFlag:crFlag(m.opp),nextLabel:nextMatch?'다음 경기':'대회 결과 보기',nextStage:nextMatch&&nextMatch.stage,onScene:updateLiveStats,onEvent:function(event){if(event.personal==='goal')liveStats.g++;if(event.personal==='assist')liveStats.a++;updateLiveStats();}});
    N.replay.play(m,{year:2027+CR.v.player.age-15}).then(function(result){
     if(CR.sf!==S||S.nat!==N||N.live!==live||result.cancelled)return;N.live=null;N.regDone=N.regDone||{};N.regDone[key]=true;
-    if(N.finishRequested)return crSfNatFinish();N.timer=setTimeout(N.tick,900);
+    if(N.finishRequested)return crSfNatFinish();if(crSfNatMatch()===false)return;N.timer=setTimeout(N.tick,180);
    });return false;
   }
   if(m.pk&&m.pk.pending){crSfPenaltyOpen(m);return false;}
@@ -10554,6 +10556,16 @@ function crSfNatFinish(){
 
 }
 function crSfNatResultRender(){
+ var S=CR.sf,N=S&&S.nat,overlay=document.getElementById('crSfNational');if(!N||!N.finished||!overlay||N.resultTransition)return;N.resultTransition=true;
+ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return crSfNatResultDraw();
+ overlay.classList.add('result-leaving');
+ N.resultTimer=setTimeout(function(){
+  if(CR.sf!==S||S.nat!==N||!overlay.isConnected)return;
+  crSfNatResultDraw();overlay.classList.remove('result-leaving');overlay.classList.add('result-entering');overlay.scrollTop=0;
+  N.resultFrame=requestAnimationFrame(function(){N.resultFrame=requestAnimationFrame(function(){if(CR.sf===S&&S.nat===N)overlay.classList.remove('result-entering');});});
+ },220);
+}
+function crSfNatResultDraw(){
  var N=CR.sf&&CR.sf.nat;if(!N||!N.finished)return;if(N.replay){N.replay.destroy();N.replay=null;}var w=N.w,last=w.matches.at(-1),overlay=document.getElementById('crSfNational'),box=overlay.querySelector('.cr-nat-box'),header=box.querySelector('.cr-nat-masthead').outerHTML;
  var medal=w.kind==='age'&&w.medal,celebrate=w.won||medal,event=crNationalReactionEvent(w),title=medal?({1:'금메달',2:'은메달',3:'동메달'})[w.place]:w.won?'우승':w.outcome||'대회 종료';
  var art=medal?'<div class="cr-nat-result-medal" style="color:'+({1:'var(--gold)',2:'var(--on-dark-header-secondary)',3:'var(--amber)'})[w.place]+'">'+crIcon('medal')+'</div>':w.won?(w.name==='월드컵'?crWorldCupSvg():'<img class="cr-nat-result-cup" src="/img/career/tro/'+crTroImg(w.name+' 우승')+'.png" alt="'+gmEsc(w.name)+' 트로피">'):'';
@@ -10585,7 +10597,7 @@ function crSfPenaltyOpen(m){
  var S=CR.sf,N=S&&S.nat;if(!N||N.pk)return;clearTimeout(N.timer);if(N.bracketFrame)cancelAnimationFrame(N.bracketFrame);if(N.bracketSettle)N.bracketSettle();
  var P=CR.v.shootout;if(!P||P.key!==m.pk.key){gameToast('승부차기 정보를 다시 확인해 주세요.');return;}
  var box=document.createElement('div');box.id='crPenaltyOverlay';box.className='cr-penalty-overlay';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label',N.w.name+' '+m.stage+' 승부차기');box.onclick=function(e){e.stopPropagation();};
- var frame=document.createElement('iframe');frame.title='슛 방향과 파워를 조절하는 승부차기';frame.src='/career/penalty.html?v=7';box.append(frame);N.pk={key:P.key,frame:frame,busy:false,resolved:false};
+ var frame=document.createElement('iframe');frame.title='슛 방향과 파워를 조절하는 승부차기';frame.src='/career/penalty.html?v=8';box.append(frame);N.pk={key:P.key,frame:frame,busy:false,resolved:false};
  frame.onload=function(){if(CR.sf!==S||S.nat!==N)return;frame.contentWindow.postMessage({type:'career-penalty-config',match:Object.assign({},P,{player:CR.v.player.name,ourName:crNat(P.nation).n,theirName:CR_NAT_NAME[P.opp]||crNat(P.opp).n})},location.origin);};
  document.querySelector('#crTov .cr-sf').append(box);
 }

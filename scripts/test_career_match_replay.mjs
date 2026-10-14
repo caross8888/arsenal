@@ -11,7 +11,7 @@ for(let seed=1;seed<=500;seed++){
   assert.equal(p.events.filter(e=>e.personal==='goal').length,m.played?m.g:0);assert.equal(p.events.filter(e=>e.personal==='assist').length,m.played?m.a:0);
   assert(p.events.every((e,i)=>e.minute>0&&e.minute<p.end&&(!i||e.minute>p.events[i-1].minute)));
   let a=0,b=0;for(const e of p.events){if(e.kind==='goal'){if(e.team)b++;else a++;}assert.deepEqual(e.score,{our:a,their:b});}
-  assert.equal(new Set(p.events.slice(0,patterns.filter(p=>p!=='farcut').length).map(e=>e.pattern)).size,Math.min(patterns.filter(p=>p!=='farcut').length,p.events.length));assert(p.events.every((e,i)=>!i||e.pattern!==p.events[i-1].pattern));assert.equal(p.events.length,m.our+m.their);if(p.events.length)assert.deepEqual(p.events.at(-1).score,{our:m.our,their:m.their});tested++;
+  assert.equal(new Set(p.events.slice(0,patterns.filter(p=>p!=='farcut').length).map(e=>e.pattern)).size,Math.min(patterns.filter(p=>p!=='farcut').length,p.events.length));assert(p.events.every((e,i)=>!i||e.pattern!==p.events[i-1].pattern));assert.equal(p.events.length,m.our+m.their||3);assert.deepEqual(p.events.at(-1).score,{our:m.our,their:m.their});tested++;
  }
 }
 const tied={stage:'결승',opp:'FRA',played:true,our:1,their:1,g:1,a:0,pk:{pending:true}};assert.equal(highlights(tied).end,120);assert.equal(highlights({...tied,pk:undefined}).end,90);
@@ -31,7 +31,18 @@ for(const pattern of ['combine','wing','counter','cutback','through'])for(const 
  if(pattern==='wing')assert(sampleScene(scene,.66).height>20,'cross must be airborne');
  else assert.equal(sampleScene(scene,.66).height,0,'ground delivery stays on pitch');
 }
-assert.deepEqual(highlights({our:0,their:0,played:true}).events,[]);
+for(const pk of [undefined,{pending:true}]){
+ const plan=highlights({our:0,their:0,played:true,pk});
+ assert.equal(plan.events.length,3);assert(plan.events.some(e=>e.kind==='save'));assert(plan.events.some(e=>e.kind==='miss'));assert.equal(new Set(plan.events.map(e=>e.team)).size,2);
+ for(const e of plan.events){assert.deepEqual(e.score,{our:0,their:0});assert.equal(e.personal,null);}
+}
+for(const kind of ['save','miss'])for(const team of [0,1])for(const minute of [30,70])for(const pattern of patterns){
+ const scene=choreography({kind,team,minute,pattern,lane:18,goalY:52,personal:null,sceneSeed:37});let previous=sampleScene(scene,0);
+ for(let i=1;i<=1000;i++){const next=sampleScene(scene,i/1000);assert(Math.hypot(next.ball.x-previous.ball.x,next.ball.y-previous.ball.y)<1,'non-scoring shot snapped');previous=next;}
+ const end=sampleScene(scene,1),ball=end.ball;
+ if(kind==='save'){const keeper=end.positions.find(p=>p.team!==team&&p.i===0);assert(Math.hypot(ball.x-keeper.x,ball.y-keeper.y)<.001,'saved shot must end at keeper');assert(ball.x>0&&ball.x<100);}
+ else assert(ball.y<40||ball.y>60,'miss must pass outside the goalposts');
+}
 console.log('PASS continuous player/ball paths, role-based fullback movement, aerial/ground delivery, scoreless match');
 
 // Regression: receiving a pass must not bring the whole pitch to a standstill.
