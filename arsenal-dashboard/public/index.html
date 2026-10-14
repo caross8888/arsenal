@@ -10448,7 +10448,7 @@ function crSfSay(t){
   f.insertBefore(el, f.firstChild);
   while(f.children.length>3) f.removeChild(f.lastChild);
 }
-function crSfClose(){ if(CR.sf){clearTimeout(CR.sf.timer);if(CR.sf.nat){if(CR.sf.nat.replay)CR.sf.nat.replay.destroy();clearTimeout(CR.sf.nat.timer);clearTimeout(CR.sf.nat.ceremonyTimer);clearTimeout(CR.sf.nat.finalTimer);clearTimeout(CR.sf.nat.exitTimer);clearTimeout(CR.sf.nat.resultTimer);clearTimeout(CR.sf.nat.penaltyExitTimer);if(CR.sf.nat.resultFrame)cancelAnimationFrame(CR.sf.nat.resultFrame);if(CR.sf.nat.openFrame)cancelAnimationFrame(CR.sf.nat.openFrame);if(CR.sf.nat.bracketFrame)cancelAnimationFrame(CR.sf.nat.bracketFrame);}if(CR.sf.fan)clearTimeout(CR.sf.fan.timer);} CR.sf=null; crTovSet(''); }
+function crSfClose(){ if(CR.sf){clearTimeout(CR.sf.timer);if(CR.sf.nat){if(CR.sf.nat.replay)CR.sf.nat.replay.destroy();clearTimeout(CR.sf.nat.timer);clearTimeout(CR.sf.nat.ceremonyTimer);clearTimeout(CR.sf.nat.exitTimer);clearTimeout(CR.sf.nat.resultTimer);clearTimeout(CR.sf.nat.penaltyExitTimer);if(CR.sf.nat.resultFrame)cancelAnimationFrame(CR.sf.nat.resultFrame);if(CR.sf.nat.openFrame)cancelAnimationFrame(CR.sf.nat.openFrame);if(CR.sf.nat.bracketFrame)cancelAnimationFrame(CR.sf.nat.bracketFrame);}if(CR.sf.fan)clearTimeout(CR.sf.fan.timer);} CR.sf=null; crTovSet(''); }
 // 합계를 from..to 경기 칸에 나눈다(시드 고정). out: 이 구간 앞쪽 몇 칸은 부상 결장.
 function crSfPlan(from,to,tot,out){
   var S=CR.sf;if(!S.segments)return crSfPlanBase(from,to,tot,out);
@@ -10620,7 +10620,6 @@ function crSfNatResultDraw(){
  crSfLiveStages(last);
  // Celebration now lives in the result itself, rather than covering it with another overlay.
  N.celebrated=!!celebrate;
- if(w.kind==='club')N.finalTimer=setTimeout(crSfNatContinue,2400);
  if(celebrate&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){var conf=document.createElement('div');conf.className='conf cr-nat-final-conf';conf.setAttribute('aria-hidden','true');for(var i=0;i<22;i++)conf.insertAdjacentHTML('beforeend','<i style="--x:'+((i*29)%100)+'%;--d:'+(i%7*.09)+'s;--r:'+((i*61)%360)+'deg"></i>');overlay.appendChild(conf);}
 }
 
@@ -10659,7 +10658,7 @@ window.addEventListener('message',function(e){
 });
 
 function crSfNatContinue(){
-  var S=CR.sf,N=S&&S.nat;if(!N||!N.finished||N.closing||document.getElementById('crNatReaction'))return;N.closing=true;clearTimeout(N.finalTimer);clearTimeout(N.timer);clearTimeout(N.ceremonyTimer);if(N.openFrame)cancelAnimationFrame(N.openFrame);if(N.bracketFrame)cancelAnimationFrame(N.bracketFrame);S.natSeen=S.natSeen||{};S.natSeen[N.w.id]=true;
+  var S=CR.sf,N=S&&S.nat;if(!N||!N.finished||N.closing||document.getElementById('crNatReaction'))return;N.closing=true;clearTimeout(N.timer);clearTimeout(N.ceremonyTimer);if(N.openFrame)cancelAnimationFrame(N.openFrame);if(N.bracketFrame)cancelAnimationFrame(N.bracketFrame);S.natSeen=S.natSeen||{};S.natSeen[N.w.id]=true;
   var log=document.getElementById('crSfLog'),r=document.createElement('div');r.className='r ft';r.innerHTML='<span class="m">'+N.w.month+'</span><b class="wdl">'+crIcon(N.w.kind==='club'?'trophy':'earth-americas')+'</b><span class="o">'+gmEsc(N.w.name+' · '+N.w.outcome)+'</span><span class="s"></span><span class="me"></span>';if(log)log.prepend(r);
   var el=document.getElementById('crSfNational'),reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var finish=function(){if(CR.sf!==S||S.nat!==N)return;el?.remove();S.nat=null;if(S.fan)S.fan.national=false;N.resume();};
@@ -11526,10 +11525,10 @@ function crNationalReactBtns(){
 }
 function crSfNatReactionShow(){
  var S=CR.sf,N=S&&S.nat;if(!N||!N.finished||document.getElementById('crNatReaction'))return;
- var club=N.w.kind==='club',e=club?N.w:crNationalReactionEvent(N.w);if(!e)return;clearTimeout(N.finalTimer);
+ var club=N.w.kind==='club',e=club?N.w:crNationalReactionEvent(N.w);if(!e)return;
  var shell=document.createElement('div');shell.innerHTML=crReactionHtml(club?crClubFinalReaction(e):crNationalReaction(e),club?'UCL FINAL · 결승 반응':'NATIONAL TEAM · 대표팀 반응','crSfNatReactionClose()');var box=shell.firstElementChild;box.id='crNatReaction';box.style.zIndex='3';box.onclick=function(event){event.stopPropagation();};document.getElementById('crSfNational').appendChild(box);
 }
-function crSfNatReactionClose(){var N=CR.sf&&CR.sf.nat;if(N?.w.kind==='club')N.finalTimer=setTimeout(crSfNatContinue,2400);document.getElementById('crNatReaction')?.remove();document.getElementById('crNatReactionLink')?.focus({preventScroll:true});}
+function crSfNatReactionClose(){document.getElementById('crNatReaction')?.remove();document.getElementById('crNatReactionLink')?.focus({preventScroll:true});}
 
 function crReactBtn(){
  return crReactionBtnHtml(crReact(),{label:'SEASON REACTION · 시즌 반응',icon:'bullhorn',action:'crReactShow()'});
