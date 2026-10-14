@@ -189,6 +189,10 @@ Real data sources in use (verified against source, not the stale README below):
 
 이벤트 오버레이 배경은 장면별 픽셀아트 그림(webp) 한 장이다. `index.html`의 `CR_SCENE_PHOTO`에 `장면id:'파일명'` 한 줄로 등록하고, 없는 장면은 `field.webp`로 떨어진다. 자세한 내용과 프롬프트·남은 일은 `docs/career-mode/career-mode.md`의 "이벤트 배경 그림" 절에 있다.
 
+- **시즌 진행 리그 배경**은 승인한 PL 화풍의 15개국 도트 그림이다. `public/career/league-scenes.js`와 `public/img/career-leagues/`를 사용한다. 선수 국적이 아닌 `crSfClub()`의 실제 소속·임대 구단 국가로 고르며, 시즌 중 복귀 때 `crSfMatch()`에서도 갱신한다. 원본 기록과 교체 방법은 `docs/career-mode/league-backgrounds.md`.
+- **대표팀 본경기·PK 화풍은 비교안 B로 확정**(사용자 지정). 부드러운 파스텔 도트, 단순하고 귀여운 골키퍼, 본경기는 사람 대신 바둑알·등번호를 사용한다. 자세한 기준은 `docs/career-mode/art-style.md`.
+- **대표팀 상대국 자료**는 `docs/career-mode/data/national-teams.json`에 저장한다(현재 73개 팀). 전력은 `api/_career_international.js`의 `NATIONAL_POWER`, 대회별 상대 목록은 `nationalOpponentPool`을 사용한다. 유니폼 수정은 원자료를 고친 후 `python3 scripts/collect_national_kits.py --render`로 `match-playback.js`의 생성 구간을 갱신하고 `node scripts/test_career_national_kits.mjs`를 실행한다. 경기용 바둑알은 줄무늬 없는 단색, 밝은 색에는 검정 등번호를 사용한다. 전체 출처·시즌 표는 `docs/career-mode/national-opponents.md`.
+- **PK 파워·확률**은 `public/career/penalty-rules.js`를 서버와 브라우저가 공유한다. 별도 초록 칸 없이 연속 그라데이션을 사용하며 최적 파워의 성공률은 80%, 파워 오차에 따라 연속 감소한다. 판정 수정 후 `node scripts/test_career_shootout.mjs`를 실행한다.
 - **코드로 그린 SVG로 되돌리지 말 것.** 예전엔 `scenes.svg`를 `<use>`로 끌어 썼는데, 아이폰 사파리가 외부 SVG의 `<use>`를 지원하지 않아 배경이 통째로 안 보였다(그리고 손으로 그린 도형은 퀄리티가 안 나왔다).
 - **구도 규칙**: 배경은 꽉 채워 잘린다. 폰에서는 가로 가운데 약 1/3만 보이고 말풍선이 한가운데를 덮으므로, 주제 소품은 "가운데, 조금 아래"에 있어야 한다. 그림을 바꾸면 반드시 좁은 화면으로도 확인할 것.
 - 새 그림 넣기: `python scripts/import_career_scene.py <장면id> <원본파일>` — 생성 서비스가 넣는 오른쪽 아래 표시를 잘라내고 webp로 저장한 뒤 등록할 줄을 알려 준다.

@@ -1992,6 +1992,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-sf{cursor:pointer}
 .cr-sf{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;
   background:radial-gradient(120% 80% at 50% 0%,rgba(40,12,14,.94),rgba(5,6,10,.96) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
+.cr-sf-scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;image-rendering:pixelated;pointer-events:none;opacity:0;transition:opacity .3s;z-index:0}.cr-sf.has-league-scene{background:var(--navy)}.cr-sf.has-league-scene>.cr-sf-scene{opacity:1}.cr-sf.has-league-scene:before{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;background:linear-gradient(180deg,rgba(9,17,23,.12),rgba(9,17,23,.22) 45%,rgba(9,17,23,.38))}.cr-sf.has-league-scene>.cr-sf-box{z-index:2}.cr-sf.has-league-scene .cr-sf-post{background:rgba(20,24,40,.85);border-color:var(--border-bright)}.cr-sf.has-league-scene .cr-ss-skip{text-shadow:0 1px 4px #000}@media(prefers-reduced-motion:reduce){.cr-sf-scene{transition:none}}
 .cr-sf .ic{align-self:center;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:linear-gradient(145deg,#2a2d36,#15171d);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);animation:crTrBounce .7s .05s cubic-bezier(.2,1.5,.4,1) both}
 .cr-sf .tag{align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:#C8A84B;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .2s ease-out both}
 .cr-sf.still,.cr-sf.still *{animation-duration:0s!important;animation-delay:0s!important}
@@ -2134,7 +2135,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-nat-overlay .cr-rx-btn{margin-top:0;flex-shrink:0}
 /* 대표팀 대회 화면: 대회 머리말 → 대진표 → 스코어/기록 → 결과/반응. */
 .cr-nat-overlay.tournament{padding:18px 16px;background:none;backdrop-filter:none;isolation:isolate;--cr-scene-aspect:1;--cr-scene-w:max(100vw,calc(100vh * var(--cr-scene-aspect)));--cr-scene-h:max(100vh,calc(100vw / var(--cr-scene-aspect)))}
-.cr-nat-overlay.tournament::before{content:'';position:fixed;inset:0;z-index:-2;background-image:url('/img/career-scenes/international-stadiums.webp?v=1');background-repeat:no-repeat;background-size:calc(var(--cr-scene-w) * 4) calc(var(--cr-scene-h) * 2);background-position:calc(0px - var(--cr-scene-x) * var(--cr-scene-w) - (var(--cr-scene-w) - 100vw) / 2) calc(0px - var(--cr-scene-y) * var(--cr-scene-h) - (var(--cr-scene-h) - 100vh) / 2);image-rendering:pixelated}
+.cr-nat-overlay.tournament::before{content:'';position:fixed;inset:0;z-index:-2;background-image:url('/img/career-scenes/international-stadiums.webp?v=2');background-repeat:no-repeat;background-size:calc(var(--cr-scene-w) * 4) calc(var(--cr-scene-h) * 2);background-position:calc(0px - var(--cr-scene-x) * var(--cr-scene-w) - (var(--cr-scene-w) - 100vw) / 2) calc(0px - var(--cr-scene-y) * var(--cr-scene-h) - (var(--cr-scene-h) - 100vh) / 2);image-rendering:pixelated}
 .cr-nat-overlay.tournament::after{content:'';position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,var(--overlay-black-55),color-mix(in srgb,var(--overlay-black-55) 80%,transparent) 45%,var(--overlay-black-55))}
 .cr-nat-overlay.tournament .cr-nat-box{gap:10px}.cr-nat-masthead{display:flex;flex-direction:column;align-items:center;gap:5px;padding:1px 0 5px;color:var(--on-dark-header);text-shadow:0 2px 8px var(--overlay-black-55)}.cr-nat-titleline{display:flex;align-items:center;justify-content:center;gap:8px}.cr-nat-masthead h3{font-size:25px;font-weight:900;line-height:1.25;letter-spacing:-.5px;margin:0}.cr-nat-emblem{width:28px;height:32px;display:grid;place-items:center;flex:none}.cr-nat-emblem img{max-width:28px;max-height:32px;image-rendering:pixelated}.cr-nat-emblem>.cr-icon{width:24px;height:28px;color:var(--gold)}.cr-nat-masthead small{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:5px;color:var(--on-dark-header-secondary);font-size:11px}.cr-nat-masthead .cr-flag{width:16px;margin:0}.cr-nat-masthead time{font:inherit;color:inherit}
 
@@ -2154,9 +2155,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* 인터뷰 오버레이 — 늘 어두운 배경이라 글자색은 테마와 무관하게 고정(.cr-tov와 같은 방식) */
 .cr-iv{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden;
   background:radial-gradient(120% 80% at 50% 0%,rgba(40,10,12,.93),rgba(5,6,10,.95) 60%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
+.cr-iv-scene{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;image-rendering:pixelated;pointer-events:none;z-index:0}.cr-iv:before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(9,17,23,.16),rgba(9,17,23,.26) 45%,rgba(9,17,23,.38))}.cr-iv>.cr-iv-box{z-index:2}.cr-iv .cr-iv-a{background:rgba(20,24,40,.85)}.cr-iv .cr-iv-a[aria-pressed="true"]{background:rgba(52,43,24,.94)}.cr-iv .fl{z-index:1}
 .cr-iv .fl{position:absolute;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,255,255,0) 60%);opacity:0;pointer-events:none;animation:crIvFlash 1.6s ease-out both}
-.cr-iv .fl:nth-child(1){left:-40px;top:8%;animation-delay:.25s}.cr-iv .fl:nth-child(2){right:-50px;top:22%;animation-delay:.55s}
-.cr-iv .fl:nth-child(3){left:12%;bottom:6%;animation-delay:.85s}.cr-iv .fl:nth-child(4){right:6%;bottom:18%;animation-delay:1.15s}
+.cr-iv .fl:nth-of-type(1){left:-40px;top:8%;animation-delay:.25s}.cr-iv .fl:nth-of-type(2){right:-50px;top:22%;animation-delay:.55s}
+.cr-iv .fl:nth-of-type(3){left:12%;bottom:6%;animation-delay:.85s}.cr-iv .fl:nth-of-type(4){right:6%;bottom:18%;animation-delay:1.15s}
 @keyframes crIvFlash{0%{opacity:0;transform:scale(.4)}8%{opacity:.9;transform:scale(1)}30%{opacity:0;transform:scale(1.25)}100%{opacity:0}}
 @keyframes crIvUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes crIvIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
@@ -2238,6 +2240,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tm{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden auto;
   background:radial-gradient(120% 80% at 50% 0%,rgba(16,22,48,.95),rgba(5,6,12,.96) 62%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
 .cr-tm-x{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#F0F2F7;font-size:16px;cursor:pointer;z-index:2}
+.cr-tm-scene{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;image-rendering:pixelated;pointer-events:none;z-index:0}
+.cr-tm:not(.done):before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(9,17,23,.16),rgba(9,17,23,.26) 45%,rgba(9,17,23,.38))}
+.cr-tm>.cr-tm-box{z-index:2}
+.cr-tm>.cr-tm-x{z-index:3;background:var(--navy)}
 .cr-tm-box{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px;margin:auto 0}
 .cr-tm .tag{align-self:center;font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#fff;background:#EF0107;border-radius:999px;padding:3px 10px;animation:crIvUp .4s .1s ease-out both}
 .cr-tm-note{display:flex;gap:12px;align-items:center;background:#F0F2F7;color:#14161C;border-radius:16px;padding:12px 14px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:crTmDrop .55s .25s cubic-bezier(.2,1.3,.4,1) both}
@@ -2269,6 +2275,26 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-tm .conf{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .cr-tm .conf i{position:absolute;top:-12px;left:var(--x);width:8px;height:12px;background:var(--c);border-radius:2px;opacity:0;animation:crTmConf 1.8s var(--d) ease-in both}
 @keyframes crTmConf{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:1;transform:translateY(105vh) rotate(var(--r))}}
+.cr-tm.official{--text:#F0F2F7;--text-secondary:rgba(255,255,255,.75);--navy:#141828;--border-bright:rgba(255,255,255,.18)}
+.cr-tm.official:before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(9,17,23,.12),rgba(9,17,23,.26) 60%,rgba(9,17,23,.38))}
+.cr-tm.official .cr-tmd{z-index:3;width:100%;max-width:420px;padding:26px 22px;gap:18px;border:1px solid var(--border-bright);border-radius:22px;background:rgba(20,24,40,.85);box-shadow:0 18px 48px rgba(0,0,0,.28)}
+.cr-tm.official .stamp{order:-1;transform:none;animation:crIvUp .4s .15s ease-out both;font-size:11px;letter-spacing:2px;color:var(--gold);background:var(--navy);border:1px solid var(--border-bright);padding:6px 12px;border-radius:999px}
+.cr-tm.official .hwg{font-size:clamp(27px,7vw,36px);letter-spacing:.5px;animation:crIvUp .45s .65s ease-out both}
+.cr-tm.official .new{animation:crIvUp .5s .3s ease-out both;filter:drop-shadow(0 4px 12px rgba(200,168,75,.22))}
+.cr-tm.official .who{display:flex;flex-direction:column;gap:5px;animation:crIvUp .4s .8s ease-out both;color:var(--text-secondary)}
+.cr-tm.official .who b{font-size:23px;color:#F0F2F7}
+.cr-tm.official .who small{margin-top:5px;color:var(--text-secondary)}
+.cr-tm.official .cr-official-go{border:0;border-top:1px solid var(--border-bright);padding:15px 0 0;margin-top:2px;width:100%;background:none;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}
+.cr-tm.official .cr-official-go:focus-visible{outline:2px solid var(--gold);outline-offset:5px;border-radius:4px}
+.cr-tm.official .conf{z-index:2}
+.cr-tm.official .conf i{width:var(--w);height:var(--h);border-radius:1px;animation:crOfficialPaper var(--fall) var(--d) linear both;will-change:transform}
+@keyframes crOfficialPaper{
+  0%{opacity:0;transform:translate3d(0,-3vh,0) rotate(0) rotateX(0)}
+  8%{opacity:1}
+  32%{transform:translate3d(calc(var(--drift) * .35),30vh,0) rotate(calc(var(--r) * .3)) rotateX(160deg)}
+  65%{opacity:.85;transform:translate3d(calc(var(--drift) * -.25),64vh,0) rotate(calc(var(--r) * .65)) rotateX(320deg)}
+  100%{opacity:0;transform:translate3d(var(--drift),105vh,0) rotate(var(--r)) rotateX(540deg)}
+}
 @media (prefers-reduced-motion: reduce){.cr-tm,.cr-tm *{animation:none!important}.cr-tm .conf{display:none}}
 .cr-tr-o[aria-pressed="true"]{border-color:#22C55E;background:rgba(22,60,38,.9);transform:translateY(-3px)}
 @keyframes crTrCard{from{opacity:0;transform:translateY(40px) scale(.92)}to{opacity:1;transform:none}}
@@ -2478,6 +2504,24 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rk-o.e{background:linear-gradient(160deg,#FFE9A6,#D4A437);color:#3a2a06;box-shadow:0 0 10px rgba(233,199,102,.4)}
 .cr-rk-o.p{background:linear-gradient(120deg,#ff9ad5,#b69cff 30%,#7fe3ff 55%,#a6ffb5 80%,#ffe58a);color:#1b1030;box-shadow:0 0 12px rgba(182,156,255,.55)}
 .cr-rk-sc{font-family:var(--fd);font-size:21px;line-height:1;text-align:right;color:var(--gold)}
+
+.cr-penalty-overlay{position:fixed;inset:0;z-index:11000;background:var(--bg);display:flex;justify-content:center}.cr-penalty-overlay iframe{width:min(100%,580px);height:100%;border:0;background:var(--bg)}
+
+.cr-nat-overlay.match-live #crNatBracket{display:none}.cr-nat-overlay.match-live.show-bracket #crNatBracket{display:block}.cr-nat-overlay.match-live .cr-nat-summary .cr-nat-match{padding:0;border-radius:18px 18px 0 0;overflow:hidden}.cr-nat-overlay.match-live .cr-live-match{border:0;border-radius:18px 18px 0 0}.cr-nat-overlay.match-live .cr-sf-card .hd{display:none}.cr-nat-overlay.match-live .cr-sf-card .cr-sf-prog{display:none}.cr-nat-overlay.match-live .cr-sf-card .st{padding:10px}.cr-nat-overlay.match-live #crNatResult{display:none}.cr-live-stages{display:flex;gap:5px;width:100%}.cr-live-stages>div{flex:1;border:1px solid var(--border-bright);border-radius:9px;text-align:center;padding:8px 1px;color:var(--on-dark-header-secondary);background:var(--overlay-black-55);font-size:11px}.cr-live-stages b{display:block;font-size:12px}.cr-live-stages small{display:block;font-size:9px;margin-top:4px}.cr-live-stages .active{border-color:var(--gold);color:var(--gold);background:var(--border-accent)}.cr-live-stages .out{border-color:#EF4444;color:#EF4444}.cr-live-stages .done{border-color:var(--green);color:var(--green)}
+
+.cr-nat-cup-label{color:var(--gold);font-size:10px;letter-spacing:2px;font-weight:800}
+/* Final tournament result: stage record → trophy/verdict → last score → personal stats → reactions. */
+.cr-nat-overlay.completed{cursor:default}.cr-nat-overlay.completed .cr-nat-box{min-height:calc(100svh - 36px);gap:12px}.cr-nat-overlay.completed .cr-nat-masthead{padding-top:6px}.cr-nat-overlay.completed .cr-live-stages{flex-shrink:0}.cr-live-stages .champion{border-color:var(--gold);color:var(--gold);background:var(--border-accent);box-shadow:0 0 12px var(--border-accent)}
+.cr-nat-overlay.completed .cr-nat-final-hero{align-self:stretch;max-width:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:0;border-radius:0;background:none;padding:14px 0 12px;margin:0;text-align:center;color:var(--on-dark-header)}
+.cr-nat-final-hero .art{flex-shrink:0;display:grid;place-items:center;width:100%;height:clamp(160px,27svh,260px)}.cr-nat-final-hero .cr-wc-img,.cr-nat-result-cup{height:clamp(160px,27svh,260px);max-height:260px;max-width:220px;width:auto;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 0 18px var(--border-accent))}.cr-nat-result-medal{display:grid;place-items:center;height:100%}.cr-nat-result-medal .cr-icon{width:140px;height:100%}
+.cr-nat-final-hero h2{margin:0;font-size:34px;line-height:1.2;letter-spacing:-1px;font-weight:900}.cr-nat-final-hero.honour h2{color:var(--nat-honour-color,var(--gold));font-size:40px;letter-spacing:3px}.cr-nat-final-hero p{margin:0;font-size:11px;line-height:1.6;color:var(--on-dark-header-secondary)}.cr-nat-final-hero.honour p{font-size:10px;letter-spacing:1.5px;font-weight:800}.cr-nat-final-hero .qualification{font-size:11px;color:var(--on-dark-header-secondary)}.cr-nat-final-hero .eyebrow{font-size:11px;letter-spacing:2px;color:var(--on-dark-header-secondary)}.cr-nat-final-hero.eliminated{min-height:clamp(140px,24svh,220px)}
+.cr-nat-final-score{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:7px;padding:12px 8px;border:1px solid var(--border-bright);border-radius:13px;background:var(--overlay-black-55);font-size:11px;color:var(--on-dark-header-secondary)}.cr-nat-final-score .round{font-size:10px}.cr-nat-final-score .team{display:flex;align-items:center;gap:5px;color:var(--on-dark-header);min-width:0}.cr-nat-final-score .team b{font-size:11px}.cr-nat-final-score .cr-flag{width:19px;max-height:15px;object-fit:contain;margin:0}.cr-nat-final-score>strong{font-size:19px;white-space:nowrap;color:var(--on-dark-header)}.cr-nat-final-score .pk{font-size:10px;white-space:nowrap;color:var(--gold)}
+.cr-nat-final-stats{display:flex;gap:0;padding:12px 8px;border:1px solid var(--border-bright);border-radius:13px;background:var(--overlay-black-55)}.cr-nat-final-stats>div{flex:1;text-align:center}.cr-nat-final-stats>div+div{border-left:1px solid var(--border-bright)}.cr-nat-final-stats b{display:block;font-size:25px;line-height:1.2;color:var(--on-dark-header)}.cr-nat-final-stats span{display:block;margin-top:5px;font-size:10px;color:var(--on-dark-header-secondary)}.cr-nat-final-apps{margin:-6px 0 0;text-align:center;font-size:9px;color:var(--on-dark-header-secondary)}
+.cr-nat-overlay.completed #crNatContinue{margin-top:auto;flex-shrink:0}.cr-nat-overlay.completed .cr-rx-btn{background:var(--overlay-black-55)}.cr-nat-final-conf{pointer-events:none;z-index:-1}
+@media(max-width:350px){.cr-nat-final-score{gap:5px}.cr-nat-final-score .team b{font-size:10px}.cr-nat-final-score>strong{font-size:17px}.cr-nat-final-score .pk{flex-basis:100%;text-align:center}}
+@media(max-height:700px){.cr-nat-overlay.completed .cr-nat-box{min-height:calc(100svh - 24px);gap:9px}.cr-nat-final-hero .art,.cr-nat-final-hero .cr-wc-img,.cr-nat-result-cup{height:150px}.cr-nat-final-hero.eliminated{min-height:110px}.cr-nat-final-hero.honour h2{font-size:32px}.cr-nat-overlay.completed .cr-nat-final-hero{padding:6px 0}.cr-nat-final-stats{padding:9px 6px}.cr-nat-final-stats b{font-size:22px}}
+@media(prefers-reduced-motion:reduce){.cr-nat-final-conf{display:none}}
+
 </style>
 </head>
 <body>
@@ -2767,6 +2811,8 @@ function playIntro(){
   <button class="nav-btn" onclick="showSec('media',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6h3a1 1 0 0 1 1 1v11a2 2 0 0 1 -4 0v-13a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1v12a3 3 0 0 0 3 3h11"/><path d="M8 8l4 0"/><path d="M8 12l4 0"/><path d="M8 16l4 0"/></svg><span>미디어</span></button>
   <button class="nav-btn" onclick="showSec('history',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8l0 4l2 2"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg><span>History</span></button>
 </nav>
+<script src="/career/league-scenes.js?v=1"></script>
+<script src="/career/match-playback.js?v=35"></script>
 <script>
 var FN='/api';
 var allStandings=[];
@@ -9761,6 +9807,7 @@ function crShow(v){
   CR.busy=false; CR.extraPick=null; CR.v=v; CR.tok=v.token; CR.armed=null; crStore(v);
   if(v.phase==='prep'){ CR.evPick=null; CR.loanPick=null; return crPrep(); }
   if(v.phase==='injury') return crInjury();
+  if(v.phase==='penalty'){crSfOpen(true);return crSfData(v);}
   if(v.phase==='result'){ CR.traitPick=null; CR.pick=v.result.released && v.result.offers.length ? 0 : null; CR.fresh=!!CR.animDone; CR.animDone=false; return crResult(); }
   if(v.phase==='retired') return crRetired();
   if(v.phase==='pick'){ CR.firstClubs=v.clubs; return crIntro(); }
@@ -10029,7 +10076,7 @@ function crPrep(){
   var tr=!iv && !lcs.length && ev.id!=='loan' ? ev : null;
   // 성장이 멈춘 뒤엔 훈련 방향 대신 시즌 운영(몸 관리·균형·주전 경쟁) — 서버가 지금 고를 수 있는 것을 준다
   var topts=pr.trainOpts||['강점 강화','균형','약점 보완']; if(topts.indexOf(CR.train)<0) CR.train='균형';
-  if(p.age>=18)crSfNatWarm();
+  if(p.age>=18){crSfNatWarm();if(window.CareerMatchReplay)CareerMatchReplay.warm().catch(function(){});}
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
   crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'
    +crHead()
@@ -10149,7 +10196,7 @@ function crTrFx(txt){   // "성장 ↑ · 부상 위험 ↑" → 좋은 쪽(초�
     var bad=(/부상|하락|문턱|부담/.test(m[1]))===(m[2][0]==='↑');   // 오르면 나쁜 것: 부상 위험·하락·데뷔 문턱
     return '<span class="fx '+(bad?'bad':'good')+'">'+gmEsc(m[1])+' '+m[2]+'</span>'; }).join('');
 }
-var CR_SCENE_PHOTO={field:'field.webp',talk:'talk.webp?v=2',tour:'tour.webp',scout:'scout.webp',captain:'captain.webp',captfull:'captain.webp',natcall:'natcall.webp',sns:'sns.webp',diet:'diet.webp',study:'study.webp',military:'military.webp',militaryTalk:'talk.webp?v=2',tournament:'natcall.webp'};
+var CR_SCENE_PHOTO={field:'field.webp',talk:'talk.webp?v=2',tour:'tour.webp',scout:'scout.webp',captain:'captain.webp?v=3',captfull:'captain.webp?v=3',natcall:'natcall.webp?v=2',sns:'sns.webp?v=2',diet:'diet.webp?v=2',study:'study.webp?v=2',military:'military.webp',militaryTalk:'talk.webp?v=2',tournament:'natcall.webp?v=2'};
 function crTrShow(ev){
   var T=CR_TR[ev.id]||{tag:'EVENT · '+ev.t, ic:'clipboard', who:'구단', say:ev.d, opt:['check','pause']}, theme=Object.prototype.hasOwnProperty.call(CR_TR,ev.id)?ev.id:'default', scene=['coach','weak','ftcall','extra','default'].indexOf(theme)>=0?'field':theme, SAY=typeof T.say==='function'?T.say(CR.v.player, ev):(T.say||ev.d); CR.trSel=null;
   // 장면 배경(픽셀아트 그림). 새 장면을 추가하면 CR_SCENE_PHOTO에 한 줄 넣고, 그림이 아직
@@ -10193,7 +10240,7 @@ function crTrPick(i, btn){   // 고르는 즉시 반영(사용자 지정) — �
 function crIvShow(iv){
   CR.ivSel=null; CR.iv=iv;
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  crTovSet('<div class="cr-iv" role="dialog" aria-modal="true" aria-label="인터뷰" onclick="crTypeSkip()"><i class="fl"></i><i class="fl"></i><i class="fl"></i><i class="fl"></i>'
+  crTovSet('<div class="cr-iv" role="dialog" aria-modal="true" aria-label="인터뷰" onclick="crTypeSkip()"><img class="cr-iv-scene" src="/img/career-scenes/interview.webp?v=2" alt="" aria-hidden="true"><i class="fl"></i><i class="fl"></i><i class="fl"></i><i class="fl"></i>'
    +'<div class="cr-iv-box"><div class="mic" aria-hidden="true">'+crIcon('microphone')+'</div><span class="tag">'+gmEsc(iv.tag)+'</span>'
    +'<div class="cr-iv-q"><div class="who">'+crIcon('newspaper')+' <b>'+gmEsc(iv.who)+'</b></div><div class="t" id="crIvQ">'+(reduce?gmEsc(iv.q):'<span class="cur"></span>')+'</div></div>'
    +'<div class="cr-iv-ans" id="crIvA" hidden><div class="me">내 답변</div>'
@@ -10235,6 +10282,18 @@ function crSfClub(){
   }
   return {club:v.player.club, loan:false};
 }
+function crSfLeagueScene(club){
+ var el=document.querySelector('#crTov .cr-sf');if(!el)return;
+ var league=window.CareerLeagueScenes&&CareerLeagueScenes.forClub(club),img=el.querySelector(':scope > .cr-sf-scene'),badge=document.getElementById('crSfLeague');
+ if(badge)badge.textContent=league?league.label:'SEASON';
+ if(!league){if(img)img.remove();el.classList.remove('has-league-scene');delete el.dataset.league;return;}
+ if(el.dataset.league===league.id&&img)return;
+ el.dataset.league=league.id;el.classList.remove('has-league-scene');
+ if(!img){img=document.createElement('img');img.className='cr-sf-scene';img.alt='';img.setAttribute('aria-hidden','true');img.decoding='async';el.prepend(img);}
+ img.onload=function(){if(el.isConnected&&el.dataset.league===league.id)el.classList.add('has-league-scene');};
+ img.onerror=function(){if(el.dataset.league===league.id)el.classList.remove('has-league-scene');};
+ img.src=league.url;
+}
 function crSfSeed(){ var p=CR.v.player, s=String(p.name)+'|'+p.age+'|'+(CR.sf?CR.sf.club.n:p.club.n), h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
 function crSfOpen(still){
   var p=CR.v.player, season=crSfClub(), club=season.club, df=p.pos==='DF', yth=!season.loan && (p.age<18 || /U-\d+$/.test(club.team||''));
@@ -10242,7 +10301,7 @@ function crSfOpen(still){
   CR.sf={n:{apps:0,goals:0,ast:0,cs:0}, i:0, G:0, timer:null, q:[], lbs:lbs, form:[], club:club, loan:season.loan};
   // 다른 오버레이(인터뷰·훈련 제안·이적시장)와 같은 틀: 흐린 배경 + 튀어 들어오는 아이콘 + 알약 태그 + 밝은 말풍선 카드 + 어두운 반투명 줄
   crTovSet('<div class="cr-sf'+(still?' still':'')+'" role="dialog" aria-modal="true" aria-label="시즌 진행" onclick="crSfTap(event)"><div class="cr-sf-box" id="crSfBox">'
-    +'<div class="ic" aria-hidden="true">'+dIcon('stadium',24)+'</div><span class="tag">SEASON '+crSeasonLabel(p.age)+' · 시즌 '+(p.seasons+1)+'</span>'
+    +'<div class="ic" aria-hidden="true">'+dIcon('stadium',24)+'</div><span class="tag"><span id="crSfLeague">SEASON</span> '+crSeasonLabel(p.age)+' · 시즌 '+(p.seasons+1)+'</span>'
     // 시즌 카드: 구단·시즌, 진행(몇 번째 경기 / 전체), 내 기록, 최근 5경기 결과
     +'<div class="cr-sf-card" id="crSfCard"><div class="hd">'+crCrest(club,32)+'<div><b>'+gmEsc(club.team)+'</b><span>'+gmEsc(p.name)+' · '+(yth?'유스 리그':crNat(club.nat).n+' 리그')+'</span></div>'
     +'<div class="md"><b id="crSfMd">0</b><span id="crSfG">/ –</span></div></div>'
@@ -10254,7 +10313,7 @@ function crSfOpen(still){
     +'<div class="cr-sf-feed" id="crSfFeed" aria-live="off"></div>'
     +'<div id="crSfExtra"><div class="cr-ss-skip" id="crSfSkip">화면을 누르면 건너뛰기 ›</div></div>'
     +'</div></div>');
-  CR.sf.t0=Date.now(); crSfFeedStart();
+  crSfLeagueScene(club);CR.sf.t0=Date.now(); crSfFeedStart();
 }
 // ── 팬 반응 피드(사용자 지정 — SNS 한마디가 빠르게 올라와 관심받는 느낌) ── 선수 상황(유스·어린 1군·전성기·베테랑·스타·해외·유리몸)에 맞는
 // 문구가 0.4초마다 하나씩 올라오고(최근 3개만 보인다), 골·도움·무실점·벤치 연속·부상·시즌 끝엔 그 반응이 먼저 끼어든다.
@@ -10368,7 +10427,7 @@ function crSfSay(t){
   f.insertBefore(el, f.firstChild);
   while(f.children.length>3) f.removeChild(f.lastChild);
 }
-function crSfClose(){ if(CR.sf){clearTimeout(CR.sf.timer);if(CR.sf.nat){clearTimeout(CR.sf.nat.timer);clearTimeout(CR.sf.nat.ceremonyTimer);clearTimeout(CR.sf.nat.exitTimer);if(CR.sf.nat.openFrame)cancelAnimationFrame(CR.sf.nat.openFrame);if(CR.sf.nat.bracketFrame)cancelAnimationFrame(CR.sf.nat.bracketFrame);}if(CR.sf.fan)clearTimeout(CR.sf.fan.timer);} CR.sf=null; crTovSet(''); }
+function crSfClose(){ if(CR.sf){clearTimeout(CR.sf.timer);if(CR.sf.nat){if(CR.sf.nat.replay)CR.sf.nat.replay.destroy();clearTimeout(CR.sf.nat.timer);clearTimeout(CR.sf.nat.ceremonyTimer);clearTimeout(CR.sf.nat.exitTimer);if(CR.sf.nat.openFrame)cancelAnimationFrame(CR.sf.nat.openFrame);if(CR.sf.nat.bracketFrame)cancelAnimationFrame(CR.sf.nat.bracketFrame);}if(CR.sf.fan)clearTimeout(CR.sf.fan.timer);} CR.sf=null; crTovSet(''); }
 // 합계를 from..to 경기 칸에 나눈다(시드 고정). out: 이 구간 앞쪽 몇 칸은 부상 결장.
 function crSfPlan(from,to,tot,out){
   var S=CR.sf;if(!S.segments)return crSfPlanBase(from,to,tot,out);
@@ -10420,11 +10479,11 @@ function crSfData(v){
     S.injAt=at; S.injGames=v.injury.games; crSfSetG();
     crSfWall(); crSfRun(crSfPlan(0, at, tot, 0), function(){ crSfInjury(v); });
   } else {
-    var r=v.result.row; S.national=r.national||[]; S.segments=r.segments||null;S.preview=false; S.G=S.G||r.games; S.rank=r.youth?Math.min(r.rank,10):r.rank; crSfSetG();
+    var r=v.preview||v.result.row; S.national=r.national||[]; S.segments=r.segments||null;S.preview=false; S.G=S.G||r.games; S.rank=r.youth?Math.min(r.rank,10):r.rank; crSfSetG();
     if(!S.wall) crSfWall();
     var from=S.injAt!=null ? S.injAt+1 : 0, out=S.injAt!=null ? Math.min(S.G-from, S.quick?Math.ceil(S.injGames/2):S.injGames) : 0;
     var rest={apps:Math.max(0,r.apps-S.n.apps), goals:Math.max(0,r.goals-S.n.goals), ast:Math.max(0,r.ast-S.n.ast), cs:Math.max(0,(r.cs||0)-S.n.cs)};
-    crSfRun(crSfPlan(from, S.G, rest, out), function(){ crSfEnd(v); });
+    crSfRun(crSfPlan(from, S.G, rest, out), function(){ crSfEnd(CR.v); });
   }
 }
 function crSfWall(){ if(CR.sf) CR.sf.wall=true; }
@@ -10433,7 +10492,7 @@ function crSfSetG(){ var g=document.getElementById('crSfG'); if(g && CR.sf) g.te
 var CR_NAT_WARM=null;
 function crSfNatWarm(){
  if(CR_NAT_WARM)return CR_NAT_WARM;
- CR_NAT_WARM=new Promise(function(resolve){var img=new Image();img.onload=function(){(img.decode?img.decode().catch(function(){}):Promise.resolve()).then(function(){resolve(true);});};img.onerror=function(){CR_NAT_WARM=null;resolve(false);};img.src='/img/career-scenes/international-stadiums.webp?v=1';});return CR_NAT_WARM;
+ CR_NAT_WARM=new Promise(function(resolve){var img=new Image();img.onload=function(){(img.decode?img.decode().catch(function(){}):Promise.resolve()).then(function(){resolve(true);});};img.onerror=function(){CR_NAT_WARM=null;resolve(false);};img.src='/img/career-scenes/international-stadiums.webp?v=2';});return CR_NAT_WARM;
 }
 var CR_NAT_BG_CELL={'월드컵':[0,0],'유로':[1,0],'코파 아메리카':[2,0],'아시안컵':[3,0],'골드컵':[0,1],'아프리카 네이션스컵':[1,1],'올림픽':[2,1],'아시안게임':[3,1]};
 var CR_NAT_NAME={CRO:'크로아티아',SUI:'스위스',DEN:'덴마크',URU:'우루과이',COL:'콜롬비아',CHI:'칠레',ECU:'에콰도르',PER:'페루',AUS:'호주',IRN:'이란',KSA:'사우디아라비아',QAT:'카타르',IRQ:'이라크',SEN:'세네갈',MAR:'모로코',EGY:'이집트',GHA:'가나',CMR:'카메룬',CIV:'코트디부아르',MEX:'멕시코',CAN:'캐나다',CRC:'코스타리카',JAM:'자메이카',PAN:'파나마'};
@@ -10455,11 +10514,12 @@ function crSfNatOpen(w,resume){
   var scene=CR_NAT_BG_CELL[w.name]||[0,0];el.style.setProperty('--cr-scene-x',scene[0]);el.style.setProperty('--cr-scene-y',scene[1]);
   var nation=gmEsc(crNat(w.nation).n),age=w.kind==='age';
   var art=age?crIcon('medal'):crTrophy(w.name+' 우승',40),year=w.year||2027+CR.v.player.age-15;
-  var header=w.knockout?'<div class="cr-nat-masthead"><div class="cr-nat-titleline"><div class="cr-nat-emblem" aria-hidden="true">'+art+'</div><h3>'+gmEsc(w.name)+'</h3></div><small>'+crFlag(w.nation)+' '+nation+'<span>·</span>'+gmEsc(CR.v.player.name)+'<span>·</span><time>'+year+' '+w.month+'</time></small></div>':'<span class="tag">INTERNATIONAL BREAK · '+w.month+'</span>';
+  var cupLabel=({'월드컵':'FIFA WORLD CUP','유로':'UEFA EURO','코파 아메리카':'COPA AMERICA','아시안컵':'AFC ASIAN CUP','골드컵':'CONCACAF GOLD CUP','아프리카 네이션스컵':'AFRICA CUP OF NATIONS','올림픽':'OLYMPIC GAMES','아시안게임':'ASIAN GAMES'})[w.name]||w.name;
+  var header=w.knockout?'<div class="cr-nat-masthead"><div class="cr-nat-cup-label">'+gmEsc(cupLabel)+' '+year+'</div><div class="cr-nat-titleline"><div class="cr-nat-emblem" aria-hidden="true">'+art+'</div><h3>'+gmEsc(w.name+(w.name==='월드컵'?' 본선':''))+'</h3></div><small>'+crFlag(w.nation)+' '+nation+'<span>·</span>'+gmEsc(CR.v.player.name)+' #'+(CR.v.player.num||CR.v.player.want||'')+'</small></div>':'<span class="tag">INTERNATIONAL BREAK · '+w.month+'</span>';
   el.innerHTML='<div class="cr-nat-box">'+header+(w.knockout?'<div id="crNatBracket"></div><div class="cr-nat-summary"><div class="cr-nat-match" id="crNatMatch"><div class="round">'+gmEsc(w.name)+'</div><div class="verdict">대표팀의 여정이 시작됩니다</div></div>':'')+'<div class="cr-sf-card"><div class="hd">'+crFlag(w.nation)+'<div><b>'+nation+(age?' 연령별 대표팀':' 대표팀')+'</b><span>'+gmEsc(w.name)+' · '+gmEsc(CR.v.player.name)+'</span></div><div class="md"><b id="crNatMd">0</b><span>/ '+(w.matches.length-start)+'</span></div></div><div class="cr-sf-prog"><i id="crNatProg"></i></div><div class="st" style="grid-template-columns:repeat(3,1fr)"><div><b id="crNatApps">0</b><span>'+(w.knockout?'대회 출전':'A매치')+'</span></div><div><b id="crNatGoals">0</b><span>골</span></div><div><b id="crNatAst">0</b><span>도움</span></div></div></div>'+(w.knockout?'<div class="cr-note" id="crNatAppsNote">조별리그 포함 · 선수 출전 수</div></div>':'')+'<div class="cr-nat-result" id="crNatResult" aria-live="polite">대표팀 일정 진행 중</div><button class="gm-btn" id="crNatContinue" onclick="crSfNatContinue()" hidden>클럽 시즌 계속</button><div class="cr-note">클럽 시즌을 잠시 멈췄어요 · '+(age?'연령별 대표 기록은 A매치 통산과 별개예요':'대표팀 기록은 클럽 기록과 별개예요')+'</div></div>';
   document.querySelector('#crTov .cr-sf').appendChild(el);crSfNatStats();if(w.knockout)crSfBracketRender(null);
-  var tick=function(){if(CR.sf!==S||!S.nat)return;if(S.skip||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return crSfNatFinish();if(S.nat.i>=w.matches.length)return crSfNatFinish();crSfNatMatch();S.nat.timer=setTimeout(tick,w.knockout?(/강|결승|동메달/.test(w.matches[S.nat.i-1].stage)?1400:450):450);};
-  var N=S.nat;crSfNatWarm().then(function(ready){if(ready&&CR.sf===S&&S.nat===N)el.classList.add('scene-ready');});
+  var tick=function(){if(CR.sf!==S||!S.nat)return;if(S.nat.finishRequested||S.skip||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return crSfNatFinish();if(S.nat.i>=w.matches.length)return crSfNatFinish();if(crSfNatMatch()===false)return;S.nat.timer=setTimeout(tick,w.knockout?(/강|결승|동메달/.test(w.matches[S.nat.i-1].stage)?1400:450):450);};
+  var N=S.nat;N.tick=tick;crSfNatWarm().then(function(ready){if(ready&&CR.sf===S&&S.nat===N)el.classList.add('scene-ready');});
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)el.classList.remove('entering');else N.openFrame=requestAnimationFrame(function(){N.openFrame=requestAnimationFrame(function(){if(CR.sf===S&&S.nat===N)el.classList.remove('entering');});});
   S.nat.timer=setTimeout(tick,300);
 }
@@ -10470,24 +10530,47 @@ function crSfNatStats(){
   document.getElementById('crNatMd').textContent=N.i-N.start;document.getElementById('crNatProg').style.transform='scaleX('+((N.i-N.start)/Math.max(1,N.w.matches.length-N.start))+')';
 }
 function crSfNatMatch(){
-  var S=CR.sf,N=S&&S.nat;if(!N||N.i>=N.w.matches.length)return;var m=N.w.matches[N.i++];
+  var S=CR.sf,N=S&&S.nat;if(!N||N.i>=N.w.matches.length)return;var m=N.w.matches[N.i],key=m.stage+'|'+m.opp;
+  if(N.live)return false;
+  if(window.CareerMatchReplay&&!N.fast&&!S.skip&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches&&!(N.regDone||{})[key]){
+   var host=document.getElementById('crNatMatch'),overlay=document.getElementById('crSfNational');overlay.classList.add('match-live');crSfLiveStages(m);N.live={key:key};var live=N.live,liveStats={g:0,a:0};var updateLiveStats=function(){if(CR.sf!==S||S.nat!==N)return;document.getElementById('crNatApps').textContent=N.n.apps+(m.played?1:0);document.getElementById('crNatGoals').textContent=N.n.goals+liveStats.g;document.getElementById('crNatAst').textContent=N.n.ast+liveStats.a;var group=N.w.matches.slice(0,N.i).filter(function(x){return x.played&&/^조별/.test(x.stage);}).length,note=document.getElementById('crNatAppsNote');if(note)note.textContent='조별리그 '+group+'경기 · 토너먼트 '+(N.n.apps-group+(m.played?1:0))+'경기 출전';};
+   N.replay=CareerMatchReplay.create(host,{nation:N.w.nation,opp:m.opp,pos:CR.v.player.pos,card:CR.v.player.card,role:((CR.meta.cards[CR.v.player.pos]||[])[CR.v.player.card]||{}).n,foot:CR.v.player.foot,number:CR.v.player.num||CR.v.player.want,player:CR.v.player.name,ourName:crNat(N.w.nation).n,theirName:CR_NAT_NAME[m.opp]||crNat(m.opp).n,ourFlag:crFlag(N.w.nation),theirFlag:crFlag(m.opp),onScene:updateLiveStats,onEvent:function(event){if(event.personal==='goal')liveStats.g++;if(event.personal==='assist')liveStats.a++;updateLiveStats();}});
+   document.querySelector('#crNatMatch .cr-live-actions').insertAdjacentHTML('afterbegin','<button type="button" onclick="event.stopPropagation();document.getElementById(\'crSfNational\').classList.toggle(\'show-bracket\')">대진표</button>');
+   N.replay.play(m,{year:2027+CR.v.player.age-15}).then(function(result){
+    if(CR.sf!==S||S.nat!==N||N.live!==live||result.cancelled)return;N.live=null;N.regDone=N.regDone||{};N.regDone[key]=true;
+    if(N.finishRequested)return crSfNatFinish();N.timer=setTimeout(N.tick,900);
+   });return false;
+  }
+  if(m.pk&&m.pk.pending){crSfPenaltyOpen(m);return false;}
+  if(N.replay){N.replay.destroy();N.replay=null;}document.getElementById('crSfNational')?.classList.remove('match-live','show-bracket');document.getElementById('crLiveStages')?.remove();N.i++;
   if(m.played){N.n.apps++;N.n.goals+=m.g;N.n.ast+=m.a;N.n.cs+=m.cs;}
   crSfNatStats();
   crSfNatStage(m);
 }
 function crSfNatFinish(){
-  var N=CR.sf&&CR.sf.nat;if(!N||N.finished)return;clearTimeout(N.timer);N.fast=true;if(N.bracketFrame)cancelAnimationFrame(N.bracketFrame);if(N.bracketSettle)N.bracketSettle();while(N.i<N.w.matches.length)crSfNatMatch();N.finished=true;
-  var w=N.w,msg=w.outcome;if(w.kind==='age')msg+=w.qualified?' · 체육요원 편입 요건 충족':!w.medal?' · 메달 획득 실패':'';
-  var result=document.getElementById('crNatResult');result.textContent=msg;result.classList.add(w.won||w.medal?'victory':'eliminated');document.getElementById('crNatContinue').hidden=false;
-  var event=crNationalReactionEvent(w);if(event)document.getElementById('crNatResult').insertAdjacentHTML('afterend',crReactionBtnHtml(crNationalReaction(event),{id:'crNatReactionLink',label:'NATIONAL TEAM · 대표팀 반응',icon:event.type==='qualify'?'shield':'trophy',action:'crSfNatReactionShow()'}));
-  if(w.won||w.medal){
-    var title=w.kind==='age'?({1:'금메달',2:'은메달',3:'동메달'})[w.place]:'우승';
-    result.classList.add('cr-nat-honour');result.style.setProperty('--honour-color',w.kind==='age'&&w.place!==1?(w.place===2?'var(--text-secondary)':'var(--amber)'):'var(--gold)');
-    result.innerHTML='<strong>'+gmEsc(title)+'</strong><span>'+gmEsc(w.name)+(w.won?' CHAMPIONS':' · '+w.place+'위')+'</span>'+(w.qualified?'<small>체육요원 편입 요건 충족</small>':'');
-    document.querySelector('#crSfNational .cr-nat-summary').prepend(result);
-  }
-  if(w.knockout&&(w.won||w.medal))crSfNatCeremony();
+  var N=CR.sf&&CR.sf.nat;if(!N||N.finished||N.pk)return;if(N.live){N.finishRequested=true;N.fast=true;clearTimeout(N.timer);N.replay.skip();return;}clearTimeout(N.timer);N.fast=true;if(N.bracketFrame)cancelAnimationFrame(N.bracketFrame);if(N.bracketSettle)N.bracketSettle();while(N.i<N.w.matches.length){if(crSfNatMatch()===false)return;}N.finished=true;
+  crSfNatResultRender();
+
 }
+function crSfNatResultRender(){
+ var N=CR.sf&&CR.sf.nat;if(!N||!N.finished)return;var w=N.w,last=w.matches.at(-1),overlay=document.getElementById('crSfNational'),box=overlay.querySelector('.cr-nat-box'),header=box.querySelector('.cr-nat-masthead').outerHTML;
+ var medal=w.kind==='age'&&w.medal,celebrate=w.won||medal,event=crNationalReactionEvent(w),title=medal?({1:'금메달',2:'은메달',3:'동메달'})[w.place]:w.won?'우승':w.outcome||'대회 종료';
+ var art=medal?'<div class="cr-nat-result-medal" style="color:'+({1:'var(--gold)',2:'var(--on-dark-header-secondary)',3:'var(--amber)'})[w.place]+'">'+crIcon('medal')+'</div>':w.won?(w.name==='월드컵'?crWorldCupSvg():'<img class="cr-nat-result-cup" src="/img/career/tro/'+crTroImg(w.name+' 우승')+'.png" alt="'+gmEsc(w.name)+' 트로피">'):'';
+ var assessment=celebrate?'':event?({historic:'기대를 뛰어넘은 역사적인 성적',praise:'기대 이상의 성적을 거뒀습니다',fair:'여기서 대표팀의 여정을 마칩니다',critic:'기대에 미치지 못한 아쉬운 결과'})[event.mood]:'';
+ if(!celebrate&&last.pk)assessment+=(assessment?' · ':'')+'승부차기에서 아쉽게';
+ var caption=medal? w.name+' · '+w.place+'위':w.won?(w.name==='월드컵'?'WORLD CUP CHAMPIONS':w.name+' CHAMPIONS'):last.stage==='결승'?'FINAL':last.stage;
+ var pk=last.pk&&!last.pk.pending?'<small class="pk">PK '+last.pk.our+'–'+last.pk.their+'</small>':'';
+ var stats='<div class="cr-nat-final-stats"><div><b id="crNatApps">'+N.n.apps+'</b><span>출전</span></div><div><b id="crNatGoals">'+N.n.goals+'</b><span>골</span></div><div><b id="crNatAst">'+N.n.ast+'</b><span>도움</span></div>'+(CR.v.player.pos==='DF'?'<div><b>'+N.n.cs+'</b><span>클린시트</span></div>':'')+'</div>';
+ var reaction=event?crReactionBtnHtml(crNationalReaction(event),{id:'crNatReactionLink',label:'NATIONAL TEAM · 대표팀 반응',icon:event.type==='qualify'?'shield':'bullhorn',action:'crSfNatReactionShow()'}):'';
+ overlay.classList.remove('match-live','show-bracket');overlay.classList.add('completed');overlay.classList.toggle('won',!!w.won);overlay.classList.toggle('medallist',!!medal);
+ if(medal)overlay.style.setProperty('--nat-honour-color',({1:'var(--gold)',2:'var(--on-dark-header-secondary)',3:'var(--amber)'})[w.place]);
+ box.innerHTML=header+'<section class="cr-nat-final-hero'+(celebrate?' honour':' eliminated')+'" id="crNatResult" aria-live="polite">'+(art?'<div class="art">'+art+'</div>':'<div class="eyebrow">'+gmEsc(caption)+'</div>')+'<h2>'+gmEsc(title)+'</h2><p>'+gmEsc(celebrate?caption:assessment)+'</p>'+(w.qualified?'<small class="qualification">체육요원 편입 요건 충족</small>':'')+'</section><div class="cr-nat-final-score" id="crNatFinalScore"><span class="round">'+gmEsc(last.stage)+'</span><span class="team">'+crFlag(w.nation)+'<b>'+gmEsc(crNat(w.nation).n)+'</b></span><strong>'+last.our+' – '+last.their+'</strong><span class="team"><b>'+gmEsc(CR_NAT_NAME[last.opp]||crNat(last.opp).n)+'</b>'+crFlag(last.opp)+'</span>'+pk+'</div>'+stats+'<p class="cr-nat-final-apps" id="crNatAppsNote">조별리그 포함 · 선수 출전 기록</p>'+reaction+'<button class="gm-btn" id="crNatContinue" onclick="crSfNatContinue()">클럽 시즌 계속</button>';
+ crSfLiveStages(last);
+ // Celebration now lives in the result itself, rather than covering it with another overlay.
+ N.celebrated=!!celebrate;
+ if(celebrate&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){var conf=document.createElement('div');conf.className='conf cr-nat-final-conf';conf.setAttribute('aria-hidden','true');for(var i=0;i<22;i++)conf.insertAdjacentHTML('beforeend','<i style="--x:'+((i*29)%100)+'%;--d:'+(i%7*.09)+'s;--r:'+((i*61)%360)+'deg"></i>');overlay.appendChild(conf);}
+}
+
 function crSfBracketRender(m){
  var S=CR.sf,N=S&&S.nat,host=document.getElementById('crNatBracket');if(!N||!host)return;
  N.lastBracketMatch=m;
@@ -10495,8 +10578,8 @@ function crSfBracketRender(m){
  if(N.bracketSettle){N.bracketSettle();N.bracketSettle=null;}
  var B=N.w.bracket;
  if(!B){host.innerHTML='<div class="cr-bracket-qualifying">'+gmEsc(m?m.stage:'조별리그')+'<small>토너먼트 진출을 향해</small></div>';return;}
- var consolation=!!(B.bronze&&m&&(m.stage==='동메달 결정전'||m.stage==='4강'&&m.our<m.their));
- if(consolation){var bronze=B.bronze;B={consolation:true,rounds:[B.rounds[B.rounds.length-2],{stage:'동메달 결정전',matches:[{a:N.w.nation,b:bronze.opp,sa:bronze.our,sb:bronze.their,winner:bronze.our>bronze.their?N.w.nation:bronze.opp,ours:true}]}],winner:bronze.our>bronze.their?N.w.nation:bronze.opp};}
+ var consolation=!!(B.bronze&&m&&(m.stage==='동메달 결정전'||m.stage==='4강'&&crNatLost(m)));
+ if(consolation){var bronze=B.bronze;B={consolation:true,rounds:[B.rounds[B.rounds.length-2],{stage:'동메달 결정전',matches:[{a:N.w.nation,b:bronze.opp,sa:bronze.our,sb:bronze.their,winner:crNatWon(bronze)?N.w.nation:bronze.opp,ours:true}]}],winner:crNatWon(bronze)?N.w.nation:bronze.opp};}
  var step=166,W=132,H=B.rounds[0].matches.length*68+32,round=B.rounds.findIndex(function(r){return m&&r.stage===m.stage;}),played=m?N.w.matches.slice(0,N.i):[],maxRound=-1,ours=N.w.nation;
  N.bracketArrivals=N.bracketArrivals||{};var arrivals=N.bracketArrivals;
  var key=function(r,j,side){return (consolation?'bronze/':'')+r+'-'+j+'-'+side;};
@@ -10504,7 +10587,7 @@ function crSfBracketRender(m){
   var ri=B.rounds.findIndex(function(r){return r.stage===match.stage;});maxRound=Math.max(maxRound,ri);
   // Earlier victories have completed their movement; skip/reduced-motion settles the current one too.
   if(ri>=0&&(ri<round||N.fast||S.skip||window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
-   if(match.our>match.their||consolation&&ri===0&&match.our<match.their){if(ri<B.rounds.length-1){var next=B.rounds[ri+1].matches[0];arrivals[key(ri+1,0,next.a===ours?'a':'b')]=true;}}
+   if(crNatWon(match)||consolation&&ri===0&&crNatLost(match)){if(ri<B.rounds.length-1){var next=B.rounds[ri+1].matches[0];arrivals[key(ri+1,0,next.a===ours?'a':'b')]=true;}}
   }
  });
  var y=function(r,j){return H-16-(j+.5)*68*Math.pow(2,r);},x=function(r){return 12+r*step;},html='',lines='',travel=null;
@@ -10517,7 +10600,7 @@ function crSfBracketRender(m){
    var known=ri<=maxRound+1,done=ri<=maxRound,advancer=consolation&&ri===0?(match.winner===match.a?match.b:match.a):match.winner,won=done&&advancer===ours,cx=x(ri),cy=y(ri,j),current=ri===round&&match.ours;
    var champion=done&&match.ours&&r.stage==='결승'&&N.w.won&&match.winner===ours;
    var aKnown=known&&(ri===0||match.a!==ours||arrivals[key(ri,j,'a')]),bKnown=known&&(ri===0||match.b!==ours||arrivals[key(ri,j,'b')]);
-   html+='<div class="cr-bracket-round" style="left:'+cx+'px;top:'+(cy-42)+'px">'+r.stage+(champion?' · 우승':'')+'</div><div class="cr-bracket-tie'+(current?' current':'')+(match.ours?' our-tie':'')+(champion?' champion':'')+'" data-round="'+ri+'" data-match="'+j+'" style="left:'+cx+'px;top:'+(cy-25)+'px">'+team(match.a,done?match.sa:'',aKnown,done&&match.winner===match.a,'a')+team(match.b,done?match.sb:'',bKnown,done&&match.winner===match.b,'b')+(champion?crNatVictorySparks():'')+'</div>';
+   html+='<div class="cr-bracket-round" style="left:'+cx+'px;top:'+(cy-42)+'px">'+r.stage+(champion?' · 우승':'')+'</div><div class="cr-bracket-tie'+(current?' current':'')+(match.ours?' our-tie':'')+(champion?' champion':'')+'" data-round="'+ri+'" data-match="'+j+'" style="left:'+cx+'px;top:'+(cy-25)+'px">'+team(match.a,done?match.sa+(match.pk?' ('+(match.a===ours?match.pk.our:match.pk.their)+')':''):'',aKnown,done&&match.winner===match.a,'a')+team(match.b,done?match.sb+(match.pk?' ('+(match.b===ours?match.pk.our:match.pk.their)+')':''):'',bKnown,done&&match.winner===match.b,'b')+(champion?crNatVictorySparks():'')+'</div>';
    if(ri===B.rounds.length-1)return;
    var parent=Math.floor(j/2),nx=x(ri+1),ny=y(ri+1,parent),parts=route(cx+W,cy,nx,ny),branch='crBracketEdge_'+ri+'_'+j,stem='crBracketStem_'+ri+'_'+parent;
    lines+='<path id="'+branch+'" d="'+parts.branch+'" class="'+(won?'route':'')+'"/>';
@@ -10563,11 +10646,40 @@ function crSfBracketZoom(delta){
  N.zooming=true;crSfBracketRender(N.lastBracketMatch);N.zooming=false;
 }
 function crNatVictorySparks(){return '<span class="cr-victory-sparks" aria-hidden="true"><i>✦</i><i>✦</i><i>✦</i><i>✦</i></span>';}
+function crSfLiveStages(m){
+ var N=CR.sf&&CR.sf.nat;if(!N)return;document.getElementById('crLiveStages')?.remove();
+ var stages=['조별'].concat(N.w.bracket?N.w.bracket.rounds.map(function(r){return r.stage;}):N.w.matches.filter(function(x){return !/^조별/.test(x.stage);}).map(function(x){return x.stage;}));if(m.stage==='동메달 결정전')stages.push(m.stage);
+ var html=stages.map(function(stage){var played=stage==='조별'?N.w.matches.filter(function(x){return /^조별/.test(x.stage);}):N.w.matches.filter(function(x){return x.stage===stage&&N.w.matches.indexOf(x)<N.i;}),current=!N.finished&&stage===m.stage,label=stage==='조별'?'통과':played.length?(played[0].pk?'PK '+played[0].pk.our+'–'+played[0].pk.their:played[0].our+'–'+played[0].their):current?'진행 중':'—';return '<div class="'+(N.finished&&stage==='결승'&&N.w.won?'champion':current?'active':played.length?(stage!=='조별'&&crNatLost(played[0])?'out':'done'):'')+'"><b>'+stage+'</b><small>'+label+'</small></div>';}).join('');
+ document.querySelector('#crSfNational .cr-nat-masthead').insertAdjacentHTML('afterend','<div class="cr-live-stages" id="crLiveStages">'+html+'</div>');
+}
+function crNatWon(m){return m.pk&&!m.pk.pending?m.pk.won:m.our>m.their;}
+function crNatLost(m){return m.pk&&!m.pk.pending?!m.pk.won:m.our<m.their;}
+function crSfPenaltyOpen(m){
+ var S=CR.sf,N=S&&S.nat;if(!N||N.pk)return;clearTimeout(N.timer);if(N.bracketFrame)cancelAnimationFrame(N.bracketFrame);if(N.bracketSettle)N.bracketSettle();
+ var P=CR.v.shootout;if(!P||P.key!==m.pk.key){gameToast('승부차기 정보를 다시 확인해 주세요.');return;}
+ var box=document.createElement('div');box.id='crPenaltyOverlay';box.className='cr-penalty-overlay';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label',N.w.name+' '+m.stage+' 승부차기');box.onclick=function(e){e.stopPropagation();};
+ var frame=document.createElement('iframe');frame.title='슛 방향과 파워를 조절하는 승부차기';frame.src='/career/penalty.html?v=7';box.append(frame);N.pk={key:P.key,frame:frame,busy:false,resolved:false};
+ frame.onload=function(){if(CR.sf!==S||S.nat!==N)return;frame.contentWindow.postMessage({type:'career-penalty-config',match:Object.assign({},P,{player:CR.v.player.name,ourName:crNat(P.nation).n,theirName:CR_NAT_NAME[P.opp]||crNat(P.opp).n})},location.origin);};
+ document.querySelector('#crTov .cr-sf').append(box);
+}
+window.addEventListener('message',function(e){
+ var S=CR.sf,N=S&&S.nat,P=N&&N.pk,d=e.data;if(!P||e.origin!==location.origin||e.source!==P.frame.contentWindow||!d||d.key!==P.key)return;
+ if(d.type==='career-penalty-continue'&&P.resolved){document.getElementById('crPenaltyOverlay')?.remove();N.pk=null;N.fast=!!N.finishRequested;if(N.finishRequested)return crSfNatFinish();crSfNatMatch();N.timer=setTimeout(N.tick,1200);return;}
+ if(d.type!=='career-penalty-kick'||P.busy||P.resolved)return;P.busy=true;var tok=CR.tok;
+ crApi('penalty',{token:tok,key:P.key,x:d.x,y:d.y,power:d.power}).then(function(v){
+  if(CR.tok!==tok)return;CR.v=v;CR.tok=v.token;crStore(v);if(CR.sf!==S||S.nat!==N||N.pk!==P)return;
+  var row=v.preview||v.result.row;S.national=row.national||[];var updated=S.national.find(function(w){return w.id===N.w.id;});Object.assign(N.w,updated);
+  (S.q||[]).forEach(function(item){if(item.national){var fresh=S.national.find(function(w){return w.id===item.national.id;});if(fresh)Object.assign(item.national,fresh);}});
+  N.n={apps:0,goals:0,ast:0,cs:0};N.w.matches.slice(0,N.i).forEach(function(m){if(m.played){N.n.apps++;N.n.goals+=m.g;N.n.ast+=m.a;N.n.cs+=m.cs;}});P.busy=false;P.resolved=true;
+  P.frame.contentWindow.postMessage({type:'career-penalty-response',result:v.penaltyResult},location.origin);
+ }).catch(function(err){P.busy=false;if(CR.sf===S&&S.nat===N&&N.pk===P)P.frame.contentWindow.postMessage({type:'career-penalty-error',error:err.message||'연결을 확인하고 다시 슛을 시도해 주세요.'},location.origin);});
+});
+
 function crSfNatStage(m){
   var N=CR.sf&&CR.sf.nat;if(!N||!N.w.knockout)return;
-  crSfBracketRender(m);var hero=document.getElementById('crNatMatch'),name=CR_NAT_NAME[m.opp]||crNat(m.opp).n,res=m.our>m.their?'승리':m.our===m.their?'무승부':'패배';
+  crSfBracketRender(m);var hero=document.getElementById('crNatMatch'),name=CR_NAT_NAME[m.opp]||crNat(m.opp).n,res=crNatWon(m)?'승리':crNatLost(m)?'패배':'무승부';
 
-  if(hero){var champion=m.stage==='결승'&&N.w.won&&m.our>m.their;hero.classList.toggle('champion',champion);hero.closest('.cr-nat-summary')?.classList.toggle('champion',champion);hero.classList.toggle('final',m.stage==='결승'||m.stage==='동메달 결정전');hero.innerHTML='<div class="round">'+gmEsc(m.stage)+' · FULL TIME</div><div class="score"><div>'+crFlag(N.w.nation)+'<span>'+gmEsc(crNat(N.w.nation).n)+'</span></div><b>'+m.our+'<i>:</i>'+m.their+'</b><div>'+crFlag(m.opp)+'<span>'+gmEsc(name)+'</span></div></div><div class="verdict">'+res+(m.stage==='결승'&&N.w.won?' · 정상에 올랐습니다':m.stage==='결승'&&res==='패배'?' · 마지막 문턱에서 멈췄습니다':m.stage==='4강'&&res==='패배'&&N.w.bracket&&N.w.bracket.bronze?' · 동메달 결정전 진출':res==='승리'&&/강$/.test(m.stage)?' · 다음 라운드 진출':'')+'</div>'+(champion?crNatVictorySparks():'');var sides=hero.querySelectorAll('.score>div');if(m.our!==m.their)sides[m.our>m.their?0:1].classList.add('winner');}
+  if(hero){var champion=m.stage==='결승'&&N.w.won&&crNatWon(m);hero.classList.toggle('champion',champion);hero.closest('.cr-nat-summary')?.classList.toggle('champion',champion);hero.classList.toggle('final',m.stage==='결승'||m.stage==='동메달 결정전');hero.innerHTML='<div class="round">'+gmEsc(m.stage)+' · FULL TIME</div><div class="score"><div>'+crFlag(N.w.nation)+'<span>'+gmEsc(crNat(N.w.nation).n)+'</span></div><b>'+m.our+'<i>:</i>'+m.their+'</b><div>'+crFlag(m.opp)+'<span>'+gmEsc(name)+'</span></div></div><div class="verdict">'+res+(m.stage==='결승'&&N.w.won?' · 정상에 올랐습니다':m.stage==='결승'&&res==='패배'?' · 마지막 문턱에서 멈췄습니다':m.stage==='4강'&&res==='패배'&&N.w.bracket&&N.w.bracket.bronze?' · 동메달 결정전 진출':res==='승리'&&/강$/.test(m.stage)?' · 다음 라운드 진출':'')+'</div>'+(champion?crNatVictorySparks():'');var sides=hero.querySelectorAll('.score>div');if(crNatWon(m)||crNatLost(m))sides[crNatWon(m)?0:1].classList.add('winner');}
 }
 function crSfNatCeremony(){
   var S=CR.sf,N=S&&S.nat;if(!N||N.celebrated)return;N.celebrated=true;
@@ -10615,7 +10727,7 @@ function crSfRun(list, done){
 function crSfMatch(m, quiet){   // 한 경기: 진행·기록·최근 결과·경기 기록 한 줄. 골/도움이면 true(조금 더 머문다)
   var S=CR.sf, p=CR.v.player, df=p.pos==='DF';
   if(m.club && S.club.n!==m.club.n){
-    S.club=m.club;
+    S.club=m.club;crSfLeagueScene(S.club);
     var hd=document.querySelector('#crSfCard .hd');
     if(hd)hd.innerHTML=crCrest(S.club,32)+'<div><b>'+gmEsc(S.club.team)+'</b><span>'+gmEsc(p.name)+' · 전역 후 복귀</span></div><div class="md"><b id="crSfMd">'+S.i+'</b><span id="crSfG">/ '+S.G+'경기</span></div>';
   }
@@ -11422,7 +11534,7 @@ function crTmShow(){
     +(M&&M.canApply?card('crMilitaryInfo(0)',crCrest({n:'김천 상무',id:133901},40),'병역 · 입대 지원','김천 상무','18개월 복무 · 전역 후 '+gmEsc(p.club.n)+' 복귀','<span class="cr-chance mid">지원 가능</span>'):'')
     +(M&&M.canRegular?card('crMilitaryRegularConfirm(0)', '<div class="cr-tm-ret">'+crIcon('shield')+'</div>','병역 · 일반 현역','일반 복무','18개월 · 프로 경기 공백',''):'')
     +(R.released?card('crTmPick(-2)', '<div class="cr-tm-ret" aria-hidden="true">'+crIcon('flag-checkered')+'</div>', '커리어 마무리', '은퇴', '여기서 축구화를 벗어요', ''):'');
-  crTovSet('<div class="cr-tm" role="dialog" aria-modal="true" aria-label="이적시장"><button class="cr-tm-x" onclick="crTovSet(\'\')" aria-label="닫기">'+crIcon('circle-xmark')+'</button><div class="cr-tm-box">'
+  crTovSet('<div class="cr-tm" role="dialog" aria-modal="true" aria-label="이적시장"><img class="cr-tm-scene" src="/img/career-scenes/transfer.webp?v=2" alt="" aria-hidden="true"><button class="cr-tm-x" onclick="crTovSet(\'\')" aria-label="닫기">'+crIcon('circle-xmark')+'</button><div class="cr-tm-box">'
     +'<span class="tag">'+(R.released?'CONTRACT EXPIRED · 계약 만료':'TRANSFER WINDOW · 이적시장')+'</span>'
     +'<div class="cr-tm-note"><span class="ic" aria-hidden="true">'+crIcon('envelope')+'</span><div><b>'+(n?'제안 '+n+'건 도착':'제안 없음')+'</b><span>'+(R.released?gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 다음 행선지를 골라 주세요.':'에이전트가 받은 제안이에요. 남을지 떠날지 골라 주세요.')+'</span></div></div>'
     +'<div class="cr-tm-list">'+h+'</div></div></div>');
@@ -11446,19 +11558,21 @@ function crTmPick(k, btn){
   CR.busy=true;
   crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ fin(function(){ crShow(v); window.scrollTo(0,0); }); }).catch(function(e){ fin(function(){ crErr(e); }); });
 }
-// 이적·재계약 완료 연출: (옛 구단 →) 새 구단, OFFICIAL 도장, HERE WE GO / 재계약. 계약서에 사인한 뒤에 띄우고, 약 3.6초 뒤(누르면 바로) 준비 화면으로.
+// 이적·재계약 완료: 공식 발표실 배경 + 계약 정보. 약 4.8초 뒤(누르면 바로) 준비 화면으로.
 function crTmFail(e){ crTovSet('', true); crErr(e); crResult(); }
 function crTmDone(ct){
   var p=CR.v.player, conf='', tr=ct.type==='transfer';
-  for(var i=0;i<26;i++) conf+='<i style="--x:'+((i*37)%100)+'%;--d:'+(0.9+(i%7)*0.09)+'s;--r:'+((i*53)%360)+'deg;--c:'+['#EF0107','#C8A84B','#F0F2F7','#22C55E'][i%4]+'"></i>';
-  crTovSet('<div class="cr-tm done" role="dialog" aria-modal="true" aria-label="'+(tr?'이적 완료':'재계약')+'" onclick="crTmDoneGo()"><div class="conf" aria-hidden="true">'+conf+'</div><div class="cr-tmd">'
+  clearTimeout(CR.offT);
+  for(var i=0;i<36;i++) conf+='<i style="--x:'+(i%2?72+(i*13)%28:(i*17)%28)+'%;--d:'+(0.15+(i%9)*0.12)+'s;--r:'+(i%2?-1:1)*(180+(i*53)%360)+'deg;--drift:'+(i%2?-1:1)*(3+i%6)+'vw;--w:'+(3+i%3)+'px;--h:'+(5+i%4)+'px;--fall:'+(2.6+(i%5)*0.18)+'s;--c:'+['#C8A84B','#F0E3C7','#94A889'][i%3]+'"></i>';
+  crTovSet('<div class="cr-tm done official" role="dialog" aria-modal="true" aria-label="'+(tr?'이적 완료':'재계약')+'" onclick="crTmDoneGo()"><img class="cr-tm-scene" src="/img/career-scenes/official.webp?v=1" alt="" aria-hidden="true"><div class="conf" aria-hidden="true">'+conf+'</div><div class="cr-tmd">'
     +'<div class="cr-tmd-row">'+(tr?'<div class="old">'+crCrest({n:ct.prev, id:ct.prevId},56)+'</div><div class="arr" aria-hidden="true">➜</div>':'')+'<div class="new">'+crCrest({n:ct.club, id:ct.id},96)+'</div></div>'
     +'<div class="stamp">OFFICIAL</div><div class="hwg">'+(tr?'HERE WE GO!':'EXTENDED!')+'</div>'
-    +'<div class="who"><b>'+gmEsc(p.name)+'</b> · '+gmEsc(ct.team)+(tr?' 이적 완료':' 재계약')+'<br><small>#'+ct.num+' · '+ct.until+'년 여름까지 ('+ct.years+'년)</small></div></div></div>');
-  CR.offT=setTimeout(crTmDoneGo, 3600);
+    +'<div class="who"><b>'+gmEsc(p.name)+'</b><span>'+gmEsc(ct.team)+' · '+(tr?'이적 확정':'재계약 완료')+'</span><small>#'+ct.num+' · '+ct.until+'년 여름까지 ('+ct.years+'년)</small></div>'
+    +'<button class="cr-official-go" onclick="event.stopPropagation();crTmDoneGo()">다음 시즌 준비로 · 누르면 바로 ›</button></div></div>');
+  CR.offT=setTimeout(crTmDoneGo, 4800);
 }
 function crTmDoneGo(){
-  clearTimeout(CR.offT); CR.offT=null; var o=document.querySelector('#crTov .cr-tm.done'); if(!o) return;
+  clearTimeout(CR.offT); CR.offT=null; var o=document.querySelector('#crTov .cr-tm.done'); if(!o || o.classList.contains('out')) return;
   o.classList.add('out'); setTimeout(function(){ crTovSet('', true); crPrep(); }, 280);
 }
 function crNext(btn){
