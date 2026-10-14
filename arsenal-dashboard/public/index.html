@@ -85,7 +85,8 @@
      휴대폰 기본 글꼴로 대체돼 튀었다(Zečević). 한글은 Noto Sans에 없으니 자동으로 KR로 넘어간다. -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:dark;--red:#EF0107;--red-dark:#b50004;--gold:#C8A84B;--navy:#0B0D12;--surface:#111318;--surface2:#181B22;--surface3:#1F2330;--border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,.15);--border-accent:rgba(200,168,75,0.3);--text:#F0F2F7;--text-muted:#7A8099;--text-dim:#4A5070;--text-secondary:rgba(255,255,255,.75);--green:#22C55E;--amber:#F59E0B;--loss:#EF4444;--blue:#60A5FA;--white:#fff;--overlay-10:rgba(255,255,255,.1);--overlay-18:rgba(255,255,255,.18);--overlay-30:rgba(255,255,255,.3);--overlay-35:rgba(255,255,255,.35);--overlay-50:rgba(255,255,255,.5);--overlay-60:rgba(255,255,255,.6);--overlay-black-55:rgba(0,0,0,.55);--chrome-bg:rgba(11,13,18,.96);--dday-bg:#1a0c0f;--otd-bg:#1a1917;--modal-bg:#1a1c22;--on-dark-header:#fff;--on-dark-header-secondary:rgba(255,255,255,.75);--on-dark-header-gold:#C8A84B;--modal-header-grad:linear-gradient(135deg,#c40004 0%,#3a0102 100%);--photo-ph-grad:linear-gradient(160deg,#c40004,#3a0102);--fd:'Bebas Neue',sans-serif;--fb:'Noto Sans','Noto Sans KR',sans-serif;--fm:'Fira Mono',monospace;--safe-bottom:env(safe-area-inset-bottom,0px);}
+/* 배경 위 커리어 오버레이는 페이지 테마와 무관하게 기본 팔레트를 사용한다. */
+:root,#crTov{color-scheme:dark;--red:#EF0107;--red-dark:#b50004;--gold:#C8A84B;--navy:#0B0D12;--surface:#111318;--surface2:#181B22;--surface3:#1F2330;--border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,.15);--border-accent:rgba(200,168,75,0.3);--text:#F0F2F7;--text-muted:#7A8099;--text-dim:#4A5070;--text-secondary:rgba(255,255,255,.75);--green:#22C55E;--amber:#F59E0B;--loss:#EF4444;--blue:#60A5FA;--white:#fff;--overlay-10:rgba(255,255,255,.1);--overlay-18:rgba(255,255,255,.18);--overlay-30:rgba(255,255,255,.3);--overlay-35:rgba(255,255,255,.35);--overlay-50:rgba(255,255,255,.5);--overlay-60:rgba(255,255,255,.6);--overlay-black-55:rgba(0,0,0,.55);--chrome-bg:rgba(11,13,18,.96);--dday-bg:#1a0c0f;--otd-bg:#1a1917;--modal-bg:#1a1c22;--on-dark-header:#fff;--on-dark-header-secondary:rgba(255,255,255,.75);--on-dark-header-gold:#C8A84B;--modal-header-grad:linear-gradient(135deg,#c40004 0%,#3a0102 100%);--photo-ph-grad:linear-gradient(160deg,#c40004,#3a0102);--fd:'Bebas Neue',sans-serif;--fb:'Noto Sans','Noto Sans KR',sans-serif;--fm:'Fira Mono',monospace;--safe-bottom:env(safe-area-inset-bottom,0px);}
 :root[data-theme="light"]{color-scheme:light;--gold:#B8923A;--navy:#ECEEF2;--surface:#FFFFFF;--surface2:#F8F9FB;--surface3:#EFF1F4;--border:rgba(0,0,0,.06);--border-bright:rgba(0,0,0,.12);--border-accent:rgba(184,146,58,.4);--text:#14161C;--text-muted:#6B7280;--text-dim:#A9AEBB;--text-secondary:rgba(20,22,28,.68);--green:#16A34A;--amber:#D97706;--loss:#DC2626;--blue:#2563EB;--overlay-10:rgba(0,0,0,.06);--overlay-18:rgba(0,0,0,.1);--overlay-30:rgba(0,0,0,.16);--overlay-35:rgba(0,0,0,.18);--overlay-50:rgba(0,0,0,.28);--overlay-60:rgba(0,0,0,.35);--overlay-black-55:rgba(0,0,0,.72);--chrome-bg:rgba(236,238,242,.92);--dday-bg:#FDECEC;--otd-bg:#FBF3E1;--modal-bg:#FFFFFF;--modal-header-grad:linear-gradient(135deg,#b50004 0%,#4a0002 100%);--photo-ph-grad:linear-gradient(160deg,#b50004,#4a0002);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 /* 탭 하이라이트(터치 시 깔리는 회색·파란 사각형)는 지금까지 요소마다 하나씩 껐는데,
@@ -2387,6 +2388,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-scout-mini .g{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;font-family:var(--fd);font-size:18px;color:#fff;vertical-align:-3px;margin-right:4px}
 .cr-scout-mini .gS{background:#A855F7}.cr-scout-mini .gA{background:#C8A84B}.cr-scout-mini .gB{background:#3B82F6}.cr-scout-mini .gC{background:#16A34A}.cr-scout-mini .gD{background:#6B7280}
 .cr-scout-mini small{font-size:12px;color:var(--text-secondary)}
+#crTov{color:var(--text)}
 .cr-tov{position:fixed;inset:0;z-index:10000;background:rgba(5,6,10,.86);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;animation:crTovIn .25s ease-out}
 .cr-tov .tag{font-size:10.5px;font-weight:700;letter-spacing:.8px;color:#3a2a06;background:var(--gold);border-radius:999px;padding:3px 9px}
 .cr-tov h3{margin:6px 0 0;font-size:19px;color:#F0F2F7;text-align:center}
@@ -2422,8 +2424,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-rx-btn .k{display:block;font-size:10.5px;font-weight:800;letter-spacing:.6px;color:var(--gold)}
 .cr-rx-btn b{display:block;margin:3px 0;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cr-rx-btn small{display:block;font-size:11.5px;color:var(--text-secondary)}.cr-rx-btn .go{color:var(--gold);flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;line-height:1;border-radius:50%;background:var(--border-accent)}.cr-rx-btn .go>svg{display:block;width:14px;height:14px;margin:0}
-:root[data-theme="light"] .cr-rx-btn .ic,:root[data-theme="light"] .cr-rx-btn .go{color:var(--text)}
-:root[data-theme="light"] .cr-nat-overlay .cr-rx-btn .ic,:root[data-theme="light"] .cr-nat-overlay .cr-rx-btn .go{color:var(--gold)}
+:root[data-theme="light"] .cr-rx-btn:not(#crTov *) .ic,:root[data-theme="light"] .cr-rx-btn:not(#crTov *) .go{color:var(--text)}
 .cr-reactions{display:flex;flex-direction:column;gap:8px}
 .cr-reactions>.cr-rx-btn{margin:0}
 .cr-rx .tag{background:#C8A84B;color:#2a1f05}
@@ -2824,7 +2825,7 @@ function playIntro(){
   <button class="nav-btn" onclick="showSec('history',this)"><svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8l0 4l2 2"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg><span>History</span></button>
 </nav>
 <script src="/career/league-scenes.js?v=1"></script>
-<script src="/career/match-playback.js?v=38"></script>
+<script src="/career/match-playback.js?v=39"></script>
 <script>
 var FN='/api';
 var allStandings=[];
