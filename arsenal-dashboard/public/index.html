@@ -2333,13 +2333,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-bd .conf{position:absolute;inset:0;pointer-events:none}
 .cr-bd .conf i{position:absolute;top:-12px;left:var(--x);width:6px;height:11px;border-radius:1px;background:linear-gradient(#FFF1B0,#C8A84B);opacity:0;animation:crTmConf 2.4s var(--d) ease-in both}
 @media (prefers-reduced-motion: reduce){.cr-bd,.cr-bd *{animation:none!important}.cr-bd .conf{display:none}}
-.cr-sc{--gc:#8A93A8;position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px 16px;overflow:hidden;
-  background:radial-gradient(90% 60% at 50% 40%,color-mix(in srgb,var(--gc) 22%,rgba(5,6,10,.95)),rgba(5,6,10,.96) 70%);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:crTovIn .35s ease-out both}
-.cr-sc.gS{--gc:#C084FC}.cr-sc.gA{--gc:#E9C766}.cr-sc.gB{--gc:#60A5FA}.cr-sc.gC{--gc:#22C55E}.cr-sc.gD{--gc:#8A93A8}
-.cr-sc .ray{position:absolute;left:50%;top:42%;width:900px;height:900px;margin:-450px 0 0 -450px;pointer-events:none;opacity:0;
-  background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--gc) 26%,transparent) 0 8deg,transparent 8deg 24deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 60%);mask:radial-gradient(circle,#000 0,transparent 60%);
-  animation:crScRay 1.2s 1.05s ease-out forwards, crScSpin 30s 1.05s linear infinite}
-@keyframes crScRay{to{opacity:1}}@keyframes crScSpin{to{transform:rotate(360deg)}}
+/* 고정된 종이색 리포트: 페이지 테마와 독립 */
+.cr-sc{--gc:#657184;position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow-y:auto;background:linear-gradient(rgba(6,12,19,.66),rgba(6,12,19,.8)),url('/img/career-scenes/scout.webp') center/cover no-repeat;animation:crTovIn .25s ease-out both}
+.cr-sc.gS{--gc:#8653B0}.cr-sc.gA{--gc:#AE8B32}.cr-sc.gB{--gc:#356CA6}.cr-sc.gC{--gc:#28744D}.cr-sc.gD{--gc:#657184}
 .cr-pro{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(6,8,12,.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);transition:opacity .28s;overflow-y:auto}
 .cr-pro.out{opacity:0}
 .cr-pro-doc{position:relative;width:100%;max-width:400px;background:#F5F1E6;color:#1d1b16;border-radius:10px;padding:18px 18px 16px;box-shadow:0 22px 60px rgba(0,0,0,.55);animation:crIvUp .45s ease-out both;
@@ -2353,7 +2349,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-pro-doc dt{font-size:12px;color:#6b6250}.cr-pro-doc dd{margin:0;font-size:14.5px;font-weight:700}
 .cr-pro-doc dd small{display:block;font-size:11.5px;font-weight:400;color:#6b6250;margin-top:2px}.cr-pro-doc dd .num{font-family:var(--fd);font-size:24px;font-weight:400;color:#B8892A}
 .cr-pro-doc .txt{font-size:12.5px;line-height:1.55;color:#3d382c;margin:10px 0}
-.cr-pro-doc .sig{position:relative;height:118px;border-radius:8px;background:rgba(255,255,255,.55);border:1.5px dashed rgba(31,42,99,.35);margin-bottom:8px}
+.cr-pro-doc .sig{position:relative;height:118px;border-radius:8px;background:rgba(255,255,255,.55);border:1.5px dashed rgba(31,42,99,.35);margin-bottom:8px;overflow:hidden}
 .cr-pro-doc .sig canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .cr-pro-doc .sig .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:rgba(31,42,99,.4);pointer-events:none;transition:opacity .2s}
 .cr-pro-doc .sig.on .ph{opacity:0}
@@ -2367,24 +2363,27 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cr-pro-doc .btns .gm-btn{color:#1d1b16;background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.22)}
 .cr-pro-doc .cr-iv-go{width:100%;animation:none}.cr-pro-doc .cr-iv-go:disabled{opacity:.4;cursor:default}
 .cr-pro-doc .wel{text-align:center;font-weight:800;color:#B8892A;font-size:16px;height:0;overflow:hidden;opacity:0;transition:opacity .3s .35s}
+.cr-pro-doc dl dd .age{display:inline;margin-left:8px}.cr-pro-doc .role{display:flex;align-items:center;justify-content:space-between;gap:8px}.cr-pro-doc .role>span{font-size:11px;font-weight:400;color:#6b6250;white-space:nowrap}.cr-pro-doc .role .num{margin-left:4px;vertical-align:middle}.cr-contract-num{display:block;font-size:10.5px;color:#6b6250;margin-top:5px}.cr-contract-pay{padding:9px 0;border-bottom:1px dashed rgba(0,0,0,.2);color:#1d1b16}.cr-contract-pay>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.cr-contract-pay>div>span:first-child{font-size:12px;color:#6b6250}.cr-contract-pay b{font-size:22px;line-height:1.3}.cr-contract-pay small{display:block;font-size:11px;color:#6b6250;margin-top:3px}.cr-pay-delta{font-size:10.5px;font-weight:700;white-space:nowrap}.cr-pay-delta.up{color:#15803D}.cr-pay-delta.down{color:#B91C1C}.cr-pay-delta.same{color:#6b6250}.cr-tm-fin{grid-column:1/-1;display:flex;gap:5px 12px;flex-wrap:wrap;border-top:1px solid var(--border-bright);padding-top:7px;font-size:11px;color:var(--text-secondary)}.cr-tm-fin b{color:var(--text)}.cr-tm-fin .up{color:#86EFAC}.cr-tm-fin .down{color:#FCA5A5}.cr-tm-fin .same{color:var(--text-secondary)}.cr-tm-value{display:block;margin-top:4px;font-size:11px;color:#4b5060}.cr-hof-income .cr-income-values{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:center}.cr-income-values>div+div{border-left:1px solid var(--ln)}.cr-income-values small{display:block;font-size:11px;color:var(--fg2)}.cr-income-values b{display:block;margin-top:3px;font-size:20px;color:var(--gd);font-variant-numeric:tabular-nums}.cr-hof-income p{text-align:center;font-size:10px;color:var(--fg2);margin:7px 0 0}
 .cr-pro.signed .wel{height:auto;margin-top:10px;opacity:1}.cr-pro.signed .btns,.cr-pro.signed .cr-iv-go{display:none}
 @media (prefers-reduced-motion: reduce){.cr-pro-doc,.cr-pro.signed .sig .stamp{animation:none!important}.cr-pro.signed .sig .stamp{transform:rotate(-12deg);opacity:.85}}
-.cr-sc-card{position:relative;width:100%;max-width:380px;background:#F3EFE4;color:#1d1b16;border-radius:14px;padding:18px 18px 16px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5);
-  animation:crScCard .6s .1s cubic-bezier(.2,1.2,.4,1) both}
-@keyframes crScCard{from{opacity:0;transform:translateY(60px) rotate(-4deg)}to{opacity:1;transform:none}}
-.cr-sc-card .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px dashed rgba(0,0,0,.2);padding-bottom:10px;margin-bottom:6px;font-size:11px;letter-spacing:1.2px;color:#6b6250}
-.cr-sc-card .hd b{font-size:13px;letter-spacing:0;color:#1d1b16}
-.cr-sc .stamp{width:104px;height:124px;margin:12px auto 6px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--fd);font-size:84px;line-height:.9;color:var(--gc);
-  border:4px solid var(--gc);box-shadow:inset 0 0 0 3px #F3EFE4,inset 0 0 0 5px var(--gc);text-shadow:0 2px 0 rgba(0,0,0,.15);filter:saturate(1.2) brightness(.9);
-  animation:crScStamp .45s .75s cubic-bezier(.3,1.6,.5,1) both}
-@keyframes crScStamp{0%{opacity:0;transform:scale(3) rotate(-25deg)}70%{opacity:1;transform:scale(.92) rotate(-8deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
-.cr-sc .stamp small{font-size:13px;letter-spacing:2px;line-height:1;margin-bottom:4px;opacity:.85}
-.cr-sc-card .tt{font-size:20px;font-weight:800;margin-top:4px;animation:crIvUp .4s 1.15s ease-out both}
-.cr-sc-card .chg{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;animation:crIvUp .4s 1.3s ease-out both}
-.cr-sc-card .chg.up{color:#15803D;background:rgba(34,197,94,.16)}.cr-sc-card .chg.dn{color:#B91C1C;background:rgba(239,68,68,.14)}.cr-sc-card .chg.eq{color:#6b6250;background:rgba(0,0,0,.06)}
-.cr-sc-card .dd{margin:10px 2px 14px;font-size:14.5px;line-height:1.6;color:#3d382c;animation:crIvUp .4s 1.45s ease-out both}
-.cr-sc-card .cr-iv-go{width:100%;animation-delay:1.65s}
-@media (prefers-reduced-motion: reduce){.cr-sc,.cr-sc *{animation:none!important}.cr-sc .ray{opacity:.6}}
+.cr-sc-card{position:relative;width:100%;max-width:380px;margin:auto;background:#F3EFE4;color:#132335;border:1px solid #DCD6C8;border-radius:16px;padding:20px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:crScCard .35s ease-out both}
+@keyframes crScCard{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.cr-sc-card .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #C8C5BC;padding-bottom:12px;font-size:10px;letter-spacing:1.8px;color:#46505A}
+.cr-sc-card .hd b{font-size:11px;font-weight:500;letter-spacing:0;white-space:nowrap}
+.cr-sc-card h2{margin:22px 0 18px;font-size:27px;font-weight:850;letter-spacing:-1px;color:#132335}
+.cr-sc .stamp{width:138px;height:142px;box-sizing:border-box;margin:0 auto 18px;border:1.5px solid #223549;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gc)}
+.cr-sc .stamp small{font-size:10px;font-weight:800;letter-spacing:2px;color:#223549;margin:0 0 4px}
+.cr-sc .stamp strong{font-family:Arial,sans-serif;font-size:94px;font-weight:750;line-height:1;letter-spacing:-4px;padding-right:4px}
+.cr-sc-card .tt{font-size:21px;font-weight:800;letter-spacing:-.5px}
+.cr-sc-card .chg{display:inline-block;margin-top:10px;font-size:12px;line-height:1.6;font-weight:700;border-radius:8px;padding:5px 10px}
+.cr-sc-card .chg.up{color:#166534;background:#DFECDF}.cr-sc-card .chg.dn{color:#991B1B;background:#F3DFDA}.cr-sc-card .chg.eq{color:#53564F;background:#E6E4DD}
+.cr-sc-card .dd{margin:12px 0 18px;font-size:13px;line-height:1.75;color:#46505A;word-break:keep-all}
+.cr-sc-player{display:flex;align-items:center;gap:12px;text-align:left;border-top:1px solid #C8C5BC;padding:14px 0 16px}
+.cr-sc-player>div{min-width:0;border-left:1px solid #C8C5BC;padding-left:12px}.cr-sc-player b{display:block;font-size:15px;overflow-wrap:anywhere}.cr-sc-player small{display:block;margin-top:3px;font-size:12px;line-height:1.5;color:#46505A;overflow-wrap:anywhere}
+.cr-sc-player .cr-crest{flex-shrink:0;background:#E4DECE;color:#223549}.cr-sc-player .cr-crest-img{flex-shrink:0;object-fit:contain}
+.cr-sc-card .cr-iv-go{width:100%;animation:none;background:var(--red);color:#fff;font-size:15px;padding:14px;border-radius:10px}
+@media (max-height:650px){.cr-sc{padding:12px 16px}.cr-sc-card{padding:16px}.cr-sc-card h2{margin:14px 0}.cr-sc .stamp{width:112px;height:116px;margin-bottom:12px}.cr-sc .stamp strong{font-size:74px}.cr-sc-card .dd{margin:10px 0 12px}.cr-sc-player{padding:10px 0 12px}}
+@media (prefers-reduced-motion: reduce){.cr-sc,.cr-sc *{animation:none!important}}
 .cr-scout-mini .g{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;font-family:var(--fd);font-size:18px;color:#fff;vertical-align:-3px;margin-right:4px}
 .cr-scout-mini .gS{background:#A855F7}.cr-scout-mini .gA{background:#C8A84B}.cr-scout-mini .gB{background:#3B82F6}.cr-scout-mini .gC{background:#16A34A}.cr-scout-mini .gD{background:#6B7280}
 .cr-scout-mini small{font-size:12px;color:var(--text-secondary)}
@@ -10127,6 +10126,18 @@ function crPrep(){
 // 사인은 이 기기에만(localStorage cr_sig_{커리어 id}) 두고 다음 계약서에 자동으로 써 넣는다(다시 쓸 수도 있다). 카드·서버·랭킹엔 넣지 않는다.
 // 이적·재계약은 사인 뒤 기존 이적 완료 연출(crTmDone — OFFICIAL · HERE WE GO / EXTENDED)로 이어진다.
 var CR_SIG_FONT='Nanum Pen Script';
+function crMoney(value,currency,compact){
+ var symbol={EUR:'€',GBP:'£',KRW:'₩',JPY:'¥'}[currency]||'€',n=Number(value)||0;
+ if(compact&&Math.abs(n)>=100000000&&(currency==='KRW'||currency==='JPY'))return symbol+(n/100000000).toFixed(1)+'억';
+ if(compact&&Math.abs(n)>=10000&&(currency==='KRW'||currency==='JPY'))return symbol+Math.round(n/10000).toLocaleString('ko-KR')+'만';
+ if(compact&&Math.abs(n)>=1000000)return symbol+(n/1000000).toFixed(1)+'M';
+ return symbol+Math.round(n).toLocaleString('en-US');
+}
+function crPayMain(f){return f.currency==='KRW'||f.currency==='JPY'?{label:'연봉',value:f.annual}:{label:'주급',value:f.weekly};}
+function crPayDelta(f){return f.change==null?'':'<span class="cr-pay-delta '+(f.change>0?'up':f.change<0?'down':'same')+'">'+(f.change>0?'▲ '+f.change+'% 인상':f.change<0?'▼ '+Math.abs(f.change)+'% 삭감':'변동 없음')+'</span>';}
+function crContractPay(f){if(!f)return '';var m=crPayMain(f),annual=m.label==='연봉',previous=f.previousAnnual;return '<div class="cr-contract-pay"><div><span>'+m.label+'</span><b>'+crMoney(m.value,f.currency)+'</b>'+crPayDelta(f)+'</div><small>'+(annual?'주급 '+crMoney(f.weekly,f.currency):'연봉 '+crMoney(f.annual,f.currency,true))+(previous==null?'':' · 이전 '+m.label+' '+crMoney(annual?previous:previous/52,f.currency))+'</small></div>';}
+function crOfferPay(f,market,stay){if(!f)return '';var m=crPayMain(f);return '<span class="cr-tm-fin">'+(!stay&&market?'<span>이적료 '+(market.free?'없음 · 자유계약':crMoney(market.fee,market.currency,true))+'</span>':'')+'<span>'+m.label+' <b>'+crMoney(m.value,f.currency)+'</b> '+crPayDelta(f)+'</span></span>';}
+function crIncomeHtml(f){return !f?'':'<div class="cr-hof-b cr-hof-income"><div class="cr-hof-h"><i aria-hidden="true">€</i>커리어 수입</div><div class="cr-income-values"><div><small>최고 주급</small><b>'+crMoney(f.peakWeekly,'EUR')+'</b></div><div><small>통산 연봉 수입</small><b>'+crMoney(f.totalAnnualIncome,'EUR',true)+'</b></div></div><p>세전 · 보너스 제외 · 고정 환율 기준</p></div>';}
 var CR_CT={pro:['PROFESSIONAL CONTRACT','첫 프로 계약'], transfer:['TRANSFER AGREEMENT','이적 계약'], renew:['CONTRACT EXTENSION','재계약']};
 function crSigKey(id){ return 'cr_sig_'+(id||''); }
 function crSigGet(id){ try{ return id ? localStorage.getItem(crSigKey(id)) : null; }catch(e){ return null; } }
@@ -10137,11 +10148,10 @@ function crProShow(ct, key){
   crTovSet('<div class="cr-pro" role="dialog" aria-modal="true" aria-label="'+T[1]+'"><div class="cr-pro-doc">'
     +'<div class="hd"><span>'+T[0]+'</span><b>'+T[1]+'</b></div>'
     +'<div class="club">'+crCrest({n:ct.club, id:ct.id},46)+'<div>'+(ty==='transfer'&&ct.prev?'<em class="prev">'+gmEsc(ct.prev)+' →</em>':'')+'<b>'+gmEsc(ct.team)+'</b><small>'+(ty==='renew'?'계약 연장 · ':'1군 · ')+ct.from+'년 여름 – '+ct.until+'년 여름 ('+(ct.years||'4+1')+'년)</small></div></div>'
-    +'<dl><div><dt>선수</dt><dd>'+gmEsc(p.name)+' <small>'+ct.age+'세</small></dd></div><div><dt>포지션</dt><dd>'+gmEsc(card.n)+'</dd></div>'
-    +'<div><dt>등번호</dt><dd><b class="num">'+ct.num+'</b>'+(ct.num!==ct.want?'<small>원하던 '+ct.want+'번은 '+(ty==='pro'?'1군 선배가':'팀 동료가')+' 달고 있어요 · 자리 잡으면 받아요</small>':'')+'</dd></div></dl>'
-    +'<p class="txt">'+(ty==='transfer'?'위 선수는 '+gmEsc(ct.prev||'')+'을(를) 떠나 '+gmEsc(ct.team)+'과(와) 계약을 맺고, 새 구단의 선수로 뛰는 데 동의합니다.'
-      :ty==='renew'?'위 선수와 '+gmEsc(ct.team)+'은(는) 계약을 '+ct.until+'년 여름까지 연장하는 데 동의합니다.'
-      :'위 선수는 '+gmEsc(ct.team)+'과(와) 프로 계약을 맺고, 구단의 1군 선수로 뛰는 데 동의합니다.')+'</p>'
+    +'<dl><div><dt>선수</dt><dd>'+gmEsc(p.name)+' <small class="age">'+ct.age+'세</small></dd></div><div><dt>포지션</dt><dd class="role">'+gmEsc(card.n)+' <span>등번호 <b class="num">'+ct.num+'</b></span></dd></div></dl>'
+    +(ct.num!==ct.want?'<small class="cr-contract-num">원하던 '+ct.want+'번은 동료가 사용 중이에요 · 주전으로 자리 잡으면 받아요</small>':'')
+    +crContractPay(ct.finance)
+    +'<p class="txt">선수와 구단은 위 조건에 동의합니다.</p>'
     +'<div class="sig" id="crSig"><canvas id="crSigCv"></canvas><span class="ph">여기에 서명하세요</span><i class="ln"></i><small>서명 · '+gmEsc(p.name)+'</small><div class="stamp" aria-hidden="true">SIGNED</div></div>'
     +'<div class="btns"><button type="button" class="gm-btn ghost" onclick="crSigClear()">다시 쓰기</button><button type="button" class="gm-btn ghost" onclick="crSigName()">이름으로 서명</button></div>'
     +'<button class="cr-iv-go" id="crProGo" disabled onclick="crProDone(\''+key.replace(/'/g,'')+'\')">계약 완료</button>'
@@ -10849,11 +10859,14 @@ function crBallonGo(){
 function crScoutShow(sc, key){
   var gi=CR_SCOUT[sc.g], re=!!sc.prev, diff=re?CR_SCOUT_ORD.indexOf(sc.g)-CR_SCOUT_ORD.indexOf(sc.prev):0;
   var chg=!re?'':diff>0?'<div class="chg up">▲ '+sc.prev+' → '+sc.g+' · 지난 3년, 기대 이상으로 자랐어요</div>':diff<0?'<div class="chg dn">▼ '+sc.prev+' → '+sc.g+' · 기대만큼 크지 못했어요. 지금부터의 선택이 더 중요해요</div>':'<div class="chg eq">= '+sc.g+' 유지 · 예상한 길을 잘 걷고 있어요</div>';
-  crTovSet('<div class="cr-sc g'+sc.g+'" role="dialog" aria-modal="true" aria-label="잠재력 평가"><i class="ray"></i>'
-   +'<div class="cr-sc-card"><div class="hd"><span>SCOUTING REPORT</span><b>'+sc.age+'세 '+(re?'재평가':'잠재력 평가')+'</b></div>'
-   +'<div class="stamp" aria-hidden="true"><small>GRADE</small>'+sc.g+'</div>'
+  var p=CR.v.player, club=p.club||{}, pos=CR_POS.find(function(x){return x.id===p.pos;});
+  crTovSet('<div class="cr-sc g'+sc.g+'" role="dialog" aria-modal="true" aria-labelledby="crScoutTitle">'
+   +'<div class="cr-sc-card"><div class="hd"><span>SCOUTING REPORT</span><b>'+sc.age+'세 · '+(re?'재평가':'첫 평가')+'</b></div>'
+   +'<h2 id="crScoutTitle">잠재력 '+(re?'재평가':'평가')+'</h2>'
+   +'<div class="stamp" aria-label="잠재력 '+sc.g+'등급"><small>POTENTIAL</small><strong>'+sc.g+'</strong></div>'
    +'<div class="tt">'+gmEsc(gi.t)+'</div>'+chg
    +'<p class="dd">'+gmEsc(gi.d)+'</p>'
+   +'<div class="cr-sc-player">'+crCrest(club,38)+'<div><b>'+gmEsc(p.name)+'</b><small>'+gmEsc(club.team||club.n||'소속 없음')+' · '+gmEsc(pos?pos.n:p.pos||'')+'</small></div></div>'
    +'<button class="cr-iv-go" onclick="CR.scoutSeen=\''+key.replace(/'/g,'')+'\';crTovSet(\'\');crResult()">확인</button></div></div>');
   CR.scoutSeen=null; CR.scoutPend=key;
 }
@@ -11639,15 +11652,15 @@ function crPickFx(btn, sel, fn){
 function crTmShow(){
   var M=CR.v.player.military;if(M&&M.lastChance&&M.status==='pending'&&!M.selected)return crMilitaryInfo();
   var p=CR.v.player, R=CR.v.result, M=p.military, n=R.offers.length, d=0;
-  var card=function(on, crest, tag, nm, meta, right){ d+=0.12; return '<button class="cr-tm-c" style="--d:'+(0.55+d)+'s" onclick="'+on.replace(')',',this)')+'">'+crest+'<div class="b"><div class="tg">'+tag+'</div><div class="nm">'+nm+'</div><div class="mt">'+meta+'</div></div><div>'+right+'</div></button>'; };
-  var h=(R.released?'':card('crTmPick(-1)', crCrest(p.club,40), '잔류', gmEsc(p.club.n), crFlag(p.club.nat)+crNat(p.club.nat).n, R.stay?crChance(R.stay.chance):''))
-    +R.offers.map(function(o,k){ return card('crTmPick('+k+')', crCrest(o,40), gmEsc(o.kind)+(o.dream?' · '+crIcon('heart')+' 꿈의 구단':''), gmEsc(o.n), crFlag(o.nat)+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':''), crChance(o.chance)); }).join('')
+  var card=function(on, crest, tag, nm, meta, right,finance){ d+=0.12; return '<button class="cr-tm-c" style="--d:'+(0.55+d)+'s" onclick="'+on.replace(')',',this)')+'">'+crest+'<div class="b"><div class="tg">'+tag+'</div><div class="nm">'+nm+'</div><div class="mt">'+meta+'</div></div><div>'+right+'</div>'+(finance||'')+'</button>'; };
+  var h=(R.released?'':card('crTmPick(-1)', crCrest(p.club,40), '잔류', gmEsc(p.club.n), crFlag(p.club.nat)+crNat(p.club.nat).n, R.stay?crChance(R.stay.chance):'',crOfferPay(R.stay?.finance,null,true)))
+    +R.offers.map(function(o,k){ return card('crTmPick('+k+')', crCrest(o,40), gmEsc(o.kind)+(o.dream?' · '+crIcon('heart')+' 꿈의 구단':''), gmEsc(o.n), crFlag(o.nat)+crNat(o.nat).n+(o.nat!==p.nation?' · 해외':''), crChance(o.chance),crOfferPay(o.finance,o.market)); }).join('')
     +(M&&M.canApply?card('crMilitaryInfo(0)',crCrest({n:'김천 상무',id:133901},40),'병역 · 입대 지원','김천 상무','18개월 복무 · 전역 후 '+gmEsc(p.club.n)+' 복귀','<span class="cr-chance mid">지원 가능</span>'):'')
     +(M&&M.canRegular?card('crMilitaryRegularConfirm(0)', '<div class="cr-tm-ret">'+crIcon('shield')+'</div>','병역 · 일반 현역','일반 복무','18개월 · 프로 경기 공백',''):'')
     +(R.released?card('crTmPick(-2)', '<div class="cr-tm-ret" aria-hidden="true">'+crIcon('flag-checkered')+'</div>', '커리어 마무리', '은퇴', '여기서 축구화를 벗어요', ''):'');
   crTovSet('<div class="cr-tm" role="dialog" aria-modal="true" aria-label="이적시장"><img class="cr-tm-scene" src="/img/career-scenes/transfer.webp?v=2" alt="" aria-hidden="true"><button class="cr-tm-x" onclick="crTovSet(\'\')" aria-label="닫기">'+crCloseIcon()+'</button><div class="cr-tm-box">'
     +'<span class="tag">'+(R.released?'CONTRACT EXPIRED · 계약 만료':'TRANSFER WINDOW · 이적시장')+'</span>'
-    +'<div class="cr-tm-note"><span class="ic" aria-hidden="true">'+crIcon('envelope')+'</span><div><b>'+(n?'제안 '+n+'건 도착':'제안 없음')+'</b><span>'+(R.released?gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 다음 행선지를 골라 주세요.':'에이전트가 받은 제안이에요. 남을지 떠날지 골라 주세요.')+'</span></div></div>'
+    +'<div class="cr-tm-note"><span class="ic" aria-hidden="true">'+crIcon('envelope')+'</span><div><b>'+(n?'제안 '+n+'건 도착':'제안 없음')+'</b><span>'+(R.released?gmEsc(p.club.n)+'과(와) 재계약이 안 됐어요. 다음 행선지를 골라 주세요.':'에이전트가 받은 제안이에요. 남을지 떠날지 골라 주세요.')+'</span>'+(p.market?'<small class="cr-tm-value">현재 시장가치 '+crMoney(p.market.value,p.market.currency,true)+'</small>':'')+'</div></div>'
     +'<div class="cr-tm-list">'+h+'</div></div></div>');
   // 카드가 다 날아 들어오기 전엔 못 누르게(사용자 지적 — 건너뛰려고 연타하다 엉뚱한 구단이 골라졌다). 마지막 카드 등장(0.5초 애니메이션)이 끝나면 풀린다.
   CR.tmReady=Date.now()+Math.round((0.55+d+0.5)*1000);
@@ -11817,6 +11830,7 @@ function crCardHtml(c){
         : [['apps',t.apps,'경기'],['goals',t.goals,'골'],DF?['cs',t.cs||0,'클린시트']:['assists',t.ast,'도움'],['caps',t.caps||0,'A매치']])
      .map(function(x){ return '<div><i class="mk" style="--m:url(/img/career/ic/'+x[0]+'.png)"></i><span><b>'+x[1]+'</b><small>'+x[2]+'</small></span></div>'; }).join('')+'</div>';
   // ④ 커리어 하이
+  h+=crIncomeHtml(c.finance);
   if(ns.length){
     var bg2=ns.reduce(function(a,b){ return (DF?(b.cs||0)>(a.cs||0):b.goals>a.goals)?b:a; }), bo=ns.reduce(function(a,b){ return b.ovr>a.ovr?b:a; }), bh=ns.reduce(function(a,b){ return (b.hon||[]).length>(a.hon||[]).length?b:a; });
     var cell=function(k,v,r){ return '<div><small>'+k+'</small><b>'+v+'</b><span>'+r.age+'세 · '+gmEsc(r.club)+'</span></div>'; };
