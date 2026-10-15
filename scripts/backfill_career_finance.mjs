@@ -9,7 +9,7 @@ import {financeSummary} from '../arsenal-dashboard/api/_career_finance.js';
 
 const positions=['FW','MF','DF'];
 export function calculateCard(card){
- if(card.finance?.v===2)return card;
+ if(card.finance?.v===3)return card;
  if(!positions.includes(card.pos)||!Array.isArray(card.seasons)||!card.seasons.length)throw new Error('카드 포지션/시즌 기록 누락');
  const finance=financeSummary(card.seasons,card.pos);
  if(![finance.peakWeekly,finance.totalAnnualIncome].every(n=>Number.isFinite(n)&&n>=0))throw new Error('급여 계산값 오류');
