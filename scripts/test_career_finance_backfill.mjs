@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import {calculateCard,prepareBackfill,applyBackfill} from './backfill_career_finance.mjs';
 const old={id:'old',pos:'FW',score:123,honors:[],seasons:[{age:24,club:'아스날',ovr:80,apps:32,goals:20,ast:5}]};
 const next=calculateCard(old);assert(!old.finance);assert(next.finance.totalAnnualIncome>0);
+// Peak pay is kept in the signed currency at its rounded contract amount; v1 summaries are recalculated.
+assert.equal(next.finance.v,2);assert.equal(next.finance.peak.currency,'GBP');assert.equal(next.finance.peak.weekly%500,0);
+assert.equal(calculateCard({...old,finance:{v:1,currency:'EUR',peakWeekly:1,totalAnnualIncome:1}}).finance.v,2);
+const kor=calculateCard({...old,seasons:[{age:24,club:'울산 HD',ovr:70,apps:30,goals:10,ast:3}]}).finance.peak;
+assert.equal(kor.currency,'KRW');assert.equal(kor.annual%1000000,0);
 const {finance,...rest}=next;assert.deepEqual(rest,old);assert.equal(calculateCard(next),next);
 const stored=new Map([['career:card:old:FW',JSON.stringify(old)],['career:card:legacy',JSON.stringify({...old,id:'legacy'})],['career:card:new:FW',JSON.stringify(next)]]),commands=[];
 const kv=async(...args)=>{

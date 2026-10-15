@@ -104,9 +104,12 @@ export function financeSummary(rows=[],pos='FW'){
  // Old leaderboard cards flatten return-season segments: one earnings year per age.
  const grouped=new Map();for(const original of rows){const row=structuredClone(original),old=grouped.get(row.age);if(!old)grouped.set(row.age,row);else if(old.loan&&!row.loan){if(old.club==='김천 상무')row.service={kind:'sangmu',months:6};grouped.set(row.age,row);}else if(row.club==='김천 상무')old.service={kind:'sangmu',months:6};}
  const state={pos,hist:[...grouped.values()].sort((a,b)=>a.age-b.age)};
- ensureFinance(state);let peak=0,total=0;
- for(const r of state.hist){peak=Math.max(peak,r.finance?.contract?.annualEUR||0);total+=r.finance?.earnedEUR||0;}
- return {v:1,currency:'EUR',peakWeekly:peak/52,totalAnnualIncome:total};
+ ensureFinance(state);let peak=null,total=0;
+ for(const r of state.hist){const c=r.finance?.contract;if(c&&(!peak||c.annualEUR>peak.annualEUR))peak=c;total+=r.finance?.earnedEUR||0;}
+ // The peak keeps its signed currency so rounded contract amounts are shown as agreed.
+ // Lifetime income mixes currencies and stays in EUR.
+ const best=peak&&{currency:peak.currency,annual:peak.annual,weekly:peak.weekly,annualEUR:peak.annualEUR};
+ return {v:2,currency:'EUR',peak:best,peakWeekly:(peak?.annualEUR||0)/52,totalAnnualIncome:total};
 }
 export function marketQuote(state,club,age=state.age+1){
  club=findClub(club)||state.club;const o=state.ovr;

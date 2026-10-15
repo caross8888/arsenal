@@ -74,7 +74,7 @@ UI에는 요청대로 별도 구분 문구 없이 동일한 최고 주급·통�
 먼저 `node scripts/backfill_career_finance.mjs`로 대상 수를 확인한 후
 `node scripts/backfill_career_finance.mjs --apply --backup /저장소밖/finance-before.json`으로 저장한다.
 `.env.local`을 사용할 때는 `node --env-file=arsenal-dashboard/.env.local`을 사용한다.
-구형/포지션별 랭킹에 연결된 모든 카드를 읽으며, 이미 `finance.v=1`인 카드는 건너뛴다.
+구형/포지션별 랭킹에 연결된 모든 카드를 읽으며, 이미 `finance.v=2`인 카드는 건너뛰고, `v=1` 카드는 다시 계산한다.
 저장 전 원문을 파일에 보관하고, Redis에서 원문 일치를 확인한 뒤 저장하여 실행 중 새로 등록된 카드를 덮어쓰지 않는다.
 저장 후 검증하며 충돌 건은 재실행한다. 운영 데이터 파일은 저장소 외부에 두며 커밋하지 않는다.
 `--public-out /저장소밖/cards.json`은 공개된 포지션별 상위 100명의 계산본만 저장하며 KV에는 쓰지 않는다.
