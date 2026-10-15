@@ -10127,7 +10127,7 @@ function crPrep(){
 // 이적·재계약은 사인 뒤 기존 이적 완료 연출(crTmDone — OFFICIAL · HERE WE GO / EXTENDED)로 이어진다.
 var CR_SIG_FONT='Nanum Pen Script';
 function crMoney(value,currency,compact){
- var symbol={EUR:'€',GBP:'£',KRW:'₩',JPY:'¥'}[currency]||'€',n=Number(value)||0;
+ var symbol={EUR:'€',GBP:'£',KRW:'₩',JPY:'¥',USD:'$'}[currency]||'€',n=Number(value)||0;
  if(compact&&Math.abs(n)>=100000000&&(currency==='KRW'||currency==='JPY'))return symbol+(n/100000000).toFixed(1)+'억';
  if(compact&&Math.abs(n)>=10000&&(currency==='KRW'||currency==='JPY'))return symbol+Math.round(n/10000).toLocaleString('ko-KR')+'만';
  if(compact&&Math.abs(n)>=1000000)return symbol+(n/1000000).toFixed(1)+'M';

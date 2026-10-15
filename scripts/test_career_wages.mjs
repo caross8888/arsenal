@@ -36,7 +36,7 @@ for(const club of ALL.filter(c=>c.n!=='김천 상무')){
   assert(q.annualEUR>=previous,'higher OVR reduced salary: '+club.n);previous=q.annualEUR;
   assert(q.annualEUR<=WAGE_PROFILES[club.nat][3]+100);
   assert.equal(q.annual,Math.round(q.annualEUR*FX[q.currency]));
-  if(['GBP','EUR'].includes(q.currency)){assert.equal(q.annual,q.weekly*52);assert.equal(q.weekly%(q.weekly<10000?100:500),0);}
+  if(['GBP','EUR','USD'].includes(q.currency)){assert.equal(q.annual,q.weekly*52);assert.equal(q.weekly%(q.weekly<10000?100:500),0);}
   else assert.equal(q.annual%(q.currency==='KRW'?1000000:100000),0);
   quotes++;
  }

@@ -3,7 +3,7 @@ import * as F from '../arsenal-dashboard/api/_career_finance.js';
 import * as S from '../arsenal-dashboard/api/_career_sim.js';
 import {calculateCard} from './backfill_career_finance.mjs';
 const club=S.clubByName('아스날'),base={club,age:23,ovr:78,pos:'FW',hist:[],seed:7,cEnd:28};
-for(const [nat,currency] of Object.entries({ENG:'GBP',KOR:'KRW',JPN:'JPY',BRA:'EUR',NGA:'EUR',USA:'EUR',NOR:'EUR'}))assert.equal(F.currencyOf(nat),currency);
+for(const [nat,currency] of Object.entries({ENG:'GBP',KOR:'KRW',JPN:'JPY',ESP:'EUR',BEL:'EUR',BRA:'USD',ARG:'USD',NGA:'USD',USA:'USD',NOR:'USD'}))assert.equal(F.currencyOf(nat),currency);
 const q=F.quoteSalary(base);assert.deepEqual(q,F.quoteSalary(base));assert.equal(q.annual,Math.round(q.annualEUR*.85));assert.equal(q.weekly,q.annual/52);
 assert(F.quoteSalary({...base,ovr:88}).annualEUR>q.annualEUR);
 assert(F.quoteSalary({...base,ovr:68}).annualEUR<q.annualEUR);

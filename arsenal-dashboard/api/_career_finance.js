@@ -3,8 +3,10 @@
 import {CLUBS} from './_career_data.js';
 import {WAGE_PROFILES,CLUB_WAGE_INDEX,DEFAULT_WAGE_INDEX,WAGE_CURVE,ROLE_CURVE,MLS_CURVE,interpolateCurve,softenSalary,salaryFloor} from './_career_wages.js';
 const CLUB = new Map(Object.entries(CLUBS).flatMap(([nat,cs])=>cs.map(c=>[c[0],{n:c[0],r:c[1],nat}])));
-export const FX = Object.freeze({EUR:1,GBP:.85,KRW:1500,JPY:160});
-export const currencyOf = nat => nat==='ENG'?'GBP':nat==='KOR'?'KRW':nat==='JPN'?'JPY':'EUR';
+export const FX = Object.freeze({EUR:1,GBP:.85,KRW:1500,JPY:160,USD:1.12});
+// Familiar currencies keep their own; every other league is shown in USD.
+const EURO=new Set(['ESP','GER','ITA','FRA','POR','NED','BEL']);
+export const currencyOf = nat => nat==='ENG'?'GBP':nat==='KOR'?'KRW':nat==='JPN'?'JPY':!nat||EURO.has(nat)?'EUR':'USD';
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
 const findClub=c=>typeof c==='string'?CLUB.get(c):c;
 export function contractLength(age,seed=0){
@@ -32,7 +34,7 @@ export function moneyView(annualEUR,club,previousEUR=null){
 // EUR earnings from that amount. Existing signed contracts are never rounded again.
 export function roundSalary(annualEUR,club,{minimumEUR=0,maximumEUR=Infinity}={}){
  const currency=currencyOf(findClub(club)?.nat),fx=FX[currency];
- const weekly=currency==='GBP'||currency==='EUR',period=weekly?52:1;
+ const weekly=currency!=='KRW'&&currency!=='JPY',period=weekly?52:1;
  const amount=annualEUR*fx/period;
  const step=weekly?(amount<10000?100:500):currency==='KRW'?1000000:100000;
  const floor=Math.ceil(minimumEUR*fx/period/step)*step;
@@ -109,7 +111,7 @@ export function financeSummary(rows=[],pos='FW'){
  // The peak keeps its signed currency so rounded contract amounts are shown as agreed.
  // Lifetime income mixes currencies and stays in EUR.
  const best=peak&&{currency:peak.currency,annual:peak.annual,weekly:peak.weekly,annualEUR:peak.annualEUR};
- return {v:2,currency:'EUR',peak:best,peakWeekly:(peak?.annualEUR||0)/52,totalAnnualIncome:total};
+ return {v:3,currency:'EUR',peak:best,peakWeekly:(peak?.annualEUR||0)/52,totalAnnualIncome:total};
 }
 export function marketQuote(state,club,age=state.age+1){
  club=findClub(club)||state.club;const o=state.ovr;
