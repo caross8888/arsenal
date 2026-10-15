@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {quoteSalary,FX} from '../arsenal-dashboard/api/_career_finance.js';
+import {quoteSalary,roundSalary,FX} from '../arsenal-dashboard/api/_career_finance.js';
 import {ALL,clubByName} from '../arsenal-dashboard/api/_career_sim.js';
 import {WAGE_PROFILES} from '../arsenal-dashboard/api/_career_wages.js';
 const quote=(name,ovr,age=26,extra={},options={})=>quoteSalary({ovr,age,pos:'FW',hist:[],...extra},clubByName(name),age,options);
@@ -35,12 +35,21 @@ for(const club of ALL.filter(c=>c.n!=='김천 상무')){
   assert(Number.isFinite(q.annualEUR)&&q.annualEUR>0);
   assert(q.annualEUR>=previous,'higher OVR reduced salary: '+club.n);previous=q.annualEUR;
   assert(q.annualEUR<=WAGE_PROFILES[club.nat][3]+100);
-  assert.equal(q.annual,Math.round(q.annualEUR*FX[q.currency]));quotes++;
+  assert.equal(q.annual,Math.round(q.annualEUR*FX[q.currency]));
+  if(['GBP','EUR'].includes(q.currency)){assert.equal(q.annual,q.weekly*52);assert.equal(q.weekly%(q.weekly<10000?100:500),0);}
+  else assert.equal(q.annual%(q.currency==='KRW'?1000000:100000),0);
+  quotes++;
  }
  const p=ovr=>quoteSalary({ovr,age:26,pos:'FW',hist:[]},club,26).annualEUR;
- assert(p(99)>p(95)&&p(95)>p(90),'top OVRs collapsed: '+club.n);
+ assert(p(99)>=p(95)&&p(95)>=p(90),'higher top OVR reduced salary: '+club.n); // Rounded negotiating bands may coincide near the ceiling.
 }
 // First-contract pay transitions smoothly through the league anchor.
 const a=quote('아스날',74.99,19,{}, {first:true}),b=quote('아스날',75.01,19,{}, {first:true});
-assert(b.annualEUR/a.annualEUR<1.01);
-console.log('PASS calibrated pay scale:',quotes,'quotes across',ALL.length-1,'clubs; actual-source anchors, J1/MLS floors, independent spending, smooth first contracts and distinct elite salaries');
+assert(b.weekly>=a.weekly&&b.weekly-a.weekly<=500); // At most one negotiated weekly step.
+console.log('PASS calibrated pay scale:',quotes,'quotes across',ALL.length-1,'clubs; actual-source anchors, J1/MLS floors, independent spending, bounded first-contract steps and monotonic elite salaries');
+
+assert.equal(roundSalary(7008*52,{nat:'ESP'}),7000*52);
+assert.equal(roundSalary(32431*52/.85,{nat:'ENG'})*.85,32500*52);
+assert.equal(roundSalary(477339000/1500,{nat:'KOR'})*1500,477000000);
+assert.equal(roundSalary(31880000/160,{nat:'JPN'})*160,31900000);
+console.log('PASS local-currency rounding and annual/weekly consistency');

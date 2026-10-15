@@ -18,7 +18,7 @@ assert.deepEqual(summary,F.financeSummary(rows));assert(!rows[0].finance,'readin
 const oldCard={pos:'FW',seasons:rows,score:123};assert.equal(calculateCard(oldCard).score,123);assert.deepEqual(calculateCard(calculateCard(oldCard)),calculateCard(oldCard));
 const soldier={...rows[1],age:19,club:'김천 상무',loan:true};
 assert.equal(F.financeSummary([rows[0],soldier]).totalAnnualIncome,legacy.salary.annualEUR);
-const returned={...rows[2],age:19};assert.equal(F.financeSummary([rows[0],soldier,returned]).totalAnnualIncome,Math.round(legacy.salary.annualEUR*1.5));
+const returned={...rows[2],age:19};assert.equal(F.financeSummary([rows[0],soldier,returned]).totalAnnualIncome,legacy.salary.annualEUR*1.5);
 const injured={club,ovr:70,age:24,pos:'FW',hist:[],salary:q,financeVersion:1};
 const injuryRow={age:24,club:club.n,youth:false,apps:0,injured:38};F.recordSalary(injured,injuryRow);assert.equal(injuryRow.finance.earnedEUR,q.annualEUR);
 const militaryRow={age:25,club:club.n,youth:false,service:{kind:'regular',months:12}};F.recordSalary(injured,militaryRow);assert.equal(militaryRow.finance.earnedEUR,0);
