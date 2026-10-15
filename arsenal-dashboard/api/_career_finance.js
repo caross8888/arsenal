@@ -28,6 +28,17 @@ export function moneyView(annualEUR,club,previousEUR=null){
  const currency=currencyOf(findClub(club)?.nat),annual=Math.round(annualEUR*FX[currency]);
  return {v:1,currency,annualEUR,annual,weekly:annual/52,previousAnnual:previousEUR==null?null:Math.round(previousEUR*FX[currency]),change:previousEUR>0?Math.round((annualEUR/previousEUR-1)*1000)/10:null};
 }
+// Set the negotiated amount in the league's display currency, then derive
+// EUR earnings from that amount. Existing signed contracts are never rounded again.
+export function roundSalary(annualEUR,club,{minimumEUR=0,maximumEUR=Infinity}={}){
+ const currency=currencyOf(findClub(club)?.nat),fx=FX[currency];
+ const weekly=currency==='GBP'||currency==='EUR',period=weekly?52:1;
+ const amount=annualEUR*fx/period;
+ const step=weekly?(amount<10000?100:500):currency==='KRW'?1000000:100000;
+ const floor=Math.ceil(minimumEUR*fx/period/step)*step;
+ const ceiling=Math.floor(maximumEUR*fx/period/step)*step;
+ return clamp(Math.round(amount/step)*step,floor,ceiling)*period/fx;
+}
 export function quoteSalary(state,club=state.club,age=state.age,{first=false,until,previous=state.salary?.annualEUR??null}={}){
  club=findClub(club)||{n:String(club),nat:'ENG',r:65};
  const [anchor,base,,max]=WAGE_PROFILES[club.nat]||WAGE_PROFILES.ENG;
@@ -43,11 +54,8 @@ export function quoteSalary(state,club=state.club,age=state.age,{first=false,unt
  // wage index describes the employer's spending; the two are not interchangeable.
  const role=base*interpolateCurve(ROLE_CURVE,ovr-((club.r||anchor+3)-3));
  const raw=Math.max(ability,role)*budget*form(state.hist||[],state.pos)*ageFactor*firstFactor*potential;
- // Round up the floor: conversion must never put an adult below the minimum.
- let annualEUR=Math.max(Math.ceil(min/100)*100,Math.round(softenSalary(raw,max)/100)*100);
- // J.League first-year base-pay ceiling. Salary remains fixed until the next
- // contract, as elsewhere in this game (we do not silently raise year-two pay).
- if(first&&club.nat==='JPN')annualEUR=Math.min(annualEUR,12000000/FX.JPY);
+ // Local-currency rounding also respects the salary floor and J1 first-contract cap.
+ const annualEUR=roundSalary(softenSalary(raw,max),club,{minimumEUR:min,maximumEUR:first&&club.nat==='JPN'?12000000/FX.JPY:max});
  return {...moneyView(annualEUR,club,previous),club:club.n,from:age,until:until??age+(first?4:contractLength(age,state.seed)),type:first?'pro':'renew'};
 }
 // Reconstruct missing salaries chronologically, carrying the signed amount until
@@ -70,7 +78,7 @@ function seasonFinance(row,salary){
  // Club wages pause during military service. A return season contains six
  // civilian months. Military allowances are outside this basic club salary model.
  const months=row.service?clamp(12-row.service.months,0,12):row.team==='일반 복무'||row.club==='김천 상무'?0:12;
- return {contract:{...salary},months,earnedEUR:Math.round(salary.annualEUR*months/12)};
+ return {contract:{...salary},months,earnedEUR:salary.annualEUR*months/12};
 }
 export function signSalary(state){
  ensureFinance(state);
