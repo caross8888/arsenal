@@ -71,7 +71,8 @@ const PRODIGY = {r:85, min:{16:59, 17:63}, p:0.008};
 // 일반 부상 +WEAR[0], 서둘러 복귀하다 재부상 +WEAR[1] 더, 큰 부상 +WEAR[2], 최대 WEAR[3]년.
 const WEAR = [0.3, 0.3, 1.0, 3];
 const ageAt = a => { a = Math.min(37, a); const f = Math.floor(a), t = a - f; return f >= 37 ? AGE_BASE[37] : AGE_BASE[f]*(1-t) + AGE_BASE[f+1]*t; };
-const ageBase = () => C.age < 28 ? AGE_BASE[C.age] : Math.min(AGE_BASE[Math.min(37, C.age)], ageAt(C.age + (C.wear||0)));
+const lateAge = a => C.late && a >= 29 ? Math.max(28, a - LATE_BLOOM.shift) : a;
+const ageBase = () => C.age < 28 ? AGE_BASE[C.age] : Math.min(ageAt(lateAge(C.age)), ageAt(lateAge(C.age) + (C.wear||0)));
 // 체형(사용자 지정 — 경량/표준/강골/장신). 오버롤 총량은 같고 "어느 스탯으로 크는지"만 갈린다(합 0):
 // 시작 때 BODY_U[0], 성장하는 시즌마다 BODY_U[1]씩 +/− 스탯으로 옮긴다. 그 밖에 부상 위험(inj, 확률 +)·30대 하락 배율(decl).
 // 카드와 궁합이 맞으면(장신 타깃맨·센터백, 경량 윙어 등) 골·도움·클린시트로 이어지고, 안 맞으면 손해 — "카드에 맞는 체형 고르기".
@@ -247,6 +248,11 @@ const CARD_CONTRIB = {FW:[1.25,0.95,0.86,0.96,1.08], MF:[1.15,0.8,0.92,0.91,1.34
 const TALENT = {gen:[2.17,2.62], wonder:[1.59,2.06], prospect:[1.15,1.36], normal:[0.84,1.11]};
 // 발전 운: 커리어마다 하나, 성장에 곱한다(같은 재능이라도 선수마다 다르게 — 사용자 지적: "재능이 결과를 다 정한다")
 const DEV = [0.8, 1.2];
+// 대기만성(사용자 지정 — 성장 곡선 모양이 모두 같아 18세 평가가 낮으면 끝이 보였다): 커리어를 만들 때 시드로 p 확률(화면엔 숨김).
+// 15~21세 성장 ×g(나이), 23~28세 ×g, 29세부터 나이 커브를 shift년 늦춘다(정체·하락이 늦다). 정점·점수는 표준과 비슷하게 맞췄다.
+// 18·21세 스카우트 평가식에 k(나이) × 재능 배율을 더해 예상 정점을 맞춘다 — 낮은 오버롤 때문에 저평가돼 리롤되지 않게(사용자 지정).
+// k는 2.4만 커리어(성장 위주 선택)에서 대기만성과 표준의 평가 오차 차이를 재능 배율로 나눈 값(등급마다 거의 같았다).
+const LATE_BLOOM = {p:0.18, g:{15:0.85, 16:0.85, 17:0.85, 18:0.8, 19:0.8, 20:0.8, 21:0.9, 23:1.2, 24:1.7, 25:1.75, 26:1.75, 27:1.7, 28:1.6}, shift:2.5, k:{18:1.55, 21:2.0}};
 // K_GROW 0.47 → 0.445: 유스 아카데미 보정으로 늘어난 유스 성장만큼 낮춰 재능별 정점을 예전대로(75.9/79.0/85.6/92.8)
 const K_GROW = 0.297, DAMP = [0.02, 24], PLAY_C = [0.5, 0.2],   // 출전 계수 바닥 0.75/0.45 → 0.5/0.2: 뛰는 곳을 고르는 게 더 중요해졌다(선택 강화)
   CLUB_C = [1.85, 1.45, 1.12, 0.84, 0.6], LEAGUE_T = 3.5;
@@ -334,6 +340,7 @@ export function createCareer(input, clubIdx, seed){
        hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, boost:1, peak:ovr, clubs:[o.club.n],
        talent:1, youthPts:0, awoken:false, last:null, offers:null, lv:0};
   if(C.nation==='KOR') C.military={status:'pending'};
+  if(mulberry(C.seed ^ hashStr('late'))() < LATE_BLOOM.p) C.late = true;
   newEvent();
   return C;
 }
@@ -777,7 +784,7 @@ export function playSeason(state, choice){
 
   // 성장 / 하락
   const base = ageBase(), ratio = starts/Math.max(1,games), luck = 0.8+rng()*0.4;
-  if(!C.wearNote && base < AGE_BASE[Math.min(37, C.age)] && base <= 0){ C.wearNote = true; notes.push('부상 이력 탓에 몸이 예전 같지 않아요. 또래보다 일찍 내리막이 시작됐어요.'); }
+  if(!C.wearNote && base < ageAt(lateAge(C.age)) && base <= 0){ C.wearNote = true; notes.push('부상 이력 탓에 몸이 예전 같지 않아요. 또래보다 일찍 내리막이 시작됐어요.'); }
   if(row0Youth && C.age<18){ if(ev==='extra' && pick===0) C.youthPts++; if(ratio>=0.6) C.youthPts++; if(ratingShow>=Y_GROW[0]) C.youthPts++; }
   // 유스에서 잘한 시즌은 더 큰다(사용자 지정 — 예전엔 평점과 성장이 무관해 7.5 넘는 시즌도 평범한 시즌과 같았다). 표시 평점(또래 기준) 7.2+ ×1.05, 7.5+ ×1.1.
   if(row0Youth) growMul *= ratingShow>=Y_GROW[1] ? Y_GROW[3] : ratingShow>=Y_GROW[0] ? Y_GROW[2] : 1;
@@ -798,6 +805,7 @@ export function playSeason(state, choice){
     const kid = row0Youth && C.age < 18;
     if(kid && club.nat !== C.nation) growMul *= ABROAD_G;
     if(C.body) growMul *= 1 + BODY_FIT*bodyFit(C.pos, C.card, C.body);
+    if(C.late) growMul *= LATE_BLOOM.g[C.age] || 1;
     // 나이에 맞는 훈련(선택 강화): 20세까지는 약점 보완(기본기), 21세부터는 강점 강화가 성장 +18%, 반대로 하면 −9%. 균형은 그대로.
     if(C.train==='약점 보완') growMul *= C.age <= TRAIN_AGE[0] ? 1+TRAIN_AGE[1] : 1-TRAIN_AGE[1]/2;
     else if(C.train==='강점 강화') growMul *= C.age <= TRAIN_AGE[0] ? 1-TRAIN_AGE[1]/2 : 1+TRAIN_AGE[1];   // 체형·카드 궁합   // 해외 유스: 큰 리그 아카데미의 경쟁·훈련(자국 유스의 ACAD 보정 대신)
@@ -810,6 +818,7 @@ export function playSeason(state, choice){
     };
     const pc = onLoan ? comp(C.club, lvOf(), pStart(C.club)) * LOAN_Q * (LOAN_PLAY[0]+LOAN_PLAY[1]*ratio) * (1 + LOAN_LVL*(club.r - cRep())) : comp(club, lv, ratio);
     C.ovr = Math.min(99, C.ovr + C.boost*base*pc*luck*growMul*C.talent*devOf()*K_GROW*dmp);
+    if(C.late && C.age === 24 && !C.bloomNote){ C.bloomNote = true; notes.push('🌱 늦게 피는 재능이 깨어나기 시작했어요. 지금부터 성장이 눈에 띄게 빨라져요.'); }
   } else {
     declMul *= ((commonOf()||{}).decl || 1) * ((LATE[C.train]||{}).decl || 1) * bodyOf().decl * (C.studied==='yes' ? STUDY.decl : 1);
     C.ovr = Math.max(30, C.ovr + base*Math.max(0.5, 1-(C.boost-1)*2)*declMul);
@@ -989,11 +998,11 @@ export function playSeason(state, choice){
   // 흔들림은 등급이 재능을 그대로 드러내지 않게 하려는 것(재능만 보고 리셋하는 걸 줄인다). 실측: S 평가의 실제 정점 중앙 91 · A 83 · B 77 · C 73 · D 68.
   let scout = null;
   if(SCOUT[C.age]){
-    const sr = mulberry(C.seed ^ hashStr('scout|'+C.age)), [k0, k1, k2] = SCOUT[C.age], est = k0 + k1*C.ovr + k2*C.talent + (sr()-0.5)*4;
+    const sr = mulberry(C.seed ^ hashStr('scout|'+C.age)), [k0, k1, k2] = SCOUT[C.age], est = k0 + k1*C.ovr + k2*C.talent + (C.late ? LATE_BLOOM.k[C.age]*C.talent : 0) + (sr()-0.5)*4;
     // S와 A는 경계를 ±6 흐리게(사용자 지정 — S만 노리고 새로 시작하는 리롤을 막으려고). 예상 정점 80 이상이면 86 ± 6을 넘을 때 S라서 두 등급의 실제 정점이 크게 겹친다.
     let g = SCOUT_G.find(x => est >= x[0])[1];
     if(est >= 80) g = est + (sr()-0.5)*12 >= 86 ? 'S' : 'A';
-    scout = {age:C.age, g, ...(C.age === 21 && C.scout18 ? {prev:C.scout18} : {})};
+    scout = {age:C.age, g, ...(C.late ? {late:true} : {}), ...(C.age === 21 && C.scout18 ? {prev:C.scout18} : {})};
     if(C.age === 18) C.scout18 = g;
   }
   const row = {age:C.age, club:club.n, loan:onLoan, team:teamName(club, lv), games, starts, apps, goals, ast, cs, rating:Math.round(ratingShow*100)/100, rank,
