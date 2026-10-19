@@ -32,6 +32,30 @@ export function introEvent(C){
 }
 // Temporarily mark the annual visit for generic consent/affinity rules. Never relocate her.
 function atHome(C,key,run){const r=C.relationship,old=r.visit;r.visit={age:C.age,key};try{return run();}finally{if(old)r.visit=old;else delete r.visit;}}
+function ringEvent(C){
+ const replies=['작은 상자를 받아 들었다. 다음에 만날 때는 준비한 말을 직접 전하기로 했다.','오늘은 둘러보기만 했다. 마음을 더 정리한 뒤 다시 생각하기로 했다.'];
+ const before=[n('비시즌 휴가 중, 혼자 보석 가게에 들렀다. 함께 살 날을 이야기했던 저녁이 떠올랐다.'),n('반지를 몇 개 꺼내 놓고 살펴봤다. 평소 그녀가 고르던 장신구를 떠올리며 화려하지 않은 것을 골랐다.'),n('준비해 둔 손가락 둘레를 직원에게 알려주고, 사이즈를 조정할 수 있는지도 확인했다.')];
+ const after=[
+  [n('반지를 골라 계산을 마쳤다. 직원이 작은 상자를 닫아 봉투에 담아 주었다.'),n('봉투 안의 상자를 한 번 더 확인했다. 아직 그녀에게는 말하지 않은 준비였다.'),n('다음에 만날 날을 떠올렸다. 무슨 말을 먼저 할지 생각하다가, 결국 가장 전하고 싶은 말부터 꺼내기로 했다.')],
+  [n('오늘은 결정을 미뤘다. 둘이 나눴던 결혼 이야기를 다시 떠올려 보기로 했다.')]
+ ];
+ [...before,...after.flat()].forEach(line=>{line[5]='ring';});
+ return event(C,'ring','혼자 고르는 반지',{questionSpeaker:'n',choiceSpeakers:['n','n'],questionCG:{key:'ring'},d:'함께할 미래는 이미 이야기했다. 이제 내 마음을 전할 반지를 준비할까?',a:['반지를 골라 구매한다.','오늘은 둘러보고 나온다.'],reply:replies,replies,script:{before,after},asia:{kind:'ring'}});
+}
+function playerProposal(C,ev){
+ ev.t='준비해 둔 말';ev.outfit=1;ev.questionSpeaker='n';ev.choiceSpeakers=['p','n'];ev.mood='happy';ev.questionCG={key:'proposal',expression:'waiting'};
+ ev.d='주머니 속 작은 상자를 만졌다. 오늘, 준비해 둔 말을 전할까?';
+ ev.a=['너랑 평생 같이 살고 싶어. 나랑 결혼해 줄래?','오늘은 반지를 꺼내지 않는다.'];
+ ev.reply=ev.replies=['응. 나도 너랑 결혼하고 싶어.','오늘은 준비한 말을 꺼내지 않고 둘이 보내는 저녁을 즐겼다.'];
+ ev.script={before:[n(location(C)),n('미리 예약한 식당에서 저녁을 먹었다. 식사를 마친 뒤 강이 보이는 테라스에 나란히 앉았다.'),f('여기 좋다. 밥도 맛있고.','happy'),p('너랑 천천히 저녁 먹고 싶어서 골랐어.'),n('그녀가 강 쪽을 보는 동안, 주머니에 넣어 둔 반지 상자를 확인했다.')],after:[
+  [n('작은 상자를 열어 그녀에게 내밀었다.'),f('……이거, 준비한 거야?','shy'),p('응. 너랑 결혼하고 싶어.'),f('응. 나도. 너랑 결혼할래.','shy'),p('손 줘봐.'),n('그녀가 내민 손에 반지를 조심스럽게 끼워 주었다.'),f('……나 자꾸 이것만 보게 된다.','happy'),p('마음에 들어?'),f('응. 고르는 동안 내 생각했을 거잖아. 그래서 더 좋아.','happy'),n('그녀는 손을 한 번 더 내려다보고 웃었다. 한동안 자리를 떠나지 않고 앞으로 함께 보낼 날을 이야기했다.')],
+  [n('상자는 주머니 안에 둔 채로 그녀의 이야기를 들었다.'),f('다음에 여기 또 오자. 내가 이번엔 다른 메뉴 고를게.','happy'),p('좋아. 다음에 또 오자.'),n('오늘은 청혼하지 않았다. 준비해 둔 반지는 그대로 간직하고, 저녁을 마친 뒤 함께 돌아갔다.')]
+ ]};
+ ev.script.before.slice(1).forEach(line=>{line[5]='proposal';line[6]='waiting';});
+ ev.script.after[1].forEach(line=>{line[5]='proposal';line[6]='waiting';});
+ ev.script.after[0].forEach((line,i)=>{line[5]='proposal';line[6]=i<3?'surprised':i<5?'tearful':'happy';});
+ return ev;
+}
 function major(C,key){
  const ev=atHome(C,key,()=>REL.relationshipEvent(C,'friend:'+key));
  if(!ev)return null;
@@ -57,7 +81,7 @@ function major(C,key){
   ];
   ev.script={before,after};
  }
- if(key==='proposal'){ev.d='너 경기 끝나고 돌아오는 날도, 내 공연 끝나고 집에 오는 날도 같이 있고 싶어. 우리 결혼할까?';}
+ if(key==='proposal')return playerProposal(C,ev);
  if(key==='confession'){
   ev.t='내가 무대에 서지 않는 날에도';ev.d='잘될 때만 네가 보고 싶은 건 아니더라. 아무 얘기 안 해도 같이 있고 싶어. ……너는 어때?';
   ev.script.before=[n(location(C)),n('저녁을 먹고 강변을 걷다가 빈 벤치에 나란히 앉았다.'),f('잠깐만 더 있다 가자. 나 할 말 있어.','shy'),p('응. 뭔데?'),n('가방을 옆에 내려놓은 그녀가 이쪽으로 몸을 돌렸다.')];ev.script.before.at(-1)[5]='confession';ev.script.before.at(-1)[6]='tense';
@@ -72,6 +96,7 @@ export function preparation(C,service=false){
  if(service)return militaryEvent(C);
  if(['foreign','followup','crisis'].includes(key))return major(C,key);
  if(key==='future'&&r.moveDiscussion)return major(C,key);
+ if(key==='proposal'&&s.ring&&C.age>s.ring.boughtAge)return major(C,key);
  const chapter=MAIN[s.chapter];
  if(chapter&&C.age>=chapter.age){
   const before=[n(location(C)),...mainBefore(C,s.chapter)];
@@ -86,7 +111,8 @@ export function preparation(C,service=false){
   return event(C,'main:'+chapter.id,chapter.title,{place:chapter.place,mood:['happy','shy','sad','sad','sad','shy','happy','happy'][s.chapter],d:s.chapter===7&&!r.done.includes('debut')?'우리 내기는 아직 안 끝났네. 그래도 오늘 내 무대는 네가 봤다.':chapter.question,a:chapter.choices,reply:after.map(lines=>lines[0][1]),replies:after.map(lines=>lines[0][1]),script:{before,after},asia:{kind:'main',index:s.chapter}});
  }
  if(key==='confession'&&s.chapter>=4&&s.support>=2&&!r.confessionDeclined)return major(C,key);
- if(['future','proposal'].includes(key))return major(C,key);
+ if(key==='proposal')return s.ring?major(C,key):ringEvent(C);
+ if(key==='future')return major(C,key);
  const available=DATES.filter(x=>!s.seen.includes(x[0])&&(!['first-train','fireworks'].includes(x[0])||C.age>=18)&&(x[0]!=='new-recording'||s.voiceFound)&&(x[0]!=='next-season'||romantic(r)));
  const date=available[0];
  if(!date)return event(C,'rest:'+C.age,'이번 휴가의 하루',{channel:'reflection',d:'지난 만남의 사진을 정리했다. 다음 휴가에 함께 가고 싶은 곳을 적어 보냈다.',a:['이번 근황을 전하고 쉰다.'],reply:['서로의 새 일정을 확인하고 연락을 마쳤다.'],replies:['서로의 새 일정을 확인하고 연락을 마쳤다.'],asia:{kind:'rest'}});
@@ -98,7 +124,7 @@ export function complete(C,ev,pick){
  if(!enabled(C)||C.relationship.prepAge===C.age||!Number.isInteger(pick)||!ev.a[pick])throw new Error('이번 만남을 다시 확인해 주세요.');
  const expected=preparation(C,!!serviceView(C));if(!expected||expected.id!==ev.id)throw new Error('지금 진행할 만남이 아니에요.');
  const r=C.relationship,s=story(C);
- if(!ev.asia){const key=ev.id.split(':')[1];if(ev.asiaMilitaryMajor)REL.applyRelationship(C,ev.id,pick);else atHome(C,key,()=>REL.applyRelationship(C,ev.id,pick));if(r.visit?.key===key)delete r.visit;r.prepAge=C.age;return;}
+ if(!ev.asia){const key=ev.id.split(':')[1];if(ev.asiaMilitaryMajor)REL.applyRelationship(C,ev.id,pick);else atHome(C,key,()=>REL.applyRelationship(C,ev.id,pick));if(key==='proposal'&&pick===0)s.ring.usedAge=C.age;if(r.visit?.key===key)delete r.visit;r.prepAge=C.age;return;}
  let delta=4,reason='휴가 중 시간을 내어 서로의 일상을 나눴다';
  if(ev.asia.kind==='main'){
   const chapter=MAIN[s.chapter],support=chapter.support[pick];
@@ -107,6 +133,10 @@ export function complete(C,ev,pick){
   s.seen.push('main:'+chapter.id);s.chapter++;s.lastMainAge=C.age;
   if(s.chapter>=7)s.voiceFound=true;
   if(s.chapter===8)s.ending=s.support>=5?'shared-stage':'own-stage';
+ }else if(ev.asia.kind==='ring'){
+  if(pick===0){s.ring={boughtAge:C.age};s.seen.push('ring-purchase');}
+  else r.proposalAskedAge=C.age;
+  delta=0;reason=pick===0?'함께할 미래를 생각하며 청혼할 반지를 준비했다':'청혼 준비를 서두르지 않고 더 생각하기로 했다';
  }else if(ev.asia.kind==='date')s.seen.push(ev.asia.id);
  else if(ev.asia.kind==='service'){
   s.serviceSeen=[...new Set([...(s.serviceSeen||[]),ev.asia.id])];
@@ -115,6 +145,6 @@ export function complete(C,ev,pick){
  else delta=0;
  const before=r.affinity;r.affinity=Math.max(0,Math.min(100,r.affinity+delta));r.lastChange={age:C.age,delta:r.affinity-before,reason};
  if(['friend','close'].includes(r.status))r.status=r.affinity>=55&&!r.confessionDeclined?'close':'friend';
- if(ev.asia.kind!=='service'||ev.asia.id==='visit'&&pick===0)r.lastVisitAge=C.age;
+ if(['main','date'].includes(ev.asia.kind)||ev.asia.kind==='service'&&ev.asia.id==='visit'&&pick===0)r.lastVisitAge=C.age;
  r.prepAge=C.age;r.records.push({age:C.age,id:ev.id,pick,delta:r.affinity-before});r.records=r.records.slice(-12);
 }
