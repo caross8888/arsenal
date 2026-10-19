@@ -59,3 +59,8 @@
 @media(orientation:portrait){.cr-friend-cg-art{object-position:70% 42%}}
 @media(max-width:500px){.cr-friend-cg-caption{left:26px;right:26px;bottom:max(120px,calc(env(safe-area-inset-bottom) + 100px))}.cr-friend-cg-caption>p{font-size:23px}.cr-friend-cg-actions{left:26px;right:26px;bottom:max(32px,calc(env(safe-area-inset-bottom) + 24px))}.cr-friend-cg-continue{width:100%;text-align:center}}
 @media(prefers-reduced-motion:reduce){.cr-friend-cg,.cr-friend-cg *{animation:none!important;transition:none!important}}
+
+/* Holiday wardrobe uses four equal frames: beach calm/happy, ski calm/happy. */
+.cr-friend-scene.is-vacation{--scene-w:max(100vw,calc(100dvh * 3));--scene-h:max(100dvh,calc(100vw / 3))}
+.cr-friend-scene.is-vacation .cr-friend-place{background-size:var(--scene-w) calc(var(--scene-h) * 2);background-position:calc((100vw - var(--scene-w)) / 2) calc(0px - var(--vacation-y) * var(--scene-h) - (var(--scene-h) - 100dvh) / 2);image-rendering:auto}
+.cr-vacation-invite p{color:var(--text-secondary);font-size:13px;line-height:1.7}

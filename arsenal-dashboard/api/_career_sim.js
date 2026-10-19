@@ -14,6 +14,7 @@ import {nationalSchedule,seniorNationalCalendar} from './_career_international.j
 import {championsFinal,EUROPEAN_LEAGUES} from './_career_club_final.js';
 import * as FIN from './_career_finance.js';
 import * as REL from './_career_relationship.js';
+import {vacationPending} from './_career_relationship_travel.js';
 export const militaryView = MIL.militaryView;
 export const militaryAction = MIL.applyMilitary;
 export const regularReturn = MIL.completeRegularReturn;
@@ -1194,6 +1195,7 @@ function offerView(){
 export function nextSeason(state, pick, traitPick){
   C = state;
   if(C.phase !== 'result') throw new Error('phase');
+  if(vacationPending(C))throw new Error('계획한 휴가 이벤트를 먼저 마쳐 주세요.');
   FIN.ensureFinance(C);
   refreshYouthRelease(C);
   const military=MIL.militaryView(C);

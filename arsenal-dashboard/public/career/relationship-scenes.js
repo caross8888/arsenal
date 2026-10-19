@@ -106,7 +106,7 @@ var CR_FRIEND_MAJOR={
 };
 function crFriendBeats(lines,place,outfit){
   var r=CR.friendScene.ev.friend;
-  return lines.map(function(line){return {place:place,outfit:outfit,who:line[0]==='f'?r.name:line[0]==='p'?'나':'',text:line[1],mood:line[2]||'neutral',hide:line[3]===false,speaker:line[0]};});
+  return lines.map(function(line){return {place:place,outfit:outfit,who:line[0]==='f'?r.name:line[0]==='p'?'나':'',text:line[1],mood:line[2]||'neutral',hide:line[3]===false,speaker:line[0],remote:line[4]==='message'};});
 }
 function crFriendMeetingBeats(ev){
   var key=ev.meeting.scene,lines=ev.meeting.lines||CR_FRIEND_MEETINGS[key];

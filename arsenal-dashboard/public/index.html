@@ -2535,7 +2535,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media(prefers-reduced-motion:reduce){.cr-nat-final-conf{display:none}}
 
 </style>
-<link rel="stylesheet" href="/career/relationship.css?v=7">
+<link rel="stylesheet" href="/career/relationship.css?v=8">
 </head>
 <body>
 
@@ -2826,8 +2826,8 @@ function playIntro(){
 </nav>
 <script src="/career/league-scenes.js?v=1"></script>
 <script src="/career/match-playback.js?v=39"></script>
-<script src="/career/relationship-scenes.js?v=2"></script>
-<script src="/career/relationship.js?v=9"></script>
+<script src="/career/relationship-scenes.js?v=3"></script>
+<script src="/career/relationship.js?v=10"></script>
 <script>
 var FN='/api';
 var allStandings=[];
@@ -11633,6 +11633,7 @@ function crResult(){
   }
   // 이적시장은 결과 화면 칸 대신 "이적시장 열기" 버튼 → 오버레이(crTmShow, 사용자 지정). 제안 없이 잔류뿐이면 버튼 없이 바로 다음 시즌.
   var M=p.military, militaryDue=M&&M.lastChance&&M.status==='pending'&&!M.selected, tm=!R.forced && !(M && (M.selected || M.service)) && (R.released || R.offers.length || M && M.status==='pending' && p.age>=19);
+  if(CR.v.friendVacation)h+='<div class="cr-panel cr-vacation-invite"><div class="cr-lbl"><b>시즌이 끝난 뒤, 둘만의 휴가</b></div><p>다음 시즌이 시작되기 전, 함께 여행할 계획을 이야기해보세요.</p><button class="gm-btn ghost" onclick="crFriendVacation()">'+(CR.v.friendVacation.wardrobe?'계획한 여행 이어가기':'휴가 계획 이야기하기')+'</button></div>';
   h+=crHist();
   var y=window.scrollY;
   crRender(h, R.forced
@@ -11647,6 +11648,7 @@ function crResult(){
   else if(scPending && !document.querySelector('#crTov .cr-sc')) crScoutShow(SC, scKey);
   else if(blPending && !document.querySelector('#crTov .cr-bl')) crBloomShow(BL, blKey);
   if(!document.getElementById('crTov')) crMilitaryResultExtra();
+  if(!document.getElementById('crTov')&&CR.v.friendVacation?.wardrobe)crFriendVacation();
   // 시즌을 막 끝낸 직후에만 오버롤 숫자가 올라가는 연출(제안을 고르며 다시 그릴 땐 안 한다)
   if(CR.fresh){
     CR.fresh=false;
@@ -11715,6 +11717,7 @@ function crTmDoneGo(){
   o.classList.add('out'); setTimeout(function(){ crTovSet('', true); crPrep(); }, 280);
 }
 function crNext(btn){
+  if(crFriendVacation())return;
   var M=CR.v.player.military;if(M&&M.lastChance&&!M.selected)return crMilitaryInfo();
   if(!crBusy(btn,'다음 시즌 준비 중...')) return;
   crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(crErr);

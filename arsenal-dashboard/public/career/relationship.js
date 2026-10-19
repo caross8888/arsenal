@@ -48,7 +48,7 @@ function crFriendPhone(ev,chosen){
       var b=document.createElement('button');b.className='cr-friend-option';b.textContent=text;b.onclick=function(){
         if(chat.picked)return;chat.picked=true;options.replaceChildren();var stamp=bubble(text,true);
         incoming(ev.replies[i].split('\n').filter(Boolean),function(){
-          stamp.textContent='읽음 · 18:25';var go=document.createElement('button');go.className='cr-friend-option go';go.textContent=crFriendIsMeeting(ev,i)?(ev.meeting?.remote===false?'방문 날짜로 이동':ev.remote?'대화 이어가기':'만나러 가기'):ev.id==='friend:visit'&&i===0?'방문 날짜로 이동':CR.friendScene.intro?'시즌 준비로':'계속';
+          stamp.textContent='읽음 · 18:25';var go=document.createElement('button');go.className='cr-friend-option go';go.textContent=crFriendIsMeeting(ev,i)?(ev.meeting?.remote===false?'방문 날짜로 이동':ev.remote?'대화 이어가기':'만나러 가기'):ev.id==='friend:visit'&&i===0?'방문 날짜로 이동':ev.id==='friend:vacation-plan'&&i<2?'여행 날짜로 이동':CR.friendScene.intro?'시즌 준비로':'계속';
           go.onclick=function(){chosen(i);};options.append(go);go.focus();
         });
       };options.append(b);
@@ -92,6 +92,8 @@ function crFriendRemoveScene(){clearTimeout(CR.friendTimer);(CR.friendCinematicT
 function crFriendCancel(){crFriendRemoveScene();crFriendClosePhone();document.getElementById('crFriendDebutMessage')?.remove();CR.friendScene=null;}
 var CR_FRIEND_ACTORS={asia:[9.95,50.55,92.11],south:[11.50,50.14,90.01],africa:[11.59,51.23,87.36],europe:[16.56,50.82,86.68]};
 function crFriendActor(r,outfit,greeting,mood){
+  var holiday=CR.friendScene?.ev.wardrobe;
+  if(holiday){var frame=(holiday==='ski'?2:0)+(['happy','shy'].includes(mood)?1:0);return '<div class="cr-friend-actor reactions vacation" role="img" data-character="'+r.id+'" data-outfit="'+holiday+'" data-pose="'+frame+'" aria-label="'+gmEsc(r.name)+(holiday==='ski'?'의 스키복':'의 해변 수영복')+'" style="background-image:url(/img/career-friends/vacation-'+r.id+'-v1.png);--actor-position:'+frame*100/3+'%"></div>';}
   var positions=CR_FRIEND_ACTORS[r.id];if(!positions)return '';
   mood=mood||(greeting?'happy':'neutral');
   var pose=greeting||mood==='happy'?1:0,date=!!outfit;
@@ -101,7 +103,7 @@ function crFriendActor(r,outfit,greeting,mood){
   return '<div class="cr-friend-actor'+(date?' reactions':'')+'" role="img" data-character="'+r.id+'" data-pose="'+(date?frame:pose)+'" data-mood="'+mood+'" data-outfit="'+(date?'date':'casual')+'" aria-label="'+gmEsc(r.name)+'의 '+description+' 표정과 자세" style="background-image:url(/img/career-friends/'+url+');--actor-position:'+(date?frame*100/3:positions[pose])+'%"></div>';
 }
 function crFriendStage(place,outfit,who,text,buttons,extra,visual){
-  if(CR.friendScene.ev.remote)return crFriendRemoteStage(who,text,buttons,visual);
+  if(CR.friendScene.ev.remote||visual?.remote){if(visual?.remote)crFriendRemoveScene();return crFriendRemoteStage(who,text,buttons,visual);}
   clearTimeout(CR.friendTimer);var C=CR.friendScene,r=C.ev.friend,v=visual||{};
   var el=document.getElementById('crFriendScene');
   if(!el){
@@ -110,7 +112,8 @@ function crFriendStage(place,outfit,who,text,buttons,extra,visual){
     document.body.appendChild(el);
   }
   el.className='cr-friend-scene '+(extra||'')+(v.speaker==='p'?' speaker-player':'');el.setAttribute('aria-label',C.ev.t);
-  el.querySelector('.cr-friend-place').style.cssText='--place-x:'+(place%2)+';--place-y:'+Math.floor(place/2);
+  el.querySelector('.cr-friend-place').style.cssText=C.ev.wardrobe?'background-image:url(/img/career-friends/vacation-places-v1.png);--vacation-y:'+(C.ev.wardrobe==='ski'?1:0):'--place-x:'+(place%2)+';--place-y:'+Math.floor(place/2);
+  el.classList.toggle('is-vacation',!!C.ev.wardrobe);
   var cast=el.querySelector('.cr-friend-cast');
   var markup=C.ev.channel==='reflection'||v.hide?'':crFriendActor(r,outfit,(extra||'').indexOf('in-stands')>=0,v.mood);
   if(cast.dataset.markup!==markup){cast.innerHTML=markup;cast.dataset.markup=markup;}
@@ -125,12 +128,13 @@ function crFriendStage(place,outfit,who,text,buttons,extra,visual){
 function crFriendSequence(beats,index,done){
   var b=beats[index],last=index===beats.length-1;
   CR.friendScene.beat=index;
-  crFriendStage(b.place,b.outfit,b.who,b.text,[{text:!last||done?'계속':CR.friendScene.debut?'시즌 계속':'시즌 준비로',run:function(){if(!last)crFriendSequence(beats,index+1,done);else if(done)done();else crFriendFinish();}}],'',b);
+  crFriendStage(b.place,b.outfit,b.who,b.text,[{text:!last||done?'계속':CR.friendScene.vacation?'여행 마치기':CR.friendScene.debut?'시즌 계속':'시즌 준비로',run:function(){if(!last)crFriendSequence(beats,index+1,done);else if(done)done();else crFriendFinish();}}],'',b);
 }
 function crFriendShow(ev){
-  CR.friendScene={ev:ev,pick:null,debut:false,intro:ev.id==='friend:intro'};
+  CR.friendScene={ev:ev,pick:null,debut:false,vacation:!!ev.vacation,intro:ev.id==='friend:intro'};
   crTovSet('',true);
-  var preload=new Image();preload.src='/img/career-friends/reactions-'+ev.friend.id+'-v1.png';
+  var preload=new Image();preload.src='/img/career-friends/'+(ev.vacation?'vacation-':'reactions-')+ev.friend.id+'-v1.png';
+  if(ev.vacation){var scenery=new Image();scenery.src='/img/career-friends/vacation-places-v1.png';}
   var key=ev.id.split(':')[1],place=key==='proposal'||key==='confession'?3:key==='foreign'?1:2;
   if(ev.channel==='message'||ev.channel==='call'||key==='intro'||key==='outing'||key==='debut')return crFriendMessage(ev);
   function question(){crFriendStage(place,1,ev.channel==='reflection'?'':ev.friend.name,ev.d,ev.a.map(function(text,i){return {text:text,run:function(){crFriendPick(i);}};}),'',{mood:key==='foreign'?'sad':key==='confession'||key==='proposal'?'shy':'neutral'});}
@@ -142,10 +146,11 @@ function crFriendFinish(){
   var C=CR.friendScene;if(!C)return;
   if(C.saving)return;C.saving=true;
   var button=document.querySelector('#crFriendSceneActions button')||document.querySelector('#crFriendOptions button');if(button){button.disabled=true;button.textContent='진행 중…';}
-  crApi(C.debut?'friend-debut':'friend-prep',{token:CR.tok,pick:C.pick}).then(function(v){
+  crApi(C.vacation?'friend-vacation':C.debut?'friend-debut':'friend-prep',{token:CR.tok,pick:C.pick}).then(function(v){
     if(CR.friendScene!==C)return;
     Object.assign(CR.v,v);CR.tok=v.token;crStore(CR.v);
     crFriendRemoveScene();crFriendClosePhone();document.getElementById('crFriendDebutMessage')?.remove();CR.friendScene=null;
+    if(C.vacation){if(v.friendVacation?.wardrobe)return crFriendShow(v.friendVacation);return crResult();}
     if(!C.debut){CR.evPick=null;return crShow(v);}
     if(CR.sf){CR.sf.friendBusy=false;if(CR.sf.v)CR.sf.v=CR.v;}
     C.resume();
@@ -217,4 +222,10 @@ function crFriendResumeDebut(){
   if(!CR.v.player.relationship?.pendingDebut||CR.friendScene)return false;
   CR.friendScene=crFriendDebutContext(function(){crResult();});
   crFriendDebutMessage();return true;
+}
+
+function crFriendVacation(){
+  if(!CR.v.friendVacation)return false;
+  if(!CR.friendScene)crFriendShow(CR.v.friendVacation);
+  return true;
 }

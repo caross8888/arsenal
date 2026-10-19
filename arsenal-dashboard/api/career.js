@@ -24,6 +24,7 @@ import { tokenCodec } from './_token.js';
 import { readToken } from './_account.js';
 import * as S from './_career_sim.js';
 import * as REL from './_career_relationship.js';
+import * as TRAVEL from './_career_relationship_travel.js';
 import {kickVerdict} from './_career_shootout.js';
 import {NATIONAL_REACTION_GROUPS} from './_career_international.js';
 import { CLUB_KIT } from './_club_kits.js';
@@ -215,7 +216,7 @@ function view(C){
   const player = S.playerView(C);
   if(C.phase === 'prep') return {phase: 'prep', player, prep: S.prepView(C),friendDebut};
   if(C.phase === 'injury') return {phase: 'injury', player, prep: S.prepView(C),friendDebut, injury: injuryView(C.inj), pending: C.pending};
-  return {phase: 'result', player, result: resultView(C),friendDebut};
+  return {phase: 'result', player, result: resultView(C),friendDebut,friendVacation:TRAVEL.vacationEvent(C)};
 }
 const injuryView = inj => ({name: inj.name, major: inj.major, games: inj.games});
 
@@ -323,6 +324,12 @@ export default async function handler(req, res){
       return res.json({token:seal(C),...view(C)});
     }
 
+    if(a==='friend-vacation'){
+      const C=load(body.token,['result']);
+      try{TRAVEL.completeVacation(C,body.pick);}catch(e){bad(e.message);}
+      return res.json({token:seal(C),...view(C)});
+    }
+
     if(a==='friend-prep'){
       const C=load(body.token,['prep']);
       try{S.completeRelationshipPrep(C,body.pick);}catch(e){bad(e.message);}
@@ -383,6 +390,7 @@ export default async function handler(req, res){
 
     if(a === 'next'){
       const C = load(body.token, ['result']);
+      if(TRAVEL.vacationPending(C))bad('계획한 휴가 이벤트를 먼저 마쳐 주세요.');
       if(C.relationship?.pendingDebut)bad('첫 프로 출전 연락을 먼저 확인해 주세요.');
       const pick = body.pick == null || body.pick === '' ? null : Number(body.pick);
       if(pick != null && !(Number.isInteger(pick) && C.offers[pick])) bad('제안을 다시 골라 주세요.');
@@ -400,6 +408,7 @@ export default async function handler(req, res){
       const C = load(body.token, ['result', 'retired']);
       if(C.relationship?.pendingDebut)bad('첫 프로 출전 연락을 먼저 확인해 주세요.');
       if(C.phase === 'result' && C.age < 29 && !C.forced) bad('29세부터 은퇴할 수 있어요.');
+      if(TRAVEL.vacationPending(C))bad('계획한 휴가 이벤트를 먼저 마쳐 주세요.');
       S.retire(C);
       return res.json({token: seal(C), ...view(C)});
     }
