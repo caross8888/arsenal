@@ -1,6 +1,6 @@
 import * as REL from './_career_relationship.js';
 import {serviceView} from './_career_military.js';
-import {MAIN,DATES,mainBefore,f,p,n} from './_career_asia_dialogue.js';
+import {MAIN,DATES,mainBefore,fireworksStory,f,p,n} from './_career_asia_dialogue.js';
 const romantic=r=>['dating','married'].includes(r.status);
 const enabled=C=>C.relationship?.region==='asia'&&C.activePartner!=='reporter'&&C.relationship.status!=='separated';
 function story(C){const r=C.relationship;return r.asiaStory??={version:1,chapter:0,seen:[],support:0,voiceFound:false};}
@@ -78,8 +78,9 @@ export function preparation(C,service=false){
  const available=DATES.filter(x=>!s.seen.includes(x[0])&&(!['first-train','fireworks'].includes(x[0])||C.age>=18)&&(x[0]!=='new-recording'||s.voiceFound)&&(x[0]!=='next-season'||romantic(r)));
  const date=available[0];
  if(!date)return event(C,'rest:'+C.age,'이번 휴가의 하루',{channel:'reflection',d:'지난 만남의 사진을 정리했다. 다음 휴가에 함께 가고 싶은 곳을 적어 보냈다.',a:['이번 근황을 전하고 쉰다.'],reply:['서로의 새 일정을 확인하고 연락을 마쳤다.'],replies:['서로의 새 일정을 확인하고 연락을 마쳤다.'],asia:{kind:'rest'}});
- const lines=date[3].map(line=>[...line]);if(date[0]==='fireworks')lines.forEach((line,i)=>{if(i>=5)line[5]='fireworks';});
- return event(C,'date:'+date[0],date[1],{channel:'story',place:date[2],a:['이야기 마치기'],reply:['다음에 또 보자.'],replies:['다음에 또 보자.'],script:{story:[n(location(C)),...lines,close(C)]},asia:{kind:'date',id:date[0]}});
+ const fireworks=date[0]==='fireworks',lines=fireworks?fireworksStory(C):date[3].map(line=>[...line]),ending=close(C);
+ if(fireworks)ending[4]='message';
+ return event(C,'date:'+date[0],date[1],{channel:'story',place:date[2],...(fireworks?{costume:'fireworks'}:{}),a:['이야기 마치기'],reply:['다음에 또 보자.'],replies:['다음에 또 보자.'],script:{story:[n(location(C)),...lines,ending]},asia:{kind:'date',id:date[0]}});
 }
 export function complete(C,ev,pick){
  if(!enabled(C)||C.relationship.prepAge===C.age||!Number.isInteger(pick)||!ev.a[pick])throw new Error('이번 만남을 다시 확인해 주세요.');

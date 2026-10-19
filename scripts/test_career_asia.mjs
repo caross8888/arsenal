@@ -4,7 +4,7 @@ import * as R from '../arsenal-dashboard/api/_career_relationship.js';
 import * as A from '../arsenal-dashboard/api/_career_asia.js';
 import * as T from '../arsenal-dashboard/api/_career_relationship_travel.js';
 import * as J from '../arsenal-dashboard/api/_career_reporter.js';
-import {MAIN,mainBefore} from '../arsenal-dashboard/api/_career_asia_dialogue.js';
+import {MAIN,mainBefore,fireworksStory} from '../arsenal-dashboard/api/_career_asia_dialogue.js';
 import {tokenCodec} from '../arsenal-dashboard/api/_token.js';
 const input={name:'첫관객',nation:'KOR',pos:'FW',card:0,foot:'오른발',body:'표준',num:9};
 function make(nation='KOR',age=16){const c=S.createCareer({...input,nation},0,8);c.age=age;c.ev='coach';c.relationship.introDone=true;return c;}
@@ -22,6 +22,16 @@ const stalled=make();stalled.hist=[{youth:true,apps:0}];const successful=make();
 assert.match(JSON.stringify(mainBefore(stalled,3)),/너도 출전 기다린다는/);
 assert.match(JSON.stringify(mainBefore(successful,3)),/네 자리가 있잖아/);
 const waiting=make('KOR',19);waiting.relationship.affinity=100;assert.notEqual(S.relationshipPrepView(waiting).event.id,'friend:confession','points cannot skip her story');
+for(const [chapter,age,voiceFound] of [[2,19,false],[5,24,false],[7,27,true]]){
+ const c=make('KOR',age);Object.assign(c.relationship,{lastAge:age,asiaStory:{version:1,chapter,support:8,voiceFound,seen:['practice-snack']}});
+ const ev=S.relationshipPrepView(c).event;assert.equal(ev.id,'friend:asia:date:fireworks');assert.equal(ev.costume,'fireworks');
+ const lines=fireworksStory(c),text=JSON.stringify(lines);assert.match(text,/역 앞에서 만났다/);assert.match(text,/집으로 돌아간 뒤/);assert.equal(lines.at(-1)[4],'message');
+ if(chapter===2){assert.match(text,/후렴을 작게 따라/);assert(!text.includes('오늘은 무대 안 보고'));}
+ if(chapter===5)assert.match(text,/오늘은 무대 안 보고/);
+ if(voiceFound){assert.match(text,/우리 합주할 때도 불러/);assert(!text.includes('오늘은 무대 안 보고'));}
+ const firstCG=lines.findIndex(line=>line[5]==='fireworks'),lastCG=lines.findLastIndex(line=>line[5]==='fireworks');assert(firstCG>0);assert.match(lines[firstCG][1],/첫 불꽃/);assert.match(lines[lastCG][1],/마지막 불꽃/);assert(lines.slice(firstCG,lastCG+1).every(line=>line[5]==='fireworks'));assert.equal(ev.script.story.at(-1)[4],'message','the closing narration stays in the return-home phone scene');
+ choose(c);assert(c.relationship.asiaStory.seen.includes('fireworks'));assert.equal(c.relationship.asiaStory.chapter,chapter);
+}
 for(const nation of ['KOR','JPN'])for(const foreign of [false,true]){
  const c=make(nation,15);c.relationship.introDone=false;if(foreign)c.club=S.clubByName('아스날');const residence=c.relationship.residence;
  const ids=[],chapters=[],romance=[];

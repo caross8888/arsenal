@@ -138,6 +138,10 @@ function crFriendCancel(){crFriendRemoveScene();crFriendClosePhone();document.ge
 var CR_FRIEND_ACTORS={reporter:[33.333,33.333,66.667],asia:[9.95,50.55,92.11],south:[11.50,50.14,90.01],africa:[11.59,51.23,87.36],europe:[16.56,50.82,86.68]};
 function crFriendActor(r,outfit,greeting,mood){
   var holiday=CR.friendScene?.ev.wardrobe;
+  if(r.id==='asia'&&CR.friendScene?.ev.costume==='fireworks'){
+    var festivalFrame={neutral:0,happy:1,shy:2,sad:3}[mood]||0;
+    return '<div class="cr-friend-actor reactions" role="img" data-character="asia" data-pose="'+festivalFrame+'" data-gesture="conversation" data-mood="'+(mood||'neutral')+'" data-outfit="fireworks" aria-label="'+gmEsc(r.name)+'의 하늘색 블라우스와 크림색 치마 차림" style="background-image:url(/img/career-friends/festival-asia-v1.png);--actor-position:'+([40,414,788,1162][festivalFrame]/1162*100)+'%;aspect-ratio:374/1024;background-size:410.695187% 100%"></div>';
+  }
   if(r.id==='reporter')return crReporterActor(r,outfit,mood,holiday);
   if(holiday){var frame=(holiday==='ski'?2:0)+(['happy','shy'].includes(mood)?1:0);return '<div class="cr-friend-actor reactions vacation" role="img" data-character="'+r.id+'" data-outfit="'+holiday+'" data-pose="'+frame+'" aria-label="'+gmEsc(r.name)+(holiday==='ski'?'의 스키복':'의 해변 수영복')+'" style="background-image:url(/img/career-friends/vacation-'+r.id+'-v2.png);--actor-position:'+frame*100/3+'%"></div>';}
   var positions=CR_FRIEND_ACTORS[r.id];if(!positions)return '';
@@ -189,6 +193,7 @@ function crFriendShow(ev){
   if(ev.channel==='route')return crFriendRoute(ev);
   var preload=new Image();preload.src='/img/career-friends/'+(ev.vacation?'vacation-':ev.friend.id==='reporter'?'casual-':'reactions-')+ev.friend.id+(ev.vacation?'-v2.png':'-v1.png');
   if(!ev.vacation&&ev.friend.id==='asia'){var casual=new Image();casual.src='/img/career-friends/casual-asia-v1.png';}
+  if(ev.costume==='fireworks'){var festival=new Image();festival.src='/img/career-friends/festival-asia-v1.png';}
   if(ev.vacation){var scenery=new Image();scenery.src='/img/career-friends/vacation-places-v1.png';}
   crFriendWarmStoryCG(ev);
   if(ev.channel==='story'){CR.friendScene.pick=0;return crFriendSequence(crFriendBeats(ev.script.story,ev.place??3,ev.outfit??1),0);}
