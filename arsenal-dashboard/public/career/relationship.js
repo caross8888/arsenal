@@ -5,7 +5,7 @@ function crFriendPortrait(r){
 }
 function crFriendPanel(p){
   var r=p.relationship;if(!r)return '';
-  return '<div class="cr-friend-status">'+crFriendPortrait(r)+'<span><b>'+gmEsc(r.name)+'</b><small>'+gmEsc(r.label)+'</small></span></div>';
+  return '<details class="cr-friend-profile"><summary class="cr-friend-status">'+crFriendPortrait(r)+'<span><b>'+gmEsc(r.name)+'</b><small>'+gmEsc(r.label)+(r.longDistance?' · 장거리':'')+'</small></span>'+(r.affinity!=null?'<span class="cr-friend-affinity"><b>호감도 '+r.affinity+' / '+(r.affinityMax||100)+'</b><progress max="100" value="'+r.affinity+'"></progress></span>':'')+'</summary><div class="cr-friend-profile-body"><p>'+gmEsc(r.personality||'')+'</p><p><b>바라는 삶</b> '+gmEsc(r.goal||'')+'</p>'+(r.lastChange?'<p>'+gmEsc(r.lastChange.reason)+' <b>'+(r.lastChange.delta>0?'+':'')+r.lastChange.delta+'</b></p>':'')+'</div></details>';
 }
 function crFriendCard(r){
   if(!r)return '';
@@ -48,12 +48,24 @@ function crFriendPhone(ev,chosen){
       var b=document.createElement('button');b.className='cr-friend-option';b.textContent=text;b.onclick=function(){
         if(chat.picked)return;chat.picked=true;options.replaceChildren();var stamp=bubble(text,true);
         incoming(ev.replies[i].split('\n').filter(Boolean),function(){
-          stamp.textContent='읽음 · 18:25';var go=document.createElement('button');go.className='cr-friend-option go';go.textContent=crFriendIsMeeting(ev,i)?'만나러 가기':CR.friendScene.intro?'시즌 준비로':'계속';
+          stamp.textContent='읽음 · 18:25';var go=document.createElement('button');go.className='cr-friend-option go';go.textContent=crFriendIsMeeting(ev,i)?(ev.remote?'대화 이어가기':'만나러 가기'):CR.friendScene.intro?'시즌 준비로':'계속';
           go.onclick=function(){chosen(i);};options.append(go);go.focus();
         });
       };options.append(b);
     });
   });
+}
+function crFriendRemoteStage(who,text,buttons,visual){
+  var C=CR.friendScene,chat=CR.friendPhone;
+  if(!chat||!chat.story){
+    crFriendClosePhone();var el=document.createElement('div');el.id='crFriendPhone';el.className='cr-friend-overlay cr-friend-phone-overlay';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',C.ev.friend.name+'와 원거리 대화');
+    el.innerHTML='<section class="cr-friend-device"><div class="cr-friend-phone-status"><b>18:24</b><span>●●● ▰</span></div><div class="cr-friend-phone-camera" aria-hidden="true"></div><header>'+crFriendPortrait(C.ev.friend)+'<div><b>'+gmEsc(C.ev.friend.name)+'</b><small>멀리서 나누는 대화</small></div></header><div class="cr-friend-history" id="crFriendHistory" aria-live="polite"></div><div class="cr-friend-options" id="crFriendOptions"></div><div class="cr-friend-home-indicator"></div></section>';
+    document.body.appendChild(el);chat=CR.friendPhone={el:el,timers:[],story:true};
+  }
+  var history=chat.el.querySelector('#crFriendHistory'),row=document.createElement('div'),body=document.createElement('p');
+  row.className='cr-friend-chat-line'+(who==='나'?' mine':'')+(!who?' narration':'');body.textContent=text;row.appendChild(body);history.appendChild(row);history.scrollTop=history.scrollHeight;
+  var actions=chat.el.querySelector('#crFriendOptions');actions.replaceChildren();buttons.forEach(function(b){var btn=document.createElement('button');btn.className='cr-friend-option go';btn.textContent=b.text;btn.onclick=b.run;actions.appendChild(btn);});
+  return chat.el;
 }
 function crFriendIsMeeting(ev,pick){
   return ev.meeting?(ev.meeting.picks||[0]).indexOf(pick)>=0:pick===0&&['friend:outing','friend:debut'].includes(ev.id);
@@ -61,16 +73,18 @@ function crFriendIsMeeting(ev,pick){
 function crFriendPick(i){
   var C=CR.friendScene;if(!C||C.pick!=null||!C.ev.a[i])return;
   C.pick=i;
-  if(C.intro||C.ev.channel==='message'&&!crFriendIsMeeting(C.ev,i)||i===1&&(C.ev.id==='friend:outing'||C.ev.id==='friend:debut'))return crFriendFinish();
-  crFriendClosePhone();
+  if(C.intro||C.ev.channel==='message'&&!crFriendIsMeeting(C.ev,i)&&!C.ev.script?.after?.[i]?.length||i===1&&(C.ev.id==='friend:outing'||C.ev.id==='friend:debut'))return crFriendFinish();
+  var hadPhone=!!CR.friendPhone;
+  if(C.ev.remote&&hadPhone){CR.friendPhone.story=true;CR.friendPhone.flush=null;}else crFriendClosePhone();
   var key=C.ev.id.split(':')[1],reply=C.ev.replies[i],beats=[];
   if(C.ev.channel==='reflection')beats=[{place:3,outfit:0,who:'',text:reply,hide:true}];
   else if(C.ev.meeting)beats=crFriendMeetingBeats(C.ev);
   else {
-    var story=CR_FRIEND_MAJOR[key],place=key==='proposal'||key==='confession'?3:key==='foreign'||key==='debut'?1:2,outfit=key==='debut'?0:1;
+    var story=C.ev.script||CR_FRIEND_MAJOR[key],place=C.ev.place??(key==='proposal'||key==='confession'?3:key==='foreign'||key==='debut'?1:2),outfit=key==='debut'?0:1;
     beats=story&&story.after[i].length?crFriendBeats(story.after[i],place,outfit):crFriendBeats([['f',reply,'neutral'],['n','인사를 나누고 각자의 길로 돌아갔다.','neutral',false]],place,outfit);
-    if(['confession','foreign','proposal'].includes(key))beats.unshift({place:place,outfit:outfit,who:'나',text:C.ev.a[i],mood:'neutral',speaker:'p'});
+    if(C.ev.channel==='scene'&&key!=='debut')beats.unshift({place:place,outfit:outfit,who:'나',text:C.ev.a[i],mood:'neutral',speaker:'p'});
   }
+  if(C.ev.remote&&hadPhone&&beats[0]?.speaker==='f'&&beats[0].text===C.ev.replies[i])beats.shift();
   crFriendSequence(beats,0);
 }
 function crFriendRemoveScene(){clearTimeout(CR.friendTimer);document.getElementById('crFriendScene')?.remove();}
@@ -86,6 +100,7 @@ function crFriendActor(r,outfit,greeting,mood){
   return '<div class="cr-friend-actor'+(date?' reactions':'')+'" role="img" data-character="'+r.id+'" data-pose="'+(date?frame:pose)+'" data-mood="'+mood+'" data-outfit="'+(date?'date':'casual')+'" aria-label="'+gmEsc(r.name)+'의 '+description+' 표정과 자세" style="background-image:url(/img/career-friends/'+url+');--actor-position:'+(date?frame*100/3:positions[pose])+'%"></div>';
 }
 function crFriendStage(place,outfit,who,text,buttons,extra,visual){
+  if(CR.friendScene.ev.remote)return crFriendRemoteStage(who,text,buttons,visual);
   clearTimeout(CR.friendTimer);var C=CR.friendScene,r=C.ev.friend,v=visual||{};
   var el=document.getElementById('crFriendScene');
   if(!el){
@@ -116,9 +131,9 @@ function crFriendShow(ev){
   crTovSet('',true);
   var preload=new Image();preload.src='/img/career-friends/reactions-'+ev.friend.id+'-v1.png';
   var key=ev.id.split(':')[1],place=key==='proposal'||key==='confession'?3:key==='foreign'?1:2;
-  if(ev.channel==='message'||key==='intro'||key==='outing'||key==='debut')return crFriendMessage(ev);
+  if(ev.channel==='message'||ev.channel==='call'||key==='intro'||key==='outing'||key==='debut')return crFriendMessage(ev);
   function question(){crFriendStage(place,1,ev.channel==='reflection'?'':ev.friend.name,ev.d,ev.a.map(function(text,i){return {text:text,run:function(){crFriendPick(i);}};}),'',{mood:key==='foreign'?'sad':key==='confession'||key==='proposal'?'shy':'neutral'});}
-  var before=CR_FRIEND_MAJOR[key]?.before;
+  var before=(ev.script||CR_FRIEND_MAJOR[key])?.before;
   if(before&&before.length)crFriendSequence(crFriendBeats(before,place,1),0,question);
   else question();
 }
@@ -139,12 +154,13 @@ function crFriendDebutMessage(){
   crFriendRemoveScene();crFriendMessage(CR.friendScene.ev);
 }
 function crFriendDebutContext(resume){
-  return {debut:true,pick:null,resume:resume,ev:{id:'friend:debut',t:'첫 1군 공식경기 · 경기 종료 직후',friend:CR.v.player.relationship,d:'아까 나 봤지?ㅋㅋ\n끝나고 왜 이렇게 안 나와\n나 아직 출구 쪽인데. 잠깐 볼래?',a:['응. 거기 있어. 금방 나갈게.','오늘은 팀 일정이 있어. 먼저 가. 다음에 보자.'],replies:['응 여기 있을게.\n천천히 나와.','아쉽다. 알겠어. 조심히 들어가.\n오늘 수고했어!']}};
+  return {debut:true,pick:null,resume:resume,ev:CR.v.friendDebut||{id:'friend:debut',t:'첫 1군 공식경기 · 경기 종료 직후',friend:CR.v.player.relationship,d:'아까 나 봤지?ㅋㅋ\n끝나고 왜 이렇게 안 나와\n나 아직 출구 쪽인데. 잠깐 볼래?',a:['응. 거기 있어. 금방 나갈게.','오늘은 팀 일정이 있어. 먼저 가. 다음에 보자.'],replies:['응 여기 있을게.\n천천히 나와.','아쉽다. 알겠어. 조심히 들어가.\n오늘 수고했어!']}};
 }
 function crFriendMatch(m,play,resume){
   var S=CR.sf,r=CR.v.player.relationship;
   if(!S||!r?.pendingDebut||S.friendSeen||!m.pl||S.n.apps!==0)return false;
   S.friendSeen=true;S.friendBusy=true;CR.friendScene=crFriendDebutContext(resume);
+  if(r.debutMode==='remote'){play();crFriendDebutMessage();return true;}
   var found=false;
   var reveal=function(){if(!CR.friendScene?.debut)return;clearTimeout(CR.friendTimer);found=true;crFriendStage(0,0,r.name,'여기! 나 여기 있어!',[{text:'그라운드로',run:function(){play();crFriendDebutMessage();}}],'found in-stands');};
   crFriendStage(0,0,'','입장 직전, 관중석 쪽으로 고개를 돌렸다.\n어디쯤이라고 했더라…',[{text:'관중석 살펴보기',run:reveal}],'searching in-stands');

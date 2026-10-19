@@ -1,147 +1,134 @@
 import assert from 'node:assert/strict';
 import * as R from '../arsenal-dashboard/api/_career_relationship.js';
+import {PROFILES} from '../arsenal-dashboard/api/_career_relationship_dialogue.js';
 import * as S from '../arsenal-dashboard/api/_career_sim.js';
 import {tokenCodec} from '../arsenal-dashboard/api/_token.js';
-
 const input={name:'관계테스트',nation:'ENG',pos:'FW',card:0,foot:'오른발',body:'표준',num:9};
-for(const [nation,region] of Object.entries({KOR:'asia',JPN:'asia',BRA:'south',ARG:'south',NGA:'africa',ENG:'europe',USA:'europe'}))assert.equal(R.createRelationship(nation).region,region);
-assert.equal(R.createRelationship('JPN').name,'유이');
-assert.equal(R.relationshipView({}),null,'old saves remain valid without inventing a prior relationship');
-const c={age:19,hist:[{youth:true,apps:25}],relationship:R.createRelationship('KOR')};
-assert.equal(R.dueRelationship(c),null,'youth appearances are not a pro debut');
-c.hist.push({youth:false,apps:0});assert.equal(R.dueRelationship(c),null,'bench is not a debut');
-R.prepareDebut(c,{youth:true,apps:25});assert(!c.relationship.pendingDebut);
-R.prepareDebut(c,{youth:false,apps:0});assert(!c.relationship.pendingDebut);
-R.prepareDebut(c,{youth:false,apps:1});assert(c.relationship.pendingDebut);
-assert.equal(R.dueRelationship(c),null,'debut is a match checkpoint, never a next-season prep event');
-c.hist.push({youth:false,apps:1});
-R.applyRelationship(c,'friend:debut',0);assert.equal(c.relationship.affinity,1);
-assert(!c.relationship.pendingDebut);
-R.applyRelationship(c,'friend:debut',0);assert.equal(c.relationship.affinity,1,'retry cannot apply twice');
-c.age=20;assert.equal(R.dueRelationship(c),null,'space relationship choices across seasons');
-c.age=21;assert.equal(R.dueRelationship(c),'outing');R.applyRelationship(c,'friend:outing',0);
-c.age=23;assert.equal(R.dueRelationship(c),'confession');R.applyRelationship(c,'friend:confession',0);
-R.recordRelationshipTransfer(c,'KOR','KOR');assert(!c.relationship.foreign);
-R.recordRelationshipTransfer(c,'KOR','ENG');c.age=25;assert.equal(R.dueRelationship(c),'foreign');
-R.applyRelationship(c,'friend:foreign',0);assert.equal(c.relationship.status,'dating');
-c.age=28;assert.equal(R.dueRelationship(c),'proposal');R.applyRelationship(c,'friend:proposal',0);
-assert.equal(c.relationship.status,'married');assert.equal(R.dueRelationship({...c,age:35}),null);assert.equal(c.relationship.done.length,5);
-const declined={age:23,relationship:R.createRelationship('ENG'),hist:[{youth:false,apps:1}]};
-declined.relationship.done=['debut','outing'];declined.relationship.affinity=2;R.applyRelationship(declined,'friend:confession',1);
-assert.equal(R.dueRelationship({...declined,age:30}),null,'friendship does not automatically become marriage');
-const separated=structuredClone(declined);separated.relationship.status='dating';R.applyRelationship(separated,'friend:foreign',1);assert.equal(R.dueRelationship({...separated,age:30}),null);
-
-// Verify actual simulation paths, injury resumption, protected call-ups and signed saves.
-const base=S.createCareer(input,0,71);
-Object.assign(base,{age:23,lv:3,proAt:18,num:9,ev:'friend:confession',ovr:60,st:Array(5).fill(60),peak:60});
-base.relationship.done=['debut','outing'];base.relationship.affinity=2;
-const yes=structuredClone(base),no=structuredClone(base);
-const yr=S.playSeason(yes,{train:'균형',evPick:0,injPick:1}).row;
-const nr=S.playSeason(no,{train:'균형',evPick:1,injPick:1}).row;
-for(const key of ['apps','starts','goals','ast','ovr','injured','rating','rank'])assert.equal(yr[key],nr[key],`romance choice must not reroll football: ${key}`);
-assert.equal(yes.relationship.status,'dating');assert.equal(no.relationship.status,'friend');
-yes.offers=[{c:S.clubByName('플라멩구'),kind:'도전'}];S.nextSeason(yes,0,0);assert(yes.relationship.foreign,'completed cross-country move is recorded');
-const old=S.createCareer(input,0,91);delete old.relationship;S.playSeason(old,{train:'균형',evPick:0,injPick:1});S.nextSeason(old,null,0);assert.equal(S.playerView(old).relationship,null);
-let injuryTested=false;
-for(let seed=1;seed<=100&&!injuryTested;seed++){
-  const injured=structuredClone(base);injured.seed=seed;
-  const first=S.playSeason(injured,{train:'균형',evPick:0});
-  if(first.injury){
-    assert(!injured.relationship.done.includes('confession'),'pending injury must not consume choice');
-    S.playSeason(injured,{train:'균형',evPick:0,injPick:1});
-    assert.equal(injured.relationship.done.filter(k=>k==='confession').length,1);injuryTested=true;
-  }
+const make=(nation='ENG',age=21)=>{const c=S.createCareer({...input,nation},0,8);c.age=age;c.ev='coach';c.relationship.introDone=true;return c;};
+function choose(c,pick=0){const ev=S.relationshipPrepView(c);assert(ev.intro||ev.event);S.completeRelationshipPrep(c,pick);return ev.intro||ev.event;}
+function nextYear(c){c.age++;c.phase='prep';}
+const regions={KOR:'asia',JPN:'asia',BRA:'south',ARG:'south',NGA:'africa',ENG:'europe',USA:'europe'};
+for(const [nation,region] of Object.entries(regions))assert.equal(R.createRelationship(nation).region,region);
+assert.equal(R.createRelationship('JPN').name,'유이');assert.equal(R.relationshipView({}),null);
+const voices=new Set(),goals=new Set();
+for(const nation of ['KOR','BRA','NGA','ENG']){
+ const c=make(nation,15);c.relationship.introDone=false;
+ const home=R.introEvent(c);voices.add(home.d);goals.add(home.friend.goal);assert.equal(home.friend.affinity,40);
+ c.club=S.clubByName(nation==='ENG'?'플라멩구':'아스날');
+ const away=R.introEvent(c);assert.notEqual(away.d,home.d);assert.equal(away.friend.homeNation,nation);assert(away.friend.longDistance);
+ c.age=22;c.relationship.introDone=true;const contact=R.routineEvent(c);assert(!contact.meeting,'no imaginary hometown walks while abroad');
 }
-assert(injuryTested);
-const callup=structuredClone(base);Object.assign(callup,{age:20,ovr:90,peak:90,st:Array(5).fill(90)});
-assert(S.nationalCallupPlan(callup));assert.equal(S.prepView(callup).event.id,'natcall','call-up keeps its mandatory decision slot');
-process.env.WHOAMI_SECRET='relationship-test-only';
-const codec=tokenCodec('career-token-v1',{zip:true});assert.deepEqual(codec.open(codec.seal(c)),c);
-console.log('PASS relationship: regional casting, debut gates, five spaced decisions, friendship/marriage/breakup, completed transfer, unchanged football outcomes, injury resume, old saves and signed state');
+assert.equal(voices.size,4);assert.equal(goals.size,4);
+let abroadChecked=false;
+for(let seed=1;seed<=200&&!abroadChecked;seed++){
+ const list=S.firstClubs('KOR','FW',0,seed),index=list.findIndex(x=>x.kind==='해외');if(index<0)continue;
+ const c=S.createCareer({...input,nation:'KOR'},index,seed);assert.equal(c.relationship.region,'asia');assert(R.introEvent(c).friend.longDistance);assert.match(R.introEvent(c).d,/도착|숙소/);abroadChecked=true;
+}
+assert(abroadChecked);console.log('PASS four distinct profiles/voices/goals; domestic/foreign youth starts, fixed hometown identity and distance-safe routines');
 
-// Full careers: accept relationship choices and check they remain bounded.
-let married=0,events=0,annual=0;
+for(const [status,old,min] of [['friend',0,40],['dating',2,65],['married',3,85]]){
+ const c=make();c.relationship={version:3,region:'europe',name:'에밀리',status,affinity:old,done:['debut'],prepAge:21};
+ R.ensureRelationship(c);assert(c.relationship.affinity>=min);const saved=structuredClone(c.relationship);R.ensureRelationship(c);assert.deepEqual(c.relationship,saved);assert.equal(c.relationship.prepAge,21);
+}
+for(const key of ['confession','proposal']){
+ const c=make('ENG',key==='confession'?23:28);c.ev='friend:'+key;c.relationship={version:3,region:'europe',name:'에밀리',status:key==='proposal'?'dating':'close',affinity:2,done:['debut','outing'],lastAge:21};
+ const prep=S.relationshipPrepView(c);assert(prep.event);choose(c,0);assert(!c.ev.startsWith('friend:'),'old ineligible prep events must not trap the save');
+ const pending=make('ENG',28);pending.phase='injury';pending.ev='friend:'+key;pending.relationship={version:3,region:'europe',name:'에밀리',status:key==='proposal'?'dating':'close',affinity:2,done:['debut','outing'],lastAge:21};
+ R.ensureRelationship(pending);R.applyRelationship(pending,pending.ev,0);assert.equal(pending.relationship.status,key==='proposal'?'married':'dating');assert(!pending.relationship.legacyPendingChoice);
+}
+const ex=make('ENG',22);ex.relationship.status='separated';R.prepareDebut(ex,{youth:false,apps:1});assert(!ex.relationship.pendingDebut,'an ex never appears for a later first senior match');
+const soldier=make('KOR',27);soldier.military={status:'regular',left:18,home:{...soldier.club}};Object.assign(soldier.relationship,{status:'dating',datingAge:22,affinity:80,unresolved:2,lastAge:24});
+assert.equal(S.relationshipPrepView(soldier).event.channel,'call');assert(S.relationshipPrepView(soldier).event.remote);
+const points=make('ENG',16);assert.equal(points.relationship.affinity,40);choose(points,0);assert.equal(points.relationship.affinity,46,'meaningful meeting +6');
+nextYear(points);const beforeDecline=points.relationship.affinity;choose(points,1);assert.equal(points.relationship.affinity,beforeDecline,'polite refusal is neutral');
+const ceiling=make('ENG',20);ceiling.relationship.affinity=99;choose(ceiling,0);assert.equal(ceiling.relationship.affinity,100);
+const floor=make('ENG',18);floor.relationship.affinity=2;const negative=choose(floor,1);assert(negative.goalTopic);assert.equal(floor.relationship.affinity,0);
+const consent=make('ENG',17);consent.relationship.affinity=100;assert.notEqual(R.dueRelationship(consent),'confession');nextYear(consent);assert.equal(R.dueRelationship(consent),'confession');choose(consent,1);assert.notEqual(consent.relationship.status,'dating');nextYear(consent);assert.notEqual(R.dueRelationship(consent),'confession','declining confession cannot auto-date/repeat next year');
+const pair=make('ENG',21);pair.relationship.affinity=65;choose(pair,0);assert.equal(pair.relationship.status,'dating');assert.equal(pair.relationship.datingAge,21);
+pair.age=22;pair.relationship.affinity=100;pair.relationship.futureAgreement=true;assert.notEqual(R.dueRelationship(pair),'proposal','minimum two years dating');
+pair.age=23;pair.relationship.affinity=84;assert.notEqual(R.dueRelationship(pair),'proposal');pair.relationship.affinity=85;assert.equal(R.dueRelationship(pair),'proposal');choose(pair,0);assert.equal(pair.relationship.status,'married');
+assert.equal(pair.relationship.affinity,95);assert.equal(pair.relationship.marriedAge,23);
+console.log('PASS 0–100 affinity, explicit event weights, neutral respectful refusal, clamp, adult/consent gates, marriage 85 + two years + future agreement');
+
+function dating(nation='ENG'){const c=make(nation,25);Object.assign(c.relationship,{status:'dating',affinity:90,datingAge:21,lastAge:21,done:['debut','outing','confession'],futureAgreement:true});return c;}
+const move=dating();const hometown=move.relationship.residence;
+R.recordRelationshipTransfer(move,'ENG','ENG');assert(!move.relationship.foreign);
+move.club=S.clubByName('플라멩구');R.recordRelationshipTransfer(move,'ENG','BRA');assert.equal(R.dueRelationship(move),'foreign');assert.equal(move.relationship.affinity,90);
+const ev=choose(move,1);assert.equal(ev.a.length,3);assert.equal(move.relationship.residence,hometown,'an invitation never teleports the partner');
+nextYear(move);assert.equal(R.dueRelationship(move),'future');const unwilling=S.relationshipPrepView(move).event;assert.equal(unwilling.canMove,false,'affinity 95 alone cannot override personal goals');choose(move,0);assert.equal(move.relationship.residence,hometown);
+move.age+=2;move.relationship.prepAge=null;move.relationship.goalSupport=PROFILES.europe.moveSupport;move.relationship.moveDiscussion={nation:'BRA',age:move.age-1};
+assert(S.relationshipPrepView(move).event.canMove);choose(move,0);assert.equal(move.relationship.residence,'BRA');assert(!R.relationshipView(move).longDistance);
+move.club=S.clubByName('아스날');R.recordRelationshipTransfer(move,'BRA','ENG');nextYear(move);assert.equal(R.dueRelationship(move),'foreign','every completed international move can raise a new discussion');
+const revisit=dating();revisit.club=S.clubByName('플라멩구');Object.assign(revisit.relationship,{futurePlan:'independent',lastFutureAge:22,goalSupport:2});
+assert.equal(R.dueRelationship(revisit),'future','a previously deferred relocation can be discussed again when personal plans are ready');
+assert(R.relationshipEvent(revisit,'friend:future').canMove);
+const long=dating();long.relationship.residence='BRA';long.club=S.clubByName('아스날');R.recordRelationshipTransfer(long,'KOR','ENG');assert.match(R.relationshipEvent(long,'friend:foreign').t,/거리/);
+const returns=dating();returns.club=S.clubByName('아스날');returns.relationship.residence='ENG';R.recordRelationshipTransfer(returns,'BRA','ENG');assert.match(R.relationshipEvent(returns,'friend:foreign').t,/가까워/);assert(!R.relationshipEvent(returns,'friend:foreign').a[0].includes('장거리'));
+const ended=dating();ended.club=S.clubByName('플라멩구');R.recordRelationshipTransfer(ended,'ENG','BRA');choose(ended,2);assert.equal(ended.relationship.status,'separated');
+console.log('PASS actual international move only, repeated transfers, changed long-distance/return-home dialogue, independent goals, explicit mutual relocation, breakup choice');
+
+const promise=dating();promise.club=S.clubByName('플라멩구');R.recordRelationshipTransfer(promise,'ENG','BRA');choose(promise,0);assert(promise.relationship.promise);
+const affinity=promise.relationship.affinity;promise.age+=1;R.relationshipView(promise);assert.equal(promise.relationship.affinity,affinity,'elapsed offscreen time never means a broken promise');
+assert.equal(R.dueRelationship(promise),'followup');choose(promise,1);assert.equal(promise.relationship.brokenPromises,0,'honest rescheduling does not count as a breach');
+nextYear(promise);choose(promise,2);assert.equal(promise.relationship.brokenPromises,1);assert.equal(promise.relationship.lastChange.delta,-12);
+nextYear(promise);choose(promise,2);assert.equal(promise.relationship.unresolved,2);
+nextYear(promise);assert.equal(R.dueRelationship(promise),'crisis');choose(promise,1);assert.equal(promise.relationship.status,'dating','a first conflict does not immediately force separation');
+nextYear(promise);const final=S.relationshipPrepView(promise).event;assert(final.partnerEnds);choose(promise,0);assert.equal(promise.relationship.status,'separated','partner may end relationship after ignored repeated conflicts');
+const repair=dating();repair.relationship.affinity=25;repair.relationship.unresolved=2;choose(repair,0);assert.equal(repair.relationship.status,'dating');assert.equal(repair.relationship.unresolved,0);assert(repair.relationship.promise);
+nextYear(repair);choose(repair,0);assert.equal(repair.relationship.fulfilledPromises,1);assert.equal(repair.relationship.affinity,43);
+console.log('PASS saved promise/fulfillment/rescheduling/breach history, personality penalties, repair branch and earned partner-initiated breakup; no passive/random decay');
+
+for(const remote of [false,true]){
+ const c=make('ENG',19);if(remote)c.club=S.clubByName('플라멩구');
+ R.prepareDebut(c,{youth:true,apps:20});assert(!c.relationship.pendingDebut);R.prepareDebut(c,{youth:false,apps:0});assert(!c.relationship.pendingDebut);
+ R.prepareDebut(c,{youth:false,apps:1});assert(c.relationship.pendingDebut);assert.equal(c.relationship.debutMode,remote?'remote':'stadium');assert.equal(R.debutEvent(c).remote,remote);
+ const before=c.relationship.affinity;R.applyRelationship(c,'friend:debut',0);assert.equal(c.relationship.affinity,before+6);R.applyRelationship(c,'friend:debut',0);assert.equal(c.relationship.affinity,before+6,'checkpoint retry is idempotent');
+}
+const football=make('ENG',23);Object.assign(football,{lv:3,proAt:18,num:9,ovr:75,peak:75,st:Array(5).fill(75)});football.relationship.affinity=70;
+const yes=structuredClone(football),no=structuredClone(football);choose(yes,0);choose(no,1);
+const y=S.playSeason(yes,{train:'균형',evPick:0,injPick:1}).row,n=S.playSeason(no,{train:'균형',evPick:0,injPick:1}).row;
+for(const key of ['apps','starts','goals','ast','ovr','injured','rating','rank'])assert.equal(y[key],n[key],key);
+const old=make();delete old.relationship;S.playSeason(old,{train:'균형',evPick:0,injPick:1});S.nextSeason(old,null,0);assert.equal(S.playerView(old).relationship,null);
+console.log('PASS debut is actual senior appearance only; local attendance vs remote viewing; checkpoint retry, unchanged football results and relationship-free legacy saves');
+
+let married=0,annual=0,foreign=0;
 for(let seed=1;seed<=60;seed++){
-  const state=S.createCareer({...input,nation:['KOR','JPN','BRA','NGA','ENG'][seed%5]},0,seed);
-  for(let year=0;year<26&&state.phase!=='retired';year++){
-    let prep=S.prepView(state);
-    assert(prep.friendIntro||prep.friendEvent,'every preparation year has a relationship choice');annual++;
-    if(prep.friendIntro){S.completeRelationshipPrep(state,0);prep=S.prepView(state);}
-    if(prep.friendEvent){
-      const career=prep.event.id;events++;assert(prep.friendEvent.replies.length===2);
-      S.completeRelationshipPrep(state,0);assert.equal(S.prepView(state).event.id,career,'relationship must not replace the career event');
-    }
-    assert.equal(state.relationship.prepAge,state.age);
-    assert.equal(S.prepView(state).friendEvent,null,'annual choice cannot repeat after saving');
-    S.playSeason(state,{train:'균형',evPick:0,injPick:1});
-    if(state.relationship.pendingDebut){events++;R.applyRelationship(state,'friend:debut',0);}
-    if(state.military?.status==='pending'&&state.age===27)S.militaryAction(state,'regular');
-    S.nextSeason(state,state.released&&state.offers.length?0:null,0);
-    assert(state.relationship.done.length<=5);
-  }
-  const card=S.cardView(state);assert.equal(card.relationship.id,state.relationship.region);
-  if(card.relationship.status==='married'){married++;assert(card.relationship.marriedAge>=28);}
+ const c=S.createCareer({...input,nation:['KOR','JPN','BRA','NGA','ENG'][seed%5]},0,seed);
+ for(let year=0;year<27&&c.phase!=='retired';year++){
+  const prep=S.prepView(c);assert(prep.friendIntro||prep.friendEvent);const career=prep.event.id;
+  if(prep.friendEvent?.id==='friend:foreign')foreign++;
+  choose(c,0);annual++;assert.equal(c.relationship.prepAge,c.age);assert.equal(S.prepView(c).friendEvent,null);assert.equal(S.prepView(c).friendIntro,null);assert.equal(S.prepView(c).event.id,career);
+  S.playSeason(c,{train:'균형',evPick:0,injPick:1});if(c.relationship.pendingDebut)R.applyRelationship(c,'friend:debut',0);
+  if(c.military?.status==='pending'&&c.age===27)S.militaryAction(c,'regular');
+  S.nextSeason(c,c.released&&c.offers.length?0:null,0);assert(c.relationship.affinity>=0&&c.relationship.affinity<=100);assert(c.relationship.records.length<=12);
+ }
+ if(c.relationship.status==='married')married++;
+ const card=S.cardView(c);assert.equal(card.relationship.id,c.relationship.region);
 }
-assert(married>0);console.log('PASS 60 complete careers:',events,'relationship decisions,',married,'married retirement cards');
+assert(married>0);console.log('PASS 60 full careers:',annual,'annual choices;',married,'married;',foreign,'actual foreign-move discussions; no duplicate choices or football-event replacement');
 
-// The match-time event must survive encrypted saves and block next season until seen.
+process.env.WHOAMI_SECRET='relationship-unit-test-only';const codec=tokenCodec('career-token-v1',{zip:true});
 const {default:handler}=await import('../arsenal-dashboard/api/career.js');
-async function api(action,body){
-  let status=200,data;
-  await handler({method:'POST',query:{a:action},body,headers:{}},{setHeader(){},status(n){status=n;return this;},json(v){data=v;}});
-  return {status,data};
-}
-const first=S.createCareer(input,0,5);
-Object.assign(first,{age:19,lv:3,proAt:18,num:9,ev:'coach',ovr:78,peak:78,st:Array(5).fill(78)});
+async function api(action,body){let status=200,data;await handler({method:'POST',query:{a:action},body,headers:{}},{setHeader(){},status(n){status=n;return this;},json(v){data=v;}});return {status,data};}
+const intro=S.createCareer(input,0,8),token=codec.seal(intro),career=S.prepView(intro).event.id;
+assert.equal((await api('season',{token,train:'균형',evPick:0})).status,400);assert.equal((await api('friend-prep',{token,pick:3})).status,400);
+const reply=await api('friend-prep',{token,pick:2});assert.equal(reply.status,200);assert.equal(reply.data.player.relationship.affinity,43);assert.equal(reply.data.prep.event.id,career);assert.equal(reply.data.prep.selected,null);assert.equal(reply.data.prep.friendEvent,null);
+assert.equal((await api('friend-prep',{token:reply.data.token,pick:0})).status,400);
+assert.deepEqual((await api('view',{token:reply.data.token})).data,reply.data);
+const callup=make('ENG',22);Object.assign(callup,{lv:3,proAt:18,num:9,ovr:90,peak:90,st:Array(5).fill(90),ev:'natcall'});callup.relationship.affinity=70;
+assert(S.nationalCallupPlan(callup));choose(callup,0);assert.equal(S.prepView(callup).event.id,'natcall');
+const loan=make('ENG',21);loan.ev='loan';loan.loanClubs=[S.clubByName('플라멩구')];choose(loan,0);assert.equal(loan.ev,'loan');assert.equal(loan.loanClubs[0].n,'플라멩구');
+const first=make('ENG',19);Object.assign(first,{lv:3,proAt:18,num:9,ovr:78,peak:78,st:Array(5).fill(78)});first.relationship.prepAge=first.age;
 S.playSeason(first,{train:'균형',evPick:0,injPick:1});assert(first.relationship.pendingDebut);
-const firstToken=codec.seal(first),before=structuredClone(first.tot);
-assert.equal((await api('next',{token:firstToken})).status,400);
-assert.equal((await api('friend-debut',{token:firstToken,pick:2})).status,400);
-const finished=await api('friend-debut',{token:firstToken,pick:0});assert.equal(finished.status,200);
-const saved=codec.open(finished.data.token);assert(!saved.relationship.pendingDebut);assert(saved.relationship.done.includes('debut'));assert.deepEqual(saved.tot,before);
-assert.equal((await api('friend-debut',{token:finished.data.token,pick:0})).status,400);
-const ongoing=structuredClone(first);ongoing.phase='prep';ongoing.hist=[];delete ongoing.relationship.pendingDebut;ongoing.relationship.prepAge=ongoing.age;
-assert.equal((await api('friend-debut',{token:codec.seal(ongoing),pick:0})).status,400);
-let injuryCheckpoint=false;
-for(let seed=1;seed<=60&&!injuryCheckpoint;seed++){
-  const test=structuredClone(ongoing);test.seed=seed;test.relationship.done=[];
-  const response=await api('season',{token:codec.seal(test),train:'균형',evPick:0});
-  if(response.data.phase==='injury'&&response.data.player.relationship.pendingDebut){
-    assert(response.data.pre.apps>0);const ack=await api('friend-debut',{token:response.data.token,pick:1});assert.equal(ack.status,200);
-    const resume=await api('season',{token:ack.data.token,injPick:1});assert.equal(resume.status,200);
-    assert.equal(codec.open(resume.data.token).relationship.done.filter(k=>k==='debut').length,1);injuryCheckpoint=true;
-  }
+const t=codec.seal(first);assert.equal((await api('next',{token:t})).status,400);assert.equal((await api('friend-debut',{token:t,pick:2})).status,400);
+const ack=await api('friend-debut',{token:t,pick:0});assert.equal(ack.status,200);assert(!codec.open(ack.data.token).relationship.pendingDebut);assert.deepEqual(codec.open(ack.data.token).tot,first.tot);assert.equal((await api('friend-debut',{token:ack.data.token,pick:0})).status,400);
+let injury=false;
+for(let seed=1;seed<=80&&!injury;seed++){
+ const c=make('ENG',19);Object.assign(c,{seed,lv:3,proAt:18,num:9,ovr:78,peak:78,st:Array(5).fill(78)});c.relationship.prepAge=c.age;
+ const r=await api('season',{token:codec.seal(c),train:'균형',evPick:0});
+ if(r.data.phase==='injury'&&r.data.player.relationship.pendingDebut){
+  assert(r.data.friendDebut);const a=await api('friend-debut',{token:r.data.token,pick:1});assert.equal(a.status,200);const done=await api('season',{token:a.data.token,injPick:1});assert.equal(done.status,200);assert.equal(codec.open(done.data.token).relationship.done.filter(x=>x==='debut').length,1);injury=true;
+ }
 }
-assert(injuryCheckpoint);console.log('PASS match checkpoint API: save/resume, invalid phases/picks, next-season guard, unchanged records, injury-before-finish acknowledgment');
-
-const intro=S.createCareer(input,0,8),introToken=codec.seal(intro),careerEvent=S.prepView(intro).event.id;
-assert.equal(S.prepView(intro).friendIntro.a.length,3);
-assert.equal((await api('season',{token:introToken,train:'균형',evPick:0})).status,400,'intro must precede the season');
-assert.equal((await api('friend-prep',{token:introToken,pick:3})).status,400);
-const introReply=await api('friend-prep',{token:introToken,pick:2});assert.equal(introReply.status,200);
-assert.equal(introReply.data.prep.friendIntro,null);assert.equal(introReply.data.prep.event.id,careerEvent);
-assert.equal(introReply.data.prep.selected,null,'a messenger reply is not a season decision');
-assert.equal(codec.open(introReply.data.token).relationship.introPick,2);
-assert.equal((await api('friend-prep',{token:introReply.data.token,pick:0})).status,400,'intro is not repeated after a reload');
-const paired=structuredClone(base);Object.assign(paired,{age:22,ovr:90,peak:90,st:Array(5).fill(90),ev:'natcall'});
-paired.relationship.done=['debut'];paired.relationship.lastAge=19;
-assert(S.nationalCallupPlan(paired));
-const pairedPrep=S.prepView(paired);assert.equal(pairedPrep.friendEvent.id,'friend:outing');assert.equal(pairedPrep.event.id,'natcall');
-const pairReply=await api('friend-prep',{token:codec.seal(paired),pick:0});assert.equal(pairReply.status,200);
-assert.equal(pairReply.data.prep.friendEvent,null);assert.equal(pairReply.data.prep.event.id,'natcall');assert.equal(pairReply.data.prep.selected,null);
-assert.equal(codec.open(pairReply.data.token).evPick,null);
-const loan=structuredClone(base);loan.age=21;loan.ev='loan';loan.loanClubs=[S.clubByName('플라멩구')];loan.relationship.done=['debut'];loan.relationship.lastAge=19;
-S.completeRelationshipPrep(loan,1);assert.equal(loan.ev,'loan');assert.equal(loan.loanClubs[0].n,'플라멩구','loan choices survive the preceding relationship event');
-assert.equal((await api('friend-prep',{token:firstToken,pick:0})).status,400,'prep response cannot change a finished season');
-console.log('PASS relationship-first order: intro reply/resume, separate season choice, call-up and loan preserved, phase guards');
-
-for(const status of ['friend','close','dating','married','separated']){
-  const state=S.createCareer(input,0,5);state.age=32;state.relationship.introDone=true;state.relationship.status=status;
-  const event=S.prepView(state).friendEvent;assert(event.id.startsWith('friend:daily:'));
-  assert.equal(event.channel,status==='separated'?'reflection':'message');
-  const before=structuredClone(state.relationship.done);S.completeRelationshipPrep(state,1);
-  assert.deepEqual(state.relationship.done,before);assert.equal(state.relationship.status,status);
-  assert.equal(S.prepView(state).friendEvent,null);
-  state.age++;assert(S.prepView(state).friendEvent);
-}
-console.log('PASS annual relationship choices:',annual,'seasons; all statuses including marriage/breakup, major-story cap independent, repeat guard and next-year renewal');
+assert(injury);
+console.log('PASS signed API: annual-first guard, score persistence/reload, repeat and invalid pick rejection, call-up/loan preservation, debut result/injury acknowledgment and unchanged records');

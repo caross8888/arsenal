@@ -109,7 +109,7 @@ function crFriendBeats(lines,place,outfit){
   return lines.map(function(line){return {place:place,outfit:outfit,who:line[0]==='f'?r.name:line[0]==='p'?'나':'',text:line[1],mood:line[2]||'neutral',hide:line[3]===false,speaker:line[0]};});
 }
 function crFriendMeetingBeats(ev){
-  var key=ev.meeting.scene,lines=CR_FRIEND_MEETINGS[key];
+  var key=ev.meeting.scene,lines=ev.meeting.lines||CR_FRIEND_MEETINGS[key];
   if(!lines)return crFriendBeats([['n','약속한 장소에서 만나 함께 시간을 보냈다.','neutral'],['f',ev.meeting.text,'happy'],['p','오늘 만나서 좋았어. 다음에 또 보자.','happy'],['f','응. 들어가면 연락해. 조심히 가.','happy'],['n','인사를 나누고 각자의 길로 돌아갔다.','neutral',false]],ev.meeting.place,0);
   return crFriendBeats(lines,ev.meeting.place,ev.friend.status==='dating'||ev.friend.status==='married'?1:0);
 }

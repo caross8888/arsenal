@@ -176,6 +176,7 @@ function load(token, phases){
   if(!st || !st.v) bad('커리어 정보가 올바르지 않아요. 새로 시작해 주세요.');
   if(phases && !phases.includes(st.phase)) bad('진행 순서가 맞지 않아요. 화면을 새로고침해 주세요.');
   S.militaryView(st);
+  REL.ensureRelationship(st);
   if(st.phase==='result') S.refreshYouthRelease(st);
   return st;
 }
@@ -207,13 +208,14 @@ function penaltyView(C){
 
 // 지금 단계에 맞는 화면 데이터
 function view(C){
-  if(C.phase === 'penalty')return penaltyView(C);
+  const friendDebut=REL.debutEvent(C);
+  if(C.phase === 'penalty')return {...penaltyView(C),friendDebut};
   if(C.phase === 'pick') return {phase: 'pick', clubs: firstView(C.input, C.seed)};
   if(C.phase === 'retired') return {phase: 'retired', card: S.cardView(C)};
   const player = S.playerView(C);
-  if(C.phase === 'prep') return {phase: 'prep', player, prep: S.prepView(C)};
-  if(C.phase === 'injury') return {phase: 'injury', player, prep: S.prepView(C), injury: injuryView(C.inj), pending: C.pending};
-  return {phase: 'result', player, result: resultView(C)};
+  if(C.phase === 'prep') return {phase: 'prep', player, prep: S.prepView(C),friendDebut};
+  if(C.phase === 'injury') return {phase: 'injury', player, prep: S.prepView(C),friendDebut, injury: injuryView(C.inj), pending: C.pending};
+  return {phase: 'result', player, result: resultView(C),friendDebut};
 }
 const injuryView = inj => ({name: inj.name, major: inj.major, games: inj.games});
 

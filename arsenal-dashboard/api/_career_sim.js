@@ -574,12 +574,19 @@ function interviewOf(){
 }
 // 시즌 준비 화면에 보여 줄 것(숨김 값 없음)
 export function relationshipPrepView(state){
+  REL.ensureRelationship(state);
   if(state.phase!=='prep'||!state.relationship||state.relationship.prepAge===state.age)return {intro:null,event:null};
   const intro=REL.introEvent(state);if(intro)return {intro,event:null};
   const service=MIL.serviceView(state);
-  const legacy=String(state.ev).startsWith('friend:')?REL.relationshipEvent(state,state.ev):null;
-  const key=!service&&REL.dueRelationship(state);
-  const ev=legacy||(key&&REL.relationshipEvent(state,'friend:'+key))||REL.routineEvent(state,!!service);
+  let legacy=String(state.ev).startsWith('friend:')?REL.relationshipEvent(state,state.ev,!!service):null;
+  // Old preparation screens may offer a confession/proposal before the new gates.
+  // Give them a currently valid annual scene, then restore the football event.
+  if(legacy?.id==='friend:confession'&&(state.age<18||state.relationship.affinity<REL.RULES.confession))legacy=null;
+  if(legacy?.id==='friend:proposal'&&(state.relationship.status!=='dating'||state.relationship.affinity<REL.RULES.proposal||state.age-(state.relationship.datingAge??state.age)<2||!state.relationship.futureAgreement))legacy=null;
+  let key=REL.dueRelationship(state);
+  if(service&&!['foreign','followup','crisis'].includes(key))key=null;
+  const ev=legacy||(key&&REL.relationshipEvent(state,'friend:'+key,!!service))||REL.routineEvent(state,!!service);
+  if(service&&ev){ev.remote=true;if(ev.channel==='scene')ev.channel='call';delete ev.meeting;if(ev.script)ev.script.before=[];}
   return {intro:null,event:{...ev,replies:ev.reply}};
 }
 export function completeRelationshipPrep(state,pick){
@@ -645,7 +652,8 @@ export function acceptScout(state){
   if(C.phase!=='prep' || currentEvent().id!=='scout') throw new Error('스카우트 제안을 다시 확인해 주세요.');
   if(C.scoutMove) return;
   if(!C.scoutClub) throw new Error('스카우트 제안이 없어요.');
-  C.scoutMove=C.club.n;C.club=C.scoutClub;delete C.scoutClub;
+  const friendFrom=C.club.nat;C.scoutMove=C.club.n;C.club=C.scoutClub;delete C.scoutClub;
+  REL.recordRelationshipTransfer(C,friendFrom,C.club.nat);
   if(!C.clubs.includes(C.club.n)) C.clubs.push(C.club.n);
   C.evPick=0;
 }

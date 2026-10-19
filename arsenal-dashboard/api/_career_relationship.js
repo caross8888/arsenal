@@ -1,124 +1,190 @@
-// One hometown friend per career; relationship scenes precede the season event.
-const PEOPLE={
-  asia:{id:'asia',name:'서윤'},south:{id:'south',name:'루시아'},africa:{id:'africa',name:'아마라'},europe:{id:'europe',name:'에밀리'}
-};
+import {PROFILES,conversation,aftermath} from './_career_relationship_dialogue.js';
+export const RULES=Object.freeze({max:100,start:40,confession:65,proposal:85,crisis:30,minDatingYears:2});
+const PEOPLE={asia:'서윤',south:'루시아',africa:'아마라',europe:'에밀리'};
+const clamp=n=>Math.max(0,Math.min(RULES.max,Number.isFinite(n)?Math.round(n):RULES.start));
+const romantic=r=>r.status==='dating'||r.status==='married';
 export function createRelationship(nation){
   const region=['KOR','JPN'].includes(nation)?'asia':['BRA','ARG'].includes(nation)?'south':nation==='NGA'?'africa':'europe';
-  return {version:3,region,name:nation==='JPN'?'유이':PEOPLE[region].name,status:'friend',affinity:0,done:[],lastAge:0,introDone:false};
+  return {version:4,region,name:nation==='JPN'?'유이':PEOPLE[region],homeNation:nation,residence:nation,status:'friend',affinity:RULES.start,done:[],lastAge:0,introDone:false,goalSupport:0,unresolved:0,brokenPromises:0,records:[],moveSeq:0};
 }
-const INTRO={id:'friend:intro',t:'새 유니폼',d:'유니폼 받았냐\n입은 거 보내봐ㅋㅋ',a:['왜 벌써 웃는데ㅋㅋ','아직 안 입어봤어. 들어가서 보내줄게.','나 프로경기 뛰면 보러 와라.'],reply:['아직 안 웃었거든?\n프로경기 처음 뛰면 나 불러. 보러 갈 거니까.','응 기다릴게ㅋㅋ\n나 첫 경기 보러 갈 거니까 그때도 꼭 알려줘.','불러주기만 해ㅋㅋ\n나중에 유명해졌다고 모른 척하기 없기다?']};
+export function ensureRelationship(C){
+  const r=C.relationship;if(!r)return null;
+  if((r.version||1)<4){
+    r.legacyDebut=(r.version||1)<2;
+    if(['injury','penalty'].includes(C.phase)&&String(C.ev).startsWith('friend:'))r.legacyPendingChoice={id:C.ev,age:C.age};
+    r.affinity=clamp(Math.max(r.status==='married'?85:r.status==='dating'?65:40,40+(Number(r.affinity)||0)*8));
+    if(romantic(r)&&r.datingAge==null)r.datingAge=r.marriedAge||C.age;
+    if(r.done?.includes('confession')&&r.status==='friend')r.confessionDeclined=true;
+    r.version=4;
+  }
+  r.homeNation=r.homeNation||C.nation||C.club?.nat;
+  r.residence=r.residence||r.homeNation;
+  r.done=r.done||[];r.records=r.records||[];r.affinity=clamp(r.affinity);
+  r.goalSupport=r.goalSupport||0;r.unresolved=r.unresolved||0;r.brokenPromises=r.brokenPromises||0;r.moveSeq=r.moveSeq||0;
+  return r;
+}
+export function isDistant(C,nation){
+  const r=ensureRelationship(C);return !!r&&r.residence!==(nation||C.club?.nat||C.nation||r.homeNation);
+}
+function change(C,delta,reason){
+  const r=ensureRelationship(C),before=r.affinity;r.affinity=clamp(before+delta);
+  r.lastChange={age:C.age,delta:r.affinity-before,reason};
+  if(['friend','close'].includes(r.status))r.status=!r.confessionDeclined&&r.affinity>=55?'close':'friend';
+}
+function remember(C,id,pick){
+  const r=C.relationship;r.records.push({age:C.age,id,pick,delta:r.lastChange?.delta||0});r.records=r.records.slice(-12);
+}
+function promise(C){C.relationship.promise={madeAge:C.age,reviewAge:C.age+1};}
+function endRelationship(C){const r=C.relationship;r.status='separated';r.separatedAge=C.age;delete r.promise;delete r.moveDiscussion;delete r.foreign;}
+export function relationshipView(C){
+  const r=ensureRelationship(C);if(!r)return null;const P=PROFILES[r.region];
+  return {id:r.region,name:r.name,status:r.status,label:{friend:'소꿉친구',close:'가까워지는 사이',dating:'연인',married:'배우자',separated:'추억으로 남은 인연'}[r.status],affinity:r.affinity,affinityMax:RULES.max,personality:P.personality,goal:P.goal,boundary:P.boundary,homeNation:r.homeNation,residence:r.residence,longDistance:isDistant(C),datingYears:romantic(r)?Math.max(0,C.age-(r.datingAge??C.age)):0,marriedAge:r.marriedAge||null,pendingDebut:!!r.pendingDebut,debutMode:r.debutMode||'stadium',lastChange:r.lastChange?.age===C.age?r.lastChange:null,promise:!!r.promise};
+}
+function event(C,key,t,d,a,reply,extra={}){
+  const r=ensureRelationship(C);return {id:'friend:'+key,t,d,a,reply,replies:reply,friend:relationshipView(C),remote:isDistant(C),...extra};
+}
 export function introEvent(C){
-  if(!C.relationship||C.relationship.introDone===true||C.age!==15||C.hist.length)return null;
-  return {...INTRO,friend:relationshipView(C),replies:INTRO.reply};
+  const r=ensureRelationship(C);if(!r||r.introDone||C.age!==15||(C.hist||[]).length)return null;
+  const P=PROFILES[r.region],abroad=isDistant(C);
+  const a=abroad?['응. 짐 풀고 사진 보내줄게.','아직 좀 낯설다. 잠깐 얘기할래?','나중에 경기 뛰면 중계로라도 봐줘.']:['왜 벌써 웃는데ㅋㅋ','아직 안 입어봤어. 들어가서 보내줄게.','나 프로경기 뛰면 보러 와라.'];
+  return event(C,'intro',abroad?'낯선 도시에서 온 첫 연락':'새 유니폼',P.intro[abroad?1:0],a,[P.welcome[abroad?1:0],abroad?'응. 지금 시간 돼. 뭐가 제일 낯설어?':P.welcome[0],abroad?'당연하지. 경기 시간 알려줘. 여기서도 챙겨볼게.':'알려줘. 첫 공식경기면 나도 같이 기억하고 싶어.'],{channel:'message'});
 }
 export function applyIntro(C,pick){
-  if(!introEvent(C)||!Number.isInteger(pick)||!INTRO.a[pick])throw new Error('intro pick');
-  C.relationship.introDone=true;C.relationship.introPick=pick;C.relationship.prepAge=C.age;
-}
-const STORIES={
-  debut:{t:'아직 못 들은 얘기',d:'너 처음 경기 뛰던 날 나까지 긴장했잖아ㅋㅋ\n근데 그 얘기 아직 제대로 못 들었어.\n쉬는 날 밥 먹으면서 얘기해줘.',a:['ㅋㅋ 알겠어. 뭐 먹을래?','이번엔 좀 쉬어야겠다. 나중에 보자.'],reply:['일단 비싼 거. 프로선수 친구 둔 보람은 있어야지ㅋㅋ','응 쉬어. 대신 나중에 내가 또 물어볼 거다ㅋㅋ']},
-  outing:{t:'밥은 먹었어?',d:'밥 먹었어?\n나 아직인데.\n너 쉬는 날이면 같이 먹을까 해서.',a:['나도 아직. 어디로 갈까?','오늘은 안 되겠다. 다음에 내가 연락할게.'],reply:['뭐야 그럼 처음부터 같이 먹자고 할걸. 나 준비하고 나갈게.','알겠어. 나 혼자 맛있는 거 먹는다?']},
-  confession:{t:'또 그 질문',d:'오늘 또 너랑 사귀냐는 얘기 들었어.\n아니라고 하긴 했는데.\n…계속 아니라고 해야 돼?',a:['아니. 이제 사귄다고 해. 나 너 좋아해.','나는 친구로 생각했어. 괜히 헷갈리게 했다면 미안해.'],reply:['방금 한 말 다시 해봐.\n못 들은 게 아니라… 한 번 더 듣고 싶어서.','아… 그렇구나.\n나 오늘 먼저 가볼게.']},
-  foreign:{t:'다음엔 언제 봐?',d:'새 팀 유니폼 입은 거 아직 어색해ㅋㅋ\n근데 우리 이제 언제 봐?\n…생각하니까 좀 싫다. 멀어지는 거.',a:['나도. 전화 자주 할게. 쉬는 날 나오면 너부터 보러 가고.','미안해. 나, 그만 만나는 게 맞는 것 같아.'],reply:['응. 바쁜 건 아는데, 그냥 네 얘기 듣고 싶어서 그래.\n시간 나면 전화해.','…지금 그 얘길 한다고?\n알겠어. 오늘은 더 못 얘기하겠다.']},
-  proposal:{t:'우리 얘기',d:'친구들이 우리 언제 결혼하냐고 묻더라.\n맨날 웃고 넘겼는데.\n넌 그런 생각 해본 적 있어?',a:['있지. 너랑 하고 싶어. 우리 결혼하자.','너랑은 하고 싶은데, 아직 준비가 안 됐어.'],reply:['응. 나도.\n…잠깐, 나 지금 좀 울 것 같아.','그럼 준비되면 네가 먼저 말해줘.\n나도 가끔은 궁금하단 말이야.']}
-};
-export function relationshipView(C){
-  const r=C.relationship;if(!r)return null;
-  return {id:r.region,name:r.name,status:r.status,label:{friend:'소꿉친구',close:'가까워지는 사이',dating:'연인',married:'배우자',separated:'추억으로 남은 인연'}[r.status],marriedAge:r.marriedAge||null,pendingDebut:!!r.pendingDebut};
+  const ev=introEvent(C);if(!ev||!Number.isInteger(pick)||!ev.a[pick])throw new Error('intro pick');
+  const r=C.relationship;r.introDone=true;r.introPick=pick;r.prepAge=C.age;change(C,3,'서로의 근황을 나눴다');remember(C,ev.id,pick);
 }
 export function prepareDebut(C,row){
-  const r=C.relationship;
-  if(!r||r.done.includes('debut')||r.pendingDebut||row?.youth!==false||!(row.apps>0))return;
-  if(C.hist.some(old=>!old.youth&&old.apps>0))return;
-  r.version=Math.max(2,r.version||0);r.pendingDebut=true;
+  const r=ensureRelationship(C);if(!r||r.status==='separated'||r.done.includes('debut')||r.pendingDebut||row?.youth!==false||!(row.apps>0))return;
+  if((C.hist||[]).some(old=>!old.youth&&old.apps>0))return;
+  r.pendingDebut=true;r.debutMode=isDistant(C,C.loanClub?.nat||C.club?.nat)?'remote':'stadium';
 }
-export function relationshipEvent(C,id){
-  const key=String(id||'').replace('friend:',''),s=STORIES[key];
-  return s&&C.relationship?{...s,id:'friend:'+key,friend:relationshipView(C)}:null;
+export function debutEvent(C){
+  const r=ensureRelationship(C);if(!r?.pendingDebut)return null;
+  const remote=r.debutMode==='remote',P=PROFILES[r.region];
+  const ev=event(C,'debut',remote?'첫 1군 공식경기 · 중계를 보고':'첫 1군 공식경기 · 경기 종료 직후',remote?({asia:'너 나오는 거 봤어!\n화면 앞에서 나만 긴장했잖아ㅋㅋ 지금 잠깐 얘기돼?',south:'첫 경기 봤어! 직접 가서 보고 싶었는데.\n네 목소리로도 얘기 듣고 싶어. 지금 괜찮아?',africa:'첫 공식경기 봤어. 나까지 긴장되더라ㅋㅋ\n거긴 지금 몇 시야? 잠깐 얘기할 수 있어?',europe:'중계로 봤어. 첫 공식경기 축하해.\n정리 끝나면 잠깐 통화할 수 있어?'}[r.region]):({asia:'아까 나 봤지?ㅋㅋ\n나 아직 출구 쪽인데. 잠깐 볼래?',south:'경기 잘 봤어!\n나 출구에 있어. 얼굴 보고 축하해주고 싶어.',africa:'나 찾았어? 손 흔든 보람이 있네ㅋㅋ\n출구 쪽에서 기다려도 돼?',europe:'수고했어. 아직 출구에 있어.\n시간 괜찮으면 잠깐 보고 가자.'}[r.region]),remote?['응. 지금 잠깐 통화하자.','오늘은 팀 일정이 있어. 정리하고 연락할게.']:['응. 거기 있어. 금방 나갈게.','오늘은 팀 일정이 있어. 먼저 가. 다음에 보자.'],[remote?{asia:'응. 나 오늘 네 경기 보면서 얘기할 거 많아ㅋㅋ',south:'좋아. 오늘 기분 어땠는지 네 목소리로 듣고 싶었어.',africa:'좋아. 내가 본 거랑 네가 뛴 거랑 얘기 맞춰보자ㅋㅋ',europe:'응. 나 지금 시간 돼. 천천히 얘기해.'}[r.region]:'응. 기다릴게. 천천히 나와.','알겠어. 오늘은 푹 쉬어. 첫 경기 정말 축하해.'],{remote,channel:'message'});
+  ev.script={before:[],after:[conversation(r.region,'debut',remote,r.status),[]]};return ev;
+}
+function moveEligible(C){
+  const r=ensureRelationship(C);return C.age>=21&&r.affinity>=75&&C.age-(r.datingAge??C.age)>=2&&r.goalSupport>=PROFILES[r.region].moveSupport;
 }
 export function dueRelationship(C){
-  const r=C.relationship;
-  if(!r||r.pendingDebut||r.status==='separated'||r.done.length>=5||C.age-r.lastAge<2)return null;
-  const has=k=>r.done.includes(k);
-  // Senior club season rows represent official league matches, not friendlies.
-  if(!has('debut')&&r.version<2&&C.hist.some(row=>!row.youth&&row.apps>0))return 'debut';
-  if(!has('debut'))return null;
-  if(r.foreign&&r.status==='dating'&&!has('foreign'))return 'foreign';
-  if(C.age>=21&&!has('outing'))return 'outing';
-  if(C.age>=23&&has('outing')&&!has('confession')&&r.affinity>=1)return 'confession';
-  if(C.age>=28&&r.status==='dating'&&!has('proposal'))return 'proposal';
+  const r=ensureRelationship(C);if(!r||r.pendingDebut||r.status==='separated')return null;
+  if(r.legacyDebut&&!r.done.includes('debut')&&(C.hist||[]).some(row=>!row.youth&&row.apps>0))return 'debut';
+  if(r.status==='dating'&&(r.affinity<=RULES.crisis||r.unresolved>=2||r.crisisTalked))return 'crisis';
+  if(romantic(r)&&r.foreign)return 'foreign';
+  if(romantic(r)&&r.moveDiscussion)return 'future';
+  if(romantic(r)&&r.promise&&C.age>=r.promise.reviewAge)return 'followup';
+  if(C.age-r.lastAge<2)return null;
+  if(['friend','close'].includes(r.status)&&C.age>=18&&r.affinity>=RULES.confession&&!r.done.includes('confession'))return 'confession';
+  if(romantic(r)&&C.age-(r.datingAge??C.age)>=2&&(!r.futureAgreement||isDistant(C)&&r.futurePlan!=='together'&&moveEligible(C)&&C.age-(r.lastFutureAge||r.datingAge||C.age)>=3))return 'future';
+  if(r.status==='dating'&&r.affinity>=RULES.proposal&&C.age-(r.datingAge??C.age)>=2&&r.futureAgreement&&C.age-(r.proposalAskedAge||0)>=2)return 'proposal';
+  if(!r.done.includes('outing')&&C.age>=18&&r.affinity>=55)return 'outing';
   return null;
 }
 export function recordRelationshipTransfer(C,from,to){
-  const r=C.relationship;
-  if(r&&r.status==='dating'&&from&&to&&from!==to&&!r.done.includes('foreign'))r.foreign=true;
+  const r=ensureRelationship(C);if(!r||!from||!to||from===to)return;
+  if(romantic(r)){
+    r.moveSeq++;r.foreign={seq:r.moveSeq,from,to,wasDistant:r.residence!==from};
+    r.futureAgreement=false;delete r.moveDiscussion;
+  }
+}
+export function relationshipEvent(C,id,forceRemote=false){
+  const key=String(id||'').split(':')[1],r=ensureRelationship(C);if(!r)return null;
+  if(key==='debut'){
+    const pending=debutEvent(C);if(pending)return pending;
+    return event(C,'debut','아직 못 들은 얘기','네 첫 공식경기 이야기, 아직 제대로 못 들었어.\n시간 되면 얘기해줘.',['응. 오늘 얘기하자.','오늘은 좀 쉬고 싶어. 다음에 보자.'],['좋아. 나도 궁금한 거 많아.','응. 푹 쉬어.'],{channel:'message',meeting:{place:2,scene:'memory',lines:conversation(r.region,'memory',isDistant(C),r.status)}});
+  }
+  const P=PROFILES[r.region],remote=forceRemote||isDistant(C),endpoint=remote?'call':'scene';let ev;
+  if(key==='outing')ev=event(C,key,'둘이 보내는 쉬는 날',P.meet,['좋아. 오늘 같이 시간 보내자.','오늘은 쉬어야겠어. 다음에 보자.'],['좋아. 오늘은 천천히 얘기하자.','알겠어. 사정 얘기해줘서 고마워.'],{channel:'message',remote,meeting:{place:3,scene:'personal:walk',lines:conversation(r.region,'walk',remote,r.status)}});
+  if(key==='confession')ev=event(C,key,'친구라는 말 다음',P.confession,['나도 너 좋아해. 우리 사귀자.','나는 친구로 생각했어. 솔직하게 말하고 싶었어.'],[P.yes,P.no],{channel:endpoint});
+  if(key==='foreign')ev=event(C,key,r.foreign?.wasDistant?'다시 맞춰야 하는 거리':'새 팀, 달라지는 우리',P.foreign[r.foreign?.wasDistant?1:0],['연락할 시간부터 같이 정하자. 멀어져도 계속 만나고 싶어.','너도 오면 좋겠지만 네 계획도 있잖아. 같이 의논해볼까?',...(r.status==='dating'?['미안해. 계속 만나기는 어려울 것 같아. 우리 그만하자.']:[])],['응. 지킬 수 있는 약속부터 같이 정하자.',P.future,...(r.status==='dating'?['쉽게 받아들이기는 어렵지만 네 마음은 알겠어. 오늘은 여기까지 하자.']:[])],{channel:endpoint});
+  if(key==='foreign'&&!remote&&r.foreign?.wasDistant){ev.t='다시 가까워진 우리';ev.d='이제 같은 나라에서 지내게 됐네.\n자주 만날 수 있겠지만 서로의 생활도 같이 지켜가고 싶어.';ev.a[0]='이제 얼굴 자주 보자. 둘 다 되는 시간부터 같이 정하자.';ev.reply[0]='좋아. 이번에는 얼굴 보면서 얘기할 수 있겠다.';}
+  if(key==='future'){
+    const canMove=isDistant(C)&&moveEligible(C),moving=!!r.moveDiscussion;
+    ev=event(C,key,'우리 각자의 계획',P.future,[canMove?'그럼 각자 계획을 지키면서 같이 가자. 준비도 함께 하자.':'네가 하고 싶은 것도 지켰으면 해. 우리 계획 같이 세우자.','지금은 각자 지내자. 대신 연락하고 만날 시간을 같이 정하자.','내 일정에 맞춰 네가 따라와 주면 안 돼?'],[canMove?'응. 내 생활을 준비할 방법도 같이 찾았으니까, 나도 가고 싶어.':'고마워. 내 계획을 포기하지 않고도 만날 방법을 같이 찾자.','좋아. 서로 가능한 시간을 정해보자.','내 생활도 있는 건데. 네 일정만으로 정하고 싶지는 않아.'],{channel:endpoint,canMove,moving});
+  }
+  if(key==='proposal')ev=event(C,key,'함께할 미래',P.proposal,['너랑 결혼하고 싶어. 우리 같이 준비하자.','아직 준비가 안 됐어. 지금 내 생각을 솔직하게 얘기할게.'],[P.marry,'알겠어. 기다리라는 말만 하지 말고, 네 생각도 같이 얘기해줘.'],{channel:endpoint});
+  if(key==='followup')ev=event(C,key,'지난번에 정한 약속',r.unresolved?'지난번에도 약속을 미뤘잖아.\n이번에 정한 시간에는 우리 얘기할 수 있을까?':'지난번에 연락하고 만날 시간 같이 정했잖아.\n이번 약속은 어떻게 할까?',['그 시간 비워뒀어. 오늘은 우리 얘기하자.','그날 팀 일정이 생겼어. 미리 말하고 싶었어. 다른 날 같이 정할까?','지금 바빠. 다음에 얘기하자.'],['시간 내줘서 고마워. 오늘은 네 얘기도 내 얘기도 하자.','미리 알려줘서 고마워. 둘 다 되는 시간으로 다시 정하자.',P.concern],{channel:endpoint});
+  if(key==='crisis'){
+    const partnerEnds=!!r.crisisTalked;
+    ev=event(C,key,partnerEnds?'상대가 꺼낸 마지막 이야기':'더 미루기 어려운 대화',partnerEnds?P.end:P.concern,partnerEnds?['알겠어. 네 결정을 존중할게. 그동안 고마웠어.','상처 줘서 미안해. 네 마음을 바꾸라고 하진 않을게.']:['오늘은 시간 내서 얘기하자. 네가 서운했던 일부터 듣고 싶어.','지금은 그 얘기까지 할 여유 없어. 다음에 하자.','우리 서로 힘든 것 같아. 여기서 그만하자.'],partnerEnds?['내 마음 들어줘서 고마워. 서로 잘 지냈으면 해.','사과는 들었어. 그래도 내 결정은 같아. 잘 지내.']:['오늘 내 얘기를 끝까지 들어줘서 고마워. 이번엔 같이 해보자.','지난번에도 기다렸어. 이번에도 그러면 난 더 기다리기 어려워.',P.end],{channel:endpoint,partnerEnds});
+  }
+  if(!ev)return null;
+  ev.remote=remote;
+  if(!ev.meeting){
+    const before=remote?[]:[['n','둘만의 시간을 내어 마주 앉았다. 이번에는 미뤄두었던 이야기를 꺼냈다.','neutral'],['f',key==='crisis'?P.concern:'오늘은 이 얘기를 그냥 넘기고 싶지 않아.','neutral']];
+    ev.script={before,after:ev.reply.map((reply,i)=>aftermath(r.region,key,i,reply,remote,ev.partnerEnds))};
+  }
+  return ev;
 }
 export function applyRelationship(C,id,pick){
-  const r=C.relationship,key=String(id||'').replace('friend:','');
-  if(!r||!STORIES[key]||r.done.includes(key))return null;
-  if(pick!==0&&pick!==1)throw new Error('relationship pick');
-  r.done.push(key);r.lastAge=C.age;
-  if(key==='debut')delete r.pendingDebut;
-  if(pick===0){
-    r.affinity++;
-    if(['debut','outing'].includes(key))r.status='close';
-    if(key==='confession')r.status='dating';
-    if(key==='proposal'){r.status='married';r.marriedAge=C.age;}
-  }else{
-    if(key==='confession')r.status='friend';
-    if(key==='foreign')r.status='separated';
+  const r=ensureRelationship(C),key=String(id||'').split(':')[1];
+  if(!r||!String(id).startsWith('friend:')||!['debut','outing','confession','foreign','future','proposal','followup','crisis'].includes(key))return null;
+  if(key==='debut'&&r.done.includes('debut')||key!=='debut'&&r.prepAge===C.age||r.records.some(x=>x.age===C.age&&x.id===id))return null;
+  const ev=relationshipEvent(C,id);if(!ev||!Number.isInteger(pick)||!ev.a[pick])throw new Error('relationship pick');
+  const legacyChoice=r.legacyPendingChoice?.id===id&&r.legacyPendingChoice.age===C.age;
+  if(!legacyChoice&&key==='confession'&&(C.age<18||r.affinity<RULES.confession))throw new Error('고백할 만큼 가까워지지 않았어요.');
+  if(!legacyChoice&&key==='proposal'&&(r.status!=='dating'||r.affinity<RULES.proposal||C.age-(r.datingAge??C.age)<2||!r.futureAgreement))throw new Error('결혼 계획을 먼저 함께 정해 주세요.');
+  if(!r.done.includes(key))r.done.push(key);if(!['followup','crisis'].includes(key))r.lastAge=C.age;
+  let delta=0,reason='서로의 생각을 솔직하게 나눴다';
+  if(key==='debut'){delete r.pendingDebut;delta=pick===0?6:0;}
+  if(key==='outing')delta=pick===0?6:0;
+  if(key==='confession'){
+    if(pick===0){delta=8;r.status='dating';r.datingAge=C.age;if(isDistant(C))promise(C);}
+    else {r.status='friend';r.confessionDeclined=true;}
   }
-  if(key==='foreign')delete r.foreign;
-  return r.name+' · '+STORIES[key].reply[pick];
+  if(key==='foreign'){
+    if(pick===0){delta=5;promise(C);}
+    if(pick===1){delta=5;r.moveDiscussion={age:C.age,nation:C.club?.nat};}
+    if(pick===2)endRelationship(C);
+    delete r.foreign;
+  }
+  if(key==='future'){
+    r.lastFutureAge=C.age;
+    if(pick===0){delta=8;r.goalSupport++;r.futureAgreement=true;r.futurePlan=ev.canMove?'together':'independent';if(ev.canMove)r.residence=C.club.nat;}
+    if(pick===1){delta=3;r.futureAgreement=true;r.futurePlan='distance';promise(C);}
+    if(pick===2){delta=PROFILES[r.region].ignore;reason='상대의 계획을 빼고 생활을 결정하려 했다';}
+    delete r.moveDiscussion;
+  }
+  if(key==='proposal'){
+    r.proposalAskedAge=C.age;
+    if(pick===0){delta=10;r.status='married';r.marriedAge=C.age;}
+  }
+  if(key==='followup'){
+    if(pick===0){delta=8;r.fulfilledPromises=(r.fulfilledPromises||0)+1;r.unresolved=Math.max(0,r.unresolved-1);delete r.promise;reason='약속한 시간을 실제로 함께 보냈다';}
+    if(pick===1){delta=3;promise(C);reason='사정을 미리 설명하고 약속을 함께 조정했다';}
+    if(pick===2){delta=PROFILES[r.region].broken;r.brokenPromises++;r.unresolved++;promise(C);reason='설명 없이 중요한 약속을 다시 미뤘다';}
+  }
+  if(key==='crisis'){
+    if(ev.partnerEnds||pick===2)endRelationship(C);
+    else if(pick===0){delta=10;r.unresolved=0;r.crisisTalked=false;promise(C);reason='시간을 내어 갈등을 풀고 약속을 함께 정했다';}
+    else {delta=PROFILES[r.region].ignore;r.crisisTalked=true;reason='서운함을 이야기하려는 상대를 다시 외면했다';}
+  }
+  delete r.legacyPendingChoice;
+  change(C,delta,reason);remember(C,id,pick);return r.name+' · '+ev.reply[pick];
 }
-export function relationshipSeasonMessage(C,row){
-  const r=C.relationship;if(!r||r.status==='separated')return null;
-  if(!row.youth&&row.apps>0&&!C.hist.some(old=>!old.youth&&old.apps>0))return r.name+' · 데뷔했다며!! 너보다 내가 더 떠들고 다니는 중ㅋㅋ';
-  if(C.age%4!==0)return null;
-  return r.name+' · '+(r.status==='married'?'시즌 끝났으니까 오늘 축구 얘기 금지. 저녁 뭐 먹을지만 생각해ㅋㅋ':r.status==='dating'?'이제 좀 쉴 수 있어? 나 너랑 할 거 엄청 밀렸는데.':'살아 있냐ㅋㅋ 시즌 끝났다며. 시간 나면 연락 좀 해.');
-}
-
-// Everyday choices fill the years between major stories without consuming them.
-// Stable age-based selection does not advance football's random seed.
-const DAILY={
-  youth:[
-    ['훈련 끝나고','오늘도 늦게 끝나?\n나 가게 앞인데. 뭐 좀 사다 줄까?',['내 거도 하나ㅋㅋ 끝나고 바로 갈게.','고마운데 오늘은 그냥 들어가서 쉬려고.'],['알겠어. 녹기 전에 와ㅋㅋ','응ㅋㅋ 내 건 내가 먹을게.'],{place:2,text:'네 몫까지 먹을 뻔했어ㅋㅋ\n앉아. 오늘 훈련은 어땠는데?'}],
-    ['사진 한 장','옛날 사진 찾았는데 너 진짜 작다ㅋㅋ\n보내줘?',['보내봐ㅋㅋ 너도 같이 나온 걸로.','분명 이상한 사진이지. 너만 갖고 있어ㅋㅋ'],['우리 둘 다 똑같이 웃겨ㅋㅋ\n이거 봐.','그래도 지우진 않는다ㅋㅋ']],
-    ['쉬는 날','너 쉬는 날 언제야?\n맨날 훈련 가는 것만 보는 듯.',['이번 주는 돼. 잠깐 걷자.','이번엔 쉬어야겠다. 다음에 내가 연락할게.'],['좋아. 나갈 때 연락해.','응. 푹 쉬어.'],{place:3,text:'여기 아직 그대로네.\n우리 어릴 때 저기서 맨날 놀았잖아.'}]
-  ],
-  friend:[
-    ['집에 가는 길','방금 네가 좋아하던 노래 나옴ㅋㅋ\n너 아직도 이거 들어?',['당연하지ㅋㅋ 너도 듣고 있었네.','요즘은 다른 거 들어. 하나 보내줄까?'],['앞부분만 나와도 네 생각 나ㅋㅋ','응 보내봐. 가는 길에 들어볼게.']],
-    ['시간 맞추기','이번에 집에 오면 얼굴 좀 보자.\n밥 먹는 거 말고 산책 어때?',['좋지. 시간 맞춰보자.','이번엔 일정이 빡빡해서 어려울 것 같아.'],['응 날짜 정해지면 알려줘.','알겠어. 다음에 보자.'],{place:3,text:'오랜만에 보니까 할 말이 한꺼번에 생각나네.\n어디부터 얘기하지ㅋㅋ'}],
-    ['점심 메뉴','네가 전에 말한 메뉴 먹어봤는데\n맛있네? 왜 이제 알려줬냐ㅋㅋ',['내가 뭐랬어ㅋㅋ 다음엔 같이 먹자.','거기 말고도 맛있는 데 있어. 알려줄게.'],['응ㅋㅋ 다음엔 네가 골라.','잠깐만. 저장하게 하나씩 보내봐.']],
-    ['잠깐 통화','오늘 좀 정신없었어.\n별일은 아닌데 네 목소리 들으면 좋을 것 같아서.',['지금 전화해도 돼?','지금은 팀 일정 중이야. 끝나고 내가 걸게.'],['응. 나 집이야.','알겠어. 나도 씻고 기다릴게.']]
-  ],
-  dating:[
-    ['우리 쉬는 날','우리 이번엔 뭐 안 하고 그냥 걸을까?\n너 옆에 있으면 그걸로 좋은데.',['나도. 천천히 걷자.','이번엔 푹 쉬고, 다음에 제대로 보자.'],['응. 편하게 입고 와.','알겠어. 대신 다음 약속은 네가 잡기.'],{place:3,text:'이렇게 아무것도 안 해도 좋은데.\n너랑 있으면 시간이 너무 빨리 가.'}],
-    ['오늘의 사진','오늘 찍은 거 보내줄게.\n네가 좋아할 것 같아서 찍었어.',['이런 거 보면 내 생각 나?ㅋㅋ','좋다. 나도 지금 찍어서 보내줄게.'],['응. 별거 아닌 것도 자꾸 보내고 싶어.','응. 네가 보는 것도 궁금해.']],
-    ['저녁 약속','이번에 만나면 네가 먹고 싶은 거 먹자.\n맨날 내가 고른 것 같아서.',['그럼 오늘은 내가 고를게.','난 네가 고르는 거 좋은데ㅋㅋ'],['좋아. 오늘은 따라갈게.','그래? 그럼 나 믿고 와ㅋㅋ'],{place:2,text:'마주 보고 밥 먹는 게 이렇게 반가울 일인가.\n얼굴 좀 보게 고개 들어봐ㅋㅋ'}],
-    ['늦은 연락','요즘 우리 연락 시간이 자꾸 엇갈리네.\n오늘은 잠깐 얘기할 수 있어?',['응. 지금은 너랑 얘기할 시간 있어.','오늘은 늦을 것 같아. 내일 내가 먼저 전화할게.'],['좋다. 오늘 무슨 일 있었는지부터 얘기해줘.','응. 내일은 기다릴게.']]
-  ],
-  married:[
-    ['둘만의 저녁','우리 요즘 마주 앉아서 밥 먹은 적이 별로 없네.\n이번엔 둘이 나갈까?',['좋아. 내가 예약할게.','오늘은 너무 피곤해. 다음에 내가 예약할게.'],['응. 오늘은 천천히 먹자.','알겠어. 오늘은 쉬자. 다음 약속은 네가 잡기.'],{place:2,text:'오랜만에 이렇게 나오니까 연애할 때 같다.\n우리 이런 시간 좀 더 자주 만들자.'}],
-    ['장보기','장 보러 왔는데 뭐 먹고 싶어?\n네가 맨날 먹던 것도 살까?',['응ㅋㅋ 그거랑 네가 좋아하는 것도.','오늘은 새로운 거 먹어보자. 내가 고를게.'],['이미 내 것도 담았지ㅋㅋ','좋아. 뭘 고를지 궁금한데.']],
-    ['오래된 사진','우리 옛날 사진 봤어.\n그때 너 저런 표정이었구나.',['너 앞에서는 지금도 똑같을걸ㅋㅋ','어떤 사진인데? 같이 보자.'],['그건 맞네ㅋㅋ 아직도 딱 알아.','응. 오늘 같이 골라보자.']],
-    ['바쁜 한 주','이번 주는 우리 둘 다 바쁘네.\n그래도 하루쯤은 같이 쉬자.',['그날은 일정 비워둘게.','시간 길게 못 내도 같이 저녁은 먹자.'],['좋아. 그날 뭐 할지 천천히 생각하자.','응. 그 정도도 나는 좋아.']]
-  ],
-  service:[['짧은 연락','지금 연락할 수 있는 시간이야?\n밥은 잘 먹고 있어?',['응. 잠깐 얘기할 수 있어. 너는?','오늘은 길게 못 해. 다음에 먼저 연락할게.'],['나도 잘 지내. 네 얘기 해줘.','알겠어. 몸 조심하고. 다음에 얘기하자.']]],
-  separated:[
-    ['남아 있는 대화','사진을 정리하다가 오래된 대화창을 발견했다.',['대화창을 정리한다.','지금은 그대로 둔다.'],['대화창을 닫고 오늘 할 일로 돌아갔다.','휴대폰을 내려놓았다. 지금 정하지 않아도 괜찮았다.']],
-    ['혼자 보내는 저녁','오늘 저녁에는 따로 잡힌 약속이 없다.',['친구에게 밥 먹자고 연락한다.','혼자 좋아하는 영화를 본다.'],['먼저 보낸 연락에 반가운 답장이 왔다.','오랜만에 아무 생각 없이 영화를 골랐다.']],
-    ['익숙한 길','걷다가 둘이 자주 가던 길에 들어섰다.',['그대로 걸어본다.','다른 길로 돌아간다.'],['익숙한 가게를 지나쳐 천천히 걸었다.','처음 보는 골목에 작은 가게가 있었다. 잠깐 들러보기로 했다.']]
-  ]
-};
 export function routineEvent(C,service=false){
-  const r=C.relationship;if(!r)return null;
-  const group=r.status==='separated'?'separated':service?'service':r.status==='married'?'married':r.status==='dating'?'dating':C.age<=20?'youth':'friend';
-  const pool=DAILY[group],index=(C.age-15)%pool.length,entry=pool[index];
-  const [t,d,a,reply,meeting]=entry;
-  return {id:'friend:daily:'+C.age,t,d,a,reply,friend:relationshipView(C),channel:group==='separated'?'reflection':'message',...(meeting?{meeting:{...meeting,scene:group+':'+index,...(group==='dating'&&index===2?{picks:[0,1]}:{})}}: {})};
+  const r=ensureRelationship(C);if(!r)return null;
+  if(r.status==='separated')return event(C,'daily:'+C.age,'각자의 일상','오늘은 나를 위해 시간을 보내기로 했다.',['친구와 연락하며 저녁을 보낸다.','혼자 좋아하는 일을 하며 쉰다.'],['편한 사람들과 이야기하며 저녁을 보냈다.','천천히 쉬고 나니 마음이 조금 가벼워졌다.'],{channel:'reflection',remote:false,deltas:[0,0]});
+  const P=PROFILES[r.region],remote=service||isDistant(C),topic=service?0:(C.age-15)%6,romance=romantic(r),meet=!remote&&(topic===1||topic===4);
+  const texts=[P.check,romance?'우리 이번 쉬는 날엔 같이 시간 보낼까?\n둘이 얘기할 시간이 있으면 좋겠어.':P.meet,P.photo,P.goalTalk,P.meet,P.check];
+  let d=service?'지금 연락할 수 있는 시간이야?\n몸은 괜찮아? 가능할 때 네 얘기 들려줘.':remote?topic===3?P.goalTalk:P.distance:texts[topic];
+  let a,reply,deltas;
+  if(meet){a=['좋아. 오늘 같이 시간 보내자.','오늘은 쉬고 싶어. 사정 얘기하고 다음에 보자.'];reply=['좋아. 만나서 얘기하자.','알겠어. 푹 쉬어. 사정 알려줘서 고마워.'];deltas=[6,0];}
+  else if(topic===3){a=['그거 좋다. 네가 원하는 생활도 중요하지. 내 생각도 얘기해줄게.','난 네가 내 일정에 맞춰줬으면 좋겠는데.'];reply=[P.welcome[1],P.future];deltas=[5,P.ignore];}
+  else {a=[remote?'응. 지금 괜찮아. 너는 오늘 어땠어?':'난 잘 지내. 너는 오늘 어땠어?','지금은 팀 일정 중이야. 끝나고 얘기할 수 있을까?'];reply=[{asia:'난 잘 지내. 네 얘기 들으니까 좀 안심되네ㅋㅋ',south:'나도 할 얘기 많아. 네가 먼저 물어봐주니까 좋다.',africa:'좋아. 내 얘기도 할게. 우리 근황 맞춰보자ㅋㅋ',europe:'응. 나도 잘 지내. 이렇게 얘기하니까 좋네.'}[r.region],'응. 끝나고 가능한 시간 알려줘. 그때 얘기하자.'];deltas=[4,0];}
+  const ev=event(C,'daily:'+C.age,service?'복무 중 짧은 연락':topic===3?'각자 그리고 싶은 생활':remote?'멀리서 나누는 하루':meet?'둘이 보내는 쉬는 날':'오늘의 연락',d,a,reply,{channel:'message',remote,deltas,goalTopic:topic===3});
+  if(meet)ev.meeting={place:topic===4?2:3,scene:'personal:'+topic,lines:conversation(r.region,topic===4?'dinner':'walk',false,r.status)};
+  return ev;
 }
 export function applyRoutine(C,ev,pick){
-  if(!Number.isInteger(pick)||!ev.a[pick]||C.relationship.prepAge===C.age)throw new Error('daily pick');
-  C.relationship.prepAge=C.age;C.relationship.lastRoutine={id:ev.id,pick};
+  const r=ensureRelationship(C);if(!Number.isInteger(pick)||!ev.a[pick]||r.prepAge===C.age)throw new Error('daily pick');
+  change(C,ev.deltas[pick],ev.channel==='reflection'?'각자의 일상을 보냈다':ev.goalTopic&&pick===1?'상대의 목표보다 내 계획만 앞세웠다':ev.deltas[pick]>0?'서로를 위해 시간을 내고 관심을 나눴다':'사정을 솔직하게 설명하고 서로의 시간을 존중했다');
+  if(ev.goalTopic&&pick===0)r.goalSupport++;
+  r.prepAge=C.age;r.lastRoutine={id:ev.id,pick};remember(C,ev.id,pick);
+  if(romantic(r)&&isDistant(C)&&!r.promise&&!r.moveDiscussion)promise(C);
+}
+export function relationshipSeasonMessage(C,row){
+  const r=ensureRelationship(C);if(!r||r.status==='separated'||C.age%4!==0)return null;
+  return r.name+' · '+({asia:'시즌 끝났다며. 밥 잘 챙겨 먹고 시간 나면 연락해ㅋㅋ',south:'시즌 끝났네! 수고했어. 네 목소리로 얘기 듣고 싶어.',africa:'수고했어. 이번엔 네 얘기 듣고 내 근황도 들려줄게.',europe:'수고했어. 정리하고 쉬어. 시간 맞으면 얘기하자.'}[r.region]);
 }
