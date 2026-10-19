@@ -31,14 +31,17 @@ function crFriendPick(i){
 }
 function crFriendRemoveScene(){clearTimeout(CR.friendTimer);document.getElementById('crFriendScene')?.remove();}
 function crFriendCancel(){crFriendRemoveScene();document.getElementById('crFriendDebutMessage')?.remove();CR.friendScene=null;}
-function crFriendActor(r,outfit){
-  var col=['asia','south','africa','europe'].indexOf(r.id);if(col<0)return '';
-  return '<div class="cr-friend-actor" role="img" aria-label="'+gmEsc(r.name)+'의 '+(outfit?'데이트복':'인사하는')+' 전신 도트" style="--actor-x:'+col+';--actor-y:'+(outfit?1:0)+'"></div>';
+var CR_FRIEND_ACTORS={asia:[9.95,50.55,92.11],south:[11.50,50.14,90.01],africa:[11.59,51.23,87.36],europe:[16.56,50.82,86.68]};
+function crFriendActor(r,outfit,greeting){
+  var positions=CR_FRIEND_ACTORS[r.id];if(!positions)return '';
+  var pose=greeting?1:outfit?2:0;
+  // Each approved woman has her own source. No shared generated face/body atlas.
+  return '<div class="cr-friend-actor" role="img" data-character="'+r.id+'" data-pose="'+pose+'" aria-label="'+gmEsc(r.name)+'의 '+['일상복','미소 짓는','데이트복'][pose]+' 전신 도트" style="background-image:url(/img/career-friends/actor-'+r.id+'-v3.png);--actor-position:'+positions[pose]+'%"></div>';
 }
 function crFriendStage(place,outfit,who,text,buttons,extra){
   crFriendRemoveScene();var C=CR.friendScene,r=C.ev.friend;
   var el=document.createElement('div');el.id='crFriendScene';el.className='cr-friend-scene '+(extra||'');el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',C.ev.t);
-  el.innerHTML='<div class="cr-friend-place" style="--place-x:'+(place%2)+';--place-y:'+Math.floor(place/2)+'"></div>'+crFriendActor(r,outfit)+'<div class="cr-friend-scene-title">'+gmEsc(C.ev.t)+'</div><section class="cr-friend-scene-dialogue"><b>'+gmEsc(who||'')+'</b><p>'+gmEsc(text)+'</p><div id="crFriendSceneActions"></div></section>';
+  el.innerHTML='<div class="cr-friend-place" style="--place-x:'+(place%2)+';--place-y:'+Math.floor(place/2)+'"></div>'+crFriendActor(r,outfit,(extra||'').indexOf('in-stands')>=0)+'<div class="cr-friend-scene-title">'+gmEsc(C.ev.t)+'</div><section class="cr-friend-scene-dialogue"><b>'+gmEsc(who||'')+'</b><p>'+gmEsc(text)+'</p><div id="crFriendSceneActions"></div></section>';
   document.body.appendChild(el);
   var actions=el.querySelector('#crFriendSceneActions');
   buttons.forEach(function(b){var btn=document.createElement('button');btn.className='cr-friend-option';btn.textContent=b.text;btn.onclick=b.run;actions.appendChild(btn);});
