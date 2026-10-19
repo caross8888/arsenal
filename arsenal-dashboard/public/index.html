@@ -2535,7 +2535,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media(prefers-reduced-motion:reduce){.cr-nat-final-conf{display:none}}
 
 </style>
-<link rel="stylesheet" href="/career/relationship.css?v=3">
+<link rel="stylesheet" href="/career/relationship.css?v=4">
 </head>
 <body>
 
@@ -2826,7 +2826,7 @@ function playIntro(){
 </nav>
 <script src="/career/league-scenes.js?v=1"></script>
 <script src="/career/match-playback.js?v=39"></script>
-<script src="/career/relationship.js?v=3"></script>
+<script src="/career/relationship.js?v=4"></script>
 <script>
 var FN='/api';
 var allStandings=[];
@@ -10084,6 +10084,11 @@ function crMilitaryResultExtra(){
 }
 
 function crPrep(){
+  var friend=CR.v.prep.friendIntro||CR.v.prep.friendEvent||(CR.v.prep.event.friend?CR.v.prep.event:null);
+  if(friend){
+    crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(CR.v.player.seasons+1)+'</div></div>'+crHead()+crFriendPanel(CR.v.player));
+    if(!CR.friendScene)crFriendShow(friend);return;
+  }
   if(CR.v.prep.service && CR.v.prep.service.fullRegular) return crRegularPrep();
   if(CR.v.prep.service && CR.v.prep.service.kind==='regular' && CR.v.prep.service.returning)return crRegularReturnPrep();
   var p=CR.v.player, pr=CR.v.prep, ev=pr.event, lcs=pr.loanClubs||(pr.loanClub?[pr.loanClub]:[]), iv=pr.interview;   // 인터뷰는 이벤트 칸 없이 오버레이로

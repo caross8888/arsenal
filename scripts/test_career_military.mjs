@@ -87,11 +87,15 @@ const c=result();const token=codec.seal(c);const applied=await api('military',{t
 // This synthetic career's only recorded season is also its first actual pro appearance.
 const contact=await api('friend-debut',{token:applied.data.token,pick:1});assert.equal(contact.code,200);assert.equal(contact.data.player.military.selected,'regular');
 const next=await api('next',{token:contact.data.token,pick:null,trait:0});assert.equal(next.code,200);assert.equal(next.data.prep.service.fullRegular,true);
-const finished=await api('season',{token:next.data.token,train:'균형',evPick:0});assert.equal(finished.code,200);assert.equal(finished.data.result.row.apps,0);assert.equal(finished.data.player.military.left,6);
+assert.equal(next.data.prep.friendEvent.channel,'message');
+const serviceReply=await api('friend-prep',{token:next.data.token,pick:1});assert.equal(serviceReply.code,200);assert.equal(serviceReply.data.prep.friendEvent,null);
+const finished=await api('season',{token:serviceReply.data.token,train:'균형',evPick:0});assert.equal(finished.code,200);assert.equal(finished.data.result.row.apps,0);assert.equal(finished.data.player.military.left,6);
 const bad=await api('military',{token:next.data.token,action:'apply'});assert.equal(bad.code,400);count++;console.log('PASS API 토큰 재개·부적절한 단계 거부');
 const returnPrep=await api('next',{token:finished.data.token,pick:null,trait:0});assert.equal(returnPrep.data.prep.service.left,6);
 const returned=await api('service-return',{token:returnPrep.data.token});assert.equal(returned.code,200);assert.equal(returned.data.player.military.status,'completed');assert.equal(returned.data.prep.service,null);assert.equal(returned.data.prep.returnPeriod.months,6);
 const repeat=await api('service-return',{token:returned.data.token});assert.equal(repeat.code,200);assert.deepEqual(repeat.data.prep,returned.data.prep);
-const half=await api('season',{token:returned.data.token,train:'균형',evPick:0,injPick:1});assert.equal(half.code,200);assert.equal(half.data.result.row.service.months,6);assert(half.data.result.row.games>0&&half.data.result.row.games<30);
+assert(returned.data.prep.friendEvent,'a due relationship event follows discharge before season preparation');
+const ready=await api('friend-prep',{token:returned.data.token,pick:1});assert.equal(ready.code,200);assert.equal(ready.data.player.military.status,'completed');
+const half=await api('season',{token:ready.data.token,train:'균형',evPick:0,injPick:1});assert.equal(half.code,200);assert.equal(half.data.result.row.service.months,6);assert(half.data.result.row.games>0&&half.data.result.row.games<30);
 assert.equal((await api('service-return',{token:next.data.token})).code,400);assert.equal((await api('service-return',{token:half.data.token})).code,400);count++;console.log('PASS API 전역 먼저 처리 · 토큰 재개/중복 요청 안전 · 반 시즌 유지');
 console.log(`${count} military scenarios passed`);

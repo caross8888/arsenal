@@ -56,7 +56,8 @@ assert(flips>20);assert(medalFlips>0);console.log('PASS shootout outcomes change
 process.env.WHOAMI_SECRET=crypto.randomBytes(32).toString('hex');
 const {default:handler}=await import('../arsenal-dashboard/api/career.js');const {tokenCodec}=await import('../arsenal-dashboard/api/_token.js');const codec=tokenCodec('career-token-v1',{zip:true});
 async function api(a,body){let status=200,data;await handler({method:'POST',query:{a},headers:{},body},{setHeader(){},status(s){status=s;return this;},json(d){data=d;return this;}});return {status,data};}
-let r=await api('season',{token:codec.seal(apiBase),train:'균형',evPick:0});assert.equal(r.status,200);assert.equal(r.data.phase,'penalty');
+const annual=await api('friend-prep',{token:codec.seal(apiBase),pick:0});assert.equal(annual.status,200);
+let r=await api('season',{token:annual.data.token,train:'균형',evPick:0});assert.equal(r.status,200);assert.equal(r.data.phase,'penalty');
 let v=r.data;const saved=await api('view',{token:v.token});assert.deepEqual(saved.data,v);assert(!v.result);assert(!v.preview.hon);assert(!v.player.hist.length);
 assert.equal((await api('next',{token:v.token})).status,400);assert.equal((await api('retire',{token:v.token})).status,400);
 assert.equal((await api('penalty',{token:v.token,key:'wrong',x:.25,y:.5,power:68})).status,400);
@@ -68,7 +69,8 @@ assert.equal(v.phase,'result');assert.equal(v.player.hist.length,1);assert.equal
 console.log('PASS encrypted pending save/resume, phase guards, input rejection, deterministic retry, single season finalization');
 let injuryPending;
 for(let seed=1;seed<=300&&!injuryPending;seed++){
- const c=fixture(seed),first=await api('season',{token:codec.seal(c),train:'균형',evPick:0});if(first.data.phase!=='injury')continue;
+ const c=fixture(seed),contact=await api('friend-prep',{token:codec.seal(c),pick:0});assert.equal(contact.status,200);
+ const first=await api('season',{token:contact.data.token,train:'균형',evPick:0});if(first.data.phase!=='injury')continue;
  assert(first.data.pre.national.every(w=>!w.knockout));const second=await api('season',{token:first.data.token,injPick:1});if(second.data.phase==='penalty')injuryPending=second.data;
 }
 assert(injuryPending);

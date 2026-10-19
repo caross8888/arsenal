@@ -435,8 +435,6 @@ function newEvent(){
   // 약발 훈련: 공격수·미드필더, 20세까지, 시즌당 30% 확률
   const r2 = mulberry(C.seed ^ hashStr('wf'+C.age))();
   if(!callup && !loan && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');   // 수비수도(사용자 지정 — 약발은 표시되는데 훈련이 안 떴다)
-  const relationship=!callup&&!loan&&!MIL.serviceView(C)?REL.dueRelationship(C):null;
-  if(relationship)ev=REL.relationshipEvent(C,'friend:'+relationship);
   C.ev = ev.id; C.lastEv = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null; delete C.loanClubs; delete C.scoutClub;
   if(ev.id === 'scout'){ const t = scoutTarget(); if(t) C.scoutClub = t; else C.ev = C.lastEv = 'extra'; }
   if(ev.id === 'loan'){
@@ -575,6 +573,25 @@ function interviewOf(){
   return {id, tag, who, q:fill(v[0]), a};
 }
 // 시즌 준비 화면에 보여 줄 것(숨김 값 없음)
+export function relationshipPrepView(state){
+  if(state.phase!=='prep'||!state.relationship||state.relationship.prepAge===state.age)return {intro:null,event:null};
+  const intro=REL.introEvent(state);if(intro)return {intro,event:null};
+  const service=MIL.serviceView(state);
+  const legacy=String(state.ev).startsWith('friend:')?REL.relationshipEvent(state,state.ev):null;
+  const key=!service&&REL.dueRelationship(state);
+  const ev=legacy||(key&&REL.relationshipEvent(state,'friend:'+key))||REL.routineEvent(state,!!service);
+  return {intro:null,event:{...ev,replies:ev.reply}};
+}
+export function completeRelationshipPrep(state,pick){
+  const pending=relationshipPrepView(state);
+  if(pending.intro)REL.applyIntro(state,pick);
+  else if(pending.event){
+    if(pending.event.id.startsWith('friend:daily:'))REL.applyRoutine(state,pending.event,pick);
+    else {REL.applyRelationship(state,pending.event.id,pick);state.relationship.prepAge=state.age;}
+  }else throw new Error('완료할 관계 이벤트가 없어요.');
+  if(String(state.ev).startsWith('friend:')){C=state;newEvent();}
+  return state;
+}
 export function prepView(state){
   C = state;
   const ev = currentEvent(),callup=ev.id==='natcall'?nationalCallupPlan(C):null;
@@ -593,7 +610,8 @@ export function prepView(state){
   else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 ↓)' : ' (감독 신뢰 ↑)')];
-  return {military:MIL.militaryView(C), service:MIL.serviceView(C), returnPeriod:C.returnService?{months:C.returnService.months,home:C.returnService.home}:null, international:callup?.ageTournament||null, goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.scoutMove ? d : C.stageNote || null, contract: FIN.contractView(C), trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a,...(ev.friend?{friend:ev.friend,replies:ev.reply}:{}),...(callup?{callup}:{})},
+  const relation=relationshipPrepView(C);
+  return {friendIntro:relation.intro,friendEvent:relation.event,military:MIL.militaryView(C), service:MIL.serviceView(C), returnPeriod:C.returnService?{months:C.returnService.months,home:C.returnService.home}:null, international:callup?.ageTournament||null, goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.scoutMove ? d : C.stageNote || null, contract: FIN.contractView(C), trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a,...(ev.friend?{friend:ev.friend,replies:ev.reply}:{}),...(callup?{callup}:{})},
     selected: C.scoutMove ? 0 : null, interview: ev.id === 'media' ? interviewOf() : null, bloom: bloomView(),
     loanClubs: ev.id==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
 }

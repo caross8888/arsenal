@@ -30,12 +30,14 @@ const {default:handler}=await import('../arsenal-dashboard/api/career.js');
 const {tokenCodec}=await import('../arsenal-dashboard/api/_token.js');const codec=tokenCodec('career-token-v1',{zip:true});
 async function api(a,body){let status=200,data;await handler({method:'POST',query:{a},headers:{},body},{setHeader(){},status(s){status=s;return this;},json(d){data=d;return this;}});assert.equal(status,200,JSON.stringify(data));return data;}
 const original=fixture(3);original.ev='scout';original.scoutClub=S.clubByName('아스날');
-const accepted=await api('scout',{token:codec.seal(original)});assert.equal(accepted.player.club.n,target);assert.equal(accepted.prep.selected,0);
+const intro=await api('friend-prep',{token:codec.seal(original),pick:0});
+const accepted=await api('scout',{token:intro.token});assert.equal(accepted.player.club.n,target);assert.equal(accepted.prep.selected,0);
 assert.deepEqual(await api('view',{token:accepted.token}),accepted);
 let injuryChecked=false;
 for(let seed=1;seed<=100&&!injuryChecked;seed++){
  const c=fixture(seed);c.ev='scout';c.scoutClub=S.clubByName('아스날');
- const moved=await api('scout',{token:codec.seal(c)});
+ const contact=await api('friend-prep',{token:codec.seal(c),pick:0});
+ const moved=await api('scout',{token:contact.token});
  const first=await api('season',{token:moved.token,train:'균형',evPick:0});
  if(first.phase!=='injury') continue;
  assert.equal(first.player.club.n,target);

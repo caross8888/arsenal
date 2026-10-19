@@ -12,6 +12,7 @@
 //   POST ?a=next    {token, pick?, trait?}                                → {token, player, prep} | {token, card}(은퇴)
 //   POST ?a=retire  {token}                                       → {token, card}
 //   POST ?a=friend-debut {token, pick:0|1}                         → 첫 공식 출전 장면 완료 저장
+//   POST ?a=friend-prep {token, pick}                             → 관계 이벤트 완료 후 시즌 이벤트
 //   POST ?a=view    {token}                                       → 지금 단계 화면(이어 하기)
 //   POST ?a=submit  {token} + Authorization: Bearer <승부예측 토큰> → {registered, rank, best, improved, key}
 //   GET  ?a=board[&p=FW|MF|DF]                                    → 역대 TOP 100(30초 CDN 캐시). p 없으면 전체(세 포지션 기록을 점수순으로)
@@ -320,6 +321,12 @@ export default async function handler(req, res){
       return res.json({token:seal(C),...view(C)});
     }
 
+    if(a==='friend-prep'){
+      const C=load(body.token,['prep']);
+      try{S.completeRelationshipPrep(C,body.pick);}catch(e){bad(e.message);}
+      return res.json({token:seal(C),...view(C)});
+    }
+
     if(a==='friend-debut'){
       const C=load(body.token,['result','injury','penalty']);
       if(!C.relationship?.pendingDebut)bad('확인할 첫 출전 이벤트가 없어요.');
@@ -330,6 +337,8 @@ export default async function handler(req, res){
 
     if(a === 'season'){
       const C = load(body.token, ['prep', 'injury']);
+      const relation=S.relationshipPrepView(C);
+      if(C.phase==='prep'&&(relation.intro||relation.event))bad('관계 이벤트를 먼저 마쳐 주세요.');
       // 부상 질문에 답하는 두 번째 호출은 첫 호출의 훈련·이벤트 선택을 그대로 쓴다(토큰에 남겨 둔 것)
       const choice = C.phase === 'injury' ? {...C.pending, injPick: Number(body.injPick)} : {train: body.train, evPick: Number(body.evPick), loanPick: Number(body.loanPick) || 0};
       if(C.phase === 'prep' && ![0, 1].includes(choice.evPick)) bad('이벤트 선택지를 골라 주세요.');
