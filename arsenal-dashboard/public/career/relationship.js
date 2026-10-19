@@ -145,6 +145,8 @@ function crFriendActor(r,outfit,greeting,mood){
   return '<div class="cr-friend-actor'+(date?' reactions':'')+'" role="img" data-character="'+r.id+'" data-pose="'+(date?frame:pose)+'" data-mood="'+mood+'" data-outfit="'+(date?'date':'casual')+'" aria-label="'+gmEsc(r.name)+'의 '+description+' 표정과 자세" style="background-image:url(/img/career-friends/'+url+');--actor-position:'+(date?frame*100/3:positions[pose])+'%"></div>';
 }
 function crFriendStage(place,outfit,who,text,buttons,extra,visual){
+  if(visual?.cg)return crFriendStoryCG(who,text,buttons,visual);
+  if(document.getElementById('crFriendScene')?.classList.contains('cr-friend-story-cg'))crFriendRemoveScene();
   if(CR.friendScene.ev.remote||visual?.remote){if(visual?.remote)crFriendRemoveScene();return crFriendRemoteStage(who,text,buttons,visual);}
   clearTimeout(CR.friendTimer);var C=CR.friendScene,r=C.ev.friend,v=visual||{};
   var el=document.getElementById('crFriendScene');
@@ -177,6 +179,8 @@ function crFriendShow(ev){
   crTovSet('',true);
   var preload=new Image();preload.src='/img/career-friends/'+(ev.vacation?'vacation-':'reactions-')+ev.friend.id+'-v1.png';
   if(ev.vacation){var scenery=new Image();scenery.src='/img/career-friends/vacation-places-v1.png';}
+  crFriendWarmStoryCG(ev);
+  if(ev.channel==='story'){CR.friendScene.pick=0;return crFriendSequence(crFriendBeats(ev.script.story,ev.place??3,1),0);}
   var key=ev.id.split(':')[1],place=key==='proposal'||key==='confession'?3:key==='foreign'?1:2;
   if(ev.channel==='message'||ev.channel==='call'||key==='intro'||key==='outing'||key==='debut')return crFriendMessage(ev);
   function question(){crFriendStage(place,1,ev.channel==='reflection'?'':ev.friend.name,ev.d,ev.a.map(function(text,i){return {text:text,run:function(){crFriendPick(i);}};}),'',{mood:key==='foreign'?'sad':key==='confession'||key==='proposal'?'shy':'neutral'});}
@@ -270,4 +274,43 @@ function crFriendVacation(){
   if(!CR.v.friendVacation)return false;
   if(!CR.friendScene)crFriendShow(CR.v.friendVacation);
   return true;
+}
+
+var CR_FRIEND_STORY_ART={};
+function crFriendStoryCGSource(region,key){
+  if(!CR_FRIEND_ACTORS[region]||!['sunset','lodge','confession','proposal'].includes(key))return null;
+  return '/img/career-friends/event-'+region+'-'+key+'-v1.png';
+}
+function crFriendStoryArt(region,key){
+  var src=crFriendStoryCGSource(region,key);if(!src)return null;
+  if(!CR_FRIEND_STORY_ART[src]){var img=new Image();img.decoding='async';img.src=src;CR_FRIEND_STORY_ART[src]=img;}
+  return CR_FRIEND_STORY_ART[src];
+}
+function crFriendWarmStoryCG(ev){
+  var script=ev.script||{},lines=script.story||[...(script.before||[]),...(script.after||[]).flat()];
+  new Set(lines.map(function(line){return line[5];}).filter(Boolean)).forEach(function(key){crFriendStoryArt(ev.friend.id,key);});
+}
+function crFriendStoryCG(who,text,buttons,visual){
+  var C=CR.friendScene,src=crFriendStoryCGSource(C.ev.friend.id,visual.cg);
+  if(!src)return crFriendStage(3,1,who,text,buttons,'',{...visual,cg:null});
+  var el=document.getElementById('crFriendScene'),fresh=!el?.classList.contains('cr-friend-story-cg')||el.dataset.source!==src;
+  if(fresh){
+    crFriendRemoveScene();
+    el=document.createElement('div');el.id='crFriendScene';el.className='cr-friend-scene cr-friend-story-cg';el.dataset.source=src;el.dataset.cutscene=visual.cg;el.dataset.character=C.ev.friend.id;el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',C.ev.t);el.tabIndex=0;
+    var img=document.createElement('img');img.className='cr-friend-story-art';img.alt=C.ev.friend.name+'과 함께한 '+({sunset:'해변의 노을',lodge:'눈 내리는 산장',confession:'고백의 순간',proposal:'프로포즈의 순간'}[visual.cg]);img.draggable=false;img.src=crFriendStoryArt(C.ev.friend.id,visual.cg).src;img.onerror=function(){img.remove();el.classList.add('art-unavailable');};
+    el.appendChild(img);
+    var shade=document.createElement('div');shade.className='cr-friend-cg-shade';el.appendChild(shade);
+    var dialogue=document.createElement('section');dialogue.className='cr-friend-scene-dialogue';dialogue.innerHTML='<b></b><p></p><div id="crFriendSceneActions"></div>';el.appendChild(dialogue);document.body.appendChild(el);
+  }
+  var render=C.storyRender=(C.storyRender||0)+1,started=false;
+  function read(){
+    if(started||CR.friendScene!==C||C.storyRender!==render)return;started=true;el.onkeydown=null;el.classList.add('dialogue-ready');
+    el.querySelector('.cr-friend-scene-dialogue>b').textContent=who||'';
+    crFriendRead(el.querySelector('.cr-friend-scene-dialogue>p'),text,el.querySelector('#crFriendSceneActions'),buttons,el);
+  }
+  if(fresh&&!crFriendReducedMotion()){
+    el.onclick=read;el.onkeydown=function(e){if(['Enter',' '].includes(e.key)){e.preventDefault();read();}};
+    CR.friendCinematicTimers.push(setTimeout(read,650));
+  }else read();
+  return el;
 }

@@ -24,16 +24,40 @@ export function vacationEvent(C){
     const choices={beach:['해변으로 가자. 며칠 느긋하게 쉬고 싶어.','좋아. 둘 다 쉴 수 있는 날짜부터 정하자. 해변이랑 숙소도 같이 찾아보자.'],ski:['눈이 남아 있는 산으로 가자. 스키장도 찾아볼까?','좋아. 운영 중인 고산 리조트부터 찾아보자. 무리한 일정 말고 여유 있게 가자.']};
     return {...base,id:'friend:vacation-plan',t:'시즌 종료 · 휴가 계획',channel:'message',d:V.plan+(remote?'\n우리 이동편이랑 만날 곳도 같이 맞추자.':''),destinations:[...remaining,null],a:[...remaining.map(x=>choices[x][0]),'이번 휴가는 각자 쉬자. 여행은 다음에 가고 싶어.'],replies:[...remaining.map(x=>choices[x][1]),'알겠어. 이번엔 푹 쉬자. 여행은 다음에 시간 맞춰보자.']};
   }
-  const ski=trip.destination==='ski',recovering=!!C.hist?.at(-1)?.injured;
-  const activity=ski?(recovering?'이번엔 슬로프 대신 설경을 보며 쉬자.':'초보 슬로프부터 천천히 같이 타자.'):'물가 따라 조금 걷자. 사진도 같이 찍고.';
-  const before=[n(remote?'시즌 일정이 모두 끝난 뒤, 서로의 출발지와 이동편을 맞췄다. 약속한 곳에서 합류해 함께 여행지로 향했다.':'시즌 일정이 모두 끝난 뒤, 둘 다 쉴 수 있는 날에 짐을 챙겼다. 함께 이동하며 이번 여행에서 하고 싶은 일을 이야기했다.'),n(ski?'며칠 뒤, 눈이 남아 있는 고산 리조트에 도착했다. 장비와 복장을 챙기고 눈 덮인 산이 보이는 곳으로 나왔다.':'며칠 뒤, 바닷가 숙소에 짐을 풀었다. 수영복으로 갈아입고 해변으로 나오자 바닷바람이 불었다.'),f(ski?V.ski:V.beach,'happy'),p('오늘은 시간 넉넉해. 우리 하고 싶은 대로 보내자.','happy')];
-  const ending=[n(ski?'산 아래로 햇빛이 기울 때까지 함께 시간을 보냈다. 숙소에 돌아와 따뜻한 저녁을 먹으며 오늘 찍은 사진을 골랐다.':'바다 위로 해가 기울 때까지 함께 시간을 보냈다. 숙소에 돌아와 저녁을 먹으며 오늘 찍은 사진을 골랐다.'),f(V.close,'shy'),p('나도 좋았어. 다음엔 네가 원하는 일정도 같이 찾아보자.','happy'),n('여행 마지막 날, 짐을 챙기고 돌아가는 길에 올랐다. 함께 보낸 며칠을 이야기하며 다음 일상으로 돌아갈 준비를 했다.'),f(V.home,'happy'),p('나도 잘 도착했어. 같이 가줘서 고마워. 오늘은 푹 쉬어.','happy'),n('각자의 집에 도착한 뒤 안부를 주고받았다. 사진 속에는 경기장 밖에서 함께 웃던 시간이 남았다.')];
-  ending.slice(-3).forEach(line=>{line[4]='message';});
-  const replies=[ski?'좋아. 오늘은 속도보다 같이 있는 게 먼저야.':'좋아. 신발 벗고 천천히 가자. 그쪽 풍경도 보고 싶어.',V.rest];
-  return {...base,id:'friend:vacation-trip',t:'시즌 후 휴가 · '+(ski?'설산 리조트':'해변 여행'),channel:'scene',wardrobe:trip.destination,place:3,d:'오늘은 어떻게 보내고 싶어?',a:[activity,ski?'테라스에서 따뜻한 거 마시며 쉬자.':'그늘에 앉아서 바다 보며 쉬자.'],replies,script:{before,after:[ [p(activity,'happy'),f(replies[0],'happy'),n(ski?(recovering?'설경이 보이는 산책길을 천천히 걸었다. 쉬어갈 곳에서는 나란히 앉아 눈 덮인 풍경을 바라봤다.':'기본 동작을 확인하고 완만한 슬로프를 천천히 내려왔다. 먼저 멀리 가기보다 서로의 속도에 맞췄다.'):'얕은 물가를 따라 걸으며 서로의 사진을 찍었다. 잘 나온 사진보다 웃긴 사진을 보며 더 오래 웃었다.'),...ending], [p(ski?'오늘은 여기서 느긋하게 쉬고 싶어.':'오늘은 바다 보면서 아무 얘기나 하자.','happy'),f(V.rest,'happy'),n(ski?'따뜻한 음료를 앞에 두고 눈 덮인 산을 바라봤다. 하고 싶은 일이 생기면 그때 움직이기로 했다.':'그늘 아래에 나란히 앉아 파도 소리를 들었다. 각자의 근황을 이야기하다가 잠깐 말없이 바다를 보기도 했다.'),...ending] ]}};
+  const ski=trip.destination==='ski',recovering=!!C.hist?.at(-1)?.injured,cg=ski?'lodge':'sunset';
+  const memory=(line)=>{line[5]=cg;return line;};
+  const play={
+    asia:ski?(recovering?'오늘은 그냥 구경만 하자. 같이 온 건데 꼭 타야 되는 건 아니잖아.':'잠깐ㅋㅋ 나 아직 출발 안 했어. 같이 내려가자며.'): '사진 찍어준다더니 왜 네가 먼저 웃어ㅋㅋ 나 이상하게 나왔어?',
+    south:ski?(recovering?'오늘은 내가 네 옆에서 천천히 걸을게. 풍경만 봐도 충분해.':'아까 내려올 때 봤어? 이번엔 내가 먼저 출발할게. 넌 옆에 있어줘.'): '이쪽으로 와봐. 여기 물 따뜻해. 발만 담그고 가기엔 좀 아깝잖아.',
+    africa:ski?(recovering?'오늘 목표는 산책이랑 따뜻한 거 마시기. 기록 경신 같은 건 없어ㅋㅋ':'잠깐, 누가 먼저 내려가나 시합으로 바뀐 거 아니지? 같이 가기로 했잖아ㅋㅋ'): '방금 파도 피한 거야? 경기장에서는 그렇게 잘 뛰더니 여기서는 나보다 느린데ㅋㅋ',
+    europe:ski?(recovering?'오늘은 타지 말고 천천히 걷자. 나도 이 풍경 더 보고 싶어.':'아까 그 코스 한번 더 갈까. 이번에는 내가 앞에 갈게.'): '그 사진 지우지 마. 네가 웃고 있는 건 그게 제일 나아.'
+  };
+  const quiet={
+    asia:ski?'눈 오는 거 봐. 내일 길 막히는 거 아니겠지?\n…조금만 더 있다 가고 싶긴 하다.':'야, 저기 봐. 해 진다.\n사진은 잠깐 그만 찍고. 같이 보자.',
+    south:ski?'밖은 추운데 여기 있으니까 좋다.\n오늘은 네가 바로 옆에 있어서 더 그런 것 같아.':'오늘 하루 좋았어.\n지금은 말 안 해도 돼. 그냥 내 옆에 조금만 더 있어줘.',
+    africa:ski?'아까는 눈 위에서 그렇게 떠들었는데 여기 오니까 조용해지네ㅋㅋ\n이렇게 가만히 같이 있는 것도 좋다.':'우리 오늘 사진 진짜 많이 찍었다ㅋㅋ\n근데 이건 그냥 보고 기억하고 싶어.',
+    europe:ski?'조금만 더 여기 앉아 있자.\n눈 그칠 때까지는 아니고. 차 다 마실 때까지.':'아직 들어가기 아쉽다.\n해가 다 질 때까지만 여기 있자.'
+  };
+  const story=[
+    n(remote?'시즌 일정이 모두 끝난 뒤, 서로의 출발지와 이동편을 맞췄다. 약속한 곳에서 합류해 함께 여행지로 향했다.':'시즌 일정이 모두 끝난 뒤, 둘 다 쉴 수 있는 날에 짐을 챙겼다. 함께 이동하며 이번 여행에서 하고 싶은 일을 이야기했다.'),
+    n(ski?'눈이 남아 있는 고산 리조트에 도착했다. 숙소에 짐을 풀고 장비와 복장을 챙겨 밖으로 나왔다.':'바닷가 숙소에 짐을 풀고 수영복으로 갈아입었다. 해변으로 나오자 따뜻한 바람과 파도 소리가 먼저 맞아주었다.'),
+    f(ski?V.ski:V.beach,'happy'),p('오늘은 급한 일정 없어. 천천히 같이 놀자.'),
+    n(ski?(recovering?'이번에는 무리해서 타지 않고 설경이 보이는 산책길을 걸었다. 쉬어갈 곳에서는 나란히 앉아 눈 덮인 풍경을 바라봤다.':'장비를 확인하고 완만한 슬로프부터 천천히 내려왔다. 몇 번 오르내리자 몸이 풀렸고, 서로를 기다리는 시간에도 웃음이 이어졌다.'):'물가에서 파도를 피하다가 결국 함께 물에 들어갔다. 서로 물을 튀기기도 하고, 모래 위로 돌아와 웃긴 포즈로 사진을 찍기도 했다.'),
+    f(play[r.region],'happy'),p(ski?'알겠어. 이번엔 네 속도에 맞출게.':'잠깐만. 이번엔 나도 같이 찍자.','happy'),
+    f(ski?'응. 조금만 더 같이 있다 가자.':'좋아. 이번엔 둘 다 웃고 있는 걸로 찍자.','happy'),
+    memory(n(ski?'해가 기울 무렵 산장으로 돌아왔다. 장비를 내려놓고 편한 옷으로 갈아입은 뒤, 따뜻한 음료를 들고 큰 창가에 나란히 앉았다. 창밖으로 눈이 내리기 시작했다.':'해가 기울자 물에서 나와 얇은 겉옷을 걸쳤다. 숙소로 돌아가는 대신 모래 위에 나란히 앉았다. 바다 위로 주황빛이 길게 번지고 있었다.')),
+    memory(f(quiet[r.region],'shy')),memory(p(ski?'응. 아직 따뜻하네. 천천히 마시자.':'응. 나도 조금 더 보고 싶어.','happy')),
+    memory(n(ski?'창밖의 눈송이를 따라 시선을 옮겼다. 컵을 두 손으로 감싼 채, 한동안 아무 말 없이 같은 풍경을 바라봤다.':'파도 소리를 들으며 한동안 말없이 수평선을 바라봤다. 낮에 웃고 떠들던 시간이 천천히 가라앉았다.')),
+    memory(f(V.close,'shy')),memory(p('나도 오늘 좋았어. 같이 와줘서 고마워.','happy')),
+    memory(n('여행 마지막 날, 함께 찍은 사진을 고르고 짐을 챙겼다. 돌아가는 길에도 오늘 보았던 풍경과 웃긴 순간들을 한참 이야기했다.')),
+    f(V.home,'happy'),p('나도 잘 도착했어. 오늘은 푹 쉬어. 사진은 내일 마저 보내줄게.','happy'),n('각자의 집에 도착한 뒤 안부를 주고받았다. 사진 속에는 경기장 밖에서 함께 웃던 시간이 남았다.')
+  ];
+  story.slice(-3).forEach(line=>{line[4]='message';});
+  // Keep before/after and the legacy completion pick for already-open older clients.
+  return {...base,id:'friend:vacation-trip',t:'시즌 후 휴가 · '+(ski?'설산 리조트':'해변 여행'),channel:'story',wardrobe:trip.destination,place:3,d:'잘 다녀왔네. 오늘은 푹 쉬자.',a:['여행 마치기'],replies:['응. 같이 가줘서 고마워.'],script:{story,before:story,after:[[]]}};
 }
 export function completeVacation(C,pick){
-  const ev=vacationEvent(C);if(!ev||!Number.isInteger(pick)||!ev.a[pick])throw new Error('휴가 선택을 다시 확인해 주세요.');
+  const ev=vacationEvent(C);if(!ev||!Number.isInteger(pick)||!(ev.a[pick]||ev.channel==='story'&&pick===1))throw new Error('휴가 선택을 다시 확인해 주세요.');
   const r=C.relationship;
   if(ev.id==='friend:vacation-plan'){
     const destination=ev.destinations[pick];
@@ -43,6 +67,6 @@ export function completeVacation(C,pick){
   const before=r.affinity;r.affinity=Math.min(RULES.max,r.affinity+6);
   r.lastChange={age:C.age,delta:r.affinity-before,reason:'휴가 일정을 함께 정하고 여행을 다녀왔다'};
   r.vacationsDone=[...new Set([...completedTrips(r),r.vacation.destination])];
-  r.lastVacationAge=C.age;r.lastVacation={...r.vacation,pick};delete r.vacation;
+  r.lastVacationAge=C.age;r.lastVacation={...r.vacation,pick:0};delete r.vacation;
 }
 export function vacationPending(C){return C.relationship?.vacation?.age===C.age;}

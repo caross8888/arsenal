@@ -73,3 +73,13 @@
 .cr-friend-device .cr-friend-read-hint{color:#526449;padding:4px 14px;margin:0;background:#f6f5ed;text-align:right}
 .cr-friend-scene-dialogue{cursor:pointer}
 .cr-friend-scene-dialogue .is-reading,.cr-friend-options.is-reading{visibility:hidden;pointer-events:none}
+
+/* Story CGs replace the entire composition and remain through several lines. */
+.cr-friend-story-cg{background:radial-gradient(ellipse at center,#425063,#111a26)}
+.cr-friend-story-cg::after{display:none}
+.cr-friend-story-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 0;animation:crFriendCGReveal 1.2s ease both;user-select:none}
+.cr-friend-story-cg .cr-friend-scene-dialogue{background:linear-gradient(0deg,#0b1527f2,#0b1527c9);border-color:#d3c09d55;box-shadow:none;opacity:0;transition:opacity .35s ease}
+.cr-friend-story-cg.dialogue-ready .cr-friend-scene-dialogue{opacity:1}
+.cr-friend-story-cg #crFriendSceneActions{justify-items:end}
+.cr-friend-story-cg #crFriendSceneActions .cr-friend-option{min-width:125px;padding:9px 20px;text-align:center;background:#0d1b2ba8;border-radius:25px}
+@media(orientation:portrait){.cr-friend-story-art{object-position:50% 0}.cr-friend-story-cg[data-cutscene="sunset"] .cr-friend-story-art{object-position:42% 0}.cr-friend-story-cg[data-cutscene="sunset"][data-character="asia"] .cr-friend-story-art{object-position:33% 0}}

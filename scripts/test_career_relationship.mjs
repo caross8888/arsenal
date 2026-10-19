@@ -96,6 +96,13 @@ for(const nation of ['KOR','BRA','NGA','ENG']){
  const follow=dating(nation);follow.club=c.club;follow.relationship.promise={reviewAge:25};const met=R.relationshipEvent(follow,'friend:followup');assert.deepEqual(met.meeting.picks,[0]);assert(met.script.after[1].length);assert.equal(met.meeting.remote,false);
  const military=R.routineEvent(follow,true);assert(!military.meeting);assert(military.remote);
 }
+for(const nation of ['KOR','BRA','NGA','ENG'])for(const key of ['confession','proposal']){
+ const c=key==='confession'?make(nation,21):dating(nation);c.relationship.affinity=90;
+ const ev=R.relationshipEvent(c,'friend:'+key);assert(ev.script.after[0].some(line=>line[5]===key),'accepted major event has its own CG');assert(!ev.script.after[1].some(line=>line[5]),'declining a major event never shows the success illustration');
+ c.club=S.clubByName(nation==='ENG'?'플라멩구':'아스날');assert.equal(R.relationshipEvent(c,'friend:'+key).id,'friend:visit');
+ c.relationship.visit={age:c.age,key};const visit=R.relationshipEvent(c,'friend:'+key);assert(!visit.remote);assert(visit.script.after[0].some(line=>line[5]===key));
+ const call=R.relationshipEvent(c,'friend:'+key,true);assert(call.remote);assert(!call.script.after[0].some(line=>line[5]),'legacy remote conversations never pretend to meet');
+}
 console.log('PASS four-region visits: saved invitation → arrival → in-person confession/proposal; neutral deferral/retry, explicit refusal, unchanged residence, youth home visits, adult visiting dates, promised reunions and service calls');
 
 console.log('PASS saved promise/fulfillment/rescheduling/breach history, personality penalties, repair branch and earned partner-initiated breakup; no passive/random decay');

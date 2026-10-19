@@ -142,6 +142,7 @@ export function relationshipEvent(C,id,forceRemote=false){
     const before=remote?[]:[['n','둘만의 시간을 내어 마주 앉았다. 이번에는 미뤄두었던 이야기를 꺼냈다.','neutral'],['f',key==='crisis'?P.concern:'오늘은 이 얘기를 그냥 넘기고 싶지 않아.','neutral']];
     if(visiting)before.unshift(...arrival(C));
     ev.script={before,after:ev.reply.map((reply,i)=>[...aftermath(r.region,key,i,reply,remote,ev.partnerEnds),...(visiting?[['n','방문을 마치고 다시 각자의 도시로 돌아갔다. 짧은 만남 뒤에도 서로의 대답은 분명하게 남았다.','neutral',false]]:[])])};
+    if(['confession','proposal'].includes(key)&&!remote)ev.script.after[0].slice(0,4).forEach(line=>{line[5]=key;});
   }
   return ev;
 }
