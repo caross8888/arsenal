@@ -11,6 +11,7 @@
 //   POST ?a=military {token, action:"apply"|"regular"}          → 상무 지원/일반 복무 선택
 //   POST ?a=next    {token, pick?, trait?}                                → {token, player, prep} | {token, card}(은퇴)
 //   POST ?a=retire  {token}                                       → {token, card}
+//   POST ?a=friend-debut {token, pick:0|1}                         → 첫 공식 출전 장면 완료 저장
 //   POST ?a=view    {token}                                       → 지금 단계 화면(이어 하기)
 //   POST ?a=submit  {token} + Authorization: Bearer <승부예측 토큰> → {registered, rank, best, improved, key}
 //   GET  ?a=board[&p=FW|MF|DF]                                    → 역대 TOP 100(30초 CDN 캐시). p 없으면 전체(세 포지션 기록을 점수순으로)
@@ -21,6 +22,7 @@ import crypto from 'crypto';
 import { tokenCodec } from './_token.js';
 import { readToken } from './_account.js';
 import * as S from './_career_sim.js';
+import * as REL from './_career_relationship.js';
 import {kickVerdict} from './_career_shootout.js';
 import {NATIONAL_REACTION_GROUPS} from './_career_international.js';
 import { CLUB_KIT } from './_club_kits.js';
@@ -191,7 +193,7 @@ function seasonDraft(C,choice,decisions={}){const D=clone(C);D.phase=C.pendingSe
 function firstPenalty(row){for(const w of [...(row?.national||[]),...(row?.clubFinal?[row.clubFinal]:[])])for(const m of w.matches)if(m.pk?.pending)return {w,m};return null;}
 function advanceSeason(C,choice,decisions={}){
  const base=clone(C),phase=C.pendingSeason?.phase||C.phase,{D,r}=seasonDraft(C,choice,decisions);
- if(!r.injury&&firstPenalty(r.row)){delete base.pendingSeason;Object.assign(C,base,{phase:'penalty',pendingSeason:{phase,choice,decisions}});return {penalty:true};}
+ if(!r.injury&&firstPenalty(r.row)){delete base.pendingSeason;Object.assign(C,base,{phase:'penalty',pendingSeason:{phase,choice,decisions}});REL.prepareDebut(C,r.row);return {penalty:true};}
  for(const k of Object.keys(C))delete C[k];Object.assign(C,D);
  if(!r.injury){C.forced=r.forced;C.forcedWhy=r.forcedWhy;delete C.pending;}return r;
 }
@@ -318,6 +320,14 @@ export default async function handler(req, res){
       return res.json({token:seal(C),...view(C)});
     }
 
+    if(a==='friend-debut'){
+      const C=load(body.token,['result','injury','penalty']);
+      if(!C.relationship?.pendingDebut)bad('확인할 첫 출전 이벤트가 없어요.');
+      if(body.pick!==0&&body.pick!==1)bad('만남 여부를 골라 주세요.');
+      REL.applyRelationship(C,'friend:debut',body.pick);
+      return res.json({token:seal(C),...view(C)});
+    }
+
     if(a === 'season'){
       const C = load(body.token, ['prep', 'injury']);
       // 부상 질문에 답하는 두 번째 호출은 첫 호출의 훈련·이벤트 선택을 그대로 쓴다(토큰에 남겨 둔 것)
@@ -333,6 +343,7 @@ export default async function handler(req, res){
         const rows = [0, 1].map(k => { const c = JSON.parse(JSON.stringify(C)); return S.playSeason(c, {...C.pending, injPick: k}).row; });
         const pre = rows.reduce((m, w) => m ? m.map((x, i) => Math.min(x, [w.apps, w.goals, w.ast, w.cs][i])) : [w.apps, w.goals, w.ast, w.cs], null);
         const games = rows[1].games;   // 시즌 진행 화면의 경기 칸 수
+        REL.prepareDebut(C,{youth:rows.some(row=>row.youth),apps:pre[0]});
         const segments=rows[1].segments && rows[1].segments.map((seg,i)=>({...seg,...Object.fromEntries(['apps','starts','goals','ast','cs'].map(k=>[k,Math.min(seg[k],rows[0].segments[i][k])]))}));
         const national=(rows[1].national||[]).filter(w=>!w.knockout).filter(w=>(rows[0].national||[]).some(other=>other.id===w.id&&JSON.stringify(other)===JSON.stringify(w)));
         return res.json({token: seal(C), ...view(C), pre: {national, apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3], games, ...(segments?{segments}:{})}});
@@ -361,6 +372,7 @@ export default async function handler(req, res){
 
     if(a === 'next'){
       const C = load(body.token, ['result']);
+      if(C.relationship?.pendingDebut)bad('첫 프로 출전 연락을 먼저 확인해 주세요.');
       const pick = body.pick == null || body.pick === '' ? null : Number(body.pick);
       if(pick != null && !(Number.isInteger(pick) && C.offers[pick])) bad('제안을 다시 골라 주세요.');
       // 특성 제안이 있으면 반드시 하나를 고른다(강제 은퇴로 끝나는 시즌은 제외)
@@ -375,6 +387,7 @@ export default async function handler(req, res){
 
     if(a === 'retire'){
       const C = load(body.token, ['result', 'retired']);
+      if(C.relationship?.pendingDebut)bad('첫 프로 출전 연락을 먼저 확인해 주세요.');
       if(C.phase === 'result' && C.age < 29 && !C.forced) bad('29세부터 은퇴할 수 있어요.');
       S.retire(C);
       return res.json({token: seal(C), ...view(C)});

@@ -84,7 +84,9 @@ const {default:handler}=await import('../arsenal-dashboard/api/career.js');
 const {tokenCodec}=await import('../arsenal-dashboard/api/_token.js');const codec=tokenCodec('career-token-v1',{zip:true});
 async function api(a,body){let code=200,data;await handler({method:'POST',query:{a},body,headers:{}},{setHeader(){},status(c){code=c;return this;},json(d){data=d;return this;}});return {code,data};}
 const c=result();const token=codec.seal(c);const applied=await api('military',{token,action:'regular'});assert.equal(applied.code,200);assert.equal(applied.data.player.military.selected,'regular');
-const next=await api('next',{token:applied.data.token,pick:null,trait:0});assert.equal(next.code,200);assert.equal(next.data.prep.service.fullRegular,true);
+// This synthetic career's only recorded season is also its first actual pro appearance.
+const contact=await api('friend-debut',{token:applied.data.token,pick:1});assert.equal(contact.code,200);assert.equal(contact.data.player.military.selected,'regular');
+const next=await api('next',{token:contact.data.token,pick:null,trait:0});assert.equal(next.code,200);assert.equal(next.data.prep.service.fullRegular,true);
 const finished=await api('season',{token:next.data.token,train:'균형',evPick:0});assert.equal(finished.code,200);assert.equal(finished.data.result.row.apps,0);assert.equal(finished.data.player.military.left,6);
 const bad=await api('military',{token:next.data.token,action:'apply'});assert.equal(bad.code,400);count++;console.log('PASS API 토큰 재개·부적절한 단계 거부');
 const returnPrep=await api('next',{token:finished.data.token,pick:null,trait:0});assert.equal(returnPrep.data.prep.service.left,6);

@@ -2535,7 +2535,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media(prefers-reduced-motion:reduce){.cr-nat-final-conf{display:none}}
 
 </style>
-<link rel="stylesheet" href="/career/relationship.css?v=1">
+<link rel="stylesheet" href="/career/relationship.css?v=2">
 </head>
 <body>
 
@@ -2826,7 +2826,7 @@ function playIntro(){
 </nav>
 <script src="/career/league-scenes.js?v=1"></script>
 <script src="/career/match-playback.js?v=39"></script>
-<script src="/career/relationship.js?v=1"></script>
+<script src="/career/relationship.js?v=2"></script>
 <script>
 var FN='/api';
 var allStandings=[];
@@ -8846,7 +8846,7 @@ function gameStopTimer(){ if(GAME.timer){ clearInterval(GAME.timer); GAME.timer=
 // 게임 모드 표시(모바일: 하단 탭을 내린다). 섹션을 바꾸는 곳은 openGames와 showSec 둘뿐이라 여기 두 곳에서만 켜고 끈다 —
 // 홈 버튼·하단 탭·뒤로 가기(popstate → showSec) 어느 길로 나가도 showSec → gameLeave를 지나므로 하단 탭이 늘 복구된다.
 function gameModeUi(on){ document.body.classList.toggle('game-mode', !!on); }
-function gameLeave(){ gameStopTimer(); setGameIcon(false); gameModeUi(false); }
+function gameLeave(){ if(typeof CR!=='undefined'&&CR&&CR.friendScene){crFriendCancel();if(CR.sf)crSfClose();} gameStopTimer(); setGameIcon(false); gameModeUi(false); }
 function toggleGameMode(){
   if(inGames()){
     var btn=document.querySelector('.nav-btn[onclick*="\''+GAME.prev+'\'"]');
@@ -10690,9 +10690,12 @@ function crSfRun(list, done){
     if(!document.getElementById('crSfLog')){ CR.sf=null; return; }   // 다른 화면으로 나감
     while(i<list.length){
       var next=list[i];if(next.national){i++;S.qi=i;return crSfNatOpen(next.national,tick);}
+      if(crFriendMatch(next,function(){crSfMatch(next,true);i++;S.qi=i;},tick))return;
       if(!S.skip&&!reduce)break;crSfMatch(list[i++],true);S.qi=i;
     }
     if(i>=list.length)return done();
+    var candidate=list[i];
+    if(crFriendMatch(candidate,function(){crSfMatch(candidate,false);i++;S.qi=i;},tick))return;
     var m=list[i++];S.qi=i;var big=crSfMatch(m,false);
     S.timer=setTimeout(tick, step+(big?extra:0));
   };
@@ -10742,12 +10745,12 @@ function crSfTap(e){
   var S=CR.sf; if(!S) return;
   if(e && e.target.closest && e.target.closest('.cr-inj-c')) return;
   // 시즌 스킵을 연속으로 눌러도 대표팀·챔스 하이라이트는 별도로 재생한다.
-  if(S.nat)return;
+  if(S.nat||S.friendBusy)return;
   if(S.v) return crSfDone();
   if(S.hurtWait) return;
   crSfSkip();
 }
-function crSfSkip(){var S=CR.sf;if(!S||S.nat)return;if(S.hurtWait)return;S.skip=true;clearTimeout(S.timer);if(S.tick)S.tick();}
+function crSfSkip(){var S=CR.sf;if(!S||S.nat||S.friendBusy)return;if(S.hurtWait)return;S.skip=true;clearTimeout(S.timer);if(S.tick)S.tick();}
 function crSfEnd(v){   // 끝 요약을 잠깐(약 2.4초) 보여 주고 결과 화면으로 저절로 넘어간다(사용자 지정 — 버튼 없이, 넘어가서 오버롤 오르는 연출까지). 누르면 바로.
   var S=CR.sf, r=v.result.row, x=document.getElementById('crSfExtra'), card=document.getElementById('crSfCard'), log=document.getElementById('crSfLog');
   if(!S) return;
@@ -11579,6 +11582,7 @@ function crBloomShow(t, key){
     +'<button class="cr-iv-go" onclick="CR.bloomSeen=\''+key.replace(/'/g,'')+'\';crTovSet(\'\');crResult()">확인</button></div>');
 }
 function crResult(){
+  if(crFriendResumeDebut())return;
   var p=CR.v.player, R=CR.v.result, r=R.row, st=CR.meta.stats[p.pos];
   var dCls=r.dOvr>0?'up':r.dOvr<0?'down':'', lg=r.youth?'유스 리그':crNat(((CR.meta.club[r.club])||{}).nat).n+' 리그';
   var h='<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+p.seasons+' 결과</div></div>'+crHead()

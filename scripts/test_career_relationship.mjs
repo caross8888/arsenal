@@ -10,8 +10,13 @@ assert.equal(R.relationshipView({}),null,'old saves remain valid without inventi
 const c={age:19,hist:[{youth:true,apps:25}],relationship:R.createRelationship('KOR')};
 assert.equal(R.dueRelationship(c),null,'youth appearances are not a pro debut');
 c.hist.push({youth:false,apps:0});assert.equal(R.dueRelationship(c),null,'bench is not a debut');
-c.hist.push({youth:false,apps:1});assert.equal(R.dueRelationship(c),'debut');
+R.prepareDebut(c,{youth:true,apps:25});assert(!c.relationship.pendingDebut);
+R.prepareDebut(c,{youth:false,apps:0});assert(!c.relationship.pendingDebut);
+R.prepareDebut(c,{youth:false,apps:1});assert(c.relationship.pendingDebut);
+assert.equal(R.dueRelationship(c),null,'debut is a match checkpoint, never a next-season prep event');
+c.hist.push({youth:false,apps:1});
 R.applyRelationship(c,'friend:debut',0);assert.equal(c.relationship.affinity,1);
+assert(!c.relationship.pendingDebut);
 R.applyRelationship(c,'friend:debut',0);assert.equal(c.relationship.affinity,1,'retry cannot apply twice');
 c.age=20;assert.equal(R.dueRelationship(c),null,'space relationship choices across seasons');
 c.age=21;assert.equal(R.dueRelationship(c),'outing');R.applyRelationship(c,'friend:outing',0);
@@ -62,6 +67,7 @@ for(let seed=1;seed<=60;seed++){
     const ev=S.prepView(state).event;
     if(ev.friend){events++;assert(ev.replies.length===2);assert(!S.nationalCallupPlan(state));}
     S.playSeason(state,{train:'균형',evPick:0,injPick:1});
+    if(state.relationship.pendingDebut){events++;R.applyRelationship(state,'friend:debut',0);}
     if(state.military?.status==='pending'&&state.age===27)S.militaryAction(state,'regular');
     S.nextSeason(state,state.released&&state.offers.length?0:null,0);
     assert(state.relationship.done.length<=5);
@@ -70,3 +76,33 @@ for(let seed=1;seed<=60;seed++){
   if(card.relationship.status==='married'){married++;assert(card.relationship.marriedAge>=28);}
 }
 assert(married>0);console.log('PASS 60 complete careers:',events,'relationship decisions,',married,'married retirement cards');
+
+// The match-time event must survive encrypted saves and block next season until seen.
+const {default:handler}=await import('../arsenal-dashboard/api/career.js');
+async function api(action,body){
+  let status=200,data;
+  await handler({method:'POST',query:{a:action},body,headers:{}},{setHeader(){},status(n){status=n;return this;},json(v){data=v;}});
+  return {status,data};
+}
+const first=S.createCareer(input,0,5);
+Object.assign(first,{age:19,lv:3,proAt:18,num:9,ev:'coach',ovr:78,peak:78,st:Array(5).fill(78)});
+S.playSeason(first,{train:'균형',evPick:0,injPick:1});assert(first.relationship.pendingDebut);
+const firstToken=codec.seal(first),before=structuredClone(first.tot);
+assert.equal((await api('next',{token:firstToken})).status,400);
+assert.equal((await api('friend-debut',{token:firstToken,pick:2})).status,400);
+const finished=await api('friend-debut',{token:firstToken,pick:0});assert.equal(finished.status,200);
+const saved=codec.open(finished.data.token);assert(!saved.relationship.pendingDebut);assert(saved.relationship.done.includes('debut'));assert.deepEqual(saved.tot,before);
+assert.equal((await api('friend-debut',{token:finished.data.token,pick:0})).status,400);
+const ongoing=structuredClone(first);ongoing.phase='prep';ongoing.hist=[];delete ongoing.relationship.pendingDebut;
+assert.equal((await api('friend-debut',{token:codec.seal(ongoing),pick:0})).status,400);
+let injuryCheckpoint=false;
+for(let seed=1;seed<=60&&!injuryCheckpoint;seed++){
+  const test=structuredClone(ongoing);test.seed=seed;test.relationship.done=[];
+  const response=await api('season',{token:codec.seal(test),train:'균형',evPick:0});
+  if(response.data.phase==='injury'&&response.data.player.relationship.pendingDebut){
+    assert(response.data.pre.apps>0);const ack=await api('friend-debut',{token:response.data.token,pick:1});assert.equal(ack.status,200);
+    const resume=await api('season',{token:ack.data.token,injPick:1});assert.equal(resume.status,200);
+    assert.equal(codec.open(resume.data.token).relationship.done.filter(k=>k==='debut').length,1);injuryCheckpoint=true;
+  }
+}
+assert(injuryCheckpoint);console.log('PASS match checkpoint API: save/resume, invalid phases/picks, next-season guard, unchanged records, injury-before-finish acknowledgment');

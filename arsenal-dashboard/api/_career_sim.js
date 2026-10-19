@@ -1026,6 +1026,7 @@ export function playSeason(state, choice){
   FIN.recordSalary(C,row);
   const friendMessage=!relationshipReply&&REL.relationshipSeasonMessage(C,row);
   if(friendMessage)row.notes.push(friendMessage);
+  REL.prepareDebut(C,row);
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
   // 점수용 가중 기록(리그 수준 반비례). 옛 토큰은 지금까지 기록을 가중 1로 시작한다.
   if(C.tot.wg == null){ C.tot.wg = C.tot.goals; C.tot.wa = C.tot.ast; C.tot.wcs = C.tot.cs; }
