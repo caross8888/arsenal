@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#11151c">
+  <title>커리어 · 그라운드 밖의 이야기</title>
+  <link rel="stylesheet" href="sample.css">
+  <script defer src="sample.js"></script>
+</head>
+<body>
+  <header class="top"><a href="/" aria-label="대시보드로">A<span>RSENAL</span></a><span class="edition">CAREER MODE <i></i> 관계 이벤트 샘플</span><button id="restart" class="quiet">처음부터</button></header>
+  <main>
+    <div class="heading"><div><p class="eyebrow">BEYOND THE PITCH</p><h1>그라운드 밖의 이야기<span>.</span></h1><p class="lede">달라지는 일상 속에서도, 늘 알고 지낸 한 사람.</p></div><div class="season"><span id="seasonLabel"></span><strong id="ageLabel"></strong></div></div>
+    <nav class="chapters" aria-label="샘플 장면"><button data-chapter="intro">01 <span>오래된 연락처</span></button><button data-chapter="debut">02 <span>처음 밟은 그라운드</span></button><button data-chapter="foreign">03 <span>멀어지는 거리</span></button></nav>
+    <div class="layout">
+      <section class="stage" aria-labelledby="sceneTitle">
+        <img id="backdrop" class="backdrop" src="/img/career-scenes/field.webp" alt="도트로 그린 축구 훈련장">
+        <div class="shade"></div>
+        <div class="scene-top"><span id="sceneTag" class="pill"></span><span id="sceneTime"></span></div>
+        <div id="visual" class="visual"></div>
+        <div class="scene-copy"><p id="sceneKicker" class="eyebrow"></p><h2 id="sceneTitle" tabindex="-1"></h2><p id="sceneDescription"></p></div>
+      </section>
+      <section class="conversation" aria-label="대화와 선택">
+        <div class="contact"><div class="avatar" aria-hidden="true"></div><div><strong id="speaker">서윤</strong><span id="contactLabel">어릴 때부터 알고 지낸 친구</span></div><span class="contact-dot"></span></div>
+        <div class="conversation-body" id="conversationBody" aria-live="polite"></div>
+        <div id="actions" class="actions"></div>
+        <div class="relationship"><span>두 사람의 거리</span><strong id="relationshipLabel">편하게 연락하는 사이</strong></div>
+      </section>
+    </div>
+    <section class="under"><div><span class="tiny">이번 시즌의 흐름</span><ol id="flow" class="flow"></ol></div><p id="seasonNote"></p></section>
+    <details class="preview-tools"><summary>다른 발생 조건도 살펴보기</summary><p>같은 화면에서 조건만 바꿔볼 수 있어요. 각 장면은 독립된 예시이며 실제 커리어 저장에는 반영되지 않습니다.</p><div class="conditions"><button data-chapter="youth">유스 경기 출전</button><button data-chapter="bench">1군 벤치 대기</button><button data-chapter="repeat">데뷔 후 다음 시즌</button><button data-chapter="offer">해외 제안만 도착</button><button data-chapter="domestic">국내 이적 완료</button></div></details>
+    <footer>동아시아 소꿉친구 1인 샘플 · 이름·대사·관계 진행은 검토용 설정</footer>
+  </main>
+</body>
+</html>

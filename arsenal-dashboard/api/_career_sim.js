@@ -13,6 +13,7 @@ import * as MIL from './_career_military.js';
 import {nationalSchedule,seniorNationalCalendar} from './_career_international.js';
 import {championsFinal,EUROPEAN_LEAGUES} from './_career_club_final.js';
 import * as FIN from './_career_finance.js';
+import * as REL from './_career_relationship.js';
 export const militaryView = MIL.militaryView;
 export const militaryAction = MIL.applyMilitary;
 export const regularReturn = MIL.completeRegularReturn;
@@ -340,6 +341,7 @@ export function createCareer(input, clubIdx, seed){
        hist:[], tot:{apps:0,goals:0,ast:0,cs:0,caps:0,cg:0}, boost:1, peak:ovr, clubs:[o.club.n],
        talent:1, youthPts:0, awoken:false, last:null, offers:null, lv:0};
   if(C.nation==='KOR') C.military={status:'pending'};
+  C.relationship=REL.createRelationship(nation);
   if(mulberry(C.seed ^ hashStr('late'))() < LATE_BLOOM.p) C.late = true;
   newEvent();
   return C;
@@ -422,7 +424,7 @@ function scoutTarget(){
   return cs[Math.floor(mulberry(C.seed ^ hashStr('scout-to|'+C.age))()*cs.length)];
 }
 const evById = id => EVENTS.find(e => e.id === id);
-const currentEvent = () => C.phase==='prep'&&nationalCallupPlan(C)?evById('natcall'):C.ev==='natcall'&&!nationalCallupPlan(C)?evById(youth()?'extra':'talk'):evById(C.ev);
+const currentEvent = () => C.phase==='prep'&&nationalCallupPlan(C)?evById('natcall'):C.ev==='natcall'&&!nationalCallupPlan(C)?evById(youth()?'extra':'talk'):REL.relationshipEvent(C,C.ev)||evById(C.ev);
 
 function newEvent(){
   // 지난 시즌과 같은 이벤트는 빼고 고른다(사용자 지정 — 같은 이벤트 연속이 단조로웠다). 후보가 그것뿐이면 그대로.
@@ -433,6 +435,8 @@ function newEvent(){
   // 약발 훈련: 공격수·미드필더, 20세까지, 시즌당 30% 확률
   const r2 = mulberry(C.seed ^ hashStr('wf'+C.age))();
   if(!callup && !loan && C.age<=20 && C.wf<5 && r2<0.3) ev = evById('weak');   // 수비수도(사용자 지정 — 약발은 표시되는데 훈련이 안 떴다)
+  const relationship=!callup&&!loan&&!MIL.serviceView(C)?REL.dueRelationship(C):null;
+  if(relationship)ev=REL.relationshipEvent(C,'friend:'+relationship);
   C.ev = ev.id; C.lastEv = ev.id; C.evPick = null; C.train = C.train || '균형'; C.loanClub = null; delete C.loanClubs; delete C.scoutClub;
   if(ev.id === 'scout'){ const t = scoutTarget(); if(t) C.scoutClub = t; else C.ev = C.lastEv = 'extra'; }
   if(ev.id === 'loan'){
@@ -589,7 +593,7 @@ export function prepView(state){
   else goal = seniorGoal();
   let a = ev.a;
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 ↓)' : ' (감독 신뢰 ↑)')];
-  return {military:MIL.militaryView(C), service:MIL.serviceView(C), returnPeriod:C.returnService?{months:C.returnService.months,home:C.returnService.home}:null, international:callup?.ageTournament||null, goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.scoutMove ? d : C.stageNote || null, contract: FIN.contractView(C), trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a,...(callup?{callup}:{})},
+  return {military:MIL.militaryView(C), service:MIL.serviceView(C), returnPeriod:C.returnService?{months:C.returnService.months,home:C.returnService.home}:null, international:callup?.ageTournament||null, goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.scoutMove ? d : C.stageNote || null, contract: FIN.contractView(C), trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a,...(ev.friend?{friend:ev.friend,replies:ev.reply}:{}),...(callup?{callup}:{})},
     selected: C.scoutMove ? 0 : null, interview: ev.id === 'media' ? interviewOf() : null, bloom: bloomView(),
     loanClubs: ev.id==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
 }
@@ -610,7 +614,7 @@ function injRiskOf(){
   return Math.max(0.03, r + Math.max(0, C.age-30)*0.01);
 }
 function rollInjury(){
-  const r = mulberry(C.seed ^ hashStr('inj|'+C.age+'|'+C.ev+'|'+C.evPick+'|'+C.club.n));
+  const r = mulberry(C.seed ^ hashStr('inj|'+C.age+'|'+C.ev+'|'+(String(C.ev).startsWith('friend:')?0:C.evPick)+'|'+C.club.n));
   const pMajor = C.age>=18 ? INJ[1] + Math.max(0, C.age-29)*INJ[2] : 0;
   if(r() < pMajor) C.inj = {major:true, games:Math.round(25+r()*10), name:INJ_MAJOR[Math.floor(r()*3)]};
   else if(r() < injRiskOf()) C.inj = {major:false, games:Math.round(5+r()*12), name:INJ_MINOR[Math.floor(r()*5)]};
@@ -661,9 +665,11 @@ export function playSeason(state, choice){
     if(choice.injPick !== 0 && choice.injPick !== 1){ C.phase = 'injury'; return {injury: C.inj}; }
     C.injPick = choice.injPick;
   }
-  const rng = seasonRng(C.train+'|'+C.ev+'|'+C.evPick+'|'+C.club.n+'|inj'+(C.inj ? C.injPick : ''));
+  const rng = seasonRng(C.train+'|'+C.ev+'|'+(String(C.ev).startsWith('friend:')?0:C.evPick)+'|'+C.club.n+'|inj'+(C.inj ? C.injPick : ''));
   if(!youth()) C.lastGoal = seniorGoal();
   const ev = C.ev, pick = C.evPick, card = CARDS[C.pos][C.card], notes = [];
+  const relationshipReply=REL.applyRelationship(C,ev,pick);
+  if(relationshipReply)notes.push(relationshipReply);
   delete C.stageNote;   // 승격 알림은 준비 화면에서만(prepView.promo)
   delete C.contract;    // 첫 프로 계약 오버레이도 준비 화면에서 한 번만
   let club = C.club, onLoan = false, startAdj = 0, growMul = 1, declMul = 1;
@@ -1018,6 +1024,8 @@ export function playSeason(state, choice){
   }
   MIL.finishServiceSeason(C,row);
   FIN.recordSalary(C,row);
+  const friendMessage=!relationshipReply&&REL.relationshipSeasonMessage(C,row);
+  if(friendMessage)row.notes.push(friendMessage);
   C.hist.push(row); C.last = {starts, games};   // 다음 시즌 임대 이벤트 판단용(토큰을 줄이려고 줄 전체를 두지 않는다)
   // 점수용 가중 기록(리그 수준 반비례). 옛 토큰은 지금까지 기록을 가중 1로 시작한다.
   if(C.tot.wg == null){ C.tot.wg = C.tot.goals; C.tot.wa = C.tot.ast; C.tot.wcs = C.tot.cs; }
@@ -1171,10 +1179,11 @@ export function nextSeason(state, pick, traitPick){
   C.traitOffer = null;
   if(forcedRetire()) return retire(state);
   if(C.released && (pick==null || !C.offers[pick])) return retire(state);
-  let newNum = null, prevClub = C.club.n, prevId = C.club.id;
+  let newNum = null, prevClub = C.club.n, prevId = C.club.id, prevCountry=C.club.nat;
   if(pick != null){
     const o = C.offers[pick]; if(!o) throw new Error('pick');
     C.club = o.c; if(!C.clubs.includes(o.c.n)) C.clubs.push(o.c.n);
+    REL.recordRelationshipTransfer(C,prevCountry,C.club.nat);
     // 이적: 새 팀 수준 이상의 선수면 원하던 번호를 바로, 아니면 남는 번호로 시작(주전이 되면 원하던 번호)
     if(C.proAt){ C.num = cOvr() >= o.c.r - NUM_STAR ? C.want : pickNum(TRANSFER_NUM, mulberry(C.seed ^ hashStr('tnum'+C.age))()); newNum = C.num; delete C.numN; }
   }
@@ -1278,7 +1287,7 @@ export function playerView(state){
   C = state;
   const fin=FIN.financeState(C);
   const hw = bodyHW(C.age), military=MIL.militaryView(C), visibleClub=military && military.status==='sangmu' ? clubByName(MIL.SANGMU) : C.club;
-  return {military, id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:cOvr(),
+  return {relationship:REL.relationshipView(C), military, id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:cOvr(),
     st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(visibleClub), team:teamName(visibleClub)}, phase:C.phase, seasons:C.hist.length,
     glass:!!C.glass, salary:fin.salary?FIN.moneyView(fin.salary.annualEUR,C.club):null,market:FIN.marketQuote(C,C.club,C.age), tot:C.tot, peak:C.peak, traits:(C.traits||[]).map(id => traitView(id, C.pos)),
     // 커리어 기록 접이식 표: [나이, 팀, 임대, 경기, 골, 도움(수비수는 클린시트), 오버롤, 구단, 유스, 그 시즌 주요 수상(S·A·B, 대표팀 제외)]
@@ -1291,7 +1300,7 @@ export function cardView(state){
   C = state;
   let peakVal = 0; C.hist.forEach(r => { peakVal = Math.max(peakVal, marketValue(r.ovr, r.age)); });
   const hw = bodyHW(Math.max(18, C.age));
-  return {military:MIL.militaryView(C), id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
+  return {relationship:REL.relationshipView(C), military:MIL.militaryView(C), id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
     peakValue: Math.round(peakVal*10)/10, traits:(C.traits||[]).map(id => (TRAIT_BY_ID.get(id)||{}).n).filter(Boolean), traitIds:(C.traits||[]).filter(id => TRAIT_BY_ID.has(id)), oneClub:!!C.oneClub, farewell:!!C.farewell, glass:!!C.glass, iron:!!C.iron,
     tot:C.tot, clubs:C.clubs,finance:FIN.financeSummary(C.hist,C.pos),
     seasons: C.hist.flatMap(r => r.segments || [r]).map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:r.ovr,

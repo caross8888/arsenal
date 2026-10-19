@@ -2535,6 +2535,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media(prefers-reduced-motion:reduce){.cr-nat-final-conf{display:none}}
 
 </style>
+<link rel="stylesheet" href="/career/relationship.css?v=1">
 </head>
 <body>
 
@@ -2825,6 +2826,7 @@ function playIntro(){
 </nav>
 <script src="/career/league-scenes.js?v=1"></script>
 <script src="/career/match-playback.js?v=39"></script>
+<script src="/career/relationship.js?v=1"></script>
 <script>
 var FN='/api';
 var allStandings=[];
@@ -10092,7 +10094,7 @@ function crPrep(){
   if(p.age>=18){crSfNatWarm();if(window.CareerMatchReplay)CareerMatchReplay.warm().catch(function(){});}
   var d=gmEsc(ev.d)+(ev.id==='weak'?'<div class="cr-note" style="margin-top:6px">지금 약발 '+crStars(p.wf)+'</div>':'');
   crRender('<div class="cr-top">'+crBack()+'<div class="cr-season">시즌 '+(p.seasons+1)+'</div></div>'
-   +crHead()
+   +crHead()+crFriendPanel(p)
    +(pr.promo?'<div class="cr-promo">'+crIcon('arrow-trend-up')+' '+gmEsc(pr.promo)+'</div>':'')
    +'<div class="cr-goal"><span class="cr-goal-tag">SEASON GOAL · 이번 시즌 목표</span><div class="cr-goal-t">'+gmEsc(pr.goal)+'</div>'
    +'<div class="cr-note">'+(pr.youth?(pr.stage?pr.stage+' 시즌이에요. 실력이 팀 수준에 가까워지면 시즌 끝에 '+(pr.stage==='U-21'?'1군에 합류':'월반')+'하고, 높은 무대일수록 더 크게 성장해요.':'유스 시즌이라 출전 기회는 유스팀 기준이에요.'):pr.late?'성장이 멈춘 나이예요. 이제는 기량을 얼마나 오래 지키느냐가 관건이에요.':'1군 시즌이에요. 선발로 뛸수록 크게 성장해요.')+'</div></div>'
@@ -10222,6 +10224,7 @@ function crTrFx(txt){   // "성장 ↑ · 부상 위험 ↑" → 좋은 쪽(초�
 }
 var CR_SCENE_PHOTO={field:'field.webp',talk:'talk.webp?v=2',tour:'tour.webp',scout:'scout.webp',captain:'captain.webp?v=3',captfull:'captain.webp?v=3',natcall:'natcall.webp?v=2',sns:'sns.webp?v=2',diet:'diet.webp?v=2',study:'study.webp?v=2',military:'military.webp',militaryTalk:'military-plan.webp?v=2',tournament:'natcall.webp?v=2'};
 function crTrShow(ev){
+  if(ev.friend)return crFriendShow(ev);
   var T=CR_TR[ev.id]||{tag:'EVENT · '+ev.t, ic:'clipboard', who:'구단', say:ev.d, opt:['check','pause']}, theme=Object.prototype.hasOwnProperty.call(CR_TR,ev.id)?ev.id:'default', scene=['coach','weak','ftcall','extra','default'].indexOf(theme)>=0?'field':theme, SAY=typeof T.say==='function'?T.say(CR.v.player, ev):(T.say||ev.d); CR.trSel=null;
   // 장면 배경(픽셀아트 그림). 새 장면을 추가하면 CR_SCENE_PHOTO에 한 줄 넣고, 그림이 아직
   // 없으면 훈련장 그림으로 대신 깔린다 — 배경이 통째로 비는 것보다 낫다.
@@ -11822,6 +11825,7 @@ function crCardHtml(c){
    +(c.h?'<div class="s">'+gmEsc(c.body||'표준')+' · '+c.h+'cm · '+grade+'</div>':'')
    +(c.military&&c.military.status!=='legacy'?'<div class="s">병역 · '+gmEsc(c.military.label)+'</div>':'')
    +'</div>'+(chips?'<div class="cr-rc-chips">'+chips+'</div>':'')+'</div>';   // 특성 칩은 박스 아래 전체 폭(오른쪽 칸에 두면 한 줄에 하나씩 쌓여 머리가 길어졌다)
+  h+=crFriendCard(c.relationship);
   // ② 큰 숫자
   h+='<div class="cr-hof-b cr-hof-big"><div class="pk"><img class="lr" src="/img/career/ic/laurel_l.png" alt=""><span><b>'+c.peak+'</b><small>PEAK OVR</small></span><img class="lr" src="/img/career/ic/laurel_r.png" alt=""></div>'   // 월계관: 사용자가 뽑은 도트 그림
    +'<div><span><b'+(c.score>=10000?' class="l"':'')+'>'+Number(c.score).toLocaleString()+'</b><small>커리어 점수</small></span></div>'   // 5자리는 글자를 줄인다(좁은 폰에서 월계관·구분선에 닿았다)
