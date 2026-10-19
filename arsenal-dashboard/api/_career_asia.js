@@ -35,21 +35,33 @@ function atHome(C,key,run){const r=C.relationship,old=r.visit;r.visit={age:C.age
 function major(C,key){
  const ev=atHome(C,key,()=>REL.relationshipEvent(C,'friend:'+key));
  if(!ev)return null;
- ev.remote=false;ev.channel='scene';ev.place=3;ev.outfit=0;ev.asiaRoute=true;delete ev.meeting;
+ ev.remote=false;ev.channel='scene';ev.place=3;ev.outfit=['confession','proposal'].includes(key)?1:0;ev.asiaRoute=true;delete ev.meeting;
  // Generic major dialogue is spoken in person during leave, with her current career acknowledged.
  ev.script.before=[n(location(C)),...(ev.script.before||[]).slice(3)];
  ev.script.after.forEach(lines=>{if(lines.at(-1)?.[1]?.includes('방문을 마치고 다시'))lines.pop();});
  ev.script.after.forEach(lines=>{const ending=close(C);if(lines.at(-1)?.[5]){ending[5]=lines.at(-1)[5];ending[6]=lines.at(-1)[6];}lines.push(ending);});
  if(key==='future'&&!story(C).voiceFound){ev.d='너랑 같이 지내는 건 나도 생각해. 근데 노래를 계속할 방법부터 여기서 찾아보고 싶어. 둘 다 놓치지 않으려면 어떻게 해야 할까?';ev.a[0]='네가 준비하는 일부터 듣고 싶어. 귀국 일정과 네 공연 일정도 함께 보자.';ev.reply[0]=ev.replies[0]='응. 내가 뭘 하고 싶은지부터 얘기할게. 다음에 만날 날짜도 같이 정하자.';}
  if(key==='foreign'){
-  ev.d='새 팀 간 거 축하해. 나도 내 일정이 있어서 같이 바로 갈 수는 없어. 네 휴가랑 내 연습 없는 날부터 맞춰 보자.';
-  ev.script.after=ev.reply.map((reply,i)=>i===2?[f(reply,'sad'),p('그동안 고마웠어.'),n('다음 약속을 잡지 않고 인사를 나눴다.'),close(C)]:[f(reply),p(i===0?'귀국할 수 있는 날짜 나오면 먼저 알려줄게. 네 일정도 보내줘.':'당장 따라오라는 뜻은 아니야. 네가 노래할 곳도 있어야 하잖아.'),f(i===0?'응. 나도 연습이랑 공연 일정 확인해 볼게.':'응. 내가 여기서 마무리하고 싶은 것부터 말할게.'),n('각자의 일정을 펼쳐 놓고 만날 수 있는 때를 확인했다.'),close(C)]);
+  // The annual visit makes the scene local; permanent residences determine the transfer's meaning.
+  const far=REL.isDistant(C),alreadyFar=!!C.relationship.foreign?.wasDistant;
+  ev.t=far?(alreadyFar?'다시 맞추는 만날 날':'새 팀으로 떠나기 전에'):'다시 가까워진 우리';
+  ev.mood=far?'neutral':'happy';
+  ev.d=far?(alreadyFar?'또 이사하느라 바쁘겠다. 새 팀 일정 나오면 알려줘. 이번에는 언제 볼 수 있을지 같이 보자.':'새 팀 가는 거 축하해. 근데 이제 너 보려면 휴가까지 기다려야 하는 거네. 우리 만나는 건 어떻게 할까?'):'이제 우리 같은 나라에 있는 거네. 전처럼 휴가까지 기다리지 않아도 볼 수 있겠다. 너 쉬는 날 언제인지 나도 알려줘.';
+  ev.a=[far?'내 일정 나오면 먼저 알려줄게. 만날 수 있는 날 같이 찾아보자.':'응. 훈련 일정 나오면 보내줄게. 너 쉬는 날이랑 맞춰 보자.',far?'나 있는 데서 같이 지내는 건 어때? 네 생각도 듣고 싶어.':'우리 같이 사는 것도 생각해 볼까? 너는 어때?',...(C.relationship.status==='dating'?['미안해. 앞으로도 계속 만나는 건 어려울 것 같아.']:[])];
+  ev.reply=ev.replies=[far?'응. 날짜부터 같이 보자. 막연히 기다리는 건 나도 힘들 것 같아서.':'좋아. 이제 저녁 한 끼 먹자고 비행기부터 알아보진 않아도 되겠네.',far?'같이 있고는 싶어. 그런데 내 일까지 바로 옮길 수 있을지는 모르겠어.':'나도 생각해 본 적 있어. 그래도 어디서 어떻게 살지는 천천히 얘기해 보고 싶어.',...(C.relationship.status==='dating'?['……이적 때문에만 그런 건 아니구나. 알겠어. 억지로 붙잡지는 않을게.']:[])];
+  const before=[n(location(C)),n('저녁을 먹고 함께 걷다가 새 팀 이야기를 꺼냈다.'),f('이사 준비는 좀 했어?'),p('응. 급한 건 정리했어. 이제 팀 일정 나오면 좀 더 알 것 같아.')];
+  const after=[
+   [f(ev.reply[0],'happy'),p(far?'나도 다음에 보자는 말만 해놓고 기다리게 하기는 싫어. 일정 정해지면 바로 말할게.':'그러게. 훈련 끝나고 시간 되면 같이 밥 먹자.'),f(far?'응. 나도 내 일정 나오면 보내줄게. 같이 정하자.':'좋아. 나도 끝나는 시간 미리 알려줄게.','happy'),n('각자의 달력을 꺼내 가능한 날을 확인했다. 아직 정해지지 않은 일정은 서로 알게 되는 대로 전하기로 했다.'),close(C)],
+   [f(ev.reply[1]),p(far?'응. 당장 옮기라는 뜻은 아니야. 네가 하는 일도 계속할 수 있어야지.':'나도 그래. 집부터 알아보기 전에 우리 일하는 곳이랑 일정부터 같이 보자.'),f(far?'그럼 내가 여기서 마무리하고 싶은 것부터 얘기할게.':'응. 내가 어디서 일하고 싶은지도 얘기할게.'),n('어디에서 지내고 각자의 일을 어떻게 이어갈지 이야기했다. 이날 바로 이사를 결정하지는 않았다.'),close(C)],
+   ...(C.relationship.status==='dating'?[[f(ev.reply[2],'sad'),p('응. 미안해. 계속 괜찮은 척하면서 만나면 더 상처 줄 것 같아서.'),f('알겠어. 오늘은 나 먼저 갈게.','sad'),n('다음 약속을 잡지 않고 인사를 나눴다.'),close(C)]]:[])
+  ];
+  ev.script={before,after};
  }
  if(key==='proposal'){ev.d='너 경기 끝나고 돌아오는 날도, 내 공연 끝나고 집에 오는 날도 같이 있고 싶어. 우리 결혼할까?';}
  if(key==='confession'){
   ev.t='내가 무대에 서지 않는 날에도';ev.d='잘될 때만 네가 보고 싶은 건 아니더라. 아무 얘기 안 해도 같이 있고 싶어. ……너는 어때?';
-  ev.script.before=[n(location(C)),f('오늘은 연습 얘기 말고 할 말 있어.','shy'),p('응. 듣고 있어.'),n('걷던 길에서 그녀가 걸음을 멈췄다.')];ev.script.before.at(-1)[5]='confession';ev.script.before.at(-1)[6]='tense';
-  ev.script.after[0]=[f('……진짜? 장난치는 거 아니지.','shy'),p('응. 너 좋아해.'),f('아, 너 얼굴 보고 준비한 말 다 까먹었어.','happy'),p('천천히 해. 나 안 가.'),f('그럼 조금만 더 걷자. 손도 잡고.','happy'),close(C)];ev.script.after[0].forEach((line,i)=>{line[5]='confession';line[6]=i<2?'surprised':'happy';});
+  ev.script.before=[n(location(C)),n('저녁을 먹고 강변을 걷다가 빈 벤치에 나란히 앉았다.'),f('잠깐만 더 있다 가자. 나 할 말 있어.','shy'),p('응. 뭔데?'),n('가방을 옆에 내려놓은 그녀가 이쪽으로 몸을 돌렸다.')];ev.script.before.at(-1)[5]='confession';ev.script.before.at(-1)[6]='tense';
+  ev.script.after[0]=[f('……진짜? 장난치는 거 아니지.','shy'),p('응. 너 좋아해.'),f('아, 너 얼굴 보고 준비한 말 다 까먹었어.','happy'),p('천천히 해. 나 안 가.'),f('그럼 조금만 더 앉아 있자. 아직 집에 가기 싫어.','happy'),n('벤치 위에 놓인 손을 조심스럽게 잡았다. 그녀도 손을 빼지 않고 가까이 앉았다.')];ev.script.after[0].forEach((line,i)=>{line[5]='confession';line[6]=i<2?'surprised':'happy';});
  }
  return ev;
 }

@@ -128,7 +128,7 @@ export function relationshipEvent(C,id,forceRemote=false){
   if(key==='outing')ev=event(C,key,'둘이 보내는 쉬는 날',P.meet,['좋아. 나갈게. 늘 만나던 데서 볼까?','오늘은 좀 쉬고 싶어. 다음에 보자.'],['응. 거기서 봐. 나도 나갈게.','응. 오늘은 쉬어. 다음에 불러.'],{channel:'message',remote,meeting:{place:3,scene:'personal:walk',lines:conversation(r.region,'walk',remote,r.status)}});
   if(key==='confession')ev=event(C,key,'친구라는 말 다음',P.confession,['나도 너 좋아해. 우리 사귀자.','미안해. 난 너를 친구로 생각했어.'],[P.yes,P.no],{channel:endpoint});
   if(key==='foreign')ev=event(C,key,r.foreign?.wasDistant?'다시 맞춰야 하는 거리':'새 팀, 달라지는 우리',P.foreign[r.foreign?.wasDistant?1:0],['연락할 시간부터 같이 정하자. 멀어져도 계속 만나고 싶어.','너도 오면 좋겠지만 네 계획도 있잖아. 같이 의논해볼까?',...(r.status==='dating'?['미안해. 계속 만나기는 어려울 것 같아. 우리 그만하자.']:[])],['응. 지킬 수 있는 약속부터 같이 정하자.',P.future,...(r.status==='dating'?['쉽게 받아들이기는 어렵지만 네 마음은 알겠어. 오늘은 여기까지 하자.']:[])],{channel:endpoint});
-  if(key==='foreign'&&!remote&&r.foreign?.wasDistant){ev.t='다시 가까워진 우리';ev.d=({asia:'너 이제 여기 있는 거지?\n맨날 시계부터 보고 전화했는데. 좀 이상하다ㅋㅋ',south:'이제 너랑 저녁 먹자는 약속도 할 수 있겠네.\n새집 정리 끝나면 나부터 불러.',africa:'이제 시차 계산 안 해도 되네ㅋㅋ\n너 있는 데로 나도 한번 보러 갈게.',europe:'이제 좀 가까워졌네.\n짐 정리 끝나면 저녁 같이 먹자.'}[r.region]);ev.a[0]='이제 얼굴 자주 보자. 둘 다 되는 시간부터 같이 정하자.';ev.reply[0]='좋아. 이번에는 얼굴 보면서 얘기할 수 있겠다.';}
+  if(key==='foreign'&&!remote&&!isDistant(C)&&r.foreign?.wasDistant){ev.t='다시 가까워진 우리';ev.d=({asia:'너 이제 여기 있는 거지?\n맨날 시계부터 보고 전화했는데. 좀 이상하다ㅋㅋ',south:'이제 너랑 저녁 먹자는 약속도 할 수 있겠네.\n새집 정리 끝나면 나부터 불러.',africa:'이제 시차 계산 안 해도 되네ㅋㅋ\n너 있는 데로 나도 한번 보러 갈게.',europe:'이제 좀 가까워졌네.\n짐 정리 끝나면 저녁 같이 먹자.'}[r.region]);ev.a[0]='이제 얼굴 자주 보자. 둘 다 되는 시간부터 같이 정하자.';ev.reply[0]='좋아. 이번에는 얼굴 보면서 얘기할 수 있겠다.';}
   if(key==='future'){
     const canMove=isDistant(C)&&moveEligible(C),moving=!!r.moveDiscussion;
     const futurePrompt=remote?P.future:({asia:'나 너랑 앞으로 어떻게 지낼지 가끔 생각하거든.\n만나는 날만 기다리는 거 말고, 그냥 같이 밥 먹고 집에 가는 거.',south:'너랑 같이 사는 건 어떨까 생각했어.\n그런데 나도 해보고 싶은 게 많아서. 네 생각도 듣고 싶어.',africa:'우리 같이 사는 얘기 했잖아.\n난 내 할 일도 계속하고 싶거든. 그 얘기부터 해볼까?',europe:'같이 살 집을 생각해봤어.\n넌 어떤 데가 좋아? 난 혼자 있을 자리도 조금 있으면 좋겠어.'}[r.region]);
@@ -141,7 +141,7 @@ export function relationshipEvent(C,id,forceRemote=false){
     ev=event(C,key,partnerEnds?'상대가 꺼낸 마지막 이야기':'더 미루기 어려운 대화',partnerEnds?P.end:P.concern,partnerEnds?['알겠어. 네 결정을 존중할게. 그동안 고마웠어.','상처 줘서 미안해. 네 마음을 바꾸라고 하진 않을게.']:['오늘은 시간 내서 얘기하자. 네가 서운했던 일부터 듣고 싶어.','지금은 그 얘기까지 할 여유 없어. 다음에 하자.','우리 서로 힘든 것 같아. 여기서 그만하자.'],partnerEnds?['내 마음 들어줘서 고마워. 서로 잘 지냈으면 해.','사과는 들었어. 그래도 내 결정은 같아. 잘 지내.']:['응. 나 오늘은 그냥 넘기고 싶지 않아.','지난번에도 기다렸어. 이번에도 그러면 난 더 기다리기 어려워.',P.end],{channel:endpoint,partnerEnds});
   }
   const branchReplies=majorReplies(r.region,key);
-  if(ev&&branchReplies&&!ev.partnerEnds&&!(key==='foreign'&&!remote&&r.foreign?.wasDistant)){
+  if(ev&&branchReplies&&!ev.partnerEnds&&!(key==='foreign'&&!remote&&!isDistant(C)&&r.foreign?.wasDistant)){
     branchReplies.forEach((text,i)=>{if(!(key==='future'&&i===0&&ev.canMove))ev.reply[i]=text;});
   }
   if(key==='followup'&&remote&&!forceRemote){ev.a[0]='일정 비워뒀어. 이번엔 직접 만나자. 이동 일정도 맞추자.';ev.reply[0]='좋아. 우리 둘 다 되는 날로 정하자. 얼굴 보고 얘기할 수 있겠다.';ev.meeting={picks:[0],place:3,scene:'reunion',remote:false,lines:[...arrival(C),...visitConversation(C,'walk')]};ev.script={before:[],after:ev.reply.map((reply,i)=>i===0?[]:aftermath(r.region,key,i,reply,true))};}
@@ -151,7 +151,7 @@ export function relationshipEvent(C,id,forceRemote=false){
   if(!ev.meeting){
     const before=remote?[]:prelude(r.region,key);
     if(visiting)before.unshift(...arrival(C));
-    ev.script={before,after:ev.reply.map((reply,i)=>[...aftermath(r.region,key,i,reply,remote,ev.partnerEnds,{returned:!remote&&r.foreign?.wasDistant}),...(visiting?[['n','방문을 마치고 다시 각자의 도시로 돌아갔다. 짧은 만남 뒤에도 서로의 대답은 분명하게 남았다.','neutral',false]]:[])])};
+    ev.script={before,after:ev.reply.map((reply,i)=>[...aftermath(r.region,key,i,reply,remote,ev.partnerEnds,{returned:!remote&&!isDistant(C)&&r.foreign?.wasDistant}),...(visiting?[['n','방문을 마치고 다시 각자의 도시로 돌아갔다. 짧은 만남 뒤에도 서로의 대답은 분명하게 남았다.','neutral',false]]:[])])};
     if(['confession','proposal'].includes(key)&&!remote){
       if(key==='confession'){
         ev.questionCG={key,expression:'tense'};

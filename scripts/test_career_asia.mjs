@@ -49,6 +49,19 @@ assert.equal(cold.relationship.asiaStory.chapter,8);assert.equal(cold.relationsh
 const late=make('KOR',31);late.relationship.status='dating';late.relationship.datingAge=29;late.relationship.affinity=90;late.relationship.futureAgreement=true;choose(late);assert.equal(late.relationship.asiaStory.chapter,1,'old saves start the new arc without a false past completion');
 const move=make('KOR',24);Object.assign(move.relationship,{status:'dating',datingAge:20,affinity:90,goalSupport:8,lastAge:20,futureAgreement:true,asiaStory:{chapter:5,seen:[],support:6,voiceFound:false}});move.club=S.clubByName('아스날');
 R.recordRelationshipTransfer(move,'KOR','ENG');const transfer=S.relationshipPrepView(move).event;assert.equal(transfer.id,'friend:foreign');assert.equal(transfer.remote,false);choose(move,1);year(move);assert.equal(S.relationshipPrepView(move).event.canMove,false);choose(move);assert.equal(move.relationship.residence,'KOR');
+for(const [from,to,homeClub,far] of [['KOR','ENG','아스날',true],['ENG','KOR','울산 HD',false],['ENG','BRA','플라멩구',true]])for(const pick of [0,1,2]){
+ const c=make('KOR',24);Object.assign(c.relationship,{status:'dating',affinity:90,datingAge:20,lastAge:20});c.club=S.clubByName(homeClub);assert(c.club);R.recordRelationshipTransfer(c,from,to);
+ const ev=S.relationshipPrepView(c).event;assert.equal(ev.id,'friend:foreign');assert.equal(ev.a.length,3);
+ if(far){assert(!ev.t.includes('가까워진'));assert(!ev.a[0].includes('얼굴 자주'));assert.match(ev.d,/휴가|언제 볼/);}
+ else{assert.equal(ev.t,'다시 가까워진 우리');assert.match(ev.d,/같은 나라/);assert(!ev.d.includes('같이 바로 갈'));assert(!speech(ev).includes('귀국할 수 있는 날짜'));assert.match(ev.a[1],/같이 사는/);}
+ const oldHome=c.relationship.residence;choose(c,pick);assert.equal(c.relationship.residence,oldHome);assert(!c.relationship.foreign);if(pick===0)assert(c.relationship.promise);if(pick===1)assert(c.relationship.moveDiscussion);if(pick===2)assert.equal(c.relationship.status,'separated');
+}
+const visiting=make('KOR',24);visiting.club=S.clubByName('플라멩구');Object.assign(visiting.relationship,{status:'dating',affinity:90,datingAge:20});R.recordRelationshipTransfer(visiting,'ENG','BRA');visiting.relationship.visit={age:24,key:'foreign'};assert(!R.relationshipEvent(visiting,'friend:foreign').t.includes('가까워진'),'a local annual visit does not turn an overseas move into a return home');
+for(const key of ['confession','proposal']){
+ const c=make('KOR',key==='confession'?22:27);Object.assign(c.relationship,{affinity:90,status:key==='proposal'?'dating':'close',datingAge:22,futureAgreement:true,lastAge:20,asiaStory:{chapter:key==='proposal'?7:4,support:8,seen:[],voiceFound:key==='proposal'}});
+ const ev=S.relationshipPrepView(c).event;assert.equal(ev.id,'friend:'+key);assert.equal(ev.outfit,1,'cardigan and burgundy skirt match both major CGs');
+ if(key==='confession'){assert.match(speech(ev),/벤치에 나란히 앉았다/);assert(!speech(ev).includes('걷던 길에서 그녀가 걸음을 멈췄다'));assert.match(JSON.stringify(ev.script.after[0]),/더 앉아 있자/);}
+}
 for(const kind of ['regular','sangmu'])for(const pick of [0,1]){
  const soldier=make('KOR',27);soldier.club=S.clubByName('아스날');soldier.military={status:kind,left:18,home:{...soldier.club}};
  const call=S.relationshipPrepView(soldier).event;assert.equal(call.id,'friend:asia:service-visit');assert(call.remote);assert.equal(call.friend.longDistance,false,'overseas home club is not the location during Korean service');assert.equal(call.backdrop,'military-visit');assert.equal(call.meeting.remote,false);assert.match(JSON.stringify(call.meeting.lines),/출입 확인.*면회/);assert.match(JSON.stringify(call.meeting.lines),/부대 안으로 복귀/);assert(!speech(call).includes('고국으로 돌아왔다'));
