@@ -64,3 +64,12 @@
 .cr-friend-scene.is-vacation{--scene-w:max(100vw,calc(100dvh * 3));--scene-h:max(100dvh,calc(100vw / 3))}
 .cr-friend-scene.is-vacation .cr-friend-place{background-size:var(--scene-w) calc(var(--scene-h) * 2);background-position:calc((100vw - var(--scene-w)) / 2) calc(0px - var(--vacation-y) * var(--scene-h) - (var(--scene-h) - 100dvh) / 2);image-rendering:auto}
 .cr-vacation-invite p{color:var(--text-secondary);font-size:13px;line-height:1.7}
+
+/* Reserve the full line's layout while only the revealed characters are visible. */
+.cr-friend-reveal{display:grid!important;cursor:pointer}
+.cr-friend-reveal::before{content:attr(data-full-text);visibility:hidden;grid-area:1 / 1;white-space:pre-line;pointer-events:none;user-select:none}
+.cr-friend-reveal-text{grid-area:1 / 1;white-space:pre-line;min-width:0}
+.cr-friend-read-hint{display:block;margin:0 0 9px;font-size:10px;color:#eddbc1;pointer-events:none}
+.cr-friend-device .cr-friend-read-hint{color:#526449;padding:4px 14px;margin:0;background:#f6f5ed;text-align:right}
+.cr-friend-scene-dialogue{cursor:pointer}
+.cr-friend-scene-dialogue .is-reading,.cr-friend-options.is-reading{visibility:hidden;pointer-events:none}
