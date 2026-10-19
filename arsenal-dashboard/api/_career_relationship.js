@@ -1,4 +1,4 @@
-import {PROFILES,conversation,aftermath} from './_career_relationship_dialogue.js';
+import {PROFILES,conversation,prelude,aftermath,routineDialogue,majorReplies} from './_career_relationship_dialogue.js';
 export const RULES=Object.freeze({max:100,start:40,confession:65,proposal:85,crisis:30,minDatingYears:2});
 const PEOPLE={asia:'서윤',south:'루시아',africa:'아마라',europe:'에밀리'};
 const clamp=n=>Math.max(0,Math.min(RULES.max,Number.isFinite(n)?Math.round(n):RULES.start));
@@ -46,8 +46,8 @@ function event(C,key,t,d,a,reply,extra={}){
 export function introEvent(C){
   const r=ensureRelationship(C);if(!r||r.introDone||C.age!==15||(C.hist||[]).length)return null;
   const P=PROFILES[r.region],abroad=isDistant(C);
-  const a=abroad?['응. 짐 풀고 사진 보내줄게.','아직 좀 낯설다. 잠깐 얘기할래?','나중에 경기 뛰면 중계로라도 봐줘.']:['왜 벌써 웃는데ㅋㅋ','아직 안 입어봤어. 들어가서 보내줄게.','나 프로경기 뛰면 보러 와라.'];
-  return event(C,'intro',abroad?'낯선 도시에서 온 첫 연락':'새 유니폼',P.intro[abroad?1:0],a,[P.welcome[abroad?1:0],abroad?'응. 지금 시간 돼. 뭐가 제일 낯설어?':P.welcome[0],abroad?'당연하지. 경기 시간 알려줘. 여기서도 챙겨볼게.':'알려줘. 첫 공식경기면 나도 같이 기억하고 싶어.'],{channel:'message'});
+  const a=abroad?['응. 짐 풀고 사진 보내줄게.','아직 좀 낯설다. 잠깐 얘기할래?','나중에 경기 뛰면 중계로라도 봐줘.']:[{asia:'웃지 마라ㅋㅋ 입어보고 보낼게.',south:'좋아. 입고 바로 보내줄게. 네가 첫 번째로 봐.',africa:'이거 평가받아야 돼?ㅋㅋ 일단 입어볼게.',europe:'알겠어. 입어보고 보내줄게. 솔직하게 말해줘.'}[r.region],'아직 안 입어봤어. 들어가서 보내줄게.','나 프로경기 뛰면 보러 와라.'];
+  return event(C,'intro',abroad?'낯선 도시에서 온 첫 연락':'새 유니폼',P.intro[abroad?1:0],a,[P.welcome[abroad?1:0],abroad?'응. 지금 괜찮아. 뭐가 제일 낯설어?':'응. 기다릴게. 등번호도 나오게 찍어줘.',abroad?'당연하지. 경기 시간 알려줘. 여기서도 챙겨볼게.':'당연하지. 날짜 나오면 알려줘. 나 꼭 갈게.'],{channel:'message'});
 }
 export function applyIntro(C,pick){
   const ev=introEvent(C);if(!ev||!Number.isInteger(pick)||!ev.a[pick])throw new Error('intro pick');
@@ -73,7 +73,7 @@ function visitPlan(C){
   return {d:minor?'다음에 가족 보러 귀국하는 일정 잡혔어?\n그때 시간 맞으면 우리도 만나자.':({asia:'너 다음에 며칠 쉴 수 있어?\n나도 일정 맞춰서 한번 가려고. 화면 말고 얼굴 좀 보자ㅋㅋ',south:'너 보러 가고 싶어.\n우리 둘 다 시간 되는 날 맞춰볼까? 네가 지내는 동네도 보고 싶어.',africa:'우리 통화만 하지 말고 얼굴도 좀 보자ㅋㅋ\n나 갈 수 있는 날이랑 네 쉬는 날 맞춰볼까?',europe:'시간 맞으면 며칠 보러 가고 싶어.\n네 쉬는 날 알려줘. 나도 일정을 확인해볼게.'}[r.region]),a:minor?'귀국 일정 정해졌어. 그때 하루 같이 보내자.':'좋아. 내 쉬는 날 알려줄게. 네 일정도 같이 맞추자.',reply:minor?'좋아. 도착해서 좀 쉬고 만나자. 기다릴게.':'좋아. 날짜 정해지면 이동편도 확인할게. 드디어 얼굴 보겠네.'};
 }
 function arrival(C){
-  return [['n',C.age<18?'가족과 귀국 일정을 맞췄다. 며칠 뒤 고향에 도착해 쉬고 나서, 약속한 날 친구를 만나러 나갔다.':'서로의 쉬는 날과 이동 일정을 확인해 방문 날짜를 정했다. 며칠 뒤, 도착 연락을 받고 약속한 곳으로 나갔다.','neutral'],['f',PROFILES[C.relationship.region].reunion||'이렇게 얼굴 보니까 좋다. 오는 내내 무슨 얘기부터 할까 생각했어.','happy'],['p','나도. 오늘은 시간 넉넉해. 천천히 얘기하자.','happy']];
+  return [['n',C.age<18?'가족과 귀국 일정을 맞췄다. 며칠 뒤 고향에 도착해 쉬고 나서, 약속한 날 친구를 만나러 나갔다.':'서로의 쉬는 날과 이동 일정을 확인해 방문 날짜를 정했다. 며칠 뒤, 도착 연락을 받고 약속한 곳으로 나갔다.','neutral'],['f',PROFILES[C.relationship.region].reunion||'이렇게 얼굴 보니까 좋다. 오는 내내 무슨 얘기부터 할까 생각했어.','happy'],['p',C.age<18?'그러게. 맨날 얘기했는데도 좀 오랜만 같네.':'왔네. 짐 줘. 오는 길 괜찮았어?','happy']];
 }
 function visitConversation(C,kind){
   const lines=conversation(C.relationship.region,kind,false,C.relationship.status);
@@ -120,28 +120,33 @@ export function relationshipEvent(C,id,forceRemote=false){
     return event(C,'debut','아직 못 들은 얘기','네 첫 공식경기 이야기, 아직 제대로 못 들었어.\n시간 되면 얘기해줘.',['응. 오늘 얘기하자.','오늘은 좀 쉬고 싶어. 다음에 보자.'],['좋아. 나도 궁금한 거 많아.','응. 푹 쉬어.'],{channel:'message',meeting:{place:2,scene:'memory',lines:conversation(r.region,'memory',isDistant(C),r.status)}});
   }
   const P=PROFILES[r.region],remote=forceRemote||(!visiting&&isDistant(C)),endpoint=remote?'call':'scene';let ev;
-  if(key==='outing')ev=event(C,key,'둘이 보내는 쉬는 날',P.meet,['좋아. 오늘 같이 시간 보내자.','오늘은 쉬어야겠어. 다음에 보자.'],['좋아. 오늘은 천천히 얘기하자.','알겠어. 사정 얘기해줘서 고마워.'],{channel:'message',remote,meeting:{place:3,scene:'personal:walk',lines:conversation(r.region,'walk',remote,r.status)}});
-  if(key==='confession')ev=event(C,key,'친구라는 말 다음',P.confession,['나도 너 좋아해. 우리 사귀자.','나는 친구로 생각했어. 솔직하게 말하고 싶었어.'],[P.yes,P.no],{channel:endpoint});
+  if(key==='outing')ev=event(C,key,'둘이 보내는 쉬는 날',P.meet,['좋아. 나갈게. 늘 만나던 데서 볼까?','오늘은 좀 쉬고 싶어. 다음에 보자.'],['응. 거기서 봐. 나도 나갈게.','응. 오늘은 쉬어. 다음에 불러.'],{channel:'message',remote,meeting:{place:3,scene:'personal:walk',lines:conversation(r.region,'walk',remote,r.status)}});
+  if(key==='confession')ev=event(C,key,'친구라는 말 다음',P.confession,['나도 너 좋아해. 우리 사귀자.','미안해. 난 너를 친구로 생각했어.'],[P.yes,P.no],{channel:endpoint});
   if(key==='foreign')ev=event(C,key,r.foreign?.wasDistant?'다시 맞춰야 하는 거리':'새 팀, 달라지는 우리',P.foreign[r.foreign?.wasDistant?1:0],['연락할 시간부터 같이 정하자. 멀어져도 계속 만나고 싶어.','너도 오면 좋겠지만 네 계획도 있잖아. 같이 의논해볼까?',...(r.status==='dating'?['미안해. 계속 만나기는 어려울 것 같아. 우리 그만하자.']:[])],['응. 지킬 수 있는 약속부터 같이 정하자.',P.future,...(r.status==='dating'?['쉽게 받아들이기는 어렵지만 네 마음은 알겠어. 오늘은 여기까지 하자.']:[])],{channel:endpoint});
-  if(key==='foreign'&&!remote&&r.foreign?.wasDistant){ev.t='다시 가까워진 우리';ev.d='이제 같은 나라에서 지내게 됐네.\n자주 만날 수 있겠지만 서로의 생활도 같이 지켜가고 싶어.';ev.a[0]='이제 얼굴 자주 보자. 둘 다 되는 시간부터 같이 정하자.';ev.reply[0]='좋아. 이번에는 얼굴 보면서 얘기할 수 있겠다.';}
+  if(key==='foreign'&&!remote&&r.foreign?.wasDistant){ev.t='다시 가까워진 우리';ev.d=({asia:'너 이제 여기 있는 거지?\n맨날 시계부터 보고 전화했는데. 좀 이상하다ㅋㅋ',south:'이제 너랑 저녁 먹자는 약속도 할 수 있겠네.\n새집 정리 끝나면 나부터 불러.',africa:'이제 시차 계산 안 해도 되네ㅋㅋ\n너 있는 데로 나도 한번 보러 갈게.',europe:'이제 좀 가까워졌네.\n짐 정리 끝나면 저녁 같이 먹자.'}[r.region]);ev.a[0]='이제 얼굴 자주 보자. 둘 다 되는 시간부터 같이 정하자.';ev.reply[0]='좋아. 이번에는 얼굴 보면서 얘기할 수 있겠다.';}
   if(key==='future'){
     const canMove=isDistant(C)&&moveEligible(C),moving=!!r.moveDiscussion;
-    ev=event(C,key,'우리 각자의 계획',P.future,[canMove?'그럼 각자 계획을 지키면서 같이 가자. 준비도 함께 하자.':'네가 하고 싶은 것도 지켰으면 해. 우리 계획 같이 세우자.','지금은 각자 지내자. 대신 연락하고 만날 시간을 같이 정하자.','내 일정에 맞춰 네가 따라와 주면 안 돼?'],[canMove?'응. 내 생활을 준비할 방법도 같이 찾았으니까, 나도 가고 싶어.':'고마워. 내 계획을 포기하지 않고도 만날 방법을 같이 찾자.','좋아. 서로 가능한 시간을 정해보자.','내 생활도 있는 건데. 네 일정만으로 정하고 싶지는 않아.'],{channel:endpoint,canMove,moving});
+    const futurePrompt=remote?P.future:({asia:'나 너랑 앞으로 어떻게 지낼지 가끔 생각하거든.\n만나는 날만 기다리는 거 말고, 그냥 같이 밥 먹고 집에 가는 거.',south:'너랑 같이 사는 건 어떨까 생각했어.\n그런데 나도 해보고 싶은 게 많아서. 네 생각도 듣고 싶어.',africa:'우리 같이 사는 얘기 했잖아.\n난 내 할 일도 계속하고 싶거든. 그 얘기부터 해볼까?',europe:'같이 살 집을 생각해봤어.\n넌 어떤 데가 좋아? 난 혼자 있을 자리도 조금 있으면 좋겠어.'}[r.region]);
+    ev=event(C,key,'우리 각자의 계획',futurePrompt,[canMove?'같이 살자. 네가 거기서 하고 싶은 것도 같이 알아보자.':'네가 생각한 것도 듣고 싶어. 우리 어떻게 지낼지 얘기해보자.','지금은 각자 지내자. 대신 연락하고 만날 시간을 같이 정하자.','내 일정에 맞춰 네가 따라와 주면 안 돼?'],[canMove?'응. 나도 가고 싶어. 준비할 게 좀 많겠다.':'응. 오늘은 내 얘기도 좀 할게. 알아보고 싶은 게 있어.','좋아. 서로 가능한 시간을 정해보자.','내 생활도 있는 건데. 네 일정만으로 정하고 싶지는 않아.'],{channel:endpoint,canMove,moving});
   }
-  if(key==='proposal')ev=event(C,key,'함께할 미래',P.proposal,['너랑 결혼하고 싶어. 우리 같이 준비하자.','아직 준비가 안 됐어. 지금 내 생각을 솔직하게 얘기할게.'],[P.marry,'알겠어. 기다리라는 말만 하지 말고, 네 생각도 같이 얘기해줘.'],{channel:endpoint});
-  if(key==='followup')ev=event(C,key,'지난번에 정한 약속',r.unresolved?'지난번에도 약속을 미뤘잖아.\n이번에 정한 시간에는 우리 얘기할 수 있을까?':'지난번에 연락하고 만날 시간 같이 정했잖아.\n이번 약속은 어떻게 할까?',['그 시간 비워뒀어. 오늘은 우리 얘기하자.','그날 팀 일정이 생겼어. 미리 말하고 싶었어. 다른 날 같이 정할까?','지금 바빠. 다음에 얘기하자.'],['시간 내줘서 고마워. 오늘은 네 얘기도 내 얘기도 하자.','미리 알려줘서 고마워. 둘 다 되는 시간으로 다시 정하자.',P.concern],{channel:endpoint});
+  if(key==='proposal')ev=event(C,key,'함께할 미래',P.proposal,['나도 너랑 결혼하고 싶어.','너랑 함께하고 싶지만, 결혼은 아직 준비가 안 됐어.'],[P.marry,'알겠어. 기다리라는 말만 하지 말고, 네 생각도 같이 얘기해줘.'],{channel:endpoint});
+  if(key==='followup')ev=event(C,key,'지난번에 정한 약속',r.unresolved?'지난번에도 약속을 미뤘잖아.\n이번에 정한 시간에는 우리 얘기할 수 있을까?':'지난번에 연락하고 만날 시간 같이 정했잖아.\n이번 약속은 어떻게 할까?',['응. 그 시간 비워뒀어. 오늘은 다른 일정 안 잡았어.','그날 팀 일정이 생겼어. 다른 날로 바꿀 수 있을까?','지금 바빠. 다음에 얘기하자.'],['다행이다. 나도 오늘 기다렸어.','응. 미리 말해줘서 다행이네. 언제 괜찮아?',P.concern],{channel:endpoint});
   if(key==='crisis'){
     const partnerEnds=!!r.crisisTalked;
-    ev=event(C,key,partnerEnds?'상대가 꺼낸 마지막 이야기':'더 미루기 어려운 대화',partnerEnds?P.end:P.concern,partnerEnds?['알겠어. 네 결정을 존중할게. 그동안 고마웠어.','상처 줘서 미안해. 네 마음을 바꾸라고 하진 않을게.']:['오늘은 시간 내서 얘기하자. 네가 서운했던 일부터 듣고 싶어.','지금은 그 얘기까지 할 여유 없어. 다음에 하자.','우리 서로 힘든 것 같아. 여기서 그만하자.'],partnerEnds?['내 마음 들어줘서 고마워. 서로 잘 지냈으면 해.','사과는 들었어. 그래도 내 결정은 같아. 잘 지내.']:['오늘 내 얘기를 끝까지 들어줘서 고마워. 이번엔 같이 해보자.','지난번에도 기다렸어. 이번에도 그러면 난 더 기다리기 어려워.',P.end],{channel:endpoint,partnerEnds});
+    ev=event(C,key,partnerEnds?'상대가 꺼낸 마지막 이야기':'더 미루기 어려운 대화',partnerEnds?P.end:P.concern,partnerEnds?['알겠어. 네 결정을 존중할게. 그동안 고마웠어.','상처 줘서 미안해. 네 마음을 바꾸라고 하진 않을게.']:['오늘은 시간 내서 얘기하자. 네가 서운했던 일부터 듣고 싶어.','지금은 그 얘기까지 할 여유 없어. 다음에 하자.','우리 서로 힘든 것 같아. 여기서 그만하자.'],partnerEnds?['내 마음 들어줘서 고마워. 서로 잘 지냈으면 해.','사과는 들었어. 그래도 내 결정은 같아. 잘 지내.']:['응. 나 오늘은 그냥 넘기고 싶지 않아.','지난번에도 기다렸어. 이번에도 그러면 난 더 기다리기 어려워.',P.end],{channel:endpoint,partnerEnds});
+  }
+  const branchReplies=majorReplies(r.region,key);
+  if(ev&&branchReplies&&!ev.partnerEnds&&!(key==='foreign'&&!remote&&r.foreign?.wasDistant)){
+    branchReplies.forEach((text,i)=>{if(!(key==='future'&&i===0&&ev.canMove))ev.reply[i]=text;});
   }
   if(key==='followup'&&remote&&!forceRemote){ev.a[0]='일정 비워뒀어. 이번엔 직접 만나자. 이동 일정도 맞추자.';ev.reply[0]='좋아. 우리 둘 다 되는 날로 정하자. 얼굴 보고 얘기할 수 있겠다.';ev.meeting={picks:[0],place:3,scene:'reunion',remote:false,lines:[...arrival(C),...visitConversation(C,'walk')]};ev.script={before:[],after:ev.reply.map((reply,i)=>i===0?[]:aftermath(r.region,key,i,reply,true))};}
   if(!ev)return null;
   if(key==='outing'&&remote&&!forceRemote)visitMeeting(C,ev);
   ev.remote=remote;
   if(!ev.meeting){
-    const before=remote?[]:[['n','둘만의 시간을 내어 마주 앉았다. 이번에는 미뤄두었던 이야기를 꺼냈다.','neutral'],['f',key==='crisis'?P.concern:'오늘은 이 얘기를 그냥 넘기고 싶지 않아.','neutral']];
+    const before=remote?[]:prelude(r.region,key);
     if(visiting)before.unshift(...arrival(C));
-    ev.script={before,after:ev.reply.map((reply,i)=>[...aftermath(r.region,key,i,reply,remote,ev.partnerEnds),...(visiting?[['n','방문을 마치고 다시 각자의 도시로 돌아갔다. 짧은 만남 뒤에도 서로의 대답은 분명하게 남았다.','neutral',false]]:[])])};
+    ev.script={before,after:ev.reply.map((reply,i)=>[...aftermath(r.region,key,i,reply,remote,ev.partnerEnds,{returned:!remote&&r.foreign?.wasDistant}),...(visiting?[['n','방문을 마치고 다시 각자의 도시로 돌아갔다. 짧은 만남 뒤에도 서로의 대답은 분명하게 남았다.','neutral',false]]:[])])};
     if(['confession','proposal'].includes(key)&&!remote){
       if(key==='confession'){
         ev.questionCG={key,expression:'tense'};
@@ -212,14 +217,11 @@ export function routineEvent(C,service=false){
   const r=ensureRelationship(C);if(!r)return null;
   if(r.status==='separated')return event(C,'daily:'+C.age,'각자의 일상','오늘은 나를 위해 시간을 보내기로 했다.',['친구와 연락하며 저녁을 보낸다.','혼자 좋아하는 일을 하며 쉰다.'],['편한 사람들과 이야기하며 저녁을 보냈다.','천천히 쉬고 나니 마음이 조금 가벼워졌다.'],{channel:'reflection',remote:false,deltas:[0,0]});
   const P=PROFILES[r.region],remote=service||isDistant(C),topic=service?0:(C.age-15)%6,romance=romantic(r),meet=!remote&&(topic===1||topic===4);
-  const texts=[P.check,romance?'우리 이번 쉬는 날엔 같이 시간 보낼까?\n둘이 얘기할 시간이 있으면 좋겠어.':P.meet,P.photo,P.goalTalk,P.meet,P.check];
-  let d=service?'지금 연락할 수 있는 시간이야?\n몸은 괜찮아? 가능할 때 네 얘기 들려줘.':remote?topic===3?P.goalTalk:P.distance:texts[topic];
-  let a,reply,deltas;
-  if(meet){a=['좋아. 오늘 같이 시간 보내자.','오늘은 쉬고 싶어. 사정 얘기하고 다음에 보자.'];reply=['좋아. 만나서 얘기하자.','알겠어. 푹 쉬어. 사정 알려줘서 고마워.'];deltas=[6,0];}
-  else if(topic===3){a=['그거 좋다. 네가 원하는 생활도 중요하지. 내 생각도 얘기해줄게.','난 네가 내 일정에 맞춰줬으면 좋겠는데.'];reply=[P.welcome[1],P.future];deltas=[5,P.ignore];}
-  else {a=[remote?'응. 지금 괜찮아. 너는 오늘 어땠어?':'난 잘 지내. 너는 오늘 어땠어?','지금은 팀 일정 중이야. 끝나고 얘기할 수 있을까?'];reply=[{asia:'난 잘 지내. 네 얘기 들으니까 좀 안심되네ㅋㅋ',south:'나도 할 얘기 많아. 네가 먼저 물어봐주니까 좋다.',africa:'좋아. 내 얘기도 할게. 우리 근황 맞춰보자ㅋㅋ',europe:'응. 나도 잘 지내. 이렇게 얘기하니까 좋네.'}[r.region],'응. 끝나고 가능한 시간 알려줘. 그때 얘기하자.'];deltas=[4,0];}
+  const daily=routineDialogue(r.region,topic,remote,romance,service),d=daily.d,a=daily.a,reply=daily.reply;
+  const deltas=meet?[6,0]:topic===3?[5,P.ignore]:[4,0];
   const ev=event(C,'daily:'+C.age,service?'복무 중 짧은 연락':topic===3?'각자 그리고 싶은 생활':remote?'멀리서 나누는 하루':meet?'둘이 보내는 쉬는 날':'오늘의 연락',d,a,reply,{channel:'message',remote,deltas,goalTopic:topic===3});
   if(!service&&remote&&(topic===1||topic===4)){ev.t='다음에 얼굴 보자';ev.deltas=[6,0];visitMeeting(C,ev,topic===4?'dinner':'walk');}
+  if(remote&&!service&&topic===0)ev.script={before:[],after:[conversation(r.region,'call',true,r.status),[]]};
   if(meet)ev.meeting={place:topic===4?2:3,scene:'personal:'+topic,lines:conversation(r.region,topic===4?'dinner':'walk',false,r.status)};
   return ev;
 }
