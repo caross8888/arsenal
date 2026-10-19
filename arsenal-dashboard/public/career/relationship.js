@@ -48,7 +48,7 @@ function crFriendPhone(ev,chosen){
       var b=document.createElement('button');b.className='cr-friend-option';b.textContent=text;b.onclick=function(){
         if(chat.picked)return;chat.picked=true;options.replaceChildren();var stamp=bubble(text,true);
         incoming(ev.replies[i].split('\n').filter(Boolean),function(){
-          stamp.textContent='읽음 · 18:25';var go=document.createElement('button');go.className='cr-friend-option go';go.textContent=crFriendIsMeeting(ev,i)?(ev.remote?'대화 이어가기':'만나러 가기'):CR.friendScene.intro?'시즌 준비로':'계속';
+          stamp.textContent='읽음 · 18:25';var go=document.createElement('button');go.className='cr-friend-option go';go.textContent=crFriendIsMeeting(ev,i)?(ev.meeting?.remote===false?'방문 날짜로 이동':ev.remote?'대화 이어가기':'만나러 가기'):ev.id==='friend:visit'&&i===0?'방문 날짜로 이동':CR.friendScene.intro?'시즌 준비로':'계속';
           go.onclick=function(){chosen(i);};options.append(go);go.focus();
         });
       };options.append(b);
@@ -74,11 +74,12 @@ function crFriendPick(i){
   var C=CR.friendScene;if(!C||C.pick!=null||!C.ev.a[i])return;
   C.pick=i;
   if(C.intro||C.ev.channel==='message'&&!crFriendIsMeeting(C.ev,i)&&!C.ev.script?.after?.[i]?.length||i===1&&(C.ev.id==='friend:outing'||C.ev.id==='friend:debut'))return crFriendFinish();
+  if(crFriendIsMeeting(C.ev,i)&&C.ev.meeting?.remote===false)C.ev.remote=false;
   var hadPhone=!!CR.friendPhone;
   if(C.ev.remote&&hadPhone){CR.friendPhone.story=true;CR.friendPhone.flush=null;}else crFriendClosePhone();
   var key=C.ev.id.split(':')[1],reply=C.ev.replies[i],beats=[];
   if(C.ev.channel==='reflection')beats=[{place:3,outfit:0,who:'',text:reply,hide:true}];
-  else if(C.ev.meeting)beats=crFriendMeetingBeats(C.ev);
+  else if(C.ev.meeting&&crFriendIsMeeting(C.ev,i))beats=crFriendMeetingBeats(C.ev);
   else {
     var story=C.ev.script||CR_FRIEND_MAJOR[key],place=C.ev.place??(key==='proposal'||key==='confession'?3:key==='foreign'||key==='debut'?1:2),outfit=key==='debut'?0:1;
     beats=story&&story.after[i].length?crFriendBeats(story.after[i],place,outfit):crFriendBeats([['f',reply,'neutral'],['n','인사를 나누고 각자의 길로 돌아갔다.','neutral',false]],place,outfit);

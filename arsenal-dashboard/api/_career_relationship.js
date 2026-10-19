@@ -35,7 +35,7 @@ function remember(C,id,pick){
   const r=C.relationship;r.records.push({age:C.age,id,pick,delta:r.lastChange?.delta||0});r.records=r.records.slice(-12);
 }
 function promise(C){C.relationship.promise={madeAge:C.age,reviewAge:C.age+1};}
-function endRelationship(C){const r=C.relationship;r.status='separated';r.separatedAge=C.age;delete r.promise;delete r.moveDiscussion;delete r.foreign;}
+function endRelationship(C){const r=C.relationship;r.status='separated';r.separatedAge=C.age;delete r.promise;delete r.moveDiscussion;delete r.foreign;delete r.visit;}
 export function relationshipView(C){
   const r=ensureRelationship(C);if(!r)return null;const P=PROFILES[r.region];
   return {id:r.region,name:r.name,status:r.status,label:{friend:'소꿉친구',close:'가까워지는 사이',dating:'연인',married:'배우자',separated:'추억으로 남은 인연'}[r.status],affinity:r.affinity,affinityMax:RULES.max,personality:P.personality,goal:P.goal,boundary:P.boundary,homeNation:r.homeNation,residence:r.residence,longDistance:isDistant(C),datingYears:romantic(r)?Math.max(0,C.age-(r.datingAge??C.age)):0,marriedAge:r.marriedAge||null,pendingDebut:!!r.pendingDebut,debutMode:r.debutMode||'stadium',lastChange:r.lastChange?.age===C.age?r.lastChange:null,promise:!!r.promise};
@@ -67,8 +67,30 @@ export function debutEvent(C){
 function moveEligible(C){
   const r=ensureRelationship(C);return C.age>=21&&r.affinity>=75&&C.age-(r.datingAge??C.age)>=2&&r.goalSupport>=PROFILES[r.region].moveSupport;
 }
+// A visit changes the scene's location, never the friend's permanent residence.
+function visitPlan(C){
+  const r=ensureRelationship(C),minor=C.age<18;
+  return {d:minor?'다음에 가족 보러 귀국하는 일정 잡혔어?\n그때 시간 맞으면 우리도 만나자.':({asia:'너 다음에 며칠 쉴 수 있어?\n나도 일정 맞춰서 한번 가려고. 화면 말고 얼굴 좀 보자ㅋㅋ',south:'너 보러 가고 싶어.\n우리 둘 다 시간 되는 날 맞춰볼까? 네가 지내는 동네도 보고 싶어.',africa:'우리 통화만 하지 말고 얼굴도 좀 보자ㅋㅋ\n나 갈 수 있는 날이랑 네 쉬는 날 맞춰볼까?',europe:'시간 맞으면 며칠 보러 가고 싶어.\n네 쉬는 날 알려줘. 나도 일정을 확인해볼게.'}[r.region]),a:minor?'귀국 일정 정해졌어. 그때 하루 같이 보내자.':'좋아. 내 쉬는 날 알려줄게. 네 일정도 같이 맞추자.',reply:minor?'좋아. 도착해서 좀 쉬고 만나자. 기다릴게.':'좋아. 날짜 정해지면 이동편도 확인할게. 드디어 얼굴 보겠네.'};
+}
+function arrival(C){
+  return [['n',C.age<18?'가족과 귀국 일정을 맞췄다. 며칠 뒤 고향에 도착해 쉬고 나서, 약속한 날 친구를 만나러 나갔다.':'서로의 쉬는 날과 이동 일정을 확인해 방문 날짜를 정했다. 며칠 뒤, 도착 연락을 받고 약속한 곳으로 나갔다.','neutral'],['f',PROFILES[C.relationship.region].reunion||'이렇게 얼굴 보니까 좋다. 오는 내내 무슨 얘기부터 할까 생각했어.','happy'],['p','나도. 오늘은 시간 넉넉해. 천천히 얘기하자.','happy']];
+}
+function visitConversation(C,kind){
+  const lines=conversation(C.relationship.region,kind,false,C.relationship.status);
+  lines[lines.length-1]=['n',C.age<18?'돌아가는 길에 남은 귀국 일정을 이야기했다. 다시 출국하기 전에 시간이 맞으면 한번 더 보기로 했다.':'숙소로 돌아가는 길까지 함께 걸었다. 남은 방문 일정에도 시간이 맞으면 다시 보기로 했다.','neutral',false];
+  return [...lines,['n','짧은 방문을 마치고 각자의 생활로 돌아갔다. 다음에 만날 때는 누가 찾아갈지도 함께 이야기했다.','neutral',false]];
+}
+function visitMeeting(C,ev,kind='walk'){
+  const plan=visitPlan(C);ev.d=plan.d;ev.a=[plan.a,'이번엔 일정 맞추기 어렵겠다. 가능한 날 다시 찾아보자.'];ev.reply=ev.replies=[plan.reply,'알겠어. 무리해서 정하지 말자. 다음에 둘 다 되는 날로 보자.'];
+  ev.meeting={place:kind==='dinner'?2:3,scene:'reunion',remote:false,lines:[...arrival(C),...visitConversation(C,kind)]};return ev;
+}
+function visitInvitation(C,key){
+  const plan=visitPlan(C);
+  return event(C,'visit','다음에 얼굴 보자',plan.d,[plan.a,'이번엔 어렵겠다. 가능한 날을 다시 찾아보자.'],[plan.reply,'응. 무리해서 약속하지 말자. 날짜 맞을 때 다시 얘기하자.'],{channel:'message',visitFor:key});
+}
 export function dueRelationship(C){
   const r=ensureRelationship(C);if(!r||r.pendingDebut||r.status==='separated')return null;
+  if(r.visit?.age===C.age)return r.visit.key;
   if(r.legacyDebut&&!r.done.includes('debut')&&(C.hist||[]).some(row=>!row.youth&&row.apps>0))return 'debut';
   if(r.status==='dating'&&(r.affinity<=RULES.crisis||r.unresolved>=2||r.crisisTalked))return 'crisis';
   if(romantic(r)&&r.foreign)return 'foreign';
@@ -90,11 +112,14 @@ export function recordRelationshipTransfer(C,from,to){
 }
 export function relationshipEvent(C,id,forceRemote=false){
   const key=String(id||'').split(':')[1],r=ensureRelationship(C);if(!r)return null;
+  if(key==='visit')return visitInvitation(C,r.visit?.key||dueRelationship(C));
+  const visiting=!forceRemote&&r.visit?.age===C.age&&r.visit.key===key;
+  if(!forceRemote&&isDistant(C)&&['confession','proposal'].includes(key)&&!visiting)return visitInvitation(C,key);
   if(key==='debut'){
     const pending=debutEvent(C);if(pending)return pending;
     return event(C,'debut','아직 못 들은 얘기','네 첫 공식경기 이야기, 아직 제대로 못 들었어.\n시간 되면 얘기해줘.',['응. 오늘 얘기하자.','오늘은 좀 쉬고 싶어. 다음에 보자.'],['좋아. 나도 궁금한 거 많아.','응. 푹 쉬어.'],{channel:'message',meeting:{place:2,scene:'memory',lines:conversation(r.region,'memory',isDistant(C),r.status)}});
   }
-  const P=PROFILES[r.region],remote=forceRemote||isDistant(C),endpoint=remote?'call':'scene';let ev;
+  const P=PROFILES[r.region],remote=forceRemote||(!visiting&&isDistant(C)),endpoint=remote?'call':'scene';let ev;
   if(key==='outing')ev=event(C,key,'둘이 보내는 쉬는 날',P.meet,['좋아. 오늘 같이 시간 보내자.','오늘은 쉬어야겠어. 다음에 보자.'],['좋아. 오늘은 천천히 얘기하자.','알겠어. 사정 얘기해줘서 고마워.'],{channel:'message',remote,meeting:{place:3,scene:'personal:walk',lines:conversation(r.region,'walk',remote,r.status)}});
   if(key==='confession')ev=event(C,key,'친구라는 말 다음',P.confession,['나도 너 좋아해. 우리 사귀자.','나는 친구로 생각했어. 솔직하게 말하고 싶었어.'],[P.yes,P.no],{channel:endpoint});
   if(key==='foreign')ev=event(C,key,r.foreign?.wasDistant?'다시 맞춰야 하는 거리':'새 팀, 달라지는 우리',P.foreign[r.foreign?.wasDistant?1:0],['연락할 시간부터 같이 정하자. 멀어져도 계속 만나고 싶어.','너도 오면 좋겠지만 네 계획도 있잖아. 같이 의논해볼까?',...(r.status==='dating'?['미안해. 계속 만나기는 어려울 것 같아. 우리 그만하자.']:[])],['응. 지킬 수 있는 약속부터 같이 정하자.',P.future,...(r.status==='dating'?['쉽게 받아들이기는 어렵지만 네 마음은 알겠어. 오늘은 여기까지 하자.']:[])],{channel:endpoint});
@@ -109,20 +134,30 @@ export function relationshipEvent(C,id,forceRemote=false){
     const partnerEnds=!!r.crisisTalked;
     ev=event(C,key,partnerEnds?'상대가 꺼낸 마지막 이야기':'더 미루기 어려운 대화',partnerEnds?P.end:P.concern,partnerEnds?['알겠어. 네 결정을 존중할게. 그동안 고마웠어.','상처 줘서 미안해. 네 마음을 바꾸라고 하진 않을게.']:['오늘은 시간 내서 얘기하자. 네가 서운했던 일부터 듣고 싶어.','지금은 그 얘기까지 할 여유 없어. 다음에 하자.','우리 서로 힘든 것 같아. 여기서 그만하자.'],partnerEnds?['내 마음 들어줘서 고마워. 서로 잘 지냈으면 해.','사과는 들었어. 그래도 내 결정은 같아. 잘 지내.']:['오늘 내 얘기를 끝까지 들어줘서 고마워. 이번엔 같이 해보자.','지난번에도 기다렸어. 이번에도 그러면 난 더 기다리기 어려워.',P.end],{channel:endpoint,partnerEnds});
   }
+  if(key==='followup'&&remote&&!forceRemote){ev.a[0]='일정 비워뒀어. 이번엔 직접 만나자. 이동 일정도 맞추자.';ev.reply[0]='좋아. 우리 둘 다 되는 날로 정하자. 얼굴 보고 얘기할 수 있겠다.';ev.meeting={picks:[0],place:3,scene:'reunion',remote:false,lines:[...arrival(C),...visitConversation(C,'walk')]};ev.script={before:[],after:ev.reply.map((reply,i)=>i===0?[]:aftermath(r.region,key,i,reply,true))};}
   if(!ev)return null;
+  if(key==='outing'&&remote&&!forceRemote)visitMeeting(C,ev);
   ev.remote=remote;
   if(!ev.meeting){
     const before=remote?[]:[['n','둘만의 시간을 내어 마주 앉았다. 이번에는 미뤄두었던 이야기를 꺼냈다.','neutral'],['f',key==='crisis'?P.concern:'오늘은 이 얘기를 그냥 넘기고 싶지 않아.','neutral']];
-    ev.script={before,after:ev.reply.map((reply,i)=>aftermath(r.region,key,i,reply,remote,ev.partnerEnds))};
+    if(visiting)before.unshift(...arrival(C));
+    ev.script={before,after:ev.reply.map((reply,i)=>[...aftermath(r.region,key,i,reply,remote,ev.partnerEnds),...(visiting?[['n','방문을 마치고 다시 각자의 도시로 돌아갔다. 짧은 만남 뒤에도 서로의 대답은 분명하게 남았다.','neutral',false]]:[])])};
   }
   return ev;
 }
 export function applyRelationship(C,id,pick){
   const r=ensureRelationship(C),key=String(id||'').split(':')[1];
-  if(!r||!String(id).startsWith('friend:')||!['debut','outing','confession','foreign','future','proposal','followup','crisis'].includes(key))return null;
+  if(!r||!String(id).startsWith('friend:')||!['debut','outing','confession','foreign','future','proposal','followup','crisis','visit'].includes(key))return null;
   if(key==='debut'&&r.done.includes('debut')||key!=='debut'&&r.prepAge===C.age||r.records.some(x=>x.age===C.age&&x.id===id))return null;
-  const ev=relationshipEvent(C,id);if(!ev||!Number.isInteger(pick)||!ev.a[pick])throw new Error('relationship pick');
   const legacyChoice=r.legacyPendingChoice?.id===id&&r.legacyPendingChoice.age===C.age;
+  const ev=relationshipEvent(C,id,!!legacyChoice);if(!ev||!Number.isInteger(pick)||!ev.a[pick])throw new Error('relationship pick');
+  if(key==='visit'){
+    if(!['confession','proposal'].includes(ev.visitFor))throw new Error('방문할 이벤트가 없어요.');
+    if(pick===0){r.visit={age:C.age,key:ev.visitFor};change(C,0,'서로 가능한 방문 일정을 함께 정했다');}
+    else {delete r.visit;change(C,0,'방문 일정을 무리하게 정하지 않고 다시 맞추기로 했다');}
+    remember(C,id,pick);return r.name+' · '+ev.reply[pick];
+  }
+  if(ev.id!==id)throw new Error('먼저 방문 일정을 함께 정해 주세요.');
   if(!legacyChoice&&key==='confession'&&(C.age<18||r.affinity<RULES.confession))throw new Error('고백할 만큼 가까워지지 않았어요.');
   if(!legacyChoice&&key==='proposal'&&(r.status!=='dating'||r.affinity<RULES.proposal||C.age-(r.datingAge??C.age)<2||!r.futureAgreement))throw new Error('결혼 계획을 먼저 함께 정해 주세요.');
   if(!r.done.includes(key))r.done.push(key);if(!['followup','crisis'].includes(key))r.lastAge=C.age;
@@ -160,6 +195,8 @@ export function applyRelationship(C,id,pick){
     else if(pick===0){delta=10;r.unresolved=0;r.crisisTalked=false;promise(C);reason='시간을 내어 갈등을 풀고 약속을 함께 정했다';}
     else {delta=PROFILES[r.region].ignore;r.crisisTalked=true;reason='서운함을 이야기하려는 상대를 다시 외면했다';}
   }
+  if(r.visit?.age===C.age&&r.visit.key===key){r.lastVisitAge=C.age;delete r.visit;}
+  if(ev.meeting?.remote===false&&pick===0)r.lastVisitAge=C.age;
   delete r.legacyPendingChoice;
   change(C,delta,reason);remember(C,id,pick);return r.name+' · '+ev.reply[pick];
 }
@@ -174,6 +211,7 @@ export function routineEvent(C,service=false){
   else if(topic===3){a=['그거 좋다. 네가 원하는 생활도 중요하지. 내 생각도 얘기해줄게.','난 네가 내 일정에 맞춰줬으면 좋겠는데.'];reply=[P.welcome[1],P.future];deltas=[5,P.ignore];}
   else {a=[remote?'응. 지금 괜찮아. 너는 오늘 어땠어?':'난 잘 지내. 너는 오늘 어땠어?','지금은 팀 일정 중이야. 끝나고 얘기할 수 있을까?'];reply=[{asia:'난 잘 지내. 네 얘기 들으니까 좀 안심되네ㅋㅋ',south:'나도 할 얘기 많아. 네가 먼저 물어봐주니까 좋다.',africa:'좋아. 내 얘기도 할게. 우리 근황 맞춰보자ㅋㅋ',europe:'응. 나도 잘 지내. 이렇게 얘기하니까 좋네.'}[r.region],'응. 끝나고 가능한 시간 알려줘. 그때 얘기하자.'];deltas=[4,0];}
   const ev=event(C,'daily:'+C.age,service?'복무 중 짧은 연락':topic===3?'각자 그리고 싶은 생활':remote?'멀리서 나누는 하루':meet?'둘이 보내는 쉬는 날':'오늘의 연락',d,a,reply,{channel:'message',remote,deltas,goalTopic:topic===3});
+  if(!service&&remote&&(topic===1||topic===4)){ev.t='다음에 얼굴 보자';ev.deltas=[6,0];visitMeeting(C,ev,topic===4?'dinner':'walk');}
   if(meet)ev.meeting={place:topic===4?2:3,scene:'personal:'+topic,lines:conversation(r.region,topic===4?'dinner':'walk',false,r.status)};
   return ev;
 }
@@ -181,6 +219,7 @@ export function applyRoutine(C,ev,pick){
   const r=ensureRelationship(C);if(!Number.isInteger(pick)||!ev.a[pick]||r.prepAge===C.age)throw new Error('daily pick');
   change(C,ev.deltas[pick],ev.channel==='reflection'?'각자의 일상을 보냈다':ev.goalTopic&&pick===1?'상대의 목표보다 내 계획만 앞세웠다':ev.deltas[pick]>0?'서로를 위해 시간을 내고 관심을 나눴다':'사정을 솔직하게 설명하고 서로의 시간을 존중했다');
   if(ev.goalTopic&&pick===0)r.goalSupport++;
+  if(ev.meeting?.remote===false&&pick===0)r.lastVisitAge=C.age;
   r.prepAge=C.age;r.lastRoutine={id:ev.id,pick};remember(C,ev.id,pick);
   if(romantic(r)&&isDistant(C)&&!r.promise&&!r.moveDiscussion)promise(C);
 }

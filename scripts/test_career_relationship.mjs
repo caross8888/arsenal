@@ -5,7 +5,7 @@ import * as S from '../arsenal-dashboard/api/_career_sim.js';
 import {tokenCodec} from '../arsenal-dashboard/api/_token.js';
 const input={name:'관계테스트',nation:'ENG',pos:'FW',card:0,foot:'오른발',body:'표준',num:9};
 const make=(nation='ENG',age=21)=>{const c=S.createCareer({...input,nation},0,8);c.age=age;c.ev='coach';c.relationship.introDone=true;return c;};
-function choose(c,pick=0){const ev=S.relationshipPrepView(c);assert(ev.intro||ev.event);S.completeRelationshipPrep(c,pick);return ev.intro||ev.event;}
+function choose(c,pick=0){let ev=S.relationshipPrepView(c);assert(ev.intro||ev.event);if(ev.event?.id==='friend:visit'){S.completeRelationshipPrep(c,0);ev=S.relationshipPrepView(c);}S.completeRelationshipPrep(c,pick);return ev.intro||ev.event;}
 function nextYear(c){c.age++;c.phase='prep';}
 const regions={KOR:'asia',JPN:'asia',BRA:'south',ARG:'south',NGA:'africa',ENG:'europe',USA:'europe'};
 for(const [nation,region] of Object.entries(regions))assert.equal(R.createRelationship(nation).region,region);
@@ -16,7 +16,7 @@ for(const nation of ['KOR','BRA','NGA','ENG']){
  const home=R.introEvent(c);voices.add(home.d);goals.add(home.friend.goal);assert.equal(home.friend.affinity,40);
  c.club=S.clubByName(nation==='ENG'?'플라멩구':'아스날');
  const away=R.introEvent(c);assert.notEqual(away.d,home.d);assert.equal(away.friend.homeNation,nation);assert(away.friend.longDistance);
- c.age=22;c.relationship.introDone=true;const contact=R.routineEvent(c);assert(!contact.meeting,'no imaginary hometown walks while abroad');
+ c.age=22;c.relationship.introDone=true;const contact=R.routineEvent(c);assert(contact.meeting&&contact.remote&&contact.meeting.remote===false,'remote dates need a travel invitation and arrival before a physical scene');assert.match(contact.d,/가려고|가고 싶어|갈 수 있는|보러 가고/);assert.match(contact.meeting.lines[0][1],/일정.*방문|방문.*날짜/);
 }
 assert.equal(voices.size,4);assert.equal(goals.size,4);
 let abroadChecked=false;
@@ -76,6 +76,28 @@ nextYear(promise);assert.equal(R.dueRelationship(promise),'crisis');choose(promi
 nextYear(promise);const final=S.relationshipPrepView(promise).event;assert(final.partnerEnds);choose(promise,0);assert.equal(promise.relationship.status,'separated','partner may end relationship after ignored repeated conflicts');
 const repair=dating();repair.relationship.affinity=25;repair.relationship.unresolved=2;choose(repair,0);assert.equal(repair.relationship.status,'dating');assert.equal(repair.relationship.unresolved,0);assert(repair.relationship.promise);
 nextYear(repair);choose(repair,0);assert.equal(repair.relationship.fulfilledPromises,1);assert.equal(repair.relationship.affinity,43);
+for(const nation of ['KOR','BRA','NGA','ENG']){
+ const c=make(nation,21);c.club=S.clubByName(nation==='ENG'?'플라멩구':'아스날');c.relationship.affinity=65;
+ const home=c.relationship.residence,invite=S.relationshipPrepView(c).event;
+ assert.equal(invite.id,'friend:visit');assert.equal(invite.visitFor,'confession');assert.equal(invite.channel,'message');
+ assert.throws(()=>R.applyRelationship(c,'friend:confession',0),/방문/,'cannot skip the visit invitation');
+ const deferred=structuredClone(c);S.completeRelationshipPrep(deferred,1);assert.equal(deferred.relationship.status,'close');assert.equal(deferred.relationship.affinity,65);assert(!deferred.relationship.done.includes('confession'));assert.equal(S.relationshipPrepView(deferred).event,null);
+ nextYear(deferred);assert.equal(S.relationshipPrepView(deferred).event.id,'friend:visit','deferring a visit is not rejecting the confession');
+ S.completeRelationshipPrep(c,0);assert.notEqual(c.relationship.prepAge,c.age);assert.equal(c.relationship.affinity,65);assert.equal(c.relationship.status,'close');
+ const restored=structuredClone(c),scene=S.relationshipPrepView(restored).event;assert.equal(scene.id,'friend:confession');assert.equal(scene.remote,false);assert.equal(scene.channel,'scene');assert(scene.friend.longDistance);assert.match(scene.script.before[0][1],/訪問|방문/);
+ assert.equal(scene.friend.residence,home);S.completeRelationshipPrep(restored,0);assert.equal(restored.relationship.status,'dating');assert.equal(restored.relationship.affinity,73);assert.equal(restored.relationship.residence,home);assert(!restored.relationship.visit);assert.equal(restored.relationship.lastVisitAge,21);
+ const no=structuredClone(c);S.completeRelationshipPrep(no,1);assert.equal(no.relationship.status,'friend');assert(no.relationship.confessionDeclined);
+ const proposal=dating(nation);proposal.club=c.club;const invitation=S.relationshipPrepView(proposal).event;assert.equal(invitation.visitFor,'proposal');S.completeRelationshipPrep(proposal,0);assert.equal(S.relationshipPrepView(proposal).event.remote,false);S.completeRelationshipPrep(proposal,0);assert.equal(proposal.relationship.status,'married');assert.equal(proposal.relationship.residence,home);
+ for(const age of [16,19,22,25]){
+  const daily=make(nation,age);daily.club=c.club;const visit=R.routineEvent(daily);assert(visit.meeting&&visit.meeting.remote===false);assert.match(visit.meeting.lines[0][1],age<18?/귀국/:/방문/);
+  const before=daily.relationship.affinity;R.applyRoutine(daily,visit,1);assert.equal(daily.relationship.affinity,before);assert.equal(daily.relationship.lastVisitAge,undefined);
+ }
+ const outing=make(nation,20);outing.club=c.club;outing.relationship.affinity=60;const walk=R.relationshipEvent(outing,'friend:outing');assert(walk.remote&&walk.meeting.remote===false);assert(!walk.d.includes('걷자'));assert.match(walk.meeting.lines[0][1],/방문/);
+ const follow=dating(nation);follow.club=c.club;follow.relationship.promise={reviewAge:25};const met=R.relationshipEvent(follow,'friend:followup');assert.deepEqual(met.meeting.picks,[0]);assert(met.script.after[1].length);assert.equal(met.meeting.remote,false);
+ const military=R.routineEvent(follow,true);assert(!military.meeting);assert(military.remote);
+}
+console.log('PASS four-region visits: saved invitation → arrival → in-person confession/proposal; neutral deferral/retry, explicit refusal, unchanged residence, youth home visits, adult visiting dates, promised reunions and service calls');
+
 console.log('PASS saved promise/fulfillment/rescheduling/breach history, personality penalties, repair branch and earned partner-initiated breakup; no passive/random decay');
 
 for(const remote of [false,true]){
@@ -115,6 +137,12 @@ assert.equal((await api('season',{token,train:'균형',evPick:0})).status,400);a
 const reply=await api('friend-prep',{token,pick:2});assert.equal(reply.status,200);assert.equal(reply.data.player.relationship.affinity,43);assert.equal(reply.data.prep.event.id,career);assert.equal(reply.data.prep.selected,null);assert.equal(reply.data.prep.friendEvent,null);
 assert.equal((await api('friend-prep',{token:reply.data.token,pick:0})).status,400);
 assert.deepEqual((await api('view',{token:reply.data.token})).data,reply.data);
+const traveling=make('ENG',21);traveling.club=S.clubByName('플라멩구');traveling.relationship.affinity=65;
+const invitationReply=await api('friend-prep',{token:codec.seal(traveling),pick:0});assert.equal(invitationReply.status,200);assert.equal(invitationReply.data.prep.friendEvent.id,'friend:confession');assert.equal(invitationReply.data.prep.friendEvent.remote,false);assert.equal(invitationReply.data.player.relationship.status,'close');assert.equal(invitationReply.data.player.relationship.affinity,65);
+assert.equal((await api('season',{token:invitationReply.data.token,train:'균형',evPick:0})).status,400,'a visit invitation does not bypass the actual confession choice');
+const reloadVisit=await api('view',{token:invitationReply.data.token});assert.deepEqual(reloadVisit.data,invitationReply.data);
+const inPerson=await api('friend-prep',{token:reloadVisit.data.token,pick:0});assert.equal(inPerson.status,200);assert.equal(inPerson.data.player.relationship.status,'dating');assert.equal(inPerson.data.prep.friendEvent,null);assert.equal(inPerson.data.player.relationship.residence,'ENG');
+const postpone=await api('friend-prep',{token:codec.seal(traveling),pick:1});assert.equal(postpone.status,200);assert.equal(postpone.data.prep.friendEvent,null);assert.notEqual(postpone.data.player.relationship.status,'dating');assert.equal(postpone.data.player.relationship.affinity,65);
 const callup=make('ENG',22);Object.assign(callup,{lv:3,proAt:18,num:9,ovr:90,peak:90,st:Array(5).fill(90),ev:'natcall'});callup.relationship.affinity=70;
 assert(S.nationalCallupPlan(callup));choose(callup,0);assert.equal(S.prepView(callup).event.id,'natcall');
 const loan=make('ENG',21);loan.ev='loan';loan.loanClubs=[S.clubByName('플라멩구')];choose(loan,0);assert.equal(loan.ev,'loan');assert.equal(loan.loanClubs[0].n,'플라멩구');

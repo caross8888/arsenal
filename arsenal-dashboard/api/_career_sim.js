@@ -581,8 +581,8 @@ export function relationshipPrepView(state){
   let legacy=String(state.ev).startsWith('friend:')?REL.relationshipEvent(state,state.ev,!!service):null;
   // Old preparation screens may offer a confession/proposal before the new gates.
   // Give them a currently valid annual scene, then restore the football event.
-  if(legacy?.id==='friend:confession'&&(state.age<18||state.relationship.affinity<REL.RULES.confession))legacy=null;
-  if(legacy?.id==='friend:proposal'&&(state.relationship.status!=='dating'||state.relationship.affinity<REL.RULES.proposal||state.age-(state.relationship.datingAge??state.age)<2||!state.relationship.futureAgreement))legacy=null;
+  if((legacy?.id==='friend:confession'||legacy?.visitFor==='confession')&&(state.age<18||state.relationship.affinity<REL.RULES.confession))legacy=null;
+  if((legacy?.id==='friend:proposal'||legacy?.visitFor==='proposal')&&(state.relationship.status!=='dating'||state.relationship.affinity<REL.RULES.proposal||state.age-(state.relationship.datingAge??state.age)<2||!state.relationship.futureAgreement))legacy=null;
   let key=REL.dueRelationship(state);
   if(service&&!['foreign','followup','crisis'].includes(key))key=null;
   const ev=legacy||(key&&REL.relationshipEvent(state,'friend:'+key,!!service))||REL.routineEvent(state,!!service);
@@ -594,7 +594,7 @@ export function completeRelationshipPrep(state,pick){
   if(pending.intro)REL.applyIntro(state,pick);
   else if(pending.event){
     if(pending.event.id.startsWith('friend:daily:'))REL.applyRoutine(state,pending.event,pick);
-    else {REL.applyRelationship(state,pending.event.id,pick);state.relationship.prepAge=state.age;}
+    else {REL.applyRelationship(state,pending.event.id,pick);if(pending.event.id!=='friend:visit'||pick!==0)state.relationship.prepAge=state.age;}
   }else throw new Error('완료할 관계 이벤트가 없어요.');
   if(String(state.ev).startsWith('friend:')){C=state;newEvent();}
   return state;
