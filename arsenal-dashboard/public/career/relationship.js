@@ -157,13 +157,16 @@ function crFriendDebutContext(resume){
   return {debut:true,pick:null,resume:resume,ev:CR.v.friendDebut||{id:'friend:debut',t:'첫 1군 공식경기 · 경기 종료 직후',friend:CR.v.player.relationship,d:'아까 나 봤지?ㅋㅋ\n끝나고 왜 이렇게 안 나와\n나 아직 출구 쪽인데. 잠깐 볼래?',a:['응. 거기 있어. 금방 나갈게.','오늘은 팀 일정이 있어. 먼저 가. 다음에 보자.'],replies:['응 여기 있을게.\n천천히 나와.','아쉽다. 알겠어. 조심히 들어가.\n오늘 수고했어!']}};
 }
 var CR_FRIEND_CGS={};
+function crFriendCGSource(region,mobile){
+  return '/img/career-friends/debut-'+region+(mobile?'-mobile':'')+'-v'+(region==='south'?2:1)+'.png';
+}
 function crFriendWarmDebut(v){
   var r=v.player?.relationship;if(!r?.pendingDebut||r.debutMode==='remote'||!CR_FRIEND_ACTORS[r.id])return null;
-  var mobile=matchMedia('(orientation:portrait)').matches,key=r.id+(mobile?':mobile':':wide');
+  var mobile=matchMedia('(orientation:portrait)').matches,key=crFriendCGSource(r.id,mobile);
   if(CR_FRIEND_CGS[key])return CR_FRIEND_CGS[key];
   var pic=new Image();pic.decoding='async';
   var ready=new Promise(function(resolve){pic.onload=function(){resolve(true);};pic.onerror=function(){resolve(false);};});
-  pic.fetchPriority='high';pic.src='/img/career-friends/debut-'+r.id+(mobile?'-mobile':'')+'-v1.png';
+  pic.fetchPriority='high';pic.src=key;
   return CR_FRIEND_CGS[key]={image:pic,ready:ready};
 }
 function crFriendDebutCG(play){
@@ -175,7 +178,7 @@ function crFriendDebutCG(play){
     crFriendRemoveScene();
     var el=document.createElement('div');el.id='crFriendScene';el.className='cr-friend-scene cr-friend-cg found'+(reduced?' is-ready':'')+(loaded?'':' art-unavailable');
     el.dataset.character=r.id;el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','관중석에서 '+r.name+' 발견');
-    if(loaded){var picture=document.createElement('picture'),source=document.createElement('source');source.media='(orientation:portrait)';source.srcset='/img/career-friends/debut-'+r.id+'-mobile-v1.png';picture.appendChild(source);var pic=document.createElement('img');pic.className='cr-friend-cg-art';pic.src='/img/career-friends/debut-'+r.id+'-v1.png';pic.alt=r.name+'이 관중석 난간 너머에서 눈을 맞추고 응원하는 모습';pic.draggable=false;picture.appendChild(pic);el.appendChild(picture);}
+    if(loaded){var picture=document.createElement('picture'),source=document.createElement('source');source.media='(orientation:portrait)';source.srcset=crFriendCGSource(r.id,true);picture.appendChild(source);var pic=document.createElement('img');pic.className='cr-friend-cg-art';pic.src=crFriendCGSource(r.id,false);pic.alt=r.name+'이 관중석 난간 너머에서 눈을 맞추고 응원하는 모습';pic.draggable=false;picture.appendChild(pic);el.appendChild(picture);}
     var shade=document.createElement('div');shade.className='cr-friend-cg-shade';el.appendChild(shade);
     var caption=document.createElement('div');caption.className='cr-friend-cg-caption';
     var name=document.createElement('small');name.textContent=r.name;var line=document.createElement('p');line.textContent=quote;caption.append(name,line);el.appendChild(caption);
