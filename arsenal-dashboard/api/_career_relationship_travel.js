@@ -1,7 +1,10 @@
-import {ensureRelationship,relationshipView,isDistant,RULES} from './_career_relationship.js';
+import {RULES} from './_career_relationship.js';
+import {vacationStory as asiaVacationStory} from './_career_asia_dialogue.js';
 import {serviceView} from './_career_military.js';
+import {partnerState,partnerView} from './_career_reporter.js';
 
 const VOICES={
+  reporter:{plan:'마감 일정 끝나면 며칠 쉴 수 있어요.\n이번엔 취재 일정 없이 같이 어디 다녀올까요?'},
   asia:{plan:'시즌 끝나면 며칠 쉬지?\n나 너랑 어디 좀 가고 싶은데. 이번엔 진짜 멀리ㅋㅋ'},
   south:{plan:'이번 휴가는 나랑 보내자.\n너도 며칠은 푹 쉬고, 나도 너 오래 보고.'},
   africa:{plan:'휴가 계획 세웠어?\n없으면 나랑 갈래? 이번엔 둘이 찍힌 사진 좀 남기자.'},
@@ -14,12 +17,12 @@ function completedTrips(r){
   return r.vacationsDone=[...done];
 }
 export function vacationEvent(C){
-  const r=ensureRelationship(C);
+  const r=partnerState(C);
   if(!r||C.phase!=='result'||C.age<18||!['dating','married'].includes(r.status)||r.pendingDebut||C.forced||C.bodyOut||C.age>=40||serviceView(C))return null;
   const done=completedTrips(r),trip=r.vacation?.age===C.age?r.vacation:null,remaining=['beach','ski'].filter(x=>!done.includes(x));
   if(!trip&&!remaining.length)return null;
   if(!trip&&r.lastVacationAge!=null&&C.age-r.lastVacationAge<3)return null;
-  const V=VOICES[r.region],remote=isDistant(C),base={friend:relationshipView(C),remote:false,vacation:true};
+  const V=VOICES[r.region],remote=r.residence!==(C.club?.nat||C.nation),base={friend:partnerView(C),remote:false,vacation:true};
   if(!trip){
     const choices={beach:['해변으로 가자. 며칠 느긋하게 쉬고 싶어.','좋아. 수영복 챙겨야겠다. 어디가 좋을지 나도 찾아볼게.'],ski:['눈이 남아 있는 산으로 가자. 스키장도 찾아볼까?','좋아. 아직 눈 남아 있는 데 찾아보자. 숙소도 따뜻한 데로.']};
     return {...base,id:'friend:vacation-plan',t:'시즌 종료 · 휴가 계획',channel:'message',d:V.plan+(remote?'\n어디서 만나서 같이 갈지도 정하자.':''),destinations:[...remaining,null],a:[...remaining.map(x=>choices[x][0]),'이번 휴가는 각자 쉬자. 여행은 다음에 가고 싶어.'],replies:[...remaining.map(x=>choices[x][1]),'알겠어. 이번엔 푹 쉬자. 여행은 다음에 시간 맞춰보자.']};
@@ -45,9 +48,12 @@ export function vacationEvent(C){
     africa:{start:['오늘 일정. 걷고, 쉬고, 따뜻한 거 마시기. 의견 있어?','아주 마음에 들어. 쉬는 시간은 넉넉하게.'],play:['나 지금 눈 안 감았지? 방금 사진 좀 봐줘.','감았어. 아주 편하게.','다시 찍어ㅋㅋ 이번엔 셋까지 꼭 세.']},
     europe:{start:['오늘은 타지 말자. 난 저쪽 산책길이 더 궁금해.','응. 거기로 가자. 천천히.'],play:['여기서 사진 하나 찍어줄래? 뒤에 눈 보이게.','응. 조금만 왼쪽으로 와.','이 정도? 너도 같이 찍자.']}
   };
+  beach.reporter={start:['바다 소리가 생각보다 크네요. 잠깐만, 조금 더 들어볼래요.','네. 오늘은 녹음 안 하셔도 돼요.'],play:['알아요. 지금은 그냥 듣는 거예요. 같이요.','그럼 저도 옆에 있을게요.','좋아요. 물 좀 더 따뜻해지면 같이 들어가요.'],quiet:['오늘은 사진을 별로 안 찍었네요. 그래도 다 기억날 것 같아요.','지금 같이 보고 있으니까요.'],close:['취재하러 왔으면 지금쯤 방에서 원고 썼을 텐데. 여기 앉아 있으니까 좋네요.','내일도 천천히 나와요. 시간표 없이요.'],home:['집에 왔어요. 가방에서 모래가 계속 나오네요.','저도요. 사진은 내일 마저 보낼게요. 오늘 푹 쉬어요.']};
+  snow.reporter={start:['저도 천천히 탈래요. 잘 타는 척하다가 내일 못 걷겠어요.','좋아요. 완만한 쪽부터 가요.'],play:['아까 넘어지는 거 봤죠? 기사로 안 써주실 거죠.','그건 제가 안 써도 얼굴에 다 나오는데요.','그럼 웃긴 얘기 하나 생긴 걸로 할게요. 한번 더 타요.'],quiet:['오늘은 물어볼 말보다 같이 보고 싶은 게 더 많네요.','눈 오는 거요?'],close:['그것도요. 그리고 지금 여기 앉아 있는 것도요.','저도 지금 좋네요. 조금만 더 있다 가요.'],home:['집에 왔어요. 창가에서 보던 눈이 자꾸 생각나요.','저도요. 사진보다 그때 얘기가 더 기억나네요. 오늘은 푹 쉬어요.']};
+  resting.reporter={start:['오늘은 눈 구경만 해요. 다리 신경 쓰이면 천천히 쉬어가고요.','네. 저쪽 산책길로 가볼까요?'],play:['여기서 사진 한 장 찍어줄래요? 오늘 같이 온 거 남기고 싶어서요.','네. 조금만 기다려요. 이번엔 저도 같이 찍어요.','좋아요. 둘이 나온 게 더 좋겠네요.']};
   const tripVoice=(ski?snow:beach)[r.region],day=ski&&recovering?resting[r.region]:tripVoice;
   const sameHome=r.status==='married'&&!remote;
-  const story=[
+  const story=r.region==='asia'?asiaVacationStory(C,r,ski,recovering,sameHome):[
     n(remote?'각자 출발해 약속한 곳에서 만났다. 짐을 받아 들고 함께 숙소로 향했다.':'마지막 팀 일정이 끝나고 여행 가방을 챙겼다. 이동하는 동안 못다 잔 잠을 나눠 잤다.'),
     n(ski?'눈이 남아 있는 고산 리조트에 도착했다. 짐을 풀고 밖으로 나서자 차가운 공기가 볼에 닿았다.':'숙소에 짐을 놓고 수영복으로 갈아입었다. 해변에 나오자 모래가 발밑에서 푹 꺼졌다.'),
     f(day.start[0],'happy'),p(day.start[1]),
@@ -66,7 +72,7 @@ export function vacationEvent(C){
 }
 export function completeVacation(C,pick){
   const ev=vacationEvent(C);if(!ev||!Number.isInteger(pick)||!(ev.a[pick]||ev.channel==='story'&&pick===1))throw new Error('휴가 선택을 다시 확인해 주세요.');
-  const r=C.relationship;
+  const r=partnerState(C);
   if(ev.id==='friend:vacation-plan'){
     const destination=ev.destinations[pick];
     if(!destination){r.lastVacationAge=C.age;r.lastVacation={age:C.age,destination:null};return;}
@@ -77,4 +83,4 @@ export function completeVacation(C,pick){
   r.vacationsDone=[...new Set([...completedTrips(r),r.vacation.destination])];
   r.lastVacationAge=C.age;r.lastVacation={...r.vacation,pick:0};delete r.vacation;
 }
-export function vacationPending(C){return C.relationship?.vacation?.age===C.age;}
+export function vacationPending(C){return partnerState(C)?.vacation?.age===C.age;}

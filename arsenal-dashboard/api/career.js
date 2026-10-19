@@ -24,6 +24,7 @@ import { tokenCodec } from './_token.js';
 import { readToken } from './_account.js';
 import * as S from './_career_sim.js';
 import * as REL from './_career_relationship.js';
+import * as REPORTER from './_career_reporter.js';
 import * as TRAVEL from './_career_relationship_travel.js';
 import {kickVerdict} from './_career_shootout.js';
 import {NATIONAL_REACTION_GROUPS} from './_career_international.js';
@@ -324,6 +325,18 @@ export default async function handler(req, res){
       return res.json({token:seal(C),...view(C)});
     }
 
+    if(a==='reporter-intro'){
+      const C=load(body.token,['prep']);
+      if(!S.prepView(C).interview?.reporter)bad('지금은 첫 만남 인터뷰가 없어요.');
+      try{REPORTER.completeIntro(C,body.pick,body.ivPick);}catch(e){bad(e.message);}
+      return res.json({token:seal(C),...view(C)});
+    }
+    if(a==='reporter-message'){
+      const C=load(body.token,['prep']);
+      try{REPORTER.completeWelcome(C,body.pick);}catch(e){bad(e.message);}
+      return res.json({token:seal(C),...view(C)});
+    }
+
     if(a==='friend-vacation'){
       const C=load(body.token,['result']);
       try{TRAVEL.completeVacation(C,body.pick);}catch(e){bad(e.message);}
@@ -352,6 +365,8 @@ export default async function handler(req, res){
       const choice = C.phase === 'injury' ? {...C.pending, injPick: Number(body.injPick)} : {train: body.train, evPick: Number(body.evPick), loanPick: Number(body.loanPick) || 0};
       if(C.phase === 'prep' && ![0, 1].includes(choice.evPick)) bad('이벤트 선택지를 골라 주세요.');
       if(C.phase === 'injury' && ![0, 1].includes(choice.injPick)) bad('부상 대처를 골라 주세요.');
+      if(C.phase==='prep'&&C.ev==='media'&&REPORTER.interviewView(C))bad('인터뷰 후 연락 여부를 먼저 골라 주세요.');
+      if(C.reporter?.interviewAge===C.age&&choice.evPick!==C.reporter.interviewPick)bad('인터뷰 답변을 다시 확인해 주세요.');
       const r = advanceSeason(C, choice);
       if(r.penalty)return res.json({token:seal(C),...view(C)});
       if(r.injury){

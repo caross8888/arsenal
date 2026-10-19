@@ -1,4 +1,5 @@
 import {PROFILES,conversation,prelude,aftermath,routineDialogue,majorReplies} from './_career_relationship_dialogue.js';
+import {serviceView} from './_career_military.js';
 export const RULES=Object.freeze({max:100,start:40,confession:65,proposal:85,crisis:30,minDatingYears:2});
 const PEOPLE={asia:'서윤',south:'루시아',africa:'아마라',europe:'에밀리'};
 const clamp=n=>Math.max(0,Math.min(RULES.max,Number.isFinite(n)?Math.round(n):RULES.start));
@@ -24,7 +25,7 @@ export function ensureRelationship(C){
   return r;
 }
 export function isDistant(C,nation){
-  const r=ensureRelationship(C);return !!r&&r.residence!==(nation||C.club?.nat||C.nation||r.homeNation);
+  const r=ensureRelationship(C);return !!r&&r.residence!==(nation||(serviceView(C)?'KOR':C.club?.nat)||C.nation||r.homeNation);
 }
 function change(C,delta,reason){
   const r=ensureRelationship(C),before=r.affinity;r.affinity=clamp(before+delta);
@@ -38,7 +39,7 @@ function promise(C){C.relationship.promise={madeAge:C.age,reviewAge:C.age+1};}
 function endRelationship(C){const r=C.relationship;r.status='separated';r.separatedAge=C.age;delete r.promise;delete r.moveDiscussion;delete r.foreign;delete r.visit;}
 export function relationshipView(C){
   const r=ensureRelationship(C);if(!r)return null;const P=PROFILES[r.region];
-  return {id:r.region,name:r.name,status:r.status,label:{friend:'소꿉친구',close:'가까워지는 사이',dating:'연인',married:'배우자',separated:'추억으로 남은 인연'}[r.status],affinity:r.affinity,affinityMax:RULES.max,personality:P.personality,goal:P.goal,boundary:P.boundary,homeNation:r.homeNation,residence:r.residence,longDistance:isDistant(C),datingYears:romantic(r)?Math.max(0,C.age-(r.datingAge??C.age)):0,marriedAge:r.marriedAge||null,pendingDebut:!!r.pendingDebut,debutMode:r.debutMode||'stadium',lastChange:r.lastChange?.age===C.age?r.lastChange:null,promise:!!r.promise};
+  return {id:r.region,name:r.name,status:r.status,label:{friend:'소꿉친구',close:'가까워지는 사이',dating:'연인',married:'배우자',separated:'추억으로 남은 인연'}[r.status],affinity:r.affinity,affinityMax:RULES.max,personality:P.personality,goal:r.region==='asia'&&r.asiaStory?.voiceFound?'자기 이름으로 공연하며 노래와 일상을 오래 이어가기':P.goal,boundary:P.boundary,homeNation:r.homeNation,residence:r.residence,longDistance:isDistant(C),datingYears:romantic(r)?Math.max(0,C.age-(r.datingAge??C.age)):0,marriedAge:r.marriedAge||null,pendingDebut:!!r.pendingDebut,debutMode:r.debutMode||'stadium',lastChange:r.lastChange?.age===C.age?r.lastChange:null,promise:!!r.promise};
 }
 function event(C,key,t,d,a,reply,extra={}){
   const r=ensureRelationship(C);return {id:'friend:'+key,t,d,a,reply,replies:reply,friend:relationshipView(C),remote:isDistant(C),...extra};
@@ -56,16 +57,20 @@ export function applyIntro(C,pick){
 export function prepareDebut(C,row){
   const r=ensureRelationship(C);if(!r||r.status==='separated'||r.done.includes('debut')||r.pendingDebut||row?.youth!==false||!(row.apps>0))return;
   if((C.hist||[]).some(old=>!old.youth&&old.apps>0))return;
-  r.pendingDebut=true;r.debutMode=isDistant(C,C.loanClub?.nat||C.club?.nat)?'remote':'stadium';
+  r.pendingDebut=true;r.debutMode=r.region==='asia'?'stadium':isDistant(C,C.loanClub?.nat||C.club?.nat)?'remote':'stadium';
 }
 export function debutEvent(C){
   const r=ensureRelationship(C);if(!r?.pendingDebut)return null;
   const remote=r.debutMode==='remote',P=PROFILES[r.region];
   const ev=event(C,'debut',remote?'첫 1군 공식경기 · 중계를 보고':'첫 1군 공식경기 · 경기 종료 직후',remote?({asia:'너 나오는 거 봤어!\n화면 앞에서 나만 긴장했잖아ㅋㅋ 지금 잠깐 얘기돼?',south:'첫 경기 봤어! 직접 가서 보고 싶었는데.\n네 목소리로도 얘기 듣고 싶어. 지금 괜찮아?',africa:'첫 공식경기 봤어. 나까지 긴장되더라ㅋㅋ\n거긴 지금 몇 시야? 잠깐 얘기할 수 있어?',europe:'중계로 봤어. 첫 공식경기 축하해.\n정리 끝나면 잠깐 통화할 수 있어?'}[r.region]):({asia:'아까 나 봤지?ㅋㅋ\n나 아직 출구 쪽인데. 잠깐 볼래?',south:'경기 잘 봤어!\n나 출구에 있어. 얼굴 보고 축하해주고 싶어.',africa:'나 찾았어? 손 흔든 보람이 있네ㅋㅋ\n출구 쪽에서 기다려도 돼?',europe:'수고했어. 아직 출구에 있어.\n시간 괜찮으면 잠깐 보고 가자.'}[r.region]),remote?['응. 지금 잠깐 통화하자.','오늘은 팀 일정이 있어. 정리하고 연락할게.']:['응. 거기 있어. 금방 나갈게.','오늘은 팀 일정이 있어. 먼저 가. 다음에 보자.'],[remote?{asia:'응. 나 오늘 네 경기 보면서 얘기할 거 많아ㅋㅋ',south:'좋아. 오늘 기분 어땠는지 네 목소리로 듣고 싶었어.',africa:'좋아. 내가 본 거랑 네가 뛴 거랑 얘기 맞춰보자ㅋㅋ',europe:'응. 나 지금 시간 돼. 천천히 얘기해.'}[r.region]:'응. 기다릴게. 천천히 나와.','알겠어. 오늘은 푹 쉬어. 첫 경기 정말 축하해.'],{remote,channel:'message'});
-  ev.script={before:[],after:[conversation(r.region,'debut',remote,r.status),[]]};return ev;
+  if(r.region==='asia'&&!remote){
+    ev.d='아까 나 봤지? 연습 일정 바꾸고 왔는데 못 찾으면 어쩌나 했네ㅋㅋ\n나 아직 출구 쪽이야. 잠깐 볼래?';
+    const lines=[['n','출구를 나오자 익숙한 얼굴이 보였다. 가방 끈을 고쳐 멘 그녀가 먼저 다가왔다.','neutral',true],['f','내기 진 거 인정. 네가 먼저 TV 나왔네.','happy'],['p','멀리까지 와서 본 거야?','neutral'],['f',isDistant(C,C.loanClub?.nat||C.club?.nat)?'응. 연습 쉬는 날이랑 비행기 맞추느라 좀 바빴다. 가족한테도 일정 다 알려놓고 왔어.':'연습 끝나고 바로 왔어. 네가 언제 들어갈지 몰라서 계속 보고 있었잖아.','happy'],['p','아까 나도 너 찾았어. 관중석에서.','neutral'],['f','봤어. 너 고개 돌아가는 거ㅋㅋ …그래도 오늘 멋있었어.','shy'],['p','다음엔 네 무대에서 내가 찾을게.','neutral'],['f','응. 그때 너 꼭 와.','happy'],['n','팀으로 돌아갈 시간이 되어 인사를 나눴다. 그녀는 남은 방문 일정을 마친 뒤 자신의 연습으로 돌아가기로 했다.','neutral',true]];
+    ev.script={before:[],after:[lines,[]]};
+  }else ev.script={before:[],after:[conversation(r.region,'debut',remote,r.status),[]]};return ev;
 }
 function moveEligible(C){
-  const r=ensureRelationship(C);return C.age>=21&&r.affinity>=75&&C.age-(r.datingAge??C.age)>=2&&r.goalSupport>=PROFILES[r.region].moveSupport;
+  const r=ensureRelationship(C);return !(r.region==='asia'&&r.asiaStory&&!r.asiaStory.voiceFound)&&C.age>=21&&r.affinity>=75&&C.age-(r.datingAge??C.age)>=2&&r.goalSupport>=PROFILES[r.region].moveSupport;
 }
 // A visit changes the scene's location, never the friend's permanent residence.
 function visitPlan(C){
@@ -163,7 +168,7 @@ export function applyRelationship(C,id,pick){
   if(!r||!String(id).startsWith('friend:')||!['debut','outing','confession','foreign','future','proposal','followup','crisis','visit'].includes(key))return null;
   if(key==='debut'&&r.done.includes('debut')||key!=='debut'&&r.prepAge===C.age||r.records.some(x=>x.age===C.age&&x.id===id))return null;
   const legacyChoice=r.legacyPendingChoice?.id===id&&r.legacyPendingChoice.age===C.age;
-  const ev=relationshipEvent(C,id,!!legacyChoice);if(!ev||!Number.isInteger(pick)||!ev.a[pick])throw new Error('relationship pick');
+  const ev=relationshipEvent(C,id,!!legacyChoice||!!serviceView(C));if(!ev||!Number.isInteger(pick)||!ev.a[pick])throw new Error('relationship pick');
   if(key==='visit'){
     if(!['confession','proposal'].includes(ev.visitFor))throw new Error('방문할 이벤트가 없어요.');
     if(pick===0){r.visit={age:C.age,key:ev.visitFor};change(C,0,'서로 가능한 방문 일정을 함께 정했다');}

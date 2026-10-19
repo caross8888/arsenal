@@ -2535,7 +2535,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media(prefers-reduced-motion:reduce){.cr-nat-final-conf{display:none}}
 
 </style>
-<link rel="stylesheet" href="/career/relationship.css?v=11">
+<link rel="stylesheet" href="/career/relationship.css?v=12">
 </head>
 <body>
 
@@ -2827,7 +2827,7 @@ function playIntro(){
 <script src="/career/league-scenes.js?v=1"></script>
 <script src="/career/match-playback.js?v=39"></script>
 <script src="/career/relationship-scenes.js?v=5"></script>
-<script src="/career/relationship.js?v=14"></script>
+<script src="/career/relationship.js?v=17"></script>
 <script>
 var FN='/api';
 var allStandings=[];
@@ -10280,7 +10280,7 @@ function crTrPick(i, btn){   // 고르는 즉시 반영(사용자 지정) — �
 function crIvShow(iv){
   CR.ivSel=null; CR.iv=iv;
   var reduce=window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  crTovSet('<div class="cr-iv" role="dialog" aria-modal="true" aria-label="인터뷰" onclick="crTypeSkip()"><img class="cr-iv-scene" src="/img/career-scenes/interview.webp?v=2" alt="" aria-hidden="true"><i class="fl"></i><i class="fl"></i><i class="fl"></i><i class="fl"></i>'
+  crTovSet('<div class="cr-iv'+(iv.reporter?' has-reporter':'')+'" role="dialog" aria-modal="true" aria-label="인터뷰" onclick="crTypeSkip()"><img class="cr-iv-scene" src="'+(iv.reporter?'/img/career-friends/event-reporter-interview-v1.png':'/img/career-scenes/interview.webp?v=2')+'" alt="" aria-hidden="true"><i class="fl"></i><i class="fl"></i><i class="fl"></i><i class="fl"></i>'
    +'<div class="cr-iv-box"><div class="mic" aria-hidden="true">'+crIcon('microphone')+'</div><span class="tag">'+gmEsc(iv.tag)+'</span>'
    +'<div class="cr-iv-q"><div class="who">'+crIcon('newspaper')+' <b>'+gmEsc(iv.who)+'</b></div><div class="t" id="crIvQ">'+(reduce?gmEsc(iv.q):'<span class="cur"></span>')+'</div></div>'
    +'<div class="cr-iv-ans" id="crIvA" hidden><div class="me">내 답변</div>'
@@ -10297,7 +10297,9 @@ function crIvPick(i){
 }
 function crIvGo(){
   if(CR.ivSel==null || !CR.iv) return;
-  CR.evPick=CR.iv.a[CR.ivSel].k; CR.typeSkip=null; crTovSet(''); crPrep();
+  CR.evPick=CR.iv.a[CR.ivSel].k; CR.typeSkip=null;
+  if(CR.iv.reporter)return crReporterIntro(CR.iv.reporter,CR.evPick);
+  crTovSet(''); crPrep();
 }
 function crSeason(btn){
   if(!crBusy(btn,'시즌 진행 중...')) return;

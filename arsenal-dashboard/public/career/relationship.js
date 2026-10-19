@@ -41,17 +41,19 @@ function crFriendRead(target,text,actions,buttons,surface,scroll){
   read=crFriendType(target,text,function(){ready=true;actions.classList.remove('is-reading');actions.inert=false;actions.removeAttribute('aria-hidden');hint.textContent=buttons.length===1?'터치하여 계속':'대답을 골라 주세요';},scroll);
 }
 function crFriendPortrait(r){
+  if(r?.id==='reporter')return '<span class="cr-friend-face reporter-face" role="img" aria-label="'+gmEsc(r.name)+'의 초상"></span>';
   if(!r||['asia','south','africa','europe'].indexOf(r.id)<0)return '';
   return '<span class="cr-friend-face" role="img" aria-label="'+gmEsc(r.name)+'의 도트 초상" style="background-image:url(/img/career-friends/'+r.id+'.png)"></span>';
 }
 function crFriendPanel(p){
+  if(p.connections?.length&&!p.relationshipPanel)return p.connections.map(function(r){return crFriendPanel({relationship:r,relationshipPanel:true});}).join('');
   var r=p.relationship;if(!r)return '';
   return '<details class="cr-friend-profile"><summary class="cr-friend-status">'+crFriendPortrait(r)+'<span><b>'+gmEsc(r.name)+'</b><small>'+gmEsc(r.label)+(r.longDistance?' · 장거리':'')+'</small></span>'+(r.affinity!=null?'<span class="cr-friend-affinity"><b>호감도 '+r.affinity+' / '+(r.affinityMax||100)+'</b><progress max="100" value="'+r.affinity+'"></progress></span>':'')+'</summary><div class="cr-friend-profile-body"><p>'+gmEsc(r.personality||'')+'</p><p><b>바라는 삶</b> '+gmEsc(r.goal||'')+'</p>'+(r.lastChange?'<p>'+gmEsc(r.lastChange.reason)+' <b>'+(r.lastChange.delta>0?'+':'')+r.lastChange.delta+'</b></p>':'')+'</div></details>';
 }
 function crFriendCard(r){
   if(!r)return '';
   var married=r.status==='married',year=r.marriedAge?2027+r.marriedAge-15:null;
-  return '<div class="cr-hof-b cr-friend-card">'+crFriendPortrait(r)+'<div><small>'+(married?'함께 걸어온 사람':'그라운드 밖의 인연')+'</small><b>'+gmEsc(r.name)+' <em>'+gmEsc(r.label)+'</em></b><p>'+gmEsc(married?(year+'년 결혼 · 어릴 적 친구에서 평생의 동반자로.'):r.status==='dating'?'선수 생활을 함께 지켜본 연인.':r.status==='separated'?'각자의 길을 걷지만, 함께한 시간은 남았다.':'처음의 꿈을 기억하는 오래된 친구.')+'</p></div></div>';
+  return '<div class="cr-hof-b cr-friend-card">'+crFriendPortrait(r)+'<div><small>'+(married?'함께 걸어온 사람':'그라운드 밖의 인연')+'</small><b>'+gmEsc(r.name)+' <em>'+gmEsc(r.label)+'</em></b><p>'+gmEsc(married?(year+'년 결혼 · '+(r.origin==='reporter'?'첫 인터뷰에서 평생의 동반자로.':'어릴 적 친구에서 평생의 동반자로.')):r.status==='dating'?'선수 생활을 함께 지켜본 연인.':r.status==='separated'?'각자의 길을 걷지만, 함께한 시간은 남았다.':'처음의 꿈을 기억하는 오래된 친구.')+'</p></div></div>';
 }
 function crFriendMessage(ev){
   crFriendPhone(ev,function(i){crFriendPick(i);});
@@ -99,8 +101,8 @@ function crFriendPhone(ev,chosen){
 function crFriendRemoteStage(who,text,buttons,visual){
   var C=CR.friendScene,chat=CR.friendPhone;
   if(!chat||!chat.story){
-    crFriendClosePhone();var el=document.createElement('div');el.id='crFriendPhone';el.className='cr-friend-overlay cr-friend-phone-overlay';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',C.ev.friend.name+'와 원거리 대화');
-    el.innerHTML='<section class="cr-friend-device"><div class="cr-friend-phone-status"><b>18:24</b><span>●●● ▰</span></div><div class="cr-friend-phone-camera" aria-hidden="true"></div><header>'+crFriendPortrait(C.ev.friend)+'<div><b>'+gmEsc(C.ev.friend.name)+'</b><small>멀리서 나누는 대화</small></div></header><div class="cr-friend-history" id="crFriendHistory" aria-live="polite"></div><div class="cr-friend-options" id="crFriendOptions"></div><div class="cr-friend-home-indicator"></div></section>';
+    crFriendClosePhone();var el=document.createElement('div');el.id='crFriendPhone';el.className='cr-friend-overlay cr-friend-phone-overlay';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',C.ev.friend.name+'와 메시지');
+    el.innerHTML='<section class="cr-friend-device"><div class="cr-friend-phone-status"><b>18:24</b><span>●●● ▰</span></div><div class="cr-friend-phone-camera" aria-hidden="true"></div><header>'+crFriendPortrait(C.ev.friend)+'<div><b>'+gmEsc(C.ev.friend.name)+'</b><small>'+(C.ev.remote?'멀리서 나누는 대화':'메시지')+'</small></div></header><div class="cr-friend-history" id="crFriendHistory" aria-live="polite"></div><div class="cr-friend-options" id="crFriendOptions"></div><div class="cr-friend-home-indicator"></div></section>';
     document.body.appendChild(el);chat=CR.friendPhone={el:el,timers:[],story:true};
   }
   var history=chat.el.querySelector('#crFriendHistory'),row=document.createElement('div'),body=document.createElement('p');
@@ -115,6 +117,7 @@ function crFriendIsMeeting(ev,pick){
 function crFriendPick(i){
   var C=CR.friendScene;if(!C||C.pick!=null||!C.ev.a[i])return;
   C.pick=i;
+  if(C.ev.channel==='route')return crFriendFinish();
   if(C.intro||C.ev.channel==='message'&&!crFriendIsMeeting(C.ev,i)&&!C.ev.script?.after?.[i]?.length||i===1&&(C.ev.id==='friend:outing'||C.ev.id==='friend:debut'))return crFriendFinish();
   if(crFriendIsMeeting(C.ev,i)&&C.ev.meeting?.remote===false)C.ev.remote=false;
   var hadPhone=!!CR.friendPhone;
@@ -123,7 +126,7 @@ function crFriendPick(i){
   if(C.ev.channel==='reflection')beats=[{place:3,outfit:0,who:'',text:reply,hide:true}];
   else if(C.ev.meeting&&crFriendIsMeeting(C.ev,i))beats=crFriendMeetingBeats(C.ev);
   else {
-    var story=C.ev.script||CR_FRIEND_MAJOR[key],place=C.ev.place??(key==='proposal'||key==='confession'?3:key==='foreign'||key==='debut'?1:2),outfit=key==='debut'?0:1;
+    var story=C.ev.script||CR_FRIEND_MAJOR[key],place=C.ev.place??(key==='proposal'||key==='confession'?3:key==='foreign'||key==='debut'?1:2),outfit=C.ev.outfit??(key==='debut'?0:1);
     beats=story&&story.after[i].length?crFriendBeats(story.after[i],place,outfit):crFriendBeats([['f',reply,'neutral'],['n','인사를 나누고 각자의 길로 돌아갔다.','neutral',false]],place,outfit);
     if(C.ev.channel==='scene'&&key!=='debut')beats.unshift({place:place,outfit:outfit,who:'나',text:C.ev.a[i],mood:'neutral',speaker:'p',cg:C.ev.questionCG?.key,expression:C.ev.questionCG?.expression});
   }
@@ -132,9 +135,10 @@ function crFriendPick(i){
 }
 function crFriendRemoveScene(){crFriendStopTyping();clearTimeout(CR.friendTimer);(CR.friendCinematicTimers||[]).forEach(clearTimeout);CR.friendCinematicTimers=[];document.getElementById('crFriendScene')?.remove();}
 function crFriendCancel(){crFriendRemoveScene();crFriendClosePhone();document.getElementById('crFriendDebutMessage')?.remove();CR.friendScene=null;}
-var CR_FRIEND_ACTORS={asia:[9.95,50.55,92.11],south:[11.50,50.14,90.01],africa:[11.59,51.23,87.36],europe:[16.56,50.82,86.68]};
+var CR_FRIEND_ACTORS={reporter:[33.333,33.333,66.667],asia:[9.95,50.55,92.11],south:[11.50,50.14,90.01],africa:[11.59,51.23,87.36],europe:[16.56,50.82,86.68]};
 function crFriendActor(r,outfit,greeting,mood){
   var holiday=CR.friendScene?.ev.wardrobe;
+  if(r.id==='reporter')return crReporterActor(r,outfit,mood,holiday);
   if(holiday){var frame=(holiday==='ski'?2:0)+(['happy','shy'].includes(mood)?1:0);return '<div class="cr-friend-actor reactions vacation" role="img" data-character="'+r.id+'" data-outfit="'+holiday+'" data-pose="'+frame+'" aria-label="'+gmEsc(r.name)+(holiday==='ski'?'의 스키복':'의 해변 수영복')+'" style="background-image:url(/img/career-friends/vacation-'+r.id+'-v2.png);--actor-position:'+frame*100/3+'%"></div>';}
   var positions=CR_FRIEND_ACTORS[r.id];if(!positions)return '';
   mood=mood||(greeting?'happy':'neutral');
@@ -159,7 +163,7 @@ function crFriendStage(place,outfit,who,text,buttons,extra,visual){
     document.body.appendChild(el);
   }
   el.className='cr-friend-scene '+(extra||'')+(v.speaker==='p'?' speaker-player':'');el.setAttribute('aria-label',C.ev.t);
-  el.querySelector('.cr-friend-place').style.cssText=C.ev.wardrobe?'background-image:url(/img/career-friends/vacation-places-v1.png);--vacation-y:'+(C.ev.wardrobe==='ski'?1:0):'--place-x:'+(place%2)+';--place-y:'+Math.floor(place/2);
+  el.querySelector('.cr-friend-place').style.cssText=C.ev.backdrop==='military-visit'?'background-image:url(/img/career-scenes/military-plan.webp?v=2);background-size:cover;background-position:center':C.ev.wardrobe?'background-image:url(/img/career-friends/vacation-places-v1.png);--vacation-y:'+(C.ev.wardrobe==='ski'?1:0):'--place-x:'+(place%2)+';--place-y:'+Math.floor(place/2);
   el.classList.toggle('is-vacation',!!C.ev.wardrobe);
   var cast=el.querySelector('.cr-friend-cast');
   // Player dialogue and narration must not reset the friend's expression.
@@ -182,23 +186,24 @@ function crFriendSequence(beats,index,done){
 function crFriendShow(ev){
   CR.friendScene={ev:ev,pick:null,debut:false,vacation:!!ev.vacation,intro:ev.id==='friend:intro'};
   crTovSet('',true);
-  var preload=new Image();preload.src='/img/career-friends/'+(ev.vacation?'vacation-':'reactions-')+ev.friend.id+(ev.vacation?'-v2.png':'-v1.png');
+  if(ev.channel==='route')return crFriendRoute(ev);
+  var preload=new Image();preload.src='/img/career-friends/'+(ev.vacation?'vacation-':ev.friend.id==='reporter'?'casual-':'reactions-')+ev.friend.id+(ev.vacation?'-v2.png':'-v1.png');
   if(!ev.vacation&&ev.friend.id==='asia'){var casual=new Image();casual.src='/img/career-friends/casual-asia-v1.png';}
   if(ev.vacation){var scenery=new Image();scenery.src='/img/career-friends/vacation-places-v1.png';}
   crFriendWarmStoryCG(ev);
-  if(ev.channel==='story'){CR.friendScene.pick=0;return crFriendSequence(crFriendBeats(ev.script.story,ev.place??3,1),0);}
-  var key=ev.id.split(':')[1],place=key==='proposal'||key==='confession'?3:key==='foreign'?1:2;
-  if(ev.channel==='message'||ev.channel==='call'||key==='intro'||key==='outing'||key==='debut')return crFriendMessage(ev);
-  function question(){crFriendStage(place,1,ev.channel==='reflection'?'':ev.friend.name,ev.d,ev.a.map(function(text,i){return {text:text,run:function(){crFriendPick(i);}};}),'',{mood:key==='foreign'?'sad':key==='confession'||key==='proposal'?'shy':'neutral',cg:ev.questionCG?.key,expression:ev.questionCG?.expression});}
+  if(ev.channel==='story'){CR.friendScene.pick=0;return crFriendSequence(crFriendBeats(ev.script.story,ev.place??3,ev.outfit??1),0);}
+  var key=ev.id.split(':')[1],place=ev.place??(key==='proposal'||key==='confession'?3:key==='foreign'?1:2),outfit=ev.outfit??1;
+  if(ev.channel==='message'||ev.channel==='call'||key==='intro'&&!ev.action||key==='outing'||key==='debut')return crFriendMessage(ev);
+  function question(){crFriendStage(place,outfit,ev.channel==='reflection'?'':ev.friend.name,ev.d,ev.a.map(function(text,i){return {text:text,run:function(){crFriendPick(i);}};}),'',{mood:ev.mood||(key==='foreign'?'sad':key==='confession'||key==='proposal'?'shy':'neutral'),cg:ev.questionCG?.key,expression:ev.questionCG?.expression});}
   var before=(ev.script||CR_FRIEND_MAJOR[key])?.before;
-  if(before&&before.length)crFriendSequence(crFriendBeats(before,place,1),0,question);
+  if(before&&before.length)crFriendSequence(crFriendBeats(before,place,outfit),0,question);
   else question();
 }
 function crFriendFinish(){
   var C=CR.friendScene;if(!C)return;
   if(C.saving)return;C.saving=true;
-  var button=document.querySelector('#crFriendSceneActions button')||document.querySelector('#crFriendOptions button');if(button){button.disabled=true;button.textContent='진행 중…';}
-  crApi(C.vacation?'friend-vacation':C.debut?'friend-debut':'friend-prep',{token:CR.tok,pick:C.pick}).then(function(v){
+  var button=document.querySelector('#crFriendSceneActions button')||document.querySelector('#crFriendOptions button')||document.querySelectorAll('.cr-route-option')[C.pick];if(button){button.disabled=true;button.textContent='진행 중…';}
+  crApi(C.ev.action||(C.vacation?'friend-vacation':C.debut?'friend-debut':'friend-prep'),{token:CR.tok,pick:C.pick,...(C.ev.ivPick!=null?{ivPick:C.ev.ivPick}:{})}).then(function(v){
     if(CR.friendScene!==C)return;
     Object.assign(CR.v,v);CR.tok=v.token;crStore(CR.v);
     crFriendRemoveScene();crFriendClosePhone();document.getElementById('crFriendDebutMessage')?.remove();CR.friendScene=null;
@@ -284,7 +289,7 @@ function crFriendVacation(){
 
 var CR_FRIEND_STORY_ART={};
 function crFriendStoryCGSource(region,key,expression){
-  if(!CR_FRIEND_ACTORS[region]||!['sunset','lodge','confession','proposal'].includes(key))return null;
+  if(!CR_FRIEND_ACTORS[region]||!['sunset','lodge','confession','proposal','interview','stage','fireworks'].includes(key)||['stage','fireworks'].includes(key)&&region!=='asia')return null;
   var variants={confession:['tense','surprised'],proposal:['surprised','tearful']},face=(variants[key]||[]).includes(expression)?'-'+expression:'';
   return '/img/career-friends/event-'+region+'-'+key+face+'-v'+(['sunset','lodge'].includes(key)?2:1)+'.png';
 }
@@ -311,7 +316,7 @@ function crFriendStoryCG(who,text,buttons,visual){
     el.dataset.source=src;el.dataset.expression=expression;el.classList.remove('art-unavailable');
     // Keep the current composition visible until the next facial variant is ready.
     var previous=Array.from(el.querySelectorAll('.cr-friend-story-art')),img=document.createElement('img');
-    img.className='cr-friend-story-art'+(fresh?'':' expression-change');img.alt=C.ev.friend.name+'과 함께한 '+({sunset:'해변의 노을',lodge:'눈 내리는 산장',confession:'고백의 순간',proposal:'프로포즈의 순간'}[visual.cg]);img.draggable=false;
+    img.className='cr-friend-story-art'+(fresh?'':' expression-change');img.alt=C.ev.friend.name+'과 함께한 '+({sunset:'해변의 노을',lodge:'눈 내리는 산장',confession:'고백의 순간',proposal:'프로포즈의 순간',interview:'첫 인터뷰',stage:'자기 이름으로 노래하는 작은 공연',fireworks:'고향의 불꽃축제'}[visual.cg]);img.draggable=false;
     img.onload=function(){
       if(CR.friendScene!==C||!el.isConnected||el.dataset.source!==src){img.remove();return;}
       function reveal(){
@@ -335,4 +340,20 @@ function crFriendStoryCG(who,text,buttons,visual){
     CR.friendCinematicTimers.push(setTimeout(read,650));
   }else read();
   return el;
+}
+
+function crReporterIntro(ev,ivPick){
+  crTovSet('',true);crFriendShow({...ev,ivPick:ivPick});
+}
+function crReporterActor(r,outfit,mood,holiday){
+  var frame={neutral:0,happy:1,shy:2,sad:3}[mood]||0,url='casual-reporter-v1.png',position=frame*100/3,crop='';
+  if(holiday){frame=(holiday==='ski'?2:0)+(['happy','shy'].includes(mood)?1:0);url='vacation-reporter-v2.png';position=[85,414,786,1138][frame]/1206*100;crop=';aspect-ratio:330/1024;background-size:465.454546% 100%';}
+  else if(!outfit){url='actor-reporter-v1.png';frame=0;position=100/3;}
+  return '<div class="cr-friend-actor reactions" role="img" data-character="reporter" data-pose="'+frame+'" data-mood="'+(mood||'neutral')+'" data-gesture="conversation" data-outfit="'+(holiday||(!outfit?'work':'casual'))+'" aria-label="'+gmEsc(r.name)+'의 '+(holiday==='ski'?'스키복':holiday==='beach'?'해변 여행복':!outfit?'취재복':'일상복')+'" style="background-image:url(/img/career-friends/'+url+');--actor-position:'+position+'%'+crop+'"></div>';
+}
+function crFriendRoute(ev){
+  var el=document.createElement('div');el.id='crFriendScene';el.className='cr-friend-overlay cr-relationship-route';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');
+  el.innerHTML='<section class="cr-route-panel"><small>'+gmEsc(ev.t)+'</small><h2>'+gmEsc(ev.d)+'</h2><p>선택한 사람과 이번 약속을 진행해요.</p><div class="cr-route-options"></div></section>';document.body.appendChild(el);
+  ev.people.forEach(function(r,i){var b=document.createElement('button');b.className='cr-route-option';b.innerHTML=crFriendPortrait(r)+'<span><b>'+gmEsc(r.name)+'</b><small>'+gmEsc(r.label)+'</small><em>'+gmEsc(ev.a[i])+'</em></span>';b.onclick=function(){crFriendPick(i);};el.querySelector('.cr-route-options').appendChild(b);});
+  el.querySelector('button').focus();
 }

@@ -89,3 +89,16 @@
 .cr-friend-story-art.expression-change.expression-ready{opacity:1}
 
 @media(prefers-reduced-motion:reduce){.cr-friend-story-art.expression-change{transition:none}}
+
+/* Reporter first meeting and annual partner selection. */
+.reporter-face{background-image:url('/img/career-friends/casual-reporter-v1.png');background-size:920% auto;background-position:36% 3%}
+.cr-iv.has-reporter{align-items:flex-end;padding-bottom:max(20px,env(safe-area-inset-bottom))}
+.cr-iv.has-reporter .cr-iv-scene{object-position:46% 0}
+.cr-iv.has-reporter .cr-iv-box{max-width:620px;gap:8px;max-height:62dvh;overflow:auto}
+.cr-iv.has-reporter .cr-iv-box>.mic{display:none}
+.cr-relationship-route{color:var(--text)}
+.cr-route-panel{width:min(100%,620px);padding:24px;border:1px solid var(--border);border-radius:16px;background:var(--surface2)}
+.cr-route-panel>small{color:var(--gold)}.cr-route-panel h2{font-size:20px;line-height:1.5;margin:12px 0}.cr-route-panel>p{font-size:12px;color:var(--text-secondary)}
+.cr-route-options{display:grid;gap:12px;margin-top:20px}.cr-route-option{display:flex;align-items:center;gap:14px;border:1px solid var(--border);border-radius:12px;padding:16px;background:transparent;color:var(--text);text-align:left;cursor:pointer;font:inherit}
+.cr-route-option:hover{border-color:var(--gold)}.cr-route-option:focus-visible{outline:2px solid var(--gold);outline-offset:3px}.cr-route-option span>b,.cr-route-option span>small,.cr-route-option span>em{display:block}.cr-route-option small{color:var(--text-secondary);font-size:12px;margin:4px 0}.cr-route-option em{font-style:normal;font-size:13px}
+@media(max-width:400px){.cr-route-panel{padding:18px}.cr-route-panel h2{font-size:17px}.cr-route-option{padding:12px}.cr-iv.has-reporter .cr-iv-box{max-height:57dvh}.cr-iv.has-reporter .tag{font-size:10px}}

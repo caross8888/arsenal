@@ -1,6 +1,8 @@
+import {REPORTER_PROFILE} from './_career_reporter_dialogue.js';
 // Each hometown friend has her own voice and goals, independent of the club's country.
 export const PROFILES={
-  asia:{reunion:'…왔다.\n너 실물은 오랜만이라 좀 어색한데? 웃지 마ㅋㅋ',personality:'장난 속에 속마음을 감추는 다정한 친구',goal:'익숙한 사람들 곁에서 안정적인 자기 생활을 꾸리기',boundary:'오래된 사이라고 약속과 마음을 당연하게 여기지 않기',moveSupport:2,broken:-10,ignore:-8,
+  reporter:REPORTER_PROFILE,
+  asia:{reunion:'…왔다.\n너 실물은 오랜만이라 좀 어색한데? 웃지 마ㅋㅋ',personality:'장난으로 마음을 감추지만 무대에서는 인정받고 싶은 소꿉친구',goal:'오랜 연습생 생활 속에서 남의 평가가 아닌 자기 목소리로 노래할 길 찾기',boundary:'응원한다는 이유로 진로를 대신 정하거나 성공을 재촉하지 않기',moveSupport:2,broken:-10,ignore:-8,
     intro:['유니폼 받았냐\n입은 거 보내봐ㅋㅋ','도착했어?\n숙소는 어때. 사진 좀 보내봐. 이상한 데서 자는 건 아니지?'],
     welcome:['아직 안 웃었거든? 사진 기다린다ㅋㅋ','무사히 도착해서 다행이네.\n짐 풀고 연락해. 네가 먼저 해ㅋㅋ'],
     check:'뭐 해?\n나 방금 밥 먹다가 네 생각 났어. 너 또 대충 먹었지.',photo:'사진 정리하다 이거 찾음ㅋㅋ\n너 앞니 빠졌을 때. 보내도 되냐?',goalTalk:'난 나중에도 여기 근처에서 살고 싶어.\n가끔은 지겨운데, 떠날 생각을 하니까 또 아쉽더라.',

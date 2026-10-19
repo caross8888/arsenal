@@ -14,6 +14,8 @@ import {nationalSchedule,seniorNationalCalendar} from './_career_international.j
 import {championsFinal,EUROPEAN_LEAGUES} from './_career_club_final.js';
 import * as FIN from './_career_finance.js';
 import * as REL from './_career_relationship.js';
+import * as REPORTER from './_career_reporter.js';
+import * as ASIA from './_career_asia.js';
 import {vacationPending} from './_career_relationship_travel.js';
 export const militaryView = MIL.militaryView;
 export const militaryAction = MIL.applyMilitary;
@@ -563,7 +565,7 @@ function interviewOf(){
   const sit = fresh(IV_SET.filter(([, ok]) => ok(x)).flatMap(([k, , vs]) => vs.map((v, i) => [k+i, v])));
   const gen = fresh(IV_GEN.map((v, i) => ['g'+i, v]));
   let id, v;
-  if(!C.mediaN && C.age <= 20){ id = 'first'; v = ['첫 인터뷰네요. 프로 무대에서 이루고 싶은 꿈이 있나요?', '세계 최고의 선수가 되는 거요. 시간문제라고 생각해요.', '우선 이 팀에서 꾸준히 뛰는 게 꿈이에요. 하나씩 해 나갈게요.']; }
+  if(!C.mediaN){ id = 'first'; v = ['첫 인터뷰네요. 프로 무대에서 이루고 싶은 꿈이 있나요?', '세계 최고의 선수가 되는 거요. 시간문제라고 생각해요.', '우선 이 팀에서 꾸준히 뛰는 게 꿈이에요. 하나씩 해 나갈게요.']; }
   else {
     const pool = sit.length && (r() < 0.8 || !gen.length) ? sit : gen.length ? gen : IV_GEN.map((v, i) => ['g'+i, v]);
     [id, v] = pool[Math.floor(r()*pool.length)];
@@ -571,20 +573,26 @@ function interviewOf(){
   const [tag, who] = id === 'first' ? ['FIRST INTERVIEW · 첫 인터뷰', '스포츠 매체 기자'] : IV_WHO[Math.floor(r()*IV_WHO.length)];
   const a = [{t:fill(v[1]), k:0}, {t:fill(v[2]), k:1}];
   if(r() < 0.5) a.reverse();
-  return {id, tag, who, q:fill(v[0]), a};
+  const reporter=REPORTER.interviewView(C);
+  return {id, tag, who:reporter?reporter.friend.name+' · 스포츠 매체 기자':who, q:fill(v[0]), a, reporter};
 }
 // 시즌 준비 화면에 보여 줄 것(숨김 값 없음)
 export function relationshipPrepView(state){
   REL.ensureRelationship(state);
-  if(state.phase!=='prep'||!state.relationship||state.relationship.prepAge===state.age)return {intro:null,event:null};
-  const intro=REL.introEvent(state);if(intro)return {intro,event:null};
+  if(state.phase!=='prep'||!state.relationship)return {intro:null,event:null};
+  const reporterEvent=REPORTER.preparation(state,!!MIL.serviceView(state));
+  if(reporterEvent)return {intro:null,event:reporterEvent};
+  if(state.relationship.prepAge===state.age)return {intro:null,event:null};
+  const intro=ASIA.introEvent(state)||REL.introEvent(state);if(intro)return {intro,event:null};
   const service=MIL.serviceView(state);
+  const asiaEvent=ASIA.preparation(state,!!service);
+  if(asiaEvent)return {intro:null,event:asiaEvent};
   let legacy=String(state.ev).startsWith('friend:')?REL.relationshipEvent(state,state.ev,!!service):null;
   // Old preparation screens may offer a confession/proposal before the new gates.
   // Give them a currently valid annual scene, then restore the football event.
   if((legacy?.id==='friend:confession'||legacy?.visitFor==='confession')&&(state.age<18||state.relationship.affinity<REL.RULES.confession))legacy=null;
   if((legacy?.id==='friend:proposal'||legacy?.visitFor==='proposal')&&(state.relationship.status!=='dating'||state.relationship.affinity<REL.RULES.proposal||state.age-(state.relationship.datingAge??state.age)<2||!state.relationship.futureAgreement))legacy=null;
-  let key=REL.dueRelationship(state);
+  let key=state.activePartner==='reporter'?null:REL.dueRelationship(state);
   if(service&&!['foreign','followup','crisis'].includes(key))key=null;
   const ev=legacy||(key&&REL.relationshipEvent(state,'friend:'+key,!!service))||REL.routineEvent(state,!!service);
   if(service&&ev){ev.remote=true;if(ev.channel==='scene')ev.channel='call';delete ev.meeting;if(ev.script)ev.script.before=[];}
@@ -594,7 +602,9 @@ export function completeRelationshipPrep(state,pick){
   const pending=relationshipPrepView(state);
   if(pending.intro)REL.applyIntro(state,pick);
   else if(pending.event){
-    if(pending.event.id.startsWith('friend:daily:'))REL.applyRoutine(state,pending.event,pick);
+    if(pending.event.id.startsWith('reporter:')||pending.event.id==='relationship:route')REPORTER.complete(state,pending.event,pick);
+    else if(pending.event.asia||pending.event.asiaRoute||pending.event.asiaMilitaryMajor)ASIA.complete(state,pending.event,pick);
+    else if(pending.event.id.startsWith('friend:daily:'))REL.applyRoutine(state,pending.event,pick);
     else {REL.applyRelationship(state,pending.event.id,pick);if(pending.event.id!=='friend:visit'||pick!==0)state.relationship.prepAge=state.age;}
   }else throw new Error('완료할 관계 이벤트가 없어요.');
   if(String(state.ev).startsWith('friend:')){C=state;newEvent();}
@@ -605,7 +615,7 @@ export function prepView(state){
   const ev = currentEvent(),callup=ev.id==='natcall'?nationalCallupPlan(C):null;
   let d = ev.d;
   if(callup)d=callup.nationName+' 대표팀의 '+callup.year+'년 '+callup.windows.map(w=>w.name).join(' · ')+'에 함께하자. 수락하면 아래 대회에 참가하고, 거절하면 이번 시즌 대표팀 일정에는 불참한다.';
-  if(ev.id === 'media' && (C.mediaN || C.age > 20)) d =   // "첫 인터뷰"는 어릴 때 처음 한 번만
+  if(ev.id === 'media' && C.mediaN) d =   // 첫 실제 인터뷰가 끝난 뒤에는 현재 상황에 맞는 설명
     ['기자들이 이번 시즌 각오를 묻고 있어요.','스포츠 매체에서 단독 인터뷰를 요청했어요.','개막 전 기자회견에 나서게 됐어요.','팬 채널에서 인터뷰를 하고 싶대요.'][C.age % 4];
   if(ev.id === 'loan' && loanList().length > 1) d = '두 구단에서 한 시즌 임대 제안이 왔어요. 갈 곳을 고르거나, 남아서 경쟁할 수 있어요.';
   if(ev.id === 'scout' && C.scoutClub) d = C.scoutClub.n+' 스카우트가 찾아왔어요. 아카데미로 옮기면 더 좋은 환경에서 크지만, 1군 데뷔 문턱도 높아요.';
@@ -620,7 +630,7 @@ export function prepView(state){
   if(ev.id === 'talk') a = [a[0], a[1]+(ageBase() > 0 ? ' (성장 ↑)' : ageBase() < 0 ? ' (하락 ↓)' : ' (감독 신뢰 ↑)')];
   const relation=relationshipPrepView(C);
   return {friendIntro:relation.intro,friendEvent:relation.event,military:MIL.militaryView(C), service:MIL.serviceView(C), returnPeriod:C.returnService?{months:C.returnService.months,home:C.returnService.home}:null, international:callup?.ageTournament||null, goal, youth: youth(), stage: STAGE[lv].n || '1군', promo: C.scoutMove ? d : C.stageNote || null, contract: FIN.contractView(C), trainOpts: trainOpts(), late: lateTrain(), keyMax: keyMax(), keyCapped: keyCapped(), event:{id:ev.id, t:ev.t, d, a,...(ev.friend?{friend:ev.friend,replies:ev.reply}:{}),...(callup?{callup}:{})},
-    selected: C.scoutMove ? 0 : null, interview: ev.id === 'media' ? interviewOf() : null, bloom: bloomView(),
+    selected: C.scoutMove ? 0 : C.reporter?.interviewAge===C.age ? C.reporter.interviewPick : null, interview: ev.id === 'media' ? interviewOf() : null, bloom: bloomView(),
     loanClubs: ev.id==='loan' ? loanList().map(c => ({...pub(c), chance: chanceOf(pStart(c))})) : null};
 }
 
@@ -654,7 +664,7 @@ export function acceptScout(state){
   if(C.scoutMove) return;
   if(!C.scoutClub) throw new Error('스카우트 제안이 없어요.');
   const friendFrom=C.club.nat;C.scoutMove=C.club.n;C.club=C.scoutClub;delete C.scoutClub;
-  REL.recordRelationshipTransfer(C,friendFrom,C.club.nat);
+  REL.recordRelationshipTransfer(C,friendFrom,C.club.nat);REPORTER.recordTransfer(C,friendFrom,C.club.nat);
   if(!C.clubs.includes(C.club.n)) C.clubs.push(C.club.n);
   C.evPick=0;
 }
@@ -1212,7 +1222,7 @@ export function nextSeason(state, pick, traitPick){
   if(pick != null){
     const o = C.offers[pick]; if(!o) throw new Error('pick');
     C.club = o.c; if(!C.clubs.includes(o.c.n)) C.clubs.push(o.c.n);
-    REL.recordRelationshipTransfer(C,prevCountry,C.club.nat);
+    REL.recordRelationshipTransfer(C,prevCountry,C.club.nat);REPORTER.recordTransfer(C,prevCountry,C.club.nat);
     // 이적: 새 팀 수준 이상의 선수면 원하던 번호를 바로, 아니면 남는 번호로 시작(주전이 되면 원하던 번호)
     if(C.proAt){ C.num = cOvr() >= o.c.r - NUM_STAR ? C.want : pickNum(TRANSFER_NUM, mulberry(C.seed ^ hashStr('tnum'+C.age))()); newNum = C.num; delete C.numN; }
   }
@@ -1316,7 +1326,7 @@ export function playerView(state){
   C = state;
   const fin=FIN.financeState(C);
   const hw = bodyHW(C.age), military=MIL.militaryView(C), visibleClub=military && military.status==='sangmu' ? clubByName(MIL.SANGMU) : C.club;
-  return {relationship:REL.relationshipView(C), military, id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:cOvr(),
+  return {relationship:REPORTER.partnerView(C),connections:REPORTER.connections(C), military, id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, foot:C.foot, body:C.body||'표준', h:hw[0], w:hw[1], num:C.num, want:C.want, age:C.age, ovr:cOvr(),
     st:C.st.map(v => Math.round(v)), wf:C.wf, club:{...pub(visibleClub), team:teamName(visibleClub)}, phase:C.phase, seasons:C.hist.length,
     glass:!!C.glass, salary:fin.salary?FIN.moneyView(fin.salary.annualEUR,C.club):null,market:FIN.marketQuote(C,C.club,C.age), tot:C.tot, peak:C.peak, traits:(C.traits||[]).map(id => traitView(id, C.pos)),
     // 커리어 기록 접이식 표: [나이, 팀, 임대, 경기, 골, 도움(수비수는 클린시트), 오버롤, 구단, 유스, 그 시즌 주요 수상(S·A·B, 대표팀 제외)]
@@ -1329,7 +1339,7 @@ export function cardView(state){
   C = state;
   let peakVal = 0; C.hist.forEach(r => { peakVal = Math.max(peakVal, marketValue(r.ovr, r.age)); });
   const hw = bodyHW(Math.max(18, C.age));
-  return {relationship:REL.relationshipView(C), military:MIL.militaryView(C), id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
+  return {relationship:REPORTER.partnerView(C),connections:REPORTER.connections(C), military:MIL.militaryView(C), id:C.id, name:C.name, nation:C.nation, pos:C.pos, card:C.card, num:C.num, age:C.age, peak:C.peak, score:C.score ?? careerScore(C), body:C.body||'표준', h:hw[0], w:hw[1],
     peakValue: Math.round(peakVal*10)/10, traits:(C.traits||[]).map(id => (TRAIT_BY_ID.get(id)||{}).n).filter(Boolean), traitIds:(C.traits||[]).filter(id => TRAIT_BY_ID.has(id)), oneClub:!!C.oneClub, farewell:!!C.farewell, glass:!!C.glass, iron:!!C.iron,
     tot:C.tot, clubs:C.clubs,finance:FIN.financeSummary(C.hist,C.pos),
     seasons: C.hist.flatMap(r => r.segments || [r]).map(r => ({age:r.age, club:r.club, id:(clubByName(r.club)||{}).id, team:r.team, loan:r.loan, youth:r.youth, ovr:r.ovr,

@@ -76,7 +76,8 @@ nextYear(promise);assert.equal(R.dueRelationship(promise),'crisis');choose(promi
 nextYear(promise);const final=S.relationshipPrepView(promise).event;assert(final.partnerEnds);choose(promise,0);assert.equal(promise.relationship.status,'separated','partner may end relationship after ignored repeated conflicts');
 const repair=dating();repair.relationship.affinity=25;repair.relationship.unresolved=2;choose(repair,0);assert.equal(repair.relationship.status,'dating');assert.equal(repair.relationship.unresolved,0);assert(repair.relationship.promise);
 nextYear(repair);choose(repair,0);assert.equal(repair.relationship.fulfilledPromises,1);assert.equal(repair.relationship.affinity,43);
-for(const nation of ['KOR','BRA','NGA','ENG']){
+// Asia uses its own homecoming/story gates, covered in test_career_asia.mjs.
+for(const nation of ['BRA','NGA','ENG']){
  const c=make(nation,21);c.club=S.clubByName(nation==='ENG'?'플라멩구':'아스날');c.relationship.affinity=65;
  const home=c.relationship.residence,invite=S.relationshipPrepView(c).event;
  assert.equal(invite.id,'friend:visit');assert.equal(invite.visitFor,'confession');assert.equal(invite.channel,'message');
