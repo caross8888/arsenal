@@ -48,62 +48,79 @@ function crFriendPhone(ev,chosen){
       var b=document.createElement('button');b.className='cr-friend-option';b.textContent=text;b.onclick=function(){
         if(chat.picked)return;chat.picked=true;options.replaceChildren();var stamp=bubble(text,true);
         incoming(ev.replies[i].split('\n').filter(Boolean),function(){
-          stamp.textContent='읽음 · 18:25';var go=document.createElement('button');go.className='cr-friend-option go';go.textContent=i===0&&(ev.meeting||['friend:outing','friend:debut'].includes(ev.id))?'만나러 가기':CR.friendScene.intro?'시즌 준비로':'계속';
+          stamp.textContent='읽음 · 18:25';var go=document.createElement('button');go.className='cr-friend-option go';go.textContent=crFriendIsMeeting(ev,i)?'만나러 가기':CR.friendScene.intro?'시즌 준비로':'계속';
           go.onclick=function(){chosen(i);};options.append(go);go.focus();
         });
       };options.append(b);
     });
   });
 }
+function crFriendIsMeeting(ev,pick){
+  return ev.meeting?(ev.meeting.picks||[0]).indexOf(pick)>=0:pick===0&&['friend:outing','friend:debut'].includes(ev.id);
+}
 function crFriendPick(i){
   var C=CR.friendScene;if(!C||C.pick!=null||!C.ev.a[i])return;
   C.pick=i;
-  if(C.intro||C.ev.channel==='message'&&(!C.ev.meeting||i!==0)||i===1&&(C.ev.id==='friend:outing'||C.ev.id==='friend:debut'))return crFriendFinish();
+  if(C.intro||C.ev.channel==='message'&&!crFriendIsMeeting(C.ev,i)||i===1&&(C.ev.id==='friend:outing'||C.ev.id==='friend:debut'))return crFriendFinish();
   crFriendClosePhone();
-  crFriendRemoveScene();
   var key=C.ev.id.split(':')[1],reply=C.ev.replies[i],beats=[];
-  if(C.ev.channel==='reflection'){
-    beats=[{place:3,outfit:0,who:'',text:reply}];
-  }else if(C.ev.meeting){
-    beats=[{place:C.ev.meeting.place,outfit:C.ev.friend.status==='dating'||C.ev.friend.status==='married'?1:0,who:C.ev.friend.name,text:C.ev.meeting.text}];
-  }else if(i===0&&(key==='outing'||key==='debut')){
-    beats=[{place:key==='debut'?1:2,outfit:key==='debut'?0:1,who:'',text:key==='debut'?'경기장 출구. 사람들 사이에서 먼저 손을 드는 얼굴이 보였다.':'약속한 카페. 문을 열자 익숙한 얼굴이 고개를 들었다.'},
-      {place:key==='debut'?1:2,outfit:key==='debut'?0:1,who:C.ev.friend.name,text:key==='debut'?'왜 이렇게 늦게 나와. 나 다리 아파ㅋㅋ\n…그래도 기다리길 잘했다. 오늘 진짜 멋있었어.':'너 뭐 마실 거야?\n난 네가 맨날 먹던 거 시키려다가 기다렸어.'},
-      {place:key==='debut'?1:2,outfit:key==='debut'?0:1,who:C.ev.friend.name,text:key==='debut'?'밥은 네가 사는 거지?\n일단 가자. 경기 얘기는 걸으면서 해.':'우리 맨날 보면서도 할 말은 계속 생긴다ㅋㅋ\n그래서, 요즘은 좀 어때?'}];
-  }else beats=[{place:key==='proposal'||key==='confession'?3:key==='foreign'?1:2,outfit:1,who:C.ev.friend.name,text:reply}];
+  if(C.ev.channel==='reflection')beats=[{place:3,outfit:0,who:'',text:reply,hide:true}];
+  else if(C.ev.meeting)beats=crFriendMeetingBeats(C.ev);
+  else {
+    var story=CR_FRIEND_MAJOR[key],place=key==='proposal'||key==='confession'?3:key==='foreign'||key==='debut'?1:2,outfit=key==='debut'?0:1;
+    beats=story&&story.after[i].length?crFriendBeats(story.after[i],place,outfit):crFriendBeats([['f',reply,'neutral'],['n','인사를 나누고 각자의 길로 돌아갔다.','neutral',false]],place,outfit);
+    if(['confession','foreign','proposal'].includes(key))beats.unshift({place:place,outfit:outfit,who:'나',text:C.ev.a[i],mood:'neutral',speaker:'p'});
+  }
   crFriendSequence(beats,0);
 }
 function crFriendRemoveScene(){clearTimeout(CR.friendTimer);document.getElementById('crFriendScene')?.remove();}
 function crFriendCancel(){crFriendRemoveScene();crFriendClosePhone();document.getElementById('crFriendDebutMessage')?.remove();CR.friendScene=null;}
 var CR_FRIEND_ACTORS={asia:[9.95,50.55,92.11],south:[11.50,50.14,90.01],africa:[11.59,51.23,87.36],europe:[16.56,50.82,86.68]};
-function crFriendActor(r,outfit,greeting){
+function crFriendActor(r,outfit,greeting,mood){
   var positions=CR_FRIEND_ACTORS[r.id];if(!positions)return '';
-  var pose=greeting?1:outfit?2:0;
-  // Each approved woman has her own source. No shared generated face/body atlas.
-  return '<div class="cr-friend-actor" role="img" data-character="'+r.id+'" data-pose="'+pose+'" aria-label="'+gmEsc(r.name)+'의 '+['일상복','미소 짓는','데이트복'][pose]+' 전신 도트" style="background-image:url(/img/career-friends/actor-'+r.id+'-v3.png);--actor-position:'+positions[pose]+'%"></div>';
+  mood=mood||(greeting?'happy':'neutral');
+  var pose=greeting||mood==='happy'?1:0,date=!!outfit;
+  var frame={neutral:0,happy:1,shy:2,sad:3}[mood]||0;
+  var url=date?'reactions-'+r.id+'-v1.png':'actor-'+r.id+'-v3.png';
+  var description={neutral:'차분한',happy:'웃는',shy:'쑥스러운',sad:'슬픈'}[mood];
+  return '<div class="cr-friend-actor'+(date?' reactions':'')+'" role="img" data-character="'+r.id+'" data-pose="'+(date?frame:pose)+'" data-mood="'+mood+'" data-outfit="'+(date?'date':'casual')+'" aria-label="'+gmEsc(r.name)+'의 '+description+' 표정과 자세" style="background-image:url(/img/career-friends/'+url+');--actor-position:'+(date?frame*100/3:positions[pose])+'%"></div>';
 }
-function crFriendStage(place,outfit,who,text,buttons,extra){
-  crFriendRemoveScene();var C=CR.friendScene,r=C.ev.friend;
-  var el=document.createElement('div');el.id='crFriendScene';el.className='cr-friend-scene '+(extra||'');el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',C.ev.t);
-  el.innerHTML='<div class="cr-friend-place" style="--place-x:'+(place%2)+';--place-y:'+Math.floor(place/2)+'"></div>'+(C.ev.channel==='reflection'?'':crFriendActor(r,outfit,(extra||'').indexOf('in-stands')>=0))+'<div class="cr-friend-scene-title">'+gmEsc(C.ev.t)+'</div><section class="cr-friend-scene-dialogue"><b>'+gmEsc(who||'')+'</b><p>'+gmEsc(text)+'</p><div id="crFriendSceneActions"></div></section>';
-  document.body.appendChild(el);
-  var actions=el.querySelector('#crFriendSceneActions');
+function crFriendStage(place,outfit,who,text,buttons,extra,visual){
+  clearTimeout(CR.friendTimer);var C=CR.friendScene,r=C.ev.friend,v=visual||{};
+  var el=document.getElementById('crFriendScene');
+  if(!el){
+    el=document.createElement('div');el.id='crFriendScene';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');
+    el.innerHTML='<div class="cr-friend-place"></div><div class="cr-friend-cast"></div><div class="cr-friend-scene-title"></div><section class="cr-friend-scene-dialogue"><b></b><p></p><div id="crFriendSceneActions"></div></section>';
+    document.body.appendChild(el);
+  }
+  el.className='cr-friend-scene '+(extra||'')+(v.speaker==='p'?' speaker-player':'');el.setAttribute('aria-label',C.ev.t);
+  el.querySelector('.cr-friend-place').style.cssText='--place-x:'+(place%2)+';--place-y:'+Math.floor(place/2);
+  var cast=el.querySelector('.cr-friend-cast');
+  var markup=C.ev.channel==='reflection'||v.hide?'':crFriendActor(r,outfit,(extra||'').indexOf('in-stands')>=0,v.mood);
+  if(cast.dataset.markup!==markup){cast.innerHTML=markup;cast.dataset.markup=markup;}
+  el.querySelector('.cr-friend-scene-title').textContent=C.ev.t;
+  el.querySelector('.cr-friend-scene-dialogue>b').textContent=who||'';
+  el.querySelector('.cr-friend-scene-dialogue>p').textContent=text;
+  var actions=el.querySelector('#crFriendSceneActions');actions.replaceChildren();
   buttons.forEach(function(b){var btn=document.createElement('button');btn.className='cr-friend-option';btn.textContent=b.text;btn.onclick=b.run;actions.appendChild(btn);});
+  el.querySelector('.cr-friend-scene-dialogue').scrollTop=0;
   return el;
 }
-function crFriendSequence(beats,index){
-  var b=beats[index];crFriendStage(b.place,b.outfit,b.who,b.text,[{text:index<beats.length-1?'계속':CR.friendScene.debut?'시즌 계속':'시즌 준비로',run:function(){if(index<beats.length-1)crFriendSequence(beats,index+1);else crFriendFinish();}}]);
+function crFriendSequence(beats,index,done){
+  var b=beats[index],last=index===beats.length-1;
+  CR.friendScene.beat=index;
+  crFriendStage(b.place,b.outfit,b.who,b.text,[{text:!last||done?'계속':CR.friendScene.debut?'시즌 계속':'시즌 준비로',run:function(){if(!last)crFriendSequence(beats,index+1,done);else if(done)done();else crFriendFinish();}}],'',b);
 }
 function crFriendShow(ev){
   CR.friendScene={ev:ev,pick:null,debut:false,intro:ev.id==='friend:intro'};
   crTovSet('',true);
-  // A meeting is shown in its location; it is never just a promise in a chat window.
+  var preload=new Image();preload.src='/img/career-friends/reactions-'+ev.friend.id+'-v1.png';
   var key=ev.id.split(':')[1],place=key==='proposal'||key==='confession'?3:key==='foreign'?1:2;
-  if(ev.channel==='message'||key==='intro'||key==='outing'||key==='debut'){
-    crFriendMessage(ev);return;
-  }
-  crTovSet('',true);
-  crFriendStage(place,1,ev.channel==='reflection'?'':ev.friend.name,ev.d,ev.a.map(function(text,i){return {text:text,run:function(){crFriendPick(i);}};}));
+  if(ev.channel==='message'||key==='intro'||key==='outing'||key==='debut')return crFriendMessage(ev);
+  function question(){crFriendStage(place,1,ev.channel==='reflection'?'':ev.friend.name,ev.d,ev.a.map(function(text,i){return {text:text,run:function(){crFriendPick(i);}};}),'',{mood:key==='foreign'?'sad':key==='confession'||key==='proposal'?'shy':'neutral'});}
+  var before=CR_FRIEND_MAJOR[key]?.before;
+  if(before&&before.length)crFriendSequence(crFriendBeats(before,place,1),0,question);
+  else question();
 }
 function crFriendFinish(){
   var C=CR.friendScene;if(!C)return;

@@ -99,7 +99,7 @@ const DAILY={
     ['늦은 연락','요즘 우리 연락 시간이 자꾸 엇갈리네.\n오늘은 잠깐 얘기할 수 있어?',['응. 지금은 너랑 얘기할 시간 있어.','오늘은 늦을 것 같아. 내일 내가 먼저 전화할게.'],['좋다. 오늘 무슨 일 있었는지부터 얘기해줘.','응. 내일은 기다릴게.']]
   ],
   married:[
-    ['둘만의 저녁','우리 요즘 마주 앉아서 밥 먹은 적이 별로 없네.\n이번엔 둘이 나갈까?',['좋아. 내가 예약할게.','밖에 말고 집에서 같이 만들어 먹자.'],['응. 오늘은 천천히 먹자.','좋지. 장 볼 거 같이 적어보자.'],{place:2,text:'오랜만에 이렇게 나오니까 연애할 때 같다.\n우리 이런 시간 좀 더 자주 만들자.'}],
+    ['둘만의 저녁','우리 요즘 마주 앉아서 밥 먹은 적이 별로 없네.\n이번엔 둘이 나갈까?',['좋아. 내가 예약할게.','오늘은 너무 피곤해. 다음에 내가 예약할게.'],['응. 오늘은 천천히 먹자.','알겠어. 오늘은 쉬자. 다음 약속은 네가 잡기.'],{place:2,text:'오랜만에 이렇게 나오니까 연애할 때 같다.\n우리 이런 시간 좀 더 자주 만들자.'}],
     ['장보기','장 보러 왔는데 뭐 먹고 싶어?\n네가 맨날 먹던 것도 살까?',['응ㅋㅋ 그거랑 네가 좋아하는 것도.','오늘은 새로운 거 먹어보자. 내가 고를게.'],['이미 내 것도 담았지ㅋㅋ','좋아. 뭘 고를지 궁금한데.']],
     ['오래된 사진','우리 옛날 사진 봤어.\n그때 너 저런 표정이었구나.',['너 앞에서는 지금도 똑같을걸ㅋㅋ','어떤 사진인데? 같이 보자.'],['그건 맞네ㅋㅋ 아직도 딱 알아.','응. 오늘 같이 골라보자.']],
     ['바쁜 한 주','이번 주는 우리 둘 다 바쁘네.\n그래도 하루쯤은 같이 쉬자.',['그날은 일정 비워둘게.','시간 길게 못 내도 같이 저녁은 먹자.'],['좋아. 그날 뭐 할지 천천히 생각하자.','응. 그 정도도 나는 좋아.']]
@@ -114,9 +114,9 @@ const DAILY={
 export function routineEvent(C,service=false){
   const r=C.relationship;if(!r)return null;
   const group=r.status==='separated'?'separated':service?'service':r.status==='married'?'married':r.status==='dating'?'dating':C.age<=20?'youth':'friend';
-  const pool=DAILY[group],entry=pool[(C.age-15)%pool.length];
+  const pool=DAILY[group],index=(C.age-15)%pool.length,entry=pool[index];
   const [t,d,a,reply,meeting]=entry;
-  return {id:'friend:daily:'+C.age,t,d,a,reply,friend:relationshipView(C),channel:group==='separated'?'reflection':'message',...(meeting?{meeting}: {})};
+  return {id:'friend:daily:'+C.age,t,d,a,reply,friend:relationshipView(C),channel:group==='separated'?'reflection':'message',...(meeting?{meeting:{...meeting,scene:group+':'+index,...(group==='dating'&&index===2?{picks:[0,1]}:{})}}: {})};
 }
 export function applyRoutine(C,ev,pick){
   if(!Number.isInteger(pick)||!ev.a[pick]||C.relationship.prepAge===C.age)throw new Error('daily pick');

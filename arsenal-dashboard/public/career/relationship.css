@@ -37,3 +37,7 @@
 @keyframes crFriendMessageIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media(max-width:360px){.cr-friend-device{border-width:7px;border-radius:30px}.cr-friend-device .cr-friend-option{font-size:11px}.cr-friend-chat-line>p{font-size:12px;max-width:225px}.cr-friend-device .cr-friend-history{padding:16px 10px}.cr-friend-device>header{padding:10px 13px}.cr-friend-device .cr-friend-options{padding:10px}}
 @media(prefers-reduced-motion:reduce){.cr-friend-chat-line,.cr-friend-typing i{animation:none}.cr-friend-device .cr-friend-history{scroll-behavior:auto}}
+/* Same wardrobe throughout the scene; expression and gesture are independent. */
+.cr-friend-actor.reactions{aspect-ratio:384/1024;background-size:400% 100%}
+.cr-friend-cast{position:absolute;inset:0;pointer-events:none}
+.cr-friend-scene.speaker-player .cr-friend-actor{filter:drop-shadow(0 10px 14px #0003) brightness(.92)}
