@@ -138,11 +138,14 @@ function crFriendActor(r,outfit,greeting,mood){
   if(holiday){var frame=(holiday==='ski'?2:0)+(['happy','shy'].includes(mood)?1:0);return '<div class="cr-friend-actor reactions vacation" role="img" data-character="'+r.id+'" data-outfit="'+holiday+'" data-pose="'+frame+'" aria-label="'+gmEsc(r.name)+(holiday==='ski'?'의 스키복':'의 해변 수영복')+'" style="background-image:url(/img/career-friends/vacation-'+r.id+'-v2.png);--actor-position:'+frame*100/3+'%"></div>';}
   var positions=CR_FRIEND_ACTORS[r.id];if(!positions)return '';
   mood=mood||(greeting?'happy':'neutral');
-  var pose=greeting||mood==='happy'?1:0,date=!!outfit;
+  var pose=greeting?1:0,date=!!outfit,casual=r.id==='asia'&&!date&&!greeting,expressions=date||casual;
   var frame={neutral:0,happy:1,shy:2,sad:3}[mood]||0;
-  var url=date?'reactions-'+r.id+'-v1.png':'actor-'+r.id+'-v3.png';
+  var url=date?'reactions-'+r.id+'-v1.png':expressions?'casual-asia-v1.png':'actor-'+r.id+'-v3.png';
+  // This sheet has unequal gutters; use each measured 360px window.
+  var position=casual?[66,432,802,1176][frame]/1176*100:expressions?frame*100/3:positions[pose];
+  var cropStyle=casual?';aspect-ratio:360/1024;background-size:426.666667% 100%':'';
   var description={neutral:'차분한',happy:'웃는',shy:'쑥스러운',sad:'슬픈'}[mood];
-  return '<div class="cr-friend-actor'+(date?' reactions':'')+'" role="img" data-character="'+r.id+'" data-pose="'+(date?frame:pose)+'" data-mood="'+mood+'" data-outfit="'+(date?'date':'casual')+'" aria-label="'+gmEsc(r.name)+'의 '+description+' 표정과 자세" style="background-image:url(/img/career-friends/'+url+');--actor-position:'+(date?frame*100/3:positions[pose])+'%"></div>';
+  return '<div class="cr-friend-actor'+(expressions?' reactions':'')+'" role="img" data-character="'+r.id+'" data-pose="'+(expressions?frame:pose)+'" data-gesture="'+(greeting&&!date?'greeting':'conversation')+'" data-mood="'+mood+'" data-outfit="'+(date?'date':'casual')+'" aria-label="'+gmEsc(r.name)+'의 '+description+' 표정과 자세" style="background-image:url(/img/career-friends/'+url+');--actor-position:'+position+'%'+cropStyle+'"></div>';
 }
 function crFriendStage(place,outfit,who,text,buttons,extra,visual){
   if(visual?.cg)return crFriendStoryCG(who,text,buttons,visual);
@@ -159,7 +162,9 @@ function crFriendStage(place,outfit,who,text,buttons,extra,visual){
   el.querySelector('.cr-friend-place').style.cssText=C.ev.wardrobe?'background-image:url(/img/career-friends/vacation-places-v1.png);--vacation-y:'+(C.ev.wardrobe==='ski'?1:0):'--place-x:'+(place%2)+';--place-y:'+Math.floor(place/2);
   el.classList.toggle('is-vacation',!!C.ev.wardrobe);
   var cast=el.querySelector('.cr-friend-cast');
-  var markup=C.ev.channel==='reflection'||v.hide?'':crFriendActor(r,outfit,(extra||'').indexOf('in-stands')>=0,v.mood);
+  // Player dialogue and narration must not reset the friend's expression.
+  if(v.speaker==='f'||!v.speaker&&v.mood)C.actorMood=v.mood||'neutral';
+  var markup=C.ev.channel==='reflection'||v.hide?'':crFriendActor(r,outfit,(extra||'').indexOf('in-stands')>=0,C.actorMood||'neutral');
   if(cast.dataset.markup!==markup){cast.innerHTML=markup;cast.dataset.markup=markup;}
   el.querySelector('.cr-friend-scene-title').textContent=C.ev.t;
   el.querySelector('.cr-friend-scene-dialogue>b').textContent=who||'';
@@ -178,6 +183,7 @@ function crFriendShow(ev){
   CR.friendScene={ev:ev,pick:null,debut:false,vacation:!!ev.vacation,intro:ev.id==='friend:intro'};
   crTovSet('',true);
   var preload=new Image();preload.src='/img/career-friends/'+(ev.vacation?'vacation-':'reactions-')+ev.friend.id+(ev.vacation?'-v2.png':'-v1.png');
+  if(!ev.vacation&&ev.friend.id==='asia'){var casual=new Image();casual.src='/img/career-friends/casual-asia-v1.png';}
   if(ev.vacation){var scenery=new Image();scenery.src='/img/career-friends/vacation-places-v1.png';}
   crFriendWarmStoryCG(ev);
   if(ev.channel==='story'){CR.friendScene.pick=0;return crFriendSequence(crFriendBeats(ev.script.story,ev.place??3,1),0);}
