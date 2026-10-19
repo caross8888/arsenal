@@ -296,7 +296,8 @@ var CR_FRIEND_STORY_ART={};
 function crFriendStoryCGSource(region,key,expression){
   if(!CR_FRIEND_ACTORS[region]||!['sunset','lodge','confession','proposal','interview','stage','fireworks','ring'].includes(key)||['stage','fireworks','ring'].includes(key)&&region!=='asia')return null;
   var variants={confession:['tense','surprised'],proposal:['waiting','surprised','tearful']},face=(variants[key]||[]).includes(expression)?'-'+expression:'';
-  return '/img/career-friends/event-'+region+'-'+key+face+'-v'+(['sunset','lodge'].includes(key)||region==='asia'&&['confession','proposal'].includes(key)?2:1)+'.png';
+  var version=region==='asia'&&key==='proposal'&&expression==='waiting'?3:['sunset','lodge'].includes(key)||region==='asia'&&['confession','proposal'].includes(key)?2:1;
+  return '/img/career-friends/event-'+region+'-'+key+face+'-v'+version+'.png';
 }
 function crFriendStoryArt(region,key,expression){
   var src=crFriendStoryCGSource(region,key,expression);if(!src)return null;
