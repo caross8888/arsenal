@@ -10856,6 +10856,8 @@ function crBallonGo(){
   var o=document.querySelector('#crTov .cr-bd'); if(o) o.classList.add('out');
   setTimeout(function(){ crTovSet(''); if(CR.v && CR.v.phase==='result') crResult(); }, 280);   // 잠재력 평가·특성 선택이 있으면 이어서
 }
+// 대기만성 힌트(사용자 지정 — 등급은 실제 정점에 맞춰 그대로 주고, 유형은 문구로만 알린다)
+var CR_SCOUT_LATE='완성까지 시간이 걸리는 유형이에요. 또래보다 늦게 크지만 20대 중반부터 크게 자라요.';
 function crScoutShow(sc, key){
   var gi=CR_SCOUT[sc.g], re=!!sc.prev, diff=re?CR_SCOUT_ORD.indexOf(sc.g)-CR_SCOUT_ORD.indexOf(sc.prev):0;
   var chg=!re?'':diff>0?'<div class="chg up">▲ '+sc.prev+' → '+sc.g+' · 지난 3년, 기대 이상으로 자랐어요</div>':diff<0?'<div class="chg dn">▼ '+sc.prev+' → '+sc.g+' · 기대만큼 크지 못했어요. 지금부터의 선택이 더 중요해요</div>':'<div class="chg eq">= '+sc.g+' 유지 · 예상한 길을 잘 걷고 있어요</div>';
@@ -10865,7 +10867,7 @@ function crScoutShow(sc, key){
    +'<h2 id="crScoutTitle">잠재력 '+(re?'재평가':'평가')+'</h2>'
    +'<div class="stamp" aria-label="잠재력 '+sc.g+'등급"><small>POTENTIAL</small><strong>'+sc.g+'</strong></div>'
    +'<div class="tt">'+gmEsc(gi.t)+'</div>'+chg
-   +'<p class="dd">'+gmEsc(gi.d)+'</p>'
+   +'<p class="dd">'+gmEsc(gi.d)+'</p>'+(sc.late?'<p class="dd">'+CR_SCOUT_LATE+'</p>':'')
    +'<div class="cr-sc-player">'+crCrest(club,38)+'<div><b>'+gmEsc(p.name)+'</b><small>'+gmEsc(club.team||club.n||'소속 없음')+' · '+gmEsc(pos?pos.n:p.pos||'')+'</small></div></div>'
    +'<button class="cr-iv-go" onclick="CR.scoutSeen=\''+key.replace(/'/g,'')+'\';crTovSet(\'\');crResult()">확인</button></div></div>');
   CR.scoutSeen=null; CR.scoutPend=key;
@@ -11596,7 +11598,7 @@ function crResult(){
   var SC=r.scout, scKey=SC?p.name+'|'+SC.age+'|'+p.seasons:null, scPending=SC && CR.scoutSeen!==scKey;
   if(SC && !scPending){ var gi=CR_SCOUT[SC.g];
     h+='<div class="cr-goal cr-scout-mini"><span class="cr-goal-tag">SCOUTING · '+SC.age+'세 '+(SC.prev?'재평가':'잠재력 평가')+'</span><div class="cr-goal-t"><b class="g g'+SC.g+'">'+SC.g+'</b> '+gmEsc(gi.t)
-      +(SC.prev&&SC.prev!==SC.g?' <small>('+SC.prev+' → '+SC.g+')</small>':'')+'</div><div class="cr-note">'+gmEsc(gi.d)+'</div></div>'; }
+      +(SC.prev&&SC.prev!==SC.g?' <small>('+SC.prev+' → '+SC.g+')</small>':'')+'</div><div class="cr-note">'+gmEsc(gi.d)+(SC.late?' '+CR_SCOUT_LATE:'')+'</div></div>'; }
   // 재능 개화(21~28세, 고르는 게 아니라 얻는 특성): 처음엔 오버레이로, 확인한 뒤엔 결과 화면에 작게 남는다
   var BL=r.bloom?(p.traits||[]).filter(function(t){ return t.id===r.bloom; })[0]:null, blKey=BL?(p.id||p.name)+'|bl|'+p.seasons:null, blPending=BL && CR.bloomSeen!==blKey;
   if(BL && !blPending) h+='<div class="cr-goal"><span class="cr-goal-tag">TALENT BLOOM · 재능 개화</span><div class="cr-tsel">'+crTraitCard(BL,1)
