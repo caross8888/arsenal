@@ -83,3 +83,9 @@
 .cr-friend-story-cg #crFriendSceneActions{justify-items:end}
 .cr-friend-story-cg #crFriendSceneActions .cr-friend-option{min-width:125px;padding:9px 20px;text-align:center;background:#0d1b2ba8;border-radius:25px}
 @media(orientation:portrait){.cr-friend-story-art{object-position:50% 0}.cr-friend-story-cg[data-cutscene="sunset"] .cr-friend-story-art{object-position:42% 0}.cr-friend-story-cg[data-cutscene="sunset"][data-character="asia"] .cr-friend-story-art{object-position:33% 0}}
+
+/* Facial variants keep a fixed composition without restarting the scene. */
+.cr-friend-story-art.expression-change{animation:none;opacity:0;transition:opacity .18s ease}
+.cr-friend-story-art.expression-change.expression-ready{opacity:1}
+
+@media(prefers-reduced-motion:reduce){.cr-friend-story-art.expression-change{transition:none}}

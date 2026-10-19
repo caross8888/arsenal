@@ -125,7 +125,7 @@ function crFriendPick(i){
   else {
     var story=C.ev.script||CR_FRIEND_MAJOR[key],place=C.ev.place??(key==='proposal'||key==='confession'?3:key==='foreign'||key==='debut'?1:2),outfit=key==='debut'?0:1;
     beats=story&&story.after[i].length?crFriendBeats(story.after[i],place,outfit):crFriendBeats([['f',reply,'neutral'],['n','인사를 나누고 각자의 길로 돌아갔다.','neutral',false]],place,outfit);
-    if(C.ev.channel==='scene'&&key!=='debut')beats.unshift({place:place,outfit:outfit,who:'나',text:C.ev.a[i],mood:'neutral',speaker:'p'});
+    if(C.ev.channel==='scene'&&key!=='debut')beats.unshift({place:place,outfit:outfit,who:'나',text:C.ev.a[i],mood:'neutral',speaker:'p',cg:C.ev.questionCG?.key,expression:C.ev.questionCG?.expression});
   }
   if(C.ev.remote&&hadPhone&&beats[0]?.speaker==='f'&&beats[0].text===C.ev.replies[i])beats.shift();
   crFriendSequence(beats,0);
@@ -135,7 +135,7 @@ function crFriendCancel(){crFriendRemoveScene();crFriendClosePhone();document.ge
 var CR_FRIEND_ACTORS={asia:[9.95,50.55,92.11],south:[11.50,50.14,90.01],africa:[11.59,51.23,87.36],europe:[16.56,50.82,86.68]};
 function crFriendActor(r,outfit,greeting,mood){
   var holiday=CR.friendScene?.ev.wardrobe;
-  if(holiday){var frame=(holiday==='ski'?2:0)+(['happy','shy'].includes(mood)?1:0);return '<div class="cr-friend-actor reactions vacation" role="img" data-character="'+r.id+'" data-outfit="'+holiday+'" data-pose="'+frame+'" aria-label="'+gmEsc(r.name)+(holiday==='ski'?'의 스키복':'의 해변 수영복')+'" style="background-image:url(/img/career-friends/vacation-'+r.id+'-v1.png);--actor-position:'+frame*100/3+'%"></div>';}
+  if(holiday){var frame=(holiday==='ski'?2:0)+(['happy','shy'].includes(mood)?1:0);return '<div class="cr-friend-actor reactions vacation" role="img" data-character="'+r.id+'" data-outfit="'+holiday+'" data-pose="'+frame+'" aria-label="'+gmEsc(r.name)+(holiday==='ski'?'의 스키복':'의 해변 수영복')+'" style="background-image:url(/img/career-friends/vacation-'+r.id+'-v2.png);--actor-position:'+frame*100/3+'%"></div>';}
   var positions=CR_FRIEND_ACTORS[r.id];if(!positions)return '';
   mood=mood||(greeting?'happy':'neutral');
   var pose=greeting||mood==='happy'?1:0,date=!!outfit;
@@ -177,13 +177,13 @@ function crFriendSequence(beats,index,done){
 function crFriendShow(ev){
   CR.friendScene={ev:ev,pick:null,debut:false,vacation:!!ev.vacation,intro:ev.id==='friend:intro'};
   crTovSet('',true);
-  var preload=new Image();preload.src='/img/career-friends/'+(ev.vacation?'vacation-':'reactions-')+ev.friend.id+'-v1.png';
+  var preload=new Image();preload.src='/img/career-friends/'+(ev.vacation?'vacation-':'reactions-')+ev.friend.id+(ev.vacation?'-v2.png':'-v1.png');
   if(ev.vacation){var scenery=new Image();scenery.src='/img/career-friends/vacation-places-v1.png';}
   crFriendWarmStoryCG(ev);
   if(ev.channel==='story'){CR.friendScene.pick=0;return crFriendSequence(crFriendBeats(ev.script.story,ev.place??3,1),0);}
   var key=ev.id.split(':')[1],place=key==='proposal'||key==='confession'?3:key==='foreign'?1:2;
   if(ev.channel==='message'||ev.channel==='call'||key==='intro'||key==='outing'||key==='debut')return crFriendMessage(ev);
-  function question(){crFriendStage(place,1,ev.channel==='reflection'?'':ev.friend.name,ev.d,ev.a.map(function(text,i){return {text:text,run:function(){crFriendPick(i);}};}),'',{mood:key==='foreign'?'sad':key==='confession'||key==='proposal'?'shy':'neutral'});}
+  function question(){crFriendStage(place,1,ev.channel==='reflection'?'':ev.friend.name,ev.d,ev.a.map(function(text,i){return {text:text,run:function(){crFriendPick(i);}};}),'',{mood:key==='foreign'?'sad':key==='confession'||key==='proposal'?'shy':'neutral',cg:ev.questionCG?.key,expression:ev.questionCG?.expression});}
   var before=(ev.script||CR_FRIEND_MAJOR[key])?.before;
   if(before&&before.length)crFriendSequence(crFriendBeats(before,place,1),0,question);
   else question();
@@ -277,30 +277,46 @@ function crFriendVacation(){
 }
 
 var CR_FRIEND_STORY_ART={};
-function crFriendStoryCGSource(region,key){
+function crFriendStoryCGSource(region,key,expression){
   if(!CR_FRIEND_ACTORS[region]||!['sunset','lodge','confession','proposal'].includes(key))return null;
-  return '/img/career-friends/event-'+region+'-'+key+'-v1.png';
+  var variants={confession:['tense','surprised'],proposal:['surprised','tearful']},face=(variants[key]||[]).includes(expression)?'-'+expression:'';
+  return '/img/career-friends/event-'+region+'-'+key+face+'-v'+(['sunset','lodge'].includes(key)?2:1)+'.png';
 }
-function crFriendStoryArt(region,key){
-  var src=crFriendStoryCGSource(region,key);if(!src)return null;
+function crFriendStoryArt(region,key,expression){
+  var src=crFriendStoryCGSource(region,key,expression);if(!src)return null;
   if(!CR_FRIEND_STORY_ART[src]){var img=new Image();img.decoding='async';img.src=src;CR_FRIEND_STORY_ART[src]=img;}
   return CR_FRIEND_STORY_ART[src];
 }
 function crFriendWarmStoryCG(ev){
   var script=ev.script||{},lines=script.story||[...(script.before||[]),...(script.after||[]).flat()];
-  new Set(lines.map(function(line){return line[5];}).filter(Boolean)).forEach(function(key){crFriendStoryArt(ev.friend.id,key);});
+  new Set(lines.filter(function(line){return line[5];}).map(function(line){return line[5]+':'+(line[6]||'happy');})).forEach(function(value){var pair=value.split(':');crFriendStoryArt(ev.friend.id,pair[0],pair[1]);});
 }
 function crFriendStoryCG(who,text,buttons,visual){
-  var C=CR.friendScene,src=crFriendStoryCGSource(C.ev.friend.id,visual.cg);
+  var C=CR.friendScene,region=C.ev.friend.id,expression=visual.expression||'happy',src=crFriendStoryCGSource(region,visual.cg,expression);
   if(!src)return crFriendStage(3,1,who,text,buttons,'',{...visual,cg:null});
-  var el=document.getElementById('crFriendScene'),fresh=!el?.classList.contains('cr-friend-story-cg')||el.dataset.source!==src;
+  var composition=region+':'+visual.cg,el=document.getElementById('crFriendScene'),fresh=!el?.classList.contains('cr-friend-story-cg')||el.dataset.composition!==composition;
   if(fresh){
     crFriendRemoveScene();
-    el=document.createElement('div');el.id='crFriendScene';el.className='cr-friend-scene cr-friend-story-cg';el.dataset.source=src;el.dataset.cutscene=visual.cg;el.dataset.character=C.ev.friend.id;el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',C.ev.t);el.tabIndex=0;
-    var img=document.createElement('img');img.className='cr-friend-story-art';img.alt=C.ev.friend.name+'과 함께한 '+({sunset:'해변의 노을',lodge:'눈 내리는 산장',confession:'고백의 순간',proposal:'프로포즈의 순간'}[visual.cg]);img.draggable=false;img.src=crFriendStoryArt(C.ev.friend.id,visual.cg).src;img.onerror=function(){img.remove();el.classList.add('art-unavailable');};
-    el.appendChild(img);
+    el=document.createElement('div');el.id='crFriendScene';el.className='cr-friend-scene cr-friend-story-cg';el.dataset.composition=composition;el.dataset.cutscene=visual.cg;el.dataset.character=region;el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',C.ev.t);el.tabIndex=0;
     var shade=document.createElement('div');shade.className='cr-friend-cg-shade';el.appendChild(shade);
     var dialogue=document.createElement('section');dialogue.className='cr-friend-scene-dialogue';dialogue.innerHTML='<b></b><p></p><div id="crFriendSceneActions"></div>';el.appendChild(dialogue);document.body.appendChild(el);
+  }
+  if(el.dataset.source!==src){
+    el.dataset.source=src;el.dataset.expression=expression;el.classList.remove('art-unavailable');
+    // Keep the current composition visible until the next facial variant is ready.
+    var previous=Array.from(el.querySelectorAll('.cr-friend-story-art')),img=document.createElement('img');
+    img.className='cr-friend-story-art'+(fresh?'':' expression-change');img.alt=C.ev.friend.name+'과 함께한 '+({sunset:'해변의 노을',lodge:'눈 내리는 산장',confession:'고백의 순간',proposal:'프로포즈의 순간'}[visual.cg]);img.draggable=false;
+    img.onload=function(){
+      if(CR.friendScene!==C||!el.isConnected||el.dataset.source!==src){img.remove();return;}
+      function reveal(){
+        if(CR.friendScene!==C||!el.isConnected||el.dataset.source!==src){img.remove();return;}
+        img.classList.add('expression-ready');el.dataset.displayedExpression=expression;
+        CR.friendCinematicTimers.push(setTimeout(function(){if(!el.isConnected)return;previous.forEach(function(old){old.remove();});},crFriendReducedMotion()?0:180));
+      }
+      if(fresh||crFriendReducedMotion())reveal();else requestAnimationFrame(reveal);
+    };
+    img.onerror=function(){img.remove();if(el.dataset.source===src)el.classList.add('art-unavailable');};
+    el.insertBefore(img,el.querySelector('.cr-friend-cg-shade'));img.src=crFriendStoryArt(region,visual.cg,expression).src;
   }
   var render=C.storyRender=(C.storyRender||0)+1,started=false;
   function read(){

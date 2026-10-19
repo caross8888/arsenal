@@ -99,6 +99,9 @@ for(const nation of ['KOR','BRA','NGA','ENG']){
 for(const nation of ['KOR','BRA','NGA','ENG'])for(const key of ['confession','proposal']){
  const c=key==='confession'?make(nation,21):dating(nation);c.relationship.affinity=90;
  const ev=R.relationshipEvent(c,'friend:'+key);assert(ev.script.after[0].some(line=>line[5]===key),'accepted major event has its own CG');assert(!ev.script.after[1].some(line=>line[5]),'declining a major event never shows the success illustration');
+ const emotionFlow=[...new Set(ev.script.after[0].map(line=>line[6]))];assert.deepEqual(emotionFlow,key==='confession'?['surprised','happy']:['surprised','tearful','happy']);
+ if(key==='confession'){assert.equal(ev.questionCG.expression,'tense');assert.equal(ev.script.before.at(-1)[6],'tense');}else assert.equal(ev.questionCG,undefined);
+ assert(ev.script.after[0].every(line=>line[5]===key),'keep the emotional scene through the ending instead of cutting back to a neutral sprite');
  c.club=S.clubByName(nation==='ENG'?'플라멩구':'아스날');assert.equal(R.relationshipEvent(c,'friend:'+key).id,'friend:visit');
  c.relationship.visit={age:c.age,key};const visit=R.relationshipEvent(c,'friend:'+key);assert(!visit.remote);assert(visit.script.after[0].some(line=>line[5]===key));
  const call=R.relationshipEvent(c,'friend:'+key,true);assert(call.remote);assert(!call.script.after[0].some(line=>line[5]),'legacy remote conversations never pretend to meet');
