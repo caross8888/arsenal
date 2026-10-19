@@ -87,7 +87,7 @@ function crFriendPick(i){
   if(C.ev.remote&&hadPhone&&beats[0]?.speaker==='f'&&beats[0].text===C.ev.replies[i])beats.shift();
   crFriendSequence(beats,0);
 }
-function crFriendRemoveScene(){clearTimeout(CR.friendTimer);document.getElementById('crFriendScene')?.remove();}
+function crFriendRemoveScene(){clearTimeout(CR.friendTimer);(CR.friendCinematicTimers||[]).forEach(clearTimeout);CR.friendCinematicTimers=[];document.getElementById('crFriendScene')?.remove();}
 function crFriendCancel(){crFriendRemoveScene();crFriendClosePhone();document.getElementById('crFriendDebutMessage')?.remove();CR.friendScene=null;}
 var CR_FRIEND_ACTORS={asia:[9.95,50.55,92.11],south:[11.50,50.14,90.01],africa:[11.59,51.23,87.36],europe:[16.56,50.82,86.68]};
 function crFriendActor(r,outfit,greeting,mood){
@@ -156,17 +156,59 @@ function crFriendDebutMessage(){
 function crFriendDebutContext(resume){
   return {debut:true,pick:null,resume:resume,ev:CR.v.friendDebut||{id:'friend:debut',t:'첫 1군 공식경기 · 경기 종료 직후',friend:CR.v.player.relationship,d:'아까 나 봤지?ㅋㅋ\n끝나고 왜 이렇게 안 나와\n나 아직 출구 쪽인데. 잠깐 볼래?',a:['응. 거기 있어. 금방 나갈게.','오늘은 팀 일정이 있어. 먼저 가. 다음에 보자.'],replies:['응 여기 있을게.\n천천히 나와.','아쉽다. 알겠어. 조심히 들어가.\n오늘 수고했어!']}};
 }
+var CR_FRIEND_CGS={};
+function crFriendWarmDebut(v){
+  var r=v.player?.relationship;if(!r?.pendingDebut||r.debutMode==='remote'||!CR_FRIEND_ACTORS[r.id])return null;
+  var mobile=matchMedia('(orientation:portrait)').matches,key=r.id+(mobile?':mobile':':wide');
+  if(CR_FRIEND_CGS[key])return CR_FRIEND_CGS[key];
+  var pic=new Image();pic.decoding='async';
+  var ready=new Promise(function(resolve){pic.onload=function(){resolve(true);};pic.onerror=function(){resolve(false);};});
+  pic.fetchPriority='high';pic.src='/img/career-friends/debut-'+r.id+(mobile?'-mobile':'')+'-v1.png';
+  return CR_FRIEND_CGS[key]={image:pic,ready:ready};
+}
+function crFriendDebutCG(play){
+  var C=CR.friendScene;if(!C?.debut)return;
+  var r=C.ev.friend,asset=crFriendWarmDebut(CR.v),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var quote={asia:'여기! 나 여기 있어!',south:'여기야! 끝까지 보고 있을게!',africa:'찾았어? 여기야!',europe:'잘하고 와. 여기서 보고 있을게.'}[r.id];
+  function paint(loaded){
+    if(CR.friendScene!==C)return;
+    crFriendRemoveScene();
+    var el=document.createElement('div');el.id='crFriendScene';el.className='cr-friend-scene cr-friend-cg found'+(reduced?' is-ready':'')+(loaded?'':' art-unavailable');
+    el.dataset.character=r.id;el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','관중석에서 '+r.name+' 발견');
+    if(loaded){var picture=document.createElement('picture'),source=document.createElement('source');source.media='(orientation:portrait)';source.srcset='/img/career-friends/debut-'+r.id+'-mobile-v1.png';picture.appendChild(source);var pic=document.createElement('img');pic.className='cr-friend-cg-art';pic.src='/img/career-friends/debut-'+r.id+'-v1.png';pic.alt=r.name+'이 관중석 난간 너머에서 눈을 맞추고 응원하는 모습';pic.draggable=false;picture.appendChild(pic);el.appendChild(picture);}
+    var shade=document.createElement('div');shade.className='cr-friend-cg-shade';el.appendChild(shade);
+    var caption=document.createElement('div');caption.className='cr-friend-cg-caption';
+    var name=document.createElement('small');name.textContent=r.name;var line=document.createElement('p');line.textContent=quote;caption.append(name,line);el.appendChild(caption);
+    var actions=document.createElement('div');actions.id='crFriendSceneActions';actions.className='cr-friend-cg-actions';
+    var button=document.createElement('button');button.type='button';button.className='cr-friend-cg-continue';button.textContent='그라운드로 돌아가기 →';button.disabled=!reduced;actions.appendChild(button);el.appendChild(actions);
+    document.body.appendChild(el);C.cgFound=true;
+    function ready(){if(CR.friendScene!==C)return;el.classList.add('is-ready');button.disabled=false;button.focus({preventScroll:true});}
+    if(!reduced)CR.friendCinematicTimers.push(setTimeout(ready,1250));
+    button.onclick=function(){
+      if(C.cgLeaving||button.disabled)return;C.cgLeaving=true;button.disabled=true;el.classList.add('is-leaving');
+      function finish(){if(CR.friendScene!==C)return;play();if(CR.friendScene===C)crFriendDebutMessage();}
+      if(reduced)finish();else CR.friendCinematicTimers.push(setTimeout(finish,240));
+    };
+  }
+  if(asset)asset.ready.then(paint);else paint(false);
+}
 function crFriendMatch(m,play,resume){
   var S=CR.sf,r=CR.v.player.relationship;
   if(!S||!r?.pendingDebut||S.friendSeen||!m.pl||S.n.apps!==0)return false;
   S.friendSeen=true;S.friendBusy=true;CR.friendScene=crFriendDebutContext(resume);
   if(r.debutMode==='remote'){play();crFriendDebutMessage();return true;}
-  var found=false;
-  var reveal=function(){if(!CR.friendScene?.debut)return;clearTimeout(CR.friendTimer);found=true;crFriendStage(0,0,r.name,'여기! 나 여기 있어!',[{text:'그라운드로',run:function(){play();crFriendDebutMessage();}}],'found in-stands');};
-  crFriendStage(0,0,'','입장 직전, 관중석 쪽으로 고개를 돌렸다.\n어디쯤이라고 했더라…',[{text:'관중석 살펴보기',run:reveal}],'searching in-stands');
-  CR.friendTimer=setTimeout(function(){if(!found)reveal();},matchMedia('(prefers-reduced-motion: reduce)').matches?0:2000);
+  crFriendWarmDebut(CR.v);
+  var C=CR.friendScene,found=false;
+  var reveal=function(){
+    if(CR.friendScene!==C||found)return;found=true;clearTimeout(CR.friendTimer);
+    var button=document.querySelector('#crFriendSceneActions button');if(button){button.disabled=true;button.textContent='…';}
+    crFriendDebutCG(function(){if(CR.sf!==S){crFriendCancel();return;}play();});
+  };
+  crFriendStage(0,0,'','입장 직전, 관중석을 천천히 둘러봤다.\n어디쯤이라고 했더라…',[{text:'관중석 살펴보기',run:reveal}],'searching in-stands',{hide:true});
+  CR.friendTimer=setTimeout(reveal,crFriendReducedMotion()?0:2200);
   return true;
 }
+function crFriendReducedMotion(){return matchMedia('(prefers-reduced-motion: reduce)').matches;}
 function crFriendResumeDebut(){
   if(!CR.v.player.relationship?.pendingDebut||CR.friendScene)return false;
   CR.friendScene=crFriendDebutContext(function(){crResult();});

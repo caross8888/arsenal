@@ -16,12 +16,8 @@
 .cr-friend-scene-dialogue{position:absolute;bottom:max(22px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:min(calc(100% - 32px),760px);padding:20px 24px;background:#111a20ed;border:1px solid #ae9668;border-radius:10px;box-shadow:0 15px 50px #0005;max-height:55dvh;overflow-y:auto}
 .cr-friend-scene-dialogue>b{font-size:13px;color:#e2c58e}.cr-friend-scene-dialogue>p{font-size:17px;line-height:1.8;white-space:pre-line;margin:8px 0 18px}.cr-friend-scene-dialogue #crFriendSceneActions{display:grid;gap:8px}.cr-friend-scene-dialogue .cr-friend-option{background:#25392f;color:#fff;border-color:#7e8e72;text-align:left}.cr-friend-scene-dialogue .cr-friend-option:hover{background:#3c5545}
 .cr-friend-scene.searching .cr-friend-actor{opacity:0}.cr-friend-scene.searching .cr-friend-place{animation:crFriendSearch 2s ease-in-out both;transform:scale(1.12)}
-.cr-friend-scene.in-stands .cr-friend-actor{height:31dvh;bottom:42dvh;left:55%;filter:drop-shadow(0 0 10px #ffefbca0)}
-.cr-friend-scene.found .cr-friend-actor{animation:crFriendFound .5s ease-out both}.cr-friend-scene.found .cr-friend-place{transform:scale(1.12)}
-.cr-friend-scene.in-stands .cr-friend-actor{clip-path:inset(0 0 48% 0)}
 @keyframes crFriendSearch{0%{transform:scale(1.12) translateX(-4%)}45%{transform:scale(1.12) translateX(4%)}100%{transform:scale(1.12) translateX(0)}}
-@keyframes crFriendFound{from{opacity:0;transform:translateX(-50%) scale(.8)}to{opacity:1;transform:translateX(-50%) scale(1)}}
-@media(max-width:500px){.cr-friend-actor{height:64dvh;bottom:24dvh}.cr-friend-scene-dialogue{padding:15px 17px;bottom:max(14px,env(safe-area-inset-bottom));max-height:48dvh}.cr-friend-scene-dialogue>p{font-size:14px;line-height:1.75;margin-bottom:14px}.cr-friend-scene-title{font-size:11px;left:16px;top:18px}.cr-friend-scene.in-stands .cr-friend-actor{height:29dvh;bottom:45dvh}}
+@media(max-width:500px){.cr-friend-actor{height:64dvh;bottom:24dvh}.cr-friend-scene-dialogue{padding:15px 17px;bottom:max(14px,env(safe-area-inset-bottom));max-height:48dvh}.cr-friend-scene-dialogue>p{font-size:14px;line-height:1.75;margin-bottom:14px}.cr-friend-scene-title{font-size:11px;left:16px;top:18px}}
 @media(prefers-reduced-motion:reduce){.cr-friend-scene *{animation:none!important}}
 /* One shared phone UI for every messenger conversation. */
 .cr-friend-phone-overlay{z-index:10002;padding:12px;background:radial-gradient(ellipse at center,#24392be8,#0b1119f2);backdrop-filter:blur(5px)}
@@ -42,3 +38,24 @@
 .cr-friend-cast{position:absolute;inset:0;pointer-events:none}
 .cr-friend-scene.speaker-player .cr-friend-actor{filter:drop-shadow(0 10px 14px #0003) brightness(.92)}
 .cr-friend-profile>summary{cursor:pointer;list-style:none}.cr-friend-profile>summary::-webkit-details-marker{display:none}.cr-friend-affinity{margin-left:auto;min-width:105px;max-width:45%}.cr-friend-affinity b{font-size:10px!important;white-space:nowrap}.cr-friend-affinity progress{display:block;width:100%;height:7px;margin-top:5px;accent-color:var(--gold)}.cr-friend-profile-body{padding:0 12px 12px;font-size:12px;color:var(--text-secondary);line-height:1.7}.cr-friend-profile-body p{margin:5px 0}.cr-friend-chat-line.narration{align-self:center;max-width:100%;opacity:.9}.cr-friend-chat-line.narration>p{background:transparent;box-shadow:none;color:#526449;font-size:11px;text-align:center}
+/* First-match discovery is a composed event CG, never an actor over the stands. */
+.cr-friend-scene.searching .cr-friend-scene-title{display:none}
+.cr-friend-scene.searching .cr-friend-scene-dialogue{bottom:max(35px,env(safe-area-inset-bottom));border:0;box-shadow:none;background:linear-gradient(0deg,#08111ee6,#08111e00);text-align:center;padding:32px 20px 15px}
+.cr-friend-scene.searching .cr-friend-scene-dialogue>p{font-size:15px;letter-spacing:.5px;text-shadow:0 2px 12px #000}
+.cr-friend-scene.searching .cr-friend-option{justify-self:center;width:auto;background:#0a162899;border-color:#e7d7b55c;font-size:12px}
+.cr-friend-cg{background:#080d17;opacity:1;transition:opacity .24s ease;isolation:isolate}
+.cr-friend-cg::after{display:none}
+.cr-friend-cg-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%;image-rendering:auto;animation:crFriendCGReveal 1.7s cubic-bezier(.18,.65,.25,1) both;user-select:none}
+.cr-friend-cg-shade{position:absolute;inset:0;background:linear-gradient(0deg,#07101ce8 0%,#07101c66 15%,transparent 38%,transparent 83%,#07101c38);pointer-events:none}
+.cr-friend-cg-caption{position:absolute;left:max(28px,6vw);right:28px;bottom:max(108px,calc(env(safe-area-inset-bottom) + 92px));color:#fff9ee;opacity:0;transform:translateY(8px);transition:opacity .65s ease,transform .65s ease;text-shadow:0 2px 16px #07101c99}
+.cr-friend-cg-caption>small{display:block;font-size:12px;letter-spacing:2px;margin-bottom:12px;color:#eddbc1}
+.cr-friend-cg-caption>p{margin:0;font-size:clamp(22px,3vw,36px);font-weight:500;line-height:1.5;word-break:keep-all}
+.cr-friend-cg-actions{position:absolute;bottom:max(28px,calc(env(safe-area-inset-bottom) + 20px));right:max(28px,6vw);opacity:0;transition:opacity .65s ease .15s}
+.cr-friend-cg-continue{border:1px solid #eddbc169;border-radius:30px;padding:13px 21px;min-height:48px;background:#0b162870;color:#fff9ee;font:inherit;font-size:12px;letter-spacing:.5px;cursor:pointer;backdrop-filter:blur(8px)}
+.cr-friend-cg-continue:hover{background:#28384d9c;border-color:#eddbc1}.cr-friend-cg-continue:focus-visible{outline:2px solid var(--gold);outline-offset:5px}
+.cr-friend-cg.is-ready .cr-friend-cg-caption{opacity:1;transform:none}.cr-friend-cg.is-ready .cr-friend-cg-actions{opacity:1}.cr-friend-cg.is-leaving{opacity:0}
+.cr-friend-cg.art-unavailable{background:radial-gradient(ellipse at 50% 25%,#30465d,#07101c)}
+@keyframes crFriendCGReveal{from{opacity:0;transform:scale(1.045);filter:blur(3px)}30%{opacity:1}to{opacity:1;transform:scale(1);filter:blur(0)}}
+@media(orientation:portrait){.cr-friend-cg-art{object-position:70% 42%}}
+@media(max-width:500px){.cr-friend-cg-caption{left:26px;right:26px;bottom:max(120px,calc(env(safe-area-inset-bottom) + 100px))}.cr-friend-cg-caption>p{font-size:23px}.cr-friend-cg-actions{left:26px;right:26px;bottom:max(32px,calc(env(safe-area-inset-bottom) + 24px))}.cr-friend-cg-continue{width:100%;text-align:center}}
+@media(prefers-reduced-motion:reduce){.cr-friend-cg,.cr-friend-cg *{animation:none!important;transition:none!important}}

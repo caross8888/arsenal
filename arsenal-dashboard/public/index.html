@@ -2535,7 +2535,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @media(prefers-reduced-motion:reduce){.cr-nat-final-conf{display:none}}
 
 </style>
-<link rel="stylesheet" href="/career/relationship.css?v=6">
+<link rel="stylesheet" href="/career/relationship.css?v=7">
 </head>
 <body>
 
@@ -2827,7 +2827,7 @@ function playIntro(){
 <script src="/career/league-scenes.js?v=1"></script>
 <script src="/career/match-playback.js?v=39"></script>
 <script src="/career/relationship-scenes.js?v=2"></script>
-<script src="/career/relationship.js?v=6"></script>
+<script src="/career/relationship.js?v=7"></script>
 <script>
 var FN='/api';
 var allStandings=[];
@@ -10510,7 +10510,7 @@ function crSfPlanBase(from, to, tot, out){
 function crSfData(v){
   if(!CR.sf) crSfOpen(true);
   var S=CR.sf, A=v.phase==='injury';
-  CR.v=v; CR.tok=v.token; crStore(v);   // 진행 중에 새로고침해도 이어지게(부상이면 부상 단계로)
+  CR.v=v; CR.tok=v.token; crStore(v); crFriendWarmDebut(v);   // 진행 중에 새로고침해도 이어지게(부상이면 부상 단계로)
   if(A){
     var pre=v.pre||{};S.national=pre.national||[];S.segments=pre.segments||null;S.preview=true;
     S.G=pre.games||38;
