@@ -578,7 +578,13 @@ export default async function handler(req, res) {
 
   const cacheKey = eventId;
   if (cache[cacheKey] && Date.now() - cache[cacheKey].ts < TTL) {
-    return res.json(cache[cacheKey].data);
+    // 메모리 캐시로 답할 때도 KV·Fotmob 경로와 같은 브라우저 캐시 헤더를 붙인다. 빠뜨렸을 땐
+    // 인스턴스가 따뜻할수록(=자주 쓰일수록) 헤더 없는 응답이 나가서, 메인 화면이 미리 받는
+    // 지난 8경기가 브라우저에 안 남고 방문할 때마다 다시 요청됐다(실측: 새로고침마다 match 8건+).
+    const hit = cache[cacheKey].data;
+    if (isSettled(hit)) setImmutable(res);
+    else if (hit && hit.status === 'Full Time') res.setHeader('Cache-Control', 'public, max-age=600');
+    return res.json(hit);
   }
 
   try {
