@@ -158,6 +158,22 @@ async function kvGetJSON(key){
     return result ? JSON.parse(result) : null;
   } catch(e){ return null; }
 }
+// 여러 키를 한 번에(MGET) — 키마다 GET을 따로 보내면 예상 선발 XI 한 번에 KV 요청이 75번이라 Cloudflare 무료
+// 플랜의 실행당 외부 요청 50번 한도를 넘었다(실측: 선수 포지션 44번 + 지난 경기 라인업 21번). 실패하면 전부 null.
+async function kvMGetJSON(keys){
+  if(!keys.length || !KV_URL || !KV_TOKEN) return keys.map(() => null);
+  try {
+    const r = await fetch(KV_URL, {
+      method: 'POST',
+      headers: {Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json'},
+      body: JSON.stringify(['MGET', ...keys]),
+      signal: AbortSignal.timeout(5000),
+    });
+    if(!r.ok) return keys.map(() => null);
+    const { result } = await r.json();
+    return keys.map((_, i) => { try { return result && result[i] ? JSON.parse(result[i]) : null; } catch(_){ return null; } });
+  } catch(e){ return keys.map(() => null); }
+}
 // JSON이 아닌 값(예: AI 해설 문장)을 그대로 읽는다. kvGetJSON으로 읽으면 한글 문장을
 // JSON.parse하다 실패하고, 그 실패를 조용히 null로 삼켜서 해설이 에러도 없이 사라졌다(실측).
 async function kvGetRaw(key){
@@ -1560,9 +1576,11 @@ async function predxiFixtures(teamId){
 }
 
 // 한 경기에서 한 팀의 선발(좌표 포함)·벤치·결장자. 끝난 경기라 영구 캐시.
-async function predxiMatchRecord(fx, teamId){
-  const key = `predxiRec:v1:${fx.id}:${teamId}`;
-  const hit = await kvGetJSON(key);
+const predxiRecKey = (fx, teamId) => `predxiRec:v1:${fx.id}:${teamId}`;
+// hit: 호출하는 쪽이 MGET으로 미리 읽은 값(undefined면 여기서 읽는다)
+async function predxiMatchRecord(fx, teamId, hit){
+  const key = predxiRecKey(fx, teamId);
+  if(hit === undefined) hit = await kvGetJSON(key);
   if(hit) return hit.none ? null : hit;
   const md = await fotmobJSON(`https://www.fotmob.com/api/data/matchDetails?matchId=${fx.id}`).catch(() => null);
   if(!md) return null;   // 네트워크 실패는 캐시하지 않는다 — 다음 요청에서 다시 시도
@@ -1593,9 +1611,10 @@ async function predxiMatchRecord(fx, teamId){
 
 // 선수 프로필의 포지션 목록(주/부) — 겸업 판단용. 지난 시즌까지 포함한 기록이라
 // "주전인가"에는 안 쓰고 "어디에 설 수 있나"에만 쓴다.
-async function predxiPosInfo(playerId){
-  const key = `predxiPos:v1:${playerId}`;
-  const hit = await kvGetJSON(key);
+const predxiPosKey = playerId => `predxiPos:v1:${playerId}`;
+async function predxiPosInfo(playerId, hit){
+  const key = predxiPosKey(playerId);
+  if(hit === undefined) hit = await kvGetJSON(key);
   if(hit) return hit;
   const pd = await fotmobJSON(`https://www.fotmob.com/api/data/playerData?id=${playerId}`).catch(() => null);
   if(!pd) return [];
@@ -1606,7 +1625,8 @@ async function predxiPosInfo(playerId){
 
 async function predxiTeam(teamId, outIds, matchId){
   const {done: fixtures, upcoming} = await predxiFixtures(teamId);
-  const recs = (await Promise.all(fixtures.map(fx => predxiMatchRecord(fx, teamId).catch(() => null))))
+  const recHits = await kvMGetJSON(fixtures.map(fx => predxiRecKey(fx, teamId)));
+  const recs = (await Promise.all(fixtures.map((fx, i) => predxiMatchRecord(fx, teamId, recHits[i]).catch(() => null))))
     .filter(Boolean);
   if(!recs.length) return null;
   // 프로필은 선발 후보가 될 만한 선수만 받는다 — 명단에 한 번이라도 든 선수 중 결장자 제외,
@@ -1619,7 +1639,8 @@ async function predxiTeam(teamId, outIds, matchId){
   });
   const ids = Object.entries(seen).filter(([id]) => !banned.has(id))
     .sort((a, b) => b[1] - a[1]).slice(0, 22).map(([id]) => id);
-  const infos = await Promise.all(ids.map(id => predxiPosInfo(id).catch(() => [])));
+  const posHits = await kvMGetJSON(ids.map(predxiPosKey));
+  const infos = await Promise.all(ids.map((id, i) => predxiPosInfo(id, posHits[i]).catch(() => [])));
   const posInfo = Object.fromEntries(ids.map((id, i) => [id, infos[i]]));
   // 예측할 경기가 국내 컵대회면 로테이션 모드. 일정에서 못 찾으면(다른 팀 경기 등) 평소대로.
   const target = (upcoming || []).find(f => f.id === String(matchId));
