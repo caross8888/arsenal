@@ -216,8 +216,19 @@ const injuryView = inj => ({name: inj.name, major: inj.major, games: inj.games})
 // 시즌 계산을 마친 상태의 응답(승부차기 대기면 그 화면, 아니면 결과)
 function seasonReply(C, r){
   if(!r.penalty){ delete C.pending; C.forced = r.forced; C.forcedWhy = r.forcedWhy; }
-  return {token: seal(C), ...view(C)};
+  return withStay(C, {token: seal(C), ...view(C)});
 }
+// 잔류 미리 계산(사용자 지정 — 커리어 모드 요청 줄이기): 결과 화면에서 고를 게 없는 시즌(방출·특성 선택·강제 은퇴 아님)이면
+// "잔류"로 넘긴 다음 시즌 준비 화면을 봉인해 같이 보낸다. 잔류를 고르면 화면이 next를 부르지 않고 이걸 쓴다.
+// 서버가 낸 결과라 조작 여지가 없고, 이적을 고르거나 병역 결정을 바꾸면 예전처럼 next를 부른다.
+function stayNext(C){
+  if(C.phase !== 'result' || C.forced || C.released || (C.traitOffer && C.traitOffer.length)) return null;
+  const D = clone(C);
+  S.nextSeason(D, null, null);
+  delete D.forced; delete D.forcedWhy;
+  return {token: seal(D), ...view(D)};
+}
+function withStay(C, out){ const s = stayNext(C); return s ? {...out, stayNext: s} : out; }
 
 async function readBody(req){
   if(req.body && typeof req.body === 'object') return req.body;
@@ -359,13 +370,13 @@ export default async function handler(req, res){
       const decisions={...C.pendingSeason.decisions,[P.key]:input};
       advanceSeason(C,C.pendingSeason.choice,decisions);
       const v=view(C),row=v.preview||v.result.row,w=P.window==='club-final'?row.clubFinal:row.national.find(w=>w.id===P.window),m=w.matches.find(m=>m.stage===P.stage);
-      return res.json({token:seal(C),...v,penaltyResult:{key:P.key,kick:outcome,pk:m.pk,stage:P.stage,window:P.window}});
+      return res.json(withStay(C,{token:seal(C),...v,penaltyResult:{key:P.key,kick:outcome,pk:m.pk,stage:P.stage,window:P.window}}));
     }
 
     if(a === 'military'){
       const C=load(body.token,['result']);
       try { S.militaryAction(C,body.action); } catch(e){ bad(e.message); }
-      return res.json({token:seal(C), ...view(C)});
+      return res.json(withStay(C, {token:seal(C), ...view(C)}));
     }
 
     if(a === 'next'){
@@ -426,7 +437,7 @@ export default async function handler(req, res){
 
     if(a === 'view'){
       const C = load(body.token);
-      return res.json({token: body.token, ...view(C)});
+      return res.json(withStay(C, {token: body.token, ...view(C)}));
     }
 
     return res.status(400).json({error: 'unknown action'});
