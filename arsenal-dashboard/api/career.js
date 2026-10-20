@@ -49,6 +49,7 @@ const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 //   옛 카드는 옮기지 않고 career:card:{키}로 그대로 읽는다(새 키가 없을 때, 그 카드의 포지션이 맞으면).
 // career:done:{id}  같은 커리어 두 번 등록 방지(30일) / career:reg:{YYYY-MM} 월 등록 수(무료 한도 보호).
 // 초기화: POST ?a=wipe (CRON_SECRET, {confirm:'RESET'}) — .github/workflows/career-reset.yml로 실행한다.
+const BOARD_VER = 'career:board:ver';
 const POSS = ['FW', 'MF', 'DF'], BOARD_V1 = 'career:board:v1', boardKey = p => `career:board:v2:${p}`, sumKey = p => `career:sum:${p}`;
 const BOARD_KEEP = 1000, BOARD_SHOW = 100, MONTHLY_REG_CAP = 20000, ACCT = '@';
 async function kv(...args){
@@ -176,6 +177,7 @@ export default async function handler(req, res){
       let deleted = 0;
       for(let i = 0; i < keys.length; i += 200) deleted += await kv('DEL', ...keys.slice(i, i + 200));
       for(const id in _boards) delete _boards[id];
+      await kv('INCR', BOARD_VER).catch(() => {});
       return res.json({ok: true, records: counts, deleted});
     }
     if(a === 'meta'){
@@ -198,6 +200,11 @@ export default async function handler(req, res){
       res.setHeader('Content-Type', 'image/png');
       res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=2592000, immutable');
       return res.end(Buffer.from(await r.arrayBuffer()));
+    }
+    // 랭킹 버전(등록할 때마다 1씩) — 크론이 5분마다 이것만 읽어 랭킹이 바뀌었는지 본다(랭킹 4종을 다시 읽으면 KV 16회)
+    if(a === 'boardver'){
+      res.setHeader('Cache-Control', 'public, max-age=0');   // no-store면 크론(callHandler)이 응답을 버린다. s-maxage가 없어 가장자리 캐시엔 안 남는다
+      return res.json({v: kvReady() ? Number(await kv('GET', BOARD_VER)) || 0 : 0});
     }
     if(a === 'board'){
       if(!kvReady()) return res.json({top: []});
@@ -280,6 +287,8 @@ export default async function handler(req, res){
           await kv('HDEL', sumKey(pos), ...ks);
         }
         delete _boards[pos]; delete _boards.ALL;
+        // 랭킹 버전 — 공용 데이터 크론(cloudflare/snapshots.js)이 이 숫자가 바뀔 때만 랭킹 파일을 다시 만든다
+        await kv('INCR', BOARD_VER).catch(() => {});
       }
       const rank = await kv('ZREVRANK', BK, member);
       return res.json(rank == null ? {registered: false, outside: true, pos}
