@@ -10588,6 +10588,18 @@ function crSfNatWarm(){
  if(CR_NAT_WARM)return CR_NAT_WARM;
  CR_NAT_WARM=new Promise(function(resolve){var img=new Image();img.onload=function(){(img.decode?img.decode().catch(function(){}):Promise.resolve()).then(function(){resolve(true);});};img.onerror=function(){CR_NAT_WARM=null;resolve(false);};img.src='/img/career-scenes/international-stadiums.webp?v=2';});return CR_NAT_WARM;
 }
+// 승부차기 화면 미리 받기 — 처음 승부차기를 열면 iframe이 화면·규칙 스크립트·그림 5장(약 600KB)을 그제야 받아서
+// "경기장 준비 중"이 길었다(사용자 지적). 토너먼트가 있는 대회 화면을 열 때 낮은 우선순위로 받아 브라우저 캐시에 넣어 둔다
+// (/career/·/img/는 하루 캐시, public/_headers). 주소는 crSfPenaltyOpen·penalty.html이 쓰는 것과 글자 하나까지 같아야 한다.
+var CR_PK_WARM=false;
+function crPkWarm(){
+ if(CR_PK_WARM)return;CR_PK_WARM=true;
+ var go=function(){
+  ['/career/penalty.html?v=10','/career/penalty-rules.js?v=1'].forEach(function(u){fetch(u,{priority:'low'}).catch(function(){CR_PK_WARM=false;});});
+  ['stadium','ready','dive','catch','jump'].forEach(function(n){var im=new Image();im.src='/img/career-penalty/'+n+'.webp?v=2';});
+ };
+ if(window.requestIdleCallback)requestIdleCallback(go,{timeout:3000});else setTimeout(go,1500);
+}
 var CR_CLUB_FINAL_WARM=null;
 function crClubFinalWarm(){
  if(CR_CLUB_FINAL_WARM)return CR_CLUB_FINAL_WARM;
@@ -10619,7 +10631,9 @@ function crSfNatOpen(w,resume){
   el.innerHTML='<div class="cr-nat-box">'+header+'<div class="cr-nat-summary"><div class="cr-nat-match" id="crNatMatch"><div class="round">경기를 준비하고 있습니다</div></div><div class="cr-sf-card"><div class="st" style="grid-template-columns:repeat(3,1fr)"><div><b id="crNatApps">0</b><span>대회 출전</span></div><div><b id="crNatGoals">0</b><span>골</span></div><div><b id="crNatAst">0</b><span>도움</span></div></div></div><div class="cr-note" id="crNatAppsNote">조별리그 포함 · 선수 출전 수</div></div><button class="gm-btn" id="crNatContinue" onclick="crSfNatContinue()" hidden>클럽 시즌 계속</button></div>';
   document.querySelector('#crTov .cr-sf').appendChild(el);crSfNatStats();crSfLiveStages(w.matches[start]);
   var tick=function(){if(CR.sf!==S||!S.nat)return;if(S.nat.finishRequested||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return crSfNatFinish();if(S.nat.i>=w.matches.length)return crSfNatFinish();if(crSfNatMatch()===false)return;S.nat.timer=setTimeout(tick,w.knockout?(/강|결승|동메달/.test(w.matches[S.nat.i-1].stage)?1400:450):450);};
-  var N=S.nat;N.tick=tick;(w.kind==='club'?crClubFinalWarm():crSfNatWarm()).then(function(ready){if(ready&&CR.sf===S&&S.nat===N)el.classList.add('scene-ready');});
+  var N=S.nat;N.tick=tick;
+  if(w.kind==='club'||w.bracket||(w.matches||[]).some(function(x){return !/^조별/.test(x.stage||'');}))crPkWarm();   // 토너먼트가 있으면 승부차기가 나올 수 있다
+  (w.kind==='club'?crClubFinalWarm():crSfNatWarm()).then(function(ready){if(ready&&CR.sf===S&&S.nat===N)el.classList.add('scene-ready');});
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)el.classList.remove('entering');else N.openFrame=requestAnimationFrame(function(){N.openFrame=requestAnimationFrame(function(){if(CR.sf===S&&S.nat===N)el.classList.remove('entering');});});
   S.nat.timer=setTimeout(tick,300);
 }
