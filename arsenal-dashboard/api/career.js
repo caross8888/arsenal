@@ -23,7 +23,10 @@ import { tokenCodec } from './_token.js';
 import { readToken } from './_account.js';
 import * as S from './_career_sim.js';
 import {Bad, cleanInput, view, withStay, step} from '../public/career/sim-v1/flow.js';
-import {replay, validateNext, VERSION} from '../public/career/sim-v1/local.js';
+import * as L1 from '../public/career/sim-v1/local.js';
+import * as L2 from '../public/career/sim-v2/local.js';
+import * as F2 from '../public/career/sim-v2/flow.js';
+import * as S2 from '../public/career/sim-v2/sim.js';
 import {NATIONAL_REACTION_GROUPS} from './_career_international.js';
 import { CLUB_KIT } from './_club_kits.js';
 
@@ -123,6 +126,8 @@ async function readBoard(pos){
   return _boards[id];
 }
 
+const flowOf=C=>C.simVersion===2?F2:{view,withStay,step};
+const simOf=C=>C.simVersion===2?S2:S;
 const bad=m=>{throw new Bad(m);};
 
 // 토큰 → 상태. 단계가 맞지 않으면 거부.
@@ -130,8 +135,9 @@ function load(token, phases){
   const st = open(token);
   if(!st || !st.v) bad('커리어 정보가 올바르지 않아요. 새로 시작해 주세요.');
   if(phases && !phases.includes(st.phase)) bad('진행 순서가 맞지 않아요. 화면을 새로고침해 주세요.');
-  S.militaryView(st);
-  if(st.phase==='result') S.refreshYouthRelease(st);
+  const sim=simOf(st);
+  sim.militaryView(st);
+  if(st.phase==='result') sim.refreshYouthRelease(st);
   return st;
 }
 
@@ -218,12 +224,13 @@ export default async function handler(req, res){
     const body = await readBody(req);
 
     if(a === 'commit'){
-      if(body.version!==VERSION)bad('유스 계산 버전이 달라요. 새로 시작해 주세요.');
-      const C=replay(body);
-      validateNext(C,body.next);
+      const local=body.version===1?L1:body.version===2?L2:null;
+      if(!local)bad('유스 계산 버전이 달라요. 새로 시작해 주세요.');
+      const C=local.replay(body);
+      local.validateNext(C,body.next);
       C.seed2=crypto.randomBytes(4).readUInt32LE(0);
       C.id=crypto.randomBytes(8).toString('hex');
-      return res.json(step(C,'next',body.next,{seal}));
+      return res.json(flowOf(C).step(C,'next',body.next,{seal}));
     }
 
     if(a === 'new'){
@@ -241,7 +248,8 @@ export default async function handler(req, res){
     }
 
     if(['service-return','scout','season','penalty','military','next','retire'].includes(a)){
-      return res.json(step(load(body.token), a, body, {seal}));
+      const C=load(body.token);
+      return res.json(flowOf(C).step(C, a, body, {seal}));
     }
 
     if(a === 'submit'){
@@ -259,7 +267,7 @@ export default async function handler(req, res){
       const member = ACCT + acct.k, score = C.score, pos = C.pos, BK = boardKey(pos);
       const prev = Number(await kv('ZSCORE', BK, member)) || 0;
       if(score > prev){
-        const card = S.cardView(C);
+        const card = simOf(C).cardView(C);
         await kv('SET', `career:card:${acct.k}:${pos}`, JSON.stringify(card));
         await kv('HSET', sumKey(pos), acct.k, JSON.stringify(summaryOf(card)));
         await kv('ZADD', BK, score, member);
@@ -280,7 +288,8 @@ export default async function handler(req, res){
 
     if(a === 'view'){
       const C = load(body.token);
-      return res.json(withStay(C, {token: body.token, ...view(C)}, seal));
+      const flow=flowOf(C);
+      return res.json(flow.withStay(C, {token: body.token, ...flow.view(C)}, seal));
     }
 
     return res.status(400).json({error: 'unknown action'});

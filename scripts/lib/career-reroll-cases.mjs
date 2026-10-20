@@ -1,9 +1,13 @@
 // Node와 실제 브라우저에서 동일한 입력·선택 묶음을 실행한다.
-import * as S from '../../arsenal-dashboard/public/career/sim-v1/sim.js';
-import {localCall,decode,replay,lookId} from '../../arsenal-dashboard/public/career/sim-v1/local.js';
-import {step,view} from '../../arsenal-dashboard/public/career/sim-v1/flow.js';
+import * as SIM1 from '../../arsenal-dashboard/public/career/sim-v1/sim.js';
+import * as LOCAL1 from '../../arsenal-dashboard/public/career/sim-v1/local.js';
+import * as FLOW1 from '../../arsenal-dashboard/public/career/sim-v1/flow.js';
+import * as S2 from '../../arsenal-dashboard/public/career/sim-v2/sim.js';
+import * as L2 from '../../arsenal-dashboard/public/career/sim-v2/local.js';
+import * as F2 from '../../arsenal-dashboard/public/career/sim-v2/flow.js';
 const copy=v=>JSON.parse(JSON.stringify(v));
-export function makeCase(i){
+export function makeCase(i,version=1){
+ const S=version===2?S2:SIM1,{localCall,decode,replay,lookId}=version===2?L2:LOCAL1,{step,view}=version===2?F2:FLOW1;
  const seed=Math.imul(i+1,2654435761)>>>0,rng=S.mulberry(seed^123),pos=['FW','MF','DF'][i%3];
  const input={name:'로컬테스트',nation:S.NATIONS[i%S.NATIONS.length].id,foot:i%2?'왼발':'오른발',body:S.BODIES[i%S.BODIES.length],pos,card:i%S.CARDS[pos].length,num:1+i%99,dream:i%3?null:'아스날'};
  let v=localCall('new',input,seed),pick=Math.floor(rng()*v.clubs.length),C=S.createCareer(input,pick,seed),tags=[];
@@ -29,4 +33,4 @@ export function makeCase(i){
  }
  throw Error('youth did not finish '+i);
 }
-export function runCases(count,start=0){return Array.from({length:count},(_,k)=>makeCase(start+k));}
+export function runCases(count,start=0,version=1){return Array.from({length:count},(_,k)=>makeCase(start+k,version));}
