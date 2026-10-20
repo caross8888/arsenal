@@ -260,6 +260,13 @@ async function translateTextsCore(rawTexts, opts) {
   const prefix = isHtml ? 'tr:koh:' : 'tr:ko:';
   const map = {};
   if (!API_KEY) return map;
+  // KV가 없으면 번역을 저장할 수 없어 요청마다 같은 글을 다시 번역한다 — 돈만 쓰므로 아예 안 한다.
+  // (Cloudflare 복제 사이트에 KV_REST_API_URL이 빠져 미디어 탭을 열 때마다 약 8,000자씩 나가
+  // 일일 할당량이 몇 번 만에 찼다.)
+  if (!KV_URL || !KV_TOKEN) {
+    if (!translateTextsCore.warned) { translateTextsCore.warned = true; console.warn('[translate] KV 미설정 — 번역 안 함(원문 유지)'); }
+    return map;
+  }
 
   // 중복 제거 + 번역 대상 선별 + 길이 클램프
   const uniq = [];
