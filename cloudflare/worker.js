@@ -93,6 +93,60 @@ async function runCron(cron, env){
   (res.statusCode >= 400 ? console.error : console.log)(job.name, res.statusCode, String(body ?? '').slice(0, 1500));
 }
 
+// ── 가장자리 캐시(Vercel CDN 대신) ──
+// Worker 응답은 Cloudflare CDN에 자동으로 안 남아서, Vercel에선 CDN이 받아 주던 요청(득점 순위 4초 등)이
+// 매번 핸들러까지 왔다. 핸들러가 붙이는 Cache-Control의 s-maxage(공유 캐시 보관 시간)를 Vercel CDN처럼 따라
+// Cache API에 보관한다. 데이터센터마다 따로 보관된다. workers.dev 주소에선 Cache API가 동작하지 않는다(자기 도메인 전용).
+// stale-while-revalidate도 흉내 낸다 — 보관 시간이 지났으면 옛 응답을 바로 주고 뒤에서 한 번 새로 만든다.
+// 로그인 헤더·쿠키가 있는 요청과 GET이 아닌 요청은 건너뛴다(사람마다 다른 응답일 수 있다).
+const EDGE = {stored: 'x-edge-stored', fresh: 'x-edge-fresh', cc: 'x-edge-cc'};
+const refreshing = new Set();
+
+function edgePolicy(cc){
+  cc = String(cc || '').toLowerCase();
+  if(!/\bpublic\b/.test(cc) || /no-store|private|no-cache/.test(cc)) return null;
+  const s = /s-maxage=(\d+)/.exec(cc), w = /stale-while-revalidate=(\d+)/.exec(cc);
+  const fresh = s ? Number(s[1]) : 0;
+  return fresh > 0 ? {fresh, keep: fresh + (w ? Number(w[1]) : 0)} : null;
+}
+
+// 핸들러를 Vercel 형식으로 실행해 Response를 만든다.
+async function runHandler(request, url, name, handler, ctx){
+  const {res, headers, finished} = vercelRes();
+  try {
+    const req = vercelReq(request, url, await readBody(request));
+    const run = Promise.resolve(handler(req, res)).then(() => res.end());
+    // 방문자가 응답 전에 떠나면(앱 닫기·탭 이동) Cloudflare는 Worker를 그 자리에서 끊는다. Vercel 함수는
+    // 끝까지 돈다. 번역처럼 "외부 유료 호출 → KV 저장" 순서인 일은 저장 전에 끊기면 돈만 내고 결과를
+    // 잃어서, 다음 방문 때 같은 글을 또 번역한다. waitUntil로 연결이 끊겨도 핸들러는 끝까지 돌게 한다.
+    ctx?.waitUntil(run.catch(() => {}));
+    const body = await Promise.race([finished, run.then(() => finished)]);
+    return new Response(request.method === 'HEAD' ? null : body ?? null, {status: res.statusCode, headers});
+  } catch(e){
+    console.error(name, e && e.stack || e);
+    return Response.json({error: '서버 오류가 났어요. 잠시 후 다시 시도해 주세요.'}, {status: 500});
+  }
+}
+
+// 캐시에 넣을 사본: 보관 시간(keep)을 max-age로 바꿔 Cache API가 그만큼 들고 있게 하고, 원래 헤더는 따로 적어 둔다.
+async function edgePut(key, resp, policy){
+  const h = new Headers(resp.headers);
+  h.set(EDGE.cc, resp.headers.get('cache-control') || '');
+  h.set(EDGE.stored, String(Date.now()));
+  h.set(EDGE.fresh, String(policy.fresh));
+  h.set('cache-control', `public, max-age=${policy.keep}`);
+  await caches.default.put(key, new Response(await resp.clone().arrayBuffer(), {status: resp.status, headers: h}));
+}
+
+// 방문자에게 줄 응답: 내부 헤더를 지우고 원래 Cache-Control(브라우저용 max-age)을 되돌린다.
+function edgeOut(hit, state){
+  const h = new Headers(hit.headers);
+  h.set('cache-control', h.get(EDGE.cc) || 'no-store');
+  for(const k of Object.values(EDGE)) h.delete(k);
+  h.set('x-edge-cache', state);
+  return new Response(hit.body, {status: hit.status, headers: h});
+}
+
 export default {
   async scheduled(event, env, ctx){
     ctx.waitUntil(runCron(event.cron, env));
@@ -103,19 +157,31 @@ export default {
     const name = url.pathname.replace(/^\/api\//, '').replace(/\/+$/, '');
     const handler = HANDLERS[name];
     if(!handler) return Response.json({error: 'unknown endpoint'}, {status: 404});
-    const {res, headers, finished} = vercelRes();
-    try {
-      const req = vercelReq(request, url, await readBody(request));
-      const run = Promise.resolve(handler(req, res)).then(() => res.end());
-      // 방문자가 응답 전에 떠나면(앱 닫기·탭 이동) Cloudflare는 Worker를 그 자리에서 끊는다. Vercel 함수는
-      // 끝까지 돈다. 번역처럼 "외부 유료 호출 → KV 저장" 순서인 일은 저장 전에 끊기면 돈만 내고 결과를
-      // 잃어서, 다음 방문 때 같은 글을 또 번역한다. waitUntil로 연결이 끊겨도 핸들러는 끝까지 돌게 한다.
-      ctx?.waitUntil(run.catch(() => {}));
-      const body = await Promise.race([finished, run.then(() => finished)]);
-      return new Response(request.method === 'HEAD' ? null : body ?? null, {status: res.statusCode, headers});
-    } catch(e){
-      console.error(name, e && e.stack || e);
-      return Response.json({error: '서버 오류가 났어요. 잠시 후 다시 시도해 주세요.'}, {status: 500});
+
+    const edge = request.method === 'GET' && !request.headers.has('authorization') && !request.headers.has('cookie')
+      && typeof caches !== 'undefined' && !url.hostname.endsWith('.workers.dev');
+    if(!edge) return runHandler(request, url, name, handler, ctx);
+
+    const key = new Request(url.toString(), {method: 'GET'});
+    let hit = null;
+    try { hit = await caches.default.match(key); } catch(_){}
+    if(hit){
+      const age = Date.now() - Number(hit.headers.get(EDGE.stored) || 0);
+      if(age <= Number(hit.headers.get(EDGE.fresh) || 0) * 1000) return edgeOut(hit, 'HIT');
+      // 보관 시간이 지난 응답 — 바로 주고, 이 인스턴스에서 아직 안 했으면 뒤에서 새로 만든다.
+      if(!refreshing.has(key.url)){
+        refreshing.add(key.url);
+        ctx.waitUntil(runHandler(new Request(key), url, name, handler, ctx).then(r => {
+          const p = r.status === 200 && edgePolicy(r.headers.get('cache-control'));
+          return p ? edgePut(key, r, p) : null;
+        }).catch(() => {}).finally(() => refreshing.delete(key.url)));
+      }
+      return edgeOut(hit, 'STALE');
     }
+    const resp = await runHandler(request, url, name, handler, ctx);
+    const policy = resp.status === 200 && edgePolicy(resp.headers.get('cache-control'));
+    if(policy) ctx.waitUntil(edgePut(key, resp, policy).catch(() => {}));
+    resp.headers.set('x-edge-cache', 'MISS');
+    return resp;
   },
 };
