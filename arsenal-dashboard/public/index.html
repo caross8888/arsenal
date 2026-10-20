@@ -9491,14 +9491,15 @@ function crNextApi(){
   if(s && (CR.pick==null || CR.pick==='') && CR.traitPick==null) return Promise.resolve(s);
   return crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick});
 }
-var CR_LOCAL_PREFIX='career-local-v1:', CR_LOCAL_MODULE=null;
-function crLocalModule(){
-  if(!CR_LOCAL_MODULE) CR_LOCAL_MODULE=import('/career/sim-v1/local.js').catch(function(e){ CR_LOCAL_MODULE=null; throw new Error('유스 계산 파일을 불러오지 못했어요. 다시 시도해 주세요.'); });
-  return CR_LOCAL_MODULE;
+var CR_LOCAL_PREFIX='career-local-v', CR_LOCAL_MODULES={};
+function crLocalModule(version){
+  version=version||2;
+  if(!CR_LOCAL_MODULES[version]) CR_LOCAL_MODULES[version]=import('/career/sim-v'+version+'/local.js').catch(function(e){ delete CR_LOCAL_MODULES[version]; throw new Error('유스 계산 파일을 불러오지 못했어요. 다시 시도해 주세요.'); });
+  return CR_LOCAL_MODULES[version];
 }
 function crApi(a, body){
   var local=body && typeof body.token==='string' && body.token.indexOf(CR_LOCAL_PREFIX)===0;
-  if(a==='new'||local) return crLocalModule().then(function(M){
+  if(a==='new'||local) return crLocalModule(local&&body.token.indexOf('career-local-v1:')===0?1:2).then(function(M){
     if(local && a==='next'){
       var v=M.localCall('view',body);
       if(v.phase==='result' && v.player.age===18) return crServerApi('commit',M.commitBody(body.token,{pick:body.pick,trait:body.trait}));
