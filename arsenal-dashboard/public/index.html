@@ -3267,16 +3267,36 @@ function isArsenalTeam(t){
 // 묶음 응답으로 대신 채운다. 묶음은 페이지를 연 직후 1분 동안만 쓰고(이후 새로고침·재요청은 원래대로 개별 호출),
 // 묶음에서 빠진 항목(서버가 시간 안에 못 만든 것)이나 묶음이 실패하면 개별 호출로 떨어진다.
 var HOME_TYPES=['fixtures','transfers','standings','leaders','roundResults','teamOfTheWeek','squad','injuries'];
+// 공용 데이터 파일(사용자 지정 — Cloudflare 요청 줄이기): 크론이 1분마다 R2(data.coyg.co.kr)에 올려 두는 JSON
+// (cloudflare/snapshots.js). CDN이 들고 있어서 방문자가 늘어도 Worker가 안 돈다. 파일이 없거나 오래되면(15분)
+// 지금처럼 /api로 받는다. 운영 주소에서만 쓴다(로컬·workers.dev는 늘 /api).
+var DATA_BASE = /^(www\.)?coyg\.co\.kr$/.test(location.hostname) ? 'https://data.coyg.co.kr' : '';
+var DATA_MAX_AGE = 15*60*1000;
+function dataFile(name, maxAge){
+  if(!DATA_BASE) return Promise.resolve(null);
+  var ac=window.AbortController ? new AbortController() : null, to=ac ? setTimeout(function(){ ac.abort(); }, 4000) : 0;
+  return fetch(DATA_BASE+'/'+name, {signal: ac ? ac.signal : undefined}).then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){ clearTimeout(to); return j && j.at && Date.now()-Date.parse(j.at) < (maxAge||DATA_MAX_AGE) ? j : null; })
+    .catch(function(){ clearTimeout(to); return null; });
+}
 var _homeReq=null, _homeAt=0;
 function homeBundle(){
-  if(!_homeReq){ _homeAt=Date.now(); _homeReq=fetch(FN+'/football?type=home').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }); }
+  if(!_homeReq){ _homeAt=Date.now(); _homeReq=dataFile('home.json').then(function(j){
+    if(j && j.parts){ var parts={}; Object.keys(j.parts).forEach(function(t){ var p=j.parts[t]; if(p && p.at && Date.now()-Date.parse(p.at) < DATA_MAX_AGE) parts[t]=p.data; }); return {parts:parts}; }
+    return fetch(FN+'/football?type=home').then(function(r){ return r.ok ? r.json() : null; });
+  }).catch(function(){ return null; }); }
   return _homeReq;
 }
+// 기본 호출(파라미터 없는 첫 페이지)만 파일로 — "더 보기"·특정 라운드 등은 그대로 /api
+var DATA_SINGLE={}; DATA_SINGLE[FN+'/news']='news.json'; DATA_SINGLE[FN+'/social']='social.json'; DATA_SINGLE[FN+'/videos']='videos.json';
 function apiFetch(url, opts){
   var hm = !(opts && opts.fresh) && /\/football\?type=([A-Za-z]+)$/.exec(url);
   if(hm && HOME_TYPES.indexOf(hm[1])>=0 && (!_homeReq || Date.now()-_homeAt < 60000)){
     return homeBundle().then(function(b){ var part=b && b.parts && b.parts[hm[1]]; return part ? JSON.parse(JSON.stringify(part)) : apiFetchOne(url, opts); });   // 복사본 — 같은 항목을 두 곳에서 받아 각자 고쳐 써도 서로 안 섞이게
   }
+  var hy = !(opts && opts.fresh) && /\/holidays\?year=(\d{4})$/.exec(url);
+  var df = !(opts && opts.fresh) && (DATA_SINGLE[url] || (hy && 'holidays-'+hy[1]+'.json'));
+  if(df) return dataFile(df, hy ? 2*86400*1000 : DATA_MAX_AGE).then(function(j){ return j ? j.data : apiFetchOne(url, opts); });
   return apiFetchOne(url, opts);
 }
 function apiFetchOne(url, opts){
@@ -12150,7 +12170,9 @@ function crBoard(from, pos){
     '<button class="gm-btn" onclick="crBoardBack()">'+(CR.boardFrom==='retired'?'은퇴 카드로':'돌아가기')+'</button>');
   window.scrollTo(0,0);
   var myKey=crMyKey();
-  Promise.all([crMeta(), fetch(FN+'/career?a=board'+(bp?'&p='+bp:'')+(CR.boardBust&&Date.now()-CR.boardBust<300000?'&t='+CR.boardBust:'')).then(function(r){ return r.json(); })]).then(function(res){
+  Promise.all([crMeta(), (CR.boardBust&&Date.now()-CR.boardBust<300000
+    ? fetch(FN+'/career?a=board'+(bp?'&p='+bp:'')+'&t='+CR.boardBust).then(function(r){ return r.json(); })   // 방금 등록 — 바로 확인
+    : dataFile('board-'+(bp||'ALL')+'.json').then(function(j){ return j ? j.data : fetch(FN+'/career?a=board'+(bp?'&p='+bp:'')).then(function(r){ return r.json(); }); }))]).then(function(res){
     if((CR.boardPos||'')!==bp) return;   // 그사이 다른 탭을 눌렀다
     var top=res[1].top||[], el=document.getElementById('crRk'); if(!el) return;
     CR.boardRows=top;
