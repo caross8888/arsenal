@@ -9945,9 +9945,34 @@ function crAvatar(look, K, num){
 }
 // 카드를 그린 직후(setTimeout 0) 빈 자리에 채운다 — crCardHtml은 문자열을 돌려줘서 그 자리에서 그릴 수 없다
 var _crAvQ={};
+// 도트 선수 그림 채우기. 그림 하나가 256×256 픽셀을 하나씩 칠하는 무거운 작업이라, 랭킹 100줄을 한꺼번에
+// 만들면 그동안 화면이 멈칫거렸다(새로고침 직후 랭킹에서 카드를 누르면 스피너가 버벅이고 카드가 늦게 열림 — 사용자 지적).
+// 그래서 (1) 랭킹 줄은 화면 가까이 온 것만 만들고(IntersectionObserver), (2) 한 번에 하나씩, 사이사이 브라우저에
+// 차례를 넘겨 만들며, (3) 은퇴 카드 그림은 줄 맨 앞에 끼운다. 화면에서 사라진 줄(카드를 열어 랭킹이 지워짐)은 건너뛴다.
+var _crAvJobs=[], _crAvBusy=false, _crAvIO=null;
+function crAvRun(){
+  if(_crAvBusy) return;
+  var el; while((el=_crAvJobs.shift()) && !el.isConnected){}
+  if(!el) return;
+  var q=_crAvQ[el._avk]; if(!q) return crAvRun();
+  _crAvBusy=true;
+  var next=function(){ _crAvBusy=false; setTimeout(crAvRun, 0); };
+  crAvatar(q.look, q.K, q.num).then(function(u){ el.src=u; el.classList.add('on'); next(); }).catch(function(){ el.parentNode && el.parentNode.classList.add('none'); next(); });
+}
 function crAvFill(){
-  document.querySelectorAll('img[data-avk]').forEach(function(el){ var q=_crAvQ[el.dataset.avk]; if(!q) return; el.removeAttribute('data-avk');
-    crAvatar(q.look, q.K, q.num).then(function(u){ el.src=u; el.classList.add('on'); }).catch(function(){ el.parentNode && el.parentNode.classList.add('none'); }); });
+  document.querySelectorAll('img[data-avk]').forEach(function(el){
+    if(!_crAvQ[el.dataset.avk]) return;
+    el._avk=el.dataset.avk; el.removeAttribute('data-avk');
+    var row=el.closest('.cr-rk-row');
+    if(row && window.IntersectionObserver){
+      // 그림은 다 그려지기 전엔 숨겨져 있어(display:none) 교차 판정이 안 된다 — 줄을 지켜본다
+      row._avImg=el;
+      _crAvIO=_crAvIO||new IntersectionObserver(function(es){ es.forEach(function(e){ if(!e.isIntersecting) return; _crAvIO.unobserve(e.target); _crAvJobs.push(e.target._avImg); }); crAvRun(); }, {rootMargin:'300px 0px'});
+      _crAvIO.observe(row);
+    } else if(row) _crAvJobs.push(el);
+    else _crAvJobs.unshift(el);   // 은퇴 카드 그림이 먼저
+  });
+  crAvRun();
 }
 function crKitCard(club){
   // 검정·아주 어두운 유니폼(뉴캐슬·보타포구 등)은 다크 모드 바탕(#0B0D12)에 묻혀서 시작을 조금 밝히고 옅은 테두리(.cr-hc.dk)
@@ -12086,7 +12111,7 @@ function crBoard(from, pos){
       var hon=(r.hon||[]).filter(function(x){ return crTroImg(x[0]); });
       var avk='rk'+i+'_'+Math.random().toString(36).slice(2,7);
       _crAvQ[avk]={look:crAvLook({id:r.id, name:r.nm, nation:r.nat, pos:r.pos||r.p, card:r.card}), K:crKit(r.club), num:r.num};
-      return '<button class="cr-rk-row'+(me?' me':'')+(i<3?' top'+(i+1):'')+'"'+(me?' id="crRkMe"':'')+' onclick="crViewCard('+i+')">'
+      return '<button class="cr-rk-row'+(me?' me':'')+(i<3?' top'+(i+1):'')+'"'+(me?' id="crRkMe"':'')+' onpointerdown="crCardFetch('+i+')" onclick="crViewCard('+i+')">'
        +'<span class="n">'+(i+1)+'</span>'
        +'<span class="cr-rk-av"><img alt="" data-avk="'+avk+'"></span>'
        +'<span class="m"><b>'+crFlag(r.nat)+gmEsc(r.nm||'')+'</b><em>'+gmEsc(r.nick)+' · '+(bp?'':pn(r.pos||r.p)+' ')+gmEsc(card.n)+'</em>'
@@ -12097,13 +12122,21 @@ function crBoard(from, pos){
   }).catch(function(){ var el=document.getElementById('crRk'); if(el) el.innerHTML='<div class="gm-empty">랭킹을 불러오지 못했어요.</div>'; });
 }
 function crBoardBack(){ if(CR.boardFrom==='retired' && CR.v && CR.v.phase==='retired') crRetired(); else crIntro(); window.scrollTo(0,0); }
+// 카드 요청은 손가락이 닿는 순간(pointerdown) 시작해 두고, 손을 뗄 때(click) 같은 요청을 이어 쓴다 — 0.1~0.2초 당겨진다.
+// 같은 줄을 다시 누르면 같은 요청을 쓴다(요청이 늘지 않는다). 실패한 요청은 버려서 다음에 다시 받는다.
+var _crCardReq={};
+function crCardFetch(i){
+  var r=(CR.boardRows||[])[i]; if(!r) return null;
+  var u=FN+'/career?a=card&k='+encodeURIComponent(r.key)+'&p='+(r.p||r.pos||'')+'&s='+(r.score||0);
+  return _crCardReq[u]||(_crCardReq[u]=fetch(u).then(function(x){ return x.json().then(function(j){ if(!x.ok) throw new Error(j.error); return j; }); }).catch(function(e){ delete _crCardReq[u]; throw e; }));
+}
 // 남의(또는 내) 대표 은퇴 카드 — 보기 전용. CR.v는 그대로 둔다.
 function crViewCard(i){
   var r=(CR.boardRows||[])[i]; if(!r) return;
   crRender('<div class="cr-top"><button class="gm-back" onclick="crBoard()">← 랭킹</button><div class="cr-season">'+gmEsc(r.nick)+'</div></div>'+loadingHtml('불러오는 중...','padding:60px 20px'),
     '<button class="gm-btn" onclick="crBoard()">랭킹으로 돌아가기</button>');
   window.scrollTo(0,0);
-  fetch(FN+'/career?a=card&k='+encodeURIComponent(r.key)+'&p='+(r.p||r.pos||'')+'&s='+(r.score||0)).then(function(x){ return x.json().then(function(j){ if(!x.ok) throw new Error(j.error); return j; }); }).then(function(d){
+  crCardFetch(i).then(function(d){
     var box=document.querySelector('#gameRoot .cr'); if(!box) return;
     // 내 카드면 은퇴 화면처럼 이미지로 저장할 수 있게(사용자 지정). 내 카드 판별은 crMyKey(로그인 계정 키).
     var myKey=crMyKey();
