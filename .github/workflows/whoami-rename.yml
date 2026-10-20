@@ -42,7 +42,7 @@ jobs:
           body=$(node -e 'console.log(JSON.stringify({rank:Number(process.env.RANK),to:process.env.TO,from:process.env.FROM||undefined}))')
           code=$(curl -sS -o res.json -w '%{http_code}' --max-time 30 \
             -X POST -H "Authorization: Bearer $CRON_SECRET" -H 'Content-Type: application/json' \
-            --data "$body" "https://coyg.vercel.app/api/game?a=rename")
+            --data "$body" "https://coyg.co.kr/api/game?a=rename")
           echo "HTTP $code"; cat res.json; echo
           cat res.json >> "$GITHUB_STEP_SUMMARY"
           [ "$code" = "200" ] || { echo "::error::닉네임 수정 실패 (HTTP $code)"; exit 1; }

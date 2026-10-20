@@ -35,7 +35,7 @@ jobs:
           body=$(node -e 'console.log(JSON.stringify({confirm:process.env.CONFIRM,dry:process.env.DRY==="true"}))')
           code=$(curl -sS -o res.json -w '%{http_code}' --max-time 60 \
             -X POST -H "Authorization: Bearer $CRON_SECRET" -H 'Content-Type: application/json' \
-            --data "$body" "https://coyg.vercel.app/api/career?a=wipe")
+            --data "$body" "https://coyg.co.kr/api/career?a=wipe")
           echo "HTTP $code"; cat res.json; echo
           cat res.json >> "$GITHUB_STEP_SUMMARY"
           [ "$code" = "200" ] || { echo "::error::초기화 실패 (HTTP $code)"; exit 1; }

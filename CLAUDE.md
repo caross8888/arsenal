@@ -54,7 +54,7 @@ To refresh the scraped squad data (`public/data/players.json`), run `fotmob_auto
 
 `playerSeason:{선수id}:{시즌}`은 완결된 직전 시즌 스탯이라 TTL 없이 영구 저장된다(현재 스쿼드 선수는 시즌마다 키가 하나씩 쌓이는 게 의도). 이적해서 나간 선수 키만 비우는 작업이 `api/_purge.js`이고, 두 경로가 이 모듈을 공유한다:
 
-- **크론** — `vercel.json`의 `crons`가 매년 5월 25일 `/api/maintenance`를 호출한다. Cloudflare 복제 사이트에도 같은 크론이 있다(`wrangler.jsonc`의 `triggers.crons` → `cloudflare/worker.js`의 `CRONS`, 매시 AI 해설 포함). 이전이 끝나면 Vercel 쪽 크론은 지운다. `CRON_SECRET` 환경변수로만 인증되며, 미설정이면 503으로 거부한다(fail closed). `?dry=1`로 삭제 없이 대상만 확인할 수 있다.
+- **크론** — Cloudflare 크론(`wrangler.jsonc`의 `triggers.crons` → `cloudflare/worker.js`의 `CRONS`)이 매년 5월 25일 `/api/maintenance`를 호출한다(매시 AI 해설 `preview_ai`도 같은 곳). Vercel 크론은 이전하면서 지웠다. `CRON_SECRET` 환경변수로만 인증되며, 미설정이면 503으로 거부한다(fail closed). `?dry=1`로 삭제 없이 대상만 확인할 수 있다.
 - **로컬 수동** — `node scripts/kv_purge_players.mjs` (드라이런) / `--apply` (삭제). `.env.local`에서 KV 자격증명을 읽고, 드라이런은 읽기 전용 토큰만 쓴다.
 
 판정 규칙에 함정이 둘 있어서 그대로 유지할 것:
@@ -203,6 +203,10 @@ JSON files + matching `*_images/` folders for History content (trophies, manager
 
 ### Deployment
 
-Live on Vercel (auto-deploys on push to `main`), configured by `arsenal-dashboard/vercel.json`. `claude/**` 브랜치 푸시는 미리보기 배포를 만들지 않는다(`git.deploymentEnabled`) — Hobby 플랜 하루 배포 한도를 작업 브랜치 푸시가 다 써서 main 반영 배포가 "Deployment rate limited"로 막힌 적이 있다. **`arsenal-dashboard/netlify.toml` and `arsenal-dashboard/README.md` describe an older Netlify-based deployment** (different function directory, different API providers — api-football.com/newsapi.org instead of the ESPN/Fotmob/FPL/Guardian setup above) and are stale; don't follow them when reasoning about how the app is actually deployed or which APIs it actually calls.
+**운영 주소는 `https://coyg.co.kr`(Cloudflare Workers, `main` 푸시 시 Workers Builds가 자동 배포)이다.** 설정은 저장소 루트의 `wrangler.jsonc`, API 변환 층은 `cloudflare/worker.js`(Vercel 형식 `(req,res)` 핸들러를 그대로 돌린다), 정적 파일 캐시 규칙은 `public/_headers`. 비밀이 아닌 값은 `wrangler.jsonc`의 `vars`에, 토큰·API 키는 대시보드 "비밀"로 넣는다 — 대시보드 "텍스트" 변수는 Git 배포 때 지워진다(실제로 `KV_REST_API_URL`이 지워져 번역이 저장되지 않고 미디어 탭마다 약 8,000자씩 새로 번역됐다).
+
+옛 주소 `coyg.vercel.app`(Vercel)은 이동 페이지만 내보낸다(`vercel.json`의 `outputDirectory: moved` → `arsenal-dashboard/moved/index.html`). 그 페이지가 브라우저 저장값(`cache_*` 제외)을 `#mig=`에 담아 새 주소로 보내고, `public/index.html` 맨 앞 스크립트가 받는다(이미 있는 값은 안 덮고, 한 번만). Vercel의 API는 열려 있던 옛 탭용으로만 남아 있다.
+
+이전 전 기록: 원래 Vercel에 배포했다(`main` 푸시 시 자동 배포, `arsenal-dashboard/vercel.json`). `claude/**` 브랜치 푸시는 미리보기 배포를 만들지 않는다(`git.deploymentEnabled`) — Hobby 플랜 하루 배포 한도를 작업 브랜치 푸시가 다 써서 main 반영 배포가 "Deployment rate limited"로 막힌 적이 있다. **`arsenal-dashboard/netlify.toml` and `arsenal-dashboard/README.md` describe an older Netlify-based deployment** (different function directory, different API providers — api-football.com/newsapi.org instead of the ESPN/Fotmob/FPL/Guardian setup above) and are stale; don't follow them when reasoning about how the app is actually deployed or which APIs it actually calls.
 
 **정적 파일 브라우저 캐시**(`vercel.json`의 `headers`, 사용자 지정 — Hobby 플랜 월 CDN 요청 한도 때문에): `/img/`·`/video/`·`/data/` 그림은 1일, `/data/*.json`은 1시간 동안 브라우저가 서버에 다시 묻지 않는다. 캐시 설정이 없을 땐 방문할 때마다 그림 한 장 한 장이 요청으로 잡혀 CDN 요청이 빠르게 쌓였다. 배포가 비우는 건 Vercel 쪽 캐시뿐이고 방문자 브라우저 캐시는 못 비우므로, **이미 있는 그림을 같은 파일명으로 바꿔 배포할 땐 그 그림을 부르는 주소에 `?v=2`처럼 버전을 붙이거나 올릴 것** — 안 그러면 다녀간 사람에겐 최대 하루 옛 그림이 보인다. 새 파일명으로 추가하는 그림은 상관없다.

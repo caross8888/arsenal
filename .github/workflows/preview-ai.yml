@@ -1,6 +1,6 @@
 # AI 프리뷰 생성 — 수동 실행 전용
 #
-# 정기 실행은 Vercel 크론이 맡는다(vercel.json에 매시 정각 24개). 이 파일은
+# 정기 실행은 Cloudflare 크론이 맡는다(wrangler.jsonc triggers.crons, 매시 정각). 이 파일은
 # "지금 당장 돌리고 싶다"는 경우에만 깃허브 화면에서 Run workflow로 쓴다.
 #
 # schedule 트리거는 뺐다 — 2026-09-29에 `7,37 * * * *`로 넣어두고 4시간 반(슬롯 8번)을
@@ -9,15 +9,13 @@
 # 이벤트를 안 보낸 것이다(문서도 "부하가 몰리면 스케줄이 밀리거나 큐에서 버려질 수
 # 있다"고 명시한다). 다시 넣더라도 이 사실을 먼저 확인할 것.
 #
-# Vercel 무료 플랜은 크론 하나가 하루 1회까지지만 프로젝트당 100개까지 둘 수 있어서,
-# 시각만 다른 크론 24개로 "매시 1회"를 만들었다. 시각은 그 시간대 안에서만 보장된다
-# (0시 크론이 00:00~00:59 사이 아무 때나 돈다).
+# (예전엔 Vercel 크론 24개로 매시 1회를 만들었다 — Cloudflare로 옮기며 지웠다.)
 #
 # 호출당 비용은 거의 없다 — preview_ai.js는 해설 캐시 키(결장자·xG·폼·확률 해시)가
 # 그대로면 Gemini를 부르지 않고 KV 조회 두 번으로 끝난다. 실제 생성은 값이 바뀐 때뿐이다.
 #
 # 준비물: 저장소 Settings → Secrets and variables → Actions에 CRON_SECRET을 등록해야 한다.
-# 값은 Vercel 프로젝트 Settings → Environment Variables의 CRON_SECRET과 같아야 한다.
+# 값은 Cloudflare Worker(arsenal)의 비밀 CRON_SECRET과 같아야 한다.
 
 name: preview-ai cron
 
@@ -50,7 +48,7 @@ jobs:
           code=$(curl -sS -o body.json -w '%{http_code}' \
             --max-time 120 \
             -H "Authorization: Bearer $CRON_SECRET" \
-            "https://coyg.vercel.app/api/preview_ai")
+            "https://coyg.co.kr/api/preview_ai")
 
           echo "HTTP $code"
           # 응답은 {checked, generated, cached, failed, matches:[...]} 형태의 짧은 리포트다.

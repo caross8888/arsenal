@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>주소가 바뀌었어요 · coyg.co.kr</title>
+<style>
+  :root { --bg:#0D0F14; --text:#F0F2F7; --sub:rgba(255,255,255,.75); --red:#EF0107; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; }
+  main { min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; box-sizing:border-box; text-align:center; }
+  h1 { font-size:20px; margin:0; }
+  p { margin:0; color:var(--sub); font-size:14px; line-height:1.6; }
+  a { display:inline-block; margin-top:6px; padding:12px 22px; border-radius:10px; background:var(--red); color:#fff; font-weight:700; text-decoration:none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>사이트 주소가 바뀌었어요</h1>
+  <p>새 주소 <b>coyg.co.kr</b>로 이동하는 중이에요.<br>진행 중인 커리어와 로그인은 그대로 이어져요.</p>
+  <a id="go" href="https://coyg.co.kr/">바로 가기</a>
+</main>
+<script>
+// Vercel(coyg.vercel.app)은 이제 이 페이지만 내보낸다(vercel.json outputDirectory = moved).
+// 이 주소의 브라우저 저장값(커리어 토큰·승부예측 로그인·설정 등)을 새 주소로 넘긴다 — 받는 쪽은
+// public/index.html 맨 앞 스크립트. 다시 받을 수 있는 데이터 캐시(cache_*)는 빼서 주소를 짧게 한다.
+// 한 번 보낸 뒤엔(movedAt) 값 없이 이동만 한다 — 새 주소에서 끝낸 커리어를 옛 값으로 되살리지 않게.
+(function(){
+  var TARGET = 'https://coyg.co.kr/';
+  var hash = location.hash || '';
+  var url = TARGET;
+  try {
+    if(!localStorage.getItem('movedAt')){
+      var d = {}, n = 0;
+      for(var i = 0; i < localStorage.length; i++){
+        var k = localStorage.key(i);
+        if(!k || k.indexOf('cache_') === 0) continue;
+        d[k] = localStorage.getItem(k); n++;
+      }
+      if(n){
+        var b = btoa(unescape(encodeURIComponent(JSON.stringify(d)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+        url = TARGET + '#mig=' + b + (hash ? '&h=' + encodeURIComponent(hash) : '');
+      }
+      localStorage.setItem('movedAt', String(Date.now()));
+    }
+  } catch(e) {}
+  if(url === TARGET && hash) url = TARGET + hash;
+  document.getElementById('go').href = url;
+  location.replace(url);
+})();
+</script>
+</body>
+</html>
