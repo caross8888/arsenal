@@ -8,6 +8,8 @@
   "main": "cloudflare/worker.js",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
+  // 요청별 로그(주소·CPU 시간) — 관찰 가능성 탭에서 무거운 요청을 찾는다. 무료 하루 20만 건, 정적 파일은 Worker를 안 거쳐 안 잡힌다.
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
   "assets": {
     "directory": "./arsenal-dashboard/public",
     "binding": "ASSETS",
