@@ -83,6 +83,9 @@ const BATCH_SEGMENTS = 64;
 const BATCH_CHARS = 5000;
 
 const HANGUL = /[가-힣]/;
+// 구글이 할당량 초과(403/429)를 주면 이 키를 걸어 두고 그동안 번역을 시도하지 않는다.
+const COOLDOWN_KEY = 'tr:cooldown';
+const COOLDOWN_SEC = 600;
 
 // format별로 캐시 네임스페이스를 분리한다 — 같은 문장이라도 평문으로 보낸
 // 결과와 HTML로 보낸 결과(태그 포함)는 다른 값이라 섞이면 안 된다.
@@ -178,6 +181,8 @@ async function callGoogle(texts, format) {
       signal: AbortSignal.timeout(8000),
     });
     if (!r.ok) {
+      // 할당량 초과면 모든 인스턴스가 10분 동안 구글을 안 부른다(아래 COOLDOWN_KEY).
+      if (r.status === 403 || r.status === 429) await kvCommand(['SET', COOLDOWN_KEY, '1', 'EX', String(COOLDOWN_SEC)]);
       // 403(할당량 초과·키 제한)도 여기로 온다 — 구글 에러 본문엔 요청에
       // 쓴 API 키가 그대로 박혀 나오는 경우가 있어서, 상태 코드만 남기고
       // 본문은 절대 로그에 찍지 않는다. 원인 구분용으로 구글이 붙이는 사유 코드
@@ -264,6 +269,17 @@ async function translateTextsCore(rawTexts, opts) {
   Object.assign(bySend, cached);
   const missing = sends.filter(t => !cached[t]);
   if (!missing.length) return resolve();
+
+  // 1-1) 같은 새 글을 여러 곳에서 동시에 번역하지 않게 한다. Cloudflare는 응답이 CDN에 안 남아
+  // 요청마다 이 코드가 돌고 인스턴스도 여럿이라, 새 기사가 뜨면 저장되기 전까지 들어온 요청이
+  // 전부 같은 글을 구글에 보냈다(실측: 일일 할당량이 풀리고 한 시간 안에 14,000자 소진).
+  // 잠금을 못 잡은 쪽은 이번엔 원문을 내보내고, 다음 요청부터 저장된 번역을 탄다.
+  // 할당량 초과 직후(쿨다운)에는 아예 시도하지 않는다.
+  if (KV_URL && KV_TOKEN) {
+    if (await kvCommand(['GET', COOLDOWN_KEY])) return resolve();
+    const lockKey = 'tr:lock:' + createHash('sha1').update(prefix + missing.slice().sort().join('\n')).digest('hex');
+    if (await kvCommand(['SET', lockKey, '1', 'NX', 'EX', '30']) !== 'OK') return resolve();
+  }
 
   // 2) 월 사용량 컷오프 — 넘었으면 새 번역은 포기하고 캐시된 것만 돌려준다
   const used = await getMonthlyUsage();
