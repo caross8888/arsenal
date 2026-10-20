@@ -1,6 +1,6 @@
 # AI 프리뷰 생성 — 수동 실행 전용
 #
-# 정기 실행은 Cloudflare 크론이 맡는다(wrangler.jsonc triggers.crons, 매시 정각). 이 파일은
+# 정기 실행은 Cloudflare 크론이 맡는다(wrangler.jsonc triggers.crons, 5분마다). 이 파일은
 # "지금 당장 돌리고 싶다"는 경우에만 깃허브 화면에서 Run workflow로 쓴다.
 #
 # schedule 트리거는 뺐다 — 2026-09-29에 `7,37 * * * *`로 넣어두고 4시간 반(슬롯 8번)을
