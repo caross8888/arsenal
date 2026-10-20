@@ -42,7 +42,8 @@ const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 // career:card:{키}:{포지션}   그 기록의 은퇴 카드(cardView) JSON — 랭킹에서 눌러 열어 본다.
 // career:sum:{포지션}         해시 {키: 랭킹 한 줄 요약 JSON} — 100줄을 HMGET 한 번으로 그린다.
 // 전체 탭은 세 판의 상위 100을 합쳐 점수순으로 — 한 계정이 포지션마다 한 줄씩 나올 수 있다(저장은 따로 안 한다).
-// 옛 한 판(career:board:v1 · career:card:{키} · career:sum)은 처음 읽을 때 한 번 포지션별로 옮긴다(career:mig:v2 NX).
+// 옛 한 판(career:board:v1 · career:card:{키} · career:sum)은 포지션별로 옮겨 두었다(2026-10 확인, career:mig:v2 = 1).
+//   옮기는 코드는 지웠다 — 랭킹을 열 때마다 확인용 KV 왕복이 한 번씩 더 들었다(Cloudflare에선 DB가 멀어 지연이 컸다).
 //   옛 카드는 옮기지 않고 career:card:{키}로 그대로 읽는다(새 키가 없을 때, 그 카드의 포지션이 맞으면).
 // career:done:{id}  같은 커리어 두 번 등록 방지(30일) / career:reg:{YYYY-MM} 월 등록 수(무료 한도 보호).
 // 초기화: POST ?a=wipe (CRON_SECRET, {confirm:'RESET'}) — .github/workflows/career-reset.yml로 실행한다.
@@ -81,27 +82,6 @@ const summaryOf = card => {
   return {v: SUM_V, id: card.id, nm: card.name, nat: card.nation, pos: card.pos, card: card.card, num: card.num, peak: card.peak,
     club: mainClubOf(card), hon: order.slice(0, 16).map(nm => [nm, g[nm].c])};
 };
-// 옛 한 판 → 포지션별(한 번만). 옛 요약에 포지션이 있어서 그걸로 나눈다.
-let _migrated = false;
-async function migrateV1(){
-  if(_migrated) return;
-  if(await kv('SET', 'career:mig:v2', '1', 'NX') === 'OK'){
-    const flat = await kv('ZRANGE', BOARD_V1, 0, -1, 'WITHSCORES') || [];
-    if(flat.length){
-      const sums = await kv('HGETALL', 'career:sum') || [], sum = {};
-      for(let i = 0; i + 1 < sums.length; i += 2) sum[sums[i]] = sums[i + 1];
-      const by = {FW: [], MF: [], DF: []}, hs = {FW: [], MF: [], DF: []};
-      for(let i = 0; i + 1 < flat.length; i += 2){
-        const k = String(flat[i]).slice(1); let pos = null;
-        try { pos = JSON.parse(sum[k] || '{}').pos; } catch(_){}
-        if(!by[pos]) continue;
-        by[pos].push(Number(flat[i + 1]), flat[i]); hs[pos].push(k, sum[k]);
-      }
-      for(const p of POSS) if(by[p].length){ await kv('ZADD', boardKey(p), ...by[p]); await kv('HSET', sumKey(p), ...hs[p]); }
-    }
-  }
-  _migrated = true;
-}
 const _boards = {}, _boardAt = {};
 async function readPos(p, n){
   const flat = await kv('ZRANGE', boardKey(p), 0, n - 1, 'REV', 'WITHSCORES') || [];
@@ -130,7 +110,6 @@ async function readPos(p, n){
 async function readBoard(pos){
   const id = POSS.includes(pos) ? pos : 'ALL';
   if(_boards[id] && Date.now() - _boardAt[id] < 30 * 1000) return _boards[id];
-  await migrateV1();
   let top;
   if(id !== 'ALL') top = await readPos(id, BOARD_SHOW);
   else {
@@ -412,7 +391,6 @@ export default async function handler(req, res){
       const used = await kv('INCR', `career:reg:${month}`);
       if(used === 1) await kv('EXPIRE', `career:reg:${month}`, 40 * 86400);
       if(used > MONTHLY_REG_CAP) return res.status(429).json({error: '이번 달 랭킹 등록이 마감됐어요. 다음 달에 다시 열려요.'});
-      await migrateV1();
       const member = ACCT + acct.k, score = C.score, pos = C.pos, BK = boardKey(pos);
       const prev = Number(await kv('ZSCORE', BK, member)) || 0;
       if(score > prev){
