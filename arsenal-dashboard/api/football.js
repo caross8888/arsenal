@@ -1325,8 +1325,38 @@ async function fotmobJSON(url, ms){
 // 예상 선발 XI·부상자 카드·승부 예측 세 곳이 이 캐시 하나를 같이 본다 —
 // 같은 모달 안에서 "예상 XI엔 빠졌는데 부상자 명단엔 없는" 불일치를 막기 위해서다.
 const UNAVAIL_TTL_SEC = 2 * 60 * 60;
+
+// 직전 같은 대회 경기 퇴장 → 이번 경기 출장정지. Fotmob은 정지를 한참 늦게(또는 아예 안) 결장자에 올린다
+// (실측: 바이킹전 74분 경고 2회 퇴장한 올리세가 다음 챔스 아스날전 결장자에 없었다). 그래서 그 팀의 같은 대회
+// 바로 앞 경기의 카드 기록에서 레드(Red)·경고 누적 퇴장(YellowRed)을 찾아 정지로 넣는다. 최소 1경기 정지만
+// 안다 — 여러 경기 징계나 경고 누적 정지(대회마다 규정이 다름)는 여전히 Fotmob 결장자에 기댄다.
+// 끝난 경기의 퇴장자는 바뀌지 않으니 KV에 오래 둔다.
+async function sentOffInMatch(matchId, teamId){
+  const key = `sentoff:v1:${matchId}`;
+  let list = await kvGetJSON(key);
+  if(!list){
+    const md = await fotmobJSON(`https://www.fotmob.com/api/data/matchDetails?matchId=${matchId}`);
+    const g = md.general || {}, homeId = String((g.homeTeam || {}).id || '');
+    const evs = (((md.content || {}).matchFacts || {}).events || {}).events || [];
+    list = evs.filter(e => e && e.type === 'Card' && (e.card === 'Red' || e.card === 'YellowRed'))
+      .map(e => ({id: String(e.playerId || (e.player || {}).id || ''), name: e.nameStr || (e.player || {}).name || '', team: e.isHome ? homeId : String((g.awayTeam || {}).id || '')}))
+      .filter(x => x.id);
+    await kvSetJSON(key, list, 60 * 24 * 60 * 60);
+  }
+  return list.filter(x => x.team === String(teamId));
+}
+async function redCardSuspensions(teamId, leagueIds, kickoffMs, matchId){
+  if(!teamId) return [];
+  const payload = await fetchTeamPayload(teamId);
+  const fx = (((payload || {}).fixtures || {}).allFixtures || {}).fixtures || [];
+  const prev = fx.filter(f => f && String(f.id) !== String(matchId) && f.status && f.status.finished
+      && leagueIds.includes(String((f.tournament || {}).leagueId || '')) && new Date(f.status.utcTime).getTime() < kickoffMs)
+    .sort((a, b) => new Date(b.status.utcTime) - new Date(a.status.utcTime))[0];
+  return prev ? sentOffInMatch(prev.id, teamId) : [];
+}
+
 async function fetchMatchUnavailable(matchId){
-  const key = `unavail:v2:${matchId}`;   // v2: 항목마다 갱신 시각(upd)을 담는다
+  const key = `unavail:v3:${matchId}`;   // v2: 항목마다 갱신 시각(upd)을 담는다 · v3: 직전 같은 대회 경기 퇴장자를 정지로 추가
   const hit = await kvGetJSON(key);
   if(hit) return hit;
   const md = await fotmobJSON(`https://www.fotmob.com/api/data/matchDetails?matchId=${matchId}`);
@@ -1347,6 +1377,14 @@ async function fetchMatchUnavailable(matchId){
     })),
   });
   const out = {home: pick(L.homeTeam, g.homeTeam), away: pick(L.awayTeam, g.awayTeam)};
+  const leagueIds = [g.leagueId, g.parentLeagueId].filter(Boolean).map(String), kickoff = new Date(g.matchTimeUTCDate || g.matchTimeUTC || 0).getTime();
+  if(leagueIds.length && kickoff && !(md.header || {}).status?.finished){
+    await Promise.all(['home', 'away'].map(async side => {
+      const t = out[side];
+      const reds = await redCardSuspensions(t.id, leagueIds, kickoff, matchId).catch(() => []);
+      for(const r of reds) if(!t.out.some(o => o.id === r.id)) t.out.push({id: r.id, name: r.name, type: 'suspension', expectedReturn: '', upd: '', red: true});
+    }));
+  }
   await kvSetJSON(key, out, UNAVAIL_TTL_SEC);
   return out;
 }
@@ -1616,7 +1654,7 @@ async function predxiTeam(teamId, outIds, matchId){
 }
 
 async function buildPredictedXI(matchId){
-  // 결장자는 부상자 카드·승부 예측과 같은 캐시(unavail:v2 + 다른 경기 최신 부상)를 본다 — 세 화면이 같은 명단을
+  // 결장자는 부상자 카드·승부 예측과 같은 캐시(unavail:v3 + 다른 경기 최신 부상)를 본다 — 세 화면이 같은 명단을
   // 보게 하려는 것이다. 매 요청마다 여기서 다시 읽으므로, 결장자가 갱신되면 피치도 같이 바뀐다.
   const unavail = await fetchMatchUnavailableMerged(matchId);
   const sides = [
