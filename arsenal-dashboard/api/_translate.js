@@ -123,9 +123,14 @@ async function kvPipeline(commands) {
       body: JSON.stringify(commands),
       signal: AbortSignal.timeout(5000),
     });
-    if (!r.ok) return null;
-    return await r.json();
-  } catch (e) { return null; }
+    if (!r.ok) { console.warn('[translate] KV pipeline HTTP ' + r.status); return null; }
+    const out = await r.json();
+    // 업스태시는 파이프라인이 200이어도 명령마다 error를 따로 준다(읽기 전용 토큰이면 NOPERM).
+    // 이걸 안 보면 번역 저장이 조용히 실패해 요청마다 같은 글을 다시 번역한다.
+    const err = Array.isArray(out) && out.find(x => x && x.error);
+    if (err) console.warn('[translate] KV 쓰기 실패: ' + String(err.error).slice(0, 120));
+    return out;
+  } catch (e) { console.warn('[translate] KV pipeline ' + e.message); return null; }
 }
 
 async function kvCommand(cmd) {
@@ -137,10 +142,14 @@ async function kvCommand(cmd) {
       body: JSON.stringify(cmd),
       signal: AbortSignal.timeout(5000),
     });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      let why = ''; try { why = String((await r.json()).error || '').slice(0, 120); } catch (_) {}
+      console.warn('[translate] KV ' + cmd[0] + ' HTTP ' + r.status + (why ? ' ' + why : ''));
+      return null;
+    }
     const { result } = await r.json();
     return result;
-  } catch (e) { return null; }
+  } catch (e) { console.warn('[translate] KV ' + cmd[0] + ' ' + e.message); return null; }
 }
 
 // 캐시된 번역 일괄 조회 — 개별 GET을 N번 던지지 않고 MGET 하나로.
@@ -269,6 +278,7 @@ async function translateTextsCore(rawTexts, opts) {
   Object.assign(bySend, cached);
   const missing = sends.filter(t => !cached[t]);
   if (!missing.length) return resolve();
+  console.log('[translate] 캐시 미스 ' + missing.length + '/' + sends.length + '개 (' + missing.reduce((n, t) => n + t.length, 0) + '자, ' + format + ')');
 
   // 1-1) 같은 새 글을 여러 곳에서 동시에 번역하지 않게 한다. Cloudflare는 응답이 CDN에 안 남아
   // 요청마다 이 코드가 돌고 인스턴스도 여럿이라, 새 기사가 뜨면 저장되기 전까지 들어온 요청이
