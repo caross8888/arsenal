@@ -174,6 +174,22 @@ async function getMonthlyUsage() {
   return Number.isFinite(n) ? n : 0;
 }
 
+// 사이트별 하루 통계(진단용) — Cloudflare 복제 사이트를 연 날 구글 일일 할당량이 한 시간 만에 찼다.
+// 어느 쪽이 얼마나 미스·전송·실패했는지 KV 해시 trStat:{태평양 날짜}:{vercel|cf}에 쌓는다
+// (구글 할당량이 태평양 자정에 풀려서 같은 기준으로 끊는다). 미스가 있을 때만 쓰니 평소엔 거의 0회.
+const SITE = process.env.VERCEL ? 'vercel' : 'cf';
+function statKey() {
+  let d;
+  try { d = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date()); }
+  catch (_) { d = new Date().toISOString().slice(0, 10); }
+  return 'trStat:' + d + ':' + SITE;
+}
+function stat(fields) {
+  const key = statKey(), cmds = Object.keys(fields).filter(f => fields[f]).map(f => ['HINCRBY', key, f, String(fields[f])]);
+  if (!cmds.length) return Promise.resolve();
+  return kvPipeline(cmds.concat([['EXPIRE', key, String(14 * 24 * 60 * 60)]]));
+}
+
 async function addMonthlyUsage(chars) {
   if (!chars) return;
   const key = usageKey();
@@ -278,7 +294,9 @@ async function translateTextsCore(rawTexts, opts) {
   Object.assign(bySend, cached);
   const missing = sends.filter(t => !cached[t]);
   if (!missing.length) return resolve();
-  console.log('[translate] 캐시 미스 ' + missing.length + '/' + sends.length + '개 (' + missing.reduce((n, t) => n + t.length, 0) + '자, ' + format + ')');
+  const missChars = missing.reduce((n, t) => n + t.length, 0);
+  console.log('[translate] 캐시 미스 ' + missing.length + '/' + sends.length + '개 (' + missChars + '자, ' + format + ')');
+  await stat({ missCalls: 1, missChars });
 
   // 1-1) 같은 새 글을 여러 곳에서 동시에 번역하지 않게 한다. Cloudflare는 응답이 CDN에 안 남아
   // 요청마다 이 코드가 돌고 인스턴스도 여럿이라, 새 기사가 뜨면 저장되기 전까지 들어온 요청이
@@ -286,9 +304,9 @@ async function translateTextsCore(rawTexts, opts) {
   // 잠금을 못 잡은 쪽은 이번엔 원문을 내보내고, 다음 요청부터 저장된 번역을 탄다.
   // 할당량 초과 직후(쿨다운)에는 아예 시도하지 않는다.
   if (KV_URL && KV_TOKEN) {
-    if (await kvCommand(['GET', COOLDOWN_KEY])) return resolve();
+    if (await kvCommand(['GET', COOLDOWN_KEY])) { await stat({ cooldownSkip: 1 }); return resolve(); }
     const lockKey = 'tr:lock:' + createHash('sha1').update(prefix + missing.slice().sort().join('\n')).digest('hex');
-    if (await kvCommand(['SET', lockKey, '1', 'NX', 'EX', '30']) !== 'OK') return resolve();
+    if (await kvCommand(['SET', lockKey, '1', 'NX', 'EX', '30']) !== 'OK') { await stat({ lockLost: 1 }); return resolve(); }
   }
 
   // 2) 월 사용량 컷오프 — 넘었으면 새 번역은 포기하고 캐시된 것만 돌려준다
@@ -307,6 +325,8 @@ async function translateTextsCore(rawTexts, opts) {
     const sent = batch;
     batch = []; batchChars = 0;
     const got = await callGoogle(sent, format);
+    const chars = sent.reduce((s, t) => s + t.length, 0);
+    await stat(got ? { googleOk: 1, googleChars: chars } : { googleFail: 1, googleFailChars: chars });
     if (!got) return; // 실패한 배치는 그냥 원문 유지
     got.forEach((ko, i) => { if (ko) fresh[sent[i]] = ko; });
     spent += sent.reduce((s, t) => s + t.length, 0);
