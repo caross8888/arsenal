@@ -69,9 +69,11 @@ function vercelRes(){
 
 // 크론(wrangler.jsonc의 triggers.crons) → Vercel 크론과 같은 모양으로 핸들러를 부른다.
 // Vercel처럼 Authorization: Bearer CRON_SECRET을 붙인다(핸들러는 이것만 통과시킨다).
-// 무료 플랜은 Worker당 크론 5개까지라, Vercel에서 시각만 다른 24개로 만들던 "매시 1회"는 한 줄로 쓴다.
+// 무료 플랜은 Worker당 크론 5개까지라 주기는 cron 식 한 줄로 쓴다(Vercel에선 시각만 다른 24개로 "매시 1회"를 만들었다).
 const CRONS = {
-  '0 * * * *': {name: 'preview_ai', query: {}},
+  // 5분마다(사용자 지정 — 결장자가 바뀌면 새 해설이 곧 나와야 한다). 화면의 즉시 생성(on=1)은 Cloudflare에서
+  // 방문자가 떠나면 30초 안에 끊겨 90초 걸리는 생성을 못 마쳤다(실측: 잠금만 5분 걸린 채 해설 없음). 크론은 끝까지 돈다.
+  '*/5 * * * *': {name: 'preview_ai', query: {}},
   '0 4 25 5 *': {name: 'maintenance', query: {}},
 };
 // 크론엔 요청 주소가 없다. 핸들러가 자기 정적 파일(/data/players.json)을 부를 때 쓸 주소 —
