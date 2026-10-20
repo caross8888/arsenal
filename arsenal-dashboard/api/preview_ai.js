@@ -27,6 +27,13 @@ const AI_TTL_SEC = 14 * 24 * 60 * 60;   // 경기가 지나면 쓸모없다
 // 경기가 18일 뒤라 날짜로 자르면 대상이 0건이 됐다(실측).
 const PREVIEW_MATCHES = 2;
 const RUN_LOG_KEY = 'predAI:_lastrun';
+// Vercel·Cloudflare 크론이 같은 키를 덮어써 어느 쪽이 돌았는지 구분이 안 됐다 — 사이트별 키에도 남긴다.
+const SITE = process.env.VERCEL ? 'vercel' : 'cf';
+async function saveRunLog(rec){
+  const v = JSON.stringify({site: SITE, ...rec}), ex = String(30 * 24 * 60 * 60);
+  await kv('SET', RUN_LOG_KEY, v, 'EX', ex);
+  await kv('SET', `${RUN_LOG_KEY}:${SITE}`, v, 'EX', ex);
+}
 // 해시 없는 폴백 키 — 같은 대진의 가장 최근 해설을 한 벌 든다.
 const lastKey = p => `predAI:last:${p.home.id}:${p.away.id}`;
 
@@ -186,11 +193,11 @@ export default async function handler(req, res){
     report.candidates = aiCandidates();
     // 실행 기록을 KV에 남긴다 — 배포 로그를 못 보는 상황에서도 무엇이 왜 실패했는지
     // KV만 읽어 확인할 수 있게 하려는 것이다(디버깅 왕복을 줄이려고 넣었다).
-    await kv('SET', RUN_LOG_KEY, JSON.stringify({at: new Date().toISOString(), ...report}), 'EX', String(30 * 24 * 60 * 60)).catch(() => {});
+    await saveRunLog({at: new Date().toISOString(), ...report}).catch(() => {});
     return res.json(report);
   } catch(err){
     try {
-      await kv('SET', RUN_LOG_KEY, JSON.stringify({at: new Date().toISOString(), error: err.message, ...report}), 'EX', String(30 * 24 * 60 * 60));
+      await saveRunLog({at: new Date().toISOString(), error: err.message, ...report});
     } catch(_){}
     return res.status(500).json({error: err.message, report});
   }
