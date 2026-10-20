@@ -2310,7 +2310,9 @@ export default async function handler(req, res) {
         // 보여줘야 하므로 정렬 자체를 SubStatValue 기준으로 다시 한다 — 안 그러면
         // "평균은 높지만 총량은 적은 선수"가 누적 순위 1위처럼 보이는 모순이 생긴다.
         const getTopN = async (statName, n, decimals, useSubStat) => {
-          for(const link of seasonLinks){
+          // 최근 2시즌까지만 내려간다 — 이번 시즌 파일이 안 받아지면 시즌 11개를 다 돌아 통계 10종 × 11 = 110번을 불렀고,
+          // Cloudflare 무료 플랜의 한 실행당 외부 요청 50번 한도를 혼자 다 썼다(실측 112번).
+          for(const link of seasonLinks.slice(0, 2)){
             const list = await fetchStatList(link.TournamentId, statName);
             if(list && list.length){
               const sorted = useSubStat ? [...list].sort((a,b) => (b.SubStatValue||0) - (a.SubStatValue||0)) : list;
