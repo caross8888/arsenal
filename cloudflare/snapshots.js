@@ -25,10 +25,10 @@ const SINGLE = () => {
     {file: 'news.json',   name: 'news',   query: {}, ttl: 300, list: 'articles'},
     {file: 'social.json', name: 'social', query: {}, ttl: 300, list: 'posts'},
     {file: 'videos.json', name: 'videos', query: {}, ttl: 300, list: 'videos'},
-    {file: 'board-ALL.json', name: 'career', query: {a: 'board'}, ttl: 300},
-    {file: 'board-FW.json',  name: 'career', query: {a: 'board', p: 'FW'}, ttl: 300},
-    {file: 'board-MF.json',  name: 'career', query: {a: 'board', p: 'MF'}, ttl: 300},
-    {file: 'board-DF.json',  name: 'career', query: {a: 'board', p: 'DF'}, ttl: 300},
+    {file: 'board-ALL.json', name: 'career', query: {a: 'board'}, ttl: 300, board: true},
+    {file: 'board-FW.json',  name: 'career', query: {a: 'board', p: 'FW'}, ttl: 300, board: true},
+    {file: 'board-MF.json',  name: 'career', query: {a: 'board', p: 'MF'}, ttl: 300, board: true},
+    {file: 'board-DF.json',  name: 'career', query: {a: 'board', p: 'DF'}, ttl: 300, board: true},
     {file: `holidays-${y}.json`, name: 'holidays', query: {year: String(y)}, ttl: 86400},
   ];
 };
@@ -66,7 +66,13 @@ export async function runSnapshots(bucket, call){
   ].sort((a, b) => (b.first - a.first) || (b.age - a.age));
 
   const meter = countFetches();
-  let homeChanged = false;
+  let homeChanged = false, boardVer;   // 랭킹 버전 — 이번 실행에서 처음 필요할 때 한 번만 읽는다
+  // 랭킹은 등록이 있을 때만 바뀐다. 버전이 그대로면 다시 읽지 않고(KV 16회 → 1회) 직전 내용에 시각만 새로 찍는다.
+  // 닉네임 변경은 버전을 안 올리므로 1시간이 지나면 버전과 상관없이 다시 만든다.
+  const boardSame = async f => {
+    if(boardVer === undefined) boardVer = ((await call('career', {a: 'boardver'}).catch(() => null)) || {}).v;
+    return boardVer != null && f.old && f.old.ver === boardVer && age(f.old.built || f.old.at) < 3600 * SEC;   // built: 실제로 다시 만든 시각(시각만 새로 찍을 땐 그대로)
+  };
   try {
     for(const j of jobs){
       if(meter.used() >= BUDGET){ skipped.push(j.kind === 'part' ? j.type : j.f.file); continue; }
@@ -76,11 +82,16 @@ export async function runSnapshots(bucket, call){
         if(!parts[j.type] || JSON.stringify(parts[j.type].data) !== JSON.stringify(data)) homeChanged = true;
         parts[j.type] = {at: now, data};
       } else {
-        const f = j.f, data = await call(f.name, f.query).catch(() => null);
+        const f = j.f;
+        if(f.board && await boardSame(f)){
+          await bucket.put(f.file, JSON.stringify({...f.old, at: now}), OBJ_OPTS);
+          continue;
+        }
+        const data = await call(f.name, f.query).catch(() => null);
         if(!data || data.error) continue;
         if(f.list && !(Array.isArray(data[f.list]) && data[f.list].length)) continue;   // 빈 목록 = 출처가 잠깐 실패
         if(f.old && JSON.stringify(f.old.data) === JSON.stringify(data) && !due(f.old.at, HEARTBEAT)) continue;
-        await bucket.put(f.file, JSON.stringify({v: 1, at: now, data}), OBJ_OPTS);
+        await bucket.put(f.file, JSON.stringify({v: 1, at: now, data, ...(f.board && boardVer != null ? {ver: boardVer, built: now} : {})}), OBJ_OPTS);
         done.push(f.file);
       }
     }
