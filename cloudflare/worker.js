@@ -67,7 +67,36 @@ function vercelRes(){
   return {res, headers, finished};
 }
 
+// 크론(wrangler.jsonc의 triggers.crons) → Vercel 크론과 같은 모양으로 핸들러를 부른다.
+// Vercel처럼 Authorization: Bearer CRON_SECRET을 붙인다(핸들러는 이것만 통과시킨다).
+// 무료 플랜은 Worker당 크론 5개까지라, Vercel에서 시각만 다른 24개로 만들던 "매시 1회"는 한 줄로 쓴다.
+const CRONS = {
+  '0 * * * *': {name: 'preview_ai', query: {}},
+  '0 4 25 5 *': {name: 'maintenance', query: {}},
+};
+// 크론엔 요청 주소가 없다. 핸들러가 자기 정적 파일(/data/players.json)을 부를 때 쓸 주소 —
+// patchSelfFetch가 이 주소를 ASSETS로 돌리므로 실제로 밖으로 나가진 않는다.
+const CRON_HOST = 'arsenal.caross8888.workers.dev';
+
+async function runCron(cron, env){
+  const job = CRONS[cron];
+  if(!job) return console.error('알 수 없는 크론', cron);
+  patchSelfFetch(env, CRON_HOST);
+  process.env.VERCEL_PROJECT_PRODUCTION_URL ||= CRON_HOST;
+  const secret = env.CRON_SECRET || process.env.CRON_SECRET || '';
+  const req = {method: 'GET', url: `/api/${job.name}`, query: job.query, body: undefined,
+    headers: {authorization: `Bearer ${secret}`, host: CRON_HOST, 'x-forwarded-host': CRON_HOST}};
+  const {res, finished} = vercelRes();
+  await Promise.resolve(HANDLERS[job.name](req, res)).then(() => res.end());
+  const body = await finished;
+  // 결과(짧은 리포트)는 관찰 가능성 로그에서 본다. 실패 코드면 error로 남겨 눈에 띄게 한다.
+  (res.statusCode >= 400 ? console.error : console.log)(job.name, res.statusCode, String(body ?? '').slice(0, 1500));
+}
+
 export default {
+  async scheduled(event, env, ctx){
+    ctx.waitUntil(runCron(event.cron, env));
+  },
   async fetch(request, env){
     const url = new URL(request.url);
     patchSelfFetch(env, url.host);
