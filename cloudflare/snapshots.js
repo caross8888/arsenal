@@ -4,16 +4,21 @@
 // 화면은 파일이 없거나 오래되면 지금처럼 /api로 받는다(public/index.html의 dataFile) — 여기가 멈춰도 사이트는 돈다.
 //
 // 항목마다 보관 시간(ttl)이 있고, 지난 것만 다시 만든다. 직전 파일을 읽어 판단하므로 크론 인스턴스가 새로 떠도
-// 원본(Fotmob 등) 호출이 그 주기대로만 일어난다(새 인스턴스가 득점 순위를 매번 다시 긁으면 Fotmob 호출이 100번 넘게 난다).
-// 다시 만든 결과가 직전과 같으면 파일을 다시 쓰지 않는다(파일의 at이 너무 오래되지 않는 한).
+// 원본(Fotmob 등) 호출이 그 주기대로만 일어난다. 다시 만든 결과가 직전과 같으면 파일을 다시 쓰지 않는다.
+//
+// 한 번에 다 만들지 않는다 — Cloudflare 무료 플랜은 실행 한 번에 외부 요청(fetch, Upstash 포함)이 50번까지라,
+// 메인 8종·미디어 3종·랭킹 4종을 한꺼번에 만들면 넘어서 뒤쪽이 "Too many subrequests"로 실패했다(실측).
+// 그래서 하나씩 만들며 외부 요청 수를 세고, BUDGET을 넘으면 남은 건 다음 분으로 넘긴다. 순위표·일정이 먼저,
+// 나머지는 오래된 순서. R2 쓰기·읽기(바인딩)는 이 한도에 안 들어간다.
 
 const SEC = 1000;
+const BUDGET = 30;   // 한 실행에 쓸 외부 요청 상한(한도 50 — 한 항목이 최대 15~20번 쓸 수 있어 여유를 둔다)
 // 메인 화면 묶음 — public/index.html의 HOME_TYPES와 같은 8종. 순위표·일정은 경기 직후 바로 바뀌어야 해서 1분.
 const HOME_PARTS = {
   fixtures: 60, standings: 60, roundResults: 300, teamOfTheWeek: 300,
   leaders: 300, injuries: 300, transfers: 600, squad: 600,
 };
-// 한 파일 = 한 응답. path는 /api 아래 엔드포인트, query는 화면이 기본으로 부르는 것과 같아야 한다.
+// 한 파일 = 한 응답. query는 화면이 기본으로 부르는 것과 같아야 한다. list가 있으면 빈 목록은 올리지 않는다.
 const SINGLE = () => {
   const y = new Date(Date.now() + 9 * 3600 * SEC).getUTCFullYear();   // 화면은 한국 날짜 기준 올해를 부른다
   return [
@@ -28,45 +33,61 @@ const SINGLE = () => {
   ];
 };
 // 내용이 그대로여도 이만큼 지나면 다시 쓴다 — 화면은 at이 15분 넘은 파일을 버리고 /api로 간다.
-const HEARTBEAT = 5 * 60 * SEC;
+const HEARTBEAT = 5 * 60;
 const OBJ_OPTS = {httpMetadata: {contentType: 'application/json; charset=utf-8', cacheControl: 'public, max-age=30, s-maxage=60'}};
 
 async function readFile(bucket, file){
   try { const o = await bucket.get(file); return o ? await o.json() : null; } catch(_){ return null; }
 }
-const due = (at, ttl) => !at || Date.now() - Date.parse(at) >= ttl * SEC;
+const age = at => at ? Date.now() - Date.parse(at) : Infinity;
+const due = (at, ttl) => age(at) >= ttl * SEC;
 
-// call(name, query) → 핸들러 응답 JSON(200이 아니면 null) — worker.js가 넘겨준다.
+// 이 실행 동안의 외부 요청 수 — 같은 인스턴스의 다른 요청 것도 섞일 수 있지만 그만큼 보수적으로 멈출 뿐이다.
+function countFetches(){
+  const outer = globalThis.fetch;
+  let n = 0;
+  globalThis.fetch = (...a) => { n++; return outer(...a); };
+  return {used: () => n, restore: () => { globalThis.fetch = outer; }};
+}
+
+// call(name, query) → 핸들러 응답 JSON(200이 아니거나 no-store면 null) — worker.js가 넘겨준다.
 export async function runSnapshots(bucket, call){
   if(!bucket) return console.error('[snapshot] R2 바인딩(DATA) 없음');
-  const now = new Date().toISOString(), report = [];
-
-  // 메인 묶음: 지난 항목만 다시 만들고 나머지는 직전 파일 것을 그대로 둔다
+  const now = new Date().toISOString(), done = [], skipped = [];
   const prev = await readFile(bucket, 'home.json');
   const parts = {...((prev && prev.parts) || {})};
-  let changed = false;
-  await Promise.all(Object.entries(HOME_PARTS).map(async ([type, ttl]) => {
-    if(!due(parts[type] && parts[type].at, ttl)) return;
-    const data = await call('football', {type}).catch(() => null);
-    if(!data || data.error) return;   // 실패하면 직전 것을 둔다(화면은 항목이 너무 오래되면 그 항목만 /api로 받는다)
-    if(!parts[type] || JSON.stringify(parts[type].data) !== JSON.stringify(data)) changed = true;
-    parts[type] = {at: now, data};
-  }));
-  if(changed || !prev || due(prev.at, HEARTBEAT / SEC)){
-    await bucket.put('home.json', JSON.stringify({v: 1, at: now, parts}), OBJ_OPTS);
-    report.push('home');
-  }
+  const singles = await Promise.all(SINGLE().map(async f => ({...f, old: await readFile(bucket, f.file)})));
 
-  for(const f of SINGLE()){
-    const old = await readFile(bucket, f.file);
-    if(old && !due(old.at, f.ttl)) continue;
-    const data = await call(f.name, f.query).catch(() => null);
-    if(!data || data.error) continue;
-    // 빈 목록은 올리지 않는다(출처가 잠깐 실패한 것) — 직전 파일이 남거나, 없으면 화면이 /api로 받는다
-    if(f.list && !(Array.isArray(data[f.list]) && data[f.list].length)) continue;
-    if(old && JSON.stringify(old.data) === JSON.stringify(data) && !due(old.at, HEARTBEAT / SEC)) continue;
-    await bucket.put(f.file, JSON.stringify({v: 1, at: now, data}), OBJ_OPTS);
-    report.push(f.file);
+  // 할 일 목록: 메인 항목과 단일 파일 중 보관 시간이 지난 것. 순위표·일정 먼저, 나머지는 오래된 순.
+  const jobs = [
+    ...Object.entries(HOME_PARTS).filter(([t, ttl]) => due(parts[t] && parts[t].at, ttl))
+      .map(([t]) => ({kind: 'part', type: t, first: t === 'fixtures' || t === 'standings', age: age(parts[t] && parts[t].at)})),
+    ...singles.filter(f => due(f.old && f.old.at, f.ttl)).map(f => ({kind: 'file', f, first: false, age: age(f.old && f.old.at)})),
+  ].sort((a, b) => (b.first - a.first) || (b.age - a.age));
+
+  const meter = countFetches();
+  let homeChanged = false;
+  try {
+    for(const j of jobs){
+      if(meter.used() >= BUDGET){ skipped.push(j.kind === 'part' ? j.type : j.f.file); continue; }
+      if(j.kind === 'part'){
+        const data = await call('football', {type: j.type}).catch(() => null);
+        if(!data || data.error) continue;   // 실패하면 직전 것을 둔다(화면은 너무 오래된 항목만 /api로 받는다)
+        if(!parts[j.type] || JSON.stringify(parts[j.type].data) !== JSON.stringify(data)) homeChanged = true;
+        parts[j.type] = {at: now, data};
+      } else {
+        const f = j.f, data = await call(f.name, f.query).catch(() => null);
+        if(!data || data.error) continue;
+        if(f.list && !(Array.isArray(data[f.list]) && data[f.list].length)) continue;   // 빈 목록 = 출처가 잠깐 실패
+        if(f.old && JSON.stringify(f.old.data) === JSON.stringify(data) && !due(f.old.at, HEARTBEAT)) continue;
+        await bucket.put(f.file, JSON.stringify({v: 1, at: now, data}), OBJ_OPTS);
+        done.push(f.file);
+      }
+    }
+  } finally { meter.restore(); }
+  if(homeChanged || !prev || due(prev.at, HEARTBEAT)){
+    await bucket.put('home.json', JSON.stringify({v: 1, at: now, parts}), OBJ_OPTS);
+    done.push('home');
   }
-  console.log('[snapshot] 갱신 ' + (report.join(', ') || '없음'));
+  console.log('[snapshot] 갱신 ' + (done.join(', ') || '없음') + (skipped.length ? ' · 다음 분으로 ' + skipped.join(', ') : '') + ' · 외부 요청 ' + meter.used());
 }
