@@ -135,7 +135,13 @@ async function edgePut(key, resp, policy){
   h.set(EDGE.stored, String(Date.now()));
   h.set(EDGE.fresh, String(policy.fresh));
   h.set('cache-control', `public, max-age=${policy.keep}`);
-  await caches.default.put(key, new Response(await resp.clone().arrayBuffer(), {status: resp.status, headers: h}));
+  const body = await resp.clone().arrayBuffer();
+  try {
+    await caches.default.put(key, new Response(body, {status: resp.status, headers: h}));
+    // 진단용: 넣자마자 다시 찾아본다(같은 데이터센터라면 바로 찾아져야 한다).
+    const back = await caches.default.match(key);
+    console.log('[edge] put ' + (back ? 'ok' : 'NOT FOUND after put') + ' ' + body.byteLength + 'B ' + key.url);
+  } catch(e){ console.warn('[edge] put 실패 ' + (e && e.message) + ' ' + key.url); }
 }
 
 // 방문자에게 줄 응답: 내부 헤더를 지우고 원래 Cache-Control(브라우저용 max-age)을 되돌린다.
@@ -164,7 +170,7 @@ export default {
 
     const key = new Request(url.toString(), {method: 'GET'});
     let hit = null;
-    try { hit = await caches.default.match(key); } catch(_){}
+    try { hit = await caches.default.match(key); } catch(e){ console.warn('[edge] match 실패 ' + (e && e.message)); }
     if(hit){
       const age = Date.now() - Number(hit.headers.get(EDGE.stored) || 0);
       if(age <= Number(hit.headers.get(EDGE.fresh) || 0) * 1000) return edgeOut(hit, 'HIT');
@@ -180,7 +186,8 @@ export default {
     }
     const resp = await runHandler(request, url, name, handler, ctx);
     const policy = resp.status === 200 && edgePolicy(resp.headers.get('cache-control'));
-    if(policy) ctx.waitUntil(edgePut(key, resp, policy).catch(() => {}));
+    if(policy) ctx.waitUntil(edgePut(key, resp, policy).catch(e => console.warn('[edge] ' + (e && e.message))));
+    else console.log('[edge] 저장 안 함 status=' + resp.status + ' cc=' + resp.headers.get('cache-control') + ' ' + key.url);
     resp.headers.set('x-edge-cache', 'MISS');
     return resp;
   },
