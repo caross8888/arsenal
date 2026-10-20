@@ -138,9 +138,6 @@ async function edgePut(key, resp, policy){
   const body = await resp.clone().arrayBuffer();
   try {
     await caches.default.put(key, new Response(body, {status: resp.status, headers: h}));
-    // 진단용: 넣자마자 다시 찾아본다(같은 데이터센터라면 바로 찾아져야 한다).
-    const back = await caches.default.match(key);
-    console.log('[edge] put ' + (back ? 'ok' : 'NOT FOUND after put') + ' ' + body.byteLength + 'B ' + key.url);
   } catch(e){ console.warn('[edge] put 실패 ' + (e && e.message) + ' ' + key.url); }
 }
 
@@ -187,7 +184,6 @@ export default {
     const resp = await runHandler(request, url, name, handler, ctx);
     const policy = resp.status === 200 && edgePolicy(resp.headers.get('cache-control'));
     if(policy) ctx.waitUntil(edgePut(key, resp, policy).catch(e => console.warn('[edge] ' + (e && e.message))));
-    else console.log('[edge] 저장 안 함 status=' + resp.status + ' cc=' + resp.headers.get('cache-control') + ' ' + key.url);
     resp.headers.set('x-edge-cache', 'MISS');
     return resp;
   },
