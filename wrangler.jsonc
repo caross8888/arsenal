@@ -13,6 +13,17 @@
   // (KV 주소가 이렇게 빠져서 번역이 저장되지 않고 미디어 탭마다 약 8,000자씩 새로 번역됐다).
   // 토큰·API 키는 대시보드에서 "비밀(Secret)"로 넣는다 — 비밀은 배포해도 남는다.
   "vars": { "KV_REST_API_URL": "https://mutual-octopus-165170.upstash.io" },
+  // Worker Previews는 운영 설정을 상속하지 않으므로 별도로 지정한다.
+  // 공개된 테스트 전용 키: 운영 키가 아니며 운영 토큰/랭킹과 호환되지 않는다.
+  // 프리뷰에서는 KV 연결을 비워 운영 데이터에 읽기·쓰기를 하지 않는다.
+  "previews": {
+    "vars": {
+      "KV_REST_API_URL": "",
+      "KV_REST_API_TOKEN": "",
+      "WHOAMI_SECRET": "career-preview-only-not-for-production"
+    },
+    "placement": { "mode": "smart" }
+  },
   // 자기 도메인(사용자 구매, 가비아 → Cloudflare 네임서버). 연결하면 DNS 레코드·인증서를 Cloudflare가 만든다.
   // workers.dev와 달리 Cache API가 동작한다.
   "routes": [
