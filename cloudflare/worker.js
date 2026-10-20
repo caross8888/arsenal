@@ -12,6 +12,7 @@ import pick from '../arsenal-dashboard/api/pick.js';
 import preview_ai from '../arsenal-dashboard/api/preview_ai.js';
 import social from '../arsenal-dashboard/api/social.js';
 import videos from '../arsenal-dashboard/api/videos.js';
+import {runSnapshots} from './snapshots.js';
 
 const HANDLERS = {career, football, game, holidays, maintenance, match, news, pick, preview_ai, social, videos};
 
@@ -75,16 +76,30 @@ const CRONS = {
   // 방문자가 떠나면 30초 안에 끊겨 90초 걸리는 생성을 못 마쳤다(실측: 잠금만 5분 걸린 채 해설 없음). 크론은 끝까지 돈다.
   '*/5 * * * *': {name: 'preview_ai', query: {}},
   '0 4 25 5 *': {name: 'maintenance', query: {}},
+  // 1분마다 공용 데이터 파일 갱신(snapshots.js) — 보관 시간이 지난 항목만 다시 만든다.
+  '* * * * *': {snapshot: true},
 };
 // 크론엔 요청 주소가 없다. 핸들러가 자기 정적 파일(/data/players.json)을 부를 때 쓸 주소 —
 // patchSelfFetch가 이 주소를 ASSETS로 돌리므로 실제로 밖으로 나가진 않는다.
 const CRON_HOST = 'arsenal.caross8888.workers.dev';
+
+// 크론 안에서 핸들러 하나를 불러 JSON 응답을 받는다(200이 아니면 null).
+async function callHandler(name, query){
+  const req = {method: 'GET', url: `/api/${name}`, query, body: undefined, headers: {host: CRON_HOST, 'x-forwarded-host': CRON_HOST}};
+  const {res, headers, finished} = vercelRes();
+  await Promise.resolve(HANDLERS[name](req, res)).then(() => res.end());
+  const body = await finished;
+  // 핸들러가 "저장하지 말라"고 한 응답(출처 전부 실패한 빈 목록 등)은 파일로 올리지 않는다 — CDN이 받던 규칙과 같다
+  if(res.statusCode !== 200 || body == null || /no-store|private/i.test(headers.get('cache-control') || '')) return null;
+  try { return JSON.parse(typeof body === 'string' ? body : new TextDecoder().decode(body)); } catch(_){ return null; }
+}
 
 async function runCron(cron, env){
   const job = CRONS[cron];
   if(!job) return console.error('알 수 없는 크론', cron);
   patchSelfFetch(env, CRON_HOST);
   process.env.VERCEL_PROJECT_PRODUCTION_URL ||= CRON_HOST;
+  if(job.snapshot) return runSnapshots(env.DATA, callHandler);
   const secret = env.CRON_SECRET || process.env.CRON_SECRET || '';
   const req = {method: 'GET', url: `/api/${job.name}`, query: job.query, body: undefined,
     headers: {authorization: `Bearer ${secret}`, host: CRON_HOST, 'x-forwarded-host': CRON_HOST}};

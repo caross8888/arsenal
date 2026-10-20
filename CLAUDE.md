@@ -207,6 +207,8 @@ JSON files + matching `*_images/` folders for History content (trophies, manager
 
 **운영 주소는 `https://coyg.co.kr`(Cloudflare Workers, `main` 푸시 시 Workers Builds가 자동 배포)이다.** 설정은 저장소 루트의 `wrangler.jsonc`, API 변환 층은 `cloudflare/worker.js`(Vercel 형식 `(req,res)` 핸들러를 그대로 돌린다), 정적 파일 캐시 규칙은 `public/_headers`. 비밀이 아닌 값은 `wrangler.jsonc`의 `vars`에, 토큰·API 키는 대시보드 "비밀"로 넣는다 — 대시보드 "텍스트" 변수는 Git 배포 때 지워진다(실제로 `KV_REST_API_URL`이 지워져 번역이 저장되지 않고 미디어 탭마다 약 8,000자씩 새로 번역됐다).
 
+**공용 데이터 파일(R2)**: 모든 방문자에게 같은 응답(메인 화면 football 8종 묶음 `home.json`, 뉴스·SNS·유튜브 첫 페이지, 커리어 랭킹 4종, 공휴일)은 1분 크론(`cloudflare/snapshots.js`)이 R2 버킷 `coyg-data`에 올리고 `https://data.coyg.co.kr/<파일>`로 공개한다(대시보드의 캐시 규칙이 CDN에 1분 보관 — Worker 실행 0). 항목별 보관 시간이 지난 것만 다시 만들고, 결과가 같으면 다시 쓰지 않으며, no-store 응답·빈 목록은 올리지 않는다. 화면은 `dataFile()`로 먼저 읽고 파일이 없거나 15분 넘게 오래되면 `/api`로 받는다(운영 주소에서만). 응답 모양을 바꾸면 파일도 같은 핸들러가 만들므로 따로 손댈 건 없다.
+
 옛 주소 `coyg.vercel.app`(Vercel)은 이동 페이지만 내보낸다(`vercel.json`의 `outputDirectory: moved` → `arsenal-dashboard/moved/index.html`). 그 페이지가 브라우저 저장값(`cache_*` 제외)을 `#mig=`에 담아 새 주소로 보내고, `public/index.html` 맨 앞 스크립트가 받는다(이미 있는 값은 안 덮고, 한 번만). Vercel의 API는 열려 있던 옛 탭용으로만 남아 있다.
 
 이전 전 기록: 원래 Vercel에 배포했다(`main` 푸시 시 자동 배포, `arsenal-dashboard/vercel.json`). `claude/**` 브랜치 푸시는 미리보기 배포를 만들지 않는다(`git.deploymentEnabled`) — Hobby 플랜 하루 배포 한도를 작업 브랜치 푸시가 다 써서 main 반영 배포가 "Deployment rate limited"로 막힌 적이 있다. **`arsenal-dashboard/netlify.toml` and `arsenal-dashboard/README.md` describe an older Netlify-based deployment** (different function directory, different API providers — api-football.com/newsapi.org instead of the ESPN/Fotmob/FPL/Guardian setup above) and are stale; don't follow them when reasoning about how the app is actually deployed or which APIs it actually calls.

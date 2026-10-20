@@ -34,9 +34,12 @@
   // Smart Placement — 한국 요청이 LAX 등 먼 곳에서 실행돼 Upstash(미국 동부)를 여러 번 왕복하며 랭킹이 느렸다.
   // DB를 자주 부르는 Worker를 DB 가까이에서 실행한다(무료). 정적 파일은 Worker를 안 거치니 영향 없다.
   "placement": { "mode": "smart" },
-  // 크론 — 5분마다 AI 경기 해설 미리 만들기(이미 최신이면 KV 확인만), 매년 5/25 KV 정리.
+  // 크론 — 5분마다 AI 경기 해설 미리 만들기(이미 최신이면 KV 확인만), 매년 5/25 KV 정리, 1분마다 공용 데이터 파일 갱신.
   // 처리는 cloudflare/worker.js의 CRONS. 시각은 UTC.
-  "triggers": { "crons": ["*/5 * * * *", "0 4 25 5 *"] },
+  "triggers": { "crons": ["*/5 * * * *", "0 4 25 5 *", "* * * * *"] },
+  // 공용 데이터 파일(cloudflare/snapshots.js)을 올리는 R2 버킷 — 대시보드에서 만들고 data.coyg.co.kr에 연결,
+  // CORS(GET, coyg.co.kr)와 캐시 규칙(호스트 data.coyg.co.kr → 캐시 대상)을 걸어 두었다.
+  "r2_buckets": [{ "binding": "DATA", "bucket_name": "coyg-data" }],
   "assets": {
     "directory": "./arsenal-dashboard/public",
     "binding": "ASSETS",
