@@ -54,7 +54,7 @@ To refresh the scraped squad data (`public/data/players.json`), run `fotmob_auto
 
 `playerSeason:{선수id}:{시즌}`은 완결된 직전 시즌 스탯이라 TTL 없이 영구 저장된다(현재 스쿼드 선수는 시즌마다 키가 하나씩 쌓이는 게 의도). 이적해서 나간 선수 키만 비우는 작업이 `api/_purge.js`이고, 두 경로가 이 모듈을 공유한다:
 
-- **크론** — `vercel.json`의 `crons`가 매년 5월 25일 `/api/maintenance`를 호출한다. `CRON_SECRET` 환경변수로만 인증되며, 미설정이면 503으로 거부한다(fail closed). `?dry=1`로 삭제 없이 대상만 확인할 수 있다.
+- **크론** — `vercel.json`의 `crons`가 매년 5월 25일 `/api/maintenance`를 호출한다. Cloudflare 복제 사이트에도 같은 크론이 있다(`wrangler.jsonc`의 `triggers.crons` → `cloudflare/worker.js`의 `CRONS`, 매시 AI 해설 포함). 이전이 끝나면 Vercel 쪽 크론은 지운다. `CRON_SECRET` 환경변수로만 인증되며, 미설정이면 503으로 거부한다(fail closed). `?dry=1`로 삭제 없이 대상만 확인할 수 있다.
 - **로컬 수동** — `node scripts/kv_purge_players.mjs` (드라이런) / `--apply` (삭제). `.env.local`에서 KV 자격증명을 읽고, 드라이런은 읽기 전용 토큰만 쓴다.
 
 판정 규칙에 함정이 둘 있어서 그대로 유지할 것:
