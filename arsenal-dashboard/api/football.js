@@ -1382,10 +1382,17 @@ async function fetchMatchUnavailable(matchId){
     await Promise.all(['home', 'away'].map(async side => {
       const t = out[side];
       const reds = await redCardSuspensions(t.id, leagueIds, kickoff, matchId).catch(() => []);
-      for(const r of reds) if(!t.out.some(o => o.id === r.id)) t.out.push({id: r.id, name: r.name, type: 'suspension', expectedReturn: '', upd: '', red: true});
+      // 징계가 취소되면(항소 등) 알 길이 없으니, 실제 발표 라인업(예상 라인업 말고)에 이름이 있으면 정지로 넣지 않는다.
+      const team = side === 'home' ? L.homeTeam : L.awayTeam;
+      const named = L.lineupType && L.lineupType !== 'predicted'
+        ? new Set([...((team || {}).starters || []), ...((team || {}).subs || [])].map(p => String((p || {}).id))) : null;
+      for(const r of reds) if(!t.out.some(o => o.id === r.id) && !(named && named.has(r.id)))
+        t.out.push({id: r.id, name: r.name, type: 'suspension', expectedReturn: '', upd: '', red: true});
     }));
   }
-  await kvSetJSON(key, out, UNAVAIL_TTL_SEC);
+  // 킥오프 2시간 전부터는 10분만 보관 — 라인업 발표(약 1시간 전)가 늦지 않게 반영되도록
+  const soon = kickoff && kickoff - Date.now() < 2 * 60 * 60 * 1000;
+  await kvSetJSON(key, out, soon ? 10 * 60 : UNAVAIL_TTL_SEC);
   return out;
 }
 
