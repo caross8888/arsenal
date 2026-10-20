@@ -3327,11 +3327,13 @@ function prefetchFinishedMatches(list, limit){
   // 최근 경기부터 — 사용자가 누를 확률이 높은 순서
   targets.sort(function(a,b){ return new Date(b.utcDate)-new Date(a.utcDate); });
   targets=targets.slice(0, limit||8);
+  // 고른 즉시 표시한다 — 일정 목록과 최근 결과 달력이 거의 동시에 이 함수를 불러서, 실제로 받을 때(유휴 시간)
+  // 표시하면 둘 다 같은 경기를 골라 최근 경기 상세가 두 번씩 요청됐다.
+  targets.forEach(function(m){ _prefetchedMatches[m.id]=true; });
   var i=0;
   var next=function(){
     if(i>=targets.length) return;
     var m=targets[i++];
-    _prefetchedMatches[m.id]=true;
     fetch(matchDetailUrl(m)).catch(function(){}).then(function(){ setTimeout(next, 150); });
   };
   if(window.requestIdleCallback) requestIdleCallback(function(){ next(); }, {timeout:6000});
