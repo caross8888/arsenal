@@ -9,6 +9,10 @@
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
   // 요청별 로그(주소·CPU 시간) — 관찰 가능성 탭에서 무거운 요청을 찾는다. 무료 하루 20만 건, 정적 파일은 Worker를 안 거쳐 안 잡힌다.
+  // 비밀이 아닌 설정값은 여기에 둔다 — 대시보드에서 "텍스트"로 넣은 변수는 다음 Git 배포 때 지워진다
+  // (KV 주소가 이렇게 빠져서 번역이 저장되지 않고 미디어 탭마다 약 8,000자씩 새로 번역됐다).
+  // 토큰·API 키는 대시보드에서 "비밀(Secret)"로 넣는다 — 비밀은 배포해도 남는다.
+  "vars": { "KV_REST_API_URL": "https://mutual-octopus-165170.upstash.io" },
   "observability": { "enabled": true, "head_sampling_rate": 1 },
   // Smart Placement — 한국 요청이 LAX 등 먼 곳에서 실행돼 Upstash(미국 동부)를 여러 번 왕복하며 랭킹이 느렸다.
   // DB를 자주 부르는 Worker를 DB 가까이에서 실행한다(무료). 정적 파일은 Worker를 안 거치니 영향 없다.
