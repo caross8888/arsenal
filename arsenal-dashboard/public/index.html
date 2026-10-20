@@ -9777,7 +9777,8 @@ function crPage3Render(){
    +'<div class="cr-me"><div><div class="v">'+c0.ovr+'</div><div class="l">오버롤</div></div><div><div class="v" style="font-family:var(--fb);font-size:15px;font-weight:700;line-height:1.9">'+gmEsc(c0.n)+'</div><div class="l">유형</div></div><div><div class="v">15</div><div class="l">나이</div></div></div>'
    +'<p class="cr-note">아카데미 수준이 높을수록 코칭이 좋고, 출전 경쟁이 낮을수록 많이 뛰어요. 유스는 또래끼리 경쟁해요.'
      +(list.some(function(o){ return o.kind==='해외'; })?' 부모님과 함께 해외로 건너가 현지 유스팀에서 시작하는 길도 열렸어요.':'')+'</p>'
-   +'<div class="cr-list">'+list.map(function(o,k){
+   // 해외 유스 제안은 맨 위에(사용자 지정 — 서버 목록에선 맨 끝이라 모르고 지나치는 사람이 있었다). 순서만 바꾸고 고른 번호(k)는 서버 목록 기준 그대로.
+   +'<div class="cr-list">'+list.map(function(o,k){ return [o,k]; }).sort(function(a,b){ return (b[0].kind==='해외')-(a[0].kind==='해외') || a[1]-b[1]; }).map(function(x){ var o=x[0], k=x[1];
      return '<button class="cr-club" aria-pressed="'+(CR.firstPick===k)+'" onclick="CR.firstPick='+k+';crPage3Render()">'+crCrest(o,44)
       +'<div>'+(o.kind==='해외'||S.dream===o.n?'<div class="tag">'+[o.kind==='해외'?crIcon('plane')+' 해외 유스':'',S.dream===o.n?crIcon('heart')+' 꿈의 구단':''].filter(Boolean).join(' · ')+'</div>':'')+'<div class="nm">'+gmEsc(o.n)+' U-16</div>'
       +'<div class="meta">'+crFlag(o.nat)+crNat(o.nat).n+'</div><div class="cr-acad">아카데미 <b>'+crStars(o.acad||1)+'</b></div></div>'
