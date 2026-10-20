@@ -1102,3 +1102,63 @@ python scripts/import_career_scene.py talk ~/Downloads/talk.png --mode corner   
 ### 대표팀 최종 결과 화면
 
 사용자 2번·3번 시안을 기준으로 대회 헤더·라운드 기록 → 우승 트로피/메달 또는 탈락 단계·국가 기대치별 평가 → 마지막 경기 점수·PK 점수 → 실제 출전·골·도움(수비수는 클린시트 포함) → 기존 대표팀 반응 버튼 → 클럽 시즌 계속 순서로 구성한다. 별도 자동 우승 오버레이를 덮지 않고 결과 화면 자체에서 트로피와 축하를 보여준다. 개인 평점은 기존 대표팀 기록에 산출값이 없어 임의 수치를 만들지 않는다. 출전은 조별리그를 포함하며 선수의 실제 출전 여부로 센다. 은·동메달은 각 메달색을 사용하고 금메달만 요건이라는 불필요한 문구는 표시하지 않는다.
+
+## 로컬 유스 리롤 (2026-10)
+
+새 커리어만 18세 평가까지 브라우저에서 계산한다. **현 구현의 18세 평가는 18세 시즌 종료에 나온다**(`SCOUT[18]`). 따라서 15·16·17·18세 네 시즌을 로컬에서 진행하고, 그 결과 화면에서 잔류/이적을 골라 계속할 때 서버에 확정한다. 17세 시즌 뒤에 확정하면 평가를 보기 전에 서버를 쓰므로 리롤 절감 목적을 충족하지 못한다.
+
+- 원본 계산·자료: `public/career/sim-v1/{sim,data,military,international,club_final,finance,wages,shootout}.js`. `api/_career_*.js`는 이 파일을 재수출한다. `flow.js`는 기존 서버의 화면 변환·진행·부상·승부차기·잔류 미리 계산을 공유한다.
+- 로컬 저장: 기존 `careerToken` 키에 `career-local-v1:` + `{version,seed,input,choices}` JSON. 서버 토큰과 접두어로 구분한다. **계산한 능력치는 저장·제출하지 않는다.** 새로고침하면 기록을 재생한다. `careerInfo`·프리셋은 기존 방식 유지.
+- `choices`: 실제 요청 순서의 `{a,...입력}` 배열. 첫 구단 `join`, 훈련·이벤트·임대 선택 `season`, 별도 부상 선택 `season/injPick`, 즉시 스카우트 수락 `scout`, 결과의 이적·공통 특성 `next`, 대표팀/클럽 승부차기 `penalty`를 포함한다. 1군 훈련 초대 `ftcall`·해외 유스도 기존 규칙을 그대로 쓴다. 로컬은 `stayNext`·`injOpts`를 생략하고 선택 시 직접 계산하므로 가지를 선택한 기록이 빠지지 않는다.
+- `POST /api/career?a=commit`: `{version:1,seed,input,choices,next:{pick,trait}}`. 처음부터 재생하고 **18세 결과·평가 완료**인지 검사한다. 순서·훈련명·선택 범위·길이(80개/24,000 JSON 문자)를 검증하고, 클라이언트가 보낸 상태·id·seed2는 무시한다. 서버가 `crypto.randomBytes`로 id와 seed2를 생성한 후, 같은 호출에서 `next`를 적용하여 19세 준비 토큰을 반환한다. 이적을 선택해도 확정 호출은 한 번이다. 실패하면 기존 로컬 기록이 남아 재시도할 수 있다.
+- 이름·국가·유형 등의 화면 자료는 `sim-v1/meta.json` 정적 파일로 받는다. 생성은 `node scripts/build_career_meta.mjs`. 테스트에서 API의 meta와 일치하는지 검사한다. **새 커리어/리롤/로컬 이어 하기/화면 자료는 모두 API 0회**, 계속할 때 1회다. 랭킹 보기 등 별도 기능의 API는 기존대로다.
+- `seed2`는 화면 데이터에 포함하지 않고 기존 암호화 토큰에만 넣는다. `career-token-v1`·암호화 키·토큰 포맷 번호는 바꾸지 않는다. 기존 토큰에는 seed2를 추가하지 않는다.
+- 로컬 외형은 원래 seed에서 재생한 `lookId`를 player/card/랭킹 요약에 보존한다. 확정 때 생기는 서버 id와 분리해 입단~은퇴 얼굴을 유지한다. lookId가 없는 기존 커리어의 외형은 기존 id 기준 그대로다.
+
+### 난수 사용처 분류
+
+`eventSeed(C) = C.seed2 ?? C.seed`이며 0도 유효한 seed2다. 모든 미래 사건은 이 함수를 거친다. 원래 `C.seed`는 절대 갈아끼우지 않는다. 아래 키는 `sim.js`의 `hashStr`에 넣는 문자열이다.
+
+| 분류 | 사용처 | 시드 |
+| --- | --- | --- |
+| 선수 고유 성질 | `dev` 발전 속도, `late` 대기만성, `body` 성인 체격, `wf` 선천 약발 | 원래 seed |
+| 선수 고유 성질 | `talent`·`talent2` 유스 활약 기반 재능, `ctrait` 공통 재능 후보, `bloom\|나이` 재능 개화 후보 동률 선택 | 원래 seed |
+| 첫 배정 | `first`·`abroad`·`assign` 첫 구단/해외 유스 | 원래 seed 인자 |
+| 미래 사건 | `나이\|훈련·이벤트·구단·부상 선택` 시즌 난수, `ct나이` 계약 연수 | eventSeed |
+| 미래 사건 | `stage\|…` 승격, `prodigy\|…` 월반, `scout-p/up/to\|…` 유스 스카우트 | eventSeed (확정 전이므로 기존 seed와 동일) |
+| 미래 사건 | `ev나이` 이벤트, `wf나이` 약발 **훈련 제안**, `loan2\|…` 임대 후보 | eventSeed |
+| 미래 사건 | `goal` 시즌 목표, `iv\|…` 인터뷰, `inj\|…` 부상, `mentor\|…` 유스 멘토 | eventSeed |
+| 미래 사건 | `scout\|나이` 평가 흔들림(18세는 확정 전, 21세는 확정 후), `trait\|…` 후천 특성 후보 | eventSeed |
+| 미래 사건 | `natx\|…` 국가대표 수치, `ucl-poty\|…` UCL 개인상 | eventSeed |
+| 미래 사건 | `cut`·`cutto` 유스 방출/행선지, `body\|나이` 노년 신체 한계(고유 체격 `body`와 구분), `tnum나이`·`num` 새 등번호 | eventSeed |
+| 미래 사건 | `military.js`의 차출·메달·순위·상무 수요/선발 roll | eventSeed |
+| 미래 사건 | `finance.js` 재계약 길이(`contractLength`에 전달하는 인자) | eventSeed |
+| 미래 사건 | `international.js` 대표팀 일정/대진/결과, `club_final.js` 결승, `shootout.js` 양 팀 킥·본인 킥 | 호출하는 sim/flow에서 eventSeed를 전달 |
+
+18세 결과의 기록·능력·평가·이미 확인한 제안은 그대로 확정한다. 서버 시드는 **19세 승격·이벤트·계약 생성 전**에 붙인다. 아직 유스에 남아 있어도 확정 이후 사건은 서버 시드를 쓴다. 과거 시점 데이터를 다시 그릴 때 미래 난수로 과거를 재계산하지 않는다.
+
+### 검증과 배포
+
+```bash
+env -u KV_REST_API_URL WHOAMI_SECRET=test-only-secret node scripts/test_career_local_reroll.mjs
+env -u KV_REST_API_URL WHOAMI_SECRET=test-only-secret node scripts/test_career_legacy_reroll.mjs
+# 실제 Chromium (Playwright 필요; PLAYWRIGHT_MODULE / CHROMIUM_PATH 지정 가능)
+env -u KV_REST_API_URL WHOAMI_SECRET=test-only-secret node scripts/test_career_local_browser.mjs
+# 기존 회귀 테스트도 모두 실행
+for test in scripts/test_career_*.mjs; do env -u KV_REST_API_URL WHOAMI_SECRET=test-only-secret node "$test" || break; done
+```
+
+Node 2,000개·실제 Chromium 2,000개 시드의 누적 상태/서버 재생을 대조한다. 기존 커리어 24개의 매 단계 상태 해시는 수정 전 main `ef3f327`에서 생성한 `scripts/lib/career-legacy-fixtures.json`과 대조한다. 원본 스냅샷을 현재 코드로 덮어 생성하지 않는다. 브라우저 테스트는 모바일 390px에서 로컬 저장·재접속, 유스 API 0회, 확정 1회, 이후 서버 이어 하기와 외형 보존을 확인한다.
+
+배포는 요청을 받았을 때 **두 번으로 나눈다**. 1차에는 API·공용 모듈·자료·문서·테스트를 반영하되 `public/index.html`은 제외한다. 기존 화면으로 운영하며 commit 경로를 확인한 뒤 2차에 index.html을 반영한다. Workers Builds만 사용하며 암호화 비밀값은 변경하지 않는다. 로컬 기록/브라우저 캐시 호환성을 위해 이미 배포한 `sim-v1` 계산 규칙을 바꾸려면 `sim-v2`처럼 디렉터리·기록 버전을 함께 올리고, 이전 로컬 기록의 재생 경로도 유지해야 한다.
+
+로컬 Node의 재생 시간이나 Wrangler dry-run은 **운영 Workers CPU 한도 검증이 아니다**. 운영 배포 전/후 commit 호출의 Cloudflare CPU 로그를 확인해야 한다. CPU 한도를 넘는 경우 요청 수 절감과 별개로 실행 시간 대책이 필요하다. 서버 호출이나 KV 저장을 유스 단계마다 다시 추가하지 않는다.
+
+추가로 로컬 workerd에서 commit 25건과 기존 토큰 복원 25건을 확인했다(Node↔Workers의 AES-GCM·deflate 호환 포함). 재현:
+
+```bash
+# 별도 터미널에서 실행, 운영으로 배포하지 않는다
+WRANGLER_SEND_METRICS=false npx wrangler dev --local --port 8797 --var WHOAMI_SECRET:test-only-secret
+# 서버 준비 뒤 실행
+WHOAMI_SECRET=test-only-secret node scripts/check_local_reroll_worker.mjs
+```

@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {legacyCases} from './lib/career-legacy-cases.mjs';
+import * as S from '../arsenal-dashboard/api/_career_sim.js';
+process.env.WHOAMI_SECRET='test-only-secret';delete process.env.KV_REST_API_URL;
+const {default:handler}=await import('../arsenal-dashboard/api/career.js');
+const {tokenCodec}=await import('../arsenal-dashboard/api/_token.js');
+const fixture=JSON.parse(readFileSync(new URL('./lib/career-legacy-fixtures.json',import.meta.url)));
+assert.deepEqual(await legacyCases(S,handler,tokenCodec('career-token-v1',{zip:true})),fixture.cases);
+console.log(`PASS legacy replay: ${fixture.cases.length} full careers match pre-change ${fixture.source} at every encrypted state through retirement`);

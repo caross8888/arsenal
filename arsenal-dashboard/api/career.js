@@ -1,9 +1,10 @@
 // api/career.js — 미니게임 "커리어 모드"(선수 한 명의 커리어 키우기)
 //
-// 계산은 전부 _career_sim.js(서버)에서 하고, 진행 상태는 암호화 토큰(_token.js, deflate)으로 브라우저와 주고받는다.
+// 계산은 public/career/sim-v1을 공유한다. 새 유스는 로컬, 18세 평가 뒤 commit부터 암호화 토큰(_token.js, deflate)으로 진행한다.
 // KV는 랭킹에만 쓴다(submit/board/card). 숨은 재능·구단 명성 숫자·발롱 점수 같은 숨김 값은
 // 응답에 넣지 않는다(토큰은 암호화라 안 보인다). 설계는 docs/career-mode/implementation.md.
 //
+//   POST ?a=commit  {version, seed, input, choices, next} → 서버 재생·seed2 봉인·다음 시즌 준비
 //   POST ?a=new     {name, nation, foot, pos, card, num, dream}  → {token, clubs}      첫 구단 3곳
 //   POST ?a=join    {token, pick}                                 → {token, player, prep}
 //   POST ?a=season  {token, train, evPick[, loanPick][, injPick]}             → {token, injury} | {token, player, result}
@@ -21,15 +22,13 @@ import crypto from 'crypto';
 import { tokenCodec } from './_token.js';
 import { readToken } from './_account.js';
 import * as S from './_career_sim.js';
-import {kickVerdict} from './_career_shootout.js';
+import {Bad, cleanInput, view, withStay, step} from '../public/career/sim-v1/flow.js';
+import {replay, validateNext, VERSION} from '../public/career/sim-v1/local.js';
 import {NATIONAL_REACTION_GROUPS} from './_career_international.js';
 import { CLUB_KIT } from './_club_kits.js';
 
 const {ready: tokenReady, seal, open} = tokenCodec('career-token-v1', {zip: true});
 const FORMAT = 1;   // 토큰 형식 버전(밸런스 버전이 아니다 — 필드 구조가 바뀔 때만 올리고 옛 값은 읽을 때 채운다)
-
-const BAD_WORDS = /(시발|씨발|ㅅㅂ|병신|ㅂㅅ|좆|존나|개새|새끼|fuck|shit|bitch|nigg)/i;
-const FEET = ['오른발', '왼발'];
 
 let META = null;
 const KV_URL = process.env.KV_REST_API_URL;
@@ -79,7 +78,7 @@ const summaryOf = card => {
     g[nm].c += c;
   }
   order.sort((a, b) => TIER.indexOf(g[a].t) - TIER.indexOf(g[b].t) || g[b].c - g[a].c);
-  return {v: SUM_V, id: card.id, nm: card.name, nat: card.nation, pos: card.pos, card: card.card, num: card.num, peak: card.peak,
+  return {v: SUM_V, id: card.id, ...(card.lookId?{lookId:card.lookId}:{}), nm: card.name, nat: card.nation, pos: card.pos, card: card.card, num: card.num, peak: card.peak,
     club: mainClubOf(card), hon: order.slice(0, 16).map(nm => [nm, g[nm].c])};
 };
 const _boards = {}, _boardAt = {};
@@ -124,27 +123,7 @@ async function readBoard(pos){
   return _boards[id];
 }
 
-class Bad extends Error {}
-const bad = m => { throw new Bad(m); };
-
-function cleanInput(b){
-  const name = String(b.name || '').replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim();
-  if(!name) bad('이름을 입력해 주세요.');
-  if([...name].length > 12) bad('이름은 12자까지 쓸 수 있어요.');
-  if(BAD_WORDS.test(name.replace(/\s/g, ''))) bad('쓸 수 없는 단어가 들어 있어요.');
-  const nation = String(b.nation || '');
-  if(!S.natInfo(nation)) bad('국적을 골라 주세요.');
-  const foot = FEET.includes(b.foot) ? b.foot : bad('주발을 골라 주세요.');
-  const pos = ['FW', 'MF', 'DF'].includes(b.pos) ? b.pos : bad('포지션을 골라 주세요.');
-  const card = Number(b.card);
-  if(!Number.isInteger(card) || !S.CARDS[pos][card]) bad('선수 유형을 골라 주세요.');
-  const num = Number(b.num);
-  if(!Number.isInteger(num) || num < 1 || num > 99) bad('등번호는 1~99예요.');
-  const dream = b.dream == null || b.dream === '' ? null : String(b.dream);
-  if(dream && !S.clubByName(dream)) bad('꿈의 구단을 다시 골라 주세요.');
-  const body = S.BODIES.includes(b.body) ? b.body : bad('체형을 골라 주세요.');
-  return {name, nation, foot, pos, card, num, dream, body};
-}
+const bad=m=>{throw new Bad(m);};
 
 // 토큰 → 상태. 단계가 맞지 않으면 거부.
 function load(token, phases){
@@ -155,59 +134,6 @@ function load(token, phases){
   if(st.phase==='result') S.refreshYouthRelease(st);
   return st;
 }
-
-const clubView = c => ({n: c.n, id: c.id, nat: c.nat});
-const firstView = (input, seed) => S.firstClubs(input.nation, input.pos, input.card, seed).map(o => ({...clubView(o.club), kind: o.kind, chance: o.chance, acad: o.acad}));
-// 시즌 결과 화면(숨김 값 없음). 지난 결과(last)는 토큰에 결과 화면용으로 남겨 둔다 — 이어 하기에서 다시 그린다.
-const resultView = C => {
-  const r = C.hist[C.hist.length - 1];
-  return {row: r, offers: S.offersView(C), stay: S.stayView(C), traitOffer: (C.traitOffer||[]).map(id => S.traitView(id, C.pos)),
-          released: !!C.released, forced: !!C.forced, forcedWhy: C.forcedWhy || null, canRetire: C.age >= 29};
-};
-
-const clone=C=>JSON.parse(JSON.stringify(C));
-function seasonDraft(C,choice,decisions={}){const D=clone(C);D.phase=C.pendingSeason?.phase||C.phase;delete D.pendingSeason;D.penaltyMode=true;D.penaltyDecisions=decisions;const r=S.playSeason(D,choice);return {D,r};}
-function firstPenalty(row){for(const w of [...(row?.national||[]),...(row?.clubFinal?[row.clubFinal]:[])])for(const m of w.matches)if(m.pk?.pending)return {w,m};return null;}
-function advanceSeason(C,choice,decisions={}){
- const base=clone(C),phase=C.pendingSeason?.phase||C.phase,{D,r}=seasonDraft(C,choice,decisions);
- if(!r.injury&&firstPenalty(r.row)){delete base.pendingSeason;Object.assign(C,base,{phase:'penalty',pendingSeason:{phase,choice,decisions}});return {penalty:true};}
- for(const k of Object.keys(C))delete C[k];Object.assign(C,D);
- if(!r.injury){C.forced=r.forced;C.forcedWhy=r.forcedWhy;delete C.pending;}return r;
-}
-function penaltyView(C){
- const {r}=seasonDraft(C,C.pendingSeason.choice,C.pendingSeason.decisions),P=firstPenalty(r.row);if(!P)throw Error('승부차기 상태가 올바르지 않습니다.');
- const preview=clone(r.row);delete preview.hon;delete preview.notes;delete preview.international;delete preview.bloom;delete preview.scout;delete preview.deltas;
- for(const w of preview.national||[])if(w.pending){w.outcome='승부차기 결과 대기';w.won=false;w.medal=false;w.qualified=false;delete w.place;if(w.bracket)w.bracket.winner=null;}
- return {phase:'penalty',player:S.playerView(C),preview,shootout:{key:P.m.pk.key,cup:P.w.name,year:2027+C.age-15,window:P.w.id,stage:P.m.stage,nation:C.nation,opp:P.m.opp,...(P.w.kind==='club'?{kind:'club',ourName:P.w.club.n,theirName:P.w.opponent.n}:{}),our:P.m.our,their:P.m.their,prefix:{ours:P.m.pk.ours,theirs:P.m.pk.theirs,our:P.m.pk.our,their:P.m.pk.their}}};
-}
-
-// 지금 단계에 맞는 화면 데이터
-function view(C){
-  if(C.phase === 'penalty')return penaltyView(C);
-  if(C.phase === 'pick') return {phase: 'pick', clubs: firstView(C.input, C.seed)};
-  if(C.phase === 'retired') return {phase: 'retired', card: S.cardView(C)};
-  const player = S.playerView(C);
-  if(C.phase === 'prep') return {phase: 'prep', player, prep: S.prepView(C)};
-  if(C.phase === 'injury') return {phase: 'injury', player, prep: S.prepView(C), injury: injuryView(C.inj), pending: C.pending};
-  return {phase: 'result', player, result: resultView(C)};
-}
-const injuryView = inj => ({name: inj.name, major: inj.major, games: inj.games});
-// 시즌 계산을 마친 상태의 응답(승부차기 대기면 그 화면, 아니면 결과)
-function seasonReply(C, r){
-  if(!r.penalty){ delete C.pending; C.forced = r.forced; C.forcedWhy = r.forcedWhy; }
-  return withStay(C, {token: seal(C), ...view(C)});
-}
-// 잔류 미리 계산(사용자 지정 — 커리어 모드 요청 줄이기): 결과 화면에서 고를 게 없는 시즌(방출·특성 선택·강제 은퇴 아님)이면
-// "잔류"로 넘긴 다음 시즌 준비 화면을 봉인해 같이 보낸다. 잔류를 고르면 화면이 next를 부르지 않고 이걸 쓴다.
-// 서버가 낸 결과라 조작 여지가 없고, 이적을 고르거나 병역 결정을 바꾸면 예전처럼 next를 부른다.
-function stayNext(C){
-  if(C.phase !== 'result' || C.forced || C.released || (C.traitOffer && C.traitOffer.length)) return null;
-  const D = clone(C);
-  S.nextSeason(D, null, null);
-  delete D.forced; delete D.forcedWhy;
-  return {token: seal(D), ...view(D)};
-}
-function withStay(C, out){ const s = stayNext(C); return s ? {...out, stayNext: s} : out; }
 
 async function readBody(req){
   if(req.body && typeof req.body === 'object') return req.body;
@@ -291,6 +217,15 @@ export default async function handler(req, res){
     if(!tokenReady()) return res.status(503).json({error: '게임 서버 설정이 아직 안 됐어요.'});
     const body = await readBody(req);
 
+    if(a === 'commit'){
+      if(body.version!==VERSION)bad('유스 계산 버전이 달라요. 새로 시작해 주세요.');
+      const C=replay(body);
+      validateNext(C,body.next);
+      C.seed2=crypto.randomBytes(4).readUInt32LE(0);
+      C.id=crypto.randomBytes(8).toString('hex');
+      return res.json(step(C,'next',body.next,{seal}));
+    }
+
     if(a === 'new'){
       const input = cleanInput(body);
       const C = {v: FORMAT, phase: 'pick', id: crypto.randomBytes(8).toString('hex'), seed: crypto.randomBytes(4).readUInt32LE(0), input};
@@ -305,78 +240,8 @@ export default async function handler(req, res){
       return res.json({token: seal(C), ...view(C)});
     }
 
-    if(a === 'service-return'){
-      const C=load(body.token,['prep']);try { S.regularReturn(C); } catch(e){ bad(e.message); }
-      return res.json({token:seal(C),...view(C)});
-    }
-
-    if(a === 'scout'){
-      const C=load(body.token,['prep']);
-      try { S.acceptScout(C); } catch(e){ bad(e.message); }
-      return res.json({token:seal(C),...view(C)});
-    }
-
-    if(a === 'season'){
-      const C = load(body.token, ['prep', 'injury']);
-      // 부상 질문에 답하는 두 번째 호출은 첫 호출의 훈련·이벤트 선택을 그대로 쓴다(토큰에 남겨 둔 것)
-      const choice = C.phase === 'injury' ? {...C.pending, injPick: Number(body.injPick)} : {train: body.train, evPick: Number(body.evPick), loanPick: Number(body.loanPick) || 0};
-      if(C.phase === 'prep' && ![0, 1].includes(choice.evPick)) bad('이벤트 선택지를 골라 주세요.');
-      if(C.phase === 'injury' && ![0, 1].includes(choice.injPick)) bad('부상 대처를 골라 주세요.');
-      const r = advanceSeason(C, choice);
-      if(r.penalty)return res.json({token:seal(C),...view(C)});
-      if(r.injury){
-        C.pending = {train: choice.train, evPick: choice.evPick};   // 임대 구단은 이미 C.loanClub에 정해졌다
-        // 시즌 진행 화면이 부상 전까지도 숫자를 올릴 수 있게: 부상 처리를 어느 쪽으로 골라도 나오는 최소 기록.
-        // (최종 기록은 이보다 작아지지 않아서, 부상 뒤 이어서 올라가도 숫자가 뒤로 가지 않는다) 상태는 건드리지 않는다.
-        const rows = [0, 1].map(k => { const c = JSON.parse(JSON.stringify(C)); return S.playSeason(c, {...C.pending, injPick: k}).row; });
-        const pre = rows.reduce((m, w) => m ? m.map((x, i) => Math.min(x, [w.apps, w.goals, w.ast, w.cs][i])) : [w.apps, w.goals, w.ast, w.cs], null);
-        const games = rows[1].games;   // 시즌 진행 화면의 경기 칸 수
-        const segments=rows[1].segments && rows[1].segments.map((seg,i)=>({...seg,...Object.fromEntries(['apps','starts','goals','ast','cs'].map(k=>[k,Math.min(seg[k],rows[0].segments[i][k])]))}));
-        const national=(rows[1].national||[]).filter(w=>!w.knockout).filter(w=>(rows[0].national||[]).some(other=>other.id===w.id&&JSON.stringify(other)===JSON.stringify(w)));
-        // 부상 답(두 갈래)을 미리 계산해 각각 봉인해 내려 준다 — 고른 쪽 토큰으로 이어 가면 두 번째 호출이 없다
-        // (사용자 지정 — 커리어 모드 요청 줄이기). 둘 다 서버가 낸 결과라 조작 여지가 없고, 예전 방식(injPick 호출)도 그대로 받는다.
-        const injOpts = [0, 1].map(k => { const D = clone(C); return seasonReply(D, advanceSeason(D, {...D.pending, injPick: k})); });
-        return res.json({token: seal(C), ...view(C), pre: {national, apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3], games, ...(segments?{segments}:{})}, injOpts});
-      }
-      return res.json(seasonReply(C, r));
-    }
-
-    if(a==='penalty'){
-      const C=load(body.token,['penalty']),P=penaltyView(C).shootout;
-      if(body.key!==P.key)bad('현재 승부차기를 다시 확인해 주세요.');
-      const input={x:body.x,y:body.y,power:body.power};
-      let outcome;try{outcome=kickVerdict(C.seed,P.key,input);}catch(e){bad(e.message);}
-      const decisions={...C.pendingSeason.decisions,[P.key]:input};
-      advanceSeason(C,C.pendingSeason.choice,decisions);
-      const v=view(C),row=v.preview||v.result.row,w=P.window==='club-final'?row.clubFinal:row.national.find(w=>w.id===P.window),m=w.matches.find(m=>m.stage===P.stage);
-      return res.json(withStay(C,{token:seal(C),...v,penaltyResult:{key:P.key,kick:outcome,pk:m.pk,stage:P.stage,window:P.window}}));
-    }
-
-    if(a === 'military'){
-      const C=load(body.token,['result']);
-      try { S.militaryAction(C,body.action); } catch(e){ bad(e.message); }
-      return res.json(withStay(C, {token:seal(C), ...view(C)}));
-    }
-
-    if(a === 'next'){
-      const C = load(body.token, ['result']);
-      const pick = body.pick == null || body.pick === '' ? null : Number(body.pick);
-      if(pick != null && !(Number.isInteger(pick) && C.offers[pick])) bad('제안을 다시 골라 주세요.');
-      // 특성 제안이 있으면 반드시 하나를 고른다(강제 은퇴로 끝나는 시즌은 제외)
-      const tp = body.trait == null || body.trait === '' ? null : Number(body.trait);
-      if(C.traitOffer && C.traitOffer.length && !C.forced && !(Number.isInteger(tp) && C.traitOffer[tp])) bad('특성을 하나 골라 주세요.');
-      const mv=S.militaryView(C);
-      if(pick!=null && mv && (mv.selected || mv.service || mv.lastChance)) bad('병역 계획을 먼저 결정해 주세요.');
-      S.nextSeason(C, pick, tp);
-      delete C.forced; delete C.forcedWhy;
-      return res.json({token: seal(C), ...view(C)});
-    }
-
-    if(a === 'retire'){
-      const C = load(body.token, ['result', 'retired']);
-      if(C.phase === 'result' && C.age < 29 && !C.forced) bad('29세부터 은퇴할 수 있어요.');
-      S.retire(C);
-      return res.json({token: seal(C), ...view(C)});
+    if(['service-return','scout','season','penalty','military','next','retire'].includes(a)){
+      return res.json(step(load(body.token), a, body, {seal}));
     }
 
     if(a === 'submit'){
@@ -415,7 +280,7 @@ export default async function handler(req, res){
 
     if(a === 'view'){
       const C = load(body.token);
-      return res.json(withStay(C, {token: body.token, ...view(C)}));
+      return res.json(withStay(C, {token: body.token, ...view(C)}, seal));
     }
 
     return res.status(400).json({error: 'unknown action'});
