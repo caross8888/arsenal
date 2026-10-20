@@ -1659,10 +1659,34 @@ async function buildPredictedXI(matchId){
     : {available: false, reason: '최근 선발 라인업을 확보하지 못했습니다'};
 }
 
+// 메인 화면 묶음(type=home) — 첫 화면이 따로 부르던 8종을 한 응답으로(사용자 지정, Cloudflare 요청 수 줄이기).
+// 항목마다 이 핸들러를 그대로 불러 같은 메모리·KV 캐시를 탄다. 1.5초 안에 못 만든 항목은 빼고 보내며(화면이 그 항목만
+// 따로 받는다), 늦은 항목도 끝까지 만들어 캐시에 넣는다(Cloudflare는 waitUntil로 응답 뒤에도 돈다). 빠진 게 있는 묶음은
+// 가장자리 캐시에 넣지 않는다 — 넣으면 1분 동안 모두가 그 항목을 따로 받는다.
+const HOME_TYPES = ['fixtures','transfers','standings','leaders','roundResults','teamOfTheWeek','squad','injuries'];
+const HOME_WAIT_MS = 1500;
+async function homeBundle(req, res){
+  const runs = HOME_TYPES.map(t => new Promise(resolve => {
+    let status = 200;
+    const fake = { setHeader(){ return fake; }, getHeader(){}, status(c){ status = c; return fake; },
+      json(d){ resolve(status === 200 && d && !d.error ? d : null); return fake; }, send(d){ return fake.json(d); }, end(){ resolve(null); return fake; } };
+    Promise.resolve(handler({ ...req, query: { type: t } }, fake)).catch(() => resolve(null));
+  }));
+  const timeout = new Promise(r => setTimeout(r, HOME_WAIT_MS, undefined));
+  const got = await Promise.all(runs.map(p => Promise.race([p, timeout])));
+  const parts = {}, missing = [];
+  HOME_TYPES.forEach((t, i) => { if(got[i]) parts[t] = got[i]; else missing.push(t); });
+  res.setHeader('Access-Control-Allow-Origin','*');
+  res.setHeader('Cache-Control', missing.length ? 'no-store' : 'public, max-age=60, s-maxage=60, stale-while-revalidate=600');
+  res.json({ parts, missing });
+  await Promise.allSettled(runs);
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin','*');
 
   const type = req.query.type || 'fixtures';
+  if(type === 'home') return homeBundle(req, res);
   const nocache = req.query.nocache;
   // injuries는 team 파라미터로 아스날 외 다른 팀도 조회할 수 있어 캐시 키에
   // team을 같이 섞는다 — 안 그러면 아스날 조회 캐시를 상대팀 조회가 그대로
