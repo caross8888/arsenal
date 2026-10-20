@@ -9468,6 +9468,12 @@ function crStore(v){
   }catch(e){}
 }
 // 응답이 20초 넘게 없으면 실패로 처리한다(모바일 망에서 요청이 걸린 채 끝나지 않아 화면이 멈춘 것처럼 보이지 않게)
+// 다음 시즌: 잔류이고 고를 특성이 없으면 서버가 결과와 함께 미리 보낸 다음 시즌(stayNext)을 쓴다(요청 줄이기, 사용자 지정)
+function crNextApi(){
+  var s=CR.v && CR.v.phase==='result' && CR.v.stayNext;
+  if(s && (CR.pick==null || CR.pick==='') && CR.traitPick==null) return Promise.resolve(s);
+  return crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick});
+}
 function crApi(a, body){
   var ac=window.AbortController ? new AbortController() : null, to=ac ? setTimeout(function(){ ac.abort(); }, 20000) : 0;
   return fetch(FN+'/career?a='+a, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{}), signal:ac ? ac.signal : undefined})
@@ -11680,12 +11686,12 @@ function crTmPick(k, btn){
   if(k<0){ if(k===-1 && R.released) return; CR.pick=null; CR.tmGo=true; return crPickFx(btn, '#crTov .cr-tm-c', function(){ CR.tmGo=false;
     if(CR.busy) return crTmFail(null);
     CR.busy=true;
-    crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(crTmFail); }); }
+    crNextApi().then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(crTmFail); }); }
   // 이적 완료 연출(OFFICIAL · HERE WE GO)은 이제 다음 화면의 이적 계약서에 사인한 뒤에 나온다(계약 → 발표 순서, 사용자 지정)
   CR.pick=k; CR.tmGo=true; crPickFx(btn, '#crTov .cr-tm-c', function(){});
   var t0=Date.now(), MIN=700, fin=function(fn){ setTimeout(function(){ CR.tmGo=false; fn(); }, Math.max(0, MIN-(Date.now()-t0))); };
   CR.busy=true;
-  crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ fin(function(){ crShow(v); window.scrollTo(0,0); }); }).catch(function(e){ fin(function(){ crErr(e); }); });
+  crNextApi().then(function(v){ fin(function(){ crShow(v); window.scrollTo(0,0); }); }).catch(function(e){ fin(function(){ crErr(e); }); });
 }
 // 이적·재계약 완료: 공식 발표실 배경 + 계약 정보. 약 4.8초 뒤(누르면 바로) 준비 화면으로.
 function crTmFail(e){ crTovSet('', true); crErr(e); crResult(); }
@@ -11707,7 +11713,7 @@ function crTmDoneGo(){
 function crNext(btn){
   var M=CR.v.player.military;if(M&&M.lastChance&&!M.selected)return crMilitaryInfo();
   if(!crBusy(btn,'다음 시즌 준비 중...')) return;
-  crApi('next', {token:CR.tok, pick:CR.pick, trait:CR.traitPick}).then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(crErr);
+  crNextApi().then(function(v){ crShow(v); window.scrollTo(0,0); }).catch(crErr);
 }
 // 은퇴는 되돌릴 수 없어서 두 번 눌러야 한다(강제 은퇴는 한 번)
 function crRetire(btn, forced){

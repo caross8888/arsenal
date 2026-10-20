@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 process.env.WHOAMI_SECRET='test-only-secret';
 const {default:handler}=await import('../arsenal-dashboard/api/career.js');
 const call=async(a,body)=>{let out,status=200;await handler({method:'POST',query:{a},headers:{},body},{setHeader(){},status(n){status=n;return this;},json(v){out=v;},end(){}});if(status!==200)throw new Error(a+' '+status+' '+JSON.stringify(out));return out;};
-const strip=v=>{const {token,injOpts,...rest}=v;return JSON.stringify(rest);};
+const strip=v=>{const {injOpts,...rest}=v;return JSON.stringify(rest,(k,x)=>k==='token'?undefined:x);};
 let checked=0;
 for(let t=0;t<40&&checked<6;t++){
   let v=await call('new',{name:'부상테스트'+t,nation:['ENG','KOR','BRA'][t%3],foot:'오른발',body:'표준',pos:['FW','MF','DF'][t%3],card:0,num:9,dream:null});
