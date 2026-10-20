@@ -1,5 +1,23 @@
 <!DOCTYPE html>
 <html lang="ko">
+<script>
+// 옛 주소(coyg.vercel.app)에서 넘어온 브라우저 저장값 받기 — 주소가 바뀌면 localStorage가 따로라서
+// 진행 중 커리어·승부예측 로그인·설정이 사라진다. 옛 주소의 이동 페이지(arsenal-dashboard/moved/index.html)가
+// 값을 #mig=<base64url JSON>에 담아 보낸다. 해시라 서버·로그로 안 간다. 다른 스크립트가 저장값을 읽기 전에
+// 동기로 처리해야 해서 맨 앞에 둔다. 여기 이미 있는 값은 덮지 않는다(새 주소에서 먼저 한 진행이 더 최신).
+// 한 번 받은 뒤엔 다시 안 받는다 — 옛 링크로 또 들어와도 끝낸 커리어가 되살아나지 않게.
+(function(){try{
+  var m=/^#mig=([A-Za-z0-9_-]+)(?:&h=(.*))?$/.exec(location.hash); if(!m) return;
+  var back=m[2]?decodeURIComponent(m[2]):'';
+  if(!localStorage.getItem('migImported')){
+    var b=m[1].replace(/-/g,'+').replace(/_/g,'/'); while(b.length%4) b+='=';
+    var d=JSON.parse(decodeURIComponent(escape(atob(b))));
+    for(var k in d) if(Object.prototype.hasOwnProperty.call(d,k) && localStorage.getItem(k)===null) localStorage.setItem(k,d[k]);
+    localStorage.setItem('migImported',String(Date.now()));
+  }
+  history.replaceState(null,'',location.pathname+location.search+back);
+}catch(e){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(_){} }})();
+</script>
 <script>(function(){try{var saved=localStorage.getItem('theme');var t=saved||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <head><!-- Arsenal FC Dashboard v2 -->
 <meta charset="UTF-8">

@@ -33,6 +33,6 @@ jobs:
           body=$(node -e 'console.log(JSON.stringify({nick:process.env.NICK,pw:process.env.PW}))')
           code=$(curl -sS -o res.json -w '%{http_code}' --max-time 30 \
             -X POST -H "Authorization: Bearer $CRON_SECRET" -H 'Content-Type: application/json' \
-            --data "$body" "https://coyg.vercel.app/api/pick?a=reset")
+            --data "$body" "https://coyg.co.kr/api/pick?a=reset")
           echo "HTTP $code"; cat res.json; echo
           [ "$code" = "200" ] || { echo "::error::초기화 실패 (HTTP $code)"; exit 1; }
