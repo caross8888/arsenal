@@ -97,7 +97,7 @@ export default {
   async scheduled(event, env, ctx){
     ctx.waitUntil(runCron(event.cron, env));
   },
-  async fetch(request, env){
+  async fetch(request, env, ctx){
     const url = new URL(request.url);
     patchSelfFetch(env, url.host);
     const name = url.pathname.replace(/^\/api\//, '').replace(/\/+$/, '');
@@ -107,6 +107,10 @@ export default {
     try {
       const req = vercelReq(request, url, await readBody(request));
       const run = Promise.resolve(handler(req, res)).then(() => res.end());
+      // 방문자가 응답 전에 떠나면(앱 닫기·탭 이동) Cloudflare는 Worker를 그 자리에서 끊는다. Vercel 함수는
+      // 끝까지 돈다. 번역처럼 "외부 유료 호출 → KV 저장" 순서인 일은 저장 전에 끊기면 돈만 내고 결과를
+      // 잃어서, 다음 방문 때 같은 글을 또 번역한다. waitUntil로 연결이 끊겨도 핸들러는 끝까지 돌게 한다.
+      ctx?.waitUntil(run.catch(() => {}));
       const body = await Promise.race([finished, run.then(() => finished)]);
       return new Response(request.method === 'HEAD' ? null : body ?? null, {status: res.statusCode, headers});
     } catch(e){
