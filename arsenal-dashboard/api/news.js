@@ -318,7 +318,9 @@ export default async function handler(req, res) {
   // 새 글이 올라오면 새로고침 한 번에 보이도록 캐시를 짧게 잡는다 — 서버 메모리 1분 +
   // CDN 1분 + 만료 직후 30초(swr)로 최악 2분 반. 브라우저는 max-age=0으로 두어
   // 새로고침할 때마다 CDN에 물어보게 한다(CDN 히트라 함수는 안 돌고 응답만 받는다).
-  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=30');
+  // 가장자리 캐시(Cloudflare)에서 1분 지나면 옛 목록을 바로 주고 뒤에서 새로 만든다 — 10분까지. Cloudflare는 인스턴스가
+  // 여럿이라 메모리 캐시가 자주 비어, 30초만 봐주면 대부분 방문이 RSS·번역부터 다시 만들며 스피너가 몇 초 돌았다.
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
 
   let pool = null, sourceErrors = null;
   if (poolCache.list && Date.now() - poolCache.ts < TTL) {
