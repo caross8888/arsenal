@@ -213,6 +213,11 @@ function view(C){
   return {phase: 'result', player, result: resultView(C)};
 }
 const injuryView = inj => ({name: inj.name, major: inj.major, games: inj.games});
+// 시즌 계산을 마친 상태의 응답(승부차기 대기면 그 화면, 아니면 결과)
+function seasonReply(C, r){
+  if(!r.penalty){ delete C.pending; C.forced = r.forced; C.forcedWhy = r.forcedWhy; }
+  return {token: seal(C), ...view(C)};
+}
 
 async function readBody(req){
   if(req.body && typeof req.body === 'object') return req.body;
@@ -274,7 +279,9 @@ export default async function handler(req, res){
     }
     if(a === 'board'){
       if(!kvReady()) return res.json({top: []});
-      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=30');
+      // CDN 5분(사용자 지정 — 32KB 응답이 30초마다 다시 만들어져 원본 전송량이 하루 500MB까지 올랐다).
+      // 방금 등록한 사람은 화면이 주소에 t=를 붙여 새로 받아 가므로 자기 순위가 늦게 보이지 않는다.
+      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
       return res.json(await readBoard(String(req.query.p || '')));
     }
     if(a === 'card'){
@@ -286,7 +293,8 @@ export default async function handler(req, res){
         try { if(old && (!POSS.includes(p) || JSON.parse(old).pos === p)) raw = old; } catch(_){}
       }
       if(!raw) return res.status(404).json({error: '랭킹에서 내려간 기록이에요.'});
-      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=30');
+      // 카드는 더 높은 점수로 다시 등록할 때만 바뀌고, 화면이 주소에 점수(s=)를 붙이므로 오래 둬도 된다(닉네임 변경은 최대 1시간 늦게).
+      res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
       return res.json({nick: nick || k, card: JSON.parse(raw)});
     }
     if(req.method !== 'POST') return res.status(405).json({error: 'POST만 받습니다'});
@@ -335,11 +343,12 @@ export default async function handler(req, res){
         const games = rows[1].games;   // 시즌 진행 화면의 경기 칸 수
         const segments=rows[1].segments && rows[1].segments.map((seg,i)=>({...seg,...Object.fromEntries(['apps','starts','goals','ast','cs'].map(k=>[k,Math.min(seg[k],rows[0].segments[i][k])]))}));
         const national=(rows[1].national||[]).filter(w=>!w.knockout).filter(w=>(rows[0].national||[]).some(other=>other.id===w.id&&JSON.stringify(other)===JSON.stringify(w)));
-        return res.json({token: seal(C), ...view(C), pre: {national, apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3], games, ...(segments?{segments}:{})}});
+        // 부상 답(두 갈래)을 미리 계산해 각각 봉인해 내려 준다 — 고른 쪽 토큰으로 이어 가면 두 번째 호출이 없다
+        // (사용자 지정 — 커리어 모드 요청 줄이기). 둘 다 서버가 낸 결과라 조작 여지가 없고, 예전 방식(injPick 호출)도 그대로 받는다.
+        const injOpts = [0, 1].map(k => { const D = clone(C); return seasonReply(D, advanceSeason(D, {...D.pending, injPick: k})); });
+        return res.json({token: seal(C), ...view(C), pre: {national, apps: pre[0], goals: pre[1], ast: pre[2], cs: pre[3], games, ...(segments?{segments}:{})}, injOpts});
       }
-      delete C.pending;
-      C.forced = r.forced; C.forcedWhy = r.forcedWhy;
-      return res.json({token: seal(C), ...view(C)});
+      return res.json(seasonReply(C, r));
     }
 
     if(a==='penalty'){

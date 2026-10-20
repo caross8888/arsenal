@@ -17,6 +17,7 @@ const TTL_OVERRIDES = { leaders: 10 * 60 * 1000, standings: 5 * 60 * 1000 };
 // CDN 보관 시간(초) 예외 — 기본은 min(서버 TTL, 5분). 순위표는 1분(사용자 지정). CDN이 앞에서
 // 막아주므로 방문자가 몰려도 함수 실행은 1분에 한 번 수준이다.
 const CDN_SEC_OVERRIDES = { standings: 60 };
+const BROWSER_MAX_SEC = 180;
 function getTTL(k){ return TTL_OVERRIDES[k] || TTL; }
 function getCache(k){const c=cache[k];return(c&&Date.now()-c.ts<getTTL(k))?c.data:null;}
 function getStale(k){const c=cache[k];return c?c.data:null;}
@@ -1713,9 +1714,13 @@ export default async function handler(req, res) {
   // (요청마다 "바뀌었나"를 새로 판정). predict는 메모리 캐시는 안 타지만 CDN 5분은 괜찮다 —
   // 크론이 만든 AI 해설이 늦어도 5분 안에 반영된다.
   const cdnSec = CDN_SEC_OVERRIDES[type] || Math.min(Math.floor(getTTL(type)/1000), 300);
+  // 브라우저도 최대 3분(CDN보다 길지 않게)은 다시 묻지 않는다(사용자 지정 — 하루 CDN 요청 9.5만 건,
+  // 방문 한 번에 이 엔드포인트만 8건). 앱 전환·새로고침·탭 이동으로 짧은 시간에 다시 들어오면 요청 0건.
+  // 화면은 원래 localStorage 직전 값을 먼저 보여 주므로 최악이어도 몇 분 늦게 바뀌는 정도다.
+  const browserSec = Math.min(cdnSec, BROWSER_MAX_SEC);
   res.setHeader('Cache-Control', (nocache || isLivePlayerDiff)
     ? 'no-store'
-    : `public, max-age=0, s-maxage=${cdnSec}, stale-while-revalidate=600`);
+    : `public, max-age=${browserSec}, s-maxage=${cdnSec}, stale-while-revalidate=600`);
 
   if(!nocache && !noMemCache){
     const hit = getCache(cacheKey);
@@ -2056,7 +2061,7 @@ export default async function handler(req, res) {
       if(!nocache){
         const liveNow = !!seasonData.hasLive;
         res.setHeader('Cache-Control',
-          `public, max-age=0, s-maxage=${liveNow ? 60 : 300}, stale-while-revalidate=${liveNow ? 30 : 600}`);
+          `public, max-age=${liveNow ? 0 : BROWSER_MAX_SEC}, s-maxage=${liveNow ? 60 : 300}, stale-while-revalidate=${liveNow ? 30 : 600}`);
       }
       const requestedRound = parseInt(req.query.round, 10) || seasonData.latestFinishedRound;
       const roundMatches = seasonData.matches.filter(m => m.round === requestedRound);

@@ -10787,7 +10787,9 @@ function crInjPick(k, btn){
   if(CR.busy || !CR.sf) return; CR.busy=true;
   var S=CR.sf, res=null, err=null, shown=false;
   S.quick=!CR.v.injury.major && k===0;   // 빨리 복귀면 결장 칸이 절반
-  crApi('season', {token:CR.tok, injPick:k}).then(function(v){ res=v; if(shown) go(); }).catch(function(e){ err=e; if(shown) go(); });
+  var opt=CR.v.injOpts && CR.v.injOpts[k];   // 서버가 두 갈래 결과를 미리 보내 줬으면 호출 없이 이어 간다
+  if(opt) res=opt;
+  else crApi('season', {token:CR.tok, injPick:k}).then(function(v){ res=v; if(shown) go(); }).catch(function(e){ err=e; if(shown) go(); });
   var go=function(){
     if(err){ CR.busy=false; crSfInjury(CR.v); return crErr(err); }
     S.hurtWait=false; var box=document.getElementById('crSfBox'), x=document.getElementById('crSfExtra');
@@ -12024,7 +12026,7 @@ function crSubmit(btn){
       if(x.status===409){ crMarkReg(); return crBoard('retired'); }   // 이미 등록한 커리어 — 표시만 맞춘다
       if(!x.ok) throw new Error(x.j.error||'잠시 후 다시 시도해 주세요.');
       crMarkReg(x.j.key);
-      CR.lastReg=x.j;
+      CR.lastReg=x.j; CR.boardBust=Date.now();   // 랭킹은 CDN에 5분 캐시 — 방금 등록한 순위가 바로 보이게 한 번은 새로 받는다
       crBoard('retired', x.j.pos||'');   // 등록한 포지션 탭으로
     }).catch(crErr);
 }
@@ -12048,7 +12050,7 @@ function crBoard(from, pos){
     '<button class="gm-btn" onclick="crBoardBack()">'+(CR.boardFrom==='retired'?'은퇴 카드로':'돌아가기')+'</button>');
   window.scrollTo(0,0);
   var myKey=crMyKey();
-  Promise.all([crMeta(), fetch(FN+'/career?a=board'+(bp?'&p='+bp:'')).then(function(r){ return r.json(); })]).then(function(res){
+  Promise.all([crMeta(), fetch(FN+'/career?a=board'+(bp?'&p='+bp:'')+(CR.boardBust&&Date.now()-CR.boardBust<300000?'&t='+CR.boardBust:'')).then(function(r){ return r.json(); })]).then(function(res){
     if((CR.boardPos||'')!==bp) return;   // 그사이 다른 탭을 눌렀다
     var top=res[1].top||[], el=document.getElementById('crRk'); if(!el) return;
     CR.boardRows=top;
@@ -12077,7 +12079,7 @@ function crViewCard(i){
   crRender('<div class="cr-top"><button class="gm-back" onclick="crBoard()">← 랭킹</button><div class="cr-season">'+gmEsc(r.nick)+'</div></div>'+loadingHtml('불러오는 중...','padding:60px 20px'),
     '<button class="gm-btn" onclick="crBoard()">랭킹으로 돌아가기</button>');
   window.scrollTo(0,0);
-  fetch(FN+'/career?a=card&k='+encodeURIComponent(r.key)+'&p='+(r.p||r.pos||'')).then(function(x){ return x.json().then(function(j){ if(!x.ok) throw new Error(j.error); return j; }); }).then(function(d){
+  fetch(FN+'/career?a=card&k='+encodeURIComponent(r.key)+'&p='+(r.p||r.pos||'')+'&s='+(r.score||0)).then(function(x){ return x.json().then(function(j){ if(!x.ok) throw new Error(j.error); return j; }); }).then(function(d){
     var box=document.querySelector('#gameRoot .cr'); if(!box) return;
     // 내 카드면 은퇴 화면처럼 이미지로 저장할 수 있게(사용자 지정). 내 카드 판별은 crMyKey(로그인 계정 키).
     var myKey=crMyKey();
