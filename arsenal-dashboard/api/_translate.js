@@ -180,8 +180,15 @@ async function callGoogle(texts, format) {
     if (!r.ok) {
       // 403(할당량 초과·키 제한)도 여기로 온다 — 구글 에러 본문엔 요청에
       // 쓴 API 키가 그대로 박혀 나오는 경우가 있어서, 상태 코드만 남기고
-      // 본문은 절대 로그에 찍지 않는다.
-      console.warn('[translate] HTTP ' + r.status);
+      // 본문은 절대 로그에 찍지 않는다. 원인 구분용으로 구글이 붙이는 사유 코드
+      // (dailyLimitExceeded, API_KEY_IP_ADDRESS_BLOCKED 같은 영문 대문자·밑줄 토큰)만 골라 남긴다.
+      let why = '';
+      try {
+        const e = (await r.json()).error || {};
+        why = [...(e.errors || []).map(x => x && x.reason), ...(e.details || []).map(x => x && x.reason), e.status]
+          .filter(x => typeof x === 'string' && /^[A-Za-z_]{1,64}$/.test(x)).join(',');
+      } catch (_) {}
+      console.warn('[translate] HTTP ' + r.status + (why ? ' ' + why : ''));
       return null;
     }
     const data = await r.json();
