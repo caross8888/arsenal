@@ -15064,10 +15064,8 @@ loadTransferWindow();
 })();
 
 </script>
-<!-- Vercel Web Analytics — 방문자/페이지뷰. 빌드 없는 정적 HTML이라 자동 주입이 안 돼서
-     직접 넣는다. 이 앱은 탭 전환·모달을 해시(#fixtures, #match…)로만 바꾸고 경로는 계속
-     "/"인데, 이 스크립트는 pathname이 달라질 때만 전송하므로 "페이지 로드 1번 = 1건"이다
-     (탭 전환·모달 열기·뒤로가기는 집계되지 않는다). 로컬 dev에서는 이 경로가 없어 404가
-     뜨지만 defer라 페이지 동작엔 영향이 없다. -->
+<!-- 방문자 분석은 Cloudflare Web Analytics "자동 설정"이 응답에 비콘을 넣는다(여기엔 스크립트를 안 둔다).
+     예전 Vercel Analytics 스크립트(/_vercel/insights/script.js)는 Cloudflare에 없는 경로라 SPA 폴백으로
+     index.html이 한 번 더 내려가서 지웠다. 자동 주입이 안 되면 대시보드의 JS 스니펫을 여기에 넣는다. -->
 </body>
 </html>
