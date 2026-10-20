@@ -3262,7 +3262,24 @@ function isArsenalTeam(t){
 // 적중하지 않았다(방문자마다 서버 함수 실행). 신선도는 이제 서버 Cache-Control이 정한다 —
 // 브라우저는 max-age=0/짧게 두고 CDN만 보관하며, "지금 값"이 필요한 호출은 nocache=1을 붙여
 // 서버가 no-store로 답한다. opts.fresh는 그래도 꼬리표가 필요한 예외용으로 남겨 둔다.
+// 메인 화면 묶음(사용자 지정 — Cloudflare 요청 줄이기): 첫 화면이 따로 부르던 football 8종을
+// /football?type=home 한 번으로 받는다. 호출하는 곳은 그대로 두고, 여기서 같은 주소(파라미터 없는 기본 호출)를
+// 묶음 응답으로 대신 채운다. 묶음은 페이지를 연 직후 1분 동안만 쓰고(이후 새로고침·재요청은 원래대로 개별 호출),
+// 묶음에서 빠진 항목(서버가 시간 안에 못 만든 것)이나 묶음이 실패하면 개별 호출로 떨어진다.
+var HOME_TYPES=['fixtures','transfers','standings','leaders','roundResults','teamOfTheWeek','squad','injuries'];
+var _homeReq=null, _homeAt=0;
+function homeBundle(){
+  if(!_homeReq){ _homeAt=Date.now(); _homeReq=fetch(FN+'/football?type=home').then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }); }
+  return _homeReq;
+}
 function apiFetch(url, opts){
+  var hm = !(opts && opts.fresh) && /\/football\?type=([A-Za-z]+)$/.exec(url);
+  if(hm && HOME_TYPES.indexOf(hm[1])>=0 && (!_homeReq || Date.now()-_homeAt < 60000)){
+    return homeBundle().then(function(b){ var part=b && b.parts && b.parts[hm[1]]; return part ? JSON.parse(JSON.stringify(part)) : apiFetchOne(url, opts); });   // 복사본 — 같은 항목을 두 곳에서 받아 각자 고쳐 써도 서로 안 섞이게
+  }
+  return apiFetchOne(url, opts);
+}
+function apiFetchOne(url, opts){
   var full = (opts && opts.fresh) ? url+(url.indexOf('?')>=0?'&':'?')+'_='+Date.now() : url;
   return fetch(full).then(function(r){
     if(!r.ok) return r.json().then(function(e){throw new Error(e.error||'HTTP '+r.status);});
@@ -3958,7 +3975,7 @@ function initMatchNav(data){
     var mm = monthMatchesFrom(seasonMatches, _mYear, _mMonth);
     renderMatches(mm);
     // 지금 보고 있는 달의 지난 경기도 미리 받아둔다
-    prefetchFinishedMatches(mm, 8);
+    prefetchFinishedMatches(mm, 2);
   });
 }
 // 화살표 이동은 경기 없는 달을 자동으로 건너뛰고, 데이터 상/하한(가장 이른
@@ -4095,8 +4112,9 @@ function loadFixtures(){
         if(_calPlaced) renderCalendarMonth(); else { _calPlaced=true; calGoToNearestMatch(); }
       }
       renderDday(upcomingAll);
-      // 지난 경기 상세를 유휴 시간에 미리 받아둔다 — 카드를 눌렀을 때 스피너 없이 열리게
-      prefetchFinishedMatches(data.finished||[], 8);
+      // 지난 경기 상세를 유휴 시간에 미리 받아둔다 — 카드를 눌렀을 때 스피너 없이 열리게.
+      // 최근 2경기만(사용자 지정 — Cloudflare는 요청마다 세서 8경기 미리 받기가 방문당 8회였다). 나머지는 누를 때 받는다.
+      prefetchFinishedMatches(data.finished||[], 2);
       // 라이브 경기 있으면 폴링 시작, 없으면 가장 가까운 예정 경기 킥오프에 맞춰
       // 감시 타이머를 걸어둔다 — 페이지를 계속 열어두고 있어도 킥오프 시점에
       // 자동으로 라이브 전환을 감지하기 위함(안 그러면 새로고침 전까진 못 알아챔).
