@@ -1,0 +1,9 @@
+# Cloudflare 정적 파일 캐시(vercel.json의 headers와 같은 값). Vercel은 이 파일을 쓰지 않는다.
+/data/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+/img/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/video/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/career/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
