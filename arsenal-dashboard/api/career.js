@@ -110,6 +110,21 @@ async function readPos(p, n){
   }
   return top;
 }
+// 랭킹 4종(전체·FW·MF·DF)을 한 번에 — 데이터 파일 크론이 4개를 따로 부르면 "전체"가 세 판을 다 읽고 각 포지션이
+// 또 읽어 다시 만들 때마다 KV 16회였다(실측). 세 판을 한 번씩 읽고 닉네임도 한 번에 받아 7회로 만든다.
+async function readBoards(){
+  const per = await Promise.all(POSS.map(p => readPos(p, BOARD_SHOW)));
+  const all = per.flat().sort((a, b) => b.score - a.score).slice(0, BOARD_SHOW);
+  const keys = [...new Set(per.flat().map(r => r.key))];
+  if(keys.length){
+    const names = await kv('HMGET', 'pk:names', ...keys) || [];
+    const nick = Object.fromEntries(keys.map((k, i) => [k, names[i] || k]));
+    per.flat().forEach(r => { r.nick = nick[r.key]; });
+  }
+  const out = {ALL: {top: all}};
+  POSS.forEach((p, i) => { out[p] = {top: per[i]}; });
+  return out;
+}
 async function readBoard(pos){
   const id = POSS.includes(pos) ? pos : 'ALL';
   if(_boards[id] && Date.now() - _boardAt[id] < 30 * 1000) return _boards[id];
@@ -212,6 +227,11 @@ export default async function handler(req, res){
       // 방금 등록한 사람은 화면이 주소에 t=를 붙여 새로 받아 가므로 자기 순위가 늦게 보이지 않는다.
       res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
       return res.json(await readBoard(String(req.query.p || '')));
+    }
+    if(a === 'boards'){
+      if(!kvReady()) return res.json({ALL: {top: []}});
+      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600');
+      return res.json(await readBoards());
     }
     if(a === 'card'){
       const k = String(req.query.k || '').slice(0, 64), p = String(req.query.p || '');

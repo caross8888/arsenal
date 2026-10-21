@@ -54,7 +54,7 @@ To refresh the scraped squad data (`public/data/players.json`), run `fotmob_auto
 
 `playerSeason:{선수id}:{시즌}`은 완결된 직전 시즌 스탯이라 TTL 없이 영구 저장된다(현재 스쿼드 선수는 시즌마다 키가 하나씩 쌓이는 게 의도). 이적해서 나간 선수 키만 비우는 작업이 `api/_purge.js`이고, 두 경로가 이 모듈을 공유한다:
 
-- **크론** — Cloudflare 크론(`wrangler.jsonc`의 `triggers.crons` → `cloudflare/worker.js`의 `CRONS`)이 매년 5월 25일 `/api/maintenance`를 호출한다(5분마다 AI 해설 `preview_ai`도 같은 곳 — 다음 경기가 48시간 밖이면 핸들러가 매시 첫 5분만 실제로 돈다). Vercel 크론은 이전하면서 지웠다. `CRON_SECRET` 환경변수로만 인증되며, 미설정이면 503으로 거부한다(fail closed). `?dry=1`로 삭제 없이 대상만 확인할 수 있다.
+- **크론** — Cloudflare 크론(`wrangler.jsonc`의 `triggers.crons` → `cloudflare/worker.js`의 `CRONS`)이 매년 5월 25일 `/api/maintenance`를 호출한다(AI 해설 `preview_ai`도 같은 곳 — 5분마다 깨지만 매시 첫 5분만 전체 확인, 그 밖엔 다음 경기 24시간 안일 때 승부 예측이 남긴 요청 표시 `predAI:want`만 확인한다. `worker.js`의 `previewPlan`). Vercel 크론은 이전하면서 지웠다. `CRON_SECRET` 환경변수로만 인증되며, 미설정이면 503으로 거부한다(fail closed). `?dry=1`로 삭제 없이 대상만 확인할 수 있다.
 - **로컬 수동** — `node scripts/kv_purge_players.mjs` (드라이런) / `--apply` (삭제). `.env.local`에서 KV 자격증명을 읽고, 드라이런은 읽기 전용 토큰만 쓴다.
 
 판정 규칙에 함정이 둘 있어서 그대로 유지할 것:
@@ -128,7 +128,7 @@ Real data sources in use (verified against source, not the stale README below):
 | News | BBC/Sky RSS + Guardian Open Platform | `GUARDIAN_API_KEY` (Guardian only) |
 | History (trophies/managers/legends/timeline) | Static hand-curated JSON in `public/data/*.json`, photos sourced from Wikipedia/Wikimedia | none |
 | Korean translation of news/SNS/YouTube text | Google Cloud Translation API v2 (GCP project `arsenal-506800`) | `GOOGLE_TRANSLATE_API_KEY` |
-| YouTube videos (media tab) | YouTube Data API v3 first (uploads playlist + video status); falls back to the channel RSS feed, then to the last successful list stored in KV (`videos:last:{channelId}`) — the RSS feed has had full outages (404/500 for every channel) | `YOUTUBE_API_KEY` |
+| YouTube videos (media tab) | YouTube Data API v3 first (uploads playlist + video status); falls back to the channel RSS feed, then to the last successful list in instance memory — the RSS feed has had full outages (404/500 for every channel). The KV copy (`videos:last:{channelId}`) was removed in 2026-10 (user decision: RSS is already the backup, and the R2 `videos.json` keeps the previous list for 15 minutes) | `YOUTUBE_API_KEY` |
 
 **출장정지 수동 입력**: Fotmob 결장자 목록(`matchDetails`의 `lineup.unavailable`)은 정지를 늦게 올린다(올리세 챔스 퇴장 건). 이럴 땐 `football.js`의 `MANUAL_SUSPENSIONS`에 `{Fotmob 경기 id: [{team, id, name}]}`로 직접 넣는다. 직전 경기 퇴장으로 정지를 자동 판정하는 로직은 사용자 지정으로 넣지 않는다(징계 경기 수·항소 취소를 코드로 알 수 없다).
 

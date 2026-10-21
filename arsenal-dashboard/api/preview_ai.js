@@ -27,6 +27,7 @@ const AI_TTL_SEC = 14 * 24 * 60 * 60;   // 경기가 지나면 쓸모없다
 // 경기가 18일 뒤라 날짜로 자르면 대상이 0건이 됐다(실측).
 const PREVIEW_MATCHES = 2;
 const RUN_LOG_KEY = 'predAI:_lastrun';
+const WANT_KEY = 'predAI:want';   // "해설을 새로 만들어 줘" 표시 — football.js predict가 남긴다
 // Vercel·Cloudflare 크론이 같은 키를 덮어써 어느 쪽이 돌았는지 구분이 안 됐다 — 사이트별 키에도 남긴다.
 const SITE = process.env.VERCEL ? 'vercel' : 'cf';
 async function saveRunLog(rec){
@@ -105,6 +106,15 @@ export default async function handler(req, res){
   const dry = !!req.query.dry;
   const report = {checked: 0, generated: 0, cached: 0, failed: 0, matches: []};
 
+  // flag=1은 "요청 표시가 있을 때만" — 매시 정각 외의 5분 크론이 경기 24시간 안일 때 이렇게 부른다
+  // (cloudflare/worker.js). 표시는 승부 예측이 해설이 낡은 걸 발견했을 때 남긴다(football.js predict).
+  // 표시 확인은 GET 1회라, 바뀐 게 없으면 예측 계산(KV 9회)을 하지 않는다.
+  if(req.query.flag === '1' && !dry){
+    if(!await kv('GET', WANT_KEY)) return res.json({skip: '요청 표시 없음'});
+    await kv('DEL', WANT_KEY);   // 먼저 지운다 — 생성 중에 새로 바뀌면 다음 크론이 다시 받는다
+    report.flagged = true;
+  }
+
   try {
     const fx = await callFootball({type: 'fixtures'});
     const now = Date.now();
@@ -115,12 +125,6 @@ export default async function handler(req, res){
       .sort((a, b) => new Date(a.utcDate || a.date) - new Date(b.utcDate || b.date));
     const upcoming = future.slice(0, PREVIEW_MATCHES);
     report.upcoming = upcoming.length;
-    // 5분마다는 다음 경기가 48시간 안일 때만 — 결장자 소식이 몰리는 건 경기 직전이고, 확인 한 번에 KV를
-    // 수십 번 읽어서(예측 계산) 늘 5분마다 돌면 방문자가 없어도 하루 수천 회였다. 그 밖엔 매시 첫 5분에만.
-    const firstMs = upcoming.length ? new Date(upcoming[0].utcDate || upcoming[0].date).getTime() : 0;
-    if(!onDemand && !dry && (!firstMs || firstMs - now > 48 * 3600 * 1000) && new Date().getUTCMinutes() >= 5){
-      return res.json({...report, skip: '다음 경기 48시간 밖 — 매시 한 번만'});
-    }
 
     // 함수 실행 한도가 5분이라, 한 경기가 재시도로 오래 걸려도 전체가 잘리지 않게
     // 4분이 지나면 남은 경기는 다음 크론으로 넘긴다(실행 기록은 남겨야 하므로).
@@ -141,6 +145,7 @@ export default async function handler(req, res){
         league: m.leagueId ? String(m.leagueId) : undefined,
         date: m.utcDate || undefined,
         match: String(m.id),
+        cron: '1',   // 크론 자신은 표시를 남기지 않는다
       });
       if(!p || !p.available){ report.matches.push({id: m.id, skip: '예측 불가'}); continue; }
 

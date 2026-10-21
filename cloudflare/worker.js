@@ -72,9 +72,9 @@ function vercelRes(){
 // Vercel처럼 Authorization: Bearer CRON_SECRET을 붙인다(핸들러는 이것만 통과시킨다).
 // 무료 플랜은 Worker당 크론 5개까지라 주기는 cron 식 한 줄로 쓴다(Vercel에선 시각만 다른 24개로 "매시 1회"를 만들었다).
 const CRONS = {
-  // 5분마다(사용자 지정 — 결장자가 바뀌면 새 해설이 곧 나와야 한다). 화면의 즉시 생성(on=1)은 Cloudflare에서
-  // 방문자가 떠나면 30초 안에 끊겨 90초 걸리는 생성을 못 마쳤다(실측: 잠금만 5분 걸린 채 해설 없음). 크론은 끝까지 돈다.
-  '*/5 * * * *': {name: 'preview_ai', query: {}},
+  // AI 해설. 화면의 즉시 생성(on=1)은 Cloudflare에서 방문자가 떠나면 30초 안에 끊겨 90초 걸리는 생성을 못
+  // 마쳤다(실측: 잠금만 5분 걸린 채 해설 없음). 크론은 끝까지 돈다. 5분마다 깨지만 실제 일은 previewPlan이 고른다.
+  '*/5 * * * *': {name: 'preview_ai', query: {}, plan: true},
   '0 4 25 5 *': {name: 'maintenance', query: {}},
   // 1분마다 공용 데이터 파일 갱신(snapshots.js) — 보관 시간이 지난 항목만 다시 만든다.
   '* * * * *': {snapshot: true},
@@ -94,14 +94,37 @@ async function callHandler(name, query){
   try { return JSON.parse(typeof body === 'string' ? body : new TextDecoder().decode(body)); } catch(_){ return null; }
 }
 
+// AI 해설 크론이 이번에 할 일(사용자 지정 — 바뀐 게 없어도 5분마다 예측을 다시 계산해 KV를 하루 약 2,600회 썼다):
+//  - 매시 첫 5분: 전체 확인(full)
+//  - 그 밖엔 다음 경기가 24시간 안일 때만 요청 표시 확인(flag, KV GET 1회) — 화면이 낡은 해설을 보면 표시를 남긴다
+//  - 24시간 밖이면 아무것도 안 한다(skip, KV 0회)
+// 다음 경기 시각은 KV가 아니라 R2의 home.json(snapshots.js가 1분마다 만드는 일정)에서 읽는다.
+async function previewPlan(bucket){
+  if(new Date().getUTCMinutes() < 5) return 'full';
+  try {
+    const o = bucket && await bucket.get('home.json');
+    const fx = o ? (((await o.json()).parts || {}).fixtures || {}).data : null;
+    const now = Date.now();
+    const next = ((fx && fx.matches) || []).map(m => Date.parse(m.utcDate || m.date))
+      .filter(t => t > now).sort((a, b) => a - b)[0];
+    return next && next - now < 24 * 3600 * 1000 ? 'flag' : 'skip';
+  } catch(_){ return 'flag'; }   // 일정을 못 읽으면 표시 확인만(GET 1회)
+}
+
 async function runCron(cron, env){
   const job = CRONS[cron];
   if(!job) return console.error('알 수 없는 크론', cron);
   patchSelfFetch(env, CRON_HOST);
   process.env.VERCEL_PROJECT_PRODUCTION_URL ||= CRON_HOST;
   if(job.snapshot) return runSnapshots(env.DATA, callHandler);
+  let query = job.query;
+  if(job.plan){
+    const plan = await previewPlan(env.DATA);
+    if(plan === 'skip') return;
+    if(plan === 'flag') query = {...query, flag: '1'};
+  }
   const secret = env.CRON_SECRET || process.env.CRON_SECRET || '';
-  const req = {method: 'GET', url: `/api/${job.name}`, query: job.query, body: undefined,
+  const req = {method: 'GET', url: `/api/${job.name}`, query, body: undefined,
     headers: {authorization: `Bearer ${secret}`, host: CRON_HOST, 'x-forwarded-host': CRON_HOST}};
   const {res, finished} = vercelRes();
   await Promise.resolve(HANDLERS[job.name](req, res)).then(() => res.end());
