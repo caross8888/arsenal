@@ -38,6 +38,10 @@ function isArsenalMatch(data){
 }
 
 // 경기가 끝나고 하루가 지나면 평점·스탯이 확정된 것으로 보고 불변 취급한다.
+// 진행 중 경기 — 라이브 상세는 보는 사람마다 30초마다 오므로 모두에게 같은 응답을 가장자리 캐시에 20초 둔다
+// (데이터센터마다 20초에 한 번만 실제로 돈다). 브라우저는 매번 묻는다.
+const LIVE_TTL = 20 * 1000, LIVE_CC = 'public, max-age=0, s-maxage=20';
+const isLiveData = d => !!d && d.status === 'In Progress';
 function isSettled(data){
   if(!data || data.status !== 'Full Time' || !data.utcDate) return false;
   return Date.now() - new Date(data.utcDate).getTime() > 24 * 60 * 60 * 1000;
@@ -577,13 +581,16 @@ export default async function handler(req, res) {
   }
 
   const cacheKey = eventId;
-  if (cache[cacheKey] && Date.now() - cache[cacheKey].ts < TTL) {
+  // 진행 중 경기는 메모리 20초만 — 5분 그대로 두면 30초마다 받는 라이브 상세가 같은 인스턴스에선 최대 5분 같은 값이었다
+  const memTtl = cache[cacheKey] && isLiveData(cache[cacheKey].data) ? LIVE_TTL : TTL;
+  if (cache[cacheKey] && Date.now() - cache[cacheKey].ts < memTtl) {
     // 메모리 캐시로 답할 때도 KV·Fotmob 경로와 같은 브라우저 캐시 헤더를 붙인다. 빠뜨렸을 땐
     // 인스턴스가 따뜻할수록(=자주 쓰일수록) 헤더 없는 응답이 나가서, 메인 화면이 미리 받는
     // 지난 8경기가 브라우저에 안 남고 방문할 때마다 다시 요청됐다(실측: 새로고침마다 match 8건+).
     const hit = cache[cacheKey].data;
     if (isSettled(hit)) setImmutable(res);
     else if (hit && hit.status === 'Full Time') res.setHeader('Cache-Control', 'public, max-age=600');
+    else if (isLiveData(hit)) res.setHeader('Cache-Control', LIVE_CC);
     return res.json(hit);
   }
 
@@ -632,7 +639,7 @@ export default async function handler(req, res) {
           // 다시 열 때 스피너는 안 뜨게.
           if (settled) setImmutable(res);
           else res.setHeader('Cache-Control', 'public, max-age=600');
-        }
+        } else if (isLiveData(fm)) res.setHeader('Cache-Control', LIVE_CC);
         return res.json(fm);
       }
     } catch (_) {}
