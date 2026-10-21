@@ -3,11 +3,7 @@
   "buildCommand": "echo 'no build needed'",
   "outputDirectory": "moved",
   "git": {
-    "deploymentEnabled": {
-      "claude/**": false,
-      "codex/**": false,
-      "work": false
-    }
+    "deploymentEnabled": false
   },
   "rewrites": [
     {
