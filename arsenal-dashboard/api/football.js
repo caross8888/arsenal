@@ -144,8 +144,23 @@ const POS_GROUP_FROM_CODE = {
   RW: 'FW', LW: 'FW', ST: 'FW', CF: 'FW',
 };
 
+// 미리 묶어 읽은 값(kvPrefetch) — 승부 예측 하나가 팀 문맥·리그 강도·팀 색·다가오는 경기·결장자를 키마다 GET 해서
+// 실행 한 번에 KV 12회였다(실측). 그 요청이 곧 읽을 키를 MGET 한 번으로 받아 두고 kvGetJSON이 먼저 여기를 본다.
+// 10초만 유효하고, 같은 키를 쓰면 같이 고친다(없던 값을 원본에서 만들어 저장한 직후 다시 "없음"으로 읽지 않게).
+const _kvPre = new Map(), KV_PRE_MS = 10 * 1000;
+async function kvPrefetch(keys){
+  const now = Date.now();
+  const need = [...new Set(keys)].filter(k => { const e = _kvPre.get(k); return !(e && now - e.ts < KV_PRE_MS); });
+  if(need.length){
+    const vals = await kvMGetJSON(need);
+    if(vals.length === need.length) need.forEach((k, i) => _kvPre.set(k, {v: vals[i], ts: now}));
+  }
+  return keys.map(k => (_kvPre.get(k) || {}).v ?? null);
+}
 async function kvGetJSON(key){
   if(!KV_URL || !KV_TOKEN) return null;
+  const pre = _kvPre.get(key);
+  if(pre && Date.now() - pre.ts < KV_PRE_MS) return pre.v;
   try {
     const r = await fetch(KV_URL, {
       method: 'POST',
@@ -194,6 +209,7 @@ async function kvGetRaw(key){
 // 안 바뀌는 데이터용.
 async function kvSetJSON(key, data, ttlSec){
   if(!KV_URL || !KV_TOKEN) return;
+  if(_kvPre.has(key)) _kvPre.set(key, {v: data, ts: Date.now()});
   try {
     const cmd = ttlSec
       ? ['SET', key, JSON.stringify(data), 'EX', String(ttlSec)]
@@ -3058,6 +3074,15 @@ export default async function handler(req, res) {
       const homeId = req.query.home, awayId = req.query.away;
       if(!homeId || !awayId) throw new Error('home/away 파라미터 필요');
       const compLeagueId = Number(req.query.league) || PL_LEAGUE_ID;
+      const predMatch = String(req.query.match || '').replace(/\D/g, '');
+      // 아래에서 읽을 KV 키를 두 번의 MGET으로 미리 받는다(12회 → 3회, kvPrefetch 참고).
+      // 두 번째는 다가오는 경기들의 결장자 — 어느 경기인지가 첫 번째 결과(nextm)에 있다.
+      try {
+        const pre = await kvPrefetch([`teamCtx:${homeId}`, `teamCtx:${awayId}`, `leagueStrength:${compLeagueId}`,
+          'teamColorsByMode', `nextm:v1:${homeId}`, `nextm:v1:${awayId}`, ...(predMatch ? [`unavail:v4:${predMatch}`] : [])]);
+        const more = [pre[4], pre[5]].flat().filter(Boolean).map(id => `unavail:v4:${id}`);
+        if(more.length) await kvPrefetch(more);
+      } catch(_){ /* 못 받으면 아래가 키마다 읽는다 */ }
       const [homeCtx, awayCtx] = await Promise.all([
         fetchTeamContext(homeId).catch(() => null),
         fetchTeamContext(awayId).catch(() => null),

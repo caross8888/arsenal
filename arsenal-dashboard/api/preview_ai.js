@@ -115,6 +115,12 @@ export default async function handler(req, res){
       .sort((a, b) => new Date(a.utcDate || a.date) - new Date(b.utcDate || b.date));
     const upcoming = future.slice(0, PREVIEW_MATCHES);
     report.upcoming = upcoming.length;
+    // 5분마다는 다음 경기가 48시간 안일 때만 — 결장자 소식이 몰리는 건 경기 직전이고, 확인 한 번에 KV를
+    // 수십 번 읽어서(예측 계산) 늘 5분마다 돌면 방문자가 없어도 하루 수천 회였다. 그 밖엔 매시 첫 5분에만.
+    const firstMs = upcoming.length ? new Date(upcoming[0].utcDate || upcoming[0].date).getTime() : 0;
+    if(!onDemand && !dry && (!firstMs || firstMs - now > 48 * 3600 * 1000) && new Date().getUTCMinutes() >= 5){
+      return res.json({...report, skip: '다음 경기 48시간 밖 — 매시 한 번만'});
+    }
 
     // 함수 실행 한도가 5분이라, 한 경기가 재시도로 오래 걸려도 전체가 잘리지 않게
     // 4분이 지나면 남은 경기는 다음 크론으로 넘긴다(실행 기록은 남겨야 하므로).
@@ -139,7 +145,9 @@ export default async function handler(req, res){
       if(!p || !p.available){ report.matches.push({id: m.id, skip: '예측 불가'}); continue; }
 
       const key = predictAiKey(p);
-      const hit = await kv('GET', key);
+      // 예측 응답이 이미 이 키로 해설을 읽어 왔다(aiStale이면 옛 해설이라 없는 것) — 있으면 같은 키를 다시 GET 하지 않는다.
+      // 없을 때만 확인 삼아 한 번 더 읽는다(그 읽기가 잠깐 실패한 것이면 Gemini를 괜히 부르게 되므로).
+      const hit = (p.aiText && !p.aiStale) || await kv('GET', key);
       if(hit){ report.cached++; report.matches.push({id: m.id, key, cached: true}); continue; }
       if(dry){ report.matches.push({id: m.id, key, would: '생성'}); continue; }
       // 같은 키를 동시에 두 번 만들지 않는다. SET NX가 실패하면 누군가 이미 만들고 있다.
@@ -193,7 +201,8 @@ export default async function handler(req, res){
     report.candidates = aiCandidates();
     // 실행 기록을 KV에 남긴다 — 배포 로그를 못 보는 상황에서도 무엇이 왜 실패했는지
     // KV만 읽어 확인할 수 있게 하려는 것이다(디버깅 왕복을 줄이려고 넣었다).
-    await saveRunLog({at: new Date().toISOString(), ...report}).catch(() => {});
+    // 전부 이미 있던 해설이면 남기지 않는다 — 5분마다 SET 2회가 쌓였다(백엔드 기준 3: 드문 경우에만 쓰기).
+    if(report.generated || report.failed) await saveRunLog({at: new Date().toISOString(), ...report}).catch(() => {});
     return res.json(report);
   } catch(err){
     try {
