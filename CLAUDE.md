@@ -131,7 +131,7 @@ Real data sources in use (verified against source, not the stale README below):
 | Korean translation of news/SNS/YouTube text | Google Cloud Translation API v2 (GCP project `arsenal-506800`) | `GOOGLE_TRANSLATE_API_KEY` |
 | YouTube videos (media tab) | YouTube Data API v3 first (uploads playlist + video status); falls back to the channel RSS feed, then to the last successful list in instance memory — the RSS feed has had full outages (404/500 for every channel). The KV copy (`videos:last:{channelId}`) was removed in 2026-10 (user decision: RSS is already the backup, and the R2 `videos.json` keeps the previous list for 15 minutes) | `YOUTUBE_API_KEY` |
 
-**출장정지 수동 입력**: Fotmob 결장자 목록(`matchDetails`의 `lineup.unavailable`)은 정지를 늦게 올린다(올리세 챔스 퇴장 건). 이럴 땐 `football.js`의 `MANUAL_SUSPENSIONS`에 `{Fotmob 경기 id: [{team, id, name}]}`로 직접 넣는다. 직전 경기 퇴장으로 정지를 자동 판정하는 로직은 사용자 지정으로 넣지 않는다(징계 경기 수·항소 취소를 코드로 알 수 없다).
+**출장정지 수동 입력**: Fotmob 결장자 목록(`matchDetails`의 `lineup.unavailable`)은 정지를 늦게 올린다(올리세 챔스 퇴장 건). 이럴 땐 `football.js`의 `MANUAL_ABSENCES`에 `{Fotmob 경기 id: [{team, id, name}]}`로 직접 넣는다. 정지가 아닌 결장(가족 사유 등 — 키미히 뮌헨전)은 `type:'absent', note:'개인 사유'`를 붙이면 화면에 "결장"으로 나온다. 항목 모양을 바꾸면 `UNAVAIL_KEY`의 버전을 올려 옛 캐시를 버릴 것. 직전 경기 퇴장으로 정지를 자동 판정하는 로직은 사용자 지정으로 넣지 않는다(징계 경기 수·항소 취소를 코드로 알 수 없다).
 
 `football.js`'s fixtures/results logic has two non-obvious pieces of handling worth preserving if you touch it:
 - One-off branded pre-season tournaments (e.g. "Emirates Cup") aren't returned by the normal per-competition ESPN endpoints, since ESPN files them under their own league id each year. A supplemental `soccer/all/scoreboard` sweep over the near-term window fills this gap — don't remove it without another way to catch these.
