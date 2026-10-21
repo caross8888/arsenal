@@ -1432,6 +1432,9 @@ async function upcomingMatchIds(teamId){
 async function freshInjuriesFor(teamId, exceptMatchId){
   if(!teamId) return [];
   const ids = (await upcomingMatchIds(String(teamId)).catch(() => [])).filter(id => id !== String(exceptMatchId || ''));
+  // 경기마다 GET 하지 않고 한 번에(부상자 탭 크론이 5분마다 3회씩 읽었다). 1분 메모리에 있는 건 건너뛴다.
+  const cold = ids.filter(id => !(_unavailMem[id] && Date.now() - _unavailMem[id].ts < 60 * 1000));
+  if(cold.length > 1) await kvPrefetch(cold.map(id => `unavail:v4:${id}`)).catch(() => {});
   const lists = await Promise.all(ids.map(id => fetchMatchUnavailable(id).then(u => {
     const side = ['home', 'away'].map(k => u[k]).find(t => t && String(t.id) === String(teamId));
     return side ? side.out : [];
