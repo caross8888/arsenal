@@ -128,7 +128,7 @@ Real data sources in use (verified against source, not the stale README below):
 | News | BBC/Sky RSS + Guardian Open Platform | `GUARDIAN_API_KEY` (Guardian only) |
 | History (trophies/managers/legends/timeline) | Static hand-curated JSON in `public/data/*.json`, photos sourced from Wikipedia/Wikimedia | none |
 | Korean translation of news/SNS/YouTube text | Google Cloud Translation API v2 (GCP project `arsenal-506800`) | `GOOGLE_TRANSLATE_API_KEY` |
-| YouTube videos (media tab) | YouTube Data API v3 first (uploads playlist + video status); falls back to the channel RSS feed, then to the last successful list stored in KV (`videos:last:{channelId}`) — the RSS feed has had full outages (404/500 for every channel) | `YOUTUBE_API_KEY` |
+| YouTube videos (media tab) | YouTube Data API v3 first (uploads playlist + video status); falls back to the channel RSS feed, then to the last successful list in instance memory — the RSS feed has had full outages (404/500 for every channel). The KV copy (`videos:last:{channelId}`) was removed in 2026-10 (user decision: RSS is already the backup, and the R2 `videos.json` keeps the previous list for 15 minutes) | `YOUTUBE_API_KEY` |
 
 **출장정지 수동 입력**: Fotmob 결장자 목록(`matchDetails`의 `lineup.unavailable`)은 정지를 늦게 올린다(올리세 챔스 퇴장 건). 이럴 땐 `football.js`의 `MANUAL_SUSPENSIONS`에 `{Fotmob 경기 id: [{team, id, name}]}`로 직접 넣는다. 직전 경기 퇴장으로 정지를 자동 판정하는 로직은 사용자 지정으로 넣지 않는다(징계 경기 수·항소 취소를 코드로 알 수 없다).
 

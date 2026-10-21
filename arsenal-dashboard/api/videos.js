@@ -4,7 +4,7 @@
 // 목록 소스는 YouTube Data API v3가 기본이다. 예전엔 목록을 RSS 피드로 받고
 // API는 임베드 가능 여부 확인에만 썼는데, 유튜브 RSS가 통째로 404/500을 내는
 // 장애가 있어(2026-09-11, 다른 채널 RSS도 같이 죽음) 키가 멀쩡해도 영상 탭이
-// 비었다. 그래서 순서를 API → RSS(예비) → 마지막 성공 목록(KV) 으로 둔다.
+// 비었다. 그래서 순서를 API → RSS(예비) → 마지막 성공 목록(인스턴스 메모리) 으로 둔다(KV 보관은 2026-10에 뺐다).
 // API 비용: 업로드 목록 1 + 영상 상세 1 = 호출당 2단위(무료 하루 10,000),
 // 30분 메모리 캐시가 있어 실제 사용량은 하루 수백 단위 수준.
 
@@ -20,39 +20,6 @@ const FEED_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_
 // maxResults/id 상한이 50이고, 20을 받든 50을 받든 비용은 똑같이 2유닛이다.
 // 51번째부터는 페이지 토큰으로 한 번 더 받아야 해서 유닛이 늘어난다.
 const PAGE = 20, CAP = 50;
-const LAST_GOOD_KEY = `videos:last:${CHANNEL_ID}`;
-
-const KV_URL = process.env.KV_REST_API_URL;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN;
-
-async function kvGetJSON(key) {
-  if (!KV_URL || !KV_TOKEN) return null;
-  try {
-    const r = await fetch(KV_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(['GET', key]),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!r.ok) return null;
-    const { result } = await r.json();
-    return result ? JSON.parse(result) : null;
-  } catch { return null; }
-}
-
-// 만료 없이 저장 — 장애·재배포 직후에 보여줄 "마지막으로 성공한 목록"
-async function kvSetJSON(key, data) {
-  if (!KV_URL || !KV_TOKEN) return;
-  try {
-    await fetch(KV_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(['SET', key, JSON.stringify(data)]),
-      signal: AbortSignal.timeout(5000),
-    });
-  } catch { /* 저장 실패는 무시 */ }
-}
-
 function decodeHtml(str) {
   return (str || '')
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
@@ -189,17 +156,12 @@ export default async function handler(req, res) {
     }
 
     if (!videos || !videos.length) {
-      // 둘 다 실패 — 메모리 캐시(같은 인스턴스) → KV의 마지막 성공 목록 순으로 대체.
+      // 둘 다 실패 — 같은 인스턴스 메모리의 마지막 성공 목록으로 대체(KV 보관은 사용자 지정으로 뺐다 — RSS가 이미
+      // 예비이고, 운영 화면은 R2의 videos.json을 먼저 읽는데 크론은 빈 목록을 올리지 않아 15분은 직전 목록이 남는다).
       // 대체 응답은 CDN에 1분만 보관한다(30분 보관하면 복구된 뒤에도 옛 목록·빈 목록이 계속 나간다).
       // 대체 목록에는 더보기를 붙이지 않는다(hasMore:false) — 뒷부분을 받아올 데가 없다.
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60');
       if (lastGood) return res.json(lastGood);
-      const last = await kvGetJSON(LAST_GOOD_KEY);
-      if (last && last.videos?.length) {
-        // 저장 당시의 "N분 전"은 낡았으니 저장해 둔 게시 시각으로 다시 계산
-        last.videos = last.videos.map((v) => ({ ...v, timeAgo: v.publishedAt ? timeAgo(v.publishedAt) : v.timeAgo }));
-        return res.json({ ...last, hasMore: false, stale: true, error: errors.join(' / ') });
-      }
       return res.json({ videos: [], source: 'none', hasMore: false, error: errors.join(' / ') });
     }
 
@@ -229,11 +191,6 @@ export default async function handler(req, res) {
 
   outCache.set(limit, { data: result, ts: Date.now() });
   // 장애 대비 보관은 기본 목록만 — 더보기 응답까지 덮어쓰면 대체 화면이 들쭉날쭉해진다.
-  // KV에는 매시 첫 5분에만 쓴다 — "N분 전" 때문에 내용이 매번 달라 크론이 5분마다 SET 했고, 크론은 매번 새
-  // 인스턴스에서 돌아 메모리로 "바뀌었나"를 기억할 수도 없었다(실측). 장애 대비용이라 한 시간 낡아도 된다.
-  if (limit === PAGE) {
-    lastGood = result;
-    if (new Date().getUTCMinutes() < 5) await kvSetJSON(LAST_GOOD_KEY, result);
-  }
+  if (limit === PAGE) lastGood = result;
   return res.json(result);
 }
