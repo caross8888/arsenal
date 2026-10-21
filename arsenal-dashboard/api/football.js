@@ -1369,6 +1369,7 @@ const MANUAL_SUSPENSIONS = {
 // 같은 인스턴스 안에서 1분은 메모리로 — 예상 XI·승부 예측·부상자 카드가 한 모달에서 같은 경기 결장자를 각자 읽고,
 // 다가오는 경기 3개 것까지 합치느라(freshInjuriesFor) 한 번에 KV GET이 5회씩 났다.
 const _unavailMem = {};
+let _aiWantAt = 0;   // predict가 AI 해설 요청 표시(predAI:want)를 마지막으로 쓴 시각
 async function fetchMatchUnavailable(matchId){
   const m = _unavailMem[matchId];
   if(m && Date.now() - m.ts < 60 * 1000) return m.data;
@@ -3143,6 +3144,14 @@ export default async function handler(req, res) {
           // 저장할 때가 아니라 내보낼 때 적용한다 — 사전을 고치면 이미 만든 해설까지
           // 재생성 없이 바로 교정된다(번역 파이프라인과 같은 원칙).
           if(typeof aiText === 'string' && aiText.trim()) result.aiText = applyGlossary(aiText.trim());
+          // 해설이 없거나 낡았고 킥오프가 24시간 안이면 크론에 "새로 만들어 줘" 표시를 남긴다 — 5분 크론은 이
+          // 표시가 있을 때만 예측을 다시 계산한다(preview_ai.js flag). 같은 인스턴스에선 5분에 한 번만 쓴다.
+          const koMs = req.query.date ? Date.parse(req.query.date) : NaN;
+          if((!result.aiText || result.aiStale) && !req.query.cron && koMs - Date.now() > 0 && koMs - Date.now() < 24 * 3600 * 1000
+            && Date.now() - _aiWantAt > 5 * 60 * 1000){
+            _aiWantAt = Date.now();
+            await kvSetJSON('predAI:want', 1, 3600);
+          }
         } catch(e){ /* 해설 없음은 정상 동작 */ }
       }
     } else if(type === 'predxi'){
