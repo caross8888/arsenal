@@ -12998,27 +12998,41 @@ function espnFetch(url){
   var ac = window.AbortController ? new AbortController() : null, to = ac ? setTimeout(function(){ ac.abort(); }, 7000) : 0;
   return fetch(url, {signal: ac ? ac.signal : undefined}).then(function(r){ clearTimeout(to); if(!r.ok) throw new Error('ESPN '+r.status); return r.json(); });
 }
-function espnEventFor(m){
-  if(_espnEv[m.id]) return Promise.resolve(_espnEv[m.id]);
+function espnBoardUrl(m){
   var slug = COMP_SLUG_MAP[m.competition&&m.competition.short] || 'eng.1';
   // ESPN 스코어보드 날짜는 미국 동부 기준이다
   var et = new Intl.DateTimeFormat('en-CA', {timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date(m.utcDate)).replace(/-/g,'');
-  return espnFetch('https://site.api.espn.com/apis/site/v2/sports/soccer/'+slug+'/scoreboard?dates='+et).then(function(d){
-    var ev = (d.events||[]).filter(function(e){
-      var c = ((e.competitions||[])[0]||{}).competitors||[];
-      return c.some(function(x){ return String(x.team&&x.team.id)===ESPN_ARSENAL; });
-    })[0];
-    return ev ? (_espnEv[m.id] = {id: ev.id, slug: slug}) : null;
+  return {slug: slug, url: 'https://site.api.espn.com/apis/site/v2/sports/soccer/'+slug+'/scoreboard?dates='+et};
+}
+function espnFindArsenal(d){
+  return (d.events||[]).filter(function(e){
+    var c = ((e.competitions||[])[0]||{}).competitors||[];
+    return c.some(function(x){ return String(x.team&&x.team.id)===ESPN_ARSENAL; });
+  })[0] || null;
+}
+function espnEventFor(m){
+  if(_espnEv[m.id]) return Promise.resolve(_espnEv[m.id]);
+  var b = espnBoardUrl(m);
+  return espnFetch(b.url).then(function(d){
+    var ev = espnFindArsenal(d);
+    return ev ? (_espnEv[m.id] = {id: ev.id, slug: b.slug, url: b.url}) : null;
   });
 }
 // → {state:'pre'|'in'|'post', clock, isHT, home, away, commentary[]} (home/away는 우리 카드 기준), 실패하면 null
+// 시계·스코어·상태는 스코어보드에서 읽는다 — 경기 상세(summary)의 status엔 진행 시간(displayClock)이 없다(실측).
+// 코멘트만 summary에서 받고, summary가 실패해도 점수는 고친다.
 function espnLiveOf(m){
   return espnEventFor(m).then(function(ev){
     if(!ev) return null;
-    return espnFetch('https://site.api.espn.com/apis/site/v2/sports/soccer/'+ev.slug+'/summary?event='+ev.id).then(function(d){
-      var comp = ((d.header&&d.header.competitions)||[])[0];
+    var base = 'https://site.api.espn.com/apis/site/v2/sports/soccer/'+ev.slug;
+    return Promise.all([
+      espnFetch(ev.url),
+      espnFetch(base+'/summary?event='+ev.id).catch(function(){ return null; }),
+    ]).then(function(res){
+      var e = (res[0].events||[]).filter(function(x){ return x.id===ev.id; })[0] || espnFindArsenal(res[0]);
+      var comp = e && (e.competitions||[])[0];
       if(!comp) return null;
-      var cs = comp.competitors||[], st = comp.status||{}, type = st.type||{};
+      var cs = comp.competitors||[], st = comp.status||e.status||{}, type = st.type||{};
       var ars = cs.filter(function(c){ return String(c.team&&c.team.id)===ESPN_ARSENAL; })[0];
       if(!ars) return null;
       // 카드의 홈이 아스날인지와 ESPN의 홈이 아스날인지가 다르면 좌우를 바꾼다
@@ -13031,7 +13045,7 @@ function espnLiveOf(m){
       if(mm) clock = mm[1]+"'";
       var names = {};
       cs.forEach(function(c){ var nm = c.team&&(c.team.displayName||c.team.name); if(nm) names[nm] = flip ? (c.homeAway==='home'?'away':'home') : c.homeAway; });
-      var commentary = (d.commentary||[]).filter(function(c){ return c.text; }).map(function(c){
+      var commentary = ((res[1]&&res[1].commentary)||[]).filter(function(c){ return c.text; }).map(function(c){
         return {minute: (c.play&&c.play.clock&&c.play.clock.displayValue) || (c.time&&c.time.displayValue) || null, text: c.text,
           homeAway: c.play&&c.play.team&&c.play.team.displayName ? (names[c.play.team.displayName]||null) : null};
       }).reverse();
