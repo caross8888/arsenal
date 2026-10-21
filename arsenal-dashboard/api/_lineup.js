@@ -35,13 +35,19 @@ export const PARAMS = {
 };
 
 // Fotmob 리그 id — 국내 컵대회(로테이션 경기). 다른 나라 컵은 이름으로도 잡는다.
-const CUP_LEAGUE_IDS = new Set([132, 133, 247]);   // FA컵, EFL컵, 커뮤니티 실드
-const CUP_NAME_RE = /\b(cup|pokal|copa|coupe|coppa|shield|supercup|super cup|trophy)\b/i;
+// 커뮤니티 실드·슈퍼컵은 넣지 않는다 — 시즌 개막전이라 주전이 나온다. 컵으로 셌을 땐 아스날 실드(라야 등 주전)가
+// 리그컵 입스위치전(케파·요케레스·다우먼 등 로테이션)의 신호를 반으로 희석해, 플리트우드전 예측이 주전 위주로 나왔다.
+const CUP_LEAGUE_IDS = new Set([132, 133]);   // FA컵, EFL컵
+const SUPER_LEAGUE_IDS = new Set([247]);      // 커뮤니티 실드
+const CUP_NAME_RE = /\b(cup|pokal|copa|coupe|coppa|trophy)\b/i;
+const SUPER_NAME_RE = /shield|super ?cup|supercopa|supercoppa|supercoupe|supercup|troph[ée]e des champions/i;
 const EURO_NAME_RE = /champions league|europa|conference/i;
 
 export function isCupMatch(rec){
+  if(SUPER_LEAGUE_IDS.has(Number(rec.leagueId))) return false;
   if(CUP_LEAGUE_IDS.has(Number(rec.leagueId))) return true;
   const n = rec.tournament || '';
+  if(SUPER_NAME_RE.test(n)) return false;
   return CUP_NAME_RE.test(n) && !EURO_NAME_RE.test(n);
 }
 
