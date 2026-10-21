@@ -5,6 +5,9 @@ import {nationalOpponentPool} from './international.js';
 export const SANGMU = '김천 상무';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const year=C=>2027+C.age-15;
+// 나라별 A대표 발탁 기준 — sim.js의 NAT_BAR와 같은 값(sim.js가 이 파일을 불러서 거꾸로 import하면 순환이 된다).
+// 와일드카드(24세 이상)는 이 기준으로 본다: 고정 72였을 땐 한국 A대표 주전급(OVR 72)도 차출 12%였다(사용자 지정 2026-10).
+const NAT_BAR={ENG:80,ESP:80,FRA:80,BRA:80,GER:80,ARG:80,ITA:77,POR:77,NED:76,BEL:76,NOR:71,USA:70,JPN:70,KOR:67,NGA:68};
 const roll=(C,key)=>{let h=eventSeed(C)>>>0;for(const c of key)h=Math.imul(h^c.charCodeAt(0),16777619);h=(h+0x6D2B79F5)|0;let t=Math.imul(h^(h>>>15),h|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};
 const publicClub=c=>c?{n:c.n,id:c.id,nat:c.nat}:null;
 const active=M=>M && ['sangmu','regular'].includes(M.status);
@@ -29,10 +32,10 @@ export function tournamentView(C){
   if(C.age<18||(C.lv??3)<3||active(ensureMilitary(C)))return null;
   const y=year(C),kind=y%4===2?'asian':y%4===0?'olympic':null;if(!kind)return null;
   if(!nationalOpponentPool(kind==='asian'?'아시안게임':'올림픽').includes(C.nation))return null;
-  const o=Math.round(C.ovr),wild=C.age>23;
-  if(o<(wild?72:59))return null;
+  const o=Math.round(C.ovr),wild=C.age>23,bar=NAT_BAR[C.nation]||75;
+  if(o<(wild?bar:59))return null;
   const last=C.hist.at(-1),form=last&&last.apps>=10?clamp((last.rating-6.8)*.12,-.1,.1):0;
-  const p=wild?clamp(.12+(o-72)*.035+form,.05,.65):clamp(.30+(o-65)*.035+form,.05,.95);
+  const p=wild?clamp(.45+(o-bar)*.04+form,.15,.85):clamp(.30+(o-65)*.035+form,.05,.95);
   if(roll(C,'call|'+y+'|'+kind)>=p)return null;
   return {kind,year:y,name:kind==='asian'?'아시안게임':'올림픽',wild,callProbability:Math.round(p*100),medalRange:kind==='asian'?'금메달 50~70%':'메달 8~15%'};
 }
