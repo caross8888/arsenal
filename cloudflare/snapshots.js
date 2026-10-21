@@ -13,11 +13,29 @@
 
 const SEC = 1000;
 const BUDGET = 30;   // 한 실행에 쓸 외부 요청 상한(한도 50 — 한 항목이 최대 15~20번 쓸 수 있어 여유를 둔다)
-// 메인 화면 묶음 — public/index.html의 HOME_TYPES와 같은 8종. 순위표·일정은 경기 직후 바로 바뀌어야 해서 1분.
+// 메인 화면 묶음 — public/index.html의 HOME_TYPES와 같은 8종.
 const HOME_PARTS = {
-  fixtures: 60, standings: 60, roundResults: 300, teamOfTheWeek: 300,
+  fixtures: 300, standings: 300, roundResults: 300, teamOfTheWeek: 300,
   leaders: 300, injuries: 300, transfers: 600, squad: 600,
 };
+// 일정·순위표는 경기 시간대(킥오프 30분 전 ~ 3시간 후)에만 1분, 나머지는 5분(사용자 지정 — 바뀐 게 없어도
+// 확인할 때마다 KV를 읽어서, 매분 확인하면 방문자가 없어도 하루 약 2,900회였다).
+// 일정은 아스날 경기, 순위표는 다른 팀 경기로도 바뀌므로 PL 전체 킥오프(roundResults의 kickoffs)도 본다.
+// 시각은 직전 파일에서 읽으므로 원본 호출이 늘지 않는다. 시각을 모르면 1분으로 둔다.
+const WINDOW_BEFORE = 30 * 60 * SEC, WINDOW_AFTER = 3 * 3600 * SEC;
+function partTtl(type, parts){
+  if(type !== 'fixtures' && type !== 'standings') return HOME_PARTS[type];
+  const fx = (parts.fixtures && parts.fixtures.data && parts.fixtures.data.matches) || [];
+  const times = fx.map(m => m.utcDate);
+  if(fx.some(m => m.status === 'IN_PLAY')) return 60;
+  if(type === 'standings'){
+    const rr = (parts.roundResults && parts.roundResults.data) || {};
+    times.push(...(rr.kickoffs || []), ...(rr.matches || []).map(m => m.utcDate));
+  }
+  if(!times.length) return 60;
+  const now = Date.now();
+  return times.some(t => { const d = now - Date.parse(t); return d >= -WINDOW_BEFORE && d <= WINDOW_AFTER; }) ? 60 : HOME_PARTS[type];
+}
 // 한 파일 = 한 응답. query는 화면이 기본으로 부르는 것과 같아야 한다. list가 있으면 빈 목록은 올리지 않는다.
 const SINGLE = () => {
   const y = new Date(Date.now() + 9 * 3600 * SEC).getUTCFullYear();   // 화면은 한국 날짜 기준 올해를 부른다
@@ -69,8 +87,8 @@ export async function runSnapshots(bucket, call){
 
   // 할 일 목록: 메인 항목과 단일 파일 중 보관 시간이 지난 것. 순위표·일정 먼저, 나머지는 오래된 순.
   const jobs = [
-    ...Object.entries(HOME_PARTS).filter(([t, ttl]) => due(parts[t] && parts[t].at, ttl))
-      .map(([t]) => ({kind: 'part', type: t, first: t === 'fixtures' || t === 'standings', age: age(parts[t] && parts[t].at)})),
+    ...Object.keys(HOME_PARTS).filter(t => due(parts[t] && parts[t].at, partTtl(t, parts)))
+      .map(t => ({kind: 'part', type: t, first: t === 'fixtures' || t === 'standings', age: age(parts[t] && parts[t].at)})),
     ...singles.filter(f => due(f.old && f.old.at, f.ttl)).map(f => ({kind: 'file', f, first: false, age: age(f.old && f.old.at)})),
   ].sort((a, b) => (b.first - a.first) || (b.age - a.age));
 
