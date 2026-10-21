@@ -136,6 +136,24 @@ Real data sources in use (verified against source, not the stale README below):
 - One-off branded pre-season tournaments (e.g. "Emirates Cup") aren't returned by the normal per-competition ESPN endpoints, since ESPN files them under their own league id each year. A supplemental `soccer/all/scoreboard` sweep over the near-term window fills this gap — don't remove it without another way to catch these.
 - ESPN's per-team schedule endpoint needs an explicit `season` query param; without it, during the off-season gap it silently returns an empty "current season" instead of falling back to the just-finished one. `currentSeasonYear`/`seasonsToFetch` compute this explicitly rather than relying on ESPN's default.
 
+### 백엔드 기준 (새 기능·API를 만들 때 — 사용자 지정, 2026-10 Cloudflare 이전에서 겪은 것)
+
+운영은 Cloudflare Workers 무료 플랜 + Upstash KV 무료(월 50만 명령)다. 사이트 체급에 비해 요청·DB 사용이 뻥튀기되지 않게 아래를 지킨다. 머지 전에 `node scripts/measure_api.mjs <api> '<query>'`로 실행 한 번의 외부 요청·KV 명령 수를 재서 PR에 적을 것.
+
+1. **모두에게 같은 데이터는 방문자마다 계산하지 않는다.** 일정·순위·랭킹·뉴스처럼 누가 봐도 같은 응답은 1분 크론(`cloudflare/snapshots.js`)이 R2 파일로 만들고 화면은 `dataFile()`로 읽는다. Worker는 저장분으로 답해도 1회로 세므로 "캐시해 두면 된다"로 끝내지 말 것. 새 공용 데이터는 `SINGLE`/`HOME_PARTS`에 한 줄 추가가 기본이다.
+2. **실행 한 번에 외부 요청 30회 이하.** 무료 플랜 한도는 50회이고 Upstash 호출도 외부 요청이다. 넘으면 뒤쪽 fetch와 응답 저장(Cache API)이 조용히 실패한다(실측: 예상 XI가 KV GET 75회 → 저장 실패 → 열 때마다 반복). 
+   - 키를 반복문으로 하나씩 `GET` 하지 말고 `MGET`/파이프라인으로 묶는다(`kvMGetJSON`).
+   - 외부 원본을 목록만큼 부르는 구조(시즌·선수·팀마다 fetch)는 상한을 둔다(득점 순위 시즌 탐색 11개 → 2개).
+3. **KV는 바뀔 때만 읽고 쓴다.**
+   - 한 요청에서 같은 키를 여러 번 읽지 않는다. 한 화면이 여러 API로 같은 값을 읽으면 인스턴스 메모리에 짧게(1분) 둔다(`_unavailMem`).
+   - "바뀌었나" 확인은 버전 키 하나로 한다(`career:board:ver`처럼 쓰는 쪽이 INCR, 읽는 쪽은 GET 1회).
+   - 방문마다 쓰기(카운터·로그)를 넣지 않는다. 통계가 필요하면 미스·실패처럼 드문 경우에만.
+4. **응답 캐시 헤더를 반드시 정한다.** 공용 GET은 `public, max-age=…, s-maxage=…`(가장자리 캐시가 따른다), 사람마다 다른 응답·실패한 빈 응답은 `no-store`. 로그인 헤더(`Authorization`)가 붙은 요청은 가장자리 캐시를 안 탄다.
+5. **오래 걸리거나 돈이 드는 외부 호출(Gemini·번역)은 요청 경로에서 끝까지 기다리게 만들지 않는다.** Cloudflare는 방문자가 떠나면 30초 안에 끊는다(AI 해설 90초 생성이 매번 죽었다). 크론에서 만들고 KV에 저장, 화면은 읽기만. 유료 호출은 KV 캐시 + 동시 실행 잠금 + 실패 시 쿨다운을 함께 둔다(`_translate.js` 참고).
+6. **CPU 10ms(무료 플랜).** 큰 JSON 파싱·스크래핑은 크론으로 옮긴다. 배포 후 관찰 가능성 로그의 `cpuTimeMs`/`outcome`을 확인할 것.
+7. **화면(프런트) 쪽 요청 수도 기준이다.** 첫 화면에서 병렬 호출을 늘리지 말고 묶음(`type=home`)·데이터 파일에 넣는다. "혹시 누를까 봐" 미리 받기는 2건 이하, 같은 주소 동시 요청은 하나로 합친다(`_crCardReq` 패턴), 폴링은 화면이 보일 때만.
+8. **설정값**: 비밀이 아닌 값은 `wrangler.jsonc`의 `vars`, 토큰·키는 대시보드 "비밀". 대시보드 "텍스트" 변수는 배포 때 지워진다.
+
 ### Translation (`api/_translate.js`)
 
 미디어 탭의 영어 원문(뉴스 헤드라인·요약, Bluesky 본문, 유튜브 제목)을 서버에서 한국어로 바꿔 내려준다. 손대기 전에 알아야 할 것들:
