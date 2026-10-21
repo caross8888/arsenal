@@ -3291,6 +3291,10 @@ function homeBundle(){
 var DATA_SINGLE={}; DATA_SINGLE[FN+'/news']='news.json'; DATA_SINGLE[FN+'/social']='social.json'; DATA_SINGLE[FN+'/videos']='videos.json';
 function apiFetch(url, opts){
   var hm = !(opts && opts.fresh) && /\/football\?type=([A-Za-z]+)$/.exec(url);
+  // 1분이 지나면 묶음을 새로 받는다 — 예전엔 1분 뒤부터 항목마다 /api로 갔는데(탭을 다시 열 때 등), 그 응답의
+  // 가장자리 캐시가 1분이라 데이터센터마다 1분에 한 번씩 서버가 돌며 KV를 읽었다(실측: standings·fixtures·teamColors
+  // 매분). 운영에선 묶음이 데이터 파일(home.json, CDN)이라 Worker·KV가 안 돈다.
+  if(hm && HOME_TYPES.indexOf(hm[1])>=0 && DATA_BASE && _homeReq && Date.now()-_homeAt >= 60000) _homeReq = null;
   if(hm && HOME_TYPES.indexOf(hm[1])>=0 && (!_homeReq || Date.now()-_homeAt < 60000)){
     return homeBundle().then(function(b){ var part=b && b.parts && b.parts[hm[1]]; return part ? JSON.parse(JSON.stringify(part)) : apiFetchOne(url, opts); });   // 복사본 — 같은 항목을 두 곳에서 받아 각자 고쳐 써도 서로 안 섞이게
   }
