@@ -34,11 +34,11 @@ export function tournamentView(C){
   const last=C.hist.at(-1),form=last&&last.apps>=10?clamp((last.rating-6.8)*.12,-.1,.1):0;
   const p=wild?clamp(.12+(o-72)*.035+form,.05,.65):clamp(.30+(o-65)*.035+form,.05,.95);
   if(roll(C,'call|'+y+'|'+kind)>=p)return null;
-  return {kind,year:y,name:kind==='asian'?'아시안게임':'올림픽',wild,callProbability:Math.round(p*100),medalRange:kind==='asian'?'금메달 30~40%':'메달 8~15%'};
+  return {kind,year:y,name:kind==='asian'?'아시안게임':'올림픽',wild,callProbability:Math.round(p*100),medalRange:kind==='asian'?'금메달 50~70%':'메달 8~15%'};
 }
 export function resolveTournament(C,T,rating,actualPlace){
   if(!T)return null;
-  const strength=clamp((C.ovr-60)/35+(rating-7)*.15,0,1),p=T.kind==='asian'?.30+.10*strength:.08+.07*strength;
+  const strength=clamp((C.ovr-60)/35+(rating-7)*.15,0,1),p=T.kind==='asian'?.50+.20*strength:.08+.07*strength;
   const qualifyingFinish=roll(C,'medal|'+T.year+'|'+T.kind)<p;
   const place=actualPlace??(T.kind==='asian'?(qualifyingFinish?1:2+Math.floor(roll(C,'place|'+T.year)*5)):(qualifyingFinish?1+Math.floor(roll(C,'place|'+T.year)*3):4+Math.floor(roll(C,'place|'+T.year)*5)));
   const medal=place<=3;
