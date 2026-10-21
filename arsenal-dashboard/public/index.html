@@ -7598,7 +7598,7 @@ function openMatchModal(m, isAuto, opts){
   var matchUrl = isSettledMatch(m) ? matchDetailUrl(m)
     : FN+'/match?id='+m.id+'&slug='+slug+'&_='+Date.now();
   Promise.all([
-    fetch(matchUrl).then(function(r){ return r.json(); }),
+    m.status==='IN_PLAY' ? liveDetailFetch(m, matchUrl) : fetch(matchUrl).then(function(r){ return r.json(); }),
     oppInjPromise,
     predPromise,
     predXIPromise,
@@ -12388,7 +12388,7 @@ function loadLiveExpand(m, panel){
   }
 
   var matchApiUrl = FN+'/match?id='+m.id+'&slug='+slug;
-  (window.apiFetch||apiFetch)(matchApiUrl).then(function(data){
+  liveDetailFetch(m, matchApiUrl).then(function(data){
     var el = document.getElementById('live-detail-'+m.id);
     if(!el) return;
     el.innerHTML = buildLiveDetail(applyCardTeamNames(data, m));
@@ -12421,7 +12421,7 @@ function updateCardCommentary(m){
   // 주심·경기장은 경기 중 안 바뀌므로 비어 있을 때 한 번만 받는다(예전엔 30초마다 서버를 불렀다)
   var refEl0 = document.getElementById('fix-referee-'+m.id);
   if(refEl0 && refEl0.textContent.trim()) return;
-  (window.apiFetch||apiFetch)(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
+  liveDetailFetch(m, FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
     // 주심·경기장도 상세보기를 펼치기 전부터 바로 채운다(예전엔 상세보기를
     // 펼쳐서 loadLiveExpand가 도는 시점까지 빈 채로 있었음).
     var refEl = document.getElementById('fix-referee-'+m.id);
@@ -12474,7 +12474,7 @@ function startLiveExpandPolling(m, panel){
     var comp = m.competition&&m.competition.short || 'PL';
     var slug = comp==='UCL'?'uefa.champions':comp==='FAC'?'eng.fa':comp==='EFL'?'eng.league_cup':comp==='CS'?'eng.charity':comp==='FR'?'club.friendly':'eng.1';
     // 매치 상세 갱신
-    (window.apiFetch||apiFetch)(FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
+    liveDetailFetch(m, FN+'/match?id='+m.id+'&slug='+slug+'&nocache=1').then(function(data){
       var el = document.getElementById('live-detail-'+m.id);
       if(!el) return;
       // 응답이 도착한 시점의 선택을 기억해야 요청 중에 바꾼 탭도 안 튄다
@@ -12786,7 +12786,9 @@ function loadLiveCommentary(matchId, btn){
   var panel = scope ? scope.querySelector('[id="live-panel-commentary"]') : document.getElementById('live-panel-commentary');
   if(!panel || panel.dataset.loaded==='1' || panel.dataset.loading==='1') return;
   panel.dataset.loading='1';
-  (window.apiFetch||apiFetch)(FN+'/match?id='+encodeURIComponent(matchId)+'&commentary=1')
+  // 라이브 중 ESPN에서 직접 받고 있는 경기면(30초마다 _liveCommentary가 갱신된다) 서버를 부르지 않는다
+  (_espnEv[matchId] && _liveCommentary[matchId] ? Promise.resolve({commentary: _liveCommentary[matchId]})
+    : (window.apiFetch||apiFetch)(FN+'/match?id='+encodeURIComponent(matchId)+'&commentary=1'))
     .then(function(d){
       var list=(d&&d.commentary)||[];
       panel.dataset.loaded='1';
@@ -13054,6 +13056,30 @@ function espnLiveOf(m){
     });
   }).catch(function(){ return null; });
 }
+// 펼친 라이브 상세도 ESPN에서 직접(사용자 지정 2026-10 — 펼친 사람마다 30초마다 서버를 불렀다).
+// 변환은 서버의 ESPN 예비 경로와 같은 파일(public/live/espn-match.js)을 쓴다. 평점·xG·결장자처럼 Fotmob에만 있는
+// 항목은 빠진다. 진행 중 경기가 아니거나, 카드와 ESPN의 홈/원정이 다르거나(중립 경기 등), 실패하면 null → 서버.
+var ESPN_MATCH_JS = '/live/espn-match.js?v=1', _espnMatchMod = null;
+function espnDetailOf(m){
+  if(!m || m.status !== 'IN_PLAY') return Promise.resolve(null);
+  return espnEventFor(m).then(function(ev){
+    if(!ev) return null;
+    if(!_espnMatchMod) _espnMatchMod = import(ESPN_MATCH_JS).catch(function(e){ _espnMatchMod = null; throw e; });
+    return Promise.all([_espnMatchMod, espnFetch('https://site.api.espn.com/apis/site/v2/sports/soccer/'+ev.slug+'/summary?event='+ev.id)]).then(function(r){
+      var d = r[0].espnToMatch(r[1], m.id);
+      var espnArsHome = String(d.homeTeam&&d.homeTeam.id) === ESPN_ARSENAL;
+      var cardArsHome = String(m.homeTeam&&m.homeTeam.id)==='9825' || /arsenal/i.test(m.homeTeam&&m.homeTeam.name||'');
+      if(espnArsHome !== cardArsHome) return null;
+      d.source = 'espn-live';
+      if(d.commentary && d.commentary.length) _liveCommentary[m.id] = d.commentary;
+      return d;
+    });
+  }).catch(function(){ return null; });
+}
+// 라이브 상세 받기 — 진행 중이면 ESPN, 아니면(또는 ESPN 실패) 서버 주소로
+function liveDetailFetch(m, url){
+  return espnDetailOf(m).then(function(d){ return d || (window.apiFetch||apiFetch)(url); });
+}
 function applyCardComment(m, list){
   if(list.length) _liveCommentary[m.id] = list;
   var el2 = document.getElementById('fix-comment-'+m.id), latest = list[0];
@@ -13131,7 +13157,7 @@ function liveDesktopRefresh(liveIds){
         if(stillLive){
           var slugPoll = COMP_SLUG_MAP[liveRef.competition&&liveRef.competition.short]||'eng.1';
           // 주소에 시각을 붙이지 않는다 — 같은 주소여야 서버 가장자리 캐시(20초)를 보는 사람끼리 나눠 쓴다
-          fetch(FN+'/match?id='+liveRef.id+'&slug='+slugPoll).then(function(r){ return r.json(); }).then(function(freshData){
+          liveDetailFetch(liveRef, FN+'/match?id='+liveRef.id+'&slug='+slugPoll).then(function(freshData){
             if(!panelContent._liveMatchRef || panelContent._liveMatchRef.id!==liveRef.id) return; // 그 사이 다른 경기로 바뀌었으면 버림
             if(freshData.error) return;
             var viewStatePc = captureLiveView(panelContent);
