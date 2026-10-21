@@ -10647,7 +10647,7 @@ var CR_PK_WARM=false;
 function crPkWarm(){
  if(CR_PK_WARM)return;CR_PK_WARM=true;
  var go=function(){
-  ['/career/penalty.html?v=10','/career/penalty-rules.js?v=1'].forEach(function(u){fetch(u,{priority:'low'}).catch(function(){CR_PK_WARM=false;});});
+  ['/career/penalty.html?v=11','/career/penalty-rules.js?v=1'].forEach(function(u){fetch(u,{priority:'low'}).catch(function(){CR_PK_WARM=false;});});
   ['stadium','ready','dive','catch','jump'].forEach(function(n){var im=new Image();im.src='/img/career-penalty/'+n+'.webp?v=2';});
  };
  if(window.requestIdleCallback)requestIdleCallback(go,{timeout:3000});else setTimeout(go,1500);
@@ -10762,7 +10762,7 @@ function crSfPenaltyOpen(m){
  var S=CR.sf,N=S&&S.nat;if(!N||N.pk)return;clearTimeout(N.timer);if(N.bracketFrame)cancelAnimationFrame(N.bracketFrame);if(N.bracketSettle)N.bracketSettle();
  var P=CR.v.shootout;if(!P||P.key!==m.pk.key){gameToast('승부차기 정보를 다시 확인해 주세요.');return;}
  var box=document.createElement('div');box.id='crPenaltyOverlay';box.className='cr-penalty-overlay';box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');box.setAttribute('aria-label',N.w.name+' '+m.stage+' 승부차기');box.onclick=function(e){e.stopPropagation();};
- var frame=document.createElement('iframe');frame.title='슛 방향과 파워를 조절하는 승부차기';frame.src='/career/penalty.html?v=10';box.append(frame);N.pk={key:P.key,frame:frame,busy:false,resolved:false};
+ var frame=document.createElement('iframe');frame.title='슛 방향과 파워를 조절하는 승부차기';frame.src='/career/penalty.html?v=11';box.append(frame);N.pk={key:P.key,frame:frame,busy:false,resolved:false};
  frame.onload=function(){if(CR.sf!==S||S.nat!==N)return;frame.contentWindow.postMessage({type:'career-penalty-config',match:Object.assign({},P,{player:CR.v.player.name,ourName:P.ourName||crNat(P.nation).n,theirName:P.theirName||CR_NAT_NAME[P.opp]||crNat(P.opp).n})},location.origin);};
  document.querySelector('#crTov .cr-sf').append(box);
 }
