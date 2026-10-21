@@ -1361,10 +1361,16 @@ const UNAVAIL_TTL_SEC = 2 * 60 * 60;
 // 수동 출장정지(사용자 지정) — Fotmob 결장자 목록이 정지를 늦게 올릴 때 경기별로 직접 넣는다. 정지 경기 수를
 // 코드로 추측하지 않으려고 자동 판정(직전 경기 퇴장 → 정지)은 뺐다. {Fotmob 경기 id: [{team: Fotmob 팀 id, id: 선수 id, name}]}.
 // 경기가 끝나면 지워도 된다. Fotmob이 나중에 같은 선수를 올리면 중복으로 안 들어간다.
-const MANUAL_SUSPENSIONS = {
-  // 챔스 바이에른–아스날(2026-10-21): 올리세, 직전 챔스 바이킹전 경고 2회 퇴장(Fotmob 미리보기 기사에 "suspended")
-  '6106238': [{team: '9823', id: '1029063', name: 'Michael Olise'}],
+// type: 'suspension'(출장 정지, 기본값) · 'absent'(그 밖의 결장 — 가족 사유 등, 화면엔 "결장"). note는 화면 설명.
+const MANUAL_ABSENCES = {
+  '6106238': [
+    // 챔스 바이에른–아스날(2026-10-21): 올리세, 직전 챔스 바이킹전 경고 2회 퇴장(Fotmob 미리보기 기사에 "suspended")
+    {team: '9823', id: '1029063', name: 'Michael Olise'},
+    // 같은 경기: 키미히, 가족 별세로 명단 제외(바이에른 공식 발표 당일, Fotmob 미반영)
+    {team: '9823', id: '460632', name: 'Joshua Kimmich', type: 'absent', note: '개인 사유'},
+  ],
 };
+const UNAVAIL_KEY = id => `unavail:v5:${id}`;   // v5: 수동 결장에 type(absent) 추가 — 키미히가 빠진 v4 캐시를 버리려고 올렸다
 
 // 같은 인스턴스 안에서 1분은 메모리로 — 예상 XI·승부 예측·부상자 카드가 한 모달에서 같은 경기 결장자를 각자 읽고,
 // 다가오는 경기 3개 것까지 합치느라(freshInjuriesFor) 한 번에 KV GET이 5회씩 났다.
@@ -1378,7 +1384,7 @@ async function fetchMatchUnavailable(matchId){
   return data;
 }
 async function fetchMatchUnavailableKV(matchId){
-  const key = `unavail:v4:${matchId}`;   // v2: 항목마다 갱신 시각(upd)을 담는다 · v4: 수동 출장정지(MANUAL_SUSPENSIONS) — v3의 자동 퇴장 판정 결과를 버리려고 올렸다
+  const key = UNAVAIL_KEY(matchId);   // v2: 항목마다 갱신 시각(upd)을 담는다 · v4: 수동 출장정지 — v3의 자동 퇴장 판정 결과를 버리려고 · v5: 수동 결장(MANUAL_ABSENCES)에 type 추가
   const hit = await kvGetJSON(key);
   if(hit) return hit;
   const md = await fotmobJSON(`https://www.fotmob.com/api/data/matchDetails?matchId=${matchId}`);
@@ -1399,9 +1405,9 @@ async function fetchMatchUnavailableKV(matchId){
     })),
   });
   const out = {home: pick(L.homeTeam, g.homeTeam), away: pick(L.awayTeam, g.awayTeam)};
-  for(const m of MANUAL_SUSPENSIONS[String(matchId)] || []){
+  for(const m of MANUAL_ABSENCES[String(matchId)] || []){
     const t = [out.home, out.away].find(x => x.id === m.team);
-    if(t && !t.out.some(o => o.id === m.id)) t.out.push({id: m.id, name: m.name, type: 'suspension', expectedReturn: '', upd: ''});
+    if(t && !t.out.some(o => o.id === m.id)) t.out.push({id: m.id, name: m.name, type: m.type || 'suspension', expectedReturn: m.note || '', upd: ''});
   }
   await kvSetJSON(key, out, UNAVAIL_TTL_SEC);
   return out;
@@ -1435,7 +1441,7 @@ async function freshInjuriesFor(teamId, exceptMatchId){
   const ids = (await upcomingMatchIds(String(teamId)).catch(() => [])).filter(id => id !== String(exceptMatchId || ''));
   // 경기마다 GET 하지 않고 한 번에(부상자 탭 크론이 5분마다 3회씩 읽었다). 1분 메모리에 있는 건 건너뛴다.
   const cold = ids.filter(id => !(_unavailMem[id] && Date.now() - _unavailMem[id].ts < 60 * 1000));
-  if(cold.length > 1) await kvPrefetch(cold.map(id => `unavail:v4:${id}`)).catch(() => {});
+  if(cold.length > 1) await kvPrefetch(cold.map(UNAVAIL_KEY)).catch(() => {});
   const lists = await Promise.all(ids.map(id => fetchMatchUnavailable(id).then(u => {
     const side = ['home', 'away'].map(k => u[k]).find(t => t && String(t.id) === String(teamId));
     return side ? side.out : [];
@@ -1506,6 +1512,7 @@ function mergeMatchUnavailable(list, outArr){
     const i = merged.findIndex(p => isSamePerson([p.fullName, p.name], u.name));
     if(i >= 0){
       if(u.type === 'suspension') merged[i] = Object.assign({}, merged[i], {status: 's', chance: null});
+      else if(u.type === 'absent') merged[i] = Object.assign({}, merged[i], {status: 'u', chance: null, news: u.expectedReturn || merged[i].news});
       continue;
     }
     merged.push({
@@ -1514,7 +1521,7 @@ function mergeMatchUnavailable(list, outArr){
       fullName: u.name,
       position: '',
       photo: `https://images.fotmob.com/image_resources/playerimages/${u.id}.png`,
-      status: u.type === 'suspension' ? 's' : (/doubt/i.test(u.expectedReturn) ? 'd' : 'i'),
+      status: u.type === 'suspension' ? 's' : u.type === 'absent' ? 'u' : (/doubt/i.test(u.expectedReturn) ? 'd' : 'i'),
       news: u.expectedReturn || '',
       chance: null,
     });
@@ -1543,7 +1550,7 @@ function ctxWithMatchUnavailable(ctx, outArr){
   for(const u of outArr){
     const i = list.findIndex(p => isSamePerson([p.name], u.name));
     if(i >= 0){
-      if(u.type === 'suspension') list[i] = Object.assign({}, list[i], {type: 'suspension', doubtful: false, missWeight: 1});
+      if(u.type === 'suspension' || u.type === 'absent') list[i] = Object.assign({}, list[i], {type: u.type, doubtful: false, missWeight: 1});
       continue;
     }
     // 포지션을 안 줘서 미드필더(2)로 둔다 — injuryFactors가 모르는 포지션에 쓰는 기본값과 같다.
@@ -1684,7 +1691,7 @@ async function predxiTeam(teamId, outIds, matchId){
 }
 
 async function buildPredictedXI(matchId){
-  // 결장자는 부상자 카드·승부 예측과 같은 캐시(unavail:v4 + 다른 경기 최신 부상)를 본다 — 세 화면이 같은 명단을
+  // 결장자는 부상자 카드·승부 예측과 같은 캐시(unavail + 다른 경기 최신 부상)를 본다 — 세 화면이 같은 명단을
   // 보게 하려는 것이다. 매 요청마다 여기서 다시 읽으므로, 결장자가 갱신되면 피치도 같이 바뀐다.
   const unavail = await fetchMatchUnavailableMerged(matchId);
   const sides = [
@@ -3089,8 +3096,8 @@ export default async function handler(req, res) {
       // 두 번째는 다가오는 경기들의 결장자 — 어느 경기인지가 첫 번째 결과(nextm)에 있다.
       try {
         const pre = await kvPrefetch([`teamCtx:${homeId}`, `teamCtx:${awayId}`, `leagueStrength:${compLeagueId}`,
-          'teamColorsByMode', `nextm:v1:${homeId}`, `nextm:v1:${awayId}`, ...(predMatch ? [`unavail:v4:${predMatch}`] : [])]);
-        const more = [pre[4], pre[5]].flat().filter(Boolean).map(id => `unavail:v4:${id}`);
+          'teamColorsByMode', `nextm:v1:${homeId}`, `nextm:v1:${awayId}`, ...(predMatch ? [UNAVAIL_KEY(predMatch)] : [])]);
+        const more = [pre[4], pre[5]].flat().filter(Boolean).map(UNAVAIL_KEY);
         if(more.length) await kvPrefetch(more);
       } catch(_){ /* 못 받으면 아래가 키마다 읽는다 */ }
       const [homeCtx, awayCtx] = await Promise.all([
