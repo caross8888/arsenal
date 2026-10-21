@@ -39,6 +39,15 @@ const OBJ_OPTS = {httpMetadata: {contentType: 'application/json; charset=utf-8',
 async function readFile(bucket, file){
   try { const o = await bucket.get(file); return o ? await o.json() : null; } catch(_){ return null; }
 }
+// R2가 가끔 일시 오류(10001 internal error)를 낸다. 저장 하나가 실패해도 실행 전체가 끊기지 않게, 한 번 더 시도하고
+// 그래도 안 되면 그 파일만 건너뛴다(다음 분에 다시 만든다).
+async function put(bucket, file, body){
+  for(let i = 0; i < 2; i++){
+    try { await bucket.put(file, body, OBJ_OPTS); return true; }
+    catch(e){ if(i) console.error('[snapshot] 저장 실패 ' + file + ': ' + e.message); }
+  }
+  return false;
+}
 const age = at => at ? Date.now() - Date.parse(at) : Infinity;
 const due = (at, ttl) => age(at) >= ttl * SEC;
 
@@ -84,21 +93,19 @@ export async function runSnapshots(bucket, call){
       } else {
         const f = j.f;
         if(f.board && await boardSame(f)){
-          await bucket.put(f.file, JSON.stringify({...f.old, at: now}), OBJ_OPTS);
+          await put(bucket, f.file, JSON.stringify({...f.old, at: now}));
           continue;
         }
         const data = await call(f.name, f.query).catch(() => null);
         if(!data || data.error) continue;
         if(f.list && !(Array.isArray(data[f.list]) && data[f.list].length)) continue;   // 빈 목록 = 출처가 잠깐 실패
         if(f.old && JSON.stringify(f.old.data) === JSON.stringify(data) && !due(f.old.at, HEARTBEAT)) continue;
-        await bucket.put(f.file, JSON.stringify({v: 1, at: now, data, ...(f.board && boardVer != null ? {ver: boardVer, built: now} : {})}), OBJ_OPTS);
-        done.push(f.file);
+        if(await put(bucket, f.file, JSON.stringify({v: 1, at: now, data, ...(f.board && boardVer != null ? {ver: boardVer, built: now} : {})}))) done.push(f.file);
       }
     }
   } finally { meter.restore(); }
   if(homeChanged || !prev || due(prev.at, HEARTBEAT)){
-    await bucket.put('home.json', JSON.stringify({v: 1, at: now, parts}), OBJ_OPTS);
-    done.push('home');
+    if(await put(bucket, 'home.json', JSON.stringify({v: 1, at: now, parts}))) done.push('home');
   }
   console.log('[snapshot] 갱신 ' + (done.join(', ') || '없음') + (skipped.length ? ' · 다음 분으로 ' + skipped.join(', ') : '') + ' · 외부 요청 ' + meter.used());
 }
