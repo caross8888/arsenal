@@ -50,10 +50,11 @@ const SINGLE = () => {
     {file: 'news.json',   name: 'news',   query: {}, ttl: 300, list: 'articles'},
     {file: 'social.json', name: 'social', query: {}, ttl: 300, list: 'posts'},
     {file: 'videos.json', name: 'videos', query: {}, ttl: 300, list: 'videos'},
-    {file: 'board-ALL.json', name: 'career', query: {a: 'board'}, ttl: 300, board: true},
-    {file: 'board-FW.json',  name: 'career', query: {a: 'board', p: 'FW'}, ttl: 300, board: true},
-    {file: 'board-MF.json',  name: 'career', query: {a: 'board', p: 'MF'}, ttl: 300, board: true},
-    {file: 'board-DF.json',  name: 'career', query: {a: 'board', p: 'DF'}, ttl: 300, board: true},
+    // 랭킹 4종은 career?a=boards 한 번으로 같이 만들어 같이 올린다(board: 응답 안의 키)
+    {file: 'board-ALL.json', ttl: 300, board: 'ALL'},
+    {file: 'board-FW.json',  ttl: 300, board: 'FW'},
+    {file: 'board-MF.json',  ttl: 300, board: 'MF'},
+    {file: 'board-DF.json',  ttl: 300, board: 'DF'},
     {file: `holidays-${y}.json`, name: 'holidays', query: {year: String(y)}, ttl: 86400},
   ];
 };
@@ -105,7 +106,7 @@ export async function runSnapshots(bucket, call){
   ].sort((a, b) => (b.first - a.first) || (b.age - a.age));
 
   const meter = countFetches();
-  let homeChanged = false, boardVer;   // 랭킹 버전 — 이번 실행에서 처음 필요할 때 한 번만 읽는다
+  let homeChanged = false, boardVer, boardsDone = false;   // 랭킹 버전 — 이번 실행에서 처음 필요할 때 한 번만 읽는다
   // 랭킹은 등록이 있을 때만 바뀐다. 버전이 그대로면 다시 읽지 않고(KV 16회 → 1회) 직전 내용에 시각만 새로 찍는다.
   // 닉네임 변경은 버전을 안 올리므로 1시간이 지나면 버전과 상관없이 다시 만든다.
   const boardSame = async f => {
@@ -122,15 +123,27 @@ export async function runSnapshots(bucket, call){
         parts[j.type] = {at: now, built: now, data};
       } else {
         const f = j.f;
+        if(f.board && boardsDone) continue;   // 이번 실행에서 4종을 이미 같이 올렸다
         if(f.board && await boardSame(f)){
           await put(bucket, f.file, JSON.stringify({...f.old, at: now}));
+          continue;
+        }
+        if(f.board){
+          // 하나라도 다시 만들어야 하면 4종을 한 번에 받아 전부 올린다 — 따로 만들면 KV 16회, 같이 만들면 7회.
+          // 같이 올려야 다음부터 보관 시간도 같이 돈다(따로 돌면 몇 분 차이로 두 번 다시 만들었다 — 실측).
+          const all = await call('career', {a: 'boards'}).catch(() => null);
+          if(!all || all.error || !all.ALL) continue;
+          boardsDone = true;
+          for(const g of singles.filter(x => x.board && all[x.board])){
+            if(await put(bucket, g.file, JSON.stringify({v: 1, at: now, data: all[g.board], ...(boardVer != null ? {ver: boardVer, built: now} : {})}))) done.push(g.file);
+          }
           continue;
         }
         const data = await call(f.name, f.query).catch(() => null);
         if(!data || data.error) continue;
         if(f.list && !(Array.isArray(data[f.list]) && data[f.list].length)) continue;   // 빈 목록 = 출처가 잠깐 실패
         if(f.old && JSON.stringify(f.old.data) === JSON.stringify(data) && !due(f.old.at, HEARTBEAT)) continue;
-        if(await put(bucket, f.file, JSON.stringify({v: 1, at: now, data, ...(f.board && boardVer != null ? {ver: boardVer, built: now} : {})}))) done.push(f.file);
+        if(await put(bucket, f.file, JSON.stringify({v: 1, at: now, data}))) done.push(f.file);
       }
     }
   } finally { meter.restore(); }
