@@ -7,3 +7,5 @@
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 /career/*
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/live/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
