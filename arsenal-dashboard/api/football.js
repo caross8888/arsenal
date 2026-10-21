@@ -2137,11 +2137,20 @@ export default async function handler(req, res) {
       }
       const requestedRound = parseInt(req.query.round, 10) || seasonData.latestFinishedRound;
       const roundMatches = seasonData.matches.filter(m => m.round === requestedRound);
+      // 앞으로 8일 안(진행 중 포함)의 PL 킥오프 시각 — 데이터 파일 크론이 순위표를 경기 시간대에만
+      // 1분마다 다시 만들 때 쓴다(cloudflare/snapshots.js). 화면은 안 쓴다.
+      const nowMs = Date.now();
+      const kickoffs = seasonData.matches.filter(m => {
+        if(m.status === 'FINISHED' || m.status === 'CANCELED') return false;
+        const d = Date.parse(m.utcDate) - nowMs;
+        return d > -3 * 3600 * 1000 && d < 8 * 86400 * 1000;
+      }).map(m => m.utcDate);
       return res.json({
         round: requestedRound,
         maxRound: seasonData.maxRound,
         latestFinishedRound: seasonData.latestFinishedRound,
         matches: roundMatches,
+        kickoffs: [...new Set(kickoffs)],
       });
 
     } else if(type === 'team'){
