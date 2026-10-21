@@ -70,7 +70,15 @@ async function kvCmd(cmd) {
 }
 
 // 1군 명단 + 감독 이름으로 키워드 목록. Fotmob을 못 부르면 FALLBACK_NAMES(KV엔 안 넣음).
+// 같은 인스턴스에선 10분 메모리로 — 뉴스·SNS 크론이 5분마다 각각 KV를 읽었다. 명단은 몇 달에 한 번 바뀐다.
+let memo = null, memoAt = 0;
 export async function loadTerms() {
+  if (memo && Date.now() - memoAt < 10 * 60 * 1000) return memo;
+  const terms = await loadTermsKV();
+  memo = terms; memoAt = Date.now();
+  return terms;
+}
+async function loadTermsKV() {
   const hit = await kvCmd(['GET', 'arsenalTerms']);
   if (hit) { try { return JSON.parse(hit); } catch (_) {} }
   let names = FALLBACK_NAMES;

@@ -157,6 +157,7 @@ const feedCache = { list: null, source: null, ts: 0 };
 const outCache = new Map();
 // 목록 소스가 통째로 죽었을 때 돌려줄 마지막 성공 응답(기본 20건짜리만 보관한다)
 let lastGood = null;
+let lastSaved = { ids: '', ts: 0 };   // 마지막으로 KV에 쓴 목록
 const TTL = 60 * 1000;
 
 export default async function handler(req, res) {
@@ -229,6 +230,15 @@ export default async function handler(req, res) {
 
   outCache.set(limit, { data: result, ts: Date.now() });
   // 장애 대비 보관은 기본 목록만 — 더보기 응답까지 덮어쓰면 대체 화면이 들쭉날쭉해진다.
-  if (limit === PAGE) { lastGood = result; await kvSetJSON(LAST_GOOD_KEY, result); }
+  // KV에는 목록(영상 id)이 바뀌었거나 이 인스턴스에서 6시간 넘게 안 썼을 때만 — "N분 전" 때문에 내용이 매번 달라
+  // 크론이 5분마다 SET 했다. 장애 대비용이라 조금 낡아도 된다.
+  if (limit === PAGE) {
+    lastGood = result;
+    const ids = result.videos.map((v) => v.videoId).join(',');
+    if (ids !== lastSaved.ids || Date.now() - lastSaved.ts > 6 * 3600 * 1000) {
+      await kvSetJSON(LAST_GOOD_KEY, result);
+      lastSaved = { ids, ts: Date.now() };
+    }
+  }
   return res.json(result);
 }
