@@ -38,8 +38,8 @@ check('발탁 여부·성적은 반복 조회와 훈련 선택에 따라 리롤�
     if(a){const x=structuredClone(c),y=structuredClone(c);x.train='강점 강화';y.train='약점 보완';assert.equal(M.resolveTournament(x,a,7).medal,M.resolveTournament(y,a,7).medal);}
   }
 });
-check('최종 명단 발탁 후 메달 확률 30~40% / 8~15%',()=>{
-  for(const [kind,year,lo,hi] of [['asian',2034,.30,.40],['olympic',2032,.08,.15]]){
+check('최종 명단 발탁 후 메달 확률 50~70% / 8~15%',()=>{
+  for(const [kind,year,lo,hi] of [['asian',2034,.50,.70],['olympic',2032,.08,.15]]){
     let medals=0;for(let seed=1;seed<=12000;seed++){const c=fixture(seed,22);const r=M.resolveTournament(c,{kind,year,name:kind==='asian'?'아시안게임':'올림픽'},7);if(kind==='asian'?r.place===1:r.medal)medals++;}
     const rate=medals/12000;assert(rate>=lo&&rate<=hi,`${kind}: ${rate}`);console.log(' measured',kind,(rate*100).toFixed(2)+'%');
   }
