@@ -7707,13 +7707,9 @@ function renderPredictCard(data, m){
 // 같은 경기에 대해서는 한 번만 던진다 — 모달을 여닫을 때마다 쌓이지 않게. 전역 플래그
 // 하나로 두면 리즈전에서 던진 뒤 릴전이 낡아 있어도 영영 안 던진다(이 앱은 SPA라 새로고침이
 // 드물다). 서버도 잠금으로 중복을 막지만, 쓸데없는 호출은 여기서 먼저 줄인다.
-var _aiRefreshFired = {};
-function requestAiRefresh(matchKey){
-  var k = matchKey || 'default';
-  if(_aiRefreshFired[k]) return;
-  _aiRefreshFired[k] = true;
-  fetch(FN+'/preview_ai?on=1').catch(function(){});
-}
+// → 지금은 아무것도 안 한다(사용자 지정 — DB 사용 줄이기). Cloudflare에선 방문자가 떠나면 30초 안에 끊겨 90초 걸리는
+// 생성을 못 마치고 DB만 수십 번 읽었다. 크론이 5분마다 돌며 만든다(cloudflare/worker.js CRONS). 호출부는 그대로 둔다.
+function requestAiRefresh(matchKey){}
 function predictCardHTML(p, data){
   var pct=function(v){ return Math.round(v*100); };
   var one=function(v){ return v.toFixed(1); };

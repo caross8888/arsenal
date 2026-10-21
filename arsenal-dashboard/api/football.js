@@ -1350,7 +1350,17 @@ const MANUAL_SUSPENSIONS = {
   '6106238': [{team: '9823', id: '1029063', name: 'Michael Olise'}],
 };
 
+// 같은 인스턴스 안에서 1분은 메모리로 — 예상 XI·승부 예측·부상자 카드가 한 모달에서 같은 경기 결장자를 각자 읽고,
+// 다가오는 경기 3개 것까지 합치느라(freshInjuriesFor) 한 번에 KV GET이 5회씩 났다.
+const _unavailMem = {};
 async function fetchMatchUnavailable(matchId){
+  const m = _unavailMem[matchId];
+  if(m && Date.now() - m.ts < 60 * 1000) return m.data;
+  const data = await fetchMatchUnavailableKV(matchId);
+  _unavailMem[matchId] = {data, ts: Date.now()};
+  return data;
+}
+async function fetchMatchUnavailableKV(matchId){
   const key = `unavail:v4:${matchId}`;   // v2: 항목마다 갱신 시각(upd)을 담는다 · v4: 수동 출장정지(MANUAL_SUSPENSIONS) — v3의 자동 퇴장 판정 결과를 버리려고 올렸다
   const hit = await kvGetJSON(key);
   if(hit) return hit;
@@ -1385,10 +1395,13 @@ async function fetchMatchUnavailable(matchId){
 // 있고 그보다 먼저 치르는 릴전·선수단 탭엔 없었다). 그 팀의 다가오는 경기들에서 갱신 시각(upd)이 있는
 // 부상 항목만 모아 다른 경기·선수단에 얹는다. 출장정지는 경기·대회마다 달라서 옮기지 않는다.
 const NEXT_MATCHES_TTL_SEC = 2 * 60 * 60, FRESH_LOOKAHEAD = 3, FRESH_DAYS = 21;
+const _nextmMem = {};
 async function upcomingMatchIds(teamId){
+  const m = _nextmMem[teamId];
+  if(m && Date.now() - m.ts < 60 * 1000) return m.data;
   const key = `nextm:v1:${teamId}`;
   const hit = await kvGetJSON(key);
-  if(hit) return hit;
+  if(hit){ _nextmMem[teamId] = {data: hit, ts: Date.now()}; return hit; }
   const td = await fetchTeamPayload(teamId);
   const now = Date.now();
   const ids = ((((td || {}).fixtures || {}).allFixtures || {}).fixtures || [])
@@ -1397,6 +1410,7 @@ async function upcomingMatchIds(teamId){
     .sort((a, b) => new Date(a.status.utcTime) - new Date(b.status.utcTime))
     .slice(0, FRESH_LOOKAHEAD).map(m => String(m.id));
   await kvSetJSON(key, ids, NEXT_MATCHES_TTL_SEC);
+  _nextmMem[teamId] = {data: ids, ts: Date.now()};
   return ids;
 }
 async function freshInjuriesFor(teamId, exceptMatchId){
