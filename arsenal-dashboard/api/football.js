@@ -1810,7 +1810,13 @@ export default async function handler(req, res) {
   // 방문 한 번에 이 엔드포인트만 8건). 앱 전환·새로고침·탭 이동으로 짧은 시간에 다시 들어오면 요청 0건.
   // 화면은 원래 localStorage 직전 값을 먼저 보여 주므로 최악이어도 몇 분 늦게 바뀌는 정도다.
   const browserSec = Math.min(cdnSec, BROWSER_MAX_SEC);
-  res.setHeader('Cache-Control', (nocache || isLivePlayerDiff)
+  // 라이브 폴링(일정 nocache=1)은 보는 사람마다 30초마다 오는데, no-store면 매번 핸들러가 돌아 Fotmob을 받고
+  // KV에 일정·순위·선수단을 다시 썼다(한 번에 KV 약 5회 — 50명이 90분 보면 수만 회). 모두에게 같은 응답이라
+  // 가장자리 캐시에 20초만 둔다: 데이터센터마다 20초에 한 번만 실제로 돌고, 점수는 최대 20초 늦다.
+  const livePoll = nocache && type === 'fixtures';
+  res.setHeader('Cache-Control', livePoll
+    ? 'public, max-age=0, s-maxage=20'
+    : (nocache || isLivePlayerDiff)
     ? 'no-store'
     : `public, max-age=${browserSec}, s-maxage=${cdnSec}, stale-while-revalidate=600`);
 
