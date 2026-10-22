@@ -13190,13 +13190,19 @@ var _kickoffTimer = null;
 var _kickoffCheckTimer = null;
 var _kickoffCheckCount = 0;
 var _kickoffNext = null;   // 감시 중인 다음 경기(ESPN 직접 확인용)
+var _kickoffList = [];     // 감시 대상 후보(끝난 경기를 빼고 다시 걸 때 쓴다)
+var _kickoffGen = 0;       // 감시를 멈추거나 다시 걸 때마다 +1 — 그 전에 떠난 ESPN 확인 응답은 버린다
+var KICKOFF_STALE_MS = 3*3600*1000;   // 킥오프가 이보다 오래 지난 "예정" 경기는 옛 캐시 값으로 보고 감시하지 않는다
 var KICKOFF_MARGIN_MS = 60*1000;      // 킥오프 1분 전부터 확인 시작
 var KICKOFF_CHECK_INTERVAL_MS = 60*1000; // 확인 간격
 var KICKOFF_CHECK_MAX = 25;           // 최대 확인 횟수(약 25분간 지연 커버)
 function scheduleKickoffWatch(upcomingMatches){
   stopKickoffWatch();
-  var next = (upcomingMatches||[])
-    .filter(function(m){return m.utcDate && m.tbd!=='postponed' && m.tbd!=='canceled' && m.tbd!=='tbd';})
+  var now = Date.now();
+  _kickoffList = (upcomingMatches||[]).filter(function(m){
+    return m.utcDate && m.tbd!=='postponed' && m.tbd!=='canceled' && m.tbd!=='tbd' && now - new Date(m.utcDate).getTime() < KICKOFF_STALE_MS;
+  });
+  var next = _kickoffList.slice()
     .sort(function(a,b){return new Date(a.utcDate)-new Date(b.utcDate);})[0];
   _kickoffNext = next || null;
   if(!next) return;
@@ -13208,6 +13214,7 @@ function stopKickoffWatch(){
   if(_kickoffTimer){clearTimeout(_kickoffTimer);_kickoffTimer=null;}
   if(_kickoffCheckTimer){clearInterval(_kickoffCheckTimer);_kickoffCheckTimer=null;}
   _kickoffCheckCount=0;
+  _kickoffGen++;
 }
 function startKickoffBurstCheck(){
   _kickoffTimer=null;
@@ -13220,8 +13227,13 @@ function checkKickoffTransition(){
   _kickoffCheckCount++;
   // 킥오프 전 1분마다 확인도 ESPN에서 직접 — 아직 시작 전('pre')이면 서버를 안 부른다.
   // 시작했거나 ESPN을 못 읽으면 서버 일정으로 확인한다(서버 응답은 가장자리 캐시 20초).
-  var nx = _kickoffNext;
+  // 이미 끝난 경기('post')면 서버를 부르지 않고 그 경기를 빼고 다음 경기로 다시 건다. 화면이 localStorage의
+  // 옛 일정(경기 전 값)을 먼저 그리면 끝난 경기를 "다음 경기"로 감시하게 되는데, 예전엔 그때마다 서버를
+  // 불러서 경기 다음 날 아침 재방문자마다 Fotmob·KV 쓰기 5회가 돌았다(실측: 20분에 14번).
+  var nx = _kickoffNext, gen = _kickoffGen;
   (nx && nx.utcDate ? espnLiveOf(nx) : Promise.resolve(null)).then(function(r){
+    if(gen !== _kickoffGen) return;   // 그 사이 새 일정으로 감시가 바뀌었다(캐시 → 새 응답)
+    if(r && r.state === 'post') return scheduleKickoffWatch(_kickoffList.filter(function(m){ return m.id !== nx.id; }));
     if(r && r.state === 'pre' && _kickoffCheckCount < KICKOFF_CHECK_MAX) return;
     kickoffServerCheck();
   });
