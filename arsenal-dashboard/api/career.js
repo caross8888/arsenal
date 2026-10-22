@@ -1,6 +1,6 @@
 // api/career.js — 미니게임 "커리어 모드"(선수 한 명의 커리어 키우기)
 //
-// 계산은 public/career/sim-v1·v2·v3으로 고정한다. 현재 화면은 v2, v3은 성인 로컬 진행용 서버 경로만 먼저 준비한다.
+// 계산은 public/career/sim-v1·v2·v3으로 고정한다. 새 v3는 은퇴까지 로컬, 기존 v1/v2는 이전 서버 진행을 유지한다.
 // KV는 랭킹에만 쓴다(submit/board/card). 숨은 재능·구단 명성 숫자·발롱 점수 같은 숨김 값은
 // v1/v2 응답에 넣지 않는다. v3 확정은 로컬 계산용 평문 상태도 준다(local-adult-design.md).
 //
@@ -301,8 +301,8 @@ export default async function handler(req, res){
       if(!acct) return res.status(401).json({error: '랭킹 등록은 로그인 후에 할 수 있어요.', login: true});
       let C=load(body.token);
       if(C.simVersion===3){
-        C=L3.replayAdult(C,body.choices);
         if(!body.claim||!Number.isFinite(body.claim.score)||typeof body.claim.digest!=='string'||!/^[a-f0-9]{64}$/.test(body.claim.digest))bad('은퇴 결과 대조 정보가 올바르지 않아요.');
+        C=L3.replayAdult(C,body.choices);
         const digest=await stateDigest(C);
         if(body.claim.score!==C.score||body.claim.digest!==digest){
           // 엔진 종류만 남긴다. 원문 UA·선택 기록·닉네임은 로그에 넣지 않는다.
