@@ -39,7 +39,8 @@ for(let i=0;i<2000;i++){
 }
 const old=makeCase(11,1),next={pick:null,trait:old.state.traitOffer?.length?0:null};
 const result=await call({...old.record,next});assert.equal(open(result.token).simVersion,undefined,'v1 records still use original rules');
-await call({...old.record,version:3,next},400);
+// v3가 추가됐으므로 미지원 버전 검사는 다음 버전으로 유지한다.
+await call({...old.record,version:4,next},400);
 // A v2 invalid record must remain a 400 input error, not a different-class 500.
 const invalid=structuredClone(makeCase(10,2).record);invalid.choices.find(c=>c.a==='season').train='invalid';await call({...invalid,next},400);
 console.log('PASS talent rates: gen +1pp, wonder +1pp, prospect unchanged, normal -2pp; 1,000,000 sampled rolls; 2,000 v2 replays; v1 frozen and API version compatibility');
