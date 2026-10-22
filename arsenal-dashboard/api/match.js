@@ -47,9 +47,11 @@ function isSettled(data){
   if(!data || data.status !== 'Full Time' || !data.utcDate) return false;
   return Date.now() - new Date(data.utcDate).getTime() > 24 * 60 * 60 * 1000;
 }
-// 브라우저가 다시 요청조차 안 하게 만드는 헤더 — 불변 데이터에만 쓴다.
+// 브라우저가 다시 요청조차 안 하게 만드는 헤더 — 불변 데이터에만 쓴다. s-maxage는 가장자리 캐시(cloudflare/worker.js)용 —
+// 빠져 있으면 공유 캐시에 안 남아, 방문자마다 메인 화면이 미리 받는 지난 경기를 서버가 다시 읽었다(실측: 하루 KV GET 약 800회).
+// 종료 직후(평점 확정 전)의 10분 캐시도 같은 이유로 s-maxage를 같이 붙인다.
 function setImmutable(res){
-  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=2592000, immutable');
 }
 
 // ttlSec이 없으면 만료 없이 영구 저장
@@ -537,7 +539,7 @@ export default async function handler(req, res) {
     // 지난 8경기가 브라우저에 안 남고 방문할 때마다 다시 요청됐다(실측: 새로고침마다 match 8건+).
     const hit = cache[cacheKey].data;
     if (isSettled(hit)) setImmutable(res);
-    else if (hit && hit.status === 'Full Time') res.setHeader('Cache-Control', 'public, max-age=600');
+    else if (hit && hit.status === 'Full Time') res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
     else if (isLiveData(hit)) res.setHeader('Cache-Control', LIVE_CC);
     return res.json(hit);
   }
@@ -560,7 +562,7 @@ export default async function handler(req, res) {
     if (kvHit && !kvStale) {
       cache[cacheKey] = { data: kvHit, ts: Date.now() };
       if (isSettled(kvHit)) setImmutable(res);
-      else if (kvHit.status === 'Full Time') res.setHeader('Cache-Control', 'public, max-age=600');
+      else if (kvHit.status === 'Full Time') res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
       return res.json(kvHit);
     }
 
@@ -586,7 +588,7 @@ export default async function handler(req, res) {
           // 조정되므로, 브라우저엔 10분짜리 캐시를 준다 — 영구 저장은 막되
           // 다시 열 때 스피너는 안 뜨게.
           if (settled) setImmutable(res);
-          else res.setHeader('Cache-Control', 'public, max-age=600');
+          else res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600');
         } else if (isLiveData(fm)) res.setHeader('Cache-Control', LIVE_CC);
         return res.json(fm);
       }
