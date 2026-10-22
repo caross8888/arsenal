@@ -13,8 +13,39 @@ import preview_ai from '../arsenal-dashboard/api/preview_ai.js';
 import social from '../arsenal-dashboard/api/social.js';
 import videos from '../arsenal-dashboard/api/videos.js';
 import {runSnapshots} from './snapshots.js';
+import {AsyncLocalStorage} from 'node:async_hooks';
 
 const HANDLERS = {career, football, game, holidays, maintenance, match, news, pick, preview_ai, social, videos};
+
+// ── KV 사용량 기록(사용자 지정 — 모니터 조각 대신 하루 전체를 엔드포인트별로 보려고) ──
+// 실행 하나(요청·뒤에서 하는 갱신·크론 항목)마다 Upstash 명령 수와 외부 요청 수를 세어, KV를 쓴 실행만 관찰 가능성
+// 로그에 한 줄 남긴다({kvlog, ep, kv, ext, fam}). 로그는 무료이고 KV를 더 쓰지 않는다. 대시보드 Workers 로그에서
+// kvlog로 걸러 ep별 kv 합계를 보면 된다. 같은 인스턴스의 요청이 동시에 돌아도 섞이지 않게 AsyncLocalStorage로 나눈다.
+const usage = new AsyncLocalStorage();
+function countFetch(input, init){
+  const st = usage.getStore();
+  if(!st) return;
+  st.ext++;
+  try {
+    const u = new URL(typeof input === 'string' ? input : input.url);
+    if(!/upstash\.io$/.test(u.host)) return;
+    const b = init && typeof init.body === 'string' ? JSON.parse(init.body) : null;
+    const cmds = Array.isArray(b) ? (Array.isArray(b[0]) ? b : [b]) : [[u.pathname.split('/')[1] || '?', u.pathname.split('/')[2]]];
+    for(const c of cmds){
+      st.kv++;
+      const fam = String(c[1] ?? '').split(':')[0] || String(c[0]);
+      st.fam[fam] = (st.fam[fam] || 0) + 1;
+    }
+  } catch(_){}
+}
+function withUsage(ep, fn){
+  const st = {ep, kv: 0, ext: 0, fam: {}};
+  return usage.run(st, () => Promise.resolve().then(fn).finally(() => {
+    if(st.kv) console.log({kvlog: 1, ep: st.ep, kv: st.kv, ext: st.ext, fam: st.fam});
+  }));
+}
+// 엔드포인트 이름 + 갈래(type/a) — football:preview, career:boards처럼
+const epOf = (name, query) => name + ((query && (query.type || query.a)) ? ':' + (query.type || query.a) : '');
 
 // 핸들러가 자기 사이트의 정적 파일(/data/players.json 등)을 fetch로 받는 곳이 있다. workers.dev에서
 // Worker가 자기 주소를 다시 부르면 막히므로, 같은 주소의 /api 밖 요청은 정적 파일 저장소(ASSETS)에서 바로 꺼낸다.
@@ -24,6 +55,7 @@ function patchSelfFetch(env, host){
   patched = true;
   const outer = globalThis.fetch;
   globalThis.fetch = (input, init) => {
+    countFetch(input, init);
     try {
       const u = new URL(typeof input === 'string' ? input : input.url);
       if(u.host === host && !u.pathname.startsWith('/api/')) return env.ASSETS.fetch(new Request(u, init));
@@ -87,7 +119,7 @@ const CRON_HOST = 'arsenal.caross8888.workers.dev';
 async function callHandler(name, query){
   const req = {method: 'GET', url: `/api/${name}`, query, body: undefined, headers: {host: CRON_HOST, 'x-forwarded-host': CRON_HOST}};
   const {res, headers, finished} = vercelRes();
-  await Promise.resolve(HANDLERS[name](req, res)).then(() => res.end());
+  await withUsage('cron:snap:' + epOf(name, query), () => Promise.resolve(HANDLERS[name](req, res)).then(() => res.end()));
   const body = await finished;
   // 핸들러가 "저장하지 말라"고 한 응답(출처 전부 실패한 빈 목록 등)은 파일로 올리지 않는다 — CDN이 받던 규칙과 같다
   if(res.statusCode !== 200 || body == null || /no-store|private/i.test(headers.get('cache-control') || '')) return null;
@@ -116,10 +148,10 @@ async function runCron(cron, env){
   if(!job) return console.error('알 수 없는 크론', cron);
   patchSelfFetch(env, CRON_HOST);
   process.env.VERCEL_PROJECT_PRODUCTION_URL ||= CRON_HOST;
-  if(job.snapshot) return runSnapshots(env.DATA, callHandler);
+  if(job.snapshot) return withUsage('cron:snapshot', () => runSnapshots(env.DATA, callHandler));
   let query = job.query;
   if(job.plan){
-    const plan = await previewPlan(env.DATA);
+    const plan = await previewPlan(env.DATA);   // R2만 읽는다(KV 0)
     if(plan === 'skip') return;
     if(plan === 'flag') query = {...query, flag: '1'};
   }
@@ -127,7 +159,7 @@ async function runCron(cron, env){
   const req = {method: 'GET', url: `/api/${job.name}`, query, body: undefined,
     headers: {authorization: `Bearer ${secret}`, host: CRON_HOST, 'x-forwarded-host': CRON_HOST}};
   const {res, finished} = vercelRes();
-  await Promise.resolve(HANDLERS[job.name](req, res)).then(() => res.end());
+  await withUsage('cron:' + job.name + (query.flag ? ':flag' : ''), () => Promise.resolve(HANDLERS[job.name](req, res)).then(() => res.end()));
   const body = await finished;
   // 결과(짧은 리포트)는 관찰 가능성 로그에서 본다. 실패 코드면 error로 남겨 눈에 띄게 한다.
   (res.statusCode >= 400 ? console.error : console.log)(job.name, res.statusCode, String(body ?? '').slice(0, 1500));
@@ -151,11 +183,11 @@ function edgePolicy(cc){
 }
 
 // 핸들러를 Vercel 형식으로 실행해 Response를 만든다.
-async function runHandler(request, url, name, handler, ctx){
+async function runHandler(request, url, name, handler, ctx, bg){
   const {res, headers, finished} = vercelRes();
   try {
     const req = vercelReq(request, url, await readBody(request));
-    const run = Promise.resolve(handler(req, res)).then(() => res.end());
+    const run = withUsage(epOf(name, req.query) + (bg ? ' (bg)' : ''), () => Promise.resolve(handler(req, res)).then(() => res.end()));
     // 방문자가 응답 전에 떠나면(앱 닫기·탭 이동) Cloudflare는 Worker를 그 자리에서 끊는다. Vercel 함수는
     // 끝까지 돈다. 번역처럼 "외부 유료 호출 → KV 저장" 순서인 일은 저장 전에 끊기면 돈만 내고 결과를
     // 잃어서, 다음 방문 때 같은 글을 또 번역한다. waitUntil로 연결이 끊겨도 핸들러는 끝까지 돌게 한다.
@@ -214,7 +246,7 @@ export default {
       // 보관 시간이 지난 응답 — 바로 주고, 이 인스턴스에서 아직 안 했으면 뒤에서 새로 만든다.
       if(!refreshing.has(key.url)){
         refreshing.add(key.url);
-        ctx.waitUntil(runHandler(new Request(key), url, name, handler, ctx).then(r => {
+        ctx.waitUntil(runHandler(new Request(key), url, name, handler, ctx, true).then(r => {
           const p = r.status === 200 && edgePolicy(r.headers.get('cache-control'));
           return p ? edgePut(key, r, p) : null;
         }).catch(() => {}).finally(() => refreshing.delete(key.url)));
