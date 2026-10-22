@@ -1,8 +1,8 @@
 // api/career.js — 미니게임 "커리어 모드"(선수 한 명의 커리어 키우기)
 //
-// 계산은 public/career/sim-v1을 공유한다. 새 유스는 로컬, 18세 평가 뒤 commit부터 암호화 토큰(_token.js, deflate)으로 진행한다.
+// 계산은 public/career/sim-v1·v2·v3으로 고정한다. 현재 화면은 v2, v3은 성인 로컬 진행용 서버 경로만 먼저 준비한다.
 // KV는 랭킹에만 쓴다(submit/board/card). 숨은 재능·구단 명성 숫자·발롱 점수 같은 숨김 값은
-// 응답에 넣지 않는다(토큰은 암호화라 안 보인다). 설계는 docs/career-mode/implementation.md.
+// v1/v2 응답에 넣지 않는다. v3 확정은 로컬 계산용 평문 상태도 준다(local-adult-design.md).
 //
 //   POST ?a=commit  {version, seed, input, choices, next} → 서버 재생·seed2 봉인·다음 시즌 준비
 //   POST ?a=new     {name, nation, foot, pos, card, num, dream}  → {token, clubs}      첫 구단 3곳
@@ -27,6 +27,10 @@ import * as L1 from '../public/career/sim-v1/local.js';
 import * as L2 from '../public/career/sim-v2/local.js';
 import * as F2 from '../public/career/sim-v2/flow.js';
 import * as S2 from '../public/career/sim-v2/sim.js';
+import * as L3 from '../public/career/sim-v3/local.js';
+import * as F3 from '../public/career/sim-v3/flow.js';
+import * as S3 from '../public/career/sim-v3/sim.js';
+import {stableJSON,stateDigest} from '../public/career/sim-v3/digest.js';
 import {NATIONAL_REACTION_GROUPS} from './_career_international.js';
 import { CLUB_KIT } from './_club_kits.js';
 
@@ -142,14 +146,15 @@ async function readBoard(pos){
   return _boards[id];
 }
 
-const flowOf=C=>C.simVersion===2?F2:{view,withStay,step};
-const simOf=C=>C.simVersion===2?S2:S;
+const flowOf=C=>C.simVersion===3?F3:C.simVersion===2?F2:{view,withStay,step};
+const simOf=C=>C.simVersion===3?S3:C.simVersion===2?S2:S;
 const bad=m=>{throw new Bad(m);};
 
 // 토큰 → 상태. 단계가 맞지 않으면 거부.
 function load(token, phases){
   const st = open(token);
   if(!st || !st.v) bad('커리어 정보가 올바르지 않아요. 새로 시작해 주세요.');
+  if(st.simVersion!=null&&![1,2,3].includes(st.simVersion))bad('지원하지 않는 커리어 계산 버전이에요.');
   if(phases && !phases.includes(st.phase)) bad('진행 순서가 맞지 않아요. 화면을 새로고침해 주세요.');
   const sim=simOf(st);
   sim.militaryView(st);
@@ -251,8 +256,18 @@ export default async function handler(req, res){
     const body = await readBody(req);
 
     if(a === 'commit'){
-      const local=body.version===1?L1:body.version===2?L2:null;
+      const local=body.version===1?L1:body.version===2?L2:body.version===3?L3:null;
       if(!local)bad('유스 계산 버전이 달라요. 새로 시작해 주세요.');
+      if(body.version===3){
+        const secret=process.env.CAREER_SEED_SECRET;
+        if(!secret)return res.status(503).json({error:'성인 로컬 진행 서버 설정이 아직 안 됐어요.'});
+        const C=local.replay(body),record=L3.canonicalYouth(body,C),canonical=stableJSON(record);
+        C.seed2=crypto.createHmac('sha256',secret).update(canonical).digest().readUInt32BE(0);
+        C.id=crypto.createHmac('sha256',secret).update('id|'+canonical).digest('hex').slice(0,16);
+        C.localAdult=3;
+        const out=F3.step(C,'next',record.next,{seal,prefetch:false});
+        return res.json({...out,seed2:C.seed2,state:C});
+      }
       const C=local.replay(body);
       local.validateNext(C,body.next);
       C.seed2=crypto.randomBytes(4).readUInt32LE(0);
@@ -276,14 +291,26 @@ export default async function handler(req, res){
 
     if(['service-return','scout','season','penalty','military','next','retire'].includes(a)){
       const C=load(body.token);
+      if(C.simVersion===3)bad('이 커리어는 브라우저에서 진행해 주세요.');
       return res.json(flowOf(C).step(C, a, body, {seal}));
     }
 
     if(a === 'submit'){
-      const C = load(body.token, ['retired']);
       // 등록은 승부예측 계정으로만(Who Am I와 같음). 계정당 최고 커리어 하나.
       const acct = readToken(req);
       if(!acct) return res.status(401).json({error: '랭킹 등록은 로그인 후에 할 수 있어요.', login: true});
+      let C=load(body.token);
+      if(C.simVersion===3){
+        C=L3.replayAdult(C,body.choices);
+        if(!body.claim||!Number.isFinite(body.claim.score)||typeof body.claim.digest!=='string'||!/^[a-f0-9]{64}$/.test(body.claim.digest))bad('은퇴 결과 대조 정보가 올바르지 않아요.');
+        const digest=await stateDigest(C);
+        if(body.claim.score!==C.score||body.claim.digest!==digest){
+          // 엔진 종류만 남긴다. 원문 UA·선택 기록·닉네임은 로그에 넣지 않는다.
+          const ua=String(req.headers['user-agent']||''),engine=/iPhone|iPad|iPod/i.test(ua)&&/AppleWebKit/i.test(ua)?'safari':/firefox|fxios/i.test(ua)?'firefox':/chrome|chromium|crios|edg/i.test(ua)?'chrome':/safari/i.test(ua)?'safari':'other';
+          console.warn(JSON.stringify({careerMismatch:1,id:C.id,simVersion:C.simVersion,claimed:body.claim.score,actual:C.score,choices:body.choices.length,engine}));
+          return res.status(409).json({error:'기록이 서버 계산과 달라요',mismatch:true});
+        }
+      }else if(C.phase!=='retired')bad('은퇴한 커리어만 등록할 수 있어요.');
       if(!kvReady()) return res.status(503).json({error: '랭킹 저장소에 연결할 수 없어요.'});
       const fresh = await kv('SET', `career:done:${C.id}`, acct.k, 'NX', 'EX', 30 * 86400);
       if(fresh !== 'OK') return res.status(409).json({error: '이미 등록한 커리어예요.'});
