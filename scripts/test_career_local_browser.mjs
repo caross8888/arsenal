@@ -45,7 +45,7 @@ try{
  const sample=makeCase(11);
  await page.evaluate(async({record})=>{
   await crMeta();
-  const v=await crApi('new',record.input);if(!v.token.startsWith('career-local-v2:'))throw Error('new must use buffed v2 rules');
+  const v=await crApi('new',record.input);if(!v.token.startsWith('career-local-v3:'))throw Error('new must use local v3 rules');
   let v2=await crApi('join',{token:v.token,pick:0});
   v2=await crApi('season',{token:v2.token,train:'균형',evPick:0,loanPick:0});
   crStore(v2);if(crSaved().tok!==v2.token)throw Error('local persistence');

@@ -9505,7 +9505,7 @@ function gameBoard(){
 }
 
 // ── 커리어 모드(api/career.js) ──────────────────────────────────────────
-// 18세 시즌 평가까지는 로컬 계산·선택 기록으로 저장한다. 계속하면 서버가 재생·확정하고, 이후는 암호화 토큰으로 진행한다.
+// 새 v3 커리어는 은퇴까지 로컬 계산·선택 기록으로 저장한다. 18세 확정과 은퇴 랭킹 등록만 서버를 부른다. 기존 v1/v2는 이전 방식으로 이어 간다.
 // 화면은 목업(docs/career-mode/mockup.html)을 옮긴 것이고, 클래스는 다른 화면과 겹치지 않게 cr- 접두어.
 var CR = {meta:null, S:null, tok:null, v:null, train:'균형', evPick:null, pick:null, busy:false, armed:null, firstClubs:null, firstPick:null};
 var CR_KEY='careerToken', CR_INFO='careerInfo';
@@ -9516,10 +9516,11 @@ function crStore(v){
   try{
     if(!v){ localStorage.removeItem(CR_KEY); localStorage.removeItem(CR_INFO); return; }
     var p=v.player||v.card||{};
+    var previousToken=localStorage.getItem(CR_KEY);
     localStorage.setItem(CR_KEY, v.token);
     var prev=JSON.parse(localStorage.getItem(CR_INFO)||'{}')||{};
     // 랭킹 등록 표시는 같은 은퇴 카드를 다시 열 때만 이어 간다(새 커리어는 prep부터라 자연히 지워진다)
-    localStorage.setItem(CR_INFO, JSON.stringify({name:p.name, age:p.age, phase:v.phase, reg: v.phase==='retired' && prev.phase==='retired' && prev.reg || undefined}));
+    localStorage.setItem(CR_INFO, JSON.stringify({name:p.name, age:p.age, phase:v.phase, reg: v.phase==='retired' && prev.phase==='retired' && previousToken===v.token && prev.reg || undefined, regError: v.phase==='retired' && prev.phase==='retired' && previousToken===v.token ? prev.regError : undefined}));
   }catch(e){}
 }
 // 응답이 20초 넘게 없으면 실패로 처리한다(모바일 망에서 요청이 걸린 채 끝나지 않아 화면이 멈춘 것처럼 보이지 않게)
@@ -9531,22 +9532,27 @@ function crNextApi(){
 }
 var CR_LOCAL_PREFIX='career-local-v', CR_LOCAL_MODULES={};
 function crLocalModule(version){
-  version=version||2;
-  if(!CR_LOCAL_MODULES[version]) CR_LOCAL_MODULES[version]=import('/career/sim-v'+version+'/local.js').catch(function(e){ delete CR_LOCAL_MODULES[version]; throw new Error('유스 계산 파일을 불러오지 못했어요. 다시 시도해 주세요.'); });
+  version=version||3;
+  if(!CR_LOCAL_MODULES[version]) CR_LOCAL_MODULES[version]=import('/career/sim-v'+version+(version===3?'/browser.js':'/local.js')).catch(function(e){ delete CR_LOCAL_MODULES[version]; throw new Error('커리어 계산 파일을 불러오지 못했어요. 다시 시도해 주세요.'); });
   return CR_LOCAL_MODULES[version];
 }
 function crApi(a, body){
   var local=body && typeof body.token==='string' && body.token.indexOf(CR_LOCAL_PREFIX)===0;
-  if(a==='new'||local) return crLocalModule(local&&body.token.indexOf('career-local-v1:')===0?1:2).then(function(M){
-    if(local && a==='next'){
-      var v=M.localCall('view',body);
-      if(v.phase==='result' && v.player.age===18) return crServerApi('commit',M.commitBody(body.token,{pick:body.pick,trait:body.trait}));
-    }
-    var seed=a==='new'?window.crypto.getRandomValues(new Uint32Array(1))[0]:undefined;
-    return M.localCall(a,body,seed);
-  });
+  var match=local && /^career-local-v(\d+):/.exec(body.token), version=local ? match&&Number(match[1]) : 3;
+  if(a==='new'||local){
+    if([1,2,3].indexOf(version)<0) return Promise.reject(new Error('지원하지 않는 커리어 계산 버전이에요.'));
+    return crLocalModule(version).then(function(M){
+      if(local && a==='next' && !(version===3 && M.isAdult(body.token))){
+        var v=M.localCall('view',body);
+        if(v.phase==='result' && v.player.age===18) return crServerApi('commit',M.commitBody(body.token,{pick:body.pick,trait:body.trait})).then(function(out){return version===3 ? M.fromCommit(out) : out;});
+      }
+      var seed=a==='new'?window.crypto.getRandomValues(new Uint32Array(1))[0]:undefined;
+      return M.localCall(a,body,seed);
+    });
+  }
   return crServerApi(a,body);
 }
+
 function crServerApi(a, body){
   var ac=window.AbortController ? new AbortController() : null, to=ac ? setTimeout(function(){ ac.abort(); }, 20000) : 0;
   return fetch(FN+'/career?a='+a, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{}), signal:ac ? ac.signal : undefined})
@@ -9607,7 +9613,7 @@ function crDock(html){ var d=document.querySelector('#gameRoot .cr-dock'); if(d)
 function crErr(e){
   CR.busy=false;
   // 토큰이 깨졌거나(서버 비밀값 교체 등) 순서가 꼬였으면 이어 하기를 지우고 처음으로
-  if(e && /커리어 정보가 올바르지|진행 순서/.test(e.message)){ crStore(null); gameToast(e.message); return crIntro(); }
+  if(e && !(CR.tok&&CR.tok.indexOf('career-local-v3:')===0) && /커리어 정보가 올바르지|진행 순서/.test(e.message)){ crStore(null); gameToast(e.message); return crIntro(); }
   gameToast(e ? e.message : '잠시 후 다시 시도해 주세요.');
   document.querySelectorAll('#gameRoot .cr-dock .gm-btn').forEach(function(b){ b.disabled=false; });
 }
@@ -12004,13 +12010,15 @@ function crCardHtml(c){
 // 내 은퇴 카드. 랭킹에서 남의 카드를 열 때는 CR.v(내 커리어)를 건드리지 않고 따로 그린다
 // (목업에서 내 커리어 변수를 남의 카드로 덮어써서, 랭킹 → 돌아가기에 남의 카드가 내 카드처럼 뜨던 버그가 있었다).
 function crRetired(){
-  var sv=crSaved(), reg=sv && sv.info && sv.info.reg;
+  var sv=crSaved(), reg=sv && sv.info && sv.info.reg, regError=sv && sv.info && sv.info.regError;
   crRender('<div class="cr-top"><button class="gm-back" onclick="crIntro()">← 커리어 모드</button><div class="cr-season">은퇴 카드</div></div>'
     +'<div id="crShotBox">'+crCardHtml(CR.v.card)+'</div><div class="cr-shot-row"><button class="cr-shot-btn" onclick="crShot(this,1)">'+crIcon('camera')+' 공유 카드 저장</button><button class="cr-shot-btn ghost" onclick="crShot(this)">전체 카드 저장</button></div>'
+    +(!reg && regError ? '<div class="gm-best" role="status">'+gmEsc(regError.message)+'</div>' : '')
     +(reg?'':'<div class="gm-best">'+(PK.tok?'<b style="color:var(--text)">'+gmEsc(PK.nick||'')+'</b> 계정으로 랭킹에 등록돼요 · 계정당 최고 커리어 하나':'랭킹 등록은 승부예측 계정으로 해요 · 처음이면 가입부터')+'</div>'),
     '<button class="gm-btn ghost" onclick="crNew()">새 커리어</button>'
     +(reg?'<button class="gm-btn" onclick="crBoard(\'retired\',(CR.v&&CR.v.player&&CR.v.player.pos)||\'\')">랭킹 보기</button>'
-         :'<button class="gm-btn" onclick="crSubmit(this)">'+(PK.tok?'랭킹 등록':'로그인하고 랭킹 등록')+'</button>'));
+         :regError&&!regError.retry?'<button class="gm-btn" disabled>등록할 수 없는 기록</button>'
+         :'<button class="gm-btn" onclick="crSubmit(this)">'+(regError?'잠시 후 다시 등록':PK.tok?'랭킹 등록':'로그인하고 랭킹 등록')+'</button>'));
 }
 // 은퇴 카드 이미지 저장(사용자 지정). html-to-image를 처음 누를 때만 불러온다(번들러가 없어서 CDN, hls.js와 같은 방식).
 // 캡처는 카드 노드만 복제해 그리므로 ① 트로피 SVG가 참조하는 그라데이션 defs를 카드 안에 잠깐 넣고
@@ -12127,26 +12135,43 @@ function crMyKey(){
   try{ return localStorage.getItem('careerMyKey'); }catch(e){ return null; }
 }
 function crMarkReg(key){
-  try{ var i=JSON.parse(localStorage.getItem(CR_INFO)||'{}'); i.reg=true; localStorage.setItem(CR_INFO, JSON.stringify(i)); if(key) localStorage.setItem('careerMyKey', key); }catch(e){}
+  try{ var i=JSON.parse(localStorage.getItem(CR_INFO)||'{}'); i.reg=true; delete i.regError; localStorage.setItem(CR_INFO, JSON.stringify(i)); if(key) localStorage.setItem('careerMyKey', key); }catch(e){}
+}
+// 등록 실패는 커리어 원문을 지우지 않는다. 영구 검증 오류와 일시 오류를 구분해 저장한다.
+function crSubmitError(message,retry){
+  CR.busy=false;
+  try{var i=JSON.parse(localStorage.getItem(CR_INFO)||'{}');i.regError={message:message,retry:retry};localStorage.setItem(CR_INFO,JSON.stringify(i));}catch(_){}
+  crRetired();
 }
 function crSubmit(btn){
+  var saved=crSaved(),blocked=saved&&saved.info&&saved.info.regError;
+  if(blocked&&!blocked.retry)return;
   if(!PK.tok){
     PK.after=function(){ crRetired(); crSubmit(document.querySelector('#gameRoot .cr-dock .gm-btn:last-child')); };
     PK.afterLabel='은퇴 카드'; PK.afterBack=crRetired;
     return pkAuth('join');
   }
   if(!crBusy(btn,'등록 중...')) return;
-  fetch(FN+'/career?a=submit', {method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+PK.tok}, body:JSON.stringify({token:CR.tok})})
-    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, status:r.status, j:j}; }); })
-    .then(function(x){
-      CR.busy=false;
-      if(x.j.login){ pkSetAuth(null,null); return crSubmit(btn); }
-      if(x.status===409){ crMarkReg(); return crBoard('retired'); }   // 이미 등록한 커리어 — 표시만 맞춘다
-      if(!x.ok) throw new Error(x.j.error||'잠시 후 다시 시도해 주세요.');
-      crMarkReg(x.j.key);
-      CR.lastReg=x.j; CR.boardBust=Date.now();   // 랭킹은 CDN에 5분 캐시 — 방금 등록한 순위가 바로 보이게 한 번은 새로 받는다
-      crBoard('retired', x.j.pos||'');   // 등록한 포지션 탭으로
-    }).catch(crErr);
+  var token=CR.tok, v3=token && token.indexOf('career-local-v3:')===0;
+  var payload=v3?crLocalModule(3).then(function(M){return M.submitBody(token);}):Promise.resolve({token:token});
+  payload.then(function(body){
+    var ac=window.AbortController?new AbortController():null,to=ac?setTimeout(function(){ac.abort();},20000):0;
+    return fetch(FN+'/career?a=submit',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+PK.tok},body:JSON.stringify(body),signal:ac?ac.signal:undefined})
+      .then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,status:r.status,j:j};});})
+      .finally(function(){clearTimeout(to);});
+  }).then(function(x){
+    CR.busy=false;if(CR.tok!==token)return;
+    if(x.j.login){pkSetAuth(null,null);return crSubmit(btn);}
+    if(x.status===400 || x.status===409 && x.j.mismatch)return crSubmitError(x.j.error||'기록을 확인할 수 없어 등록하지 못했어요.',false);
+    if(x.status===409){crMarkReg();return crBoard('retired');}
+    if(!x.ok)return crSubmitError(x.j.error||'일시적으로 등록하지 못했어요. 잠시 후 다시 시도해 주세요.',true);
+    crMarkReg(x.j.key);CR.lastReg=x.j;CR.boardBust=Date.now();crBoard('retired',x.j.pos||'');
+  }).catch(function(e){
+    if(CR.tok!==token){CR.busy=false;return;}
+    // 로컬 기록 검증 오류는 같은 내용으로 재전송해도 해결되지 않는다.
+    if(e && e.constructor && e.constructor.name==='Bad')return crSubmitError(e.message,false);
+    crSubmitError(e&&e.name==='AbortError'?'응답이 늦어요. 잠시 후 다시 등록해 주세요.':e.message||'연결이 불안정해요. 잠시 후 다시 등록해 주세요.',true);
+  });
 }
 
 // ── 랭킹(역대 TOP 100) ─────────────────────────────────────────────────

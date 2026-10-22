@@ -301,8 +301,8 @@ export default async function handler(req, res){
       if(!acct) return res.status(401).json({error: '랭킹 등록은 로그인 후에 할 수 있어요.', login: true});
       let C=load(body.token);
       if(C.simVersion===3){
-        C=L3.replayAdult(C,body.choices);
         if(!body.claim||!Number.isFinite(body.claim.score)||typeof body.claim.digest!=='string'||!/^[a-f0-9]{64}$/.test(body.claim.digest))bad('은퇴 결과 대조 정보가 올바르지 않아요.');
+        C=L3.replayAdult(C,body.choices);
         const digest=await stateDigest(C);
         if(body.claim.score!==C.score||body.claim.digest!==digest){
           // 엔진 종류만 남긴다. 원문 UA·선택 기록·닉네임은 로그에 넣지 않는다.

@@ -51,6 +51,8 @@ try{
  const savedSecret=process.env.CAREER_SEED_SECRET;delete process.env.CAREER_SEED_SECRET;await call('commit',rec,503);process.env.CAREER_SEED_SECRET=savedSecret;
  const c=makeAdultCase(11,commit.state),claim={score:c.state.score,digest:await stateDigest(c.state)},body={token:commit.token,choices:c.choices,claim};
  await call('submit',body,401,{});
+ const malformed=await call('submit',{...body,choices:null,claim:{score:'invalid',digest:'invalid'}},400);
+ assert.equal(malformed.error,'은퇴 결과 대조 정보가 올바르지 않아요.','잘못된 claim은 선택 기록 재생보다 먼저 거부해야 해요.');
  for(const choices of [[],[...c.choices,{a:'retire'}],Array(L3.MAX_ADULT_ACTIONS+1).fill({a:'next'}),[{a:'season',train:'균형',evPick:0,state:{score:9999}}],[{a:'penalty',key:'forged',x:2,y:0,power:50}],[{a:'military',action:'regular'}],[{a:'service-return'}],[{a:'injury',injPick:0}]])await call('submit',{...body,choices},400);
  const foreign=seal({...commit.state,simVersion:4});await call('submit',{...body,token:foreign},400);
  await call('submit',{...body,token:seal({...commit.state,phase:'retired'})},400);
