@@ -1757,11 +1757,44 @@ async function homeBundle(req, res){
   await Promise.allSettled(runs);
 }
 
+// 경기 프리뷰 묶음(type=preview) — 다음 두 경기 상세모달이 따로 부르던 승부 예측·예상 XI·양 팀 결장자 4종을 한 응답으로
+// (사용자 지정 — KV 줄이기). 따로 부르면 요청마다 다른 인스턴스에서 돌아 결장자·다음 경기 키를 각자 읽었다(실측: 프리뷰
+// 한 번에 unavail 10회·nextm 6회). 한 인스턴스에서 차례로 돌려 메모리 캐시(_unavailMem·_kvPre)를 같이 쓰고, 같은 주소라
+// 가장자리 캐시를 보는 사람끼리 나눠 쓴다. 항목 하나가 실패해도 그 항목만 null(화면은 그 카드만 비운다).
+const PREVIEW_PARTS = q => [
+  ['prediction',  {type: 'predict', home: q.home, away: q.away, league: q.league, date: q.date, match: q.match}],
+  ['predictedXI', {type: 'predxi', match: q.match}],
+  ['arsInjuries', {type: 'injuries', match: q.match}],
+  ['oppInjuries', q.team ? {type: 'injuries', team: q.team, tid: q.tid, match: q.match} : null],
+];
+const runSub = (req, query) => new Promise(resolve => {
+  let status = 200;
+  const fake = { setHeader(){ return fake; }, getHeader(){}, status(c){ status = c; return fake; },
+    json(d){ resolve(status === 200 && d && !d.error ? d : null); return fake; }, send(d){ return fake.json(d); }, end(){ resolve(null); return fake; } };
+  const clean = Object.fromEntries(Object.entries(query).filter(([, v]) => v != null && v !== ''));
+  Promise.resolve(handler({ ...req, query: clean }, fake)).catch(() => resolve(null));
+});
+async function previewBundle(req, res){
+  res.setHeader('Access-Control-Allow-Origin','*');
+  const q = req.query;
+  if(!/^\d{1,12}$/.test(String(q.match || ''))){ res.setHeader('Cache-Control', 'no-store'); return res.status(400).json({error: 'match 필요'}); }
+  const out = {}, failed = [];
+  // 차례로 — 동시에 돌리면 메모리 캐시가 차기 전에 넷이 같은 키를 각자 읽는다
+  for(const [k, query] of PREVIEW_PARTS(q)){
+    out[k] = query ? await runSub(req, query) : null;
+    if(query && !out[k]) failed.push(k);
+  }
+  // 실패한 항목이 있는 응답은 가장자리 캐시에 넣지 않는다(3분 동안 모두가 빈 카드를 본다)
+  res.setHeader('Cache-Control', failed.length ? 'no-store' : 'public, max-age=0, s-maxage=180, stale-while-revalidate=300');
+  res.json(out);
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin','*');
 
   const type = req.query.type || 'fixtures';
   if(type === 'home') return homeBundle(req, res);
+  if(type === 'preview') return previewBundle(req, res);
   const nocache = req.query.nocache;
   // injuries는 team 파라미터로 아스날 외 다른 팀도 조회할 수 있어 캐시 키에
   // team을 같이 섞는다 — 안 그러면 아스날 조회 캐시를 상대팀 조회가 그대로

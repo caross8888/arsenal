@@ -3488,7 +3488,14 @@ function renderCrest(c){
 function renderDday(list){
   var el=document.getElementById('ddayCard');
   if(!el) return;
-  var next=(list||[]).find(function(m){return m.tbd!=='postponed'&&m.tbd!=='canceled';});
+  // 킥오프가 3시간 넘게 지났는데 "예정"인 경기는 localStorage의 옛 일정이다(화면은 캐시 → 새 응답 순으로 두 번 그린다).
+  // 빼지 않으면 끝난 경기를 다음 경기로 잡아 PC에서 그 경기 프리뷰를 자동으로 열었다가(서버 계산 한 번이 통째로 버려진다)
+  // 새 응답으로 다시 연다(실측: 뮌헨전 다음 날 아침 PC 방문마다 프리뷰 두 번).
+  var _ddNow=Date.now();
+  list=(list||[]).filter(function(m){
+    return m.status==='IN_PLAY'||m.status==='PAUSED'||!m.utcDate||_ddNow-new Date(m.utcDate).getTime()<3*3600*1000;
+  });
+  var next=list.find(function(m){return m.tbd!=='postponed'&&m.tbd!=='canceled';});
   // 경기 예측은 가장 가까운 두 경기에만 띄운다(사용자 지정) — 그 뒤 경기는 그 사이 치를
   // 경기 결과·부상·일정에 따라 변수가 너무 많아 지금 예측해봐야 의미가 없다. 진행 중이거나
   // 끝난 경기, 연기·취소된 경기는 세지 않는다. 크론(api/preview_ai.js)도 같은 두 경기만 만든다.
@@ -7566,34 +7573,24 @@ function openMatchModal(m, isAuto, opts){
     if(sp) sp.parentElement.innerHTML='<div class="error-state">&#9888;&#65039; 응답 없음 — 잠시 후 다시 시도해주세요</div>';
   }, 10000);
 
-  // 예상 선발 XI도 여기서 같이 출발시킨다(예측 카드와 같은 이유 — 모달이 다 뜬 뒤에
-  // 따로 부르면 스피너가 두 번 돈다). 예측·부상자와 같은 두 경기에 붙인다.
-  var predXIPromise = (!isPlayedSkel && _predTargetSkel)
-    ? apiFetch(FN+'/football?type=predxi&match='+encodeURIComponent(m.id)).catch(function(){ return null; })
-    : Promise.resolve(null);
-
-  // 부상자 조회에 경기 id를 같이 넘긴다 — 서버가 그 경기 기준 결장자(출장정지 포함)를
-  // 얹어서 내려준다. 예상 선발 XI·승부 예측이 보는 명단과 같은 캐시라 세 카드가 어긋나지 않는다.
-  var _injMatchQ = _predTargetSkel ? ('&match='+encodeURIComponent(m.id)) : '';
-  var oppInjPromise = oppNameSkel
-    ? fetch(FN+'/football?type=injuries&team='+encodeURIComponent(oppNameSkel)+(oppTeamSkel&&oppTeamSkel.id?'&tid='+encodeURIComponent(oppTeamSkel.id):'')+_injMatchQ).then(function(r){ return r.json(); }).catch(function(){ return null; })
-    : Promise.resolve(null);
-  // 아스날 쪽도 같은 이유로 모달 전용 목록을 따로 받는다 — 전역 allInjuries(선수단 탭 공용)는
-  // 특정 경기와 무관한 "지금 팀 상태"라 경기 기준 값으로 덮어쓰면 안 된다.
-  var arsInjPromise = _injMatchQ
-    ? fetch(FN+'/football?type=injuries'+_injMatchQ).then(function(r){ return r.json(); }).catch(function(){ return null; })
-    : Promise.resolve(null);
-
-  // 경기 예측도 여기서 같이 출발시킨다 — 모달 로딩이 끝난 뒤에 따로 부르면
-  // 스피너가 두 번(상세 → 예측) 도는 꼴이 된다. 필요한 값(양 팀 id·대회·킥오프)이
-  // 전부 일정 목록 항목(m)에 있어서 상세 응답을 기다릴 이유가 없다.
-  var predPromise = Promise.resolve(null);
-  if(_predTargetSkel && !isSettledMatch(m) && m.status!=='FINISHED' && m.homeTeam && m.awayTeam && m.homeTeam.id && m.awayTeam.id){
-    var _pq = FN+'/football?type=predict&home='+encodeURIComponent(m.homeTeam.id)+'&away='+encodeURIComponent(m.awayTeam.id)
+  // 다음 두 경기(승부 예측·예상 XI·양 팀 결장자 카드가 뜨는 경기)는 서버 묶음(type=preview) 한 번으로 받는다
+  // (사용자 지정 — 넷을 따로 부르면 요청마다 다른 인스턴스에서 같은 KV 키를 각자 읽었다). 주소가 사람마다 같아야
+  // 가장자리 캐시(3분)를 나눠 쓰므로 시각 꼬리표를 붙이지 않는다. 실패하면 각 카드가 지금처럼 비어 있을 뿐이다.
+  var predXIPromise = Promise.resolve(null), oppInjPromise = Promise.resolve(null);
+  var arsInjPromise = Promise.resolve(null), predPromise = Promise.resolve(null);
+  if(!isPlayedSkel && _predTargetSkel && !isSettledMatch(m) && m.homeTeam && m.awayTeam && m.homeTeam.id && m.awayTeam.id){
+    var _pvq = FN+'/football?type=preview&match='+encodeURIComponent(m.id)
+      + '&home='+encodeURIComponent(m.homeTeam.id)+'&away='+encodeURIComponent(m.awayTeam.id)
       + (m.leagueId ? '&league='+encodeURIComponent(m.leagueId) : '')
       + ((m.utcDate||m.date) ? '&date='+encodeURIComponent(m.utcDate||m.date) : '')
-      + (_predTargetSkel ? '&match='+encodeURIComponent(m.id) : '');
-    predPromise = apiFetch(_pq).catch(function(){ return null; });
+      + (oppNameSkel ? '&team='+encodeURIComponent(oppNameSkel) : '')
+      + (oppNameSkel && oppTeamSkel && oppTeamSkel.id ? '&tid='+encodeURIComponent(oppTeamSkel.id) : '');
+    var _pv = fetch(_pvq).then(function(r){ return r.json(); }).catch(function(){ return {}; });
+    var _pvPart = function(k){ return _pv.then(function(d){ return (d && d[k]) || null; }); };
+    predPromise = _pvPart('prediction');
+    predXIPromise = _pvPart('predictedXI');
+    arsInjPromise = _pvPart('arsInjuries');
+    oppInjPromise = _pvPart('oppInjuries');
   }
 
   // 하루 지난 종료 경기는 데이터가 확정돼서 서버가 immutable로 내려준다 —
