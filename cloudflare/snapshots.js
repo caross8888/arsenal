@@ -16,7 +16,7 @@ const BUDGET = 30;   // 한 실행에 쓸 외부 요청 상한(한도 50 — 한
 // 메인 화면 묶음 — public/index.html의 HOME_TYPES와 같은 8종. 숫자는 보관 시간(초)이다.
 // {live, idle}인 항목은 경기가 있어야 바뀌므로(사용자 지정 — 바뀐 게 없어도 확인할 때마다 KV·원본을 읽어서,
 // 매분 확인하면 방문자가 없어도 일정·순위표만 하루 약 2,900회였다) 경기 시간대엔 live, 나머지는 idle.
-// 경기 시간대 = 킥오프 30분 전 ~ after시간 후. 일정은 아스날 경기만, pl이 붙은 건 PL 전체 킥오프
+// 경기 시간대 = 킥오프 30분 전 ~ after시간 후. 일정은 아스날 경기만, pl이 붙은 건 아스날 PL 경기와 PL 전체 킥오프
 // (roundResults의 kickoffs)도 본다 — 순위·득점 순위는 다른 팀 경기로도 바뀐다. 득점 순위는 Fotmob 집계가
 // 경기 뒤 늦게 붙는 경우가 있어 더 길게 본다. 시각은 직전 파일에서 읽으므로 원본 호출이 늘지 않고,
 // 시각을 모르면 live로 둔다. 일정 변경(킥오프 시각 확정·연기)은 경기와 무관하게 나오지만 30분이면 충분하다.
@@ -32,7 +32,9 @@ const WINDOW_BEFORE = 30 * 60 * SEC;
 function partTtl(type, parts){
   const cfg = HOME_PARTS[type];
   if(typeof cfg === 'number') return cfg;
-  const fx = (parts.fixtures && parts.fixtures.data && parts.fixtures.data.matches) || [];
+  let fx = (parts.fixtures && parts.fixtures.data && parts.fixtures.data.matches) || [];
+  // pl 항목(순위·득점 순위 등)은 PL 경기로만 바뀐다 — 챔스·컵 경기 땐 idle(사용자 지정, 경기당 KV 약 250회)
+  if(cfg.pl) fx = fx.filter(m => m.competition && m.competition.short === 'PL');
   if(fx.some(m => m.status === 'IN_PLAY')) return cfg.live;
   const times = fx.map(m => m.utcDate);
   if(cfg.pl){
