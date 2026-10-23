@@ -165,6 +165,30 @@ async function runCron(cron, env){
   (res.statusCode >= 400 ? console.error : console.log)(job.name, res.statusCode, String(body ?? '').slice(0, 1500));
 }
 
+// ── 첫 화면 묶음을 R2 파일로 대신 답하기 ──
+// 화면은 원래 data.coyg.co.kr/home.json(크론이 만든 파일)을 받고, 못 받을 때만 /api/football?type=home으로 온다
+// (느린 망 4초 초과, 차단, 폰 시계가 틀려 파일이 오래돼 보일 때 — 실측: 안드로이드 크롬·삼성 인터넷). 그때 핸들러가
+// 8종을 다시 만들며 KV를 읽어 하루 약 600회였다(kvlog ep=football:home). 같은 파일을 R2 바인딩으로 읽어 서버 시계로
+// 신선도를 보고 답한다 — KV 0회. 오래된 항목이 하나라도 있으면 지금처럼 핸들러로 넘긴다.
+const HOME_FILE_TYPES = ['fixtures','transfers','standings','leaders','roundResults','teamOfTheWeek','squad','injuries'];
+const HOME_FILE_MAX_AGE = 15 * 60 * 1000;   // 화면의 DATA_MAX_AGE와 같은 값
+async function homeFromFile(bucket){
+  try {
+    const o = bucket && await bucket.get('home.json');
+    const j = o && await o.json();
+    if(!j || !j.parts) return null;
+    const parts = {}, now = Date.now();
+    for(const t of HOME_FILE_TYPES){
+      const p = j.parts[t];
+      if(!p || !p.at || now - Date.parse(p.at) >= HOME_FILE_MAX_AGE) return null;
+      parts[t] = p.data;
+    }
+    return new Response(JSON.stringify({parts, missing: []}), {headers: {
+      'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*',
+      'cache-control': 'public, max-age=60', 'x-home-source': 'r2'}});
+  } catch(_){ return null; }
+}
+
 // ── 가장자리 캐시(Vercel CDN 대신) ──
 // Worker 응답은 Cloudflare CDN에 자동으로 안 남아서, Vercel에선 CDN이 받아 주던 요청(득점 순위 4초 등)이
 // 매번 핸들러까지 왔다. 핸들러가 붙이는 Cache-Control의 s-maxage(공유 캐시 보관 시간)를 Vercel CDN처럼 따라
@@ -232,6 +256,10 @@ export default {
     const name = url.pathname.replace(/^\/api\//, '').replace(/\/+$/, '');
     const handler = HANDLERS[name];
     if(!handler) return Response.json({error: 'unknown endpoint'}, {status: 404});
+    if(name === 'football' && url.searchParams.get('type') === 'home' && request.method === 'GET'){
+      const fromFile = await homeFromFile(env.DATA);
+      if(fromFile) return fromFile;
+    }
 
     const edge = request.method === 'GET' && !request.headers.has('authorization') && !request.headers.has('cookie')
       && typeof caches !== 'undefined' && !url.hostname.endsWith('.workers.dev');
