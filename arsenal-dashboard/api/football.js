@@ -1835,7 +1835,8 @@ async function previewBundle(req, res){
   // 차례로 — 동시에 돌리면 메모리 캐시가 차기 전에 넷이 같은 키를 각자 읽는다
   for(const [k, query] of PREVIEW_PARTS(q)){
     out[k] = query ? await runSub(req, query) : null;
-    if(query && !out[k]) failed.push(k);
+    // 예상 XI는 실패해도 {available:false}로 온다 — 그것도 실패로 센다(배포 직후 빈 카드가 3분+ 캐시됐다)
+    if(query && (!out[k] || (k === 'predictedXI' && out[k].available === false))) failed.push(k);
   }
   // 실패한 항목이 있는 응답은 가장자리 캐시에 넣지 않는다(3분 동안 모두가 빈 카드를 본다)
   res.setHeader('Cache-Control', failed.length ? 'no-store' : 'public, max-age=0, s-maxage=180, stale-while-revalidate=300');
@@ -3259,6 +3260,8 @@ export default async function handler(req, res) {
       const predxiMatch = String(req.query.match || '').replace(/\D/g, '');
       if(!predxiMatch) throw new Error('match 파라미터 필요');
       result = await buildPredictedXI(predxiMatch);
+      // 못 만든 결과(대개 캐시가 빈 직후 한도·시간 초과)는 가장자리 캐시에 두지 않는다 — 두면 몇 분 동안 모두가 빈 카드를 본다
+      if(!result.available) res.setHeader('Cache-Control', 'no-store');
     } else if(type === 'transfers'){
       // 이적시장 IN/OUT 요약 — Fotmob 팀 API(이미 스쿼드 라이브 목록에 쓰는
       // 그 엔드포인트)의 transfers 필드를 그대로 재사용한다. 이 필드는
