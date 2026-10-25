@@ -13181,6 +13181,10 @@ function liveDesktopRefresh(liveIds){
         var liveRef = panelContent && panelContent._liveMatchRef;
         var stillLive = liveRef && liveIds.indexOf(liveRef.id) >= 0;
         if(stillLive){
+          // 킥오프 전에 연 패널이면 참조가 아직 "예정" 상태의 옛 객체다 — 라이브 목록의 새 객체로 바꿔야
+          // ESPN 직접 경로(진행 중 경기만)를 타고 라이브 모양으로 그려진다.
+          var freshRef = _liveList.filter(function(x){ return x.id === liveRef.id; })[0];
+          if(freshRef){ liveRef = freshRef; panelContent._liveMatchRef = freshRef; }
           var slugPoll = COMP_SLUG_MAP[liveRef.competition&&liveRef.competition.short]||'eng.1';
           // 주소에 시각을 붙이지 않는다 — 같은 주소여야 서버 가장자리 캐시(20초)를 보는 사람끼리 나눠 쓴다
           liveDetailFetch(liveRef, FN+'/match?id='+liveRef.id+'&slug='+slugPoll).then(function(freshData){
@@ -13266,7 +13270,9 @@ function kickoffServerCheck(){
     if(hasLive){
       stopKickoffWatch();
       initMatchNav(data);
+      renderDday(data.upcoming||[]);   // 상단 D-day 카드도 라이브로 — 예전엔 새로고침 전까지 경기 전 모양이었다
       _liveList = (data.matches||[]).filter(function(m){return m.status==='IN_PLAY';});
+      liveDesktopRefresh(_liveList.map(function(m){ return m.id; }));   // 킥오프 전에 열어 둔 PC 패널도 바로
       startLivePolling();
       return;
     }
