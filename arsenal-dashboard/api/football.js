@@ -1370,7 +1370,7 @@ const MANUAL_ABSENCES = {
     {team: '9823', id: '460632', name: 'Joshua Kimmich', type: 'absent', note: '개인 사유'},
   ],
 };
-const UNAVAIL_KEY = id => `unavail:v5:${id}`;   // v5: 수동 결장에 type(absent) 추가 — 키미히가 빠진 v4 캐시를 버리려고 올렸다
+const UNAVAIL_KEY = id => `unavail:v6:${id}`;   // v5: 수동 결장에 type(absent) 추가 — 키미히가 빠진 v4 캐시를 버리려고 올렸다 · v6: Fotmob 예상 선발(lineup) 추가
 
 // 같은 인스턴스 안에서 1분은 메모리로 — 예상 XI·승부 예측·부상자 카드가 한 모달에서 같은 경기 결장자를 각자 읽고,
 // 다가오는 경기 3개 것까지 합치느라(freshInjuriesFor) 한 번에 KV GET이 5회씩 났다.
@@ -1405,6 +1405,16 @@ async function fetchMatchUnavailableKV(matchId){
     })),
   });
   const out = {home: pick(L.homeTeam, g.homeTeam), away: pick(L.awayTeam, g.awayTeam)};
+  // Fotmob 예상 선발 — PL 경기는 1~2일 전부터 lineupType 'predicted'로 온다(그 전엔 'unavailable', 컵대회는
+  // 직전 선발을 그대로 옮긴 'lastStarting11'이라 로테이션을 모른다 → 우리 모델이 낫다). 같은 응답에 이미 있어 추가 비용 0.
+  if(L.lineupType === 'predicted'){
+    const xi = t => ((t || {}).starters || []).filter(p => p.horizontalLayout).map(p => ({
+      id: String(p.id), name: p.name || '', num: p.shirtNumber ?? null,
+      usual: p.usualPlayingPositionId ?? null, layout: {x: p.horizontalLayout.x, y: p.horizontalLayout.y},
+    }));
+    out.home.lineup = {formation: (L.homeTeam || {}).formation || null, xi: xi(L.homeTeam)};
+    out.away.lineup = {formation: (L.awayTeam || {}).formation || null, xi: xi(L.awayTeam)};
+  }
   for(const m of MANUAL_ABSENCES[String(matchId)] || []){
     const t = [out.home, out.away].find(x => x.id === m.team);
     if(t && !t.out.some(o => o.id === m.id)) t.out.push({id: m.id, name: m.name, type: m.type || 'suspension', expectedReturn: m.note || '', upd: ''});
@@ -1585,10 +1595,17 @@ function predxiSeasonStart(now = new Date()){
   return Date.UTC(y, 6, 1);
 }
 
-// 반환: {done: 이번 시즌 끝난 공식전(오래된 것부터), upcoming: 예정 경기의 대회 정보}.
+// 마지막 이적시장 마감 — 여름 9월 1일, 겨울 2월 2일 무렵(나라마다 하루이틀 차이는 하루 여유로 덮는다).
+function predxiWindowClose(now = new Date()){
+  const y = now.getUTCFullYear(), t = now.getTime();
+  const summer = Date.UTC(y, 8, 2), winter = Date.UTC(y, 1, 3);
+  return t >= summer ? summer : t >= winter ? winter : Date.UTC(y - 1, 8, 2);
+}
+
+// 반환: {done: 이번 시즌 끝난 공식전(오래된 것부터), upcoming: 예정 경기의 대회 정보, squad: 1군 명단 id}.
 // upcoming은 예측할 경기가 컵대회인지 알아내는 데 쓴다 — 같은 응답에 이미 들어있다.
 async function predxiFixtures(teamId){
-  const key = `predxiFix:v2:${teamId}`;
+  const key = `predxiFix:v3:${teamId}`;   // v3: 1군 명단(squad) 추가 — 이적생 거르기
   const hit = await kvGetJSON(key);
   if(hit) return hit;
   const td = await fotmobJSON(`https://www.fotmob.com/api/data/teams?id=${teamId}`);
@@ -1611,7 +1628,9 @@ async function predxiFixtures(teamId){
   let use = done.filter(f => f.at && new Date(f.at).getTime() >= start);
   if(use.length < PREDXI_MIN_MATCHES) use = done.slice(-PREDXI_MIN_MATCHES);
   use = use.slice(-PREDXI_MAX_MATCHES);
-  const out = {done: use, upcoming};
+  const squad = [];
+  (((td.squad || {}).squad) || []).forEach(g => (g.members || []).forEach(mem => { if(mem.id != null) squad.push(String(mem.id)); }));
+  const out = {done: use, upcoming, squad};
   await kvSetJSON(key, out, use.length ? PREDXI_TTL_SEC : 30 * 60);
   return out;
 }
@@ -1665,7 +1684,7 @@ async function predxiPosInfo(playerId, hit){
 }
 
 async function predxiTeam(teamId, outIds, matchId){
-  const {done: fixtures, upcoming} = await predxiFixtures(teamId);
+  const {done: fixtures, upcoming, squad} = await predxiFixtures(teamId);
   const recHits = await kvMGetJSON(fixtures.map(fx => predxiRecKey(fx, teamId)));
   const recs = (await Promise.all(fixtures.map((fx, i) => predxiMatchRecord(fx, teamId, recHits[i]).catch(() => null))))
     .filter(Boolean);
@@ -1673,6 +1692,15 @@ async function predxiTeam(teamId, outIds, matchId){
   // 프로필은 선발 후보가 될 만한 선수만 받는다 — 명단에 한 번이라도 든 선수 중 결장자 제외,
   // 이번 시즌 선발 경험이 있거나 벤치에 자주 든 선수. 팀당 많아야 20명 남짓.
   const banned = new Set((outIds || []).map(String));
+  // 이적생 거르기: 1군 명단에 없고 마지막 이적시장 마감 뒤 경기 명단(선발·벤치)에도 없으면 나간 선수로 본다
+  // (실측: 맨시티로 간 은디아예가 에버턴 예상 XI에 나왔다). 명단에 없다는 것만으로 빼면 1군 명단에 안 잡히는
+  // 유스(아스날 U21 마를리 새먼, 플리트우드전 선발)가 빠진다 — 마감 뒤에 뛰었으면 남은 선수다.
+  if(squad && squad.length){
+    const inSquad = new Set(squad), since = predxiWindowClose(), recent = new Set();
+    recs.filter(r => r.at && new Date(r.at).getTime() >= since)
+      .forEach(r => r.starters.concat(r.bench).forEach(p => recent.add(p.id)));
+    recs.forEach(r => r.starters.concat(r.bench).forEach(p => { if(!inSquad.has(p.id) && !recent.has(p.id)) banned.add(p.id); }));
+  }
   const seen = {};
   recs.forEach(r => {
     r.starters.forEach(p => { seen[p.id] = (seen[p.id] || 0) + 2; });
@@ -1698,6 +1726,20 @@ async function buildPredictedXI(matchId){
     {side: 'home', id: unavail.home.id, name: unavail.home.name, out: unavail.home.out},
     {side: 'away', id: unavail.away.id, name: unavail.away.name, out: unavail.away.out},
   ];
+
+  // Fotmob 예상 선발이 있으면 그대로 쓴다(사용자 지정 — 이적·부상 반영이 우리 모델보다 빠르다).
+  // 두 팀 다 11명일 때만. 한쪽만 있으면 섞지 않고 둘 다 우리 모델로 — 카드 부제가 한 가지 기준이어야 해서.
+  const fm = [unavail.home.lineup, unavail.away.lineup];
+  if(fm.every(l => l && l.xi && l.xi.length === 11)){
+    return {available: true, source: 'fotmob', teams: sides.map((s, i) => ({
+      side: s.side, id: String(s.id), name: s.name, formation: fm[i].formation,
+      outCount: (s.out || []).length,
+      suspendedCount: (s.out || []).filter(o => o.type === 'suspension').length,
+      replacedCount: 0,
+      xi: fm[i].xi.map(p => ({id: p.id, name: p.name, num: p.num, layout: p.layout,
+        pos: FM_POS_BY_ID[p.usual] || '', replaced: false, replacedFor: null})),
+    }))};
+  }
 
   const teams = await Promise.all(sides.map(async s => {
     if(!s.id) return null;
