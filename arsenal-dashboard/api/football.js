@@ -586,9 +586,15 @@ function liveClockOf(st){
 // 팀 일정은 liveTime "1'", 같은 시각 경기 상세(matchDetails)는 "72'". 그래서
 // 라이브 경기만 경기 상세의 header.status로 시계·하프타임·스코어를 덮어쓴다.
 // 목록 폴링(30초, 사용자마다)이 매번 상세를 부르지 않게 경기별로 20초 메모리 캐시.
+// 시작 판정도 같은 이유로 늦다 — 팀 일정의 started가 킥오프 몇 분 뒤에야 켜져서, 브라우저가 ESPN으로 킥오프를
+// 잡고 서버에 물어도 "예정"이 와서 라이브 전환이 5분쯤 밀렸다. 킥오프 시각이 지났는데 아직 예정인 경기도
+// 경기 상세 헤더로 확인한다(킥오프 뒤 2시간까지만 — 그 뒤까지 예정이면 연기 등이라 더 묻지 않는다).
 const _liveHeaderCache = {};
+const KICKOFF_CHECK_WINDOW_MS = 2 * 60 * 60 * 1000;
 async function refreshLiveFromDetails(matches){
-  const live = (matches || []).filter(m => m.status === 'IN_PLAY');
+  const now = Date.now();
+  const live = (matches || []).filter(m => m.status === 'IN_PLAY' || (m.status === 'SCHEDULED' && !m.tbd && m.utcDate
+    && now >= new Date(m.utcDate).getTime() && now - new Date(m.utcDate).getTime() < KICKOFF_CHECK_WINDOW_MS));
   await Promise.all(live.map(async m => {
     try {
       let hdr = _liveHeaderCache[m.id];
@@ -600,6 +606,11 @@ async function refreshLiveFromDetails(matches){
         if(!j?.header?.status) return;
         hdr = {status: j.header.status, teams: j.header.teams || [], ts: Date.now()};
         _liveHeaderCache[m.id] = hdr;
+      }
+      if(m.status === 'SCHEDULED'){
+        // 끝난 건 여기서 바꾸지 않는다(스코어 정리는 팀 일정 몫) — 시작만 앞당긴다
+        if(!hdr.status.started || hdr.status.finished || hdr.status.cancelled) return;
+        m.status = 'IN_PLAY';
       }
       Object.assign(m, liveClockOf(hdr.status));
       const [h, a] = hdr.teams;
