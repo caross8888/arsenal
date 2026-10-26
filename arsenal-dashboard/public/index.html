@@ -6201,6 +6201,7 @@ function openLegendModal(enc){
   } else {
     modal = document.getElementById('matchModal');
     content = document.getElementById('matchModalContent');
+    content._liveMatchRef = null;   // 같은 모달 틀을 쓴다 — 라이브 갱신이 이 내용을 경기 화면으로 덮지 않게
   }
 
   var html = '';
@@ -6289,6 +6290,7 @@ function openOtdModal(enc){
   } else {
     modal = document.getElementById('matchModal');
     content = document.getElementById('matchModalContent');
+    content._liveMatchRef = null;   // 같은 모달 틀을 쓴다 — 라이브 갱신이 이 내용을 경기 화면으로 덮지 않게
   }
   var MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   var mArr = (item.month_day||'').split('-');
@@ -6343,6 +6345,7 @@ function openTrophyDetailModal(enc){
   } else {
     modal = document.getElementById('matchModal');
     content = document.getElementById('matchModalContent');
+    content._liveMatchRef = null;   // 같은 모달 틀을 쓴다 — 라이브 갱신이 이 내용을 경기 화면으로 덮지 않게
   }
 
   var modalImg = t.moment_image || t.image;
@@ -6439,6 +6442,7 @@ function openManagerModal(enc){
   } else {
     modal = document.getElementById('matchModal');
     content = document.getElementById('matchModalContent');
+    content._liveMatchRef = null;   // 같은 모달 틀을 쓴다 — 라이브 갱신이 이 내용을 경기 화면으로 덮지 않게
   }
   // 은퇴한 감독은 games가 정적으로 고정돼 있지만, 현재 재임 중인 감독은
   // (managers.json이 손으로 채운 정적 파일이라) 계속 경기가 늘어나서
@@ -6546,6 +6550,7 @@ function computeManagerGames(mgr){
 function openHistModal(enc){
   var item = JSON.parse(decodeURIComponent(enc));
   var mc = document.getElementById('matchModalContent');
+  mc._liveMatchRef = null;
   var ph = HIST_CAT_PH[item.category]||'⚽';
   var catInfo = HIST_CAT[item.category]||{label:item.category,icon:ph};
   var html = '';
@@ -7505,6 +7510,8 @@ function openMatchModal(m, isAuto, opts){
   } else {
     overlay=document.getElementById('matchModal');
     content=document.getElementById('matchModalContent');
+    // 모바일 모달도 같은 참조를 남긴다 — 킥오프 전에 열어 둔 모달이 라이브로 바뀌고, 열려 있는 동안 갱신되게
+    content._liveMatchRef = m;
     document.querySelector('.match-modal-sheet').classList.remove('hist-compact');
   }
   var slug=COMP_SLUG_MAP[m.competition&&m.competition.short]||'eng.1';
@@ -13176,8 +13183,10 @@ function liveDesktopRefresh(liveIds){
       // startLiveExpandPolling과 동등하게 상세 탭 내용도 30초마다 새로
       // 받아온다 — 목록 카드 점수/시계만 갱신하고 패널은 그대로 두면
       // 우측 패널을 계속 보고 있는 사람만 실시간 갱신에서 빠지게 된다.
-      if(isDesktopLayout()){
-        var panelContent = document.getElementById('fixDetailContent');
+      // 모바일 모달도 열려 있으면 같은 방식으로(사용자 지정 — 킥오프 전에 연 모달이 경기 전 모양 그대로였다)
+      var mobileModal = document.getElementById('matchModal');
+      if(isDesktopLayout() || (mobileModal && mobileModal.classList.contains('open'))){
+        var panelContent = document.getElementById(isDesktopLayout() ? 'fixDetailContent' : 'matchModalContent');
         var liveRef = panelContent && panelContent._liveMatchRef;
         var stillLive = liveRef && liveIds.indexOf(liveRef.id) >= 0;
         if(stillLive){
